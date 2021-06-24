@@ -2058,11 +2058,13 @@ namespace pwiz.Skyline.Model
 
         public int ExplicitRetentionTimeWindowColumn { get; set; }
 
+        public int ExplicitCollisionEnergyColumn { get; set; }
 
+        public int NoteColumn { get; set; }
 
         private ColumnIndices()
         {
-            // TODO: ensure that all the newly added columns have their inxex set here
+            // TODO: ensure that all the newly added columns have their index set here
             ProteinColumn = -1;
             PeptideColumn = -1;
             PrecursorColumn = -1;
@@ -2076,6 +2078,8 @@ namespace pwiz.Skyline.Model
             FragmentNameColumn = -1;
             ExplicitRetentionTimeColumn = -1;
             ExplicitRetentionTimeWindowColumn = -1;
+            ExplicitCollisionEnergyColumn = -1;
+            NoteColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2134,6 +2138,10 @@ namespace pwiz.Skyline.Model
                 ExplicitRetentionTimeColumn = -1;
             if (ExplicitRetentionTimeWindowColumn == index)
                 ExplicitRetentionTimeWindowColumn = -1;
+            if (ExplicitCollisionEnergyColumn == index)
+                ExplicitCollisionEnergyColumn = -1;
+            if (NoteColumn == index)
+                NoteColumn = -1;
         }
 
         /// <summary>

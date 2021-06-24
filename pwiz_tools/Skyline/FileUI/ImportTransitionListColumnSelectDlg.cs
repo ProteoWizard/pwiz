@@ -150,7 +150,9 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                    Resources.PasteDlg_UpdateMoleculeType_Note
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
@@ -197,6 +199,8 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
                 SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
                 SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+                SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
                 // Commented out for consistency because there is no product charge column
                 // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);  
             }
@@ -348,6 +352,18 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ExplicitRetentionTimeWindowColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitCollisionEnergyColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitCollisionEnergyColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Note)
+            {
+                CheckForComboBoxOverlap(columns.NoteColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.NoteColumn = comboBoxIndex;
+            }
             // Commented out for consistency because there is no product charge column
             /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
@@ -368,6 +384,13 @@ namespace pwiz.Skyline.FileUI
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
                 // Commented out for consistency because there is no product charge column
                 // if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
+
+                // TODO: add support for new columns from small molecules here
+                if (columns.ExplicitRetentionTimeWindowColumn == comboBoxIndex)
+                    columns.ExplicitRetentionTimeWindowColumn = -1;
+                if (columns.ExplicitCollisionEnergyColumn == comboBoxIndex) columns.ExplicitCollisionEnergyColumn = -1;
+                if (columns.ExplicitRetentionTimeColumn == comboBoxIndex) columns.ExplicitRetentionTimeColumn = -1;
+                if (columns.NoteColumn == comboBoxIndex) columns.NoteColumn = -1;
             }
         }
 
