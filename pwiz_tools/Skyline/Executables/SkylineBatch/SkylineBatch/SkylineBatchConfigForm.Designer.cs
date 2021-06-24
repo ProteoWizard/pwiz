@@ -78,13 +78,13 @@
             this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
+            this.checkBoxLogTestFormat = new System.Windows.Forms.CheckBox();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
-            this.checkBoxLogTestFormat = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -483,6 +483,12 @@
             this.tabSkyline.Name = "tabSkyline";
             this.tabSkyline.Enter += new System.EventHandler(this.TabEnter);
             // 
+            // checkBoxLogTestFormat
+            // 
+            resources.ApplyResources(this.checkBoxLogTestFormat, "checkBoxLogTestFormat");
+            this.checkBoxLogTestFormat.Name = "checkBoxLogTestFormat";
+            this.checkBoxLogTestFormat.UseVisualStyleBackColor = true;
+            // 
             // panelSkylineSettings
             // 
             resources.ApplyResources(this.panelSkylineSettings, "panelSkylineSettings");
@@ -521,12 +527,6 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
-            // 
-            // checkBoxLogTestFormat
-            // 
-            resources.ApplyResources(this.checkBoxLogTestFormat, "checkBoxLogTestFormat");
-            this.checkBoxLogTestFormat.Name = "checkBoxLogTestFormat";
-            this.checkBoxLogTestFormat.UseVisualStyleBackColor = true;
             // 
             // SkylineBatchConfigForm
             // 
