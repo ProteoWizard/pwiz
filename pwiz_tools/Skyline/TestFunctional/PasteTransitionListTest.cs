@@ -39,6 +39,7 @@ namespace pwiz.SkylineTestFunctional
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
         private string ignoreColumn => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+        private string decoy => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy;
 
         [TestMethod]
         public void TestPasteTransitionList()
@@ -89,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new [] {protName, peptide, precursor, ignoreColumn, ignoreColumn, product, ignoreColumn, fragName};
+            var expectedColumns = new [] {protName, peptide, precursor, ignoreColumn, decoy, product, ignoreColumn, fragName};
             // expectedColumns is the same length as targetColumns for comparison
             var actualColumns = 
                 Settings.Default.CustomImportTransitionListColumnTypesList.GetRange(0, expectedColumns.Length);
@@ -194,8 +195,13 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(pep, pep.OkDialog);
             
-            // Verify that the change was saved in the settings
+            // Verify that the change and other columns were saved in the settings
             Assert.AreEqual(ignoreColumn,Settings.Default.CustomImportTransitionListColumnTypesList[7]);
+            Assert.AreEqual(protName, Settings.Default.CustomImportTransitionListColumnTypesList[0]);
+            Assert.AreEqual(peptide, Settings.Default.CustomImportTransitionListColumnTypesList[1]);
+
+            // Verify the document state we expect
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, null, 2, 2, 9);
 
             // Paste in a new transition list with the precursor m/z column in a new location
             LoadNewDocument(true);
