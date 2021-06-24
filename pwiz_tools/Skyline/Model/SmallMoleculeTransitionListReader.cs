@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model
 
         private int INDEX_MOLECULE_NAME
         {
-            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.nameMolecule); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.namePrecursor); }
         }
 
         private int INDEX_PRODUCT_NAME
@@ -458,7 +458,7 @@ namespace pwiz.Skyline.Model
 
         private int INDEX_MOLECULE_FORMULA
         {
-            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaMolecular); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); }
         }
 
         private int INDEX_PRECURSOR_ADDUCT
@@ -1944,9 +1944,9 @@ namespace pwiz.Skyline.Model
                 {
                     // These are pretty basic hints, without much overlap in peptide lists
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.nameMolecule, 
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.nameProduct, 
-                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular, 
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.idCAS, 
                     SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
@@ -1994,9 +1994,9 @@ namespace pwiz.Skyline.Model
     public static class SmallMoleculeTransitionListColumnHeaders
     {
         public const string moleculeGroup = "MoleculeGroup";
-        public const string nameMolecule = "MoleculeName";
+        public const string namePrecursor = "PrecursorName";
         public const string nameProduct = "ProductName";
-        public const string formulaMolecular = "MolecularFormula";
+        public const string formulaPrecursor = "PrecursorFormula";
         public const string formulaProduct = "ProductFormula";
         public const string neutralLossProduct = "ProductNeutralLoss";
         public const string mzPrecursor = "PrecursorMz";
@@ -2037,9 +2037,9 @@ namespace pwiz.Skyline.Model
             KnownHeaders =  new List<string>(new[]
             {
                 moleculeGroup,
-                nameMolecule,
+                namePrecursor,
                 nameProduct,
-                formulaMolecular,
+                formulaPrecursor,
                 formulaProduct,
                 mzPrecursor,
                 mzProduct,
@@ -2082,11 +2082,11 @@ namespace pwiz.Skyline.Model
                     Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
                 foreach (var pair in new[] {
                     Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
-                    Tuple.Create(nameMolecule, Resources.PasteDlg_UpdateMoleculeType_Molecule_Name),
-                    Tuple.Create(nameMolecule, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
-                    Tuple.Create(nameMolecule, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
+                    Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
+                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
+                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
-                    Tuple.Create(formulaMolecular, Resources.PasteDlg_UpdateMoleculeType_Molecular_Formula),
+                    Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
                     Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),

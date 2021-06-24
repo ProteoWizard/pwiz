@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
             var columnOrder =  new[]
                 {
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.nameMolecule,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.mzProduct,

@@ -21328,29 +21328,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecular Formula.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Molecular_Formula {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecular_Formula", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Molecule List Name.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Molecule_List_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_List_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Molecule Name.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Molecule_Name {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_Name", resourceCulture);
             }
         }
         
@@ -21397,6 +21379,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Precursor_Charge {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Formula.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Precursor_Formula {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Formula", resourceCulture);
             }
         }
         
