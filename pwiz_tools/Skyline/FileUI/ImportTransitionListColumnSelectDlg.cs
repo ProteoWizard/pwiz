@@ -218,7 +218,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
         /// <summary>
-        /// Returns the current column positions as a list of tuples
+        /// Returns the current column positions as a list of strings
         /// </summary>
         private List<string> CurrentColumnPositions()
         {
