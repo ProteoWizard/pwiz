@@ -2051,8 +2051,18 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public int LibraryColumn { get; set; }
 
+        // After this point are new columns added that were initially only supported for small molecule transition lists
+        // TODO: add appropriate comments detailing what each of these does
+
+        public int ExplicitRetentionTimeColumn { get; set; }
+
+        public int ExplicitRetentionTimeWindowColumn { get; set; }
+
+
+
         private ColumnIndices()
         {
+            // TODO: ensure that all the newly added columns have their inxex set here
             ProteinColumn = -1;
             PeptideColumn = -1;
             PrecursorColumn = -1;
@@ -2064,6 +2074,8 @@ namespace pwiz.Skyline.Model
             LibraryColumn = -1;
             LabelTypeColumn = -1;
             FragmentNameColumn = -1;
+            ExplicitRetentionTimeColumn = -1;
+            ExplicitRetentionTimeWindowColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2116,6 +2128,12 @@ namespace pwiz.Skyline.Model
                 FragmentNameColumn = -1;
             if (PrecursorChargeColumn == index)
                 PrecursorChargeColumn = -1;
+
+            // TODO: add new statements for all of the new columns here
+            if (ExplicitRetentionTimeColumn == index)
+                ExplicitRetentionTimeColumn = -1;
+            if (ExplicitRetentionTimeWindowColumn == index)
+                ExplicitRetentionTimeWindowColumn = -1;
         }
 
         /// <summary>
