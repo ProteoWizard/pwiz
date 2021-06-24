@@ -11477,4 +11477,16 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Decoy" xml:space="preserve">
+    <value>Decoy</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
+    <value>Fragment Name</value>
+  </data>
 </root>

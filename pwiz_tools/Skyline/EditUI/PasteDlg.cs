@@ -1710,11 +1710,12 @@ namespace pwiz.Skyline.EditUI
         private void UpdateMoleculeType()
         {
             bool isPeptide = radioPeptide.Checked;
-            btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
+            btnCustomMoleculeColumns.Enabled = true;
             Settings.Default.TransitionListInsertPeptides = isPeptide; // Remember for next time
 
-            //Skip updating if nothing needs to be changed
-            if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
+            // Skip updating if nothing needs to be changed
+            // This should probably be taken out when we add smarter column selection as its currently hard coded for the number of columns
+            if ((isPeptide && gridViewTransitionList.ColumnCount == 10) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
                 return;
 
             int rowCount = gridViewTransitionList.RowCount - 1;
@@ -1729,7 +1730,7 @@ namespace pwiz.Skyline.EditUI
                     DialogResult.Cancel)
                 {
                     radioPeptide.Checked = !isPeptide;
-                    btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
+                    btnCustomMoleculeColumns.Enabled = true;
                     return;
                 }
             }
@@ -1758,6 +1759,11 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name);
                 gridViewTransitionList.Columns.Add(@"Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description);
+                gridViewTransitionList.Columns.Add(@"Label", Resources.PasteDlg_UpdateMoleculeType_Label_Type);
+                gridViewTransitionList.Columns.Add(@"iRT", Resources.PasteDlg_UpdateMoleculeType_iRT);
+                gridViewTransitionList.Columns.Add(@"Decoy", Resources.PasteDlg_UpdateMoleculeType_Decoy);
+                gridViewTransitionList.Columns.Add(@"Library", Resources.PasteDlg_UpdateMoleculeType_Library_Intensity);
+                gridViewTransitionList.Columns.Add(@"Fragment", Resources.PasteDlg_UpdateMoleculeType_Fragment_Name);
             }
             else
             {

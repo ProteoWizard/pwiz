@@ -21193,6 +21193,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Decoy.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Decoy {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Decoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Collision Energy.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy {
@@ -21283,11 +21292,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragment Name.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Fragment_Name {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_iRT {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Label Type.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Label_Type {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Label_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Intensity.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Library_Intensity {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Library_Intensity", resourceCulture);
             }
         }
         
