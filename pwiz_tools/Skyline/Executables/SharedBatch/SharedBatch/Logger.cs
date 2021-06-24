@@ -31,6 +31,7 @@ using SharedBatch.Properties;
     public class Logger
     {
         private const string DATE_PATTERN = "^\\[.*\\]\x20*";
+        private const string MEMSTAMP_PATTERN = "^[0-9]+\t[0-9]+\t";
 
 
         private readonly string _filePath;
@@ -143,11 +144,18 @@ using SharedBatch.Properties;
 
         public void Log(params string[] text)
         {
+            var memstampRegex = new Regex(MEMSTAMP_PATTERN);
             var messageNoTimestamp = TextUtil.LineSeparate(text);
             if (text.Length > 0 && !messageNoTimestamp.Equals(_lastLogMessage))
             {
                 _lastLogMessage = messageNoTimestamp;
-                text[0] = GetDate() + text[0];
+                if (!LogTestFormat || memstampRegex.IsMatch(text[0]))
+                    text[0] = GetDate() + text[0];
+                else
+                {
+                    // Add memstamp with zeros
+                    text[0] = GetDate() + "0\t0\t" + text[0];
+                }
                 LogVerbatim(text);
             }
         }

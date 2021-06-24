@@ -183,7 +183,7 @@ namespace SkylineBatch
             }
 
             // STEP 4: run r scripts using csv files
-            if (runOption != RunBatchOptions.DOWNLOAD_DATA)
+            if (runOption != RunBatchOptions.DOWNLOAD_DATA && IsRunning())
             {
                 var rScriptsRunInformation = Config.GetScriptArguments();
                 foreach (var rScript in rScriptsRunInformation)
@@ -207,11 +207,6 @@ namespace SkylineBatch
 
         public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
-            if (Config.LogTestFormat)
-            {
-                commandWriter.Write("--memstamp");
-                commandWriter.EndCommandGroup();
-            }
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
@@ -245,6 +240,7 @@ namespace SkylineBatch
                 Config.WriteRetentionTimeCommand(commandWriter);
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
                 commandWriter.EndCommandGroup();
                 // import data
                 Config.WriteImportDataCommand(commandWriter);
@@ -257,6 +253,7 @@ namespace SkylineBatch
             else if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
             }
 
             // STEP 2: refine file and save to new location
