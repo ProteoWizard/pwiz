@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     // Prepare transition list insert window to match tutorial
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameMolecule,
                     SmallMoleculeTransitionListColumnHeaders.labelType,
                     SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,

@@ -2186,9 +2186,6 @@
   <data name="ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_" xml:space="preserve">
     <value>最適補償電圧は粗調整しかされていません。</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
-    <value>プリカーサーイオンの式</value>
-  </data>
   <data name="Peptide" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptide.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

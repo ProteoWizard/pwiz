@@ -2186,9 +2186,6 @@
   <data name="ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_" xml:space="preserve">
     <value>You have only rough tune optimized compensation voltages.</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
-    <value>Precursor Formula</value>
-  </data>
   <data name="Peptide" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptide.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -11488,5 +11485,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
     <value>Fragment Name</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecular_Formula" xml:space="preserve">
+    <value>Molecular Formula</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_Name" xml:space="preserve">
+    <value>Molecule Name</value>
   </data>
 </root>

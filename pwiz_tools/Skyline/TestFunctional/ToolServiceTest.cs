@@ -138,10 +138,10 @@ TTDFDGYWVNHNWYSIYEST*
             var header = string.Join(",", new string[]
             {
                 SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameMolecule,
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,

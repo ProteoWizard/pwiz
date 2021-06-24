@@ -108,8 +108,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         // Prepare transition list insert window to match tutorial
                         // Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Label Type,Precursor m/z,Precursor Charge,Explicit Retention Time
                         SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                        SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                        SmallMoleculeTransitionListColumnHeaders.nameMolecule,
+                        SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                         SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                         SmallMoleculeTransitionListColumnHeaders.labelType,
                         SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
