@@ -159,7 +159,8 @@ namespace pwiz.Skyline.FileUI
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
@@ -213,7 +214,8 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
                 SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
                 SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                SetComboBoxText(columns.ExplicitCompenstaionVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+                SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+                SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
                 // Commented out for consistency because there is no product charge column
                 // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);  
             }
@@ -409,9 +411,15 @@ namespace pwiz.Skyline.FileUI
             }
             else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage)
             {
-                CheckForComboBoxOverlap(columns.ExplicitCompenstaionVoltageColumn, 0, comboBoxIndex);
+                CheckForComboBoxOverlap(columns.ExplicitCompensationVoltageColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitCompenstaionVoltageColumn = comboBoxIndex;
+                columns.ExplicitCompensationVoltageColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitDeclusteringPotentialColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
             }
             // Commented out for consistency because there is no product charge column
             /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
@@ -447,8 +455,10 @@ namespace pwiz.Skyline.FileUI
                     columns.ExplicitIonMobilityUnitsColumn = -1;
                 if (columns.ExplicitIonMobilityHighEnergyOffsetColumn == comboBoxIndex)
                     columns.ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-                if (columns.ExplicitCompenstaionVoltageColumn == comboBoxIndex)
-                    columns.ExplicitCompenstaionVoltageColumn = -1;
+                if (columns.ExplicitCompensationVoltageColumn == comboBoxIndex)
+                    columns.ExplicitCompensationVoltageColumn = -1;
+                if (columns.ExplicitDeclusteringPotentialColumn == comboBoxIndex)
+                    columns.ExplicitDeclusteringPotentialColumn = -1;
             }
         }
 

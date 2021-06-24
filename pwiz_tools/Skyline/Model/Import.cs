@@ -2072,7 +2072,9 @@ namespace pwiz.Skyline.Model
 
         public int ExplicitIonMobilityHighEnergyOffsetColumn { get; set; }
 
-        public int ExplicitCompenstaionVoltageColumn { get; set; }
+        public int ExplicitCompensationVoltageColumn { get; set; }
+
+        public int ExplicitDeclusteringPotentialColumn { get; set; }
 
         private ColumnIndices()
         {
@@ -2097,7 +2099,8 @@ namespace pwiz.Skyline.Model
             ExplicitIonMobilityColumn = -1;
             ExplicitIonMobilityUnitsColumn = -1;
             ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-            ExplicitCompenstaionVoltageColumn = -1;
+            ExplicitCompensationVoltageColumn = -1;
+            ExplicitDeclusteringPotentialColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2170,8 +2173,10 @@ namespace pwiz.Skyline.Model
                 ExplicitIonMobilityUnitsColumn = -1;
             if (ExplicitIonMobilityHighEnergyOffsetColumn == index)
                 ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-            if (ExplicitCompenstaionVoltageColumn == index)
-                ExplicitCompenstaionVoltageColumn = -1;
+            if (ExplicitCompensationVoltageColumn == index)
+                ExplicitCompensationVoltageColumn = -1;
+            if (ExplicitDeclusteringPotentialColumn == index)
+                ExplicitDeclusteringPotentialColumn = -1;
         }
 
         /// <summary>
