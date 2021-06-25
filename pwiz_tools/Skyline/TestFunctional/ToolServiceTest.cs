@@ -141,7 +141,7 @@ TTDFDGYWVNHNWYSIYEST*
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,

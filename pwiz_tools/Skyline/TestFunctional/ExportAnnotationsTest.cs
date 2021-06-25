@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg.IsMolecule = true;
                 pasteDlg.SetSmallMoleculeColumns(new List<String>
                 {
-                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                     SmallMoleculeTransitionListColumnHeaders.chargeProduct

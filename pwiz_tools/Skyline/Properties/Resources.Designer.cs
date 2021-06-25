@@ -5775,7 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}..
+        ///   Looks up a localized string similar to Error: Failed to load {0}.
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -21336,29 +21336,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecular Formula.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Molecular_Formula {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecular_Formula", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Molecule List Name.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Molecule_List_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_List_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Molecule Name.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Molecule_Name {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Molecule_Name", resourceCulture);
             }
         }
         

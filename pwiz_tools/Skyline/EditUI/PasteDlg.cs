@@ -1757,7 +1757,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(@"Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide);
                 gridViewTransitionList.Columns.Add(@"Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
                 gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
-                gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Molecule_Name);
+                gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name);
                 gridViewTransitionList.Columns.Add(@"Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description);
                 gridViewTransitionList.Columns.Add(@"Label", Resources.PasteDlg_UpdateMoleculeType_Label_Type);
                 gridViewTransitionList.Columns.Add(@"iRT", Resources.PasteDlg_UpdateMoleculeType_iRT);
@@ -1774,9 +1774,9 @@ namespace pwiz.Skyline.EditUI
                     if (isDefaultColumn)
                         defaultColumns.Add(name);
                 }
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_Name, true);
+                AddColumn(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name, true);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.formulaMolecular, Resources.PasteDlg_UpdateMoleculeType_Molecular_Formula, true);
+                AddColumn(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula, true);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, true);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z, true);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge, true);

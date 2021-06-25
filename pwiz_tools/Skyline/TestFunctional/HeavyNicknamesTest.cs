@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargeProduct

@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestTutorial
                     // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
