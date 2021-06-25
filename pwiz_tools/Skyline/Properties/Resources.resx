@@ -11477,7 +11477,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_DisplayData_Column__0_" xml:space="preserve">
     <value>Column {0}</value>
   </data>
-<<<<<<< HEAD
   <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
   </data>
@@ -11493,6 +11492,4 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
     <value>Fragment Name</value>
   </data>
-=======
->>>>>>> parent of 98e1fafeb... Implemented CollisionCrossSectionColumn in ImportTransitionListColumnSelectDlg.cs, refactored from "Collisional..." there and in PasteDlg.cs
 </root>
