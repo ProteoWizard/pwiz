@@ -10040,20 +10040,6 @@
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>已嵌入</value>
   </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
-    <value>无法在与 MaxQuant 输入文件“{1}”相同的目录中或其父目录或祖父目录中找到与“{0}”匹配的外部谱图文件。
-
-如果您没有原始文件，则可以使用输入文件中的嵌入谱图来构建库。然而，MaxQuant 已嵌入谱图中的子离子是已去卷积电荷状态，并且将仅包含单电荷子离子，可能不代表由质谱仪测得的强度。
-
-</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
-    <value>单击“已嵌入”使用已嵌入的谱图。
-单击“重试”尝试使用位于输入文件旁边的原始谱图文件（具有支持的文件扩展名：{0}）再次构建。</value>
-  </data>
-  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
-    <value>使用参数“--导入-搜索-首选-已嵌入-谱图”来强制库构建使用嵌入的谱图，或将原始谱图文件放在输入文件（带有支持的文件扩展名：{0}）旁并重新运行。</value>
-  </data>
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>错误：无法连接到网站{0}</value>
   </data>
