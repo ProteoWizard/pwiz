@@ -1976,6 +1976,11 @@ namespace pwiz.Skyline.Model
         private static Type GetColumnType(string value, IFormatProvider provider)
         {
             double result;
+            var quote = @"""";
+            if (value.StartsWith(quote) && value.EndsWith(quote))
+            {
+                value = value.Substring(1, value.Length - 2);
+            }
             if (double.TryParse(value, NumberStyles.Number, provider, out result))
                 return typeof(double);
             else if (FastaSequence.IsExSequence(value))
