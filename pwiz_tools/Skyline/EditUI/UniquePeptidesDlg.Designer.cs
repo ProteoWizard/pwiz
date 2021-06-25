@@ -107,7 +107,7 @@
             this.PeptideIncludedColumn.Name = "PeptideIncludedColumn";
             this.PeptideIncludedColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
-            // PeptideColumn
+            // MoleculeNameColumn
             // 
             this.PeptideColumn.FillWeight = 1F;
             resources.ApplyResources(this.PeptideColumn, "PeptideColumn");

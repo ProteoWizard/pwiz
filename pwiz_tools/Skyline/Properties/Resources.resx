@@ -11492,4 +11492,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
     <value>Fragment Name</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecular_Formula" xml:space="preserve">
+    <value>Molecular Formula</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Molecule_Name" xml:space="preserve">
+    <value>Molecule Name</value>
+  </data>
 </root>

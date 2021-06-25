@@ -458,7 +458,7 @@ namespace pwiz.Skyline.Model
 
         private int INDEX_MOLECULE_FORMULA
         {
-            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaMolecular); }
         }
 
         private int INDEX_PRECURSOR_ADDUCT
@@ -1946,7 +1946,7 @@ namespace pwiz.Skyline.Model
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.nameProduct, 
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular, 
                     SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
                     SmallMoleculeTransitionListColumnHeaders.idCAS, 
                     SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
@@ -1996,7 +1996,7 @@ namespace pwiz.Skyline.Model
         public const string moleculeGroup = "MoleculeGroup";
         public const string namePrecursor = "PrecursorName";
         public const string nameProduct = "ProductName";
-        public const string formulaPrecursor = "PrecursorFormula";
+        public const string formulaMolecular = "PrecursorFormula";
         public const string formulaProduct = "ProductFormula";
         public const string neutralLossProduct = "ProductNeutralLoss";
         public const string mzPrecursor = "PrecursorMz";
@@ -2039,7 +2039,7 @@ namespace pwiz.Skyline.Model
                 moleculeGroup,
                 namePrecursor,
                 nameProduct,
-                formulaPrecursor,
+                formulaMolecular,
                 formulaProduct,
                 mzPrecursor,
                 mzProduct,
@@ -2081,12 +2081,12 @@ namespace pwiz.Skyline.Model
                 Thread.CurrentThread.CurrentUICulture =
                     Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
                 foreach (var pair in new[] {
-                    Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
+                    Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_Name),
                     Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
-                    Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
+                    Tuple.Create(formulaMolecular, Resources.PasteDlg_UpdateMoleculeType_Molecular_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
                     Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),

@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                     SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                     SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.mzProduct,
@@ -410,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 };
 
@@ -446,7 +446,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                     SmallMoleculeTransitionListColumnHeaders.mzProduct,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargeProduct,
@@ -474,7 +474,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                     SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                     SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.mzProduct,
@@ -497,7 +497,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify adduct usage - none, or in own column, or as part of formula, when no name hints are given
             columnOrderC = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                     SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                     SmallMoleculeTransitionListColumnHeaders.mzProduct,
@@ -586,7 +586,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargeProduct,
@@ -824,7 +824,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargeProduct,
@@ -926,7 +926,7 @@ namespace pwiz.SkylineTestFunctional
             var columnOrder5 = new[]
             {
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
             };
             RunUI(() =>
@@ -959,7 +959,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,
@@ -1129,7 +1129,7 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.nameProduct,
                 SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzProduct,
@@ -1185,7 +1185,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaMolecular,
                 SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,

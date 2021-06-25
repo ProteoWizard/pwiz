@@ -780,7 +780,7 @@ namespace pwiz.Skyline.Model
             private Dictionary<string, PeptideDocNode> NodeDictionary { get; set; } 
             public ColumnIndices Indices { get; private set; }
             protected int ProteinColumn { get { return Indices.ProteinColumn; } }
-            protected int PeptideColumn { get { return Indices.PeptideColumn; } }
+            protected int PeptideColumn { get { return Indices.MoleculeNameColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
             protected int FragmentNameColumn { get { return Indices.FragmentNameColumn; } }
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
@@ -1726,7 +1726,7 @@ namespace pwiz.Skyline.Model
 
             private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices)
             {
-                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvField(separator, indices.PeptideColumn)));
+                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvField(separator, indices.MoleculeNameColumn)));
             }
         }
 
@@ -1879,7 +1879,7 @@ namespace pwiz.Skyline.Model
 
             private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices, Regex exPeptideRegex)
             {
-                return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.PeptideColumn])));
+                return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.MoleculeNameColumn])));
             }
         }
 
@@ -2009,7 +2009,7 @@ namespace pwiz.Skyline.Model
             int precursorChargeColumn)
         {
             ProteinColumn = proteinColumn;
-            PeptideColumn = peptideColumn;
+            MoleculeNameColumn = peptideColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
@@ -2020,7 +2020,7 @@ namespace pwiz.Skyline.Model
         public string[] Headers { get; private set; }
 
         public int ProteinColumn { get; set; }
-        public int PeptideColumn { get; set; }
+        public int MoleculeNameColumn { get; set; }
         public int PrecursorColumn { get; set; }
         public int PrecursorChargeColumn { get; set; }
         public int ProductColumn { get; set; }
@@ -2082,7 +2082,7 @@ namespace pwiz.Skyline.Model
         {
             // TODO: ensure that all the newly added columns have their index set here
             ProteinColumn = -1;
-            PeptideColumn = -1;
+            MoleculeNameColumn = -1;
             PrecursorColumn = -1;
             PrecursorChargeColumn = -1;
             ProductColumn = -1;
@@ -2144,8 +2144,8 @@ namespace pwiz.Skyline.Model
                 LabelTypeColumn = -1;
             if (LibraryColumn == index)
                 LibraryColumn = -1;
-            if (PeptideColumn == index)
-                PeptideColumn = -1;
+            if (MoleculeNameColumn == index)
+                MoleculeNameColumn = -1;
             if (PrecursorColumn == index)
                 PrecursorColumn = -1;
             if (ProductColumn == index)
@@ -2191,11 +2191,11 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public void PrioritizePeptideColumn()
         {
-            if (PeptideColumn != -1)
+            if (MoleculeNameColumn != -1)
             {
-                var save = PeptideColumn;
-                ResetDuplicateColumns(PeptideColumn);
-                PeptideColumn = save;
+                var save = MoleculeNameColumn;
+                ResetDuplicateColumns(MoleculeNameColumn);
+                MoleculeNameColumn = save;
             }
         }
 
