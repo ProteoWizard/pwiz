@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -90,11 +92,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new [] {protName, peptide, precursor, ignoreColumn, decoy, product, ignoreColumn, fragName};
-            // expectedColumns is the same length as targetColumns for comparison
-            var actualColumns = 
-                Settings.Default.CustomImportTransitionListColumnTypesList.GetRange(0, expectedColumns.Length);
-            CollectionAssert.AreEqual(expectedColumns, actualColumns);
+            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, decoy, product, ignoreColumn, fragName};
+            expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
+            CollectionAssert.AreEqual(expectedColumns, Settings.Default.CustomImportTransitionListColumnTypesList);
             
             // Paste in the same transition list and verify that the earlier modification was saved
             var peptideTransitionList1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
