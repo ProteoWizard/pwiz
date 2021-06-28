@@ -1969,7 +1969,7 @@ namespace pwiz.Skyline.Model
 
         private static bool TrySplitColumns(string line, char sep, out string[] columns)
         {
-            columns = line.Split(sep);
+            columns = line.ParseDsvFields(sep);
             return columns.Length > 1;
         }
 
