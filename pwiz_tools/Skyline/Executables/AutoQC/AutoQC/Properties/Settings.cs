@@ -59,7 +59,8 @@ namespace AutoQC.Properties
             if (Equals(Default.InstalledVersion, currentVersion))
                 return;
             // get file path of user.config file with old settings
-            var possibleOldSettingsVersion = !string.IsNullOrEmpty(Default.InstalledVersion)
+            var xmlVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
+            var possibleOldSettingsVersion = xmlVersion != null && xmlVersion.Major > 1
                 ? Default.InstalledVersion
                 : "1.0.0.0";
             var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
@@ -69,7 +70,6 @@ namespace AutoQC.Properties
             if (File.Exists(possibleOldConfigFile))
             {
                 // update ConfigList using old user.config
-                var xmlVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
                 if (xmlVersion == null || xmlVersion.Major < 21)
                     SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, currentVersion, Program.AppName, XmlUpdater.GetUpdatedXml);
                 // update skyline settings of all configuration if settings were very old and still in AutoQC.Properties.Settings
