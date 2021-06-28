@@ -606,7 +606,7 @@ namespace SharedBatch
                 if (string.IsNullOrEmpty(forceReplaceRoot))
                     addingConfig = RunRootReplacement(config);
                 else
-                    addingConfig = ForceRootReplacement(config, forceReplaceRoot);
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
                 addedConfigs.Add(addingConfig);
                 numAdded++;
             }
@@ -861,9 +861,18 @@ namespace SharedBatch
         }
 
         // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
-        private IConfig ForceRootReplacement(IConfig config, string oldRoot)
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot, out string errorMessage)
         {
-            return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+            errorMessage = null;
+            try
+            {
+                return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+            }
+            catch (ArgumentException e)
+            {
+                errorMessage = e.Message;
+                return config;
+            }
         }
 
         #endregion
