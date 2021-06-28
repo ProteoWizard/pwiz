@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,20 +11,21 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_EDG`]
+/* tag::reference[]
+= `BOOST_COMP_EDG`
 
-[@http://en.wikipedia.org/wiki/Edison_Design_Group EDG C++ Frontend] compiler.
+http://en.wikipedia.org/wiki/Edison_Design_Group[EDG {CPP} Frontend] compiler.
 Version number available as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__EDG__`] [__predef_detection__]]
+| `+__EDG__+` | {predef_detection}
 
-    [[`__EDG_VERSION__`] [V.R.0]]
-    ]
- */
+| `+__EDG_VERSION__+` | V.R.0
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_EDG BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -45,13 +46,12 @@ Version number available as major, minor, and patch.
 
 #define BOOST_COMP_EDG_NAME "EDG C++ Frontend"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_EDG,BOOST_COMP_EDG_NAME)
 
 #ifdef BOOST_COMP_EDG_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_EDG_EMULATED,BOOST_COMP_EDG_NAME)
-#endif
-
-
 #endif

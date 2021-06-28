@@ -946,7 +946,7 @@
     <value>Top, Right</value>
   </data>
   <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 3</value>
+    <value>73, 6</value>
   </data>
   <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
     <value>403, 16</value>

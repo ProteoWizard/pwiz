@@ -421,7 +421,7 @@
     <value>7</value>
   </data>
   <data name="textFolderName.ToolTip" xml:space="preserve">
-    <value>其中要放入结果的文件夹的名称</value>
+    <value>要放入结果的文件夹的名称</value>
   </data>
   <data name="&gt;&gt;textFolderName.Name" xml:space="preserve">
     <value>textFolderName</value>

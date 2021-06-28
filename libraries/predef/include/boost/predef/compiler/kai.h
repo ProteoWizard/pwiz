@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,20 +11,21 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_KCC`]
+/* tag::reference[]
+= `BOOST_COMP_KCC`
 
-Kai C++ compiler.
+Kai {CPP} compiler.
 Version number available as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__KCC`] [__predef_detection__]]
+| `+__KCC+` | {predef_detection}
 
-    [[`__KCC_VERSION`] [V.R.P]]
-    ]
- */
+| `+__KCC_VERSION+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_KCC BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -45,13 +46,12 @@ Version number available as major, minor, and patch.
 
 #define BOOST_COMP_KCC_NAME "Kai C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_KCC,BOOST_COMP_KCC_NAME)
 
 #ifdef BOOST_COMP_KCC_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_KCC_EMULATED,BOOST_COMP_KCC_NAME)
-#endif
-
-
 #endif

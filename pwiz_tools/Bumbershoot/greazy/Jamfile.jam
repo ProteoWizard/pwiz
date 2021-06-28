@@ -71,7 +71,7 @@ generate-version.cpp $(GREAZY_PATH)/$(version-file) : freicore $(application-nam
 import modules ;
 if [ modules.peek : NT ]
 {
-    import path feature svnrev sequence ;
+    import path feature sequence ;
     path-constant GUI_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/Greazy/GUI ;
 
     # generate GreazyGUI version header

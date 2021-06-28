@@ -999,12 +999,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
             {
-                var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
+                var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct); // N.B. this may actually be a small molecule
 
+                // Try for a ion mobility library value (.imsdb file)
                 var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
                 if (result != null && result.HasIonMobilityValue)
                     return result;
 
+                // Try other sources - BiblioSpec, Chromatogram libraries etc
                 if (libraryIonMobilityInfo != null)
                 {
                     var imAndCCS = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndCCS(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);
@@ -1321,12 +1323,12 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                var map = LibKeyMap<IonMobilityAndCCS[]>.FromDictionary(dict);
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
                     {
+                        var map = LibKeyMap<IonMobilityAndCCS[]>.FromDictionary(dict);
                         foreach (var im in ionMobilities.GetIonMobilityDict().Where(item => 
                             !map.TryGetValue(item.Key, out _)))
                         {
