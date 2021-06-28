@@ -2078,6 +2078,8 @@ namespace pwiz.Skyline.Model
 
         public int CollisionCrossSectionColumn { get; set; }
 
+        public int ProteinDescriptionColumn { get; set; }
+
         private ColumnIndices()
         {
             // TODO: ensure that all the newly added columns have their index set here
@@ -2104,6 +2106,7 @@ namespace pwiz.Skyline.Model
             ExplicitCompensationVoltageColumn = -1;
             ExplicitDeclusteringPotentialColumn = -1;
             CollisionCrossSectionColumn = -1;
+            ProteinDescriptionColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2182,6 +2185,8 @@ namespace pwiz.Skyline.Model
                 ExplicitDeclusteringPotentialColumn = -1;
             if (CollisionCrossSectionColumn == index)
                 CollisionCrossSectionColumn = -1;
+            if (ProteinDescriptionColumn == index)
+                ProteinDescriptionColumn = -1;
         }
 
         /// <summary>
