@@ -467,15 +467,15 @@ namespace SharedBatch
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
             
-            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
+            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
                 copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
                 var file = new FileInfo(filePath);
-                if (!File.Exists(copiedConfigFile))
-                    file.CopyTo(copiedConfigFile, false);
+                file.CopyTo(copiedConfigFile, true);
+                filePath = copiedConfigFile;
             }
 
             var readConfigs = new List<IConfig>();
@@ -494,7 +494,7 @@ namespace SharedBatch
                 {
                     reader.Dispose();
                     stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, showDownloadedFileForm);
+                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, null);
                 }
 
                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
