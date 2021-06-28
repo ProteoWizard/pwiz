@@ -124,10 +124,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _requestedRange = new MzRange(0, _maxMz * 1.1);
             if (Settings.Default.SyncMZScale)
             {
-                // TODO(ritach): Use GraphSpectrum.ISpectrumScaleProvider
-                var graphSpectrum = (_documentContainer as SkylineWindow)?.GraphSpectrum;
-                if (graphSpectrum != null && graphSpectrum.HasSpectrum)
-                    _requestedRange = graphSpectrum.Range;
+                if(_documentContainer is ISpectrumScaleProvider scaleProvider)
+                    _requestedRange = scaleProvider.GetMzRange(SpectrumControlType.LibraryMatch) ?? _requestedRange;
             } 
 
             if (_zoomXAxis)

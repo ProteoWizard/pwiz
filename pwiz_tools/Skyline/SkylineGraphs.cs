@@ -1401,6 +1401,18 @@ namespace pwiz.Skyline
             }
         }
 
+        MzRange ISpectrumScaleProvider.GetMzRange(SpectrumControlType controlType)
+        {
+            switch (controlType)
+            {
+                case SpectrumControlType.FullScanViewer:
+                    return _graphFullScan?.Range;
+                case SpectrumControlType.LibraryMatch:
+                    return _graphSpectrum?.Range;
+                default:
+                    return null;
+            }
+        }
         #endregion
 
         #region Chromatogram graphs

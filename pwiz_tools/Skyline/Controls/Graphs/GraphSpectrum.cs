@@ -66,13 +66,18 @@ namespace pwiz.Skyline.Controls.Graphs
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
     }
+
+    public interface ISpectrumScaleProvider
+    {
+        MzRange GetMzRange(SpectrumControlType controlType);
+    }
     
     public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
     {
 
         private static readonly double YMAX_SCALE = 1.25;
 
-        public interface IStateProvider
+        public interface IStateProvider : ISpectrumScaleProvider
         {
             TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes(bool isProteomic);
@@ -104,6 +109,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
             {
+            }
+
+            public MzRange GetMzRange(SpectrumControlType controlType)
+            {
+                return new MzRange();
             }
         }
 
@@ -286,10 +296,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var requestedRange = new MzRange(xMin, instrument.MaxMz);
             if (Settings.Default.SyncMZScale)
             {
-                // TODO(ritach): Create ISpectrumScaleProvider make IStateProvider a subclass
-                var graphFullScan = (_documentContainer as SkylineWindow)?.GraphFullScan;
-                if (graphFullScan != null && graphFullScan.IsLoaded)
-                    requestedRange = graphFullScan.Range;
+                if(_documentContainer is ISpectrumScaleProvider scaleProvider)
+                    requestedRange = scaleProvider.GetMzRange(SpectrumControlType.FullScanViewer) ?? requestedRange;
             } 
 
             ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
@@ -1671,6 +1679,9 @@ namespace pwiz.Skyline.Controls.Graphs
             Min = min;
             Max = max;
         }
+
+        public MzRange() : this(0, 1){}
+
         public double Min { get; private set; }
         public double Max { get; private set; }
         public override bool Equals(object obj)
