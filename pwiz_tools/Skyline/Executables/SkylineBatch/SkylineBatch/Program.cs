@@ -61,7 +61,6 @@ namespace SkylineBatch
 
             if (!FunctionalTest)
             {
-                SendAnalyticsHit();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
                 // Handle exceptions on the UI thread.
@@ -88,6 +87,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
+                SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
