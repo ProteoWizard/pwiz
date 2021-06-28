@@ -11470,7 +11470,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_DisplayData_Column__0_" xml:space="preserve">
     <value>Column {0}</value>
   </data>
- <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
+  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
     <value>While searching for spectrum files for the MaxQuant input file '{0}', the following basenames could not be found with any of the supported file extensions ({3}):
 
 {1}

@@ -349,7 +349,7 @@
     <value>gridViewProteins</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.174, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
     <value>tabPageProteinList</value>
@@ -418,7 +418,7 @@
     <value>gridViewPeptides</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.174, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
     <value>tabPagePeptideList</value>
@@ -499,7 +499,7 @@
     <value>gridViewTransitionList</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.174, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Parent" xml:space="preserve">
     <value>tabPageTransitionList</value>
@@ -565,7 +565,7 @@
     <value>7, 12</value>
   </data>
   <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>73, 20</value>
+    <value>66, 17</value>
   </data>
   <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -691,7 +691,7 @@
     <value>Col&amp;umns...</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>200, 17</value>
+    <value>17, 17</value>
   </metadata>
   <data name="btnCustomMoleculeColumns.ToolTip" xml:space="preserve">
     <value>Selects columns for display.  Columns can be reordered by dragging.</value>
@@ -718,7 +718,7 @@
     <value>100, 12</value>
   </data>
   <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 20</value>
+    <value>100, 17</value>
   </data>
   <data name="radioMolecule.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -787,7 +787,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.174, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;colProteinName.Name" xml:space="preserve">
     <value>colProteinName</value>
@@ -889,6 +889,6 @@
     <value>PasteDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.1.1.174, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
