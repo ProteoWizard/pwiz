@@ -1740,12 +1740,14 @@ namespace SkylineTester
 
         private void diffButton_Click(object sender, EventArgs e)
         {
-            string formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+            var formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+
+            if (formName != null && formName.Contains("."))
+                formName = formName.Substring(0, formName.IndexOf(".", StringComparison.Ordinal));
+
             if (formName != null)
-            {
                 ShowDiff(GetPathForLanguage(formName, formsLanguage.SelectedItem.ToString()),
                     GetPathForLanguage(formName, formsLanguageDiff.SelectedItem.ToString()));
-            }
         }
 
         private void PopulateFormsLanguageDiff(string language)
@@ -1790,7 +1792,73 @@ namespace SkylineTester
             else
                 diffButton.Enabled = true;
         }
-        
+
+        private string[] GetChangedFileList()
+        {
+            var skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
+            var procStartInfo = new ProcessStartInfo("cmd", "/c " + skylineDir + " & git diff --name-only");
+
+            procStartInfo.RedirectStandardOutput = true;
+            procStartInfo.UseShellExecute = false;
+            procStartInfo.CreateNoWindow = true;
+            var cmd = new Process();
+            cmd.StartInfo = procStartInfo;
+            cmd.Start();
+
+            var changedFiles = cmd.StandardOutput.ReadToEnd();
+            return changedFiles.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        }
+
+        private static string GetFileName(string file)
+        {
+            var fileName = Path.GetFileName(file);
+            return fileName.Substring(0, fileName.IndexOf(".", StringComparison.Ordinal));
+        }
+
+        private void showChangedFiles_CheckedChanged(object sender, EventArgs e)
+        {
+            var changedFilesArray = GetChangedFileList();
+
+            if (showChangedFiles.Checked)
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    var formNoExt = "";
+                    if (row.Cells[0].Value.ToString().Contains("."))
+                        formNoExt = row.Cells[0].Value.ToString().Substring(0,
+                            row.Cells[0].Value.ToString().IndexOf(".", StringComparison.Ordinal));
+                    else
+                        formNoExt = row.Cells[0].Value.ToString();
+
+                    foreach (var file in changedFilesArray)
+                    {
+                        if (!Equals(file, ""))
+                        {
+                            var fileName = GetFileName(file);
+                            if (Equals(formNoExt, fileName))
+                            {
+                                row.Visible = true;
+                                break;
+                            }
+                            else
+                            {
+                                row.Visible = false;
+                            }
+                        }
+                    }
+                }
+                formsGrid.Update();
+            }
+            else
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    row.Visible = true;
+                }
+                formsGrid.Update();
+            }
+        }
+
         #endregion Control events
     }
 }
