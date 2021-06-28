@@ -971,8 +971,21 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             if (nodeGroup1 == null || nodeGroup2 == null)
                 return false;
-            return Equals(nodeGroup1.TransitionGroup.PrecursorAdduct, nodeGroup2.TransitionGroup.PrecursorAdduct) &&
-                   ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType);
+            if (Equals(nodeGroup1.TransitionGroup.PrecursorAdduct, nodeGroup2.TransitionGroup.PrecursorAdduct) &&
+                ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType))
+            {
+                
+                if (nodeGroup1.TransitionGroup.IsProteomic && nodeGroup2.TransitionGroup.IsProteomic)
+                {
+                    return true; // Their children must be identical since we generate them algorithmically
+                }
+                if (nodeGroup1.EquivalentChildren(nodeGroup2))
+                {
+                    return true; // Their children are identical, these are equivalent groups
+                }
+            }
+
+            return false;
         }
     }
 
