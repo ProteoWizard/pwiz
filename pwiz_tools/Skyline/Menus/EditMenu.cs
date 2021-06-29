@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
             // Perhaps it's a small molecule list with headers
-            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text) &&
+            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document) &&
                      MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);

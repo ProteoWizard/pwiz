@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model
             status = status.NextSegment();
             _linesSeen = 0;
 
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
+            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Document))
             {
                 IsSmallMoleculeInput = true;
                 if (progressMonitor != null)
@@ -484,19 +484,30 @@ namespace pwiz.Skyline.Model
                 RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
                 if (RowReader == null)
                 {
-                    CreateGeneralRowReader(progressMonitor, indices, tolerateErrors, lines, status);
+                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
+                    if (RowReader == null)
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
                 }
             }
             return true;
         }
 
-        public void CreateGeneralRowReader(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors,
-            List<string> lines, IProgressStatus status)
+        public bool TryCreateGeneralRowReader(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors,
+            List<string> lines, IProgressStatus status, SrmSettings settings, out MassListRowReader generalRowReader)
         {
-            RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors,
-                progressMonitor, status);
-            if (RowReader == null)
-                throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+            try
+            {
+                generalRowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, settings, lines,
+                    tolerateErrors,
+                    progressMonitor, status);
+            }
+            catch (MzMatchException)
+            {
+                // If it doesn't find a matching precursor m/z or product m/z column we are unable to create a row reader
+                generalRowReader = null;
+                return false;
+            }
+            return generalRowReader != null;
         }
 
         public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,

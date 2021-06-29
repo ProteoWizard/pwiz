@@ -27,6 +27,7 @@ using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1918,16 +1919,16 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmDocument document)
         {
-            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText));
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), document);
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmDocument document)
         {
-
             // Check the first line for peptide header
             var header = csvText.First();
+            // CONSIDER (henrys): Look for "peptide" in other languages as well
             if (header.ToLowerInvariant().Contains(@"peptide"))
             {
                 return false;
@@ -1935,48 +1936,41 @@ namespace pwiz.Skyline.Model
 
             // Use the first 100 lines and a default document to create an importer
             var inputs = new MassListInputs(csvText.Take(100).ToString());
-            var importer = new MassListImporter(new SrmDocument(SrmSettingsList.GetDefault()), inputs);
+            var importer = new MassListImporter(document, inputs);
+            // See if creating a peptide row reader with the first 100 lines is possible
+            if (importer.TryCreateGeneralRowReader(null, new ColumnIndices(), false, csvText.Skip(1).Take(100).ToList(), null, document.Settings, out _))
+            {
+                // If the row reader is able to find a peptide column then it must be a protein transition list
+                return false;
+            }
+            // If we cannot find the peptide column, then try reading it as a small molecule list
             try
             {
-                // Try creating a row reader using 100 lines
-                importer.CreateGeneralRowReader(null, new ColumnIndices(), false, csvText.Take(100).ToList(), null);
+                // This will throw if the headers don't look right
+                var probe = new SmallMoleculeTransitionListCSVReader(csvText);
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                return probe != null;
             }
-            catch (LineColNumberedIoException x)
+            catch
             {
-                if (x.Message.Contains(Resources.MassListImporter_Import_Failed_to_find_peptide_column))
+                // Not a proper small molecule transition list, but was it trying to be one?
+                return new[]
                 {
-                    // If we cannot find the peptide column, then try reading it as a small molecule list
-                    try
-                    {
-                        // This will throw if the headers don't look right
-                        var probe = new SmallMoleculeTransitionListCSVReader(csvText);
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                        return probe != null;
-                    }
-                    catch
-                    {
-                        // Not a proper small molecule transition list, but was it trying to be one?
-                        return new[]
-                        {
-                            // These are pretty basic hints, without much overlap in peptide lists
-                            SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
-                            SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                            SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                            SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                            SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                            SmallMoleculeTransitionListColumnHeaders.idCAS,
-                            SmallMoleculeTransitionListColumnHeaders.idInChiKey,
-                            SmallMoleculeTransitionListColumnHeaders.idInChi,
-                            SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                            SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                            SmallMoleculeTransitionListColumnHeaders.idKEGG,
-                        }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
-                            p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
-                    }
-                }
+                    // These are pretty basic hints, without much overlap in peptide lists
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct, 
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.idCAS, 
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
+                    SmallMoleculeTransitionListColumnHeaders.idInChi, 
+                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                    SmallMoleculeTransitionListColumnHeaders.idKEGG,
+                }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
+                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
             }
-            // If the row reader is able to find a peptide column then it must be a protein transition list
-            return false;
         }
 
         public override void UpdateCellBackingStore(int row, int col, object value)
