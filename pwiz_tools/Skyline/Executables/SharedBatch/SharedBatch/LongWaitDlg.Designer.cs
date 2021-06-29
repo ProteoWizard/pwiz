@@ -55,7 +55,7 @@
             this.Name = "LongWaitDlg";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LongWaitDlg_FormClosing);
-            this.Shown += new System.EventHandler(this.LongWaitDlg_Shown);
+            //this.Shown += new System.EventHandler(this.LongWaitDlg_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

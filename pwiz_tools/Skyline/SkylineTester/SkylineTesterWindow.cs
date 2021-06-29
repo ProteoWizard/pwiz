@@ -1746,8 +1746,10 @@ namespace SkylineTester
                 formName = formName.Substring(0, formName.IndexOf(".", StringComparison.Ordinal));
 
             if (formName != null)
+            {
                 ShowDiff(GetPathForLanguage(formName, formsLanguage.SelectedItem.ToString()),
                     GetPathForLanguage(formName, formsLanguageDiff.SelectedItem.ToString()));
+            }
         }
 
         private void PopulateFormsLanguageDiff(string language)

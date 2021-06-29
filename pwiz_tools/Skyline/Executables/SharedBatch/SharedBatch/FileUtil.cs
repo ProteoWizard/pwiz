@@ -56,6 +56,20 @@ namespace SharedBatch
             return Path.GetDirectoryName(path);
         }
 
+        // Extension of Path.GetDirectoryName that handles null file paths and returns an empty string if the directory cannot be found
+        public static string GetDirectorySafe(string path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path), Resources.TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_);
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         public static bool DirectoryExists(string path)
         {
             var exists = false;
@@ -92,6 +106,33 @@ namespace SharedBatch
                 return null;
             }
             return GetInitialDirectory(directoryName);
+        }
+
+        public static void CreateDirectory(string path)
+        {
+            string directory = null;
+            try
+            {
+                directory = GetDirectory(path);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+        }
+
+        public static string ForceReplaceRoot(string oldText, string newText, string originalString)
+        {
+            if (!originalString.StartsWith(oldText))
+                throw new ArgumentException(string.Format("The path to be replaced {0} did not start with the expected root {1}", originalString, oldText));
+            if (!Directory.Exists(newText))
+                throw new ArgumentException(string.Format("The folder {0} does not exist.", newText));
+
+            var newPath = newText + originalString.Substring(oldText.Length);
+            CreateDirectory(newPath);
+            return newPath;
         }
 
         public static List<string> GetFilesInFolder(string folder, string fileType)
