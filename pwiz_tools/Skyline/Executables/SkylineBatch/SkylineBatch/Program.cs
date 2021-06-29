@@ -38,8 +38,6 @@ namespace SkylineBatch
 {
     public class Program
     {
-        public const string ADMIN_VERSION = "21.1.0.146";
-
         private static string _version;
 
         #region For tests
@@ -255,7 +253,7 @@ namespace SkylineBatch
             postData += "&tid=UA-9194399-1"; // Tracking Id 
             postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
             postData += "&ec=InstanceBatch"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : ADMIN_VERSION) + "batch");
+            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : "Version unspecified") + "batch"); // version should never be unspecified
             var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
             postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
             postData += "&p=" + "Instance"; // Page
