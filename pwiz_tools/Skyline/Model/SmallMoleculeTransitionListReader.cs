@@ -1925,38 +1925,58 @@ namespace pwiz.Skyline.Model
 
         public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText)
         {
+
+            // Check the first line for peptide header
+            var header = csvText.First();
+            if (header.ToLowerInvariant().Contains(@"peptide"))
+            {
+                return false;
+            }
+
+            // Use the first 100 lines and a default document to create an importer
+            var inputs = new MassListInputs(csvText.Take(100).ToString());
+            var importer = new MassListImporter(new SrmDocument(SrmSettingsList.GetDefault()), inputs);
             try
             {
-                // This will throw if the headers don't look right
-                var probe = new SmallMoleculeTransitionListCSVReader(csvText);
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                return probe != null;
+                // Try creating a row reader using 100 lines
+                importer.CreateGeneralRowReader(null, new ColumnIndices(), false, csvText.Take(100).ToList(), null);
             }
-            catch
+            catch (LineColNumberedIoException x)
             {
-                // Not a proper small molecule transition list, but was it trying to be one?
-                var header = csvText.First();
-                if (header.ToLowerInvariant().Contains(@"peptide") || header.ToLowerInvariant().Contains(@"sequence"))
+                if (x.Message.Contains(Resources.MassListImporter_Import_Failed_to_find_peptide_column))
                 {
-                    return false;
+                    // If we cannot find the peptide column, then try reading it as a small molecule list
+                    try
+                    {
+                        // This will throw if the headers don't look right
+                        var probe = new SmallMoleculeTransitionListCSVReader(csvText);
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        return probe != null;
+                    }
+                    catch
+                    {
+                        // Not a proper small molecule transition list, but was it trying to be one?
+                        return new[]
+                        {
+                            // These are pretty basic hints, without much overlap in peptide lists
+                            SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
+                            SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                            SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                            SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                            SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                            SmallMoleculeTransitionListColumnHeaders.idCAS,
+                            SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                            SmallMoleculeTransitionListColumnHeaders.idInChi,
+                            SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                            SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                            SmallMoleculeTransitionListColumnHeaders.idKEGG,
+                        }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
+                            p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
+                    }
                 }
-                return new[]
-                {
-                    // These are pretty basic hints, without much overlap in peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct, 
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.idCAS, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChi, 
-                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                    SmallMoleculeTransitionListColumnHeaders.idKEGG,
-                }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
-                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
             }
+            // If the row reader is able to find a peptide column then it must be a protein transition list
+            return false;
         }
 
         public override void UpdateCellBackingStore(int row, int col, object value)

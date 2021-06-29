@@ -484,12 +484,19 @@ namespace pwiz.Skyline.Model
                 RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
                 if (RowReader == null)
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
-                    if (RowReader == null)
-                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                    CreateGeneralRowReader(progressMonitor, indices, tolerateErrors, lines, status);
                 }
             }
             return true;
+        }
+
+        public void CreateGeneralRowReader(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors,
+            List<string> lines, IProgressStatus status)
+        {
+            RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors,
+                progressMonitor, status);
+            if (RowReader == null)
+                throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
         }
 
         public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,
@@ -2051,7 +2058,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public int LibraryColumn { get; set; }
 
-        private ColumnIndices()
+        public ColumnIndices()
         {
             ProteinColumn = -1;
             PeptideColumn = -1;
