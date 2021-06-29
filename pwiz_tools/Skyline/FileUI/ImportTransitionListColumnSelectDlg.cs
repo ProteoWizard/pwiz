@@ -151,6 +151,19 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
+					Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                    Resources.PasteDlg_UpdateMoleculeType_Note,
+                    Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                    Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
+                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description
                 });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += ComboChanged;
@@ -368,6 +381,84 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.FragmentNameColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitRetentionTimeColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitRetentionTimeColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitRetentionTimeWindowColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitRetentionTimeWindowColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitCollisionEnergyColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitCollisionEnergyColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Note)
+            {
+                CheckForComboBoxOverlap(columns.NoteColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.NoteColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_S_Lens)
+            {
+                CheckForComboBoxOverlap(columns.SLensColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.SLensColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage)
+            {
+                CheckForComboBoxOverlap(columns.ConeVoltageColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ConeVoltageColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitIonMobilityColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitIonMobilityColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitIonMobilityUnitsColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitIonMobilityUnitsColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitIonMobilityHighEnergyOffsetColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitIonMobilityHighEnergyOffsetColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitCompensationVoltageColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitCompensationVoltageColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential)
+            {
+                CheckForComboBoxOverlap(columns.ExplicitDeclusteringPotentialColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_)
+            {
+                CheckForComboBoxOverlap(columns.CollisionCrossSectionColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.CollisionCrossSectionColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description)
+            {
+                CheckForComboBoxOverlap(columns.ProteinDescriptionColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProteinDescriptionColumn = comboBoxIndex;
+            }
             // Commented out for consistency because there is no product charge column
             /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
@@ -388,6 +479,24 @@ namespace pwiz.Skyline.FileUI
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
                 // Commented out for consistency because there is no product charge column
                 // if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
+                if (columns.ExplicitRetentionTimeWindowColumn == comboBoxIndex)
+                    columns.ExplicitRetentionTimeWindowColumn = -1;
+                if (columns.ExplicitCollisionEnergyColumn == comboBoxIndex) columns.ExplicitCollisionEnergyColumn = -1;
+                if (columns.ExplicitRetentionTimeColumn == comboBoxIndex) columns.ExplicitRetentionTimeColumn = -1;
+                if (columns.NoteColumn == comboBoxIndex) columns.NoteColumn = -1;
+                if (columns.SLensColumn == comboBoxIndex) columns.SLensColumn = -1;
+                if (columns.ConeVoltageColumn == comboBoxIndex) columns.ConeVoltageColumn = -1;
+                if (columns.ExplicitIonMobilityColumn == comboBoxIndex) columns.ExplicitIonMobilityColumn = -1;
+                if (columns.ExplicitIonMobilityUnitsColumn == comboBoxIndex)
+                    columns.ExplicitIonMobilityUnitsColumn = -1;
+                if (columns.ExplicitIonMobilityHighEnergyOffsetColumn == comboBoxIndex)
+                    columns.ExplicitIonMobilityHighEnergyOffsetColumn = -1;
+                if (columns.ExplicitCompensationVoltageColumn == comboBoxIndex)
+                    columns.ExplicitCompensationVoltageColumn = -1;
+                if (columns.ExplicitDeclusteringPotentialColumn == comboBoxIndex)
+                    columns.ExplicitDeclusteringPotentialColumn = -1;
+                if (columns.ProteinDescriptionColumn == comboBoxIndex)
+                    columns.ProteinDescriptionColumn = -1;
             }
         }
 
