@@ -94,8 +94,18 @@ namespace SkylineBatch
             bool fileNameChanged;
             try
             {
-                var fileName = System.IO.Path.GetFileName(ServerPath());
-                fileNameChanged = !textPath.Text.EndsWith("\\" + fileName);
+                var serverPath = ServerPath();
+                if (string.IsNullOrEmpty(serverPath))
+                {
+                    fileNameChanged = false;
+                    Server = ((PanoramaFile) Server).ReplaceFolder(textPath.Text);
+                    textPath.Text += "\\" + ((PanoramaFile)Server).FileName;
+                }
+                else
+                {
+                    var fileName = System.IO.Path.GetFileName(ServerPath());
+                    fileNameChanged = !textPath.Text.EndsWith("\\" + fileName);
+                }
             }
             catch (Exception)
             {
