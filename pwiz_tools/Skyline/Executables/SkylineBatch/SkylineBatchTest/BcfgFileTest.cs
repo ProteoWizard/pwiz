@@ -130,6 +130,7 @@ namespace SkylineBatchTest
         {
             ClearConfigs(configManager);
             configManager.Import(importPath, null);
+            configManager.ReplaceSkylineSettings(TestUtils.GetTestSkylineSettings());
             Assert.AreEqual(expectedConfigs.Count, configManager.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.ConfigNamesAsObjectArray().Length}.");
             Assert.AreEqual(true, configManager.IsConfigValid(0), "Expected imported configuration to be valid");
             Assert.AreEqual(true, configManager.ConfigListEquals(expectedConfigs), $"Configurations did not have same values as expected configurations: {Path.GetFileName(importPath)}");
