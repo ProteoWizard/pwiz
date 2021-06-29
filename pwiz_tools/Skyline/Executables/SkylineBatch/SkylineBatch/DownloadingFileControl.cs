@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -86,7 +87,23 @@ namespace SkylineBatch
 
         private void textPath_TextChanged(object sender, EventArgs e)
         {
-            if (Server != null && !textPath.Text.Equals(ServerPath()))
+            // data server paths do not have file names and can always be changed
+            if (_isDataServer || Server == null)
+                return;
+
+            bool fileNameChanged;
+            try
+            {
+                var fileName = System.IO.Path.GetFileName(ServerPath());
+                fileNameChanged = !textPath.Text.EndsWith("\\" + fileName);
+            }
+            catch (Exception)
+            {
+                // assume name was changed if path could not be compared
+                fileNameChanged = true;
+            }
+
+            if (fileNameChanged)
             {
                 var newText = textPath.Text;
                 textPath.Text = ServerPath();
