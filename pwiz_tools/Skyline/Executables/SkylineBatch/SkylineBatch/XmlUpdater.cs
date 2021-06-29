@@ -102,7 +102,7 @@ namespace SkylineBatch
             writer.WriteAttributeString(Attr.version, newVersion);
 
 
-            while (!reader.Name.EndsWith("_config"))
+            while (!reader.Name.EndsWith("_config") && !reader.EOF)
             {
                 if (reader.Name == "userSettings" && !reader.IsStartElement())
                     break; // there are no configurations in the file
