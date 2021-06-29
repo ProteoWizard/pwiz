@@ -1715,7 +1715,7 @@ namespace pwiz.Skyline.EditUI
 
             // Skip updating if nothing needs to be changed
             // This should probably be taken out when we add smarter column selection as its currently hard coded for the number of columns
-            if ((isPeptide && gridViewTransitionList.ColumnCount == 10) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
+            if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
                 return;
 
             int rowCount = gridViewTransitionList.RowCount - 1;
@@ -1759,12 +1759,17 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(@"Protein", Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
                 gridViewTransitionList.Columns.Add(@"Description", Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
-                gridViewTransitionList.Columns.Add(@"Label", Resources.PasteDlg_UpdateMoleculeType_Label_Type);
-                gridViewTransitionList.Columns.Add(@"iRT", Resources.PasteDlg_UpdateMoleculeType_iRT);
-                gridViewTransitionList.Columns.Add(@"Decoy", Resources.PasteDlg_UpdateMoleculeType_Decoy);
-                gridViewTransitionList.Columns.Add(@"Library", Resources.PasteDlg_UpdateMoleculeType_Library_Intensity);
-                gridViewTransitionList.Columns.Add(@"Fragment", Resources.PasteDlg_UpdateMoleculeType_Fragment_Name);
+                // These really should be supported but we're not going to use this window in the future and this was causing test
+                // errors
+                //gridViewTransitionList.Columns.Add(@"Label", Resources.PasteDlg_UpdateMoleculeType_Label_Type);
+                //gridViewTransitionList.Columns.Add(@"iRT", Resources.PasteDlg_UpdateMoleculeType_iRT);
+                //gridViewTransitionList.Columns.Add(@"Decoy", Resources.PasteDlg_UpdateMoleculeType_Decoy);
+                //gridViewTransitionList.Columns.Add(@"Library", Resources.PasteDlg_UpdateMoleculeType_Library_Intensity);
+                //gridViewTransitionList.Columns.Add(@"Fragment", Resources.PasteDlg_UpdateMoleculeType_Fragment_Name);
 
+                // Code designed to be used with the commented out headers that will only show the default headers upon
+                // opening a new document
+                /*
                 // Makes an array of the headers which we want to show by default
                 string[] defaultCol = new string[5];
                 defaultCol[0] = @"Peptide";
@@ -1793,6 +1798,7 @@ namespace pwiz.Skyline.EditUI
                         }
                     }
                 }
+                */
             }
             else
             {
