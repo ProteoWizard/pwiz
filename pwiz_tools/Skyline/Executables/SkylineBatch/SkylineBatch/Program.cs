@@ -45,6 +45,7 @@ namespace SkylineBatch
         // Parameters for running tests
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static string TestDirectory { get; set; }       
+        public static readonly string TEST_VERSION = "1000.0.0.0";
 
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
@@ -184,7 +185,8 @@ namespace SkylineBatch
                     _version = string.Empty;
                 }
             }
-
+            if (FunctionalTest)
+                _version = TEST_VERSION;
             Settings.Default.UpdateIfNecessary(_version);
         }
 

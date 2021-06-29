@@ -488,7 +488,14 @@ namespace SharedBatch
                 {
                     reader.Dispose();
                     stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, null);
+                    var newFile = getUpdatedXml(filePath, installedVersion);
+                    if(newFile == null)
+                    {
+                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
+                            filePath));
+                        return new List<IConfig>();
+                    }
+                    return ImportFrom(newFile, installedVersion, null);
                 }
                 // check that the configuration file is not newer than the program version
                 var oldVersion = new Version(fileVersion);

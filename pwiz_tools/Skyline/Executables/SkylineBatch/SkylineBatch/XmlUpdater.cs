@@ -68,12 +68,23 @@ namespace SkylineBatch
 
         public static string GetUpdatedXml(string oldFile, string newVersion)
         {
+            var stream = new FileStream(oldFile, FileMode.Open);
+            var reader = XmlReader.Create(stream);
+
+            while (!reader.Name.Equals("ConfigList"))
+            {
+                if (reader.EOF)
+                {
+                    reader.Dispose();
+                    stream.Dispose();
+                    return null;
+                }
+                reader.Read();
+            }
+
             Guid guid = Guid.NewGuid();
             string uniqueFileName = guid + TextUtil.EXT_TMP;
             var filePath = Path.Combine(Path.GetDirectoryName(oldFile) ?? string.Empty, uniqueFileName);
-
-            var stream = new FileStream(oldFile, FileMode.Open);
-            var reader = XmlReader.Create(stream);
             var file = File.Create(filePath);
             var streamWriter = new StreamWriter(file);
             XmlWriterSettings settings = new XmlWriterSettings();
@@ -81,8 +92,6 @@ namespace SkylineBatch
             settings.NewLineChars = Environment.NewLine;
             XmlWriter writer = XmlWriter.Create(streamWriter, settings);
 
-            while (!reader.Name.Equals("ConfigList"))
-                reader.Read();
             var oldConfigFile = reader.GetAttribute(OLD_XML_TAGS.SavedConfigsFilePath);
             var oldFolder = reader.GetAttribute(OLD_XML_TAGS.SavedPathRoot);
             if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
@@ -100,10 +109,14 @@ namespace SkylineBatch
                 reader.Read();
             }
 
+            var hasConfigs = false;
             while (reader.IsStartElement())
             {
                 if (reader.Name.EndsWith("_config"))
+                {
+                    hasConfigs = true;
                     WriteNewConfig(reader, writer);
+                }
 
                 reader.Read();
                 reader.Read();
@@ -115,6 +128,13 @@ namespace SkylineBatch
             file.Dispose();
             reader.Dispose();
             stream.Dispose();
+
+            // no configurations were found to import
+            if (!hasConfigs)
+            {
+                File.Delete(filePath);
+                return null;
+            }
 
             return filePath;
         }
