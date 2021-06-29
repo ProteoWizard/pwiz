@@ -164,17 +164,17 @@ namespace SkylineBatch
                     if (entryAssembly != null)
                     {
                         // custom attribute
-                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
                         // Play it safe with a null check no matter what ReSharper thinks
                         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                         if (attrs != null && attrs.Length > 0)
                         {
-                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                            productVersion = ((AssemblyFileVersionAttribute)attrs[0]).Version;
                         }
                         else
                         {
                             // win32 version info
-                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).FileVersion?.Trim();
                         }
                     }
 
