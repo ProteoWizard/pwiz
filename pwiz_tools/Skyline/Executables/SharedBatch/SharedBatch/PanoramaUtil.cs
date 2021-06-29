@@ -584,14 +584,16 @@ namespace SharedBatch
         public string DownloadStringAsync(Uri queryUri, string username, string password, CancellationToken cancelToken)
         {
             string data = null;
-
+            Exception error = null;
             using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
             {
                 bool finishedDownloading = false;
                 webClient.DownloadStringAsync(queryUri);
                 webClient.DownloadStringCompleted += (sender, e) =>
                 {
-                    data = e.Result;
+                    error = e.Error;
+                    if (error == null)
+                        data = e.Result;
                     finishedDownloading = true;
                 };
                 while (!finishedDownloading)
@@ -600,6 +602,8 @@ namespace SharedBatch
                         webClient.CancelAsync();
                 }
             }
+            if (error != null)
+                throw error;
             return data;
         }
 

@@ -30,9 +30,9 @@ namespace SkylineBatchTest
         {
             caller.WaitForShownForm(configForm);
             configForm.textConfigName.Text = configName;
-            configForm.templateFileControl.Text = Path.Combine(directory, "emptyTemplate.sky");
+            configForm.templateControl.SetPath(Path.Combine(directory, "emptyTemplate.sky"));
             configForm.textAnalysisPath.Text = Path.Combine(directory, "analysisFolder");
-            configForm.textDataPath.Text = Path.Combine(directory, "emptyData");
+            configForm.dataControl.SetPath(Path.Combine(directory, "emptyData"));
         }
 
         public static void CheckConfigs(int total, int invalid, MainForm mainForm, string messsageOne = "", string messageTwo = "")

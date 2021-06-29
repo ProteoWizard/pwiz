@@ -35,12 +35,13 @@ namespace SkylineBatch
         {
             if (servers == null)
                 servers = _fileList.Keys.ToList();
+            if (servers.Count == 0) return;
 
             var serverNum = 0.0;
-            doOnProgress(0,
-                (int)(1.0 / servers.Count * 100));
             foreach (var server in servers)
             {
+                doOnProgress((int)serverNum / servers.Count * 100,
+                    (int)(serverNum + 1.0) / servers.Count * 100);
                 if (cancelToken.IsCancellationRequested) break;
                 try
                 {
@@ -52,8 +53,6 @@ namespace SkylineBatch
                 }
 
                 serverNum++;
-                doOnProgress((int)serverNum / servers.Count * 100,
-                    (int)(serverNum + 1.0) / servers.Count * 100);
             }
         }
 
@@ -78,62 +77,70 @@ namespace SkylineBatch
 
         public ConnectedFileInfo GetFileInfo(Server server, CancellationToken cancelToken)
         {
-            var zipFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
-            var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
-            var panoramaServerUri =  new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
-
-            var idQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", panoramaFolder,
+            var downloadingFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
+            Uri webdavUri = null;
+            if (downloadingFileName == null) // this is not a zipped Skyline file 
+            {
+                downloadingFileName = Path.GetFileName(server.URI.LocalPath);
+                webdavUri = server.URI;
+            }
+            else
+            {
+                var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
+                var panoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
+                var idQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", panoramaFolder,
                 "selectRows", "schemaName=targetedms&query.queryName=runs&query.Deleted~eq=false&query.Status~isblank&query.columns=Id,FileName", true);
 
 
 
-            var webClient = new WebPanoramaClient(panoramaServerUri);
-            var jsonAsString = webClient.DownloadStringAsync(idQuery, server.Username, server.Password, cancelToken);
-            if (cancelToken.IsCancellationRequested) return null;
+                var webClient = new WebPanoramaClient(panoramaServerUri);
+                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.Username, server.Password, cancelToken);
+                if (cancelToken.IsCancellationRequested) return null;
 
-            var id = -1;
-            var panoramaJsonObject = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
-            var rows = panoramaJsonObject.rows;
-            foreach (var row in rows)
-            {
-                if (row.FileName.Equals(zipFileName))
-                    id = row.Id;
-            }
-
-            var downloadSkypUri =
-                PanoramaUtil.CallNewInterface(panoramaServerUri, "targetedms", panoramaFolder, "downloadDocument", $"id={id}&view=skyp");
-
-            var tmpFile = Path.GetTempFileName();
-
-            using (var wc = new UTF8WebClient())
-            {
-                if (!string.IsNullOrEmpty(server.Username) && !string.IsNullOrEmpty(server.Password))
+                var id = -1;
+                var panoramaJsonObject = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
+                var rows = panoramaJsonObject.rows;
+                foreach (var row in rows)
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.Username, server.Password));
+                    if (row.FileName.Equals(downloadingFileName))
+                        id = row.Id;
                 }
-                
-                wc.DownloadFile(downloadSkypUri, tmpFile);
-            }
 
-            Uri webdavUri = null;
-            using (var fileStream = new FileStream(tmpFile, FileMode.Open, FileAccess.Read))
-            {
-                using (var streamReader = new StreamReader(fileStream))
+                var downloadSkypUri =
+                    PanoramaUtil.CallNewInterface(panoramaServerUri, "targetedms", panoramaFolder, "downloadDocument", $"id={id}&view=skyp");
+
+                var tmpFile = Path.GetTempFileName();
+
+                using (var wc = new UTF8WebClient())
                 {
-                    while (!streamReader.EndOfStream)
+                    if (!string.IsNullOrEmpty(server.Username) && !string.IsNullOrEmpty(server.Password))
                     {
-                        var line = streamReader.ReadLine();
-                        if (!string.IsNullOrEmpty(line))
-                            webdavUri = new Uri(line);
+                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.Username, server.Password));
+                    }
+
+                    wc.DownloadFile(downloadSkypUri, tmpFile);
+                }
+
+                using (var fileStream = new FileStream(tmpFile, FileMode.Open, FileAccess.Read))
+                {
+                    using (var streamReader = new StreamReader(fileStream))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            var line = streamReader.ReadLine();
+                            if (!string.IsNullOrEmpty(line))
+                                webdavUri = new Uri(line);
+                        }
                     }
                 }
-            }
-            File.Delete(tmpFile);
+                File.Delete(tmpFile);
 
-            if (webdavUri == null)
-                throw new Exception("Could not parse skyp file.");
-            var downloadServer = new Server(webdavUri, server.Username, server.Password);
-            var fileName = zipFileName;
+                if (webdavUri == null)
+                    throw new Exception("Could not parse skyp file.");
+            }
+
+            var downloadServer = new Server(webdavUri, server.Username, server.Password, server.Encrypt);
+            var fileName = downloadingFileName;
             var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }

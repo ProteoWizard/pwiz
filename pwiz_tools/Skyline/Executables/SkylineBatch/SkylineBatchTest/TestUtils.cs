@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Linq;
 using System.Threading;
+using SharedBatch.Properties;
 
 namespace SkylineBatchTest
 {
@@ -85,7 +86,7 @@ namespace SkylineBatchTest
                 else if ("ReplicateNamingPattern".Equals(variable))
                     namingPattern = (string)changedVariables[variable];
             }
-            return new MainSettings(template, analysisFolder, dataFolder, null, annotationsFile, namingPattern);
+            return new MainSettings(template, analysisFolder, dataFolder, null, annotationsFile, null, namingPattern);
         }
 
         public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
@@ -170,7 +171,7 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty, string.Empty);
+            return new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
@@ -192,7 +193,7 @@ namespace SkylineBatchTest
         public static ReportInfo GetTestReportInfo()
         {
             return new ReportInfo("UniqueReport", false, GetTestFilePath("UniqueReport.skyr"),
-                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, false);
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, new Dictionary<string, PanoramaFile>(), false);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
@@ -221,7 +222,7 @@ namespace SkylineBatchTest
         public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
         {
             var main = new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"),
-                GetTestFilePath("emptyData"), null, GetTestFilePath("fakeAnnotations.csv"), "testNamingPattern");
+                GetTestFilePath("emptyData"), null, GetTestFilePath("fakeAnnotations.csv"), null, "testNamingPattern");
             var file = FileSettings.FromUi("5", "4", "3", true, true, true);
             var refine = new RefineSettings(new RefineInputObject() 
                 {
@@ -234,8 +235,8 @@ namespace SkylineBatchTest
             var reportList = new List<ReportInfo>();
             var script = new List<Tuple<string, string>>()
                 {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
-            reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, false));
-            reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, true));
+            reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), false));
+            reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), true));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
             return new SkylineBatchConfig(name, true, DateTime.Now, main, file, refine, reports, skyline);
@@ -293,6 +294,12 @@ namespace SkylineBatchTest
         public static void InitializeRInstallation()
         {
             Assert.IsTrue(RInstallations.FindRDirectory());
+        }
+
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = SkylineBatchConfig.ReadXml;
+            ConfigList.Version = "21.1.1.171";
         }
 
         public static List<string> GetAllLogFiles(string directory = null)
