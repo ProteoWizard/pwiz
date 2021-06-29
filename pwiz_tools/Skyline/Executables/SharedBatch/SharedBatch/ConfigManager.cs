@@ -123,13 +123,7 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var updatedConfigs = new ConfigList();
-                foreach (var config in _configList)
-                {
-                    updatedConfigs.Add(config);
-                }
-
-                Settings.Default.ConfigList = updatedConfigs;
+                Settings.Default.SetConfigList(_configList.ToList());
                 Settings.Default.Save();
             }
         }
@@ -885,6 +879,7 @@ namespace SharedBatch
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
+                SaveConfigList();
             }
         }
 
