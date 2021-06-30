@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -31,7 +32,7 @@ namespace SharedBatch.Properties
 {
     public sealed partial class Settings
     {
-
+        
         [UserScopedSetting]
         public ConfigList ConfigList
         {
@@ -46,6 +47,14 @@ namespace SharedBatch.Properties
                 return list;
             }
             set => this["ConfigList"] = value; // Not L10N
+        }
+
+        public void SetConfigList(List<IConfig> configs)
+        {
+            var settingsConfigList = new ConfigList();
+            foreach (var config in configs)
+                settingsConfigList.Add(config);
+            Default.ConfigList = settingsConfigList;
         }
 
         [UserScopedSetting]
@@ -80,6 +89,55 @@ namespace SharedBatch.Properties
             }
             set => this["RVersions"] = value; // Not L10N
         }
+
+        // Upgrades the settings from the previous version and rewrites the XML to the current version
+        public void Update(string oldXmlPath, string newVersion, string appName, XmlUpdater updater)
+        {
+            Upgrade();
+            var newXmlPath = string.Empty;
+            try
+            {
+                newXmlPath = updater(oldXmlPath, newVersion);
+                var configList = new ConfigList();
+                using (var stream = new FileStream(newXmlPath, FileMode.Open))
+                {
+                    using (var reader = XmlReader.Create(stream))
+                    {
+                        while (!Equals(reader.Name, "config_list") && !reader.EOF)
+                            reader.Read();
+                        configList.ReadXml(reader);
+                    }
+                }
+                Default.ConfigList = configList;
+                Default.Save();
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error(e.Message, e);
+                var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                var message = string.Format(
+                    Resources
+                        .Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
+                    appName);
+                File.Copy(oldXmlPath, newFileName, true);
+                File.Delete(oldXmlPath);
+                message += Environment.NewLine + Environment.NewLine +
+                           string.Format(
+                               Resources
+                                   .Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                               appName) +
+                           Environment.NewLine +
+                           newFileName;
+
+                MessageBox.Show(message);
+            }
+            finally
+            {
+                if (File.Exists(newXmlPath))
+                    File.Delete(newXmlPath);
+            }
+        }
     }
 
     public class ConfigList : Collection<IConfig>, IXmlSerializable
@@ -88,6 +146,8 @@ namespace SharedBatch.Properties
 
         public static Importer Importer;
 
+        public static string Version;
+
         public XmlSchema GetSchema()
         {
             return null;
@@ -95,11 +155,6 @@ namespace SharedBatch.Properties
 
         public void ReadXml(XmlReader reader)
         {
-            if (Importer == null)
-            {
-                throw new Exception("Must specify Importer before configurations are loaded.");
-            }
-
             var isEmpty = reader.IsEmptyElement;
 
             // Read past the property element
@@ -116,15 +171,23 @@ namespace SharedBatch.Properties
             var message = new StringBuilder();
             while (reader.IsStartElement())
             {
-                try
+                if (Importer != null)
                 {
-                    list.Add(Importer(reader));
+                    try
+                    {
+                        list.Add(Importer(reader));
+                    }
+                    catch (ArgumentException e)
+                    {
+                        message.Append(e.Message + Environment.NewLine);
+                    }
                 }
-                catch (ArgumentException e)
+                else
                 {
-                    message.Append(e.Message + Environment.NewLine);
+                    // this should never happen
+                    throw new Exception("Must specify Importer before configurations are loaded.");
                 }
-                
+
                 reader.Read();
             }
 
@@ -136,10 +199,23 @@ namespace SharedBatch.Properties
 
             if (message.Length > 0)
                 MessageBox.Show(message.ToString(), Resources.ConfigList_ReadXml_Load_Configurations_Error, MessageBoxButtons.OK);
+
+        }
+
+        enum Attr
+        {
+            version
         }
 
         public void WriteXml(XmlWriter writer)
         {
+            if (string.IsNullOrEmpty(Version))
+            {
+                // this should never happen
+                throw new Exception("Must specify version before configurations are saved.");
+            }
+
+            writer.WriteAttributeString(Attr.version, Version);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

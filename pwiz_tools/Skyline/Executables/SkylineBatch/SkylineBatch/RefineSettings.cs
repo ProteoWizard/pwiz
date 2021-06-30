@@ -124,40 +124,29 @@ namespace SkylineBatch
             return didReplace;
         }
 
-        #region Read/Write XML
-
-        private enum Attr
+        public RefineSettings ForcePathReplace(string oldRoot, string newRoot)
         {
-            RemoveDecoys,
-            RemoveResults,
-            OutputFilePath
-        };
+            var path = !string.IsNullOrEmpty(OutputFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, OutputFilePath) : string.Empty;
+            return new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, path);
+        }
+
+        #region Read/Write XML
 
         public static RefineSettings ReadXml(XmlReader reader)
         {
-            if (!reader.Name.Equals("refine_settings"))
-            {
-                // This is an old configuration with no refine settings
-                return new RefineSettings(new RefineInputObject(), false, false,
-                    string.Empty);
-            }
-            var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
-            var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
+            var removeDecoys = reader.GetBoolAttribute(XML_TAGS.remove_decoys);
+            var removeResults = reader.GetBoolAttribute(XML_TAGS.remove_results);
+            var outputFilePath = reader.GetAttribute(XML_TAGS.output_file_path);
             var commandList = new List<Tuple<RefineVariable, string>>();
-            while (reader.IsStartElement() && !reader.IsEmptyElement)
+            if (reader.ReadToDescendant(XMLElements.COMMAND_ARGUMENT))
             {
-                if (reader.Name == "command_value")
+                do
                 {
-                    var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), tupleItems[0].Trim());
-                    var value = tupleItems[1].Trim();
+                    var variable =
+                        (RefineVariable) Enum.Parse(typeof(RefineVariable), reader.GetAttribute(XML_TAGS.name));
+                    var value = reader.GetAttribute(XML_TAGS.value);
                     commandList.Add(new Tuple<RefineVariable, string>(variable, value));
-                }
-                else
-                {
-                    reader.Read();
-                }
+                } while (reader.ReadToNextSibling(XMLElements.COMMAND_ARGUMENT));
             }
             var commandValues = RefineInputObject.FromInvariantCommandList(commandList);
             return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
@@ -165,13 +154,19 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("refine_settings");
-            writer.WriteAttribute(Attr.RemoveDecoys, RemoveDecoys);
-            writer.WriteAttribute(Attr.RemoveResults, RemoveResults);
-            writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
+            writer.WriteStartElement(XMLElements.REFINE_SETTINGS);
+            writer.WriteAttribute(XML_TAGS.remove_decoys, RemoveDecoys);
+            writer.WriteAttribute(XML_TAGS.remove_results, RemoveResults);
+            writer.WriteAttributeIfString(XML_TAGS.output_file_path, OutputFilePath);
             var commandList = _commandValues.AsCommandList(CultureInfo.InvariantCulture);
             foreach (var commandValue in commandList)
-                writer.WriteElementString("command_value", commandValue);
+            {
+                writer.WriteStartElement(XMLElements.COMMAND_ARGUMENT);
+                writer.WriteAttributeIfString(XML_TAGS.name, commandValue.Item1.ToString());
+                var value = !string.IsNullOrEmpty(commandValue.Item2) ? commandValue.Item2 : true.ToString();
+                writer.WriteAttributeIfString(XML_TAGS.value, value);
+                writer.WriteEndElement();
+            }
             writer.WriteEndElement();
         }
         #endregion

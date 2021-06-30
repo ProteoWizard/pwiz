@@ -58,9 +58,9 @@ namespace SharedBatch
         {
             get
             {
-                if (radioButtonSkyline.Enabled && radioButtonSkyline.Checked)
+                if (radioButtonSkyline.Checked)
                     return SkylineType.Skyline;
-                if (radioButtonSkylineDaily.Enabled && radioButtonSkylineDaily.Checked)
+                if (radioButtonSkylineDaily.Checked)
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;

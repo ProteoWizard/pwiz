@@ -37,6 +37,7 @@ namespace SharedBatch
                 try
                 {
                     valid = Directory.Exists(Path.GetDirectoryName(path));
+                    Directory.CreateDirectory(path);
                 }
                 catch (Exception)
                 {

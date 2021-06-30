@@ -61,7 +61,6 @@ using SharedBatch.Properties;
         public Logger(string logFilePath, string logName, bool initialize)
         {
             var logFolder = FileUtil.GetDirectory(logFilePath);
-            Directory.CreateDirectory(logFolder);
 
             InitializeErrorFormats();
 
@@ -108,6 +107,7 @@ using SharedBatch.Properties;
 
         public void Init()
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
 
@@ -159,34 +159,45 @@ using SharedBatch.Properties;
         private int LastPercent;
         private DateTime LastLogTime;
         private const int MIN_SECONDS_BETWEEN_LOGS = 4;
+        private object _percentLock = new object();
 
 
         public void LogPercent(int percent)
         {
-            if (percent < 0)
+            lock (_percentLock)
             {
-                LastPercent = percent;
-            }
-            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
-                percent != LastPercent)
-            {
-                if (percent == 0 && LastPercent < 0)
+                if (percent < 0 || percent < LastPercent || percent == 100)
+                    return;
+                if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                    percent != LastPercent)
                 {
-                    LastLogTime = DateTime.Now;
-                    LastPercent = 0;
-                }
-                else if (percent == 100)
-                {
-                    if (LastPercent != 0) Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-                    LastPercent = -1;
-                }
-                else
-                {
-                    LastPercent = percent;
+                    // do not log 0%, gives fast operations a chance to skip percent logging
+                    if (percent == 0)
+                    {
+                        if (LastPercent == -2)
+                        {
+                            LastPercent = -1;
+                            LastLogTime = DateTime.Now;
+                        }
+
+                        return;
+                    }
+
                     LastLogTime = DateTime.Now;
                     Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = Math.Max(LastPercent, percent);
                 }
+            }
+        }
 
+        public void StopLogPercent(bool completed)
+        {
+            lock (_percentLock)
+            {
+                if (completed && LastPercent >= 0)
+                    Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+                LastPercent = -2;
+                LastLogTime = DateTime.MinValue;
             }
         }
 
