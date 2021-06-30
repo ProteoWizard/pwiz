@@ -99,8 +99,8 @@ namespace SkylineTester
             "CommonTest.dll", "TestConnected.dll", "TestPerf.dll"
         };
 
-        private static readonly string[] FORMS_DLLS = {"TestFunctional.dll", "TestTutorial.dll"};
-        private static readonly string[] TUTORIAL_DLLS = {"TestTutorial.dll", "TestPerf.dll"};
+        private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
+        private static readonly string[] TUTORIAL_DLLS = { "TestTutorial.dll", "TestPerf.dll" };
 
         private readonly string _resultsDir;
         private readonly string _openFile;
@@ -361,11 +361,11 @@ namespace SkylineTester
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
 
-//                    var focusNode = new TreeNode("Focus tests");
-//                    focusNode.Nodes.Add(new TreeNode("Mzml speed", new []{new TreeNode("x")}));
-//                    focusNode.Nodes.Add(new TreeNode("Gene name", new []{new TreeNode("y")}));
-//                    testsTree.Nodes.Add(focusNode);
-//                    focusNode.Expand();
+                    //                    var focusNode = new TreeNode("Focus tests");
+                    //                    focusNode.Nodes.Add(new TreeNode("Mzml speed", new []{new TreeNode("x")}));
+                    //                    focusNode.Nodes.Add(new TreeNode("Gene name", new []{new TreeNode("y")}));
+                    //                    testsTree.Nodes.Add(focusNode);
+                    //                    focusNode.Expand();
                 });
 
                 var tutorialTests = new List<string>();
@@ -423,7 +423,7 @@ namespace SkylineTester
                     var methods = type.GetMethods();
                     foreach (var method in methods)
                     {
-                        if (HasAttribute(method, "TestMethodAttribute") && 
+                        if (HasAttribute(method, "TestMethodAttribute") &&
                             (filterAttribute == null || !HasAttribute(method, filterAttribute)) &&
                             (filterName == null || method.Name.Contains(filterName)))
                             yield return method.Name;
@@ -444,7 +444,7 @@ namespace SkylineTester
         private static bool IsNightlyRun()
         {
             // Uncomment for testing
-//            return true;
+            //            return true;
 
             bool isNightly;
             try
@@ -456,8 +456,8 @@ namespace SkylineTester
                 var results = search.Get().GetEnumerator();
                 results.MoveNext();
                 var queryObj = results.Current;
-                var parentId = (uint) queryObj["ParentProcessId"];
-                var parent = Process.GetProcessById((int) parentId);
+                var parentId = (uint)queryObj["ParentProcessId"];
+                var parent = Process.GetProcessById((int)parentId);
                 // Only go interactive if our parent process is not named "SkylineNightly"
                 isNightly = CultureInfo.InvariantCulture.CompareInfo.IndexOf(parent.ProcessName, "SkylineNightly", CompareOptions.IgnoreCase) >= 0;
             }
@@ -586,7 +586,7 @@ namespace SkylineTester
             int defaultIndex = int.MaxValue;
             for (int i = 0; i < buildDirs.Length; i++)
             {
-                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[i];
+                var item = (ToolStripMenuItem)selectBuildMenuItem.DropDownItems[i];
                 if (buildDirs[i] == null)
                     item.Visible = false;
                 else
@@ -597,7 +597,7 @@ namespace SkylineTester
             }
 
             // Select first available build if previously selected build doesn't exist.
-            SelectBuild(buildDirs[(int) SelectedBuild] != null ? SelectedBuild : (BuildDirs) defaultIndex);
+            SelectBuild(buildDirs[(int)SelectedBuild] != null ? SelectedBuild : (BuildDirs)defaultIndex);
         }
 
         private static void CheckBuildDirExistence(string[] buildDirs)
@@ -617,11 +617,11 @@ namespace SkylineTester
             SelectedBuild = select;
 
             // Clear all checks.
-            foreach (var buildDirType in (BuildDirs[]) Enum.GetValues(typeof (BuildDirs)))
+            foreach (var buildDirType in (BuildDirs[])Enum.GetValues(typeof(BuildDirs)))
             {
                 if ((int)buildDirType < selectBuildMenuItem.DropDownItems.Count)
                 {
-                    var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
+                    var item = (ToolStripMenuItem)selectBuildMenuItem.DropDownItems[(int)buildDirType];
                     item.Checked = false;
                 }
             }
@@ -629,7 +629,7 @@ namespace SkylineTester
             // Check the selected build.
             if ((int)select >= 0 && (int)select < selectBuildMenuItem.DropDownItems.Count)
             {
-                var selectedItem = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) select];
+                var selectedItem = (ToolStripMenuItem)selectBuildMenuItem.DropDownItems[(int)select];
                 selectedItem.Visible = true;
                 selectedItem.Checked = true;
                 selectedBuild.Text = selectedItem.Text;
@@ -642,7 +642,7 @@ namespace SkylineTester
         public string GetSelectedBuildDir()
         {
             var buildDirs = GetPossibleBuildDirs();
-            return buildDirs[(int) SelectedBuild];
+            return buildDirs[(int)SelectedBuild];
         }
 
         private string GetZipPath(int architecture)
@@ -793,7 +793,7 @@ namespace SkylineTester
                         graphContainer.FindTest.AddRange(findTest);
 
                         var fillGreen = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
-//                        var fillYellow = new Fill(Color.FromArgb(237, 125, 49), Color.FromArgb(255, 192, 0), -90);
+                        //                        var fillYellow = new Fill(Color.FromArgb(237, 125, 49), Color.FromArgb(255, 192, 0), -90);
                         var fillPurple = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
                         var fillBlue = new Fill(Color.FromArgb(91, 155, 213), Color.LightBlue, -90);
                         if (minorMemoryPoints != null && minorMemoryPoints.Count > 0)
@@ -972,14 +972,14 @@ namespace SkylineTester
 
         private void open_Click(object sender, EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog {Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr"};
+            var openFileDialog = new OpenFileDialog { Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr" };
             if (openFileDialog.ShowDialog() != DialogResult.Cancel)
                 LoadSettingsFromFile(openFileDialog.FileName);
         }
 
         private void save_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog {Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr"};
+            var saveFileDialog = new SaveFileDialog { Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr" };
             if (saveFileDialog.ShowDialog() != DialogResult.Cancel)
                 Save(saveFileDialog.FileName);
         }
@@ -1380,106 +1380,106 @@ namespace SkylineTester
 
         #region Accessors
 
-        public ToolStripMenuItem AccessInternet             { get { return accessInternet; } }
-        public TextBox          BranchUrl                   { get { return branchUrl; } }
-        public CheckBox         Build32                     { get { return build32; } }
-        public CheckBox         Build64                     { get { return build64; } }
-        public TextBox          BuildRoot                   { get { return buildRoot; } }
-        public RadioButton      BuildTrunk                  { get { return buildTrunk; } }
-        public Button           ButtonDeleteBuild           { get { return buttonDeleteBuild; } }
-        public Button           ButtonOpenLog               { get { return buttonOpenLog; } }
-        public Button           ButtonViewLog               { get { return buttonViewLog; } }
-        public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
-        public ComboBox         ComboRunStats               { get { return comboBoxRunStats; } }
-        public ComboBox         ComboRunStatsCompare        { get { return comboBoxRunStatsCompare; } }
-        public CommandShell     CommandShell                { get { return commandShell; } }
-        public DataGridView     DataGridRunStats            { get { return dataGridRunStats; } }
-        public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
-        public RichTextBox      ErrorConsole                { get { return errorConsole; } }
-        public ComboBox         FormsLanguage               { get { return formsLanguage; } }
-        public DataGridView     FormsGrid                   { get { return formsGrid; } }
-        public ToolStripLabel   FormsSeenPercent            { get { return labelFormsSeenPercent; } }
-        public ZedGraphControl  GraphDuration               { get { return graphDuration; } }
-        public ZedGraphControl  GraphFailures               { get { return graphFailures; } }
-        public ZedGraphControl  GraphMemory                 { get { return graphMemory; } }
-        public ZedGraphControl  GraphMemoryHistory          { get { return graphMemoryHistory; } }
-        public ZedGraphControl  GraphTestsRun               { get { return graphTestsRun; } }
-        public Label            LabelDuration               { get { return labelDuration; } }
-        public Label            LabelFailures               { get { return labelFailures; } }
-        public Label            LabelLeaks                  { get { return labelLeaks; } }
-        public Label            LabelSpecifyPath            { get { return labelSpecifyPath; } }
-        public Label            LabelTestsRun               { get { return labelTestsRun; } }
-        public TextBox          NightlyBranchUrl            { get { return nightlyBranchUrl; } }
-        public RadioButton      NightlyBuildTrunk           { get { return nightlyBuildTrunk; } }
-        public DomainUpDown     NightlyBuildType            { get { return nightlyBuildType; } }
-        public Button           NightlyDeleteRun            { get { return nightlyDeleteRun; } }
-        public NumericUpDown    NightlyDuration             { get { return nightlyDuration; } }
-        public CheckBox         NightlyExit                 { get { return nightlyExit; } }
-        public Label            NightlyLabelDuration        { get { return nightlyLabelDuration; } }
-        public Label            NightlyLabelFailures        { get { return nightlyLabelFailures; } }
-        public Label            NightlyLabelLeaks           { get { return nightlyLabelLeaks; } }
-        public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
-        public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
-        public CheckBox         NightlyRandomize            { get { return nightlyRandomize; } }
-        public CheckBox         NightlyRunIndefinitely      { get { return nightlyRunIndefinitely; } }
-        public Label            NightlyRoot                 { get { return nightlyRoot; } }
-        public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
-        public ComboBox         NightlyRepeat               { get { return nightlyRepeat; } }
-        public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
-        public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
-        public Label            NightlyTestName             { get { return nightlyTestName; } }
-        public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
-        public Button           NightlyViewLog              { get { return nightlyViewLog; } }
-        public bool             NightlyMemoryGraphType      { get { return radioNightlyMemory.Checked; } }
-        public RadioButton      NukeBuild                   { get { return nukeBuild; } }
-        public CheckBox         Offscreen                   { get { return offscreen; } }
-        public ComboBox         OutputJumpTo                { get { return outputJumpTo; } }
-        public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
-        public CheckBox         Pass0                       { get { return pass0; } }
-        public CheckBox         Pass1                       { get { return pass1; } }
-        public RadioButton      ModeTutorialsCoverShots     { get { return modeTutorialsCoverShots; } }
-        public TextBox          PauseStartingPage           { get { return pauseStartingPage; } }
-        public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
-        public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
-        public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
-        public TabPage          QualityPage                 { get { return tabQuality; } }
-        public NumericUpDown    QualityPassCount            { get { return qualityPassCount; } }
-        public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
-        public Label            QualityTestName             { get { return qualityTestName; } }
-        public CheckBox         QualityRunSmallMoleculeVersions { get { return qualityRunSmallMoleculeVersions; } }
-        public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
-        public bool             QualityMemoryGraphType      { get { return radioQualityMemory.Checked; } }
-        public Button           RunBuild                    { get { return runBuild; } }
-        public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
-        public Button           RunForms                    { get { return runForms; } }
-        public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
-        public CheckBox         RunDemoMode                 { get { return runDemoMode; } }
-        public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
-        public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
-        public Button           RunNightly                  { get { return runNightly; } }
-        public Button           RunQuality                  { get { return runQuality; } }
-        public Button           RunTests                    { get { return runTests; } }
-        public Button           RunTutorials                { get { return runTutorials; } }
-        public CheckBox         ShowFormNames               { get { return showFormNames; } }
-        public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
-        public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
-        public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
-        public CheckBox         StartSln                    { get { return startSln; } }
-        public TabControl       Tabs                        { get { return tabs; } }
-        public CheckBox         TestsRunSmallMoleculeVersions { get {  return testsRunSmallMoleculeVersions;} }
-        public CheckBox         TestsRandomize              { get { return randomize; } }
-        public CheckBox         TestsRecordAuditLogs        { get { return recordAuditLogs; } }
-        public ComboBox         TestsRepeatCount            { get { return repeat; } }
-        public MyTreeView       TestsTree                   { get { return testsTree; } }
-        public CheckBox         TestsChinese                { get { return testsChinese; } }
-        public CheckBox         TestsEnglish                { get { return testsEnglish; } }
-        public CheckBox         TestsFrench                 { get { return testsFrench; } }
-        public CheckBox         TestsJapanese               { get { return testsJapanese; } }
-        public CheckBox         TestsTurkish                { get { return testsTurkish; } }
-        public RadioButton      TutorialsDemoMode           { get { return tutorialsDemoMode; } }
-        public ComboBox         TutorialsLanguage           { get { return tutorialsLanguage; } }
-        public MyTreeView       TutorialsTree               { get { return tutorialsTree; } }
-        public RadioButton      UpdateBuild                 { get { return updateBuild; } }
+        public ToolStripMenuItem AccessInternet { get { return accessInternet; } }
+        public TextBox BranchUrl { get { return branchUrl; } }
+        public CheckBox Build32 { get { return build32; } }
+        public CheckBox Build64 { get { return build64; } }
+        public TextBox BuildRoot { get { return buildRoot; } }
+        public RadioButton BuildTrunk { get { return buildTrunk; } }
+        public Button ButtonDeleteBuild { get { return buttonDeleteBuild; } }
+        public Button ButtonOpenLog { get { return buttonOpenLog; } }
+        public Button ButtonViewLog { get { return buttonViewLog; } }
+        public ComboBox ComboOutput { get { return comboBoxOutput; } }
+        public ComboBox ComboRunStats { get { return comboBoxRunStats; } }
+        public ComboBox ComboRunStatsCompare { get { return comboBoxRunStatsCompare; } }
+        public CommandShell CommandShell { get { return commandShell; } }
+        public DataGridView DataGridRunStats { get { return dataGridRunStats; } }
+        public Button DeleteNightlyTask { get { return buttonDeleteNightlyTask; } }
+        public RichTextBox ErrorConsole { get { return errorConsole; } }
+        public ComboBox FormsLanguage { get { return formsLanguage; } }
+        public DataGridView FormsGrid { get { return formsGrid; } }
+        public ToolStripLabel FormsSeenPercent { get { return labelFormsSeenPercent; } }
+        public ZedGraphControl GraphDuration { get { return graphDuration; } }
+        public ZedGraphControl GraphFailures { get { return graphFailures; } }
+        public ZedGraphControl GraphMemory { get { return graphMemory; } }
+        public ZedGraphControl GraphMemoryHistory { get { return graphMemoryHistory; } }
+        public ZedGraphControl GraphTestsRun { get { return graphTestsRun; } }
+        public Label LabelDuration { get { return labelDuration; } }
+        public Label LabelFailures { get { return labelFailures; } }
+        public Label LabelLeaks { get { return labelLeaks; } }
+        public Label LabelSpecifyPath { get { return labelSpecifyPath; } }
+        public Label LabelTestsRun { get { return labelTestsRun; } }
+        public TextBox NightlyBranchUrl { get { return nightlyBranchUrl; } }
+        public RadioButton NightlyBuildTrunk { get { return nightlyBuildTrunk; } }
+        public DomainUpDown NightlyBuildType { get { return nightlyBuildType; } }
+        public Button NightlyDeleteRun { get { return nightlyDeleteRun; } }
+        public NumericUpDown NightlyDuration { get { return nightlyDuration; } }
+        public CheckBox NightlyExit { get { return nightlyExit; } }
+        public Label NightlyLabelDuration { get { return nightlyLabelDuration; } }
+        public Label NightlyLabelFailures { get { return nightlyLabelFailures; } }
+        public Label NightlyLabelLeaks { get { return nightlyLabelLeaks; } }
+        public Label NightlyLabelTestsRun { get { return nightlyLabelTestsRun; } }
+        public ZedGraphControl NightlyGraphMemory { get { return nightlyGraphMemory; } }
+        public CheckBox NightlyRandomize { get { return nightlyRandomize; } }
+        public CheckBox NightlyRunIndefinitely { get { return nightlyRunIndefinitely; } }
+        public Label NightlyRoot { get { return nightlyRoot; } }
+        public ComboBox NightlyRunDate { get { return nightlyRunDate; } }
+        public ComboBox NightlyRepeat { get { return nightlyRepeat; } }
+        public CheckBox NightlyRunPerfTests { get { return nightlyRunPerfTests; } }
+        public DateTimePicker NightlyStartTime { get { return nightlyStartTime; } }
+        public Label NightlyTestName { get { return nightlyTestName; } }
+        public WindowThumbnail NightlyThumbnail { get { return nightlyThumbnail; } }
+        public Button NightlyViewLog { get { return nightlyViewLog; } }
+        public bool NightlyMemoryGraphType { get { return radioNightlyMemory.Checked; } }
+        public RadioButton NukeBuild { get { return nukeBuild; } }
+        public CheckBox Offscreen { get { return offscreen; } }
+        public ComboBox OutputJumpTo { get { return outputJumpTo; } }
+        public SplitContainer OutputSplitContainer { get { return outputSplitContainer; } }
+        public CheckBox Pass0 { get { return pass0; } }
+        public CheckBox Pass1 { get { return pass1; } }
+        public RadioButton ModeTutorialsCoverShots { get { return modeTutorialsCoverShots; } }
+        public TextBox PauseStartingPage { get { return pauseStartingPage; } }
+        public RadioButton PauseTutorialsScreenShots { get { return pauseTutorialsScreenShots; } }
+        public NumericUpDown PauseTutorialsSeconds { get { return pauseTutorialsSeconds; } }
+        public RadioButton QualityChooseTests { get { return qualityChooseTests; } }
+        public TabPage QualityPage { get { return tabQuality; } }
+        public NumericUpDown QualityPassCount { get { return qualityPassCount; } }
+        public RadioButton QualityPassDefinite { get { return qualityPassDefinite; } }
+        public Label QualityTestName { get { return qualityTestName; } }
+        public CheckBox QualityRunSmallMoleculeVersions { get { return qualityRunSmallMoleculeVersions; } }
+        public WindowThumbnail QualityThumbnail { get { return qualityThumbnail; } }
+        public bool QualityMemoryGraphType { get { return radioQualityMemory.Checked; } }
+        public Button RunBuild { get { return runBuild; } }
+        public CheckBox RunBuildVerificationTests { get { return runBuildVerificationTests; } }
+        public Button RunForms { get { return runForms; } }
+        public CheckBox RunFullQualityPass { get { return runFullQualityPass; } }
+        public CheckBox RunDemoMode { get { return runDemoMode; } }
+        public RadioButton RunIndefinitely { get { return runIndefinitely; } }
+        public NumericUpDown RunLoopsCount { get { return runLoopsCount; } }
+        public Button RunNightly { get { return runNightly; } }
+        public Button RunQuality { get { return runQuality; } }
+        public Button RunTests { get { return runTests; } }
+        public Button RunTutorials { get { return runTutorials; } }
+        public CheckBox ShowFormNames { get { return showFormNames; } }
+        public CheckBox ShowMatchingPagesTutorial { get { return showMatchingPagesTutorial; } }
+        public CheckBox ShowFormNamesTutorial { get { return showFormNamesTutorial; } }
+        public RadioButton SkipCheckedTests { get { return skipCheckedTests; } }
+        public CheckBox StartSln { get { return startSln; } }
+        public TabControl Tabs { get { return tabs; } }
+        public CheckBox TestsRunSmallMoleculeVersions { get { return testsRunSmallMoleculeVersions; } }
+        public CheckBox TestsRandomize { get { return randomize; } }
+        public CheckBox TestsRecordAuditLogs { get { return recordAuditLogs; } }
+        public ComboBox TestsRepeatCount { get { return repeat; } }
+        public MyTreeView TestsTree { get { return testsTree; } }
+        public CheckBox TestsChinese { get { return testsChinese; } }
+        public CheckBox TestsEnglish { get { return testsEnglish; } }
+        public CheckBox TestsFrench { get { return testsFrench; } }
+        public CheckBox TestsJapanese { get { return testsJapanese; } }
+        public CheckBox TestsTurkish { get { return testsTurkish; } }
+        public RadioButton TutorialsDemoMode { get { return tutorialsDemoMode; } }
+        public ComboBox TutorialsLanguage { get { return tutorialsLanguage; } }
+        public MyTreeView TutorialsTree { get { return tutorialsTree; } }
+        public RadioButton UpdateBuild { get { return updateBuild; } }
 
         #endregion Accessors
 
@@ -1488,7 +1488,7 @@ namespace SkylineTester
         private void comboBoxOutput_SelectedIndexChanged(object sender, EventArgs e)
         {
             _tabOutput.ClearErrors();
-            commandShell.Load(GetSelectedLog(comboBoxOutput), comboBoxOutput.SelectedIndex == 0,() => _tabOutput.LoadDone());
+            commandShell.Load(GetSelectedLog(comboBoxOutput), comboBoxOutput.SelectedIndex == 0, () => _tabOutput.LoadDone());
         }
 
         private void buttonOpenOutput_Click(object sender, EventArgs e)
@@ -1528,7 +1528,7 @@ namespace SkylineTester
 
         private void selectBuild_Click(object sender, EventArgs e)
         {
-            SelectBuild((BuildDirs) selectBuildMenuItem.DropDownItems.IndexOf((ToolStripMenuItem)sender));
+            SelectBuild((BuildDirs)selectBuildMenuItem.DropDownItems.IndexOf((ToolStripMenuItem)sender));
         }
 
         private void selectBuildMenuOpening(object sender, EventArgs e)
@@ -1848,6 +1848,7 @@ namespace SkylineTester
                     }
                 }
                 formsGrid.Update();
+                formsGrid.Refresh();
             }
             else
             {
@@ -1856,6 +1857,7 @@ namespace SkylineTester
                     row.Visible = true;
                 }
                 formsGrid.Update();
+                formsGrid.Refresh();
             }
         }
 
