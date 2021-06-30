@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -85,7 +87,7 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                //SendAnalyticsHit();
+                SendAnalyticsHit();
             }
 
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
@@ -116,7 +118,7 @@ namespace SkylineBatch
                     var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                     var newFileName = Path.Combine(folderToCopy, "error-user.config");
                     var message = string.Format(
-                        Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
+                        SharedBatch.Properties.Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
                         AppName());
                     if (configFile != null)
                     {
@@ -124,7 +126,7 @@ namespace SkylineBatch
                         File.Delete(configFile);
                         message += Environment.NewLine + Environment.NewLine +
                                    string.Format(
-                                       Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       SharedBatch.Properties.Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
                                        AppName()) +
                                    Environment.NewLine +
                                    newFileName;
@@ -150,9 +152,42 @@ namespace SkylineBatch
 
         private static void InitializeVersion()
         {
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                : string.Empty;
+            if (ApplicationDeployment.IsNetworkDeployed)
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            else
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion ?? string.Empty;
+                }
+                catch (Exception)
+                {
+                    _version = string.Empty;
+                }
+            }
+
+            Settings.Default.UpdateIfNecessary(_version);
         }
 
         private static string GetFirstArg(string[] args)
@@ -160,7 +195,6 @@ namespace SkylineBatch
             string arg;
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
@@ -168,7 +202,6 @@ namespace SkylineBatch
             }
             else
             {
-                _version = string.Empty;
                 arg = args.Length > 0 ? args[0] : string.Empty;
             }
 

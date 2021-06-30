@@ -1622,10 +1622,11 @@ namespace pwiz.SkylineTestFunctional
         private void TestInconsistentMoleculeDescriptions()
         {
             // Check that we handle items with same name but different InChiKey, which is legitimate
+            // Also checks that we handle LipidCreator output where everything is quoted
             var input =
                 "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, Explicit Declustering potential\n" +
-                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M-H],-1,97,-1,,8,NGHMDNPXVRFFGS-IUYQGCFVSA-N,60\n" +
-                "bob,D-Erythrose 4-phosphate,C4H9O7P,[M+H],1,99,1,,8,,60\n";
+                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",\"60\"\n" +
+                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"\",\"60\"\n";
             var docOrig = NewDocument();
             SetClipboardText(input);
 

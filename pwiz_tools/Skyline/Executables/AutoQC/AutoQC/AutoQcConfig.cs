@@ -14,7 +14,7 @@ namespace AutoQC
     [XmlRoot("autoqc_config")]
     public class AutoQcConfig : IConfig
     {
-        private const string AUTOQC_CONFIG = "autoqc_config";
+        public const string AUTOQC_CONFIG = "autoqc_config";
 
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
@@ -54,6 +54,12 @@ namespace AutoQC
         {
             replacedConfig = this;
             return false;
+        }
+
+        public IConfig ForcePathReplace(string oldRoot, string newRoot)
+        {
+            // method used in SkylineBatch to create valid configurations with no files on disk (all downloaded later)
+            throw new NotImplementedException();
         }
 
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
@@ -121,10 +127,7 @@ namespace AutoQC
             DateTime.TryParse(reader.GetAttribute(Attr.modified), out dateTime);
             var modified = dateTime;
 
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
+            SharedBatch.XmlUtil.ReadUntilElement(reader);
 
             MainSettings mainSettings = null;
             PanoramaSettings panoramaSettings = null;
