@@ -52,7 +52,7 @@ namespace SkylineBatch
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
+            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, _invalidConfig.LogTestFormat, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // replace old configuration

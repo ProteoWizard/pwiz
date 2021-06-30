@@ -174,7 +174,7 @@ namespace SkylineBatch
                         TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
                         Resources.SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_);
                     var newRefineSettings = RefineSettings.GetPathChanged(replacingConfig.RefineSettings, config.RefineSettings.OutputFilePath);
-                    newConfig = new SkylineBatchConfig(config.Name, replacingConfig.Enabled, DateTime.Now,
+                    newConfig = new SkylineBatchConfig(config.Name, replacingConfig.Enabled, replacingConfig.LogTestFormat, DateTime.Now,
                         replacingConfig.MainSettings,
                         replacingConfig.FileSettings, newRefineSettings, replacingConfig.ReportSettings,
                         replacingConfig.SkylineSettings);
