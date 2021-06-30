@@ -109,7 +109,6 @@ namespace SharedBatch.Properties
                             configList.ReadXml(reader);
                             break;
                         }
-                        configList.ReadXml(reader);
                     }
                 }
                 Default.ConfigList = configList;
