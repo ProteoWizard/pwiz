@@ -1117,21 +1117,20 @@ namespace pwiz.SkylineTestFunctional
             var textCSV9 =
                 "Protein Name,Modified Sequence, Precursor Mz,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
                 "peptides1,PEPTIDER,478.737814,2,16.6,478.737814,2,precursor,precursor\n" +
-                "peptides1, PEPTIDER,478.737814,2,16.6,730.372994,1,y6,y\n" +
-                "peptides1, PEPTIDER,478.737814,2,16.6,633.32023,1,y5,y\n" +
-                "peptides1, PEPTIDER,478.737814,2,16.6,532.272552,1,y4,y\n";
+                "peptides1,PEPTIDER,478.737814,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,532.272552,1,y4,y\n";
             // Check that the logic ignored the headers and looked for matching amino acid sequence and precursor m/z columns
             Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV9, SkylineWindow.Document));
             // Paste in the document to make sure it imports properly
-            // Need to make a new document because of small molecule lists already pasted
+            LoadNewDocument(true);
+            SetClipboardText(textCSV9);
             
-            NewDocument();
-            RunUI(() =>
-            {
-                SetClipboardText(textCSV9);
-                SkylineWindow.Paste();
-            });
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 4);
+            // This will paste in a transition list with headers
+            var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 4);
+
         }
 
         private void TestLabelsNoFormulas()
