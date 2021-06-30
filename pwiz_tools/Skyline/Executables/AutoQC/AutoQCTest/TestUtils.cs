@@ -21,6 +21,7 @@ using System.IO;
 using System.Threading;
 using AutoQC;
 using SharedBatch;
+using SharedBatch.Properties;
 
 namespace AutoQCTest
 {
@@ -145,6 +146,12 @@ namespace AutoQCTest
             throw new Exception(errorMessage);
         }
 
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = AutoQcConfig.ReadXml;
+            AutoQC.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
+            ConfigList.Version = "1000.0.0.0";
+        }
     }
     
     class TestImportContext : ImportContext

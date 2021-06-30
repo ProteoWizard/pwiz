@@ -8,7 +8,7 @@ using SharedBatch.Properties;
 
 namespace AutoQC.Properties
 {
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
 
         [UserScopedSetting]

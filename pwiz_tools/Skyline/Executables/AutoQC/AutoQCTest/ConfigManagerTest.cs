@@ -245,6 +245,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestCloseReopenConfigs()
         {
+            TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new [] { "one", "two", "three", "four" });
