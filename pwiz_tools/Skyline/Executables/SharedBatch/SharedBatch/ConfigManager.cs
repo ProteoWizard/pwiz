@@ -484,63 +484,70 @@ namespace SharedBatch
             // read configs from file
             try
             {
-                var stream = new FileStream(filePath, FileMode.Open);
-                var reader = XmlReader.Create(stream);
-                while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
-                    reader.Read();
-
-                var fileVersion = reader.GetAttribute(Attr.version);
-                if (fileVersion == null)
+                using (var stream = new FileStream(filePath, FileMode.Open))
                 {
-                    reader.Dispose();
-                    stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, null);
-                }
-
-                var oldFolder = reader.GetAttribute(Attr.saved_path_root);
-                if (!string.IsNullOrEmpty(oldFolder))
-                {
-                    var newFolder = string.IsNullOrEmpty(copiedDestination)
-                        ? Path.GetDirectoryName(filePath)
-                        : Path.GetDirectoryName(copiedConfigFile);
-                    AddRootReplacement(oldFolder, newFolder, false, out string oldRoot, out _);
-                    if (!string.IsNullOrEmpty(copiedDestination))
-                        forceReplaceRoot = oldRoot;
-                } else if (!string.IsNullOrEmpty(copiedConfigFile))
-                {
-                    DisplayWarning(string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
-                }
-
-                while (!reader.Name.EndsWith("_config"))
-                {
-                    if (reader.Name == "userSettings" && !reader.IsStartElement())
-                        break; // there are no configurations in the file
-                    reader.Read();
-                }
-
-                while (reader.IsStartElement())
-                {
-                    if (reader.Name.EndsWith("_config"))
+                    using (var reader = XmlReader.Create(stream))
                     {
-                        IConfig config = null;
-                        try
+                        while (reader.Read())
                         {
-                            config = importer(reader);
-                        }
-                        catch (Exception ex)
-                        {
-                            readXmlErrors.Add(ex.Message);
-                        }
-                        
-                        if (config != null)
-                            readConfigs.Add(config);
-                    }
+                            if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
+                            {
+                                var fileVersion = reader.GetAttribute(Attr.version);
+                                if (fileVersion == null)
+                                {
+                                    reader.Dispose(); // Close the file first so that we don't get an exception when it is opened again below.
+                                    stream.Dispose();
+                                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, null);
+                                }
 
-                    reader.Read();
-                    reader.Read();
+                                var oldFolder = reader.GetAttribute(Attr.saved_path_root);
+                                if (!string.IsNullOrEmpty(oldFolder))
+                                {
+                                    var newFolder = string.IsNullOrEmpty(copiedDestination)
+                                        ? Path.GetDirectoryName(filePath)
+                                        : Path.GetDirectoryName(copiedConfigFile);
+                                    AddRootReplacement(oldFolder, newFolder, false, out string oldRoot, out _);
+                                    if (!string.IsNullOrEmpty(copiedDestination))
+                                        forceReplaceRoot = oldRoot;
+                                }
+                                else if (!string.IsNullOrEmpty(copiedConfigFile))
+                                {
+                                    DisplayWarning(string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
+                                }
+
+                                while (!reader.Name.EndsWith("_config"))
+                                {
+                                    if (reader.EOF || reader.Name == "userSettings" && !reader.IsStartElement())
+                                        break; // there are no configurations in the file
+                                    reader.Read();
+                                }
+
+                                while (reader.IsStartElement())
+                                {
+                                    if (reader.Name.EndsWith("_config"))
+                                    {
+                                        IConfig config = null;
+                                        try
+                                        {
+                                            config = importer(reader);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            readXmlErrors.Add(ex.Message);
+                                        }
+
+                                        if (config != null)
+                                            readConfigs.Add(config);
+                                    }
+
+                                    reader.Read();
+                                    reader.Read();
+                                }
+                                break; // We are done reading the config list
+                            }
+                        }
+                    }
                 }
-                reader.Dispose();
-                stream.Dispose();
             }
             catch (Exception e)
             {
@@ -690,7 +697,7 @@ namespace SharedBatch
         }
 
         // TODO (Ali): fix autoQC SavedFilePath
-        enum Attr
+        public enum Attr
         {
             saved_path_root,
             version

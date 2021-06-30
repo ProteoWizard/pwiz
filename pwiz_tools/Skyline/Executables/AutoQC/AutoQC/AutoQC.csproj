@@ -169,7 +169,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="XmlUpdater.cs" />
-    <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net">

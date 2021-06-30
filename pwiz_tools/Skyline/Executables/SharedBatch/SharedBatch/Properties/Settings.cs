@@ -103,8 +103,12 @@ namespace SharedBatch.Properties
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        while (!Equals(reader.Name, "config_list") && !reader.EOF)
-                            reader.Read();
+                        while (reader.Read())
+                        {
+                            if (!reader.IsStartElement("config_list")) continue;
+                            configList.ReadXml(reader);
+                            break;
+                        }
                         configList.ReadXml(reader);
                     }
                 }

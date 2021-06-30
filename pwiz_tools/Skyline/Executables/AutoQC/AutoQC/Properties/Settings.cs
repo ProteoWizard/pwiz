@@ -57,7 +57,12 @@ namespace AutoQC.Properties
             ConfigList.Importer = AutoQcConfig.ReadXml;
             // return if settings are already correct version
             if (Equals(Default.InstalledVersion, currentVersion))
+            {
+                ProgramLog.Info(
+                    $"No config settings update is required. Installed version: {Default.InstalledVersion}; Current version: {currentVersion}");
                 return;
+            }
+
             // get file path of user.config file with old settings
             var xmlVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
             var possibleOldSettingsVersion = xmlVersion != null && xmlVersion.Major > 1
@@ -65,22 +70,48 @@ namespace AutoQC.Properties
                 : "1.0.0.0";
             var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
                 .FilePath;
-            var possibleOldConfigFile = configFile.Replace(currentVersion, possibleOldSettingsVersion);
+            var possibleOldConfigFile = GetOldConfigFile(configFile, currentVersion, possibleOldSettingsVersion);
             // check if old user.config file exists (if it does not, this is a first installation of autoQC)
             if (File.Exists(possibleOldConfigFile))
             {
+                ProgramLog.Info($"Reading old settings from: {possibleOldConfigFile}");
                 // update ConfigList using old user.config
                 if (xmlVersion == null || xmlVersion.Major < 21)
-                    SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, currentVersion, Program.AppName, XmlUpdater.GetUpdatedXml);
-                // update skyline settings of all configuration if settings were very old and still in AutoQC.Properties.Settings
+                {
+                    SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, currentVersion,
+                        Program.AppName, XmlUpdater.GetUpdatedXml);
+                }
+
                 if (migrate)
-                    GetSettingsFromPreviousVersion(possibleOldConfigFile);
+                {
+                    // Update skyline settings of all configuration if settings are old (v 1.1.0.20237 and older)
+                    // and still in AutoQC.Properties.Settings
+                    ProgramLog.Info($"Migrating old Skyline settings from: {possibleOldConfigFile}");
+                    GetSkylineSettingsFromPreviousVersion(possibleOldConfigFile);
+                }
             }
             Default.InstalledVersion = currentVersion;
             Save();
         }
 
-        private void GetSettingsFromPreviousVersion(string fileName)
+        private static string GetOldConfigFile(string defaultConfigFile, string currentVersion, string oldSettingsVersion)
+        {
+            if (defaultConfigFile.Contains(currentVersion))
+            {
+                return defaultConfigFile.Replace(currentVersion, oldSettingsVersion);
+            }
+
+            // Handle the case where there is a mismatch between the version in AssemblyInfo and the published version.
+            // The current user.config is saved in a folder named for the version in AssemblyInfo.  The default is 1.0.0.0 but we
+            // are now updating it to be the current published version (e.g. 21.1.0.158).  If there is a mismatch between the 
+            // published version (ApplicationDeployment.CurrentDeployment.CurrentVersion) and the version in AssemblyInfo
+            // then the replacement above will not work.  Here we will get the path to the directory that contains the current
+            // user.config(e.g. 21.1.0.158) and build the path to the old user.config.
+            var configDir = FileUtil.GetDirectorySafe(FileUtil.GetDirectorySafe(defaultConfigFile));
+            return Path.Combine(configDir, oldSettingsVersion, Path.GetFileName(defaultConfigFile));
+        }
+
+        private void GetSkylineSettingsFromPreviousVersion(string fileName)
         {
             string skylineType = null;
             string skylineInstallDir = string.Empty;
@@ -92,13 +123,13 @@ namespace AutoQC.Properties
                     var inAutoQcProps = false;
                     while (reader.Read())
                     {
-                        if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals("AutoQC.Properties.Settings"))
+                        if (reader.IsElement("AutoQC.Properties.Settings"))
                         {
                             inAutoQcProps = true;
                             continue;
                         }
 
-                        if (reader.NodeType == XmlNodeType.EndElement && reader.Name.Equals("AutoQC.Properties.Settings"))
+                        if (reader.IsEndElement("AutoQC.Properties.Settings"))
                         {
                             break;
                         }
