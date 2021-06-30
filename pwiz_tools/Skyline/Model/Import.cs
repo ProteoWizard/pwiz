@@ -495,6 +495,15 @@ namespace pwiz.Skyline.Model
         public bool TryCreateGeneralRowReader(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors,
             List<string> lines, IProgressStatus status, SrmSettings settings, out MassListRowReader generalRowReader)
         {
+            // Check first line for validity
+            var line = lines.FirstOrDefault();
+            if (string.IsNullOrEmpty(line))
+                throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+            indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+            if (indices.Headers != null)
+            {
+                lines.RemoveAt(0);
+            }
             try
             {
                 generalRowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, settings, lines,
