@@ -1935,10 +1935,10 @@ namespace pwiz.Skyline.Model
             }
 
             // Use the first 100 lines and a default document to create an importer
-            var inputs = new MassListInputs(csvText.Take(100).ToString());
+            var inputs = new MassListInputs(csvText.Take(100).ToArray());
             var importer = new MassListImporter(document, inputs);
             // See if creating a peptide row reader with the first 100 lines is possible
-            if (importer.TryCreateGeneralRowReader(null, new ColumnIndices(), false, csvText.Skip(1).Take(100).ToList(), null, document.Settings, out _))
+            if (importer.TryCreateGeneralRowReader(null, new ColumnIndices(), false, csvText.Take(100).ToList(), null, document.Settings, out _))
             {
                 // If the row reader is able to find a peptide column then it must be a protein transition list
                 return false;
