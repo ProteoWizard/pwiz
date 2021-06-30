@@ -36,6 +36,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestCurrentBcfgFiles()
         {
+            TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
 
@@ -149,6 +150,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestOldBcfgFiles()
         {
+            TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
 
@@ -241,6 +243,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestOldestBcfgFile()
         {
+            TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
 
