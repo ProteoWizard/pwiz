@@ -36,6 +36,7 @@
             this.comboPanelInner = new System.Windows.Forms.Panel();
             this.fileLabel = new System.Windows.Forms.Label();
             this.dataGrid = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.CheckShowUnusedColumns = new System.Windows.Forms.CheckBox();
             this.comboPanelOuter.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -91,12 +92,22 @@
             this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.DataGrid_ColumnWidthChanged);
             this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.DataGrid_Scroll);
             // 
+            // CheckShowUnusedColumns
+            // 
+            resources.ApplyResources(this.CheckShowUnusedColumns, "CheckShowUnusedColumns");
+            this.CheckShowUnusedColumns.Checked = true;
+            this.CheckShowUnusedColumns.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CheckShowUnusedColumns.Name = "CheckShowUnusedColumns";
+            this.CheckShowUnusedColumns.UseVisualStyleBackColor = true;
+            this.CheckShowUnusedColumns.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
             // ImportTransitionListColumnSelectDlg
             // 
             this.AcceptButton = this.buttonOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
+            this.Controls.Add(this.CheckShowUnusedColumns);
             this.Controls.Add(this.buttonCheckForErrors);
             this.Controls.Add(this.comboPanelOuter);
             this.Controls.Add(this.fileLabel);
@@ -125,5 +136,6 @@
         private System.Windows.Forms.Panel comboPanelOuter;
         private System.Windows.Forms.Panel comboPanelInner;
         public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
+        private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
     }
 }
