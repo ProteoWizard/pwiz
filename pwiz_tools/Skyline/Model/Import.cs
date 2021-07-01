@@ -469,54 +469,61 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                // Check first line for validity
-                var line = lines.FirstOrDefault();
-                if (string.IsNullOrEmpty(line))
-                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
-                indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
-                if (indices.Headers != null)
+                if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
                 {
-                    lines.RemoveAt(0);
-                    _linesSeen++;
+                    RowReader = rowReader;
                 }
-
-                // If no numeric columns in the first row
-                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
-                if (RowReader == null)
+                else
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
-                    if (RowReader == null)
-                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                    if (mzException != null)
+                    {
+                        throw mzException;
+                    }
+                    else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                    {
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                            -1);
+                    }
                 }
             }
             return true;
         }
 
-        public bool TryCreateGeneralRowReader(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors,
-            List<string> lines, IProgressStatus status, SrmSettings settings, out MassListRowReader generalRowReader)
+        public bool TryCreateRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+            IProgressStatus status, out MassListRowReader rowReader, out MzMatchException mzException)
         {
+            mzException = null;
+
             // Check first line for validity
             var line = lines.FirstOrDefault();
             if (string.IsNullOrEmpty(line))
-                throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
-            indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+                throw new InvalidDataException(Resources
+                    .MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+            var indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
             if (indices.Headers != null)
             {
                 lines.RemoveAt(0);
+                _linesSeen++;
             }
-            try
+
+            // If no numeric columns in the first row
+            rowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
+            if (rowReader == null)
             {
-                generalRowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, settings, lines,
-                    tolerateErrors,
-                    progressMonitor, status);
+                try
+                {
+                    rowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines,
+                        tolerateErrors,
+                        progressMonitor, status);
+                }
+                catch(MzMatchException exception)
+                {
+                    // If there is a valid amino acid sequence but no valid precursor m/z column, catch the exception
+                    // as it could be a small molecule transition list
+                    mzException = exception;
+                }
             }
-            catch (MzMatchException)
-            {
-                // If it doesn't find a matching precursor m/z or product m/z column we are unable to create a row reader
-                generalRowReader = null;
-                return false;
-            }
-            return generalRowReader != null;
+            return rowReader != null;
         }
 
         public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,

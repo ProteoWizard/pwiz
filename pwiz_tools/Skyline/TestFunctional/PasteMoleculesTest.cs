@@ -29,7 +29,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -1126,7 +1125,6 @@ namespace pwiz.SkylineTestFunctional
             LoadNewDocument(true);
             SetClipboardText(textCSV9);
             
-            // This will paste in a transition list with headers
             var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 4);
