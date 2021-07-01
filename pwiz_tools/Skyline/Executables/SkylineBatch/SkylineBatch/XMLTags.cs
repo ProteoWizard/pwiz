@@ -30,6 +30,7 @@ namespace SkylineBatch
         version,
         name,
         enabled,
+        log_test_format,
         modified,
         analysis_folder_path,
         replicate_naming_pattern,

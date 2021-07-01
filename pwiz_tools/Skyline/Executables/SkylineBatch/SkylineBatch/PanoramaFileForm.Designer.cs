@@ -60,6 +60,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.checkBoxNoEncryption);
             this.splitContainer1.Panel2.Controls.Add(this.label3);
             this.splitContainer1.Panel2.Controls.Add(this.textPassword);
             // 
@@ -129,7 +130,6 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.checkBoxNoEncryption);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.btnSave);

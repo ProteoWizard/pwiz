@@ -123,13 +123,7 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var updatedConfigs = new ConfigList();
-                foreach (var config in _configList)
-                {
-                    updatedConfigs.Add(config);
-                }
-
-                Settings.Default.ConfigList = updatedConfigs;
+                Settings.Default.SetConfigList(_configList.ToList());
                 Settings.Default.Save();
             }
         }
@@ -488,13 +482,28 @@ namespace SharedBatch
                 var reader = XmlReader.Create(stream);
                 while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
                     reader.Read();
-
+                // check if the configuration file needs to be updated
                 var fileVersion = reader.GetAttribute(Attr.version);
                 if (fileVersion == null)
                 {
                     reader.Dispose();
                     stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, null);
+                    var newFile = getUpdatedXml(filePath, installedVersion);
+                    if(newFile == null)
+                    {
+                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
+                            filePath));
+                        return new List<IConfig>();
+                    }
+                    return ImportFrom(newFile, installedVersion, null);
+                }
+                // check that the configuration file is not newer than the program version
+                var oldVersion = new Version(fileVersion);
+                var newVersion = new Version(installedVersion);
+                if (oldVersion > newVersion)
+                {
+                    DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
+                    return new List<IConfig>();
                 }
 
                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
@@ -885,6 +894,7 @@ namespace SharedBatch
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
+                SaveConfigList();
             }
         }
 
