@@ -396,8 +396,8 @@ namespace pwiz.Skyline.Model
             if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
             {
                 inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
-                return !MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
-                       columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double);
+                return MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
+                       columnTypes.All(t => Type.GetTypeCode(t) == TypeCode.Double);
             }
             return true;
         }
