@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Ionic.Zip;
 using Microsoft.Win32;
@@ -82,6 +83,12 @@ namespace SharedBatch
                 // pass incorrectly formatted paths
             }
             return exists;
+        }
+
+        public static bool PathHasDriveName(string path)
+        {
+            var driveRegex = new Regex(@"^[A-Z]|[a-z]:\\");
+            return driveRegex.IsMatch(path);
         }
 
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)

@@ -333,7 +333,8 @@ namespace SkylineBatch
                 var directoryExists = false;
                 try
                 {
-                    directoryExists = Directory.Exists(Path.GetDirectoryName(rScriptPath));
+                    var directory = Path.GetDirectoryName(rScriptPath);
+                    directoryExists = Directory.Exists(directory) && FileUtil.PathHasDriveName(directory);
                 }
                 catch (Exception)
                 {

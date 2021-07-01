@@ -220,7 +220,8 @@ namespace SkylineBatch
         public long ExpectedSize;
 
         public string FilePath =>
-            !string.IsNullOrEmpty(DownloadFolder) ? Path.Combine(DownloadFolder, FileName?? string.Empty) : string.Empty;
+            !string.IsNullOrEmpty(DownloadFolder) ? 
+                Path.Combine(DownloadFolder, FileName?? string.Empty) : "\\" + FileName;
 
         public string DownloadUrl => URI.AbsoluteUri;
 
@@ -275,7 +276,7 @@ namespace SkylineBatch
         public static void ValidateDownloadFolder(string folderPath)
         {
             FileUtil.ValidateNotEmptyPath(folderPath, Resources.PanoramaFile_ValidateDownloadFolder_template_download_folder);
-            if (!Directory.Exists(folderPath))
+            if (!Directory.Exists(folderPath) || !FileUtil.PathHasDriveName(folderPath))
                 throw new ArgumentException(Resources.PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does_not_exist__Please_enter_a_valid_folder_);
         }
 
