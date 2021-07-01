@@ -98,6 +98,8 @@ namespace SharedBatch.Properties
             try
             {
                 newXmlPath = updater(oldXmlPath, newVersion);
+                if (newXmlPath == null)
+                    return;
                 var configList = new ConfigList();
                 using (var stream = new FileStream(newXmlPath, FileMode.Open))
                 {
@@ -137,7 +139,7 @@ namespace SharedBatch.Properties
             }
             finally
             {
-                if (File.Exists(newXmlPath))
+                if (newXmlPath != null && File.Exists(newXmlPath))
                     File.Delete(newXmlPath);
             }
         }

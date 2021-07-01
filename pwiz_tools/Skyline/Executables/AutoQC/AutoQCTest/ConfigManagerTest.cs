@@ -194,6 +194,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestEnableInvalid()
         {
+            TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.Import(TestUtils.GetTestFilePath("bad.qcfg"), null);
             configManager.SelectConfig(3);
@@ -218,6 +219,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestImportExport()
         {
+            TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
             configManager.ExportConfigs(configsXmlPath, "21.1.1.166", new [] {0,1,2});

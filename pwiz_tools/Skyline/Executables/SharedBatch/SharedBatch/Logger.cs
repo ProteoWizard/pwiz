@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +31,7 @@ using SharedBatch.Properties;
     public class Logger
     {
         private const string DATE_PATTERN = "^\\[.*\\]\x20*";
+        private const string MEMSTAMP_PATTERN = "^[0-9]+\t[0-9]+\t";
 
 
         private readonly string _filePath;
@@ -60,8 +62,6 @@ using SharedBatch.Properties;
 
         public Logger(string logFilePath, string logName, bool initialize)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-
             InitializeErrorFormats();
 
             _filePath = logFilePath;
@@ -85,6 +85,8 @@ using SharedBatch.Properties;
 
         public bool WillTruncate => _lines > MaxLogLines;
 
+        public bool LogTestFormat = false;
+
         private static void InitializeErrorFormats()
         {
             if (_errorFormats != null) return;
@@ -107,7 +109,7 @@ using SharedBatch.Properties;
 
         public void Init()
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
+            Directory.CreateDirectory(FileUtil.GetDirectorySafe(_filePath));
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
 
@@ -140,11 +142,18 @@ using SharedBatch.Properties;
 
         public void Log(params string[] text)
         {
+            var memstampRegex = new Regex(MEMSTAMP_PATTERN);
             var messageNoTimestamp = TextUtil.LineSeparate(text);
             if (text.Length > 0 && !messageNoTimestamp.Equals(_lastLogMessage))
             {
                 _lastLogMessage = messageNoTimestamp;
-                text[0] = GetDate() + text[0];
+                if (!LogTestFormat || memstampRegex.IsMatch(text[0]))
+                    text[0] = GetDate() + text[0];
+                else
+                {
+                    // Add memstamp with zeros
+                    text[0] = GetDate() + "0\t0\t" + text[0];
+                }
                 LogVerbatim(text);
             }
         }
@@ -201,8 +210,10 @@ using SharedBatch.Properties;
             }
         }
 
-        private static string GetDate()
+        private string GetDate()
         {
+            if (LogTestFormat)
+                return "[" + DateTime.Now.ToString("G", CultureInfo.InvariantCulture) + "]\t";
             return "[" + DateTime.Now.ToString("G") + "]    ";
         }
 
