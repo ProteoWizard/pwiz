@@ -26,6 +26,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
+using SharedBatch.Properties;
 
 namespace AutoQCTest
 {
@@ -256,6 +257,66 @@ namespace AutoQCTest
             // Simulate loading saved configs from file
             testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
             Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
+            var version = AutoQC.Properties.Settings.Default.InstalledVersion;
+            Assert.AreEqual(version, ConfigList.Version, $"Expected ConfigList version '{version}. But it was '{ConfigList.Version}.'");
+        }
+
+        [TestMethod]
+        public void TestConfigListVersion()
+        {
+            ClearInstalledVersion(); // Clear out the saved InstalledVersion in user.config
+
+            // Initialize an AutoQcConfigManager; This will set the version on the ConfigList to be the same as the InstalledVersion (blank at this point)
+            var configManager = new AutoQcConfigManager();
+            configManager.Close(); // This will persist the <ConfigList> to user.config
+            Assert.AreEqual(string.Empty, ConfigList.Version,
+                $"Expected ConfigList version after initializing AutoQcConfigManager to be blank since InstalledVersion is blank.  But it was '{ConfigList.Version}'.");
+
+
+            ReloadConfigList();
+            Assert.AreEqual(ConfigList.DUMMY_VER, ConfigList.Version,
+                $"InstalledVersion was empty so we expect ConfigList in user.config to have a dummy version '{ConfigList.DUMMY_VER}'. But it was '{ConfigList.Version}'.");
+            
+            var version = "1000.2.3.4";
+            SetInstalledVersion(version);
+            // Initialize an AutoQcConfigManager; This will set the version on the ConfigList to be the same as the InstalledVersion
+            configManager = new AutoQcConfigManager();
+            configManager.Close(); // persist to the <ConfigList> in user.config
+            Assert.AreEqual(version, ConfigList.Version,
+                $"Expected ConfigList version to be {version}.  But it was {ConfigList.Version}");
+            
+
+            ReloadConfigList();
+            Assert.AreEqual(version, ConfigList.Version,
+                $"Expect ConfigList read from user.config to have version {version}. But it was {ConfigList.Version}");
+
+        }
+
+        private static void ReloadConfigList()
+        {
+            Settings.Default.Reload();
+            // ReSharper disable once NotAccessedVariable
+            var list = Settings.Default.ConfigList; // Read from file
+        }
+
+        private static void SetInstalledVersion(string version)
+        {
+            AutoQC.Properties.Settings.Default.InstalledVersion = version;
+            AutoQC.Properties.Settings.Default.Save(); // Persist the version to user.config
+            AutoQC.Properties.Settings.Default.Reload();
+            Assert.AreEqual(version, AutoQC.Properties.Settings.Default.InstalledVersion,
+                $"Expected InstalledVersion to be '{version}'. But it was {AutoQC.Properties.Settings.Default.InstalledVersion}.");
+        }
+
+        private static void ClearInstalledVersion()
+        {
+            if (!string.IsNullOrEmpty(AutoQC.Properties.Settings.Default.InstalledVersion))
+            {
+                // Tried using Properties.Settings.Default.Properties.Remove() and Properties.Settings.Default.Properties.Clear()
+                // but that did not remove the property from the user.config file.  We want to clear the InstalledVersion that
+                // may have been set by a previous test.
+                SetInstalledVersion(string.Empty); // Clear the InstalledVersion
+            }
         }
 
         #endregion

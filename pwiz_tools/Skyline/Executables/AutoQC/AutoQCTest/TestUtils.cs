@@ -150,7 +150,7 @@ namespace AutoQCTest
         {
             ConfigList.Importer = AutoQcConfig.ReadXml;
             AutoQC.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
-            ConfigList.Version = "1000.0.0.0";
+            // ConfigList.Version = "1000.0.0.0"; // Don't set this here.  We expect this to get set when AutoQcConfigManager is initialized
         }
     }
     
