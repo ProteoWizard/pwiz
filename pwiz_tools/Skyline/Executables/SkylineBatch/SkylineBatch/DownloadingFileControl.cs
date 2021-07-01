@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 

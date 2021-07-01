@@ -60,7 +60,6 @@ namespace SharedBatch
         // Extension of Path.GetDirectoryName that handles null file paths and returns an empty string if the directory cannot be found
         public static string GetDirectorySafe(string path)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path), Resources.TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_);
             try
             {
                 return Path.GetDirectoryName(path);
