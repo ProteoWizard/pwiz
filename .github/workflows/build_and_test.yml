@@ -9,6 +9,7 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
+    - '.github/workflows/build_and_test.yml'
     - 'pwiz_tools/BiblioSpec/**'
     - 'pwiz_tools/MSConvertGUI/**'
     - 'pwiz_tools/SeeMS/**'
@@ -18,6 +19,7 @@ on:
   pull_request:
     branches: [ master ]
     paths-ignore:
+    - '.github/workflows/build_and_test.yml'
     - 'pwiz_tools/BiblioSpec/**'
     - 'pwiz_tools/MSConvertGUI/**'
     - 'pwiz_tools/SeeMS/**'
