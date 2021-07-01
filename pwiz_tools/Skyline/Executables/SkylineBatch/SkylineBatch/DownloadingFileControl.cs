@@ -131,6 +131,7 @@ namespace SkylineBatch
         {
             if (!Path.Equals(textPath.Text))
             {
+                Path = textPath.Text;
                 if (Server != null)
                 {
                     if (_isDataServer)
@@ -143,7 +144,6 @@ namespace SkylineBatch
                         Server = ((PanoramaFile) Server).ReplacedFolder(System.IO.Path.GetDirectoryName(textPath.Text));
                     }
                 }
-                Path = textPath.Text;
             }
             _addedPathChangedHandler?.Invoke(sender, e);
         }
