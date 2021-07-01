@@ -9,15 +9,22 @@ namespace SkylineBatchTest
     [TestClass]
     public class ConfigFormFunctionalTest : AbstractSkylineBatchFunctionalTest
     {
+        public static string CONFIG_FOLDER; // folder containing template file, data, reports, etc used by test configs
+        public static string TEST_FOLDER;  // folder containing bcfg file(s)
+
         [TestMethod]
         public void AddConfigErrorsTest()
         {
-            TestFilesZip = @"SkylineBatchTest\TestConfigurationFiles.zip";
+            TestFilesZipPaths = new[]
+                {@"SkylineBatchTest\ImportFunctionalTest.zip", @"SkylineBatchTest\TestConfigurationFiles.zip"};
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            TEST_FOLDER = TestFilesDirs[0].FullPath;
+            CONFIG_FOLDER = TestFilesDirs[1].FullPath;
+
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
             WaitForShownForm(mainForm);
@@ -35,7 +42,7 @@ namespace SkylineBatchTest
             var newConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, string.Empty, TestFilesDirs[0].FullPath, this);
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, string.Empty, CONFIG_FOLDER, this);
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
@@ -47,10 +54,10 @@ namespace SkylineBatchTest
                     dlg.ClickOk();
                 });
 
-            var nonexistentTemplate = Path.Combine(TestFilesDirs[0].FullPath, "nonexistent.sky");
+            var nonexistentTemplate = Path.Combine(CONFIG_FOLDER, "nonexistent.sky");
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", CONFIG_FOLDER, this);
                 newConfigForm.templateControl.SetPath(nonexistentTemplate);
             });
 
@@ -63,11 +70,11 @@ namespace SkylineBatchTest
                     dlg.ClickOk();
                 });
 
-            var nonexistentData = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData");
+            var nonexistentData = Path.Combine(CONFIG_FOLDER, "nonexistentData");
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.dataControl.SetPath(Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData"));
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", CONFIG_FOLDER, this);
+                newConfigForm.dataControl.SetPath(Path.Combine(CONFIG_FOLDER, "nonexistentData"));
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
@@ -82,7 +89,7 @@ namespace SkylineBatchTest
             var nonexistentAnalysis = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentFolderOne\\nonexistentFolderTwo");
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", CONFIG_FOLDER, this);
                 newConfigForm.textAnalysisPath.Text = nonexistentAnalysis;
             });
 
@@ -97,8 +104,8 @@ namespace SkylineBatchTest
 
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.textRefinedFilePath.Text = Path.Combine(TestFilesDirs[0].FullPath, "refinedOutput.sky");
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", CONFIG_FOLDER, this);
+                newConfigForm.textRefinedFilePath.Text = Path.Combine(CONFIG_FOLDER, "refinedOutput.sky");
                 newConfigForm.checkBoxRemoveData.Checked = false;
                 newConfigForm.checkBoxRemoveDecoys.Checked = false;
             });
