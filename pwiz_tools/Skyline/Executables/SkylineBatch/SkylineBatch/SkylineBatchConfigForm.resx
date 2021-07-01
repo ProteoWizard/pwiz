@@ -961,11 +961,14 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabReports.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="checkBoxLogTestFormat.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="checkBoxLogTestFormat.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="checkBoxLogTestFormat.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 98</value>
+    <value>8, 378</value>
   </data>
   <data name="checkBoxLogTestFormat.Size" type="System.Drawing.Size, System.Drawing">
     <value>172, 17</value>
@@ -995,7 +998,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>8, 6</value>
   </data>
   <data name="panelSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>429, 91</value>
+    <value>429, 366</value>
   </data>
   <data name="panelSkylineSettings.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -1521,7 +1524,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>10, 73</value>
   </data>
   <data name="gridRefineInputs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 325</value>
+    <value>427, 326</value>
   </data>
   <data name="gridRefineInputs.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1710,7 +1713,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
     <value>2, 2, 2, 2</value>
   </data>
   <data name="gridReportSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 403</value>
+    <value>415, 404</value>
   </data>
   <data name="gridReportSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1735,7 +1738,7 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAbgBAwG4AQMBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAcABAwHAAQMBHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

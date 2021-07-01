@@ -302,7 +302,8 @@ namespace SkylineBatchTest
         public static void InitializeSettingsImportExport()
         {
             ConfigList.Importer = SkylineBatchConfig.ReadXml;
-            ConfigList.Version = "21.1.1.171";
+            SkylineBatch.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
+            ConfigList.Version = "1000.0.0.0";
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

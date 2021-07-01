@@ -62,9 +62,6 @@ using SharedBatch.Properties;
 
         public Logger(string logFilePath, string logName, bool initialize)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-            Directory.CreateDirectory(logFolder);
-
             InitializeErrorFormats();
 
             _filePath = logFilePath;
@@ -112,6 +109,7 @@ using SharedBatch.Properties;
 
         public void Init()
         {
+            Directory.CreateDirectory(FileUtil.GetDirectorySafe(_filePath));
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
 

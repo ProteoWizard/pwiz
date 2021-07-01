@@ -123,13 +123,7 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var updatedConfigs = new ConfigList();
-                foreach (var config in _configList)
-                {
-                    updatedConfigs.Add(config);
-                }
-
-                Settings.Default.ConfigList = updatedConfigs;
+                Settings.Default.SetConfigList(_configList.ToList());
                 Settings.Default.Save();
             }
         }
@@ -467,15 +461,15 @@ namespace SharedBatch
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
             
-            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
+            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
                 copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
                 var file = new FileInfo(filePath);
-                if (!File.Exists(copiedConfigFile))
-                    file.CopyTo(copiedConfigFile, false);
+                file.CopyTo(copiedConfigFile, true);
+                filePath = copiedConfigFile;
             }
 
             var readConfigs = new List<IConfig>();
@@ -488,13 +482,28 @@ namespace SharedBatch
                 var reader = XmlReader.Create(stream);
                 while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
                     reader.Read();
-
+                // check if the configuration file needs to be updated
                 var fileVersion = reader.GetAttribute(Attr.version);
                 if (fileVersion == null)
                 {
                     reader.Dispose();
                     stream.Dispose();
-                    return ImportFrom(getUpdatedXml(filePath, installedVersion), installedVersion, showDownloadedFileForm);
+                    var newFile = getUpdatedXml(filePath, installedVersion);
+                    if(newFile == null)
+                    {
+                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
+                            filePath));
+                        return new List<IConfig>();
+                    }
+                    return ImportFrom(newFile, installedVersion, null);
+                }
+                // check that the configuration file is not newer than the program version
+                var oldVersion = new Version(fileVersion);
+                var newVersion = new Version(installedVersion);
+                if (oldVersion > newVersion)
+                {
+                    DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
+                    return new List<IConfig>();
                 }
 
                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
@@ -606,7 +615,7 @@ namespace SharedBatch
                 if (string.IsNullOrEmpty(forceReplaceRoot))
                     addingConfig = RunRootReplacement(config);
                 else
-                    addingConfig = ForceRootReplacement(config, forceReplaceRoot);
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
                 addedConfigs.Add(addingConfig);
                 numAdded++;
             }
@@ -861,9 +870,18 @@ namespace SharedBatch
         }
 
         // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
-        private IConfig ForceRootReplacement(IConfig config, string oldRoot)
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot, out string errorMessage)
         {
-            return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+            errorMessage = null;
+            try
+            {
+                return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+            }
+            catch (ArgumentException e)
+            {
+                errorMessage = e.Message;
+                return config;
+            }
         }
 
         #endregion
@@ -876,6 +894,7 @@ namespace SharedBatch
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
+                SaveConfigList();
             }
         }
 

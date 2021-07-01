@@ -78,6 +78,7 @@
             this.columnScripts = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabSkyline = new System.Windows.Forms.TabPage();
+            this.checkBoxLogTestFormat = new System.Windows.Forms.CheckBox();
             this.panelSkylineSettings = new System.Windows.Forms.Panel();
             this.btnCancelConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
@@ -482,6 +483,12 @@
             resources.ApplyResources(this.tabSkyline, "tabSkyline");
             this.tabSkyline.Name = "tabSkyline";
             this.tabSkyline.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // checkBoxLogTestFormat
+            // 
+            resources.ApplyResources(this.checkBoxLogTestFormat, "checkBoxLogTestFormat");
+            this.checkBoxLogTestFormat.Name = "checkBoxLogTestFormat";
+            this.checkBoxLogTestFormat.UseVisualStyleBackColor = true;
             // 
             // panelSkylineSettings
             // 

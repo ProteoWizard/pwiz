@@ -24,9 +24,9 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC-test/</InstallUrl>
-    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
+    <SupportUrl>https://panoramaweb.org/support.url</SupportUrl>
     <ProductName>AutoQC</ProductName>
-    <PublisherName>MacCoss Lab, UW</PublisherName>
+    <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <ApplicationRevision>5</ApplicationRevision>
