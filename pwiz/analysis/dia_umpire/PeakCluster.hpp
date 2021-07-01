@@ -395,6 +395,7 @@ class PeakCurveClusteringCorrKDtree
     int MinNoOfClusters;
     int StartCharge;
     int EndCharge;
+    boost::mutex& mx;
 
     public:
 
@@ -403,8 +404,8 @@ class PeakCurveClusteringCorrKDtree
 
     PeakCurveClusteringCorrKDtree(vector<PeakCurvePtr> const& peakCurves, size_t targetCurveIndex, const PeakCurveSearchTree& peakCurveSearchTree, InstrumentParameter& parameter,
                                   const IsotopePatternMap& isotopePatternMap, const ChiSquareGOF& chiSquaredGof, const pwiz::msdata::MSData& msd,
-                                  int StartCharge, int EndCharge, int MaxNoClusters, int MinNoClusters)
-        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof), msd(msd)
+                                  int StartCharge, int EndCharge, int MaxNoClusters, int MinNoClusters, boost::mutex& mx)
+        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof), msd(msd), mx(mx)
     {
         this->MaxNoOfClusters = MaxNoClusters;
         this->MinNoOfClusters = MinNoClusters;
@@ -575,7 +576,10 @@ class PeakCurveClusteringCorrKDtree
             {
                 peakCluster.CalcPeakArea_V2();
                 peakCluster.UpdateIsoMapProb(isotopePatternMap);
-                peakCluster.AssignConfilictCorr();
+                {
+                    boost::lock_guard<boost::mutex> g(mx);
+                    peakCluster.AssignConfilictCorr();
+                }
                 peakCluster.LeftInt = peakA->GetSmoothedList().Data.at(0).getY();
                 peakCluster.RightInt = peakA->GetSmoothedList().Data.at(peakA->GetSmoothedList().PointCount() - 1).getY();
                 if (parameter.TargetIDOnly || peakCluster.IsoMapProb > parameter.IsoPattern)
@@ -587,6 +591,7 @@ class PeakCurveClusteringCorrKDtree
                         {
                             PeakCurvePtr& peak = peakCluster.IsoPeaksCurves[i];
                             if (peak && peakCluster.Corrs[i - 1] > parameter.RemoveGroupedPeaksCorr && peakCluster.OverlapRT[i - 1] > parameter.RemoveGroupedPeaksRTOverlap) {
+                                boost::lock_guard<boost::mutex> g(mx);
                                 peak->ChargeGrouped.insert(charge);
                             }
                         }
