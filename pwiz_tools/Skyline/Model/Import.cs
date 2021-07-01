@@ -495,6 +495,9 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
+        /// <summary>
+        /// // Attempt to create either an ExPeptideRowReader or a GeneralRowReader
+        /// </summary>
         public bool TryCreateRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
             IProgressStatus status, out MassListRowReader rowReader, out MzMatchException mzException)
         {
