@@ -25,7 +25,9 @@ namespace SkylineBatchTest
             Assert.AreEqual(0, mainForm.ConfigCount());
 
             TestAddInvalidConfiguration(mainForm);
-            
+
+            //TestEditInvalidDownloadingFolderPath(mainForm) TODO(Surya) - look at TestRootReplacement in ImportFunctionalTest.cs
+
         }
 
         public void TestAddInvalidConfiguration(MainForm mainForm)
