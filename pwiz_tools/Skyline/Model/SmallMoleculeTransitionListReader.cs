@@ -27,7 +27,6 @@ using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1926,16 +1925,14 @@ namespace pwiz.Skyline.Model
 
         public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmDocument document)
         {
-            // Check the first line for peptide header
-            var header = csvText.First();
-            // CONSIDER (henrys): Look for "peptide" in other languages as well
-            if (header.ToLowerInvariant().Contains(@"peptide"))
+            // If it cannot be formatted as a mass list it cannot be a small molecule transition list
+            if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
             {
                 return false;
             }
 
-            // Use the first 100 lines and a default document to create an importer
-            var inputs = new MassListInputs(csvText.Take(100).ToArray());
+            // Use the first 100 lines and the document to create an importer
+            var inputs = new MassListInputs(csvText.Take(100).ToString(), provider, sep);
             var importer = new MassListImporter(document, inputs);
             // See if creating a peptide row reader with the first 100 lines is possible
             if (importer.TryCreateRowReader(null, false, csvText.Take(100).ToList(), null, out _, out _))
@@ -1954,6 +1951,13 @@ namespace pwiz.Skyline.Model
             catch
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
+                // Check the first line for peptide header
+                var header = csvText.First();
+                // CONSIDER (henrys): Look for "peptide" in other languages as well
+                if (header.ToLowerInvariant().Contains(@"peptide"))
+                {
+                    return false;
+                }
                 return new[]
                 {
                     // These are pretty basic hints, without much overlap in peptide lists

@@ -373,27 +373,33 @@ namespace pwiz.Skyline.Model
         {
             if (FormatProvider == null)
             {
-                char sep;
-                IFormatProvider provider;
-                Type[] columnTypes;
-                string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
-                if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+                if (!TryInitFormat(inputLines, out var provider, out var sep))
                 {
-                    throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                }
-                // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
-                if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                {
-                    inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
-                    if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
-                        columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                    {
-                        throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                    }
+                    throw new IOException(Resources
+                        .SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
                 FormatProvider = provider;
                 Separator = sep;
             }
+        }
+
+        public static bool TryInitFormat(IList<string> inputLines, out IFormatProvider provider, out char sep)
+        {
+            Type[] columnTypes;
+            string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
+            if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+            {
+                return false;
+            }
+
+            // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
+            if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
+            {
+                inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
+                return !MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
+                       columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double);
+            }
+            return true;
         }
 
         public IFormatProvider FormatProvider { get; set; }
@@ -518,8 +524,9 @@ namespace pwiz.Skyline.Model
                 }
                 catch(MzMatchException exception)
                 {
-                    // If there is a valid amino acid sequence but no valid precursor m/z column, catch the exception
-                    // as it could be a small molecule transition list
+                    // If we find a valid amino acid sequence but no valid precursor or product m/z column, catch the exception
+                    // as it could be a small molecule transition list. If we decide later it is a peptide transition list,
+                    // we throw the exception then
                     mzException = exception;
                 }
             }
