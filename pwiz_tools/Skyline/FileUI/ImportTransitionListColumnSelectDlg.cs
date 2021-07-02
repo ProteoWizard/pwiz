@@ -324,6 +324,8 @@ namespace pwiz.Skyline.FileUI
         }
 
         // Hides columns if the data is not being used and the appropriate setting is selected
+        // This is intentionally not called whenever the user changes a column header to avoid essentially punishing
+        // the user for making a mistake
         private void SetUnusedColumnVisibility(ComboBox comboBox)
         {
             if (Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))

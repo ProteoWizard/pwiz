@@ -1551,9 +1551,7 @@ namespace pwiz.SkylineTestUtil
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)
-            {
                 AssertEx.NoDiff(expected, actual);
-            }
             else
             {
                 // Copy the just recorded file to the project for comparison or commit

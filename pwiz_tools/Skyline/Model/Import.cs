@@ -2052,7 +2052,7 @@ namespace pwiz.Skyline.Model
         public int LibraryColumn { get; set; }
 
         // After this point are new columns added that were initially only supported for small molecule transition lists
-        // TODO: add appropriate comments detailing what each of these does
+        // TODO: add appropriate comments detailing what each of these does, make sure skyline is using this info
 
         public int ExplicitRetentionTimeColumn { get; set; }
 
@@ -2082,7 +2082,6 @@ namespace pwiz.Skyline.Model
 
         private ColumnIndices()
         {
-            // TODO: ensure that all the newly added columns have their index set here
             ProteinColumn = -1;
             PeptideColumn = -1;
             PrecursorColumn = -1;
@@ -2160,7 +2159,7 @@ namespace pwiz.Skyline.Model
             if (PrecursorChargeColumn == index)
                 PrecursorChargeColumn = -1;
 
-            // TODO: add new statements for all of the new columns here
+            // 
             if (ExplicitRetentionTimeColumn == index)
                 ExplicitRetentionTimeColumn = -1;
             if (ExplicitRetentionTimeWindowColumn == index)
