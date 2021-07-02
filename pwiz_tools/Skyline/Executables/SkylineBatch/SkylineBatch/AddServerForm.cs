@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using FluentFTP;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -16,6 +15,7 @@ namespace SkylineBatch
         private CancellationTokenSource _cancelValidate;
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
+        private bool _updated;
 
         public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
         {
@@ -36,9 +36,31 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
-            btnSave.Enabled = false;
+            if (!_updated)
+                CheckServer(true);
+            else
+            {
+                Server = GetServerFromUi();
+                if (Server == null)
+                {
+                    DialogResult = DialogResult.OK;
+                    return;
+                }
+                serverConnector.GetFiles(Server, out Exception error);
+                if (error != null)
+                    AlertDlg.ShowError(this, Program.AppName(), error.Message);
+                else
+                    DialogResult = DialogResult.OK;
+            }
+        }
 
+        private void btnUpdate_Click(object sender, EventArgs e)
+        {
+            CheckServer(false);
+        }
+
+        private void CheckServer(bool closeWhenDone)
+        {
             Exception validationException = null;
             try
             {
@@ -54,63 +76,52 @@ namespace SkylineBatch
             {
                 if (validationException != null)
                     UnsuccessfulConnect(validationException);
-                else 
-                    SuccessfulConnect(null);
+                else
+                    SuccessfulConnect(new List<ConnectedFileInfo>(), closeWhenDone);
                 return;
             }
 
 
             _cancelValidate = new CancellationTokenSource();
-            var connectToServer = new LongWaitOperation(_cancelValidate);
+            var connectToServer = new LongWaitOperation(new LongWaitDlg(this, Program.AppName(), "Connecting to server..."));
             serverConnector = new ServerConnector(Server);
-            List<FtpListItem> serverFiles = null;
             Exception connectionException = null;
-            connectToServer.Start(false, 
+            List<ConnectedFileInfo> files = null;
+            connectToServer.Start(true,
                 (OnProgress, cancelToken) =>
                 {
                     serverConnector.Connect(OnProgress, cancelToken);
-                    serverFiles = serverConnector.GetFiles(Server, out connectionException);
+                    files = serverConnector.GetFiles(Server, out connectionException);
                 }, completed =>
                 {
+                    if (!completed)
+                        return;
+                    _updated = true;
+                    Invoke(new Action(() =>
+                    {
+                        listBoxFileNames.Items.Clear();
+                    }));
+
                     if (connectionException == null)
-                        SuccessfulConnect(serverFiles);
+                        SuccessfulConnect(files, closeWhenDone);
                     else
                         UnsuccessfulConnect(connectionException);
                 });
         }
 
-        private void SuccessfulConnect(List<FtpListItem> ftpFiles)
+        private void SuccessfulConnect(List<ConnectedFileInfo> files, bool closeWhenDone)
         {
-            if (Server != null)
+            if (closeWhenDone)
+                DialogResult = DialogResult.OK;
+            else
             {
-                if (ftpFiles.Count == 0)
+                _updated = true;
+                Invoke(new Action(() =>
                 {
-                    UnsuccessfulConnect(new ArgumentException(string.Format(
-                        Resources
-                            .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                        Server.GetUrl())));
-                    return;
-                }
-                var nameRegex = new Regex(Server.DataNamingPattern);
-                var filesMatchRegex = false;
-                foreach (var ftpFile in ftpFiles)
-                {
-                    if (nameRegex.IsMatch(ftpFile.Name))
-                        filesMatchRegex = true;
-                }
-
-                if (!filesMatchRegex)
-                {
-                    UnsuccessfulConnect(new ArgumentException(
-                        string.Format(
-                            Resources
-                                .DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_,
-                            Server.DataNamingPattern) + Environment.NewLine +
-                        Resources.DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_));
-                    return;
-                }
+                    UpdateLabel();
+                    UpdateFileList(files);
+                }));
             }
-            DialogResult = DialogResult.OK;
         }
 
         private void UnsuccessfulConnect(Exception e)
@@ -118,8 +129,7 @@ namespace SkylineBatch
             Invoke(new Action(() =>
             {
                 if (e != null) AlertDlg.ShowError(this, Program.AppName(), e.Message);
-                btnSave.Enabled = true;
-                btnSave.Text = Resources.AddServerForm_FinishConnectToServer_Save;
+
             }));
             _cancelValidate = null;
         }
@@ -135,14 +145,17 @@ namespace SkylineBatch
                     throw new ArgumentException("The server cannot be empty. Please enter the server information.");
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, textNamingPattern.Text, _dataFolder);
+            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
+            listBoxFileNames.Items.Clear();
             Server = null;
             UpdateUiServer();
+            _updated = true;
+            UpdateLabel();
         }
 
         private void UpdateUiServer()
@@ -150,7 +163,11 @@ namespace SkylineBatch
             textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
             textUserName.Text = Server != null ? Server.Username : string.Empty;
             textPassword.Text = Server != null ? Server.Password : string.Empty;
-            textNamingPattern.Text = Server != null ? Server.DataNamingPattern : string.Empty;
+            checkBoxNoEncryption.Enabled = Server != null && !string.IsNullOrEmpty(Server.Password);
+            checkBoxNoEncryption.Checked = checkBoxNoEncryption.Enabled && Server != null && !Server.Encrypt;
+            textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
+                ? string.Empty
+                : Server.DataNamingPattern;
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -161,6 +178,64 @@ namespace SkylineBatch
         private void AddServerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             _cancelValidate?.Cancel();
+        }
+
+        private void UpdateLabel()
+        {
+            listBoxFileNames.Enabled = _updated;
+            listBoxFileNames.BackColor = _updated ? Color.White : Color.WhiteSmoke;
+            btnUpdate.Enabled = !_updated;
+            labelFileInfo.Visible = _updated;
+        }
+
+        private void text_TextChanged(object sender, EventArgs e)
+        {
+            _updated = false;
+            serverConnector = null;
+            UpdateLabel();
+
+            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
+            if (textPassword.Text.Length == 0)
+                checkBoxNoEncryption.Checked = false;
+        }
+
+        private void textNamingPattern_TextChanged(object sender, EventArgs e)
+        {
+            if (_updated)
+            {
+                var files = serverConnector.GetFiles(GetServerFromUi(), out _)?? new List<ConnectedFileInfo>();
+                UpdateFileList(files);
+            }
+        }
+
+        private void UpdateFileList(List<ConnectedFileInfo> files)
+        {
+            listBoxFileNames.Items.Clear();
+            long totalSize = 0;
+            foreach (var file in files)
+            {
+                listBoxFileNames.Items.Add(file.FileName);
+                totalSize += file.Size;
+            }
+
+            var sizeInGB = Math.Round(totalSize / 1000000000.0, 2);
+            var sizeInKB = -1.0;
+            if (sizeInGB < 1)
+            {
+                sizeInGB = -1;
+                sizeInKB = Math.Round(totalSize / 1000.0);
+            }
+
+            var sizeString = sizeInGB > 0 ? string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB) : string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
+            if (files.Count != 1)
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__0__files___1_, listBoxFileNames.Items.Count, sizeString);
+            else
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, sizeString);
+        }
+
+        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
+        {
+            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
         }
     }
 }

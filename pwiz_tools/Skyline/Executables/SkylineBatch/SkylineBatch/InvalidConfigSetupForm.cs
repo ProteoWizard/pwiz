@@ -80,7 +80,7 @@ namespace SkylineBatch
             var validTemplate = mainSettings.Template;
             if (mainSettings.Template.IsIndependent())
             {
-                if (mainSettings.Template.Downloaded(new ServerFilesManager()))
+                if (mainSettings.Template.PanoramaFile == null)
                 {
                     var validTemplateFile = await GetValidPath(
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
@@ -92,13 +92,11 @@ namespace SkylineBatch
                 {
                     var invalidPanoramaFile = mainSettings.Template.PanoramaFile;
                     var validDownloadFolder = await GetValidPath(
-                        "folder to download the Skyline template into",
-                        mainSettings.Template.FilePath, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
+                        Resources.InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into,
+                        invalidPanoramaFile.DownloadFolder, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
                     validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
                         new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
                 }
-
-                
             }
 
             var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
@@ -106,11 +104,17 @@ namespace SkylineBatch
             var dataValidator = mainSettings.Server != null ? MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
             var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
                 mainSettings.DataFolderPath, dataValidator, null, PathDialogOptions.Folder);
+            var annotationsValidator = mainSettings.AnnotationsDownload != null ? MainSettings.ValidateAnnotationsWithServer : (Validator)MainSettings.ValidateAnnotationsWithoutServer;
             var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
-                MainSettings.ValidateAnnotationsFile, TextUtil.FILTER_CSV, PathDialogOptions.File);
+                annotationsValidator, TextUtil.FILTER_CSV, PathDialogOptions.File);
+            var validAnnotationsDownload =
+                !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
+                    ? new PanoramaFile(mainSettings.AnnotationsDownload,
+                        Path.GetDirectoryName(validAnnotationsFilePath), mainSettings.AnnotationsDownload.FileName)
+                    : null;
 
-            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
-                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern);
+            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,
+                validAnnotationsFilePath, validAnnotationsDownload, mainSettings.ReplicateNamingPattern);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()
@@ -131,16 +135,30 @@ namespace SkylineBatch
                         report.Name), report.ReportPath, 
                     ReportInfo.ValidateReportPath, TextUtil.FILTER_SKYR, PathDialogOptions.File);
                 var validScripts = new List<Tuple<string, string>>();
+                var validRemoteFiles = new Dictionary<string, PanoramaFile>();
                 foreach (var scriptAndVersion in report.RScripts)
                 {
                     var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
-                    var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                        scriptAndVersion.Item1, 
-                        ReportInfo.ValidateRScriptPath, TextUtil.FILTER_R, PathDialogOptions.File);
-                    
+                    string validRScript;
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                    {
+                        var validFolder = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            FileUtil.GetDirectorySafe(scriptAndVersion.Item1),
+                            ReportInfo.ValidateRScriptWithServer, null, PathDialogOptions.Folder);
+                        validRScript = Path.Combine(validFolder,
+                            report.RScriptServers[scriptAndVersion.Item1].FileName);
+                    }
+                    else
+                    {
+                        validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            scriptAndVersion.Item1,
+                            ReportInfo.ValidateRScriptWithoutServer, TextUtil.FILTER_R, PathDialogOptions.File);
+                    }
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                        validRemoteFiles.Add(validRScript, report.RScriptServers[scriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(validRScript)));
                 }
-                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, validRemoteFiles, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }
