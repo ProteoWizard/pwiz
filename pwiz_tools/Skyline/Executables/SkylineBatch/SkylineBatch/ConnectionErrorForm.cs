@@ -51,7 +51,7 @@ namespace SkylineBatch
                 var mainSettings = config.MainSettings;
                 var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
                     addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.AnnotationsDownload, mainSettings.ReplicateNamingPattern);
-                var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.Modified, newMainSettings, config.FileSettings, 
+                var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.LogTestFormat, config.Modified, newMainSettings, config.FileSettings, 
                     config.RefineSettings, config.ReportSettings, config.SkylineSettings);
 
                 ReplacingConfigs.Add(newConfig);

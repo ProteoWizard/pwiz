@@ -80,7 +80,7 @@ namespace SkylineBatch
                 Exception validationError;
                 try
                 {
-                    ValidateTemplateFile(FilePath);
+                    ValidateTemplateFile(FilePath, PanoramaFile != null);
                     return;
                 }
                 catch (ArgumentException e)
@@ -90,7 +90,7 @@ namespace SkylineBatch
                 }
                 try
                 {
-                    ValidateTemplateFile(_zippedPath);
+                    ValidateTemplateFile(_zippedPath, PanoramaFile != null);
                 }
                 catch (ArgumentException)
                 {
@@ -99,14 +99,29 @@ namespace SkylineBatch
             }
         }
 
-        public static void ValidateTemplateFile(string templateFile)
+        public static void ValidateTemplateFileDownloading(string templateFile)
+        {
+            ValidateTemplateFile(templateFile, true);
+        }
+
+        public static void ValidateTemplateFileNotDownloading(string templateFile)
+        {
+            ValidateTemplateFile(templateFile, false);
+        }
+
+        public static void ValidateTemplateFile(string templateFile, bool downloading)
         {
 
             FileUtil.ValidateNotEmptyPath(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
             if (!File.Exists(templateFile))
-
-                throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
-                                            Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
+            {
+                if (!downloading)
+                    throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
+                                                Resources.MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_);
+                if (!Directory.Exists(FileUtil.GetDirectorySafe(templateFile)))
+                    throw new ArgumentException(string.Format(Resources.SkylineTemplate_ValidateTemplateFile_The_folder_of_the_downloading_template_file__0__does_not_exist_, templateFile) + Environment.NewLine +
+                                                Resources.SkylineTemplate_ValidateTemplateFile_Please_provide_a_valid_folder_to_download_the_template_file_into_);
+            }
             FileUtil.ValidateNotInDownloads(templateFile, Resources.MainSettings_ValidateSkylineFile_Skyline_file);
         }
 
@@ -115,9 +130,12 @@ namespace SkylineBatch
             var preferReplace = Program.FunctionalTest;
             pathReplacedTemplate = this;
             string replacedFilePath = null;
-            var pathReplaced = _path != null && TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _path,
+            var templateFileValidator = PanoramaFile == null
+                ? ValidateTemplateFileNotDownloading
+                : (Validator) ValidateTemplateFileDownloading;
+            var pathReplaced = _path != null && TextUtil.SuccessfulReplace(templateFileValidator, oldRoot, newRoot, _path,
                 preferReplace, out replacedFilePath);
-            var zipPathReplaced = TextUtil.SuccessfulReplace(ValidateTemplateFile, oldRoot, newRoot, _zippedPath,
+            var zipPathReplaced = TextUtil.SuccessfulReplace(templateFileValidator, oldRoot, newRoot, _zippedPath,
                 preferReplace, out string replacedZippedFilePath);
 
             PanoramaFile replacedPanoramaFile = null;
@@ -220,7 +238,8 @@ namespace SkylineBatch
         public long ExpectedSize;
 
         public string FilePath =>
-            !string.IsNullOrEmpty(DownloadFolder) ? Path.Combine(DownloadFolder, FileName?? string.Empty) : string.Empty;
+            !string.IsNullOrEmpty(DownloadFolder) ? 
+                Path.Combine(DownloadFolder, FileName?? string.Empty) : "\\" + FileName;
 
         public string DownloadUrl => URI.AbsoluteUri;
 
@@ -275,7 +294,7 @@ namespace SkylineBatch
         public static void ValidateDownloadFolder(string folderPath)
         {
             FileUtil.ValidateNotEmptyPath(folderPath, Resources.PanoramaFile_ValidateDownloadFolder_template_download_folder);
-            if (!Directory.Exists(folderPath))
+            if (!Directory.Exists(folderPath) || !FileUtil.PathHasDriveName(folderPath))
                 throw new ArgumentException(Resources.PanoramaFile_ValidateDownloadFolder_The_folder_for_the_Skyline_template_file_does_not_exist__Please_enter_a_valid_folder_);
         }
 
