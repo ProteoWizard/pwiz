@@ -418,15 +418,25 @@ namespace pwiz.Skyline.Model
 
         private int _linesSeen;
 
+        // This constructor is only suitable for investigating the peptide-vs-small molecule nature of inputs
+        // CONSIDER(henryS) Arguably that code should be split out into its own class
+        public MassListImporter(SrmSettings settings, MassListInputs inputs)
+        {
+            Settings = settings;
+            Inputs = inputs;
+        }
+
+        // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
         public MassListImporter(SrmDocument document, MassListInputs inputs)
         {
             Document = document;
+            Settings = document.Settings;
             Inputs = inputs;
         }
 
         public SrmDocument Document { get; private set; }
         public MassListRowReader RowReader { get; private set; }
-        public SrmSettings Settings { get { return Document.Settings; } }
+        public SrmSettings Settings { get; private set; }
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
@@ -454,7 +464,7 @@ namespace pwiz.Skyline.Model
             status = status.NextSegment();
             _linesSeen = 0;
 
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Document))
+            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings))
             {
                 IsSmallMoleculeInput = true;
                 if (progressMonitor != null)
