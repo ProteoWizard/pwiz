@@ -163,8 +163,6 @@ namespace SharedBatch.Properties
         {
             var isEmpty = reader.IsEmptyElement;
 
-            Version = reader.GetAttribute(Attr.version);
-
             // Read past the property element
             reader.Read();
             
