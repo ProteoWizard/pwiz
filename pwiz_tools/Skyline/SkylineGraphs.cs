@@ -1090,12 +1090,13 @@ namespace pwiz.Skyline
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
             }
-
+            /*
             if(ListMzScaleCopyables().Count() >=2)
             {
                 menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
                 synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
             }
+            */
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
