@@ -121,6 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
+        public bool ShowMassError { get; set; }
         public bool ShowDuplicates { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
@@ -321,6 +322,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (ShowObservedMz)
             {
                 sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
+            }
+
+            if (ShowMassError)
+            {
+                var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
+                massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
+                sb.AppendLine().Append(Math.Round(massError, 1));
             }
             return sb.ToString();
         }

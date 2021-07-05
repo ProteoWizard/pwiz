@@ -81,6 +81,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.scoreContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -572,6 +573,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator12,
             this.ranksContextMenuItem,
             this.scoreContextMenuItem,
+            this.massErrorToolStripMenuItem,
             this.ionMzValuesContextMenuItem,
             this.observedMzValuesContextMenuItem,
             this.duplicatesContextMenuItem,
@@ -702,6 +704,13 @@ namespace pwiz.Skyline
             this.scoreContextMenuItem.Name = "scoreContextMenuItem";
             resources.ApplyResources(this.scoreContextMenuItem, "scoreContextMenuItem");
             this.scoreContextMenuItem.Click += new System.EventHandler(this.scoresContextMenuItem_Click);
+            // 
+            // massErrorToolStripMenuItem
+            // 
+            this.massErrorToolStripMenuItem.CheckOnClick = true;
+            this.massErrorToolStripMenuItem.Name = "massErrorToolStripMenuItem";
+            resources.ApplyResources(this.massErrorToolStripMenuItem, "massErrorToolStripMenuItem");
+            this.massErrorToolStripMenuItem.Click += new System.EventHandler(this.massErrorToolStripMenuItem_Click);
             // 
             // ionMzValuesContextMenuItem
             // 
@@ -2885,6 +2894,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
     }
 }
 

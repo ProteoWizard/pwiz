@@ -956,6 +956,12 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph(false);
         }
 
+        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
+            UpdateSpectrumGraph(false);
+        }
+        
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
             ToggleObservedMzValues();
@@ -1029,6 +1035,10 @@ namespace pwiz.Skyline
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
+
+            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
+
             menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);

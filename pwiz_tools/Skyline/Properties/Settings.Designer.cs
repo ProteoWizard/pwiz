@@ -3093,5 +3093,17 @@ namespace pwiz.Skyline.Properties {
                 this["ShowFullScanAnnotations"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowFullScanMassError {
+            get {
+                return ((bool)(this["ShowFullScanMassError"]));
+            }
+            set {
+                this["ShowFullScanMassError"] = value;
+            }
+        }
     }
 }
