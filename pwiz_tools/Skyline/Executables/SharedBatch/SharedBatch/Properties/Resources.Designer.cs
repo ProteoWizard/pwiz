@@ -29,7 +29,7 @@ namespace SharedBatch.Properties {
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Resources() {
+        internal Resources() {
         }
         
         /// <summary>
@@ -249,6 +249,27 @@ namespace SharedBatch.Properties {
         public static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_already_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The imported configurations are from an old file format and could not be copied to {0}.
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_" +
+                        "and_could_not_be_copied_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of the file to import from {0} is newer than the version of the program {1}. Please update the program to import configurations from this file..
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than" +
+                        "_the_version_of_the_program__1___Please_update_the_program_to_import_configurati" +
+                        "ons_from_this_file_", resourceCulture);
             }
         }
         
@@ -756,6 +777,26 @@ namespace SharedBatch.Properties {
         public static string ProcessRunner_StartException_Unable_to_start__0__ {
             get {
                 return ResourceManager.GetString("ProcessRunner_StartException_Unable_to_start__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}..
+        /// </summary>
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___ {
+            get {
+                return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
+                        "version_of__0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To help improve {0} in future versions, please post the configuration file to the Skyline Support board:.
+        /// </summary>
+        public static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
+            get {
+                return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
+                        "n_file_to_the_Skyline_Support_board_", resourceCulture);
             }
         }
         

@@ -49,7 +49,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.templateFileControl.Text = nonexistentTemplate;
+                newConfigForm.templateControl.SetPath(nonexistentTemplate);
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
@@ -65,7 +65,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"TestConfig", TestFilesDirs[0].FullPath, this);
-                newConfigForm.textDataPath.Text = Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData");
+                newConfigForm.dataControl.SetPath(Path.Combine(TestFilesDirs[0].FullPath, "nonexistentData"));
             });
 
             RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),

@@ -32,12 +32,16 @@ namespace SharedBatch
 {
     public delegate IConfig Importer(XmlReader reader);
 
+    public delegate string XmlUpdater(string oldXmlFile, string newVersion);
+
     public class ConfigManager
     {
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
 
         protected Importer importer; // a ReadXml method to import the configurations
+
+        protected XmlUpdater getUpdatedXml; // a ReadXml method to import the configurations
 
         protected ImmutableList<IConfig> _configList { get; private set; } // the list of configurations. Every config must have a validation status in _configValidation
 
@@ -70,7 +74,7 @@ namespace SharedBatch
 
         protected void AssertAllInitialized()
         {
-            if (importer == null || _configList == null || _configValidation == null || 
+            if (importer == null || getUpdatedXml == null || _configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -78,9 +82,10 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        protected List<IConfig> LoadConfigList()
+        protected List<IConfig> LoadConfigList(string version)
         {
             ConfigList.Importer = importer;
+            ConfigList.Version = version;
             // Do not load saved configurations in test mode
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
@@ -118,13 +123,7 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var updatedConfigs = new ConfigList();
-                foreach (var config in _configList)
-                {
-                    updatedConfigs.Add(config);
-                }
-
-                Settings.Default.ConfigList = updatedConfigs;
+                Settings.Default.SetConfigList(_configList.ToList());
                 Settings.Default.Save();
             }
         }
@@ -456,22 +455,22 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
+        protected List<IConfig> ImportFrom(string filePath, string installedVersion, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
-            // TODO (Ali) uncomment this when data and templates can be downloaded
-            /*
-            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER))
+            var forceReplaceRoot = string.Empty;
+            
+            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
                 copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
                 var file = new FileInfo(filePath);
-                if (!File.Exists(copiedConfigFile))
-                    file.CopyTo(copiedConfigFile, false);
-            }*/
+                file.CopyTo(copiedConfigFile, true);
+                filePath = copiedConfigFile;
+            }
 
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();
@@ -479,54 +478,78 @@ namespace SharedBatch
             // read configs from file
             try
             {
-                using (var stream = new FileStream(filePath, FileMode.Open))
+                var stream = new FileStream(filePath, FileMode.Open);
+                var reader = XmlReader.Create(stream);
+                while (!reader.Name.Equals("config_list") && !reader.Name.Equals("ConfigList"))
+                    reader.Read();
+                // check if the configuration file needs to be updated
+                var fileVersion = reader.GetAttribute(Attr.version);
+                if (fileVersion == null)
                 {
-                    using (var reader = XmlReader.Create(stream))
+                    reader.Dispose();
+                    stream.Dispose();
+                    var newFile = getUpdatedXml(filePath, installedVersion);
+                    if(newFile == null)
                     {
-                        while (!reader.Name.Equals("ConfigList"))
-                            reader.Read();
-                        var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                        var oldFolder = reader.GetAttribute(Attr.SavedPathRoot);
-                        if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
-                            oldFolder = Path.GetDirectoryName(oldConfigFile);
-                        if (!string.IsNullOrEmpty(oldFolder))
-                        {
-                            var newFolder = string.IsNullOrEmpty(copiedDestination)
-                                ? Path.GetDirectoryName(filePath)
-                                : Path.GetDirectoryName(copiedConfigFile);
-                            AddRootReplacement(oldFolder, newFolder, false, out _, out _);
-                        }
-
-                        while (!reader.Name.EndsWith("_config"))
-                        {
-                            if (reader.Name == "userSettings" && !reader.IsStartElement())
-                                break; // there are no configurations in the file
-                            reader.Read();
-                        }
-
-                        while (reader.IsStartElement())
-                        {
-                            if (reader.Name.EndsWith("_config"))
-                            {
-                                IConfig config = null;
-                                try
-                                {
-                                    config = importer(reader);
-                                }
-                                catch (Exception ex)
-                                {
-                                    readXmlErrors.Add(ex.Message);
-                                }
-                                
-                                if (config != null)
-                                    readConfigs.Add(config);
-                            }
-
-                            reader.Read();
-                            reader.Read();
-                        }
+                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
+                            filePath));
+                        return new List<IConfig>();
                     }
+                    return ImportFrom(newFile, installedVersion, null);
                 }
+                // check that the configuration file is not newer than the program version
+                var oldVersion = new Version(fileVersion);
+                var newVersion = new Version(installedVersion);
+                if (oldVersion > newVersion)
+                {
+                    DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
+                    return new List<IConfig>();
+                }
+
+                var oldFolder = reader.GetAttribute(Attr.saved_path_root);
+                if (!string.IsNullOrEmpty(oldFolder))
+                {
+                    var newFolder = string.IsNullOrEmpty(copiedDestination)
+                        ? Path.GetDirectoryName(filePath)
+                        : Path.GetDirectoryName(copiedConfigFile);
+                    AddRootReplacement(oldFolder, newFolder, false, out string oldRoot, out _);
+                    if (!string.IsNullOrEmpty(copiedDestination))
+                        forceReplaceRoot = oldRoot;
+                } else if (!string.IsNullOrEmpty(copiedConfigFile))
+                {
+                    DisplayWarning(string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
+                }
+
+                while (!reader.Name.EndsWith("_config"))
+                {
+                    if (reader.Name == "userSettings" && !reader.IsStartElement())
+                        break; // there are no configurations in the file
+                    reader.Read();
+                }
+
+                while (reader.IsStartElement())
+                {
+                    if (reader.Name.EndsWith("_config"))
+                    {
+                        IConfig config = null;
+                        try
+                        {
+                            config = importer(reader);
+                        }
+                        catch (Exception ex)
+                        {
+                            readXmlErrors.Add(ex.Message);
+                        }
+                        
+                        if (config != null)
+                            readConfigs.Add(config);
+                    }
+
+                    reader.Read();
+                    reader.Read();
+                }
+                reader.Dispose();
+                stream.Dispose();
             }
             catch (Exception e)
             {
@@ -538,6 +561,10 @@ namespace SharedBatch
                     e.Message);
                 return addedConfigs;
             }
+
+            // delete temporary file used to rewrite XML
+            if (filePath.EndsWith(TextUtil.EXT_TMP))
+                File.Delete(filePath);
 
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
@@ -582,7 +609,13 @@ namespace SharedBatch
             foreach (IConfig config in readConfigs)
             {
                 if (duplicateConfigNames.Contains(config.GetName())) continue;
-                var addingConfig = RunRootReplacement(config);
+
+
+                IConfig addingConfig;
+                if (string.IsNullOrEmpty(forceReplaceRoot))
+                    addingConfig = RunRootReplacement(config);
+                else
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
                 addedConfigs.Add(addingConfig);
                 numAdded++;
             }
@@ -617,7 +650,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, int[] indiciesToSave)
+        public void ExportConfigs(string filePath, string version, int[] indiciesToSave)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -654,8 +687,9 @@ namespace SharedBatch
                     settings.NewLineChars = Environment.NewLine;
                     using (XmlWriter writer = XmlWriter.Create(streamWriter, settings))
                     {
-                        writer.WriteStartElement("ConfigList");
-                        writer.WriteAttributeString(Attr.SavedPathRoot, directory);
+                        writer.WriteStartElement("config_list");
+                        writer.WriteAttributeString(Attr.saved_path_root, directory);
+                        writer.WriteAttributeString(Attr.version, version);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -664,10 +698,11 @@ namespace SharedBatch
             }
         }
 
+        // TODO (Ali): fix autoQC SavedFilePath
         enum Attr
         {
-            SavedConfigsFilePath, // deprecated since SkylineBatch release 20.2.0.475
-            SavedPathRoot
+            saved_path_root,
+            version
         }
 
         #endregion
@@ -834,6 +869,21 @@ namespace SharedBatch
             return config;
         }
 
+        // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot, out string errorMessage)
+        {
+            errorMessage = null;
+            try
+            {
+                return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+            }
+            catch (ArgumentException e)
+            {
+                errorMessage = e.Message;
+                return config;
+            }
+        }
+
         #endregion
 
         protected void SetState(ConfigManagerState newState)
@@ -844,6 +894,7 @@ namespace SharedBatch
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
+                SaveConfigList();
             }
         }
 
