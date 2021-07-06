@@ -434,13 +434,23 @@ namespace pwiz.Skyline.Model
             Inputs = inputs;
         }
 
+        public MassListImporter(SrmDocument document, MassListInputs inputs, bool isSmallMoleculeInput)
+        {
+            Document = document;
+            Settings = document.Settings;
+            Inputs = inputs;
+            IsSmallMoleculeInput = isSmallMoleculeInput;
+
+        }
         public SrmDocument Document { get; private set; }
         public MassListRowReader RowReader { get; private set; }
         public SrmSettings Settings { get; private set; }
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
-        public bool IsSmallMoleculeInput { get; private set; }
+        public bool IsSmallMoleculeInput { get; set; }
+        // True if the transition list has already been classified as small molecule or protein
+        public bool ListClassified { get; set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -463,10 +473,14 @@ namespace pwiz.Skyline.Model
             var lines = new List<string>(Inputs.ReadLines(progressMonitor, status));
             status = status.NextSegment();
             _linesSeen = 0;
-
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings))
+            // Decide if the input is peptide or small molecule if we haven't already
+            if (!ListClassified)
             {
-                IsSmallMoleculeInput = true;
+                IsSmallMoleculeInput =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings);
+            }
+            if (IsSmallMoleculeInput)
+            {
                 if (progressMonitor != null)
                     progressMonitor.UpdateProgress(status.Complete());
                 return true;

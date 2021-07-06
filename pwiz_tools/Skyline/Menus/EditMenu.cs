@@ -355,6 +355,8 @@ namespace pwiz.Skyline.Menus
             Type[] columnTypes;
             IFormatProvider formatProvider;
             char separator;
+            var isSmallMoleculeInput = 
+                SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings); ;
 
             // Check for a FASTA header
             if (text.StartsWith(@">"))
@@ -390,10 +392,10 @@ namespace pwiz.Skyline.Menus
                 }
             }
             // Perhaps it's a small molecule list with headers
-            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings) &&
-                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+            else if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes) && isSmallMoleculeInput)
             {
-                SkylineWindow.InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
+                SkylineWindow.InsertSmallMoleculeTransitionList(text,
+                    Resources.SkylineWindow_Paste_Paste_transition_list);
             }
             // If the text contains numbers, see if it can be imported as a mass list.
             // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
@@ -417,7 +419,7 @@ namespace pwiz.Skyline.Menus
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
                     SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                        Resources.SkylineWindow_Paste_Paste_transition_list, false);
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false, isSmallMoleculeInput);
                 // Handle unusual corner case where data is found to be columnar and contains numbers, 
                 // but first line is missing
                 else if (columnTypes.Length == 0)
