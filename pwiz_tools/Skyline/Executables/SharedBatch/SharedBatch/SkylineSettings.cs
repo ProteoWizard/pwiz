@@ -18,6 +18,7 @@ namespace SharedBatch
     public class SkylineSettings
     {
         // The skyline installation to use when a configuration is run
+        public const string XML_EL = "config_skyline_settings";
 
         private int[] _version;
 
@@ -79,13 +80,13 @@ namespace SharedBatch
                 }
             }
         }
-        
+
         private enum Attr
         {
             type,
             path,
         }
-        
+
         public static SkylineSettings ReadXml(XmlReader reader)
         {
             // always use local Skyline if it exists
@@ -98,7 +99,7 @@ namespace SharedBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("config_skyline_settings");
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(Attr.type, Type.ToString());
             if (Type == SkylineType.Custom)
                 writer.WriteAttributeIfString(Attr.path, CmdPath);
