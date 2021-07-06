@@ -39,7 +39,7 @@ namespace SkylineBatch
         // script that will copy the skyline file, import data, export reports, and run r scripts.
 
         
-        public SkylineBatchConfig(string name, bool enabled, DateTime modified, MainSettings mainSettings, 
+        public SkylineBatchConfig(string name, bool enabled, bool logTestFormat, DateTime modified, MainSettings mainSettings, 
             FileSettings fileSettings, RefineSettings refineSettings, ReportSettings reportSettings, 
             SkylineSettings skylineSettings)
         {
@@ -50,6 +50,7 @@ namespace SkylineBatch
             }
             Name = name;
             Enabled = enabled;
+            LogTestFormat = logTestFormat;
             Modified = modified;
             MainSettings = mainSettings;
             FileSettings = fileSettings;
@@ -73,6 +74,8 @@ namespace SkylineBatch
         public readonly SkylineSettings SkylineSettings;
 
         public bool Enabled;
+
+        public bool LogTestFormat;
 
         public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
 
@@ -124,19 +127,19 @@ namespace SkylineBatch
 
         public SkylineBatchConfig WithoutDependency()
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.WithoutDependency(),
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings.WithoutDependency(),
                 FileSettings, RefineSettings, ReportSettings, SkylineSettings);
         }
 
         public SkylineBatchConfig DependentChanged(string newName, string newTemplateFile)
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.UpdateDependent(newName, newTemplateFile),
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings.UpdateDependent(newName, newTemplateFile),
                 FileSettings, RefineSettings, ReportSettings, SkylineSettings);
         }
 
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings,
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings,
                 FileSettings, RefineSettings, ReportSettings, newSettings);
         }
 
@@ -158,6 +161,7 @@ namespace SkylineBatch
         {
             var name = reader.GetAttribute(XML_TAGS.name);
             var enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
+            var logTestFormat = reader.GetBoolAttribute(XML_TAGS.log_test_format);
             DateTime modified;
             DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 
@@ -193,7 +197,7 @@ namespace SkylineBatch
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
-            return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings,
+            return new SkylineBatchConfig(name, enabled, logTestFormat, modified, mainSettings, fileSettings,
                 refineSettings, reportSettings, skylineSettings);
         }
 
@@ -202,6 +206,7 @@ namespace SkylineBatch
             writer.WriteStartElement(XMLElements.BATCH_CONFIG);
             writer.WriteAttribute(XML_TAGS.name, Name);
             writer.WriteAttribute(XML_TAGS.enabled, Enabled);
+            writer.WriteAttribute(XML_TAGS.log_test_format, LogTestFormat);
             writer.WriteAttributeIfString(XML_TAGS.modified, Modified.ToString(CultureInfo.InvariantCulture));
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
@@ -239,7 +244,7 @@ namespace SkylineBatch
                 RefineSettings.TryPathReplace(oldRoot, newRoot, out RefineSettings pathReplacedRefineSettings);
             var reportSettingsReplaced =
                 ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
-            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings,
+            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, pathReplacedMainSettings,
                 FileSettings, pathReplacedRefineSettings, pathReplacedReportSettings, SkylineSettings);
             return mainSettingsReplaced || reportSettingsReplaced || refineSettingsReplaced;
         }
@@ -249,7 +254,7 @@ namespace SkylineBatch
             var mainSettings = MainSettings.ForcePathReplace(oldRoot, newRoot);
             var refineSettings = RefineSettings.ForcePathReplace(oldRoot, newRoot);
             var reportSettings = ReportSettings.ForcePathReplace(oldRoot, newRoot);
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, mainSettings,
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, mainSettings,
                 FileSettings, refineSettings, reportSettings, SkylineSettings);
         }
 

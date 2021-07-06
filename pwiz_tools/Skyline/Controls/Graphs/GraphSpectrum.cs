@@ -57,12 +57,27 @@ namespace pwiz.Skyline.Controls.Graphs
         void LockYAxis(bool lockY);
     }
 
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer
+    public enum SpectrumControlType { LibraryMatch, FullScanViewer }
+    public interface IMzScaleCopyable
+    {
+        void SetMzScale(MzRange range);
+        MzRange Range { get; }
+        void ApplyMZZoomState(ZoomState scaleState);
+        event EventHandler<ZoomEventArgs> ZoomEvent;
+        SpectrumControlType ControlType { get; }
+    }
+
+    public interface ISpectrumScaleProvider
+    {
+        MzRange GetMzRange(SpectrumControlType controlType);
+    }
+    
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
     {
 
         private static readonly double YMAX_SCALE = 1.25;
 
-        public interface IStateProvider
+        public interface IStateProvider : ISpectrumScaleProvider
         {
             TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes(bool isProteomic);
@@ -94,6 +109,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
             {
+            }
+
+            public MzRange GetMzRange(SpectrumControlType controlType)
+            {
+                return new MzRange();
             }
         }
 
@@ -272,7 +292,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 xMin = instrument.MinMz;
             else
                 xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
-            ZoomXAxis(axis, xMin, instrument.MaxMz);
+
+            var requestedRange = new MzRange(xMin, instrument.MaxMz);
+            if (Settings.Default.SyncMZScale)
+            {
+                if(_documentContainer is ISpectrumScaleProvider scaleProvider)
+                    requestedRange = scaleProvider.GetMzRange(SpectrumControlType.FullScanViewer) ?? requestedRange;
+            } 
+
+            ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
         }
 
         private void ZoomXAxis(Axis axis, double xMin, double xMax)
@@ -970,7 +998,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = !Equals(_spectrum, spectrum);
+                        var spectrumChanged = _spectrum?.CompareTo(spectrum) != 0;
                         _spectrum = spectrum;
 
                         ClearGraphPane();
@@ -1247,6 +1275,44 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
+        public void SetMzScale(MzRange range)
+        {
+            ZoomXAxis(GraphPane.XAxis, range.Min, range.Max);
+            graphControl.Invalidate();
+        }
+        public MzRange Range
+        {
+            get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
+        }
+
+        public void ApplyMZZoomState(ZoomState newState)
+        {
+            newState.XAxis.ApplyScale(GraphPane.XAxis);
+            graphControl.Refresh();
+        }
+
+        public event EventHandler<ZoomEventArgs> ZoomEvent;
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            FireZoomEvent(newState);
+        }
+
+        private void FireZoomEvent(ZoomState zoomState = null)
+        {
+            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+            {
+                if (zoomState == null)
+                    zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
+                ZoomEvent.Invoke(this, new ZoomEventArgs(zoomState));
+            }
+        }
+
+        public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+
+        public double MzMax
+        {
+            get { return GraphPane.XAxis.Scale.Max; }
+        }
 
 // ReSharper disable SuggestBaseTypeForParameter
         private static TransitionGroupDocNode[] GetChargeGroups(PeptideTreeNode nodeTree, bool requireLibInfo)
@@ -1550,6 +1616,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public int CompareTo(SpectrumDisplayInfo other)
         {
+            if (other == null) return 1;
             int i = Comparer.Default.Compare(FileOrder, other.FileOrder);
             if (i == 0)
             {
@@ -1604,5 +1671,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SpectrumDisplayInfo Spectrum { get; private set; }
         public bool IsUserAction { get; private set; }
+    }
+    public sealed class MzRange
+    {
+        public MzRange(double min, double max)
+        {
+            Min = min;
+            Max = max;
+        }
+
+        public MzRange() : this(0, 1){}
+
+        public double Min { get; private set; }
+        public double Max { get; private set; }
+        public override bool Equals(object obj)
+        {
+            if (obj is MzRange other)
+                return Min == other.Min && Max == other.Max;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Min.GetHashCode() * 397 ^ Max.GetHashCode();
+        }
     }
 }

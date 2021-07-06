@@ -263,6 +263,17 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The version of the file to import from {0} is newer than the version of the program {1}. Please update the program to import configurations from this file..
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than" +
+                        "_the_version_of_the_program__1___Please_update_the_program_to_import_configurati" +
+                        "ons_from_this_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding configuration &quot;{0}&quot;..
         /// </summary>
         public static string ConfigManager_InsertConfiguration_Adding_configuration___0___ {
