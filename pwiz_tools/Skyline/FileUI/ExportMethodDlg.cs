@@ -520,10 +520,16 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.ExportSureQuant = cbSureQuant.Checked = value; }
         }
 
-        public double IntensityThresholdPercent
+        public double? IntensityThresholdPercent
         {
             get { return _exportProperties.IntensityThresholdPercent; }
             set { _exportProperties.IntensityThresholdPercent = value; }
+        }
+
+        public double? IntensityThresholdValue
+        {
+            get { return _exportProperties.IntensityThresholdValue; }
+            set { _exportProperties.IntensityThresholdValue = value; }
         }
 
         public bool ExportEdcMass
@@ -640,6 +646,24 @@ namespace pwiz.Skyline.FileUI
             panelSureQuant.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
                 InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS;
+            if (cbSureQuant.Checked)
+            {
+                if (!lblIntensityThresholdType.Visible)
+                {
+                    lblIntensityThresholdType.Show();
+                    textIntensityThreshold.Width = textPrimaryCount.Width;
+                    textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(CultureInfo.CurrentCulture);
+                }
+            }
+            else
+            {
+                if (lblIntensityThresholdType.Visible)
+                {
+                    lblIntensityThresholdType.Hide();
+                    textIntensityThreshold.Width = textDwellTime.Width;
+                    textIntensityThreshold.Text = Settings.Default.IntensityThresholdValue.ToString(CultureInfo.CurrentCulture);
+                }
+            }
         }
 
         private void UpdateMaxTransitions()
@@ -1081,7 +1105,12 @@ namespace pwiz.Skyline.FileUI
             if (cbSureQuant.Visible)
                 Settings.Default.ExportSureQuant = ExportSureQuant;
             if (textIntensityThreshold.Visible)
-                Settings.Default.IntensityThresholdPercent = IntensityThresholdPercent;
+            {
+                if (cbSureQuant.Checked)
+                    Settings.Default.IntensityThresholdPercent = IntensityThresholdPercent.GetValueOrDefault();
+                else
+                    Settings.Default.IntensityThresholdValue = IntensityThresholdValue.GetValueOrDefault();
+            }
             if (cbExportEdcMass.Visible)
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
@@ -1265,13 +1294,21 @@ namespace pwiz.Skyline.FileUI
 
                 _exportProperties.DwellTime = dwellTime;
             }
+
+            _exportProperties.IntensityThresholdPercent = null;
+            _exportProperties.IntensityThresholdValue = null;
             if (textIntensityThreshold.Visible)
             {
-                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, 100, out var intensityThreshold))
+                var surequant = cbSureQuant.Checked;
+                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? (double?) 100 : null, out var intensityThreshold))
                     return false;
 
-                _exportProperties.IntensityThresholdPercent = intensityThreshold;
+                if (surequant)
+                    _exportProperties.IntensityThresholdPercent = intensityThreshold;
+                else
+                    _exportProperties.IntensityThresholdValue = intensityThreshold;
             }
+
             if (textRunLength.Visible)
             {
                 double runLength;
@@ -1571,6 +1608,10 @@ namespace pwiz.Skyline.FileUI
             UpdateInstrumentControls(targetType);
 
             CalcMethodCount();
+        }
+        private void cbSureQuant_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateThermoSureQuantControls();
         }
 
         private void UpdateInstrumentControls(ExportMethodType targetType)

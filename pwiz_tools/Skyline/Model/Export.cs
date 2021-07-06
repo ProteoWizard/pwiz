@@ -390,7 +390,8 @@ namespace pwiz.Skyline.Model
         public virtual bool ExportMultiQuant { get; set; }
         public virtual bool ExportSureQuant { get; set; }
 
-        public virtual double IntensityThresholdPercent { get; set; }
+        public virtual double? IntensityThresholdPercent { get; set; }
+        public virtual double? IntensityThresholdValue { get; set; }
 
         public virtual bool RetentionStartAndEnd { get; set; }
 
@@ -783,6 +784,7 @@ namespace pwiz.Skyline.Model
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.IntensityThresholdPercent = IntensityThresholdPercent;
+            exporter.IntensityThresholdValue = IntensityThresholdValue;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -796,6 +798,7 @@ namespace pwiz.Skyline.Model
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.IntensityThresholdPercent = IntensityThresholdPercent;
+            exporter.IntensityThresholdValue = IntensityThresholdValue;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -1930,6 +1933,7 @@ namespace pwiz.Skyline.Model
         private const double DEFAULT_INTENSITY_THRESHOLD_PERCENT = 1;
 
         public double? IntensityThresholdPercent { get; set; }
+        public double? IntensityThresholdValue { get; set; }
 
         protected override string InstrumentType => _instrumentType;
 
@@ -1986,11 +1990,13 @@ namespace pwiz.Skyline.Model
         {
             if (_surequantMethod)
             {
-                // <precursor charge><H|L><target>;<transition name>
+                // <precursor charge><H|L><target>;[*]<transition name>
                 var surequantInfo = nodeTranGroup.PrecursorCharge.ToString(CultureInfo);
                 surequantInfo += Equals(nodeTranGroup.LabelType, IsotopeLabelType.heavy) ? 'H' : 'L';
                 surequantInfo += nodePep.Target;
                 surequantInfo += ';';
+                if (nodeTran.Transition.IsPrecursor())
+                    surequantInfo += '*';
                 surequantInfo += nodeTran.FragmentIonName;
                 writer.WriteDsvField(surequantInfo, FieldSeparator);
                 writer.Write(FieldSeparator);
@@ -2073,12 +2079,19 @@ namespace pwiz.Skyline.Model
                 writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
             var maxHeight = (double?) null;
-            if (nodeTranGroup.HasResults)
+            if (IntensityThresholdPercent.HasValue)
             {
-                var heights = nodeTranGroup.Results.SelectMany(chromInfoList => chromInfoList.AsList())
-                    .Select(ci => ci.Height).Where(h => h.HasValue).ToArray();
-                if (heights.Any())
-                    maxHeight = heights.Max().Value * ((IntensityThresholdPercent ?? DEFAULT_INTENSITY_THRESHOLD_PERCENT) / 100);
+                if (nodeTranGroup.HasResults)
+                {
+                    var heights = nodeTranGroup.Results.SelectMany(chromInfoList => chromInfoList.AsList())
+                        .Select(ci => ci.Height).Where(h => h.HasValue).ToArray();
+                    if (heights.Any())
+                        maxHeight = heights.Max().Value * ((IntensityThresholdPercent ?? DEFAULT_INTENSITY_THRESHOLD_PERCENT) / 100);
+                }
+            }
+            else if (IntensityThresholdValue.HasValue)
+            {
+                maxHeight = IntensityThresholdValue.Value;
             }
             writer.Write(FieldSeparator);
             writer.Write(maxHeight);

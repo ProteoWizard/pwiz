@@ -83,7 +83,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cbSureQuant = new System.Windows.Forms.CheckBox();
             this.panelSureQuant = new System.Windows.Forms.Panel();
-            this.label8 = new System.Windows.Forms.Label();
+            this.lblIntensityThresholdType = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
@@ -448,20 +448,21 @@
             resources.ApplyResources(this.cbSureQuant, "cbSureQuant");
             this.cbSureQuant.Name = "cbSureQuant";
             this.cbSureQuant.UseVisualStyleBackColor = true;
+            this.cbSureQuant.CheckedChanged += new System.EventHandler(this.cbSureQuant_CheckedChanged);
             // 
             // panelSureQuant
             // 
-            this.panelSureQuant.Controls.Add(this.label8);
+            this.panelSureQuant.Controls.Add(this.lblIntensityThresholdType);
             this.panelSureQuant.Controls.Add(this.textIntensityThreshold);
             this.panelSureQuant.Controls.Add(this.label7);
             this.panelSureQuant.Controls.Add(this.cbSureQuant);
             resources.ApplyResources(this.panelSureQuant, "panelSureQuant");
             this.panelSureQuant.Name = "panelSureQuant";
             // 
-            // label8
+            // lblIntensityThresholdType
             // 
-            resources.ApplyResources(this.label8, "label8");
-            this.label8.Name = "label8";
+            resources.ApplyResources(this.lblIntensityThresholdType, "lblIntensityThresholdType");
+            this.lblIntensityThresholdType.Name = "lblIntensityThresholdType";
             // 
             // label7
             // 
@@ -594,7 +595,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbSureQuant;
         private System.Windows.Forms.Panel panelSureQuant;
-        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblIntensityThresholdType;
         private System.Windows.Forms.TextBox textIntensityThreshold;
         private System.Windows.Forms.Label label7;
     }

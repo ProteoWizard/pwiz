@@ -260,6 +260,7 @@ namespace BuildThermoMethod
         public int Charge { get; private set; }
         public bool Heavy { get; private set; }
         public string Sequence { get; private set; }
+        public bool IsPrecursor { get; private set; }
         public string FragmentName { get; private set; }
 
         private char LastChar => Sequence.Length > 0 ? Sequence.Last() : 'X';
@@ -287,11 +288,12 @@ namespace BuildThermoMethod
             }
         }
 
-        public SureQuantInfo(int charge, bool heavy, string seq, string fragmentName)
+        public SureQuantInfo(int charge, bool heavy, string seq, bool isPrecursor, string fragmentName)
         {
             Charge = charge;
             Heavy = heavy;
             Sequence = seq;
+            IsPrecursor = isPrecursor;
             FragmentName = fragmentName;
         }
 
@@ -308,7 +310,14 @@ namespace BuildThermoMethod
             var splitIdx = info.IndexOf(';');
             if (splitIdx == -1)
                 return false;
-            obj = new SureQuantInfo(charge, heavy, info.Substring(0, splitIdx), info.Substring(splitIdx + 1));
+            var fragmentName = info.Substring(splitIdx + 1);
+            var isPrecursor = false;
+            if (fragmentName.StartsWith("*"))
+            {
+                isPrecursor = true;
+                fragmentName = fragmentName.Substring(1);
+            }
+            obj = new SureQuantInfo(charge, heavy, info.Substring(0, splitIdx), isPrecursor, fragmentName);
             return true;
         }
     }
@@ -733,16 +742,19 @@ namespace BuildThermoMethod
 
                     if (surequant)
                     {
-                        massTrigger.Add(new XmlExploris.MassListRecord
+                        if (!item.SureQuantInfo.IsPrecursor)
                         {
-                            CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
-                            CollisionEnergySpecified = item.CollisionEnergy.HasValue,
-                            MOverZ = item.ProductMz.GetValueOrDefault(),
-                            MOverZSpecified = item.ProductMz.HasValue,
-                            CompoundName = item.SureQuantInfo.FragmentName,
-                            GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
-                            GroupIDSpecified = true,
-                        });
+                            massTrigger.Add(new XmlExploris.MassListRecord
+                            {
+                                CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                                CollisionEnergySpecified = item.CollisionEnergy.HasValue,
+                                MOverZ = item.ProductMz.GetValueOrDefault(),
+                                MOverZSpecified = item.ProductMz.HasValue,
+                                CompoundName = item.SureQuantInfo.FragmentName,
+                                GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                                GroupIDSpecified = true,
+                            });
+                        }
                     }
                     else
                     {
@@ -872,14 +884,17 @@ namespace BuildThermoMethod
 
                     if (surequant)
                     {
-                        massTrigger.Add(new XmlCalcium.MassListRecord
+                        if (!item.SureQuantInfo.IsPrecursor)
                         {
-                            MOverZ = item.ProductMz.GetValueOrDefault(),
-                            MOverZSpecified = item.ProductMz.HasValue,
-                            CompoundName = item.SureQuantInfo.FragmentName,
-                            GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
-                            GroupIDSpecified = true,
-                        });
+                            massTrigger.Add(new XmlCalcium.MassListRecord
+                            {
+                                MOverZ = item.ProductMz.GetValueOrDefault(),
+                                MOverZSpecified = item.ProductMz.HasValue,
+                                CompoundName = item.SureQuantInfo.FragmentName,
+                                GroupID = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                                GroupIDSpecified = true,
+                            });
+                        }
                     }
                     else
                     {
