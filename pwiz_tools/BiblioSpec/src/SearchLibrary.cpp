@@ -522,7 +522,7 @@ bool SearchLibrary::checkCharge(const vector<int>& queryCharges, int libCharge){
     }
 
     for(size_t i = 0; i < queryCharges.size(); i++){
-        if( libCharge == queryCharges[i] ){
+            if ( libCharge == queryCharges[i] ) {
             return true;
         }
     }

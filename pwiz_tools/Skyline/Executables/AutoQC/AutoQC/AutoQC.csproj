@@ -24,9 +24,9 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC-test/</InstallUrl>
-    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
+    <SupportUrl>https://panoramaweb.org/support.url</SupportUrl>
     <ProductName>AutoQC</ProductName>
-    <PublisherName>MacCoss Lab, UW</PublisherName>
+    <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
     <ApplicationRevision>5</ApplicationRevision>
@@ -85,8 +85,9 @@
     <Content Include="AutoQC_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="LaunchBatch.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe">
+      <Link>LaunchBatch.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -115,7 +116,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
@@ -168,7 +169,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="XmlUtil.cs" />
+    <Compile Include="XmlUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -263,10 +264,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd..\..
-del LaunchBatch.exe
-cd..\..
-copy SharedBatch\LaunchBatch\bin\Debug\LaunchBatch.exe AutoQC\AutoQC\LaunchBatch.exe</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

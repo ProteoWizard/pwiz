@@ -2373,10 +2373,6 @@
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>このインポートは予測より長くかかっています。ネットワークドライブからインポート中である場合、このインポートをキャンセルしてローカルディスクをコピーし再試行することを検討してください。</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>{0}の読み込みに失敗しました。
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>エラー：このアッセイライブラリのiRTデータベース「{0}」を作成するには、引数{1}または{2}のいずれかを用いてiRT標準を指定する必要があります。</value>
   </data>
@@ -3122,9 +3118,6 @@
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
-  </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>新規結果が追加されていません。Panoramaインポートをスキップ中。</value>
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>共有ファイル</value>
@@ -5267,9 +5260,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告： ファイル{0}を読み取ることができません。 無視...</value>
-  </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>ダウンロードに失敗しました。</value>
   </data>
@@ -5842,9 +5832,6 @@
   </data>
   <data name="OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_" xml:space="preserve">
     <value>ライブラリパスは空値にはできません。</value>
-  </data>
-  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>{0}からツールのインストールをキャンセルしました。</value>
   </data>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>ファイルをキャンセル</value>
@@ -7281,9 +7268,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>最大共点数{0}と最適化ステップ数を確認します。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告： 繰り返し測定{0}が指定したドキュメント内に既に存在しており、import-appendオプションが指定されていません。 繰り返し測定はドキュメントに追加されません。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重複</value>
   </data>
@@ -7646,9 +7630,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位体内積</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>Panoramaサーバー（{0}）のファイルインポート中にエラーが発生しました。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>エラー： {0}があり、かつ引数の場合、ツールにはレポートタイトルが必要です。レポートを指定するには、--tool-reportパラメータを使用します。</value>
@@ -10051,18 +10032,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>組み込み</value>
   </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
-    <value>「{0}」に一致する外部スペクトルファイルが、MaxQuant入力ファイル「{1}」と同じディレクトリ内か、親かそのまた親のディレクトリ内に見つかりませんでした。
-
-元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。質量分析計で測定された強度を表していない可能性があります。</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
-    <value>組み込みスペクトルを使用するには、[組み込み]をクリックします。
-（対応するファイル拡張子{0}のある）入力ファイルの横に配置されている元のスペクトルファイルを用いて構築しようとするには、[再試行]をクリックします。</value>
-  </data>
-  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
-    <value>--import-search-prefer-embedded-spectraという引数を使用するには、組み込みスペクトルを使用するようライブラリを強制的に構築させます。あるいは（対応するファイル拡張子{0}のある）入力ファイルの横に元のスペクトルファイルを配置してから再実行します。</value>
-  </data>
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>エラー：ウェブサイト{0}への接続が失敗しました</value>
   </data>
@@ -10305,20 +10274,11 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>計算された注釈を更新中</value>
   </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>インポートする繰り返し測定が残されていません。</value>
-  </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>エラー：{1}の正規表現「{0}」が解析できません。</value>
   </data>
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>ファイル「{0}」に試料が含まれていません。試料名のパターンを適用できません。無視します。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>ファイル名のパターン「{0}」に一致するファイルがありません。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>試料名のパターン「{0}」に一致するファイルがありません。</value>
   </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>繰り返し測定「{0}」は既にドキュメントに存在します。代わりに「{1}」を使用します。</value>
@@ -10598,9 +10558,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panoramaサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>ジョブの詳細は{0}で見ることができます。</value>
@@ -11096,9 +11053,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
-  </data>
-  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>CiRTペプチド使用時には{0}を設定する必要があります。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
