@@ -28,6 +28,7 @@ jobs:
       if: steps.check.outputs.triggered == 'true'
       with:
         pr_branch: 'Skyline/skyline_21_1'
+        merge_strategy: ''
         #merge_strategy: '--strategy=recursive -Xtheirs'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
