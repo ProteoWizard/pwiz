@@ -1,8 +1,12 @@
 name: Cherry-pick from master to Skyline release branch
 on:
-  push:
-    branches:
-      - master
+  #push:
+  #  branches:
+  #    - master
+  issue_comment:
+    types:
+      - created
+      - edited
 jobs:
   release_pull_request:
     runs-on: ubuntu-latest
@@ -15,7 +19,7 @@ jobs:
       with:
         pr_branch: 'Skyline/skyline_21_1'
         opt_in_message: '[cp-to-release]'
-        merge_strategy: '--strategy=recursive -Xtheirs'
+        #merge_strategy: '--strategy=recursive -Xtheirs'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITBOT_EMAIL: actions@users.noreply.github.com
