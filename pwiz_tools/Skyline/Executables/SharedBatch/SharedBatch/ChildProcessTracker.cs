@@ -4,15 +4,11 @@
 
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SkylineBatch
+namespace SharedBatch
 {
     /// <summary>
     /// Allows processes to be automatically killed if this parent process unexpectedly quits.

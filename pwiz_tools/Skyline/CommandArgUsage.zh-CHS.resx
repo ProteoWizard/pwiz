@@ -258,6 +258,15 @@
   <data name="_import_search_cutoff_score" xml:space="preserve">
     <value>定义要在从肽段搜索结果文件构建谱图库时使用的截止值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</value>
   </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>构建谱图库时要使用的 iRT 标准名称。</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>如果构建以 CiRT 肽段作为 iRT 标准的谱图库，请指定要用作 iRT 标准的 CiRT 肽段数量。</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>如果使用 iRT 标准构建谱图库，请重新校准相对于所添加肽段的 iRT 标准值。</value>
+  </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>将肽段搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“-–import-fasta”参数将匹配的肽段添加为目标。</value>
   </data>
@@ -795,5 +804,14 @@ Waters</value>
   </data>
   <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
     <value>仅保留群组比较已调整的 p 值低于指定截止值的目标。（对群组比较细化为必要项）</value>
+  </data>
+  <data name="CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size" xml:space="preserve">
+    <value>最小化结果文件大小</value>
+  </data>
+  <data name="_chromatograms_discard_unused" xml:space="preserve">
+    <value>丢弃文档中所有未使用的色谱图。</value>
+  </data>
+  <data name="_chromatograms_limit_noise" xml:space="preserve">
+    <value>将色谱图长度限制在色谱峰周围的分钟数，即 ± 分钟。</value>
   </data>
 </root>

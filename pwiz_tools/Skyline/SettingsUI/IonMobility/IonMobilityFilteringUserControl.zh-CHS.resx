@@ -142,7 +142,7 @@
     <value>248, 17</value>
   </metadata>
   <data name="cbUseSpectralLibraryIonMobilities.ToolTip" xml:space="preserve">
-    <value>如果选中，色谱图提取中将使用加载的任何谱图库中的离子迁移值。</value>
+    <value>如果选中，在离子迁移库不提供值时，色谱图提取操作中将使用已加载任何谱图库中的离子迁移值。</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryIonMobilities</value>
@@ -404,7 +404,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>8</value>
   </data>
   <data name="labelWidthAtMobilityMax.Text" xml:space="preserve">
-    <value>imMax 处的宽度(&amp;0)：</value>
+    <value>imMax 处的宽度(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;labelWidthAtMobilityMax.Name" xml:space="preserve">
     <value>labelWidthAtMobilityMax</value>

@@ -27,7 +27,7 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/logic/tribool.hpp"
+#include "boost/logic/tribool_io.hpp"
 
 #include <iostream>
 #include <stdexcept>

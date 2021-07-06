@@ -43,6 +43,11 @@ namespace SkylineBatch
                 baseRefineSettings.RemoveResults, outputFilePath);
         }
 
+        public static RefineSettings Empty()
+        {
+            return new RefineSettings(new RefineInputObject(), false, false, null);
+        }
+
         public RefineSettings(RefineInputObject commandValues, bool removeDecoys, bool removeResults,
             string outputFilePath)
         {
@@ -95,11 +100,11 @@ namespace SkylineBatch
             }
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
-            if (startStep != 3)
+            if (runOption != RunBatchOptions.FROM_REFINE)
                 return false;
             if (File.Exists(OutputFilePath))
             {
@@ -113,7 +118,7 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, Program.FunctionalTest, out string replacedOutputPath);
             pathReplacedRefineSettings =
                 new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;
@@ -138,7 +143,7 @@ namespace SkylineBatch
             }
             var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
             var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
+            var outputFilePath = reader.GetAttribute(Attr.OutputFilePath);
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {

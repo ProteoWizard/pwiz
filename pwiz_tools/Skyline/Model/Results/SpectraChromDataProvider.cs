@@ -159,6 +159,9 @@ namespace pwiz.Skyline.Model.Results
             if (settings == null || settings.IsEmpty)
                 return false;
 
+            if (dataFile.IsWatersSonarData())
+                return false;
+
             if (settings.FilterWindowWidthCalculator?.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range)
                 return false; // Only the linear_range option needs to discover the IM range
 
@@ -1087,7 +1090,7 @@ namespace pwiz.Skyline.Model.Results
                             if (_filter.IsWatersMse)
                             {
                                 // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
-                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra) > 2)
+                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra && nextSpectrum.IonMobilities != null) > 2)
                                     continue;
                             }
                             else if (_filter.IsWatersFile)
@@ -1570,6 +1573,12 @@ namespace pwiz.Skyline.Model.Results
         public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
         {
             return _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+        }
+
+        public bool IsWatersSonarData { get { return _dataFile.IsWatersSonarData(); } }
+        public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance)
+        {
+            return _dataFile.SonarMzToBinRange(mz, tolerance);
         }
     }
     internal enum TimeSharing { single, shared, grouped }

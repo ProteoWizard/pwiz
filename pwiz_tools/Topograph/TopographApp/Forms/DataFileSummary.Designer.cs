@@ -40,7 +40,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colApe = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
+            this.recordNavBar1 = new RecordNavBar();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -188,6 +188,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeakEnd;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colApe;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private RecordNavBar recordNavBar1;
     }
 }

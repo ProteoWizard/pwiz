@@ -714,7 +714,7 @@
     <value>5</value>
   </data>
   <data name="btnExplore.Text" xml:space="preserve">
-    <value>探索(&amp;X)...</value>
+    <value>探索(&amp;X)…</value>
   </data>
   <data name="btnExplore.ToolTip" xml:space="preserve">
     <value>打开 MS/MS 谱图库浏览器</value>
@@ -1038,7 +1038,7 @@ MS/MS谱图库。</value>
     <value>4</value>
   </data>
   <data name="btnFilter.Text" xml:space="preserve">
-    <value>过滤(&amp;F)...</value>
+    <value>过滤(&amp;F)…</value>
   </data>
   <data name="btnFilter.ToolTip" xml:space="preserve">
     <value>从 MIDAS 库过滤 MS/MS 谱图库</value>
@@ -1131,13 +1131,13 @@ MS/MS谱图库。</value>
     <value>9</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 224</value>
+    <value>28, 239</value>
   </data>
   <data name="tbxQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="tbxQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="tbxQuantUnits.ToolTip" xml:space="preserve">
     <value>要应用于校准数量的单位</value>
@@ -1152,7 +1152,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>全部</value>
@@ -1164,13 +1164,13 @@ MS/MS谱图库。</value>
     <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 177</value>
+    <value>28, 192</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="comboQuantMsLevel.ToolTip" xml:space="preserve">
     <value>用于定量的质谱图级别（1、2 或均有）</value>
@@ -1185,7 +1185,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 83</value>
@@ -1209,7 +1209,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1233,16 +1233,16 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 130</value>
+    <value>28, 145</value>
   </data>
   <data name="comboWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="comboWeighting.ToolTip" xml:space="preserve">
     <value>在计算回归时用于加权点影响的等式</value>
@@ -1257,7 +1257,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
     <value>170, 95</value>
@@ -2212,6 +2212,37 @@ MS/MS谱图库。</value>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 110</value>
+  </data>
+  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 17</value>
+  </data>
+  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbxSimpleRatios.Text" xml:space="preserve">
+    <value>简单母离子比率(&amp;S)</value>
+  </data>
+  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
+    <value>如果选中，母离子之间的比率将计算为离子对面积之和的比率。
+出于处理缺失峰或计算比率点积的目的，两个母离子的离子对不会彼此配对。</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
+    <value>cbxSimpleRatios</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -2411,13 +2442,13 @@ MS/MS谱图库。</value>
     <value>10</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 255</value>
+    <value>16, 270</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
     <value>327, 137</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>11</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Text" xml:space="preserve">
     <value>品质因数</value>
@@ -2432,7 +2463,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2441,13 +2472,13 @@ MS/MS谱图库。</value>
     <value>NoControl</value>
   </data>
   <data name="lblQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 209</value>
+    <value>25, 224</value>
   </data>
   <data name="lblQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
   </data>
   <data name="lblQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="lblQuantUnits.Text" xml:space="preserve">
     <value>单位(&amp;U)</value>
@@ -2462,19 +2493,19 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 162</value>
+    <value>25, 177</value>
   </data>
   <data name="lblMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 13</value>
   </data>
   <data name="lblMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblMsLevel.Text" xml:space="preserve">
     <value>MS 级别(&amp;M)</value>
@@ -2489,7 +2520,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2516,7 +2547,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2543,19 +2574,19 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblRegressionWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 115</value>
+    <value>25, 130</value>
   </data>
   <data name="lblRegressionWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 13</value>
   </data>
   <data name="lblRegressionWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblRegressionWeighting.Text" xml:space="preserve">
     <value>回归权重(&amp;W)：</value>
@@ -2570,7 +2601,7 @@ MS/MS谱图库。</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

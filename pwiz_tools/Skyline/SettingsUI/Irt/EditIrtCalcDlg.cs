@@ -1300,6 +1300,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        public void AddStandard()
+        {
+            foreach (var item in comboStandards.Items)
+            {
+                if (item.ToString().Equals(Resources.SettingsListComboDriver_Add))
+                {
+                    comboStandards.SelectedItem = item;
+                    return;
+                }
+            }
+        }
+
         #endregion
 
         private void comboRegressionType_SelectedIndexChanged(object sender, EventArgs e)

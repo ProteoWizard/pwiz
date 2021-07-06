@@ -47,17 +47,17 @@
             // 
             // toolStrip1
             // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblGroup,
             this.toolStripComboGroup});
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
             // 
             // lblGroup
             // 
-            this.lblGroup.Name = "lblGroup";
             resources.ApplyResources(this.lblGroup, "lblGroup");
+            this.lblGroup.Name = "lblGroup";
             // 
             // toolStripComboGroup
             // 
