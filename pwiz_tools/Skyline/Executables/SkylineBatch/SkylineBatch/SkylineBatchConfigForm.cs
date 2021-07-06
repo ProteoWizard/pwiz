@@ -84,7 +84,7 @@ namespace SkylineBatch
                 DisableUserInputs();
             }
 
-            tabsConfig.SelectedIndex = _selectedTab;
+            tabsConfig.SelectedIndex = _action == ConfigAction.Edit ? _selectedTab : 0;
 
             ActiveControl = textConfigName;
         }
