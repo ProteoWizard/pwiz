@@ -12,15 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:
+    - name: Check for trigger
+      uses: khan/pull-request-comment-trigger@master
+      id: check
+      with:
+        trigger: '[cp-to-release]'
+        reaction: rocket
+      env:
+        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     - name: checkout
       uses: actions/checkout@v2
+        if: steps.check.outputs.triggered == 'true'
     - name: Create PR to branch
       uses: chambm/github-action-cherry-pick@0.1.0
+        if: steps.check.outputs.triggered == 'true'
       with:
         pr_branch: 'Skyline/skyline_21_1'
-        opt_in_message: '[cp-to-release]'
         #merge_strategy: '--strategy=recursive -Xtheirs'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITBOT_EMAIL: actions@users.noreply.github.com
-        DRY_RUN: false
+        DRY_RUN: true
