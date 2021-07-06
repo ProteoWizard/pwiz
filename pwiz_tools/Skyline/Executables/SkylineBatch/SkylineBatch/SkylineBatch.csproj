@@ -29,8 +29,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>153</ApplicationRevision>
-    <ApplicationVersion>21.1.1.153</ApplicationVersion>
+    <ApplicationRevision>182</ApplicationRevision>
+    <ApplicationVersion>21.1.1.182</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -111,8 +111,11 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="AddPanoramaTemplate.resx">
-      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    <EmbeddedResource Include="DownloadingFileControl.resx">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaFileForm.resx">
+      <DependentUpon>PanoramaFileForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="AddServerForm.resx">
@@ -162,17 +165,23 @@
     </EmbeddedResource>
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddPanoramaTemplate.cs">
+    <Compile Include="DownloadingFileControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DownloadingFileControl.Designer.cs">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanoramaFileForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AddPanoramaTemplate.Designer.cs">
-      <DependentUpon>AddPanoramaTemplate.cs</DependentUpon>
+    <Compile Include="PanoramaFileForm.Designer.cs">
+      <DependentUpon>PanoramaFileForm.cs</DependentUpon>
     </Compile>
     <Compile Include="AddServerForm.cs">
       <SubType>Form</SubType>
@@ -209,6 +218,12 @@
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
     <Compile Include="PanoramaServerConnector.cs" />
+    <Compile Include="RScriptForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RScriptForm.Designer.cs">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ServerConnector.cs" />
     <Compile Include="ServerFilesManager.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
@@ -264,6 +279,8 @@
     </Compile>
     <Compile Include="SkylineTemplate.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="XMLTags.cs" />
+    <Compile Include="XmlUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">
@@ -299,6 +316,9 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="RScriptForm.resx">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="RVersionControl.resx">
       <DependentUpon>RVersionControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -311,7 +331,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>

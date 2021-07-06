@@ -470,17 +470,19 @@ namespace SharedBatch
                 return true;
             do
             {
-                reader.Read();
+                if (!reader.Read())
+                    return false;
             } while (reader.NodeType != XmlNodeType.Element);
             return reader.Name.Equals(name);
         }
 
-        public static void ReadUntilElement(XmlReader reader)
+        public static bool ReadUntilElement(XmlReader reader)
         {
             do
             {
-                reader.Read();
+                if (!reader.Read()) return false;
             } while (reader.NodeType != XmlNodeType.Element);
+            return true;
         }
     }
 }

@@ -554,14 +554,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(Control parentWindow, Exception errorException)
         {
             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
-            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out string spectrumFilename, out string resultsFilepath))
+            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 throw new InvalidOperationException(@"IsLibraryMissingExternalSpectraError returned false");
+
+            string extraHelp = Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
+
+            string messageFormat = spectrumFilenames.Count > 1
+                ? Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError
+                : Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError;
 
             // TODO: parse supported file extensions from BiblioSpec or ProteoWizard
             var dialogResult = MultiButtonMsgDlg.Show(parentWindow,
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                    spectrumFilename, resultsFilepath) +
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions),
+                string.Format(messageFormat,
+                    resultsFilepath, string.Join(Environment.NewLine, spectrumFilenames),
+                    string.Join(Environment.NewLine, directoriesSearched),
+                    BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions) + extraHelp,
                 Resources.BiblioSpecLiteBuilder_Embedded,
                 Resources.AlertDlg_GetDefaultButtonText__Retry, true);
 

@@ -4063,13 +4063,20 @@ namespace pwiz.Skyline
         private bool IsLibraryMissingSpectra(IProgressStatus status)
         {
             if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException,
-                out string spectrumFilename, out string resultsFilepath))
+                out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 return false;
 
-            _out.WriteLine(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                               spectrumFilename, resultsFilepath) +
-                           string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__,
-                               BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+            string extraHelp = Environment.NewLine + Resources.CommandLine_ShowLibraryMissingExternalSpectraError_Description;
+
+            string messageFormat = spectrumFilenames.Count > 1
+                ? Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError
+                : Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError;
+
+            _out.WriteLine(string.Format(messageFormat,
+                               resultsFilepath, string.Join(Environment.NewLine, spectrumFilenames),
+                               string.Join(Environment.NewLine, directoriesSearched),
+                               BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions) + extraHelp);
+
             return true;
         }
 

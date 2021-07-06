@@ -39,6 +39,7 @@ namespace AutoQC
         public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
             importer = AutoQcConfig.ReadXml;
+            getUpdatedXml = XmlUpdater.GetUpdatedXml;
             SelectedLog = -1;
             _sortedColumn = -1;
             _configRunners = ImmutableDictionary.Create<string, IConfigRunner>();
@@ -60,9 +61,9 @@ namespace AutoQC
             }
         }
 
-        private new void LoadConfigList()
+        private void LoadConfigList()
         {
-            var configs = base.LoadConfigList();
+            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
             foreach (var iconfig in configs)
             {
                 var config = (AutoQcConfig)iconfig;
@@ -632,7 +633,7 @@ namespace AutoQC
 
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var addedConfigs = ImportFrom(filePath, showDownloadedFileForm);
+            var addedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
             var state = new AutoQcConfigManagerState(this);
             foreach (var config in addedConfigs)
             {

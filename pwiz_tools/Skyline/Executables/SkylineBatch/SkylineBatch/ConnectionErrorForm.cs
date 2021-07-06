@@ -50,8 +50,8 @@ namespace SkylineBatch
             {
                 var mainSettings = config.MainSettings;
                 var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
-                    addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.ReplicateNamingPattern);
-                var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.Modified, newMainSettings, config.FileSettings, 
+                    addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.AnnotationsDownload, mainSettings.ReplicateNamingPattern);
+                var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.LogTestFormat, config.Modified, newMainSettings, config.FileSettings, 
                     config.RefineSettings, config.ReportSettings, config.SkylineSettings);
 
                 ReplacingConfigs.Add(newConfig);
@@ -88,18 +88,6 @@ namespace SkylineBatch
         }
 
         private void Reconnect(List<Server> ftpServers)
-        {
-            var longWaitDlg = new LongWaitDlg(this, Program.AppName(), "Reconnecting...");
-            var longWaitOperation = new LongWaitOperation(longWaitDlg);
-            var servers = new List<Server>();
-            foreach (var server in ftpServers) servers.Add(server);
-            longWaitOperation.Start(true, (onProgress, cancelToken) =>
-            {
-                _serverFiles.Reconnect(servers, onProgress, cancelToken);
-            }, (completed) => { DoneReconnecting(completed, servers); });
-        }
-
-        private void Reconnect(List<DataServerInfo> ftpServers)
         {
             var longWaitDlg = new LongWaitDlg(this, Program.AppName(), "Reconnecting...");
             var longWaitOperation = new LongWaitOperation(longWaitDlg);

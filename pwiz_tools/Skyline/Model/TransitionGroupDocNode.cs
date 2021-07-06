@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
-                                                              ? (float?)null
+                                                              ? null
                                                               : chromInfo.Area);
             }
         }
@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Model
                 return null;
             return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
                                                               ? chromInfo.IsotopeDotProduct
-                                                              : (float?)null);
+                                                              : null);
         }
 
         public float? AverageIsotopeDotProduct
@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
                                                               ? chromInfo.IsotopeDotProduct
-                                                              : (float?)null);
+                                                              : null);
             }
         }
 
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Model
                 return null;
             return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
                                                               ? chromInfo.LibraryDotProduct
-                                                              : (float?)null);
+                                                              : null);
         }
 
         public float? AverageLibraryDotProduct
@@ -489,7 +489,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
                                                               ? chromInfo.LibraryDotProduct
-                                                              : (float?) null);
+                                                              : null);
             }
         }
 

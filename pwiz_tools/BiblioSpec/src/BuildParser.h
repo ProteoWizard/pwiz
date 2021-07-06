@@ -89,9 +89,6 @@ class BuildParser : protected SAXHandler{
   int calculateCharge(double neutralMass, double precursorMz);
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   void removeDuplicates();
-  string fileNotFoundMessage(std::string specfileroot,
-                             const vector<std::string>& extensions,
-                             const vector<std::string>& directories);
   double aaMasses_[128];
 
  protected:
@@ -126,6 +123,13 @@ class BuildParser : protected SAXHandler{
   string getFilenameFromID(const string& idStr); // spectrum source file from spectrum ID
 
   static bool validInts(vector<string>::const_iterator begin, vector<string>::const_iterator end);
+
+  string fileNotFoundMessage(std::string specfileroot,
+      const vector<std::string>& extensions,
+      const vector<std::string>& directories);
+  string filesNotFoundMessage(const vector<std::string>& specfileroots,
+      const vector<std::string>& extensions,
+      const vector<std::string>& directories);
 
  public:
   BuildParser(BlibBuilder& maker,

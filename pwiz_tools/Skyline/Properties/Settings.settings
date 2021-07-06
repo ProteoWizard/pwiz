@@ -782,5 +782,8 @@
     <Setting Name="IntensityThresholdValue" Type="System.Double" Scope="User">
       <Value Profile="(Default)">100000</Value>
     </Setting>
+    <Setting Name="SyncMZScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
