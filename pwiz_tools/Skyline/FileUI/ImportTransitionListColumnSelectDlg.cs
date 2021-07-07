@@ -63,6 +63,7 @@ namespace pwiz.Skyline.FileUI
 
             InitializeComboBoxes();
             DisplayData();
+            InitializeRadioButtons();
             PopulateComboBoxes();
             //dataGrid.Update();
             ResizeComboBoxes();
@@ -598,6 +599,27 @@ namespace pwiz.Skyline.FileUI
 
         public DocumentChecked InsertionParams { get; private set; }
 
+        private void UpdateMode()
+        {
+            
+        }
+
+        private void InitializeRadioButtons()
+        {
+            if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                radioPeptide.Checked = true;
+            }
+            else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                radioMolecule.Checked = true;
+            }
+            else
+            {
+                radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
+            }
+        }
+
         /// <summary>
         /// Parse the mass list text, then show a status dialog if:
         ///     errors are found, or
@@ -701,5 +723,10 @@ namespace pwiz.Skyline.FileUI
             // put the data
             ResizeComboBoxes();
         }
+
+        /*private void radioPeptide_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateMode();
+        }*/
     }
 }  

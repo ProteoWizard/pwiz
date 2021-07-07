@@ -37,7 +37,10 @@
             this.fileLabel = new System.Windows.Forms.Label();
             this.dataGrid = new pwiz.Skyline.Controls.DataGridViewEx();
             this.CheckShowUnusedColumns = new System.Windows.Forms.CheckBox();
+            this.radioPeptide = new System.Windows.Forms.RadioButton();
+            this.radioMolecule = new System.Windows.Forms.RadioButton();
             this.comboPanelOuter.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonOk
@@ -101,12 +104,31 @@
             this.CheckShowUnusedColumns.UseVisualStyleBackColor = true;
             this.CheckShowUnusedColumns.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
+            // radioPeptide
+            // 
+            resources.ApplyResources(this.radioPeptide, "radioPeptide");
+            this.radioPeptide.Name = "radioPeptide";
+            this.radioPeptide.TabStop = true;
+            this.modeUIHandler.SetUIMode(this.radioPeptide, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.radioPeptide.UseVisualStyleBackColor = true;
+            this.radioPeptide.CheckedChanged += new System.EventHandler(this.radioPeptide_CheckedChanged);
+            // 
+            // radioMolecule
+            // 
+            resources.ApplyResources(this.radioMolecule, "radioMolecule");
+            this.radioMolecule.Name = "radioMolecule";
+            this.radioMolecule.TabStop = true;
+            this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
+            this.radioMolecule.UseVisualStyleBackColor = true;
+            // 
             // ImportTransitionListColumnSelectDlg
             // 
             this.AcceptButton = this.buttonOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
+            this.Controls.Add(this.radioMolecule);
+            this.Controls.Add(this.radioPeptide);
             this.Controls.Add(this.CheckShowUnusedColumns);
             this.Controls.Add(this.buttonCheckForErrors);
             this.Controls.Add(this.comboPanelOuter);
@@ -119,9 +141,9 @@
             this.Name = "ImportTransitionListColumnSelectDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Shown += OnColumnsShown;
             this.Resize += new System.EventHandler(this.form_Resize);
             this.comboPanelOuter.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -137,5 +159,7 @@
         private System.Windows.Forms.Panel comboPanelInner;
         public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
         private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
+        private System.Windows.Forms.RadioButton radioPeptide;
+        private System.Windows.Forms.RadioButton radioMolecule;
     }
 }
