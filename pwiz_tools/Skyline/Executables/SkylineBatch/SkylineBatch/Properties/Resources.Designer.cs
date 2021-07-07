@@ -2188,6 +2188,26 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please provide a valid folder to download the template file into..
+        /// </summary>
+        public static string SkylineTemplate_ValidateTemplateFile_Please_provide_a_valid_folder_to_download_the_template_file_into_ {
+            get {
+                return ResourceManager.GetString("SkylineTemplate_ValidateTemplateFile_Please_provide_a_valid_folder_to_download_th" +
+                        "e_template_file_into_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder of the downloading template file {0} does not exist..
+        /// </summary>
+        public static string SkylineTemplate_ValidateTemplateFile_The_folder_of_the_downloading_template_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("SkylineTemplate_ValidateTemplateFile_The_folder_of_the_downloading_template_file_" +
+                        "_0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name of shared Skyline archive cannot be null or empty..
         /// </summary>
         public static string SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_ {

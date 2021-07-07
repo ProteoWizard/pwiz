@@ -49,6 +49,7 @@ namespace SkylineBatchTest
             var name = baseConfig.Name;
             var enabled = baseConfig.Enabled;
             var modified = baseConfig.Modified;
+            var logTestFormat = baseConfig.LogTestFormat;
             foreach (var variable in changedVariables.Keys)
             {
                 if ("Name".Equals(variable))
@@ -57,9 +58,11 @@ namespace SkylineBatchTest
                     enabled = (bool)changedVariables[variable];
                 else if ("Modified".Equals(variable))
                     modified = (DateTime)changedVariables[variable];
+                else if ("LogTestFormat".Equals(variable))
+                    logTestFormat = (bool) changedVariables[variable];
             }
             
-            return new SkylineBatchConfig(name, enabled, modified, GetChangedMainSettings(baseConfig.MainSettings, changedVariables), 
+            return new SkylineBatchConfig(name, enabled, logTestFormat, modified, GetChangedMainSettings(baseConfig.MainSettings, changedVariables), 
                 GetChangedFileSettings(baseConfig.FileSettings, changedVariables),
                 GetChangedRefineSettings(baseConfig.RefineSettings, changedVariables), GetChangedReportSettings(baseConfig.ReportSettings, changedVariables),
                 GetChangedSkylineSettings(baseConfig.SkylineSettings, changedVariables));
@@ -203,7 +206,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig(name, true, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
+            return new SkylineBatchConfig(name, true, false, DateTime.MinValue, GetTestMainSettings(), GetTestFileSettings(), 
                 GetTestRefineSettings(), GetTestReportSettings(), GetTestSkylineSettings());
         }
 
@@ -215,7 +218,7 @@ namespace SkylineBatchTest
                 .UpdateDependent(baseConfig.Name, baseConfig.RefineSettings.OutputFilePath);
             var populatedRefineSettings = new RefineSettings(new RefineInputObject(), true, true, GetTestFilePath("test.sky"));
 
-            return new SkylineBatchConfig(name, true, DateTime.MinValue, newMainSettings, GetTestFileSettings(),
+            return new SkylineBatchConfig(name, true, false, DateTime.MinValue, newMainSettings, GetTestFileSettings(),
                 populatedRefineSettings, GetTestReportSettings(), GetTestSkylineSettings());
         }
 
@@ -239,7 +242,7 @@ namespace SkylineBatchTest
             reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), true));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
-            return new SkylineBatchConfig(name, true, DateTime.Now, main, file, refine, reports, skyline);
+            return new SkylineBatchConfig(name, true, false, DateTime.Now, main, file, refine, reports, skyline);
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
@@ -299,7 +302,8 @@ namespace SkylineBatchTest
         public static void InitializeSettingsImportExport()
         {
             ConfigList.Importer = SkylineBatchConfig.ReadXml;
-            ConfigList.Version = "21.1.1.171";
+            SkylineBatch.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
+            ConfigList.Version = "1000.0.0.0";
         }
 
         public static List<string> GetAllLogFiles(string directory = null)

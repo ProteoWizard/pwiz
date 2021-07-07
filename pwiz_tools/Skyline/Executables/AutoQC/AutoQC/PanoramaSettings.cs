@@ -32,6 +32,8 @@ namespace AutoQC
     [XmlRoot("panorama_settings")]
     public class PanoramaSettings
     {
+        public const string XML_EL = "panorama_settings";
+
         public static bool GetDefaultPublishToPanorama() { return false; }
 
         public readonly bool PublishToPanorama;
@@ -207,7 +209,7 @@ namespace AutoQC
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("panorama_settings");
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttribute(Attr.publish_to_panorama, PublishToPanorama);
             writer.WriteAttributeIfString(Attr.panorama_server_url, PanoramaServerUrl);
             writer.WriteAttributeIfString(Attr.panorama_user_email, PanoramaUserEmail);

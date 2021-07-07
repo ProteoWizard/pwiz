@@ -829,4 +829,10 @@
   <data name="MainSettings_ValidateAnnotationsFile_Please_anter_a_path_to_an_existing_folder_" xml:space="preserve">
     <value>Please anter a path to an existing folder.</value>
   </data>
+  <data name="SkylineTemplate_ValidateTemplateFile_The_folder_of_the_downloading_template_file__0__does_not_exist_" xml:space="preserve">
+    <value>The folder of the downloading template file {0} does not exist.</value>
+  </data>
+  <data name="SkylineTemplate_ValidateTemplateFile_Please_provide_a_valid_folder_to_download_the_template_file_into_" xml:space="preserve">
+    <value>Please provide a valid folder to download the template file into.</value>
+  </data>
 </root>

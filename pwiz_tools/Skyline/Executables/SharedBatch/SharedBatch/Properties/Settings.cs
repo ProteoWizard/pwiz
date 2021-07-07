@@ -98,14 +98,19 @@ namespace SharedBatch.Properties
             try
             {
                 newXmlPath = updater(oldXmlPath, newVersion);
+                if (newXmlPath == null)
+                    return;
                 var configList = new ConfigList();
                 using (var stream = new FileStream(newXmlPath, FileMode.Open))
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        while (!Equals(reader.Name, "config_list") && !reader.EOF)
-                            reader.Read();
-                        configList.ReadXml(reader);
+                        while (reader.Read())
+                        {
+                            if (!reader.IsStartElement("config_list")) continue;
+                            configList.ReadXml(reader);
+                            break;
+                        }
                     }
                 }
                 Default.ConfigList = configList;
@@ -134,7 +139,7 @@ namespace SharedBatch.Properties
             }
             finally
             {
-                if (File.Exists(newXmlPath))
+                if (newXmlPath != null && File.Exists(newXmlPath))
                     File.Delete(newXmlPath);
             }
         }
@@ -147,6 +152,7 @@ namespace SharedBatch.Properties
         public static Importer Importer;
 
         public static string Version;
+        public const string DUMMY_VER = "0.0.0.0";
 
         public XmlSchema GetSchema()
         {
@@ -159,7 +165,7 @@ namespace SharedBatch.Properties
 
             // Read past the property element
             reader.Read();
-
+            
             // For an empty list in Settings.Default
             if (isEmpty)
             {
@@ -209,13 +215,15 @@ namespace SharedBatch.Properties
 
         public void WriteXml(XmlWriter writer)
         {
-            if (string.IsNullOrEmpty(Version))
-            {
-                // this should never happen
-                throw new Exception("Must specify version before configurations are saved.");
-            }
-
-            writer.WriteAttributeString(Attr.version, Version);
+            // if (string.IsNullOrEmpty(Version))
+            // {
+            //     // this should never happen
+            //     throw new Exception("Must specify version before configurations are saved.");
+            // }
+            // The version should never be blank but if it is write a dummy version "0.0.0.0". An exception thrown here while
+            // running the program will not be caught, and any existing configurations will not be written to user.config. 
+            // As a result, the user will not see any saved configurations next time they start the application.
+            writer.WriteAttributeString(Attr.version, string.IsNullOrEmpty(Version) ? DUMMY_VER : Version);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

@@ -141,7 +141,7 @@ namespace SkylineBatch
         private static void ValidateDataFolder(string dataFolder, bool hasServer)
         {
             FileUtil.ValidateNotEmptyPath(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
-            if (!hasServer && !Directory.Exists(dataFolder))
+            if (!hasServer && (!Directory.Exists(dataFolder) || !FileUtil.PathHasDriveName(dataFolder)))
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, dataFolder) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_);
@@ -152,7 +152,7 @@ namespace SkylineBatch
                 var directoryExists = false;
                 try
                 {
-                    directoryExists = Directory.Exists(Path.GetDirectoryName(dataFolder));
+                    directoryExists = Directory.Exists(Path.GetDirectoryName(dataFolder)) && FileUtil.PathHasDriveName(dataFolder);
                 }
                 catch (Exception)
                 {
@@ -183,7 +183,8 @@ namespace SkylineBatch
                 if (!downloading && !File.Exists(annotationsFilePath))
                     throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFolder_The_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
                                             Resources.MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_);
-                if (downloading && !Directory.Exists(FileUtil.GetDirectorySafe(annotationsFilePath)))
+                var folderName = FileUtil.GetDirectorySafe(annotationsFilePath);
+                if (downloading && (!Directory.Exists(folderName) || !FileUtil.PathHasDriveName(folderName)))
                     throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnnotationsFile_The_download_folder_for_the_annotations_file__0__does_not_exist_, annotationsFilePath) + Environment.NewLine +
                                                 Resources.MainSettings_ValidateAnnotationsFile_Please_anter_a_path_to_an_existing_folder_);
                 FileUtil.ValidateNotInDownloads(annotationsFilePath, Resources.MainSettings_ValidateAnnotationsFile_annotations_file);

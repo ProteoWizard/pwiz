@@ -86,7 +86,33 @@ namespace SkylineBatch
 
         private void textPath_TextChanged(object sender, EventArgs e)
         {
-            if (Server != null && !textPath.Text.Equals(ServerPath()))
+            // data server paths do not have file names and can always be changed
+            if (_isDataServer || Server == null)
+                return;
+
+            bool fileNameChanged;
+            try
+            {
+                var serverPath = ServerPath();
+                if (string.IsNullOrEmpty(serverPath))
+                {
+                    fileNameChanged = false;
+                    Server = ((PanoramaFile) Server).ReplaceFolder(textPath.Text);
+                    textPath.Text += "\\" + ((PanoramaFile)Server).FileName;
+                }
+                else
+                {
+                    var fileName = System.IO.Path.GetFileName(ServerPath());
+                    fileNameChanged = !textPath.Text.EndsWith("\\" + fileName);
+                }
+            }
+            catch (Exception)
+            {
+                // assume name was changed if path could not be compared
+                fileNameChanged = true;
+            }
+
+            if (fileNameChanged)
             {
                 var newText = textPath.Text;
                 textPath.Text = ServerPath();
@@ -104,6 +130,7 @@ namespace SkylineBatch
         {
             if (!Path.Equals(textPath.Text))
             {
+                Path = textPath.Text;
                 if (Server != null)
                 {
                     if (_isDataServer)
@@ -116,7 +143,6 @@ namespace SkylineBatch
                         Server = ((PanoramaFile) Server).ReplacedFolder(System.IO.Path.GetDirectoryName(textPath.Text));
                     }
                 }
-                Path = textPath.Text;
             }
             _addedPathChangedHandler?.Invoke(sender, e);
         }

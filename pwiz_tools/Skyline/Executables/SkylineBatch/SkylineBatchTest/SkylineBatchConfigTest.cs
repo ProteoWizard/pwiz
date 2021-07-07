@@ -90,7 +90,7 @@ namespace SkylineBatchTest
             var validatedNoName = false;
             try
             {
-                var invalidConfig = new SkylineBatchConfig(invalidName, false, DateTime.MinValue, validMainSettings, validFileSettings, validRefineSettings, validReportSettings, validSkylineSettings);
+                var invalidConfig = new SkylineBatchConfig(invalidName, false, false, DateTime.MinValue, validMainSettings, validFileSettings, validRefineSettings, validReportSettings, validSkylineSettings);
                 invalidConfig.Validate();
                 validatedNoName = true;
             }
@@ -102,7 +102,7 @@ namespace SkylineBatchTest
 
             try
             {
-                var validConfig = new SkylineBatchConfig(validName, false, DateTime.MinValue, validMainSettings, validFileSettings, validRefineSettings, validReportSettings, validSkylineSettings);
+                var validConfig = new SkylineBatchConfig(validName, false, false, DateTime.MinValue, validMainSettings, validFileSettings, validRefineSettings, validReportSettings, validSkylineSettings);
                 validConfig.Validate();
             }
             catch (Exception x)
@@ -183,7 +183,7 @@ namespace SkylineBatchTest
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig()));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));
 
-            var differentReportSettings = new SkylineBatchConfig("name", false, DateTime.MinValue, 
+            var differentReportSettings = new SkylineBatchConfig("name", false, false, DateTime.MinValue, 
                 TestUtils.GetTestMainSettings(), TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), 
                 new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
             Assert.IsFalse(Equals(testConfig, differentReportSettings));
@@ -191,7 +191,7 @@ namespace SkylineBatchTest
             var differentMain = new MainSettings(testConfig.MainSettings.Template,
                 TestUtils.GetTestFilePath(string.Empty), testConfig.MainSettings.DataFolderPath,
                 null, string.Empty, null, testConfig.MainSettings.ReplicateNamingPattern);
-            var differentMainSettings = new SkylineBatchConfig("name", false, DateTime.MinValue, 
+            var differentMainSettings = new SkylineBatchConfig("name", false, false, DateTime.MinValue, 
                 differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), TestUtils.GetTestReportSettings(), 
                 new SkylineSettings(SkylineType.Skyline));
             Assert.IsFalse(Equals(testConfig, differentMainSettings));

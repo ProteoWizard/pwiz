@@ -52,7 +52,7 @@ namespace SkylineBatch
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
+            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, _invalidConfig.LogTestFormat, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // replace old configuration
@@ -84,7 +84,7 @@ namespace SkylineBatch
                 {
                     var validTemplateFile = await GetValidPath(
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
-                        mainSettings.Template.FilePath, SkylineTemplate.ValidateTemplateFile, TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, PathDialogOptions.File);
+                        mainSettings.Template.FilePath, SkylineTemplate.ValidateTemplateFileNotDownloading, TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, PathDialogOptions.File);
                     validTemplate = SkylineTemplate.FromUi(validTemplateFile, mainSettings.Template.DependentConfigName,
                         mainSettings.Template.PanoramaFile);
                 }

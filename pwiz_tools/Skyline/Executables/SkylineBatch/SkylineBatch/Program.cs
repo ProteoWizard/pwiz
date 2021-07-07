@@ -38,8 +38,6 @@ namespace SkylineBatch
 {
     public class Program
     {
-        public const string ADMIN_VERSION = "21.1.0.146";
-
         private static string _version;
 
         #region For tests
@@ -47,6 +45,7 @@ namespace SkylineBatch
         // Parameters for running tests
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static string TestDirectory { get; set; }       
+        public static readonly string TEST_VERSION = "1000.0.0.0";
 
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
@@ -165,17 +164,17 @@ namespace SkylineBatch
                     if (entryAssembly != null)
                     {
                         // custom attribute
-                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
                         // Play it safe with a null check no matter what ReSharper thinks
                         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                         if (attrs != null && attrs.Length > 0)
                         {
-                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                            productVersion = ((AssemblyFileVersionAttribute)attrs[0]).Version;
                         }
                         else
                         {
                             // win32 version info
-                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).FileVersion?.Trim();
                         }
                     }
 
@@ -186,7 +185,8 @@ namespace SkylineBatch
                     _version = string.Empty;
                 }
             }
-
+            if (FunctionalTest)
+                _version = TEST_VERSION;
             Settings.Default.UpdateIfNecessary(_version);
         }
 
@@ -255,7 +255,7 @@ namespace SkylineBatch
             postData += "&tid=UA-9194399-1"; // Tracking Id 
             postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
             postData += "&ec=InstanceBatch"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : ADMIN_VERSION) + "batch");
+            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : "Version unspecified") + "batch"); // version should never be unspecified
             var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
             postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
             postData += "&p=" + "Instance"; // Page

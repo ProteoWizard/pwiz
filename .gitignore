@@ -378,6 +378,7 @@ Version.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
+/pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
 
 # Files that get extracted from vendor reader distros
 Reader*Test.data

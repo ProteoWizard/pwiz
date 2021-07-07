@@ -105,6 +105,7 @@ namespace SkylineBatch
 
         public async Task Run(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
+            _logger.LogTestFormat = Config.LogTestFormat;
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
@@ -239,6 +240,7 @@ namespace SkylineBatch
                 Config.WriteRetentionTimeCommand(commandWriter);
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
                 commandWriter.EndCommandGroup();
                 // import data
                 Config.WriteImportDataCommand(commandWriter);
@@ -251,6 +253,7 @@ namespace SkylineBatch
             else if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 Config.WriteOpenSkylineResultsCommand(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
             }
 
             // STEP 2: refine file and save to new location
