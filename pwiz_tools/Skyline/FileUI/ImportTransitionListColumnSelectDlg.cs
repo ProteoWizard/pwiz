@@ -41,7 +41,7 @@ namespace pwiz.Skyline.FileUI
 
         public bool WindowShown { get; private set; }
 
-        private bool showIgnoreCols { get; set; }
+        private bool showIgnoredCols { get; set; }
 
         // These are only for error checking
         private readonly SrmDocument _docCurrent;
@@ -55,7 +55,7 @@ namespace pwiz.Skyline.FileUI
             _inputs = inputs;
             _insertPath = insertPath;
 
-            showIgnoreCols = true;
+            showIgnoredCols = true;
 
             InitializeComponent();
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
                     // Commented out for consistency because there is no product charge column
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
-					Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
                     Resources.PasteDlg_UpdateMoleculeType_Note,
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.FileUI
                 var column = dataGrid.Columns[i];
                 var comboBox = ComboBoxes[i];
                 // Only puts columns that we want to show in the layout
-                if (!(!showIgnoreCols && Equals(comboBox.Text,
+                if (!(!showIgnoredCols && Equals(comboBox.Text,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
                 {
                     comboBox.Location = new Point(xOffset, 0);
@@ -331,16 +331,8 @@ namespace pwiz.Skyline.FileUI
             if (Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
             {
                 var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
-                if (showIgnoreCols)
-                {
-                    dataGrid.Columns[comboBoxIndex].Visible = true;
-                    comboBox.Visible = true;
-                }
-                else
-                {
-                    dataGrid.Columns[comboBoxIndex].Visible = false;
-                    comboBox.Visible = false;
-                }
+                dataGrid.Columns[comboBoxIndex].Visible = showIgnoredCols;
+                comboBox.Visible = showIgnoredCols;
             }
         }
 
@@ -697,14 +689,7 @@ namespace pwiz.Skyline.FileUI
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            if (showIgnoreCols)
-            {
-                showIgnoreCols = false;
-            }
-            else
-            {
-                showIgnoreCols = true;
-            }
+            showIgnoredCols = CheckShowUnusedColumns.Checked;
 
             // Goes through each comboBox and sets their visibility if they are an Ignore Column
             foreach (var comboBox in ComboBoxes)
