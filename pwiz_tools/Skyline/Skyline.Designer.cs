@@ -96,6 +96,7 @@ namespace pwiz.Skyline
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
             this.showLibraryChromatogramsSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synchMzScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuRetentionTimes = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.timeGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -587,7 +588,8 @@ namespace pwiz.Skyline
             this.toolStripSeparator15,
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27,
-            this.showLibraryChromatogramsSpectrumContextMenuItem});
+            this.showLibraryChromatogramsSpectrumContextMenuItem,
+            this.synchMzScaleToolStripMenuItem});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
             resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
             // 
@@ -794,6 +796,13 @@ namespace pwiz.Skyline
             this.showLibraryChromatogramsSpectrumContextMenuItem.Name = "showLibraryChromatogramsSpectrumContextMenuItem";
             resources.ApplyResources(this.showLibraryChromatogramsSpectrumContextMenuItem, "showLibraryChromatogramsSpectrumContextMenuItem");
             this.showLibraryChromatogramsSpectrumContextMenuItem.Click += new System.EventHandler(this.showChromatogramsSpectrumContextMenuItem_Click);
+            // 
+            // synchMzScaleToolStripMenuItem
+            // 
+            this.synchMzScaleToolStripMenuItem.CheckOnClick = true;
+            this.synchMzScaleToolStripMenuItem.Name = "synchMzScaleToolStripMenuItem";
+            resources.ApplyResources(this.synchMzScaleToolStripMenuItem, "synchMzScaleToolStripMenuItem");
+            this.synchMzScaleToolStripMenuItem.Click += new System.EventHandler(this.synchMzScaleToolStripMenuItem_Click);
             // 
             // contextMenuRetentionTimes
             // 
@@ -2895,6 +2904,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
     }
 }
 

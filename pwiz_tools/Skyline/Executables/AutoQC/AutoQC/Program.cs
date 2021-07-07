@@ -27,13 +27,11 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
 using SharedBatch;
-using SharedBatch.Properties;
 using Resources = AutoQC.Properties.Resources;
 using Settings = AutoQC.Properties.Settings;
 
@@ -274,6 +272,7 @@ namespace AutoQC
             {
                 if (string.IsNullOrEmpty(_lastInstalledVersion))
                 {
+                    ProgramLog.Info("Last installed version not found. Config migration is required.");
                     return true;
                 }
 
@@ -283,6 +282,7 @@ namespace AutoQC
                     // ProgramLog.Info($"Previous Version: {lastVersion.Major}-{lastVersion.MajorRevision}-{lastVersion.Minor}-{lastVersion.MinorRevision}");
                     if (lastVersion.Major == 1 && lastVersion.Minor == 1 && lastVersion.MinorRevision <= 20237)
                     {
+                        ProgramLog.Info($"Last installed version was {_lastInstalledVersion}. Config migration is required.");
                         return true;
                     }
                 }
@@ -293,7 +293,7 @@ namespace AutoQC
                 }
             }
 
-            ProgramLog.Info("Configuration migration not required.");
+            ProgramLog.Info("Configuration migration is not required.");
             return false;
         }
 
