@@ -1119,7 +1119,7 @@ namespace pwiz.SkylineTestFunctional
                 "peptides1,PEPTIDER,478.737814,2,16.6,730.372994,1,y6,y\n" +
                 "peptides1,PEPTIDER,478.737814,2,16.6,633.32023,1,y5,y\n" +
                 "peptides1,PEPTIDER,478.737814,2,16.6,532.272552,1,y4,y\n";
-            // Check that the logic ignored the headers and looked for matching amino acid sequence and precursor m/z columns
+            // Check that we ignored the headers and looked for matching amino acid sequence and precursor m/z columns
             Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV9, SkylineWindow.Document.Settings));
             // Paste in the document to make sure it imports properly
             LoadNewDocument(true);
@@ -1129,6 +1129,16 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 4);
 
+            // Examine a transition list with an amino acid sequence, but no precursor m/z column and some distinctive small molecule headers
+            var textCSV10 =
+                "Protein Name,Modified Sequence,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
+                "peptides1,PEPTIDER,2,16.6,478.737814,2,precursor,precursor\n" +
+                "peptides1,PEPTIDER,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,2,16.6,532.272552,1,y4,y\n";
+            // We should realize the lack of a matching precursor m/z column, rely on the headers to make the decision,
+            // and classify it as a small molecule transition list
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV10, SkylineWindow.Document.Settings));
         }
 
         private void TestLabelsNoFormulas()
