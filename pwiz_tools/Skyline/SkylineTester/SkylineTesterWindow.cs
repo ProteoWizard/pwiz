@@ -1738,6 +1738,16 @@ namespace SkylineTester
             return null;
         }
 
+        private string GetLanguageForFile(string fileName)
+        {
+            if (fileName.Contains(".zh-CHS.resx"))
+                return "Chinese";
+            else if (fileName.Contains(".ja.resx"))
+                return "Japanese";
+            else
+                return "English";
+        }
+
         private void diffButton_Click(object sender, EventArgs e)
         {
             var formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
@@ -1832,7 +1842,7 @@ namespace SkylineTester
                         if (!Equals(file, ""))
                         {
                             var filename = GetFileName(file);
-                            if (Equals(formNoExt, filename))
+                            if (Equals(formNoExt, filename) && Equals(GetLanguageForFile(file), formsLanguage.Text))
                             {
                                 row.Visible = true;
                                 break;
