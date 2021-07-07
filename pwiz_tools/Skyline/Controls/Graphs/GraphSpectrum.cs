@@ -732,6 +732,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
+
+            var isHighRes = !Equals(settings.TransitionSettings.FullScan.ProductMassAnalyzer,
+                FullScanMassAnalyzerType.qit);
             return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
@@ -744,7 +747,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
-                LineWidth = Settings.Default.SpectrumLineWidth
+                LineWidth = Settings.Default.SpectrumLineWidth,
+                IsHighRes =  isHighRes
             };
         }
 

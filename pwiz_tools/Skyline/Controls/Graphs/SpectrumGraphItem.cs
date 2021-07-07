@@ -125,6 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowDuplicates { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
+        public bool IsHighRes { get; set; }
 
         // ReSharper disable InconsistentNaming
         private FontSpec _fontSpecA;
@@ -324,11 +325,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
             }
 
-            if (ShowMassError)
+            if (ShowMassError && IsHighRes)
             {
                 var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
                 massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
-                sb.AppendLine().Append(Math.Round(massError, 1));
+                massError = Math.Round(massError, 1);
+                // ReSharper disable LocalizableElement
+                sb.AppendLine().Append(string.Format("{0}{1} ppm", (massError > 0 ? "+" : string.Empty), massError));
+                // ReSharper enable LocalizableElement
             }
             return sb.ToString();
         }

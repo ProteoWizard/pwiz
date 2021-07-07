@@ -600,6 +600,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         _transitionIndex = new int[]{};
                 }
 
+                var isHighRes = !Equals(settings.TransitionSettings.FullScan.ProductMassAnalyzer,FullScanMassAnalyzerType.qit);
+
                 var graphItem = new SpectrumGraphItem(precursorNodePath.Peptide, precursor, transitionNode, _rmis, "")
                 {
                     ShowTypes = types,
@@ -611,7 +613,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ShowMassError = Settings.Default.ShowFullScanMassError,
                     ShowDuplicates = Settings.Default.ShowDuplicateIons,
                     FontSize = Settings.Default.SpectrumFontSize,
-                    LineWidth = Settings.Default.SpectrumLineWidth
+                    LineWidth = Settings.Default.SpectrumLineWidth,
+                    IsHighRes =  isHighRes
                 };
 
                 return graphItem;
