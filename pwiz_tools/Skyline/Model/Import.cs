@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
@@ -618,6 +619,7 @@ namespace pwiz.Skyline.Model
         {
             var info = rowReader.TransitionInfo;
             var irt = rowReader.Irt;
+            var explicitRT = rowReader.ExplicitRetentionTimeInfo;
             var libraryIntensity = rowReader.LibraryIntensity;
             var productMz = rowReader.ProductMz;
             if (irt == null && rowReader.IrtColumn != -1)
@@ -662,7 +664,7 @@ namespace pwiz.Skyline.Model
             }
             try
             {
-                seqBuilder.AppendTransition(info, irt, libraryIntensity, productMz, lineText, lineNum);
+                seqBuilder.AppendTransition(info, irt, explicitRT, libraryIntensity, productMz, lineText, lineNum);
             }
             catch (InvalidDataException x)
             {
@@ -800,6 +802,51 @@ namespace pwiz.Skyline.Model
             {
                 get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
+
+            public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
+            {
+                get
+                {
+                    var explicitRT = ColumnDouble(Fields, Indices.ExplicitRetentionTimeColumn, FormatProvider);
+                    return explicitRT.HasValue ? 
+                        new ExplicitRetentionTimeInfo(explicitRT.Value, ColumnDouble(Fields, Indices.ExplicitRetentionTimeWindowColumn, FormatProvider)) : 
+                        null;
+                }
+            }
+
+            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues
+            {
+                get
+                {
+                    var explicitCompensationVoltage =
+                        ColumnDouble(Fields, Indices.ExplicitCompensationVoltageColumn, FormatProvider); // FAIMS is a form of ion mobility
+                    var imUnits = explicitCompensationVoltage.HasValue ? 
+                        eIonMobilityUnits.compensation_V :
+                        IonMobilityFilter.IonMobilityUnitsFromL10NString(ColumnString(Fields, Indices.ExplicitIonMobilityUnitsColumn));  // TODO(HenryE): handle garbage inputs for ion mobility type
+                    var explicitIonMobility = explicitCompensationVoltage ?? ColumnDouble(Fields, Indices.ExplicitIonMobilityColumn, FormatProvider);
+
+                    return ExplicitTransitionGroupValues.Create(
+                        ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
+                        explicitIonMobility,
+                        imUnits,
+                        ColumnDouble(Fields, Indices.CollisionCrossSectionColumn, FormatProvider));
+                }
+            }
+            
+            public ExplicitTransitionValues ExplicitTransitionValues
+            {
+                get
+                {
+                    return ExplicitTransitionValues.Create(
+                            ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ExplicitIonMobilityHighEnergyOffsetColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.SLensColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ConeVoltageColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ExplicitDeclusteringPotentialColumn, FormatProvider));
+                }
+            }
+
+
 
             public PeptideModifications GetModifications(SrmDocument document)
             {
@@ -1077,6 +1124,11 @@ namespace pwiz.Skyline.Model
                 if (column != -1 && int.TryParse(fields[column], NumberStyles.Integer, provider, out result))
                     return result;
                 return null;
+            }
+
+            private static string ColumnString(string[] fields, int column)
+            {
+                return column != -1 ? fields[column].Trim() : null;
             }
 
             protected static int FindPrecursor(string[] fields,
@@ -2158,8 +2210,6 @@ namespace pwiz.Skyline.Model
                 FragmentNameColumn = -1;
             if (PrecursorChargeColumn == index)
                 PrecursorChargeColumn = -1;
-
-            // 
             if (ExplicitRetentionTimeColumn == index)
                 ExplicitRetentionTimeColumn = -1;
             if (ExplicitRetentionTimeWindowColumn == index)
@@ -2415,6 +2465,7 @@ namespace pwiz.Skyline.Model
 
         private FastaSequence _activeFastaSeq;
         private Peptide _activePeptide;
+        private ExplicitRetentionTimeInfo _activeExplicitRetentionTimeInfo;
         private string _activeModifiedSequence;
         private readonly string _sourceFile;
         // Order is important to making the variable modification choice deterministic
@@ -2570,7 +2621,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void AppendTransition(ExTransitionInfo info, double? irt, double? libraryIntensity, double productMz, string lineText, long lineNum)
+        public void AppendTransition(ExTransitionInfo info, double? irt, ExplicitRetentionTimeInfo explicitRT, double? libraryIntensity, double productMz, string lineText, long lineNum)
         {
             _autoManageChildren = false;
             // Treat this like a peptide list from now on.
@@ -2646,6 +2697,7 @@ namespace pwiz.Skyline.Model
                 _activePrecursorMz = info.PrecursorMz;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
+                _activeExplicitRetentionTimeInfo = explicitRT;
             }
             var intersectPrecursors = new List<PrecursorExp>(_activePrecursorExps.Intersect(
                 info.TransitionExps.Select(exp => exp.Precursor)));
@@ -2716,7 +2768,7 @@ namespace pwiz.Skyline.Model
             _groupLibTriples.Sort(TransitionGroupLibraryIrtTriple.CompareTriples);
             var finalGroupLibTriples = FinalizeTransitionGroups(_groupLibTriples);
             var finalTransitionGroups = finalGroupLibTriples.Select(triple => triple.NodeGroup).ToArray();
-            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0], null, null,
+            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0], null, _activeExplicitRetentionTimeInfo,
                 finalTransitionGroups, false);
             var finalLibrarySpectra = new List<SpectrumMzInfo>();
             double? peptideIrt = GetPeptideIrt(finalGroupLibTriples);
