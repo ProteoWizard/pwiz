@@ -32,6 +32,8 @@ namespace AutoQC
     [XmlRoot("main_settings")]
     public class MainSettings
     {
+        public const string XML_EL = "main_settings";
+
         public const int ACCUM_TIME_WINDOW = 31;
         public const int ACQUISITION_TIME = 75;
         public const string THERMO = "Thermo";
@@ -231,7 +233,7 @@ namespace AutoQC
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("main_settings");
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(Attr.skyline_file_path, SkylineFilePath);
             writer.WriteAttributeIfString(Attr.folder_to_watch, FolderToWatch);
             writer.WriteAttribute(Attr.include_subfolders, IncludeSubfolders);
