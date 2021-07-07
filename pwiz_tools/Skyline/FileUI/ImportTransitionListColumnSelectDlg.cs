@@ -154,8 +154,6 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
-                    // Commented out for consistency because there is no product charge column
-                    // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
@@ -168,7 +166,12 @@ namespace pwiz.Skyline.FileUI
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
                     Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
+                    // From here on is Small Molecule only
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name
+
                 });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += ComboChanged;
@@ -191,7 +194,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
-            // Commented out for consistency because there is no product charge column
+            // Commented out because this is only used for small molecules and is not currently detected
             // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
@@ -482,13 +485,24 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ProteinDescriptionColumn = comboBoxIndex;
             }
-            // Commented out for consistency because there is no product charge column
-            /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct)
+            {
+                CheckForComboBoxOverlap(columns.PrecursorAdductColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.PrecursorAdductColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
                 CheckForComboBoxOverlap(columns.PrecursorChargeColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PrecursorChargeColumn = comboBoxIndex;
-            }*/
+                columns.PrecursorChargeColumn = comboBoxIndex;                
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Name)
+            {
+                CheckForComboBoxOverlap(columns.ProductNameColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductNameColumn = comboBoxIndex;
+            }
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -500,8 +514,6 @@ namespace pwiz.Skyline.FileUI
                 if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
                 if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
-                // Commented out for consistency because there is no product charge column
-                // if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
                 if (columns.ExplicitRetentionTimeWindowColumn == comboBoxIndex)
                     columns.ExplicitRetentionTimeWindowColumn = -1;
                 if (columns.ExplicitCollisionEnergyColumn == comboBoxIndex) columns.ExplicitCollisionEnergyColumn = -1;
@@ -520,6 +532,13 @@ namespace pwiz.Skyline.FileUI
                     columns.ExplicitDeclusteringPotentialColumn = -1;
                 if (columns.ProteinDescriptionColumn == comboBoxIndex)
                     columns.ProteinDescriptionColumn = -1;
+                // Small Molecule only columns
+                if (columns.PrecursorAdductColumn == comboBoxIndex)
+                    columns.PrecursorAdductColumn = -1;
+                if (columns.PrecursorChargeColumn == comboBoxIndex)
+                    columns.PrecursorChargeColumn = -1;
+                if (columns.ProductNameColumn == comboBoxIndex)
+                    columns.ProductNameColumn = -1;
             }
         }
 
@@ -724,9 +743,9 @@ namespace pwiz.Skyline.FileUI
             ResizeComboBoxes();
         }
 
-        /*private void radioPeptide_CheckedChanged(object sender, EventArgs e)
+        private void radioPeptide_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateMode();
-        }*/
+            //UpdateMode();
+        }
     }
 }  

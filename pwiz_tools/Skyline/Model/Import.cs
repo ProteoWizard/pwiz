@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using MSAmanda.Utils;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -36,6 +37,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Array = System.Array;
+using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model
 {
@@ -2136,6 +2138,13 @@ namespace pwiz.Skyline.Model
 
         public int ProteinDescriptionColumn { get; set; }
 
+        // From here on is new columns for Small Molecules only
+        public int PrecursorAdductColumn { get; set; }
+
+        public int ProductNameColumn { get; set; }
+
+        
+
         private ColumnIndices()
         {
             ProteinColumn = -1;
@@ -2162,6 +2171,8 @@ namespace pwiz.Skyline.Model
             ExplicitDeclusteringPotentialColumn = -1;
             CollisionCrossSectionColumn = -1;
             ProteinDescriptionColumn = -1;
+            PrecursorAdductColumn = -1;
+            ProductNameColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2240,6 +2251,10 @@ namespace pwiz.Skyline.Model
                 CollisionCrossSectionColumn = -1;
             if (ProteinDescriptionColumn == index)
                 ProteinDescriptionColumn = -1;
+            if (PrecursorAdductColumn == index)
+                PrecursorAdductColumn = -1;
+            if (ProductNameColumn == index)
+                ProductNameColumn = -1;
         }
 
         /// <summary>
