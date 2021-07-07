@@ -84,7 +84,7 @@ namespace SkylineBatch
                 DisableUserInputs();
             }
 
-            tabsConfig.SelectedIndex = _selectedTab;
+            tabsConfig.SelectedIndex = _action == ConfigAction.Edit ? _selectedTab : 0;
 
             ActiveControl = textConfigName;
         }
@@ -98,7 +98,7 @@ namespace SkylineBatch
             textConfigName.Text = _action == ConfigAction.Add ? string.Empty : config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
             _lastEnteredPath = config != null ? config.MainSettings.Template.DisplayPath : null;
-            checkBoxLogTestFormat.Checked = config != null && config.LogTestFormat;
+            checkBoxLogTestFormat.Checked = config != null && !SkylineInstallations.HasLocalSkylineCmd && config.LogTestFormat;
 
             SetInitialMainSettings(config);
             SetInitialFileSettings(config);
