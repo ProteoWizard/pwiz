@@ -622,6 +622,7 @@ namespace pwiz.Skyline.Model
             var explicitRT = rowReader.ExplicitRetentionTimeInfo;
             var libraryIntensity = rowReader.LibraryIntensity;
             var productMz = rowReader.ProductMz;
+            var note = rowReader.Note;
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
@@ -664,7 +665,7 @@ namespace pwiz.Skyline.Model
             }
             try
             {
-                seqBuilder.AppendTransition(info, irt, explicitRT, libraryIntensity, productMz, lineText, lineNum);
+                seqBuilder.AppendTransition(info, irt, explicitRT, libraryIntensity, productMz, note, lineText, lineNum);
             }
             catch (InvalidDataException x)
             {
@@ -803,6 +804,8 @@ namespace pwiz.Skyline.Model
                 get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
 
+            public string Note { get { return ColumnString(Fields, Indices.NoteColumn); } }
+
             public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
             {
                 get
@@ -940,7 +943,7 @@ namespace pwiz.Skyline.Model
                     if (!precursorCharge.IsEmpty)
                     {
                         info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
-                                                                  precursorMassShift));
+                                                                  precursorMassShift, info.ExplicitTransitionValues));
                     }
                     else
                     {
@@ -962,7 +965,7 @@ namespace pwiz.Skyline.Model
                         if (!precursorCharge.IsEmpty)
                         {
                             info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
-                                                                      precursorMassShift));
+                                                                      precursorMassShift, info.ExplicitTransitionValues));
                         }
                         else
                         {
@@ -1066,7 +1069,7 @@ namespace pwiz.Skyline.Model
 
                     if (!productCharge.IsEmpty && ionType.HasValue && ordinal.HasValue)
                     {
-                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift);
+                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift, info);
                     }
                     else
                     {
@@ -1128,7 +1131,8 @@ namespace pwiz.Skyline.Model
 
             private static string ColumnString(string[] fields, int column)
             {
-                return column != -1 ? fields[column].Trim() : null;
+                var value = column != -1 ? fields[column].Trim() : null;
+                return string.IsNullOrEmpty(value) ? null : value;
             }
 
             protected static int FindPrecursor(string[] fields,
@@ -1181,7 +1185,7 @@ namespace pwiz.Skyline.Model
                         if (!charge.IsEmpty)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift));
+                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift, null)); // This is exploratory, explicit transition values don't matter here
                         }
                     }
                 }
@@ -1272,7 +1276,7 @@ namespace pwiz.Skyline.Model
                     proteinName = Fields[ProteinColumn];
                 string peptideSequence = RemoveSequenceNotes(Fields[PeptideColumn]);
                 string modifiedSequence = RemoveModifiedSequenceNotes(Fields[PeptideColumn]);
-                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy);
+                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionValues, Note);
 
                 if (LabelTypeColumn != -1)
                 {
@@ -1815,7 +1819,7 @@ namespace pwiz.Skyline.Model
                     string peptideSequence = GetSequence(match);
                     string modifiedSequence = GetModifiedSequence(match);
 
-                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy)
+                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionValues, Note)
                         {
                             DefaultLabelType = GetLabelType(match, Settings),
                             IsExplicitLabelType = true
@@ -2271,7 +2275,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ExTransitionInfo
     {
-        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy)
+        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, ExplicitTransitionValues explicitTransitionValues, string note)
         {
             ProteinName = proteinName;
             PeptideTarget = new Target(peptideSequence);
@@ -2280,6 +2284,8 @@ namespace pwiz.Skyline.Model
             IsDecoy = isDecoy;
             DefaultLabelType = IsotopeLabelType.light;
             TransitionExps = new List<TransitionExp>();
+            ExplicitTransitionValues = explicitTransitionValues;
+            Note = note;
         }
 
         public string ProteinName { get; private set; }
@@ -2287,6 +2293,8 @@ namespace pwiz.Skyline.Model
         public string PeptideSequence { get { return PeptideTarget.Sequence; } }
         public string ModifiedSequence { get; set; }
         public double PrecursorMz { get; private set; }
+        public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
+        public string Note { get; private set; }
 
         public bool IsDecoy { get; private set; }
 
@@ -2316,12 +2324,14 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class TransitionExp
     {
-        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift)
+        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift, ExplicitTransitionValues explicitTransitionValues)
         {
             Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift);
+            ExplicitTransitionValues = explicitTransitionValues;
         }
 
         public bool IsDecoy { get { return Precursor.MassShift.HasValue; } }
+        public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
         public TransitionCalc.MassShiftType ProductShiftType
         {
             get
@@ -2388,7 +2398,7 @@ namespace pwiz.Skyline.Model
 
     public sealed class ProductExp
     {
-        public ProductExp(Adduct productAdduct, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift)
+        public ProductExp(Adduct productAdduct, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift, ExTransitionInfo info)
         {
             Adduct = productAdduct;
             IonType = ionType;
@@ -2397,6 +2407,7 @@ namespace pwiz.Skyline.Model
             MassShift = null;
             if (massShift != 0)
                 MassShift = massShift;
+            ExInfo = info;
         }
 
         public Adduct Adduct { get; private set; }
@@ -2404,6 +2415,7 @@ namespace pwiz.Skyline.Model
         public int FragmentOrdinal { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public int? MassShift { get; private set; }
+        public ExTransitionInfo ExInfo { get; private set; }
     }
 
     public class MzMatchException : LineColNumberedIoException
@@ -2621,7 +2633,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void AppendTransition(ExTransitionInfo info, double? irt, ExplicitRetentionTimeInfo explicitRT, double? libraryIntensity, double productMz, string lineText, long lineNum)
+        public void AppendTransition(ExTransitionInfo info, double? irt, ExplicitRetentionTimeInfo explicitRT, double? libraryIntensity, double productMz, string note, string lineText, long lineNum)
         {
             _autoManageChildren = false;
             // Treat this like a peptide list from now on.
@@ -2916,9 +2928,10 @@ namespace pwiz.Skyline.Model
                     int? massShift = productExp.MassShift;
                     if (massShift == null && precursorExp.MassShift.HasValue)
                         massShift = 0;
+                    var annotations = string.IsNullOrEmpty(productExp.ExInfo.Note) ? Annotations.EMPTY : new Annotations(productExp.ExInfo.Note, null, 0);
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
-                    return new TransitionDocNode(tran, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+                    return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);
                 });
             // m/z calculated later
             var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions));
