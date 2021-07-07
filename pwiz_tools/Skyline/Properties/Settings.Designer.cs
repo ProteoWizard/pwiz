@@ -3103,6 +3103,12 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowFullScanMassError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SyncMZScale {
             get {
                 return ((bool)(this["SyncMZScale"]));
