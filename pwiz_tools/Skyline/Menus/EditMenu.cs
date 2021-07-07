@@ -466,18 +466,14 @@ namespace pwiz.Skyline.Menus
                     // First make sure it looks like a sequence.
                     List<double> lineLengths = new List<double>();
                     int lineLen = 0;
-                    var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text,
-                        TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
                     foreach (char c in textNoMods)
                     {
                         if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                         {
-                            MessageDlg.Show(SkylineWindow,
-                                string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c,
-                                    lineLengths.Count + 1));
+                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
                             return;
                         }
-
                         if (c == '\n')
                         {
                             lineLengths.Add(lineLen);
@@ -488,7 +484,6 @@ namespace pwiz.Skyline.Menus
                             lineLen++;
                         }
                     }
-
                     lineLengths.Add(lineLen);
 
                     // Check to see if the pasted text looks like a peptide list.
