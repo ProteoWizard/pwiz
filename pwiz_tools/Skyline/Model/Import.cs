@@ -1104,7 +1104,7 @@ namespace pwiz.Skyline.Model
             {
                 double result;
                 // CONSIDER: This does not allow exponents or thousands separators like the default double.Parse(). Should it?
-                if (column == -1)
+                if (column == -1 || column >= fields.Length)
                 {
                     return 0;
                 }
@@ -1116,7 +1116,7 @@ namespace pwiz.Skyline.Model
             private static double? ColumnDouble(string[] fields, int column, IFormatProvider provider)
             {
                 double result;
-                if (column != -1 && double.TryParse(fields[column], NumberStyles.Float|NumberStyles.AllowThousands, provider, out result))
+                if (column != -1 && column < fields.Length && double.TryParse(fields[column], NumberStyles.Float|NumberStyles.AllowThousands, provider, out result))
                     return result;
                 return null;
             }
@@ -1124,14 +1124,14 @@ namespace pwiz.Skyline.Model
             private static int? ColumnInt(string[] fields, int column, IFormatProvider provider)
             {
                 int result;
-                if (column != -1 && int.TryParse(fields[column], NumberStyles.Integer, provider, out result))
+                if (column != -1 && column < fields.Length && int.TryParse(fields[column], NumberStyles.Integer, provider, out result))
                     return result;
                 return null;
             }
 
             private static string ColumnString(string[] fields, int column)
             {
-                var value = column != -1 ? fields[column].Trim() : null;
+                var value = column != -1 && column < fields.Length ? fields[column].Trim() : null;
                 return string.IsNullOrEmpty(value) ? null : value;
             }
 
