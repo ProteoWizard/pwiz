@@ -424,33 +424,25 @@ namespace pwiz.Skyline.Model
         {
             Settings = settings;
             Inputs = inputs;
+            InputType = SrmDocument.DOCUMENT_TYPE.none;
         }
 
         // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
-        public MassListImporter(SrmDocument document, MassListInputs inputs)
+        public MassListImporter(SrmDocument document, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Document = document;
             Settings = document.Settings;
             Inputs = inputs;
+            InputType = inputType;
         }
 
-        public MassListImporter(SrmDocument document, MassListInputs inputs, bool isSmallMoleculeInput)
-        {
-            Document = document;
-            Settings = document.Settings;
-            Inputs = inputs;
-            IsSmallMoleculeInput = isSmallMoleculeInput;
-
-        }
         public SrmDocument Document { get; private set; }
         public MassListRowReader RowReader { get; private set; }
         public SrmSettings Settings { get; private set; }
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
-        public bool IsSmallMoleculeInput { get; set; }
-        // True if the transition list has already been classified as small molecule or protein
-        public bool ListClassified { get; set; }
+        public SrmDocument.DOCUMENT_TYPE InputType { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -474,12 +466,12 @@ namespace pwiz.Skyline.Model
             status = status.NextSegment();
             _linesSeen = 0;
             // Decide if the input is peptide or small molecule if we haven't already
-            if (!ListClassified)
+            if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
-                IsSmallMoleculeInput =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings);
+                InputType =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
             }
-            if (IsSmallMoleculeInput)
+            if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
                 if (progressMonitor != null)
                     progressMonitor.UpdateProgress(status.Complete());

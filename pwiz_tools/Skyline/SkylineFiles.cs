@@ -1835,7 +1835,7 @@ namespace pwiz.Skyline
                 FileEx.SafeDelete(AssayLibraryFileName);
                 FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
             }
-            ImportMassList(inputs, description, true, null);
+            ImportMassList(inputs, description, true);
         }
 
         private void importMassListMenuItem_Click(object sender, EventArgs e)
@@ -1863,7 +1863,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                ImportMassList(new MassListInputs(fileName), Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list, false, null);
+                ImportMassList(new MassListInputs(fileName), Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list, false);
             }
             catch (Exception x)
             {
@@ -1871,7 +1871,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, bool? smallMoleculeInput)
+        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
@@ -1892,13 +1892,9 @@ namespace pwiz.Skyline
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
-                    if (smallMoleculeInput != null)
-                    {
-                        importer.IsSmallMoleculeInput = smallMoleculeInput.Value;
-                        importer.ListClassified = true;
-                    }
-                    if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, inputType);
+
+                    if (importer != null && !longWaitBroker.IsCanceled && importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
                     {
                         docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
                             insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
@@ -1911,7 +1907,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (importer.IsSmallMoleculeInput)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
                 if (errorList.Any())
                 {
