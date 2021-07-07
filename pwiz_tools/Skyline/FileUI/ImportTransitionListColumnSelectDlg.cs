@@ -170,7 +170,11 @@ namespace pwiz.Skyline.FileUI
                     // From here on is Small Molecule only
                     Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge
 
                 });
                 comboBox.SelectedIndex = 0;
@@ -503,6 +507,30 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ProductNameColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Formula)
+            {
+                CheckForComboBoxOverlap(columns.ProductFormulaColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductFormulaColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss)
+            {
+                CheckForComboBoxOverlap(columns.ProductNeutralLossColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductNeutralLossColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Adduct)
+            {
+                CheckForComboBoxOverlap(columns.ProductAdductColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductAdductColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Charge)
+            {
+                CheckForComboBoxOverlap(columns.ProductChargeColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductChargeColumn = comboBoxIndex;
+            }
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -539,6 +567,14 @@ namespace pwiz.Skyline.FileUI
                     columns.PrecursorChargeColumn = -1;
                 if (columns.ProductNameColumn == comboBoxIndex)
                     columns.ProductNameColumn = -1;
+                if (columns.ProductFormulaColumn == comboBoxIndex)
+                    columns.ProductFormulaColumn = -1;
+                if (columns.ProductNeutralLossColumn == comboBoxIndex)
+                    columns.ProductNeutralLossColumn = -1;
+                if (columns.ProductAdductColumn == comboBoxIndex)
+                    columns.ProductAdductColumn = -1;
+                if (columns.ProductChargeColumn == comboBoxIndex)
+                    columns.ProductChargeColumn = -1;
             }
         }
 

@@ -2082,8 +2082,7 @@ namespace pwiz.Skyline.Model
         public int PrecursorColumn { get; set; }
         public int PrecursorChargeColumn { get; set; }
         public int ProductColumn { get; set; }
-        public int ProductChargeColumn { get; set; }
-
+        
         /// <summary>
         /// A column specifying the <see cref="IsotopeLabelType"/> (optional)
         /// </summary>
@@ -2143,7 +2142,13 @@ namespace pwiz.Skyline.Model
 
         public int ProductNameColumn { get; set; }
 
-        
+        public int ProductFormulaColumn { get; set; }
+
+        public int ProductNeutralLossColumn { get; set; }
+
+        public int ProductAdductColumn { get; set; }
+
+        public int ProductChargeColumn { get; set; }
 
         private ColumnIndices()
         {
@@ -2173,6 +2178,9 @@ namespace pwiz.Skyline.Model
             ProteinDescriptionColumn = -1;
             PrecursorAdductColumn = -1;
             ProductNameColumn = -1;
+            ProductFormulaColumn = -1;
+            ProductNeutralLossColumn = -1;
+            ProductAdductColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2255,6 +2263,12 @@ namespace pwiz.Skyline.Model
                 PrecursorAdductColumn = -1;
             if (ProductNameColumn == index)
                 ProductNameColumn = -1;
+            if (ProductFormulaColumn == index)
+                ProductFormulaColumn = -1;
+            if (ProductNeutralLossColumn == index)
+                ProductNeutralLossColumn = -1;
+            if (ProductAdductColumn == index)
+                ProductAdductColumn = -1;
         }
 
         /// <summary>
