@@ -369,10 +369,14 @@ namespace pwiz.Skyline.Model
             return inputLines;
         }
 
+        /// <summary>
+        /// Attempt to find the format of columnar data and throw an exception upon failure
+        /// </summary>
         private void InitFormat(IList<string> inputLines)
         {
             if (FormatProvider == null)
             {
+                // Throw an exception if we cannot work out the format of the input
                 if (!TryInitFormat(inputLines, out var provider, out var sep))
                 {
                     throw new IOException(Resources
@@ -383,6 +387,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Attempt to find the column separator and format provider for the input lines. Also useful for testing if data is columnar
+        /// </summary>
         public static bool TryInitFormat(IList<string> inputLines, out IFormatProvider provider, out char sep)
         {
             Type[] columnTypes;
@@ -442,6 +449,8 @@ namespace pwiz.Skyline.Model
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
+        // What we believe the text we are importing describes: proteomics vs small_molecule vs none (meaning unknown).
+        // InputType is never set to 'mixed' as we handle small molecule and proteomics input separately 
         public SrmDocument.DOCUMENT_TYPE InputType { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)

@@ -1871,6 +1871,14 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Process and then add the mass list to the document
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <param name="description"></param>
+        /// <param name="assayLibrary"></param>
+        /// <param name="inputType"> peptide vs small molecule nature of the input
+        /// if not given assign to none (meaning  unknown) and we will figure it out during the preimport step</param>
         public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
@@ -1921,6 +1929,7 @@ namespace pwiz.Skyline
             }
             else
             {
+                // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
