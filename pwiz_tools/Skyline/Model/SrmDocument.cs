@@ -1482,6 +1482,14 @@ namespace pwiz.Skyline.Model
             return docNew;
         }
 
+        /// <summary>
+        /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <param name="progressMonitor"></param>
+        /// <param name="tolerateErrors"></param>
+        /// <param name="inputType"> peptide vs small molecule nature of the input
+        /// if not given assign to none (meaning  unknown) and we will figure it out during the preimport step</param>
         public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors, DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none)
         {
             var importer = new MassListImporter(this, inputs,  inputType);
