@@ -320,9 +320,7 @@ namespace pwiz.Skyline.FileUI
 
             // Grey out any ignored column
             SetColumnColor(comboBox);
-
-            Console.WriteLine(comboBox.Text);
-
+            
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
                 CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
@@ -668,6 +666,10 @@ namespace pwiz.Skyline.FileUI
 
         public DocumentChecked InsertionParams { get; private set; }
 
+        /// <summary>
+        ///  After the mode is changed this makes sure we are only showing columns relevant to the current mode
+        /// </summary>
+        /// <param name="comboBox"></param>
         private void UpdateCombo(ComboBox comboBox)
         {
             comboBox.Text = string.Empty;
@@ -729,7 +731,9 @@ namespace pwiz.Skyline.FileUI
             ComboHelper.AutoSizeDropDown(comboBox);
         }
 
-        // After we update the range of the comboboxes we need to readd appropriate headers
+        /// <summary>
+        /// After we update the range of the comboBoxes we need to re-add appropriate headers
+        /// </summary>
         private void RefreshComboText()
         {
             var columns = Importer.RowReader.Indices;
@@ -813,6 +817,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        /// <summary>
+        /// This ensures the radio buttons are initially set to reflect the current mode Skyline is in
+        /// </summary>
         private void InitializeRadioButtons()
         {
             if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
