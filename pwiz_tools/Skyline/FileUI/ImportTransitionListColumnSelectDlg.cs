@@ -174,7 +174,13 @@ namespace pwiz.Skyline.FileUI
                     Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    @"InChiKey",
+                    @"CAS",
+                    @"HMDB",
+                    @"InChi",
+                    @"SMILES",
+                    @"KEGG"
 
                 });
                 comboBox.SelectedIndex = 0;
@@ -531,6 +537,42 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ProductChargeColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == @"InChiKey")
+            {
+                CheckForComboBoxOverlap(columns.InChiKeyColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.InChiKeyColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == @"CAS")
+            {
+                CheckForComboBoxOverlap(columns.CASColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.CASColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == @"HMDB")
+            {
+                CheckForComboBoxOverlap(columns.HMDBColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.HMDBColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == @"InChi")
+            {
+                CheckForComboBoxOverlap(columns.InChiColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.InChiColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == @"SMILES")
+            {
+                CheckForComboBoxOverlap(columns.SMILESColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.SMILESColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == @"KEGG")
+            {
+                CheckForComboBoxOverlap(columns.KEGGColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.KEGGColumn = comboBoxIndex;
+            }
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -575,6 +617,18 @@ namespace pwiz.Skyline.FileUI
                     columns.ProductAdductColumn = -1;
                 if (columns.ProductChargeColumn == comboBoxIndex)
                     columns.ProductChargeColumn = -1;
+                if (columns.InChiKeyColumn == comboBoxIndex)
+                    columns.InChiKeyColumn = -1;
+                if (columns.CASColumn == comboBoxIndex)
+                    columns.CASColumn = -1;
+                if (columns.HMDBColumn == comboBoxIndex)
+                    columns.HMDBColumn = -1;
+                if (columns.InChiColumn == comboBoxIndex)
+                    columns.InChiColumn = -1;
+                if (columns.SMILESColumn == comboBoxIndex)
+                    columns.SMILESColumn = -1;
+                if (columns.KEGGColumn == comboBoxIndex)
+                    columns.KEGGColumn = -1;
             }
         }
 

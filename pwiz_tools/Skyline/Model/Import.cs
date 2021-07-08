@@ -2150,6 +2150,18 @@ namespace pwiz.Skyline.Model
 
         public int ProductChargeColumn { get; set; }
 
+        public int InChiKeyColumn { get; set; }
+
+        public int CASColumn { get; set; }
+
+        public int HMDBColumn { get; set; }
+
+        public int InChiColumn { get; set; }
+
+        public int SMILESColumn { get; set; }
+
+        public int KEGGColumn { get; set; }
+
         private ColumnIndices()
         {
             ProteinColumn = -1;
@@ -2181,6 +2193,12 @@ namespace pwiz.Skyline.Model
             ProductFormulaColumn = -1;
             ProductNeutralLossColumn = -1;
             ProductAdductColumn = -1;
+            InChiKeyColumn = -1;
+            CASColumn = -1;
+            HMDBColumn = -1;
+            InChiColumn = -1;
+            SMILESColumn = -1;
+            KEGGColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2269,6 +2287,18 @@ namespace pwiz.Skyline.Model
                 ProductNeutralLossColumn = -1;
             if (ProductAdductColumn == index)
                 ProductAdductColumn = -1;
+            if (InChiKeyColumn == index)
+                InChiKeyColumn = -1;
+            if (CASColumn == index)
+                CASColumn = -1;
+            if (HMDBColumn == index)
+                HMDBColumn = -1;
+            if (InChiColumn == index)
+                InChiColumn = -1;
+            if (SMILESColumn == index)
+                SMILESColumn = -1;
+            if (KEGGColumn == index)
+                KEGGColumn = -1;
         }
 
         /// <summary>
