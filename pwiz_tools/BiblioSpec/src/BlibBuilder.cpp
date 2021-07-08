@@ -563,6 +563,32 @@ double BlibBuilder::getCutoffScore() const {
     return explicitCutoff;
 }
 
+int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
+{
+    if (*seqSet == NULL)
+    {
+        *seqSet = new set<string>;
+    }
+
+    int sequencesRead = 0;
+    while (*stdinStream)
+    {
+        string sequence;
+        getline(*stdinStream, sequence);
+        if (sequence.empty())
+        {
+            break;
+        }
+
+        string newSeq = parseSequence(sequence, modified);
+        Verbosity::debug("Adding target sequence %s", newSeq.c_str());
+        (*seqSet)->insert(newSeq);
+        ++sequencesRead;
+    }
+
+    return sequencesRead;
+}
+
 string BlibBuilder::parseSequence(const string& sequence, bool modified) {
     string newSeq;
     string unexpected;
@@ -624,33 +650,7 @@ string BlibBuilder::parseSequence(const string& sequence, bool modified) {
     }
     return newSeq;
 }
-
-int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
-{
-    if (*seqSet == NULL)
-    {
-        *seqSet = new set<string>;
-    }
-
-    int sequencesRead = 0;
-    while (*stdinStream)
-    {
-        string sequence;
-        getline(*stdinStream, sequence);
-        if (sequence.empty())
-        {
-            break;
-        }
-
-        string newSeq = parseSequence(sequence, modified);
-        Verbosity::debug("Adding target sequence %s", newSeq.c_str());
-        (*seqSet)->insert(newSeq);
-        ++sequencesRead;
-    }
-
-    return sequencesRead;
-}
-
+    
 static const char* getModMassFormat(double mass, bool highPrecision) {
     if (!highPrecision) {
         return "[%+.1f]";
