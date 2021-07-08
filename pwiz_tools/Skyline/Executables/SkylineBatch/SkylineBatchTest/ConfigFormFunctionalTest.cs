@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -16,7 +17,7 @@ namespace SkylineBatchTest
         public void AddConfigErrorsTest()
         {
             TestFilesZipPaths = new[]
-                {@"SkylineBatchTest\ImportFunctionalTest.zip", @"SkylineBatchTest\TestConfigurationFiles.zip"};
+                {@"SkylineBatchTest\ConfigFormFunctionalTest.zip", @"SkylineBatchTest\TestConfigurationFiles.zip"};
             RunFunctionalTest();
         }
 
@@ -33,8 +34,30 @@ namespace SkylineBatchTest
 
             TestAddInvalidConfiguration(mainForm);
 
-            //TestEditInvalidDownloadingFolderPath(mainForm) TODO(Surya) - look at TestRootReplacement in ImportFunctionalTest.cs
+            TestEditInvalidDownloadingFolderPath(mainForm);
 
+        }
+
+        public void TestEditInvalidDownloadingFolderPath(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathDownloadingConfigurations.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(invalidConfigFile);
+                FunctionalTestUtil.CheckConfigs(1, 1, mainForm);
+            });
+
+            RunUI(() => { mainForm.ClickConfig(0); });
+            var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
+            var configDlg = ShowDialog<SkylineBatchConfigForm>(() => invalidConfigForm.btnSkip.PerformClick());
+            var initialFilePath = configDlg.comboTemplateFile.Text;
+            var downloadDlg = ShowDialog<PanoramaFileForm>(() => configDlg.templateControl.btnDownload.PerformClick());
+            RunUI(() => { downloadDlg.btnSave.PerformClick(); });
+            var currFilePath = configDlg.comboTemplateFile.Text;
+            RunUI(() => { configDlg.CancelButton.PerformClick(); });
+            WaitForClosedForm(configDlg);
+            Assert.AreEqual(initialFilePath, currFilePath);
         }
 
         public void TestAddInvalidConfiguration(MainForm mainForm)
