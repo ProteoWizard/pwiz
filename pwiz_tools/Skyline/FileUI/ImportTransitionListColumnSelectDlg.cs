@@ -63,8 +63,9 @@ namespace pwiz.Skyline.FileUI
 
             InitializeComboBoxes();
             DisplayData();
-            InitializeRadioButtons();
             PopulateComboBoxes();
+            InitializeRadioButtons();
+            IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
         }
@@ -141,51 +142,8 @@ namespace pwiz.Skyline.FileUI
         {
             foreach (var comboBox in ComboBoxes)
             {
-                comboBox.Text = string.Empty;
-                comboBox.Items.AddRange(new object[]
-                {
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                    Resources.PasteDlg_UpdateMoleculeType_Note,
-                    Resources.PasteDlg_UpdateMoleculeType_S_Lens,
-                    Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
-                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
-                    // From here on is Small Molecule only
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    @"InChiKey",
-                    @"CAS",
-                    @"HMDB",
-                    @"InChi",
-                    @"SMILES",
-                    @"KEGG"
-
-                });
-                comboBox.SelectedIndex = 0;
+                UpdateCombo(comboBox);
                 comboBox.SelectedIndexChanged += ComboChanged;
-                ComboHelper.AutoSizeDropDown(comboBox);
             }
 
             var columns = Importer.RowReader.Indices;
@@ -362,6 +320,8 @@ namespace pwiz.Skyline.FileUI
 
             // Grey out any ignored column
             SetColumnColor(comboBox);
+
+            Console.WriteLine(comboBox.Text);
 
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
@@ -708,9 +668,149 @@ namespace pwiz.Skyline.FileUI
 
         public DocumentChecked InsertionParams { get; private set; }
 
-        private void UpdateMode()
+        private void UpdateCombo(ComboBox comboBox)
         {
-            
+            comboBox.Text = string.Empty;
+            comboBox.Items.AddRange(new object[]
+            {
+                // Columns for both
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                Resources.PasteDlg_UpdateMoleculeType_Note,
+                Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
+                Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
+
+            });
+            if (radioPeptide.Checked)
+            {
+                comboBox.Items.AddRange(new object[]
+                {
+                    // Peptide only columns
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name
+                });
+            }
+            else
+            {
+                comboBox.Items.AddRange(new object[]
+                {
+                    // Small Molecule only columns
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    @"InChiKey",
+                    @"CAS",
+                    @"HMDB",
+                    @"InChi",
+                    @"SMILES",
+                    @"KEGG"
+                });
+            }
+            ComboHelper.AutoSizeDropDown(comboBox);
+        }
+
+        // After we update the range of the comboboxes we need to readd appropriate headers
+        private void RefreshComboText()
+        {
+            var columns = Importer.RowReader.Indices;
+            if (radioPeptide.Checked)
+            {
+                // Set Peptide only columns
+                SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
+                SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
+                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
+                // Ignore Small Molecule only columns
+                SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.PrecursorAdductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProductNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProductFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProductNeutralLossColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProductAdductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProductChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.InChiKeyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.CASColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.HMDBColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.InChiColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.SMILESColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.KEGGColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+            }
+            else
+            {
+                // Set Small Molecule only columns
+                SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                SetComboBoxText(columns.PrecursorAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                SetComboBoxText(columns.ProductNameColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                SetComboBoxText(columns.ProductFormulaColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
+                SetComboBoxText(columns.ProductAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+                SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
+                SetComboBoxText(columns.CASColumn, @"CAS");
+                SetComboBoxText(columns.HMDBColumn, @"HMDB");
+                SetComboBoxText(columns.InChiColumn, @"InChi");
+                SetComboBoxText(columns.SMILESColumn, @"SMILES");
+                SetComboBoxText(columns.KEGGColumn, @"KEGG");
+                // Ignore Peptide only columns
+                SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+            }
+            // Both columns
+            SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+            SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+            SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+            SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+            SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
+            SetComboBoxText(columns.SLensColumn, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
+            SetComboBoxText(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
+            SetComboBoxText(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
+            SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
+            SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
+            SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
+            SetComboBoxText(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+            SetComboBoxText(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
+        }
+
+        /// Sets all empty columns to Ignore Column
+        private void IgnoreAllEmptyCols()
+        {
+            foreach (var comboBox in ComboBoxes)
+            {
+                if (comboBox.Text == string.Empty)
+                {
+                    comboBox.SelectedIndex = 0;
+                }
+                
+            }
         }
 
         private void InitializeRadioButtons()
@@ -835,7 +935,13 @@ namespace pwiz.Skyline.FileUI
 
         private void radioPeptide_CheckedChanged(object sender, EventArgs e)
         {
-            //UpdateMode();
+            foreach (var comboBox in ComboBoxes)
+            {
+                comboBox.Items.Clear();
+                UpdateCombo(comboBox);
+            }
+            RefreshComboText();
+            IgnoreAllEmptyCols();
         }
     }
 }  
