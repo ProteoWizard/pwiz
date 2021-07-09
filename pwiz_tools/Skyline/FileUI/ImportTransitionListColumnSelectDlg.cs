@@ -672,7 +672,7 @@ namespace pwiz.Skyline.FileUI
         /// <param name="comboBox"></param>
         private void UpdateCombo(ComboBox comboBox)
         {
-            comboBox.Text = string.Empty;
+            //comboBox.Text = string.Empty;
             comboBox.Items.AddRange(new object[]
             {
                 // Columns for both

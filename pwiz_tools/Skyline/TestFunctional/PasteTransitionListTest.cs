@@ -41,6 +41,7 @@ namespace pwiz.SkylineTestFunctional
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
         private string ignoreColumn => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+        private string labelType => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
         private string decoy => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy;
 
         [TestMethod]
@@ -92,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, decoy, product, ignoreColumn, fragName};
+            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
             CollectionAssert.AreEqual(expectedColumns, Settings.Default.CustomImportTransitionListColumnTypesList);
             
@@ -212,8 +213,8 @@ namespace pwiz.SkylineTestFunctional
             var pep1Boxes = pep1.ComboBoxes;
             Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
             // Verify that we did use the detected values instead
-            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 6);
-            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 7);
+            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 2);
+            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 3);
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
