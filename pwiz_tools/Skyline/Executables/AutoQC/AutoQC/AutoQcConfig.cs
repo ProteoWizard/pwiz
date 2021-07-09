@@ -15,7 +15,7 @@ namespace AutoQC
     public class AutoQcConfig : IConfig
     {
         public const string AUTOQC_CONFIG = "autoqc_config";
-
+        
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
         {
@@ -118,6 +118,18 @@ namespace AutoQC
 
         public static AutoQcConfig ReadXml(XmlReader reader)
         {
+            return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXml);
+        }
+
+        public static AutoQcConfig ReadXml_v21_1_0_158(XmlReader reader)
+        {
+            return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, ReadSkylineSettings_v21_1_0_158);
+        }
+
+        private static AutoQcConfig ReadXml(XmlReader reader, Func<XmlReader, MainSettings> mainSettingsReader,
+            Func<XmlReader, PanoramaSettings> panoramaSettingsReader,
+            Func<XmlReader, SkylineSettings> skylineSettingsReader)
+        {
             var name = reader.GetAttribute(Attr.name);
             
             var isEnabled = reader.GetBoolAttribute(Attr.is_enabled);
@@ -127,47 +139,63 @@ namespace AutoQC
             DateTime.TryParse(reader.GetAttribute(Attr.modified), out dateTime);
             var modified = dateTime;
 
-            SharedBatch.XmlUtil.ReadUntilElement(reader);
 
             MainSettings mainSettings = null;
             PanoramaSettings panoramaSettings = null;
             SkylineSettings skylineSettings = null;
             string exceptionMessage = null;
-            try
-            {
-                mainSettings = MainSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
-                } while (reader.NodeType != XmlNodeType.Element);
-                panoramaSettings = PanoramaSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
 
-                    if (reader.Name.Equals(AUTOQC_CONFIG)) // handles old configurations without skyline settings
-                    {
-                        skylineSettings = new SkylineSettings(SkylineType.Skyline);
-                        break;
-                    }
-                } while (reader.NodeType != XmlNodeType.Element);
-                skylineSettings = skylineSettings ?? SkylineSettings.ReadXml(reader);
-            }
-            catch (ArgumentException e)
+            while(reader.Read())
             {
-                exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+                if (reader.IsEndElement(AUTOQC_CONFIG))
+                {
+                   break; // We are done reading the config
+                }
+
+                try
+                {
+                    if (reader.IsElement(MainSettings.XML_EL))
+                    {
+                        mainSettings = mainSettingsReader(reader);
+                    }
+                    else if (reader.IsElement(PanoramaSettings.XML_EL))
+                    {
+                        panoramaSettings = panoramaSettingsReader(reader);
+                    }
+                    else if (reader.IsElement(SkylineSettings.XML_EL))
+                    {
+                        skylineSettings = skylineSettingsReader(reader);
+                    }
+                }
+                catch (ArgumentException e)
+                {
+                    exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+                }
             }
+            
+            // Old configurations did not have Skyline settings. Create default SkylineSettings.
+            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline);
 
             // finish reading config before exception is thrown so following configs aren't messed up
-            while (!(AUTOQC_CONFIG.Equals(reader.Name) && reader.NodeType == XmlNodeType.EndElement))
-            {
-                reader.Read();
-            } 
-
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
             return new AutoQcConfig(name, isEnabled, created, modified, mainSettings, panoramaSettings, skylineSettings);
+        }
+
+        // Method to read SkylineSettings from v.21.1.0.158 of AutoQC Loader. Not putting this in SkylineSettings.cs since that code
+        // is shared with SkylineBatch.
+        private static SkylineSettings ReadSkylineSettings_v21_1_0_158(XmlReader reader)
+        {
+            var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Old_Attr.Type), false);
+            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Old_Attr.CmdPath));
+            return new SkylineSettings(type, cmdPath);
+        }
+        // Attributes that were used in version 21.1.0.158 of AutoQC Loader
+        private enum Old_Attr
+        {
+            Type,
+            CmdPath
         }
 
         public void WriteXml(XmlWriter writer)
