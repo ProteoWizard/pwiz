@@ -364,14 +364,14 @@ int BlibBuilder::transferLibrary(int iLib,
         bool skip = false;
         if (targetSequences != NULL || targetSequencesModified != NULL) {
             // filtering targets
-            bool noFilter =
-                // don't filter if targetSequences is not null and it contains the unmodified sequence
-                (targetSequences != NULL &&
-                 targetSequences->find(boost::lexical_cast<string>(sqlite3_column_text(pStmt, 1))) != targetSequences->end()) ||
-                // OR targetSequencesModified is not null and it contains the modified sequence
-                (targetSequencesModified != NULL &&
-                 targetSequencesModified->find(parseSequence(boost::lexical_cast<string>(sqlite3_column_text(pStmt, 2)), true)) != targetSequencesModified->end());
-            skip = !noFilter;
+            string seqUnmodified = boost::lexical_cast<string>(sqlite3_column_text(pStmt, 1));
+            string seqModified = parseSequence(boost::lexical_cast<string>(sqlite3_column_text(pStmt, 2)), true);
+            skip = !(
+                    // don't filter if targetSequences is not null and it contains the unmodified sequence
+                    (targetSequences != NULL && targetSequences->find(seqUnmodified) != targetSequences->end()) ||
+                    // OR targetSequencesModified is not null and it contains the modified sequence
+                    (targetSequencesModified != NULL && targetSequencesModified->find(seqModified) != targetSequencesModified->end())
+                );
         }
 
         if (!skip) {
@@ -583,20 +583,15 @@ string BlibBuilder::parseSequence(const string& sequence, bool modified) {
             if (endIdx != string::npos)
             {
                 ++i;
-                istringstream deltaMassExtractor(sequence.substr(i, endIdx - i));
-                double deltaMass;
-                deltaMassExtractor >> deltaMass;
-                if (!deltaMassExtractor.fail())
-                {
+                string massStr = sequence.substr(i, endIdx - i);
+                try {
+                    double deltaMass = boost::lexical_cast<double>(massStr);
                     SeqMod newMod(aaPosition, deltaMass);
                     mods.push_back(newMod);
-                }
-                else
-                {
+                } catch (boost::bad_lexical_cast) {
                     Verbosity::warn("Could not read '%s' as a mass in target sequence %s, skipping this "
-                                    "modification", deltaMassExtractor.str().c_str(), sequence.c_str());
+                                    "modification", massStr.c_str(), sequence.c_str());
                 }
-
                 // move iterator to end of modification
                 i = endIdx;
             }
