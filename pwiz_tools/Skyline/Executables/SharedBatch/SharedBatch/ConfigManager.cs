@@ -502,9 +502,21 @@ namespace SharedBatch
                                     return ImportFrom(newFile, installedVersion, null);
                                 }
                                 // check that the configuration file is not newer than the program version
-                                var oldVersion = new Version(fileVersion);
-                                var newVersion = new Version(installedVersion);
-                                if (oldVersion > newVersion)
+                                var importingVersion = new Version(fileVersion);
+                                var currentVersion = new Version(installedVersion);
+                                bool versionError;
+                                if (importingVersion.Major == currentVersion.Major)
+                                {
+                                    if (importingVersion.Minor == currentVersion.Minor)
+                                    {
+                                        versionError = importingVersion.Revision > currentVersion.Revision;
+                                    }
+                                    else
+                                        versionError = importingVersion.Minor > currentVersion.Minor;
+                                }
+                                else
+                                    versionError = importingVersion.Major > currentVersion.Major;
+                                if (versionError)
                                 {
                                     DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
                                     return new List<IConfig>();
