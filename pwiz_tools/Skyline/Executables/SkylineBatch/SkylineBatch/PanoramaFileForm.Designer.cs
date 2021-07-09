@@ -160,7 +160,7 @@
         private System.Windows.Forms.TextBox textUserName;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textPassword;
-        private System.Windows.Forms.Button btnSave;
+        public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox textUrl;
         private System.Windows.Forms.Label label1;
