@@ -92,7 +92,7 @@
 
         private System.Windows.Forms.TextBox textPath;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton btnDownload;
+        public System.Windows.Forms.ToolStripButton btnDownload;
         private System.Windows.Forms.Label labelPath;
         private System.Windows.Forms.Button btnSelectFile;
     }
