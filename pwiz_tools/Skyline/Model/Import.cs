@@ -847,7 +847,7 @@ namespace pwiz.Skyline.Model
                             ColumnDouble(Fields, Indices.ExplicitIonMobilityHighEnergyOffsetColumn, FormatProvider),
                             ColumnDouble(Fields, Indices.SLensColumn, FormatProvider),
                             ColumnDouble(Fields, Indices.ConeVoltageColumn, FormatProvider),
-                            ColumnDouble(Fields, Indices.ExplicitDeclusteringPotentialColumn, FormatProvider));
+                            ColumnDouble(Fields, Indices.ExplicitDelusteringPotentialColumn, FormatProvider));
                 }
             }
 
@@ -2131,7 +2131,7 @@ namespace pwiz.Skyline.Model
 
         public int ExplicitCompensationVoltageColumn { get; set; }
 
-        public int ExplicitDeclusteringPotentialColumn { get; set; }
+        public int ExplicitDelusteringPotentialColumn { get; set; }
 
         public int CollisionCrossSectionColumn { get; set; }
 
@@ -2185,7 +2185,7 @@ namespace pwiz.Skyline.Model
             ExplicitIonMobilityUnitsColumn = -1;
             ExplicitIonMobilityHighEnergyOffsetColumn = -1;
             ExplicitCompensationVoltageColumn = -1;
-            ExplicitDeclusteringPotentialColumn = -1;
+            ExplicitDelusteringPotentialColumn = -1;
             CollisionCrossSectionColumn = -1;
             ProteinDescriptionColumn = -1;
             PrecursorAdductColumn = -1;
@@ -2226,6 +2226,18 @@ namespace pwiz.Skyline.Model
             LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(FormatHeader(col)));
             LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(FormatHeader(col)));
             FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col)));
+            ExplicitRetentionTimeColumn = headers.IndexOf(col => ExplicitRetentionTimeNames.Contains(FormatHeader(col)));
+            ExplicitRetentionTimeWindowColumn = headers.IndexOf(col => ExplicitRetentionTimeWindowNames.Contains(FormatHeader(col)));
+            ExplicitCollisionEnergyColumn = headers.IndexOf(col => ExplicitCollisionEnergyNames.Contains(FormatHeader(col)));
+            NoteColumn = headers.IndexOf(col => NoteNames.Contains(FormatHeader(col)));
+            SLensColumn = headers.IndexOf(col => SLensNames.Contains(FormatHeader(col)));
+            ConeVoltageColumn = headers.IndexOf(col => ConeVoltageNames.Contains(FormatHeader(col)));
+            ExplicitIonMobilityColumn = headers.IndexOf(col => ExplicitIonMobilityNames.Contains(FormatHeader(col)));
+            ExplicitIonMobilityUnitsColumn = headers.IndexOf(col => ExplicitIonMobilityUnitsNames.Contains(FormatHeader(col)));
+            ExplicitIonMobilityHighEnergyOffsetColumn = headers.IndexOf(col => ExplicitIonMobilityHighEnergyOffsetNames.Contains(FormatHeader(col)));
+            CollisionCrossSectionColumn = headers.IndexOf(col => CollisionalCrossSectionNames.Contains(FormatHeader(col)));
+            ExplicitDelusteringPotentialColumn = headers.IndexOf(col => ExplicitDelusteringPotentialNames.Contains(FormatHeader(col)));
+            ExplicitCompensationVoltageColumn = headers.IndexOf(col => ExplicitCompensationVoltageNames.Contains(FormatHeader(col)));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
@@ -2271,8 +2283,8 @@ namespace pwiz.Skyline.Model
                 ExplicitIonMobilityHighEnergyOffsetColumn = -1;
             if (ExplicitCompensationVoltageColumn == index)
                 ExplicitCompensationVoltageColumn = -1;
-            if (ExplicitDeclusteringPotentialColumn == index)
-                ExplicitDeclusteringPotentialColumn = -1;
+            if (ExplicitDelusteringPotentialColumn == index)
+                ExplicitDelusteringPotentialColumn = -1;
             if (CollisionCrossSectionColumn == index)
                 CollisionCrossSectionColumn = -1;
             if (ProteinDescriptionColumn == index)
@@ -2326,6 +2338,18 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
         public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
         public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeNames { get { return new[] { @"explicitretentiontime" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeWindowNames { get { return new[] { @"explicitretentiontimewindow" }; } }
+        public static IEnumerable<string> ExplicitCollisionEnergyNames { get { return new[] { @"explicitcollisionenergy" }; } }
+        public static IEnumerable<string> NoteNames { get { return new[] { @"note" }; } }
+        public static IEnumerable<string> SLensNames { get { return new[] { @"slens", @"s-lens" }; } }
+        public static IEnumerable<string> ConeVoltageNames { get { return new[] { @"conevoltage" }; } }
+        public static IEnumerable<string> ExplicitIonMobilityNames { get { return new[] { @"explicitionmobility" }; } }
+        public static IEnumerable<string> ExplicitIonMobilityUnitsNames { get { return new[] { @"explicitionmobilityunits" }; } }
+        public static IEnumerable<string> ExplicitIonMobilityHighEnergyOffsetNames { get { return new[] { @"explicitionmobilityhighenergyoffset" }; } }
+        public static IEnumerable<string> CollisionalCrossSectionNames { get { return new[] { @"collisionalcrosssection", @"collisionalcrosssection(sqa)", @"collisionalcrosssectionsqa" }; } }
+        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
+        public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
         // ReSharper restore StringLiteralTypo
     }
 

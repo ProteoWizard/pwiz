@@ -435,11 +435,11 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ExplicitCompensationVoltageColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential)
             {
-                CheckForComboBoxOverlap(columns.ExplicitDeclusteringPotentialColumn, 0, comboBoxIndex);
+                CheckForComboBoxOverlap(columns.ExplicitDelusteringPotentialColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
+                columns.ExplicitDelusteringPotentialColumn = comboBoxIndex;
             }
             else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_)
             {
@@ -556,8 +556,8 @@ namespace pwiz.Skyline.FileUI
                     columns.ExplicitIonMobilityHighEnergyOffsetColumn = -1;
                 if (columns.ExplicitCompensationVoltageColumn == comboBoxIndex)
                     columns.ExplicitCompensationVoltageColumn = -1;
-                if (columns.ExplicitDeclusteringPotentialColumn == comboBoxIndex)
-                    columns.ExplicitDeclusteringPotentialColumn = -1;
+                if (columns.ExplicitDelusteringPotentialColumn == comboBoxIndex)
+                    columns.ExplicitDelusteringPotentialColumn = -1;
                 if (columns.ProteinDescriptionColumn == comboBoxIndex)
                     columns.ProteinDescriptionColumn = -1;
                 // Small Molecule only columns
@@ -690,7 +690,7 @@ namespace pwiz.Skyline.FileUI
                 Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
                 Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
                 Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
                 Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
 
@@ -799,7 +799,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
             SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
             SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
+            SetComboBoxText(columns.ExplicitDelusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
             SetComboBoxText(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
             SetComboBoxText(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
         }

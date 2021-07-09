@@ -11513,4 +11513,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
     <value>Protein Description</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
+    <value>Explicit Delustering Potential</value>
+  </data>
 </root>
