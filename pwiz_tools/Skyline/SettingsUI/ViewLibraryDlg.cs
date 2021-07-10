@@ -391,8 +391,8 @@ namespace pwiz.Skyline.SettingsUI
                         return new ViewLibraryPepInfo(key, libInfo);
                     });
             }
-            _peptides = new ViewLibraryPepInfoList(pepInfos);
-            bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
+            
+            _peptides = new ViewLibraryPepInfoList(pepInfos, out var allPeptides);
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
