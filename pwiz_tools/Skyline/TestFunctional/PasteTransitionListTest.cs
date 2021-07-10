@@ -57,20 +57,31 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentLoaded();
 
-            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv")));
             var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             
             RunUI(() => {
                 var thermBoxes = therm.ComboBoxes;
                 // Checks that automatically assigning column headers works properly
-                Assert.AreEqual(precursor, thermBoxes[0].Text);
-                Assert.AreEqual(product, thermBoxes[1].Text);
-                Assert.AreEqual(peptide, thermBoxes[3].Text);
-                Assert.AreEqual(protName, thermBoxes[4].Text);
-                Assert.AreEqual(fragName, thermBoxes[5].Text);
-                Assert.AreEqual(label, thermBoxes[7].Text);
+                Assert.AreEqual(protName, thermBoxes[0].Text);
+                Assert.AreEqual(peptide, thermBoxes[1].Text);
+                Assert.AreEqual(precursor, thermBoxes[2].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4].Text);
+                Assert.AreEqual(product, thermBoxes[5].Text);
+                Assert.AreEqual(fragName, thermBoxes[7].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[15].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[16].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[17].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_, thermBoxes[18].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[19].Text);
+                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential, thermBoxes[20].Text);
             });
-            RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
+            // RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
             OkDialog(therm, therm.CancelDialog);
 
 
