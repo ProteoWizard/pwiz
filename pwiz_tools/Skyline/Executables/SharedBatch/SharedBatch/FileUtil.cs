@@ -114,6 +114,23 @@ namespace SharedBatch
             return GetInitialDirectory(directoryName);
         }
 
+        // Returns the directory of the path regardless of whether it exists.
+        // If the path is already a directory it returns the path, if it does not have a directory it returns an empty string
+        public static string GetPathDirectory(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            if (!Path.HasExtension(path)) return path;
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         public static void CreateDirectory(string path)
         {
             string directory = null;
