@@ -116,7 +116,7 @@ namespace SharedBatch
             {
                 OnDataReceived = (data) =>
                 {
-                    if (baseProcessRunner.OnDataReceived != null)
+                    if (baseProcessRunner.OnDataReceived != null && data != null)
                     {
                         baseProcessRunner.OnDataReceived(data);
                         _versionOutput.Add(data);

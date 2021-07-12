@@ -10,6 +10,7 @@ namespace SkylineBatch
     public partial class DownloadingFileControl : UserControl
     {
         private static string _lastEnteredPath;
+        private string _initialFile;
 
         private readonly bool _isDataServer;
         private readonly string _variableDescription;
@@ -20,6 +21,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
 
+            _initialFile = !string.IsNullOrEmpty(initialPath) && server != null ? System.IO.Path.GetFileName(initialPath) : string.Empty;
             Path = initialPath ?? string.Empty;
             Server = server;
             _isDataServer = isDataServer;
@@ -27,8 +29,8 @@ namespace SkylineBatch
             _filter = filter;
 
             labelPath.Text = string.Format(Resources.DownloadingFileControl_DownloadingFileControl__0__, label);
-            textPath.Text = Path;
             ToggleDownload(Server != null);
+            textPath.Text = Path;
             textPath.TextChanged += textPath_TextChanged;
             textPath.TextChanged += updatePathVariable;
 
@@ -103,7 +105,10 @@ namespace SkylineBatch
                 else
                 {
                     var fileName = System.IO.Path.GetFileName(ServerPath());
-                    fileNameChanged = !textPath.Text.EndsWith("\\" + fileName);
+                    var changedServerFileName = !textPath.Text.EndsWith("\\" + fileName);
+                    var changedInitialDownloadingName = string.IsNullOrEmpty(_initialFile) ||
+                                                        !textPath.Text.EndsWith("\\" + _initialFile);
+                    fileNameChanged = changedServerFileName && changedInitialDownloadingName;
                 }
             }
             catch (Exception)
