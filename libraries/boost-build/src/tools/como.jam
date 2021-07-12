@@ -21,7 +21,7 @@ using como : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, Boost.Build will search for a binary
+If the command is not specified, B2 will search for a binary
 named `como` in PATH.
 
 The following options can be provided, using
@@ -63,7 +63,7 @@ rule init ( * : * )
 {
     if [ os.name ] = LINUX
     {
-        toolset.using como-linux : 
+        toolset.using como-linux :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else
@@ -71,5 +71,5 @@ rule init ( * : * )
         toolset.using como-win :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
 
-    }        
+    }
 }

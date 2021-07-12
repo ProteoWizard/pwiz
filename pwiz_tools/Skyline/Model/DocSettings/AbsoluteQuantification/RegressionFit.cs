@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
-        protected CalibrationCurve AddRSquared(CalibrationCurve curve, IList<WeightedPoint> points)
+        protected virtual CalibrationCurve AddRSquared(CalibrationCurve curve, IList<WeightedPoint> points)
         {
             List<double> yValues = new List<double>();
             List<double> residuals = new List<double>();
@@ -330,10 +330,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     return new CalibrationCurve(this).ChangeErrorMessage(Resources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
                 }
-                var logPoints = points.Select(pt => new WeightedPoint(Math.Log(pt.X), Math.Log(pt.Y), pt.Weight)).ToArray();
+                var logPoints = points.Select(LogPoint).ToList();
                 var calibrationCurve = LinearFit(logPoints);
                 calibrationCurve.ChangeRegressionFit(this);
                 return calibrationCurve;
+            }
+
+            protected WeightedPoint LogPoint(WeightedPoint pt)
+            {
+                return new WeightedPoint(Math.Log(pt.X), Math.Log(pt.Y), pt.Weight);
             }
 
             public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
@@ -365,6 +370,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     }
                 }
                 return null;
+            }
+
+            protected override CalibrationCurve AddRSquared(CalibrationCurve curve, IList<WeightedPoint> points)
+            {
+                var linearCurve = curve.ChangeRegressionFit(LINEAR);
+                linearCurve = linearCurve.RegressionFit
+                    .AddRSquared(linearCurve, points.Select(LogPoint).ToList());
+                return curve.ChangeRSquared(linearCurve.RSquared);
             }
         }
 

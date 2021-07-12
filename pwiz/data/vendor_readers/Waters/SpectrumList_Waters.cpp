@@ -236,7 +236,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (detailLevel < DetailLevel_FastMetadata)
         return result;
 
-    // block >= 0 is ion mobility
+    // block >= 0 is ion mobility or SONAR
     if (ie.block >= 0)
     {
         double driftTime = rawdata_->GetDriftTime(ie.function, ie.scan);
@@ -335,13 +335,17 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasSonarFunctions() const
     return rawdata_->HasSONAR();
 }
 
-PWIZ_API_DECL pair<int, int> SpectrumList_Waters::sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const
+PWIZ_API_DECL pair<int, int> SpectrumList_Waters::sonarMzToBinRange(double precursorMz, double tolerance) const
 {
     pair<int, int> binRange;
-    rawdata_->Info.GetSonarRange(function, precursorMz, precursorTolerance, binRange.first, binRange.second);
+    rawdata_->GetSonarRange(precursorMz, tolerance, binRange.first, binRange.second);
     return binRange;
 }
 
+PWIZ_API_DECL double SpectrumList_Waters::sonarBinToPrecursorMz(int bin) const
+{
+    return rawdata_->SonarBinToPrecursorMz(bin);
+}
 
 PWIZ_API_DECL bool SpectrumList_Waters::hasIonMobility() const
 {
@@ -355,7 +359,7 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasCombinedIonMobility() const
 
 PWIZ_API_DECL bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const
 {
-    return rawdata_->HasCcsCalibration();
+    return rawdata_->HasCcsCalibration() && !rawdata_->HasSONAR(); // SONAR uses IMS hardware but doesn't involve CCS
 }
 
 PWIZ_API_DECL double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const
@@ -465,12 +469,21 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
     driftTime.resize(totalPoints);
     int currentPoints = 0;
     auto mzItr = &mz[0], intensityItr = &intensity[0], driftTimeItr = &driftTime[0];
+    bool wantBins = config_.reportSonarBins && hasSonarFunctions();
     for (int scan = 0; scan < numScansInBlock; ++scan)
     {
-        double dt = rawdata_->GetDriftTime(function, scan);
+        double dt;
+        if (wantBins)
+        {
+            dt = scan;
+        }
+        else
+        {
+            dt = rawdata_->GetDriftTime(function, scan);
 
-        if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, dt))
-            continue;
+            if (!chemistry::MzMobilityWindow::mobilityValueInBounds(config_.isolationMzAndMobilityFilter, dt))
+                continue;
+        }
 
         scanReader.ReadScan(function, block, scan, imsMasses, imsIntensities);
 
@@ -650,7 +663,8 @@ SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, doub
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
 pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const { return pwiz::analysis::Spectrum3DPtr(); }
 bool SpectrumList_Waters::hasSonarFunctions() const { return false; }
-pair<int, int> SpectrumList_Waters::sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const { return pair<int, int>(); }
+pair<int, int> SpectrumList_Waters::sonarMzToBinRange(double precursorMz, double tolerance) const { return pair<int, int>(); }
+double SpectrumList_Waters::sonarBinToPrecursorMz(int bin) const {return 0;}
 
 } // detail
 } // msdata

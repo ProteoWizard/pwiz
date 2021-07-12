@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,25 +11,26 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_ARCH_SH`]
+/* tag::reference[]
+= `BOOST_ARCH_SH`
 
-[@http://en.wikipedia.org/wiki/SuperH SuperH] architecture:
-If available versions \[1-5\] are specifically detected.
+http://en.wikipedia.org/wiki/SuperH[SuperH] architecture:
+If available versions [1-5] are specifically detected.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__sh__`] [__predef_detection__]]
+| `+__sh__+` | {predef_detection}
 
-    [[`__SH5__`] [5.0.0]]
-    [[`__SH4__`] [4.0.0]]
-    [[`__sh3__`] [3.0.0]]
-    [[`__SH3__`] [3.0.0]]
-    [[`__sh2__`] [2.0.0]]
-    [[`__sh1__`] [1.0.0]]
-    ]
- */
+| `+__SH5__+` | 5.0.0
+| `+__SH4__+` | 4.0.0
+| `+__sh3__+` | 3.0.0
+| `+__SH3__+` | 3.0.0
+| `+__sh2__+` | 2.0.0
+| `+__sh1__+` | 1.0.0
+|===
+*/ // end::reference[]
 
 #define BOOST_ARCH_SH BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -59,10 +60,22 @@ If available versions \[1-5\] are specifically detected.
 #   define BOOST_ARCH_SH_AVAILABLE
 #endif
 
+#if BOOST_ARCH_SH
+#   if BOOST_ARCH_SH >= BOOST_VERSION_NUMBER(5,0,0)
+#       undef BOOST_ARCH_WORD_BITS_64
+#       define BOOST_ARCH_WORD_BITS_64 BOOST_VERSION_NUMBER_AVAILABLE
+#   elif BOOST_ARCH_SH >= BOOST_VERSION_NUMBER(3,0,0)
+#       undef BOOST_ARCH_WORD_BITS_32
+#       define BOOST_ARCH_WORD_BITS_32 BOOST_VERSION_NUMBER_AVAILABLE
+#   else
+#       undef BOOST_ARCH_WORD_BITS_16
+#       define BOOST_ARCH_WORD_BITS_16 BOOST_VERSION_NUMBER_AVAILABLE
+#   endif
+#endif
+
 #define BOOST_ARCH_SH_NAME "SuperH"
+
+#endif
 
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_ARCH_SH,BOOST_ARCH_SH_NAME)
-
-
-#endif

@@ -45,8 +45,8 @@ help-output-file = help ;
 #
 .option.debug ?= ;
 
-# These are all the options available for enabling or disabling to control the 
-# help system in various ways. Options can be enabled or disabled with 
+# These are all the options available for enabling or disabling to control the
+# help system in various ways. Options can be enabled or disabled with
 # '--help-enable-<option>', and '--help-disable-<option>' respectively.
 #
 .option-description = Help Options ;
@@ -281,7 +281,7 @@ local rule print-help-top ( )
 
     print.list-start ;
     print.list-item "--help-options Print more obscure command line options." ;
-    print.list-item "--help-internal Boost.Build implementation details." ;
+    print.list-item "--help-internal B2 implementation details." ;
     print.list-item "--help-doc-options Implementation details doc formatting." ;
     print.list-end ;
 }
@@ -291,7 +291,7 @@ local rule print-help-top ( )
 #
 local rule print-help-usage ( )
 {
-    print.section "Boost.Build Usage"
+    print.section "B2 Usage"
         "b2 [ options... ] targets..."
         ;
     print.list-start ;
@@ -299,7 +299,7 @@ local rule print-help-usage ( )
         Build all targets, even if they are current. ;
     print.list-item -fx\;
         Read '"x"' as the Jamfile for building instead of searching for the
-        Boost.Build system. ;
+        B2 system. ;
     print.list-item -jx\;
         Run up to '"x"' commands concurrently. ;
     print.list-item -n\;
@@ -318,7 +318,7 @@ local rule print-help-usage ( )
     print.list-item -v\;
         Display the version of b2. ;
     print.list-item --x\;
-        Any option not explicitly handled by Boost.Build remains available to
+        Any option not explicitly handled by B2 remains available to
         build scripts using the '"ARGV"' variable. ;
     print.list-item --abbreviate-paths\;
         Use abbreviated paths for targets. ;
@@ -370,7 +370,7 @@ local rule print-help-usage ( )
 }
 
 # Generates description of options controlling the help system. This
-# automatically reads the options as all variables in the module given 
+# automatically reads the options as all variables in the module given
 # with the name `module-name` of the form  ".option.*".
 #
 local rule print-help-options (

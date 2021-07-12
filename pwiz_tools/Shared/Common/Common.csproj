@@ -109,16 +109,12 @@
     <Compile Include="Controls\DoubleBufferedListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\FindBox.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Controls\FindBox.cs" />
     <Compile Include="Controls\FindBox.Designer.cs">
       <DependentUpon>FindBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\IFormView.cs" />
-    <Compile Include="Controls\RecordNavBar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Controls\RecordNavBar.cs" />
     <Compile Include="Controls\RecordNavBar.Designer.cs">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>

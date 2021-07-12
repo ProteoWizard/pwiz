@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -25,11 +24,10 @@ namespace SkylineBatch
             MultiLine = multiLine;
             ExportsInvariantReport = invariantReport;
 
-            // TODO(Ali): Change this to invariant report release after 21.1
-            if (!MultiLine)
+            if (!ExportsInvariantReport)
             {
                 logger.Log(string.Empty);
-                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.ALLOW_NEWLINE_SAVE_VERSION));
+                logger.Log(string.Format(Resources.CommandWriter_Start_Notice__For_faster_Skyline_Batch_runs__use_Skyline_version__0__or_higher_, ConfigRunner.REPORT_INVARIANT_VERSION));
                 logger.Log(string.Empty);
             }
         }

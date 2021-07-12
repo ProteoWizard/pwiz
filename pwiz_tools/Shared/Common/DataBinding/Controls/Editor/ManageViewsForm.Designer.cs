@@ -116,8 +116,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // chooseViewsControl1
             // 
-            this.chooseViewsControl1.AllowEditing = true;
             resources.ApplyResources(this.chooseViewsControl1, "chooseViewsControl1");
+            this.chooseViewsControl1.AllowEditing = true;
             this.chooseViewsControl1.FilterRowSources = false;
             this.chooseViewsControl1.GrayDisabledRowSources = true;
             this.chooseViewsControl1.MultiSelect = true;
@@ -128,22 +128,22 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             // contextMenuStrip1
             // 
+            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openViewEditorContextMenuItem,
             this.copyToGroupContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
             // openViewEditorContextMenuItem
             // 
-            this.openViewEditorContextMenuItem.Name = "openViewEditorContextMenuItem";
             resources.ApplyResources(this.openViewEditorContextMenuItem, "openViewEditorContextMenuItem");
+            this.openViewEditorContextMenuItem.Name = "openViewEditorContextMenuItem";
             this.openViewEditorContextMenuItem.Click += new System.EventHandler(this.openViewEditorContextMenuItem_Click);
             // 
             // copyToGroupContextMenuItem
             // 
-            this.copyToGroupContextMenuItem.Name = "copyToGroupContextMenuItem";
             resources.ApplyResources(this.copyToGroupContextMenuItem, "copyToGroupContextMenuItem");
+            this.copyToGroupContextMenuItem.Name = "copyToGroupContextMenuItem";
             // 
             // ManageViewsForm
             // 
