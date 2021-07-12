@@ -1003,10 +1003,10 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(new[] { "grommet", "labbel", string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant())); // Be case insensitive
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2, SkylineWindow.Document.Settings));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant(), SkylineWindow.Document.Settings)); // Be case insensitive
             // But the word "peptide" should prevent us from trying to read this as small molecule data
-            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide")));
+            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide"), SkylineWindow.Document.Settings));
            
 
             // And check for handling of localization
@@ -1034,7 +1034,7 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(new[] { nearly, string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4, SkylineWindow.Document.Settings));
 
             // Check our ability to help users with localized headers that match the human readable names we use in the UI
             NewDocument();
@@ -1112,6 +1112,33 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
+            // Paste in a peptide transition list with some distinctive small molecule headers
+            var textCSV9 =
+                "Protein Name,Modified Sequence, Precursor Mz,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,478.737814,2,precursor,precursor\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,532.272552,1,y4,y\n";
+            // Check that we ignored the headers and looked for matching amino acid sequence and precursor m/z columns
+            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV9, SkylineWindow.Document.Settings));
+            // Paste in the document to make sure it imports properly
+            LoadNewDocument(true);
+            SetClipboardText(textCSV9);
+            
+            var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 4);
+
+            // Examine a transition list with an amino acid sequence, but no precursor m/z column and some distinctive small molecule headers
+            var textCSV10 =
+                "Protein Name,Modified Sequence,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
+                "peptides1,PEPTIDER,2,16.6,478.737814,2,precursor,precursor\n" +
+                "peptides1,PEPTIDER,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,2,16.6,532.272552,1,y4,y\n";
+            // We should realize the lack of a matching precursor m/z column, rely on the headers to make the decision,
+            // and classify it as a small molecule transition list
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV10, SkylineWindow.Document.Settings));
         }
 
         private void TestLabelsNoFormulas()
