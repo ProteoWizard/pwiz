@@ -22,8 +22,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -253,7 +256,40 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(dlg, dlg.OkDialog);
             }
 
+            TestPeptideOnlyDoc();
+
             LoadNewDocument(true); // Tidy up
         }
+
+        private void TestPeptideOnlyDoc()
+        {
+            // Try a peptide-only document, set up to work with the dimensions of PeptideTransitionList.csv
+            CheckDocumentGridAndColumns(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List,
+                9, 21, SrmDocument.DOCUMENT_TYPE.proteomic);
+            
+        }
+
+        // Tests the current document, important to note that you must have data already in a skyline document for this to work
+        private void CheckDocumentGridAndColumns(string viewName,
+            int rowCount, int colCount,  // Expected row and column count for document grid
+            SrmDocument.DOCUMENT_TYPE expectedDocumentType)
+        {
+            Assume.AreEqual(expectedDocumentType, SkylineWindow.Document.DocumentType);
+            WaitForClosedForm<DocumentGridForm>();
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            RunUI(() => documentGrid.ChooseView(viewName));
+            WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
+            int iteration = 0;
+            WaitForCondition(() =>
+            {
+                bool result = documentGrid.ColumnCount == colCount;
+                if (!result && iteration++ > 9)
+                    Assert.AreNotEqual(colCount, documentGrid.ColumnCount);   // Put breakpoint on this line, if you have changed columns and need to update the numbers
+                return result;
+            }); // Let it initialize
+
+            RunUI(() => documentGrid.Close());
+        }
+
     }
 }
