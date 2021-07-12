@@ -18,7 +18,7 @@ namespace SkylineBatch
             Icon = Program.Icon();
 
             path = path ?? string.Empty;
-            _folderPath = FileUtil.GetInitialDirectory(path);
+            _folderPath = FileUtil.GetPathDirectory(path);
 
 
             if (editingServer != null)
