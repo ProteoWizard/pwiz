@@ -66,6 +66,7 @@
             // 
             // comboPanelOuter
             // 
+            this.comboPanelOuter.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.comboPanelOuter.Controls.Add(this.comboPanelInner);
             resources.ApplyResources(this.comboPanelOuter, "comboPanelOuter");
             this.comboPanelOuter.Name = "comboPanelOuter";
@@ -73,6 +74,7 @@
             // comboPanelInner
             // 
             resources.ApplyResources(this.comboPanelInner, "comboPanelInner");
+            this.comboPanelInner.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.comboPanelInner.Name = "comboPanelInner";
             // 
             // fileLabel
