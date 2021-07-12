@@ -621,6 +621,9 @@
       <Component Id="percolator_xerces_c_3_1.dll">
         <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
       </Component>
+      <Component Id="percolator_msvcr90.dll">
+        <File Id="percolator_msvcr90.dll" Source="$(var.Skyline.TargetDir)/percolator/msvcr90.dll" KeyPath="yes" />
+      </Component>
       <Component Id="percolator_vcomp140.dll">
         <File Id="percolator_vcomp140.dll" Source="$(var.Skyline.TargetDir)/vcomp140.dll" KeyPath="yes" />
       </Component>
