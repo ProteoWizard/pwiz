@@ -678,7 +678,7 @@ namespace pwiz.SkylineTestFunctional
                 return;
             }
             
-            // Verify that graph items with ranked ions are being annotated with the correct colors
+            // Verify that the color of annotations for ranked ions are being retrieved correctly
             var graphControl = (MSGraphControl)_viewLibUI.Controls.Find("graphControl", true).First();
             foreach (var annotation in from item in graphControl.GraphPane.CurveList let info = item.Tag as IMSGraphItemExtended from pt in (MSPointList) 
                 item.Points select info.AnnotatePoint(pt) into annotation where annotation != null where annotation.ZOrder != null select annotation)
