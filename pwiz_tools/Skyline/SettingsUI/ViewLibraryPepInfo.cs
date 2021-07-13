@@ -67,19 +67,6 @@ namespace pwiz.Skyline.SettingsUI
                 return DisplayText;
             } 
         }
-        public string Formula
-        {
-            get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }
-        }
-        public double PrecursorMz
-        {
-            get { return Key.PrecursorMz.GetValueOrDefault(); }
-        }
-
-        public string InchiKey
-        {
-            get { return Key.SmallMoleculeLibraryAttributes.InChiKey; }
-        }
 
         /// <summary>
         /// Returns the unmodified peptide sequence. This, plus the Adduct is what gets displayed
