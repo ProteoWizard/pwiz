@@ -159,7 +159,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         spectrum.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
         BinaryData<double>& mzArray = spectrum.getMZArray()->data;
         BinaryData<double>& intensityArray = spectrum.getIntensityArray()->data;
-	    while (pwiz::util::getline(*is_, lineStr))
+	    while (getlinePortable(*is_, lineStr))
 	    {
             size_t lineBegin = lineStr.find_first_not_of(" \t");
             if (lineBegin == string::npos)

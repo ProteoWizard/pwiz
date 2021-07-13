@@ -51,8 +51,6 @@ using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
 
-//using pwiz::util::getline; // this will cause ambiguous lookup with ADL because std::getline is always an option when resolving an unqualified "getline()" since its arguments are members of std
-
 using std::streampos;
 using std::streamoff;
 using std::streamsize;

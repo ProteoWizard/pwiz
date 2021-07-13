@@ -438,7 +438,7 @@ struct PWIZ_API_DECL RawData
             return;
 
         string line;
-        while(pwiz::util::getline(in, line))
+        while(getlinePortable(in, line))
         {
             size_t c_pos = line.find(": ");
             if (line.find("$$ ") != 0 || c_pos == string::npos)

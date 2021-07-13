@@ -1138,14 +1138,14 @@ Map processConfig(const string & fname)
     if (!file)
     {
         cout << "Unable to open file.";
-        pwiz::util::getline(cin, str);
+        getlinePortable(cin, str);
         cin.get();
         exit(1);
     }
 
     string line, tempLine, pStr;
     Map tempMap;
-    while(pwiz::util::getline(file, line))
+    while(getlinePortable(file, line))
     {
         if (line[line.length()-1] == 'Y')
         {    

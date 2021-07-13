@@ -255,7 +255,7 @@ ostream& operator<<(ostream& os, const CVMap* cmp)
 istream& operator>>(istream& is, CVMapPtr& cm)
 {
     string line;
-    pwiz::util::getline(is, line);
+    getlinePortable(is, line);
 
     if (!line.size())
         //throw length_error("empty line found where record
