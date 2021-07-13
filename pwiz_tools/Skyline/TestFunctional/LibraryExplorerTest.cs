@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -676,6 +677,16 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(_viewLibUI);
                 return;
             }
+            
+            // Verify that graph items with ranked ions are being annotated with the correct colors
+            var graphControl = (MSGraphControl)_viewLibUI.Controls.Find("graphControl", true).First();
+            foreach (var annotation in from item in graphControl.GraphPane.CurveList let info = item.Tag as IMSGraphItemExtended from pt in (MSPointList) 
+                item.Points select info.AnnotatePoint(pt) into annotation where annotation != null where annotation.ZOrder != null select annotation)
+            {
+                Assert.AreEqual(annotation.FontSpec,
+                    IonTypeExtension.GetTypeColor(IonType.custom, annotation.ZOrder.Value));
+            }
+
             RunUI(() =>
             {
                 libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
