@@ -241,7 +241,7 @@ bool WatersMseReader::parseFile(){
     }
     // read header in first line
     string line;
-    getline(csvFile_, line);
+    pwiz::util::getline(csvFile_, line);
     parseHeader(line);
     
     Verbosity::debug("Collecting Psms.");
@@ -334,7 +334,7 @@ void WatersMseReader::collectPsms(){
     
     // read first non-header line
     string line;
-    getline(csvFile_, line);
+    pwiz::util::getline(csvFile_, line);
     lineNum_++;
     bool parseSuccess = true;
     string errorMsg;
@@ -381,7 +381,7 @@ void WatersMseReader::collectPsms(){
         // store this line's information in the curPSM
         storeLine(entry);
         
-        getline(csvFile_, line);
+        pwiz::util::getline(csvFile_, line);
         lineNum_++;
     } // next line
 
