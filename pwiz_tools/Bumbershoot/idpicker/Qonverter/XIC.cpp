@@ -1002,10 +1002,10 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 RegDefinedPrecursorInfo info;
 
                 std::string   line;
-                getline(file, line);
+                pwiz::util::getline(file, line);
                 //bool useAvgMass = config.ChromatogramMzUpperOffset.units != MZTolerance::PPM && config.ChromatogramMzLowerOffset.units != MZTolerance::PPM &&
                 //                  config.ChromatogramMzUpperOffset.value + config.ChromatogramMzLowerOffset.value > 1;
-                while(getline(file, line))
+                while(pwiz::util::getline(file, line))
                 {
                     istringstream   ss(line);
                     double     scantime1,precursorMZ;

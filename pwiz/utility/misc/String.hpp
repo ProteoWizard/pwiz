@@ -33,7 +33,6 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 using std::string;
-using std::getline;
 using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
@@ -86,6 +85,42 @@ std::string longestCommonPrefix(const SequenceT& strings)
 inline std::string::const_iterator findUnicodeBytes(const std::string& str)
 {
     return std::find_if(str.begin(), str.end(), [](char ch) { return !isprint(static_cast<unsigned char>(ch)) || static_cast<int>(ch) < 0; });
+}
+
+
+/// Convenience wrapper for std::getline that strips trailing \r from DOS-style text files on any platform (e.g. OSX and Linux)
+/// NB: DO NOT USE THIS IF YOU REQUIRE ACCURATE LINE LENGTH, E.G. FOR INDEXING A FILE!
+template <class _Elem, class _Traits, class _Alloc>
+std::basic_istream<_Elem, _Traits>& getline(std::basic_istream<_Elem, _Traits>&& _Istr, std::basic_string<_Elem, _Traits, _Alloc>& _Str, const _Elem _Delim)
+{ // get characters into string, discard delimiter and trailing \r
+    auto& result = std::getline(_Istr, _Str, _Delim);
+    if (_Delim == _Istr.widen('\n'))
+        bal::trim_right_if(_Str, bal::is_any_of("\r"));
+    return result;
+}
+
+// Convenience wrapper for std::getline that strips trailing \r from DOS-style text files on any platform (e.g. OSX and Linux)
+/// NB: DO NOT USE THIS IF YOU REQUIRE ACCURATE LINE LENGTH, E.G. FOR INDEXING A FILE!
+template <class _Elem, class _Traits, class _Alloc>
+std::basic_istream<_Elem, _Traits>& getline(std::basic_istream<_Elem, _Traits>&& _Istr, std::basic_string<_Elem, _Traits, _Alloc>& _Str)
+{ // get characters into string, discard newline and trailing \r
+    return pwiz::util::getline(_Istr, _Str, _Istr.widen('\n'));
+}
+
+// Convenience wrapper for std::getline that strips trailing \r from DOS-style text files on any platform (e.g. OSX and Linux)
+/// NB: DO NOT USE THIS IF YOU REQUIRE ACCURATE LINE LENGTH, E.G. FOR INDEXING A FILE!
+template <class _Elem, class _Traits, class _Alloc>
+std::basic_istream<_Elem, _Traits>& getline(std::basic_istream<_Elem, _Traits>& _Istr, std::basic_string<_Elem, _Traits, _Alloc>& _Str, const _Elem _Delim)
+{ // get characters into string, discard delimiter and trailing \r
+    return pwiz::util::getline(std::move(_Istr), _Str, _Delim);
+}
+
+// Convenience wrapper for std::getline that strips trailing \r from DOS-style text files on any platform (e.g. OSX and Linux)
+/// NB: DO NOT USE THIS IF YOU REQUIRE ACCURATE LINE LENGTH, E.G. FOR INDEXING A FILE!
+template <class _Elem, class _Traits, class _Alloc>
+std::basic_istream<_Elem, _Traits>& getline(std::basic_istream<_Elem, _Traits>& _Istr, std::basic_string<_Elem, _Traits, _Alloc>& _Str)
+{ // get characters into string, discard newline and trailing \r
+    return pwiz::util::getline(std::move(_Istr), _Str, _Istr.widen('\n'));
 }
 
 

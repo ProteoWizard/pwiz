@@ -1569,14 +1569,14 @@ namespace DiaUmpire {
         string line;
         vector<string> tokens;
 
-        while (/*pwiz::util::*/getline(reader, line))
+        while (pwiz::util::getline(reader, line))
         {
             if (line.empty() || line[0] == '#')
                 continue;
 
             if (line == ("==window setting begin"))
             {
-                while (/*pwiz::util::*/getline(reader, line) && line != "==window setting end")
+                while (pwiz::util::getline(reader, line) && line != "==window setting end")
                 {
                     if (line.empty())
                         continue;

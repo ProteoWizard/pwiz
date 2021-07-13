@@ -1001,7 +1001,7 @@ namespace pepitome
             size_t numPeaks;
             vector<string> tokens;
 
-            while(getline(library, buf)) 
+            while(pwiz::util::getline(library, buf))
             {
                 size_t bufLength = buf.length()+1;
                 dataOffset += bufLength;
@@ -1082,7 +1082,7 @@ namespace pepitome
                 double parentMass;
                 int charge;
                 size_t numPeaks;
-                while(getline(library,buf)) 
+                while(pwiz::util::getline(library,buf))
                 {
                     size_t bufLength = buf.length()+1;
                     dataOffset += bufLength;

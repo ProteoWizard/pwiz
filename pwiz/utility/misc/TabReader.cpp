@@ -263,8 +263,8 @@ bool TabReader::Impl::process(const char* filename)
     {
         th_->open();
         
-        getline(in, line);
-        while(getline(in, line))
+        pwiz::util::getline(in, line);
+        while(pwiz::util::getline(in, line))
         {
             if (isComment(line))
                 continue;

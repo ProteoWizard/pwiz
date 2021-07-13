@@ -51,14 +51,14 @@ using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
 
-using std::getline;
+//using pwiz::util::getline; // this will cause ambiguous lookup with ADL because std::getline is always an option when resolving an unqualified "getline()" since its arguments are members of std
 
 using std::streampos;
 using std::streamoff;
 using std::streamsize;
 
-// This breaks VS2019 usage
-using bnw::system; // unqualified system() calls will be ambiguous, by intention, to force developers to consider UTF-8 compatibility
+
+//using bnw::system; // TODO: add linting so unqualified system() calls will not be allowed to force developers to consider UTF-8 compatibility
 
 using bnw::cin;
 using bnw::cout;

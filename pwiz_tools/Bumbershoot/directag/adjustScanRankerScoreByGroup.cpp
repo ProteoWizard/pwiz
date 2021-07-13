@@ -59,12 +59,12 @@ void getHeader(const string& filename, ScoreInfo *scoreInfo )
         throw invalid_argument( string( "unable to open file \"" ) + filename + "\"" );
 
     string headerLine;
-    getline(fileStream, headerLine); //discard the first header line: H    BestTagScoreMean    BestTagTICMean    TagMzRangeMean    BestTagScoreIQR    BestTagTICIQR    TagMzRangeIQR    numTaggedSpectra
-    getline(fileStream, headerLine); // get second line, e.g.: H    25.4616    7.06014    701.679    12.0654    4.52176    305.127    18587
+    pwiz::util::getline(fileStream, headerLine); //discard the first header line: H    BestTagScoreMean    BestTagTICMean    TagMzRangeMean    BestTagScoreIQR    BestTagTICIQR    TagMzRangeIQR    numTaggedSpectra
+    pwiz::util::getline(fileStream, headerLine); // get second line, e.g.: H    25.4616    7.06014    701.679    12.0654    4.52176    305.127    18587
     stringstream lineStream(headerLine);
     string segments;
     vector<string> v;
-    while(getline(lineStream,segments,'\t'))
+    while(pwiz::util::getline(lineStream,segments,'\t'))
     {
         v.push_back(segments);
     }
@@ -103,7 +103,7 @@ void adjustScore(    const string& filename,
         throw invalid_argument( string( "unable to open file \"" ) + filename + "\"" );
 
     string line;
-    while( getline(fileStream, line))
+    while(pwiz::util::getline(fileStream, line))
     {
         if (line.find("H\tBestTagScoreMean") != string::npos)
         {
@@ -130,7 +130,7 @@ void adjustScore(    const string& filename,
             stringstream lineStream(line);
             string segments;
             vector<string> v;
-            while(getline(lineStream,segments,'\t'))
+            while(pwiz::util::getline(lineStream,segments,'\t'))
             {
                 v.push_back(segments);
             }
@@ -161,13 +161,13 @@ int main( int argc, char* argv[] )
 
     ifstream  groupFile( argv[1] );
     string line;
-    while(getline(groupFile,line))  //work on each group; one line one group, separated with ","
+    while(pwiz::util::getline(groupFile,line))  //work on each group; one line one group, separated with ","
     {
         stringstream  lineStream(line);
         string        file;
         vector<ScoreInfo> scoreInfoVector;
         //cout << "Extracting subscore infomation from metrics files ... \n" << endl;
-        while(getline(lineStream,file,','))  //work on a sigle file in a group, extract mean and IQR from each file 
+        while(pwiz::util::getline(lineStream,file,','))  //work on a sigle file in a group, extract mean and IQR from each file 
         {
             ScoreInfo scoreInfo;
             getHeader( file, &scoreInfo );
@@ -205,7 +205,7 @@ int main( int argc, char* argv[] )
         lineStream.clear(); // reset lineStream for getline()
         lineStream.seekg(0,std::ios::beg);
         cout << "Adjusting ScanRanker scores ...\n" << endl;
-        while(getline(lineStream,file,','))  //work on a sigle file in a group, add adjusted scores 
+        while(pwiz::util::getline(lineStream,file,','))  //work on a sigle file in a group, add adjusted scores 
         {
             adjustScore(    file, 
                             gbBestTagScoreMean,

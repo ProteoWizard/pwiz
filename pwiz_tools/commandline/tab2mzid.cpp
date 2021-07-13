@@ -115,7 +115,7 @@ bool loadFile(Config& config)
     {
         string line;
     
-        while(getline(in, line))
+        while(pwiz::util::getline(in, line))
         {
             record rec;
             boost::char_separator<char> sep("\t");
