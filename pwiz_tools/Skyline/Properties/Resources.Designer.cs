@@ -15892,6 +15892,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column {0}.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_DisplayData_Column__0_ {

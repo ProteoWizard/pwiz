@@ -157,7 +157,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
             SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
-            SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+            SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
             SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
@@ -345,11 +345,11 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.LibraryColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name)
             {
-                CheckForComboBoxOverlap(columns.PeptideColumn, 0, comboBoxIndex);
+                CheckForComboBoxOverlap(columns.MoleculeNameColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PeptideColumn = comboBoxIndex;
+                columns.MoleculeNameColumn = comboBoxIndex;
             }
             else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z)
             {
@@ -531,13 +531,19 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.KEGGColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name)
+            {
+                CheckForComboBoxOverlap(columns.MoleculeListNameColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.MoleculeListNameColumn = comboBoxIndex;
+            }
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
                 if (columns.IrtColumn == comboBoxIndex) columns.IrtColumn = -1;
                 if (columns.LabelTypeColumn == comboBoxIndex) columns.LabelTypeColumn = -1;
                 if (columns.LibraryColumn == comboBoxIndex) columns.LibraryColumn = -1;
-                if (columns.PeptideColumn == comboBoxIndex) columns.PeptideColumn = -1;
+                if (columns.MoleculeNameColumn == comboBoxIndex) columns.MoleculeNameColumn = -1;
                 if (columns.PrecursorColumn == comboBoxIndex) columns.PrecursorColumn = -1;
                 if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
                 if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
@@ -587,6 +593,8 @@ namespace pwiz.Skyline.FileUI
                     columns.SMILESColumn = -1;
                 if (columns.KEGGColumn == comboBoxIndex)
                     columns.KEGGColumn = -1;
+                if (columns.MoleculeListNameColumn == comboBoxIndex)
+                    columns.MoleculeListNameColumn = -1;
             }
         }
 
@@ -677,6 +685,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // Columns for both
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
@@ -692,27 +701,27 @@ namespace pwiz.Skyline.FileUI
                 Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
                 Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
                 Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
-
+                
             });
             if (radioPeptide.Checked)
             {
                 comboBox.Items.AddRange(new object[]
                 {
                     // Peptide only columns
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name
                 });
             }
-            else
+            if (!radioPeptide.Checked)
             {
                 comboBox.Items.AddRange(new object[]
                 {
                     // Small Molecule only columns
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -743,7 +752,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
                 SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
                 SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
-                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
                 SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
                 // Ignore Small Molecule only columns
@@ -781,7 +790,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
-                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
             }
@@ -858,8 +867,8 @@ namespace pwiz.Skyline.FileUI
 
                     var columns = Importer.RowReader.Indices;
                     MissingEssentialColumns = new List<string>();
-                    CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+                    CheckEssentialColumn(new Tuple<int, string>(columns.MoleculeNameColumn,
+                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name));
                     CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
                     CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
