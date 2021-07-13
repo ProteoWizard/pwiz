@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     {
         private string precursor => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z;
         private string product => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z;
-        private string peptide => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
+        private string moleculeName => Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name;
         private string protName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
                 var thermBoxes = therm.ComboBoxes;
                 // Checks that automatically assigning column headers works properly
                 Assert.AreEqual(protName, thermBoxes[0].Text);
-                Assert.AreEqual(peptide, thermBoxes[1].Text);
+                Assert.AreEqual(moleculeName, thermBoxes[1].Text);
                 Assert.AreEqual(precursor, thermBoxes[2].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4].Text);
                 Assert.AreEqual(product, thermBoxes[5].Text);
@@ -101,13 +101,13 @@ namespace pwiz.SkylineTestFunctional
                 // Column positions are only saved if at least one combobox is changed, so
                 // change a couple in order to trigger column saving
                 peptideBoxes[14].SelectedIndex = 0;
-                peptideBoxes[4].SelectedIndex = 1;
+                peptideBoxes[4].SelectedIndex = 2;
             });
             // Clicking the OK button should save the column locations
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
+            var expectedColumns = new List<string> {protName, moleculeName, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
             CollectionAssert.AreEqual(expectedColumns, Settings.Default.CustomImportTransitionListColumnTypesList);
             
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => 
             {
                 var peptideTransitionListBoxes1 = peptideTransitionList1.ComboBoxes;
-                Assert.AreEqual(1, peptideTransitionListBoxes1[4].SelectedIndex);
+                Assert.AreEqual(2, peptideTransitionListBoxes1[4].SelectedIndex);
                 peptideTransitionList1.CancelDialog();
             });
 
@@ -213,7 +213,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the change and other columns were saved in the settings
             Assert.AreEqual(ignoreColumn,Settings.Default.CustomImportTransitionListColumnTypesList[7]);
             Assert.AreEqual(protName, Settings.Default.CustomImportTransitionListColumnTypesList[0]);
-            Assert.AreEqual(peptide, Settings.Default.CustomImportTransitionListColumnTypesList[1]);
+            Assert.AreEqual(moleculeName, Settings.Default.CustomImportTransitionListColumnTypesList[1]);
 
             // Verify the document state we expect
             AssertEx.IsDocumentState(SkylineWindow.Document, null, null, 2, 2, 9);
@@ -227,8 +227,8 @@ namespace pwiz.SkylineTestFunctional
             var pep1Boxes = pep1.ComboBoxes;
             Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
             // Verify that we did use the detected values instead
-            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 2);
-            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 3);
+            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 3);
+            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 4);
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
                 // Correct the header assignments
                 RunUI(() => {
                     var comboBoxes = dlg.ComboBoxes;
-                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
                     comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
                     comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 });

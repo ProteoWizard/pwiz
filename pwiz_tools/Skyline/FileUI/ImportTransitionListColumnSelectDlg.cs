@@ -689,19 +689,7 @@ namespace pwiz.Skyline.FileUI
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                Resources.PasteDlg_UpdateMoleculeType_Note,
-                Resources.PasteDlg_UpdateMoleculeType_S_Lens,
-                Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
-                Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
-                
+
             });
             if (radioPeptide.Checked)
             {
@@ -724,11 +712,33 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
+                });
+            }
+            comboBox.Items.AddRange(new object[]
+            {
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
+                Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
+                Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                Resources.PasteDlg_UpdateMoleculeType_Note,
+            });
+            if (!radioPeptide.Checked)
+            {
+                comboBox.Items.AddRange(new object[]
+                {
+                    // Small Molecule only columns
                     @"InChiKey",
                     @"CAS",
                     @"HMDB",
