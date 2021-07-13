@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
-        // The color of small molecule fragments and other non-peptide ions depends upon their library rank
+        // Consider the rank of small molecule fragments when selecting the color for the FontSpec
         private FontSpec GetOtherIonsFontSpec(int rank = 0)
         {
             return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.custom, rank), ref _fontSpecOtherIons);
