@@ -48,6 +48,52 @@ namespace pwiz.Skyline.FileUI
         private readonly MassListInputs _inputs;
         private readonly IdentityPath _insertPath;
 
+        // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
+        private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
+            new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
+            {
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_S_Lens,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Note,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(@"InChiKey",SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(@"CAS",SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(@"HMDB",SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(@"InChi",SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(@"SMILES",SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(@"KEGG",SrmDocument.DOCUMENT_TYPE.small_molecules),
+            };
+
+        
+        
         public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath)
         {
             Importer = importer;
@@ -537,6 +583,14 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.MoleculeListNameColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula)
+            {
+                CheckForComboBoxOverlap(columns.MolecularFormulaColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.MolecularFormulaColumn = comboBoxIndex;
+            }
+
+            
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -595,6 +649,8 @@ namespace pwiz.Skyline.FileUI
                     columns.KEGGColumn = -1;
                 if (columns.MoleculeListNameColumn == comboBoxIndex)
                     columns.MoleculeListNameColumn = -1;
+                if (columns.MolecularFormulaColumn == comboBoxIndex)
+                    columns.MolecularFormulaColumn = -1;
             }
         }
 
@@ -680,72 +736,17 @@ namespace pwiz.Skyline.FileUI
         /// <param name="comboBox"></param>
         private void UpdateCombo(ComboBox comboBox)
         {
-            //comboBox.Text = string.Empty;
-            comboBox.Items.AddRange(new object[]
+            // Add appropriate headers to the comboBox range based on the user selected mode
+            foreach (var item in headerList)
             {
-                // Columns for both
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,
-                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-
-            });
-            if (radioPeptide.Checked)
-            {
-                comboBox.Items.AddRange(new object[]
+                string name = item.Item1;
+                SrmDocument.DOCUMENT_TYPE type = item.Item2;
+                if (type == SrmDocument.DOCUMENT_TYPE.mixed ||
+                    (type == SrmDocument.DOCUMENT_TYPE.proteomic && radioPeptide.Checked) ||
+                    (type == SrmDocument.DOCUMENT_TYPE.small_molecules && !radioPeptide.Checked))
                 {
-                    // Peptide only columns
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name
-                });
-            }
-            if (!radioPeptide.Checked)
-            {
-                comboBox.Items.AddRange(new object[]
-                {
-                    // Small Molecule only columns
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
-                });
-            }
-            comboBox.Items.AddRange(new object[]
-            {
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
-                Resources.PasteDlg_UpdateMoleculeType_S_Lens,
-                Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
-                Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
-                Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                Resources.PasteDlg_UpdateMoleculeType_Note,
-            });
-            if (!radioPeptide.Checked)
-            {
-                comboBox.Items.AddRange(new object[]
-                {
-                    // Small Molecule only columns
-                    @"InChiKey",
-                    @"CAS",
-                    @"HMDB",
-                    @"InChi",
-                    @"SMILES",
-                    @"KEGG"
-                });
+                    comboBox.Items.Add(name);
+                }
             }
             ComboHelper.AutoSizeDropDown(comboBox);
         }

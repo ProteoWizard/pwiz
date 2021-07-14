@@ -11522,4 +11522,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name" xml:space="preserve">
     <value>Molecule Name</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula" xml:space="preserve">
+    <value>Molecular Formula</value>
+  </data>
 </root>

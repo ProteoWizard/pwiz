@@ -15941,6 +15941,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecular Formula.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decoy.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy {

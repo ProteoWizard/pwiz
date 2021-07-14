@@ -2164,6 +2164,8 @@ namespace pwiz.Skyline.Model
 
         public int MoleculeListNameColumn { get; set; }
 
+        public int MolecularFormulaColumn { get; set; }
+
         private ColumnIndices()
         {
             ProteinColumn = -1;
@@ -2202,6 +2204,7 @@ namespace pwiz.Skyline.Model
             SMILESColumn = -1;
             KEGGColumn = -1;
             MoleculeListNameColumn = -1;
+            MolecularFormulaColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2316,6 +2319,8 @@ namespace pwiz.Skyline.Model
                 KEGGColumn = -1;
             if (MoleculeListNameColumn == index)
                 MoleculeListNameColumn = -1;
+            if (MolecularFormulaColumn == index)
+                MolecularFormulaColumn = -1;
         }
 
         /// <summary>
