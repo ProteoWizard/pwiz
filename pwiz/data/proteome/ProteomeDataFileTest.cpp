@@ -205,7 +205,7 @@ class TestReader : public Reader
             return "";
 
         string buf;
-        getline(*uriStreamPtr, buf);
+        getlinePortable(*uriStreamPtr, buf);
         if (buf[0] != '>')
             return "";
 

@@ -25,9 +25,10 @@
 
 #include "Filesystem.hpp"
 
-#ifdef WIN32
+#ifdef _MSC_VER
     #define _WIN32_WINNT 0x0600
     #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
     #define NOGDI
     #include <windows.h>
     #include <direct.h>
