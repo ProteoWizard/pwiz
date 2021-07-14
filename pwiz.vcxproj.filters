@@ -565,12 +565,8 @@
     <ClCompile Include="pwiz\utility\misc\BinaryDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReaderTest.cpp" />
-    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.cpp" />
-    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmSchedulerTest.cpp" />
-    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.cpp" />
     <ClCompile Include="pwiz\analysis\dia_umpire\DiaUmpire.cpp" />
     <ClCompile Include="pwiz\analysis\dia_umpire\IsotopePatternMap.cpp" />
-    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1004,9 +1000,6 @@
     <ClInclude Include="pwiz_tools\BiblioSpec\src\BuildParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
-    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.hpp" />
-    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\prmscheduler.h" />
-    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpire.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpireMath.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\InstrumentParameter.hpp" />
@@ -1015,17 +1008,6 @@
     <ClInclude Include="pwiz\analysis\dia_umpire\PeakCluster.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\PeakCurve.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\ScanData.hpp" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\WatersRawFile.hpp" />
-    <ClInclude Include="pwiz\utility\misc\sort_together.hpp" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICalibration.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICollection.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIConstants.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFile.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFrame.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIGate.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIMetadata.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIScan.h" />
-    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />

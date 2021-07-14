@@ -789,7 +789,7 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             {
                 ifstream urls(filepath.string().c_str());
                 string url;
-                while (getline(urls, url))
+                while (getlinePortable(urls, url))
                 {
                     if (isPathTestable(url))
                     {
