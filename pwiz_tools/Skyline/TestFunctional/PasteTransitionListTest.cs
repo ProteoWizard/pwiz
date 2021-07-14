@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
                 // Column positions are only saved if at least one combobox is changed, so
                 // change a couple in order to trigger column saving
                 peptideBoxes[14].SelectedIndex = 0;
-                peptideBoxes[4].SelectedIndex = 2;
+                peptideBoxes[4].SelectedIndex = 6;
             });
             // Clicking the OK button should save the column locations
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => 
             {
                 var peptideTransitionListBoxes1 = peptideTransitionList1.ComboBoxes;
-                Assert.AreEqual(2, peptideTransitionListBoxes1[4].SelectedIndex);
+                Assert.AreEqual(6, peptideTransitionListBoxes1[4].SelectedIndex);
                 peptideTransitionList1.CancelDialog();
             });
 
@@ -227,8 +227,8 @@ namespace pwiz.SkylineTestFunctional
             var pep1Boxes = pep1.ComboBoxes;
             Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
             // Verify that we did use the detected values instead
-            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 3);
-            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 4);
+            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 8);
+            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 9);
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
