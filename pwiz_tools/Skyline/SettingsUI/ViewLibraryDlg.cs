@@ -173,6 +173,7 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
+            comboFilterType.SelectedText = "Starts with";
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -202,6 +203,8 @@ namespace pwiz.Skyline.SettingsUI
             get { return cbAssociateProteins.Checked; }
             set { cbAssociateProteins.Checked = value; }
         }
+
+        public FilterType selectedFilterType;
 
         public void ChangeSelectedPeptide(string text)
         {
@@ -1091,7 +1094,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
-            _currentRange = _peptides.Filter(textPeptide.Text);
+            _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType);
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
@@ -2543,10 +2546,27 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public enum FilterType
+        {
+            startsWith, contains
+        }
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;
             UpdateUI();
+        }
+
+        private void comboOperation1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboFilterType.SelectedItem.ToString() == "Starts with")
+            {
+                selectedFilterType = FilterType.startsWith;
+            }
+            else
+            {
+                selectedFilterType = FilterType.contains;
+            }
+            textPeptide_TextChanged(sender, e);
         }
     }
 }

@@ -100,6 +100,15 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool IsModified { get { return Key.IsModified; } }
 
+        public string InchiKey
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.InChiKey; }
+        }
+
+        public string Formula
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }
+        }
         /// <summary>
         /// True if a <see cref="PeptideDocNode"/> has been successfully associated
         /// with this entry

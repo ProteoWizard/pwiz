@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Lib;
 
@@ -42,7 +43,15 @@ namespace pwiz.Skyline.SettingsUI
             get { return _allEntries[index]; }
         }
 
-        public IList<int> Filter(string filterText)
+        private List<int> SearchByProperty(PropertyInfo property, string filterText)
+        {
+            var orderedList = _allEntries.OrderBy(property.GetValue).ToList();
+            var matchRange = CollectionUtil.BinarySearch(orderedList,
+                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
+                    StringComparison.OrdinalIgnoreCase));
+            return orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
+        }
+        public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType = ViewLibraryDlg.FilterType.startsWith)
         {
             if (string.IsNullOrEmpty(filterText))
             {
@@ -56,6 +65,31 @@ namespace pwiz.Skyline.SettingsUI
             if (range.Length > 0)
             {
                 return new RangeList(range);
+            }
+
+            if (true)
+            {
+                if (filterType == ViewLibraryDlg.FilterType.contains)
+                {
+                    var ret = (from entry in _allEntries
+                        let combinedFields = entry.UnmodifiedTargetText + "\0" + entry.Formula + "\0" + entry.InchiKey
+                        where combinedFields.Contains(filterText) select IndexOf(entry)).ToList();
+
+                    return ImmutableList.ValueOf(ret);
+                }
+                else if(filterType == ViewLibraryDlg.FilterType.startsWith)
+                {
+
+                    // Fields of type string we want to compare to the search term
+                    var stringSearchFields = new List<string> { @"Formula", @"InchiKey", @"UnmodifiedTargetText" };
+
+                    // Find the indices of entries that have field that could match the search term if something was appended to it 
+                    var rangeList = Enumerable.Empty<int>();
+                    rangeList = stringSearchFields.Aggregate(rangeList, (current, str) =>
+                        current.Union(SearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
+
+                    return ImmutableList.ValueOf(rangeList);
+                }
             }
             // Now look at all the entries which could match the target text, if they had something appended to them.
             range = CollectionUtil.BinarySearch(_allEntries,

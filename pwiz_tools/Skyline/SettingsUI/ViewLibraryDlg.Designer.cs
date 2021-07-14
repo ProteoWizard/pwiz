@@ -1,3 +1,5 @@
+using MathNet.Numerics.Properties;
+
 namespace pwiz.Skyline.SettingsUI
 {
     partial class ViewLibraryDlg
@@ -32,8 +34,11 @@ namespace pwiz.Skyline.SettingsUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewLibraryDlg));
             this.splitPeptideList = new System.Windows.Forms.SplitContainer();
             this.PeptideListPanel = new System.Windows.Forms.Panel();
+            this.comboFilterType = new System.Windows.Forms.ComboBox();
             this.listPeptide = new System.Windows.Forms.ListBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.cbShowModMasses = new System.Windows.Forms.CheckBox();
+            this.textPeptide = new System.Windows.Forms.TextBox();
             this.PageCount = new System.Windows.Forms.Label();
             this.PeptideCount = new System.Windows.Forms.Label();
             this.NextLink = new System.Windows.Forms.LinkLabel();
@@ -45,7 +50,6 @@ namespace pwiz.Skyline.SettingsUI
             this.comboLibrary = new System.Windows.Forms.ComboBox();
             this.btnLibDetails = new System.Windows.Forms.Button();
             this.PeptideLabel = new System.Windows.Forms.Label();
-            this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -142,8 +146,20 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.PeptideListPanel.Controls.Add(this.listPeptide);
             this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
+            this.PeptideListPanel.Controls.Add(this.textPeptide);
             resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
             this.PeptideListPanel.Name = "PeptideListPanel";
+            // 
+            // comboFilterType
+            // 
+            resources.ApplyResources(this.comboFilterType, "comboFilterType");
+            this.comboFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboFilterType.FormattingEnabled = true;
+            this.comboFilterType.Items.AddRange(new object[] {
+            resources.GetString("comboFilterType.Items"),
+            resources.GetString("comboFilterType.Items1")});
+            this.comboFilterType.Name = "comboFilterType";
+            this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboOperation1_SelectedIndexChanged);
             // 
             // listPeptide
             // 
@@ -156,12 +172,25 @@ namespace pwiz.Skyline.SettingsUI
             this.listPeptide.MouseLeave += new System.EventHandler(this.listPeptide_MouseLeave);
             this.listPeptide.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listPeptide_MouseMove);
             // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // cbShowModMasses
             // 
             resources.ApplyResources(this.cbShowModMasses, "cbShowModMasses");
             this.cbShowModMasses.Name = "cbShowModMasses";
             this.cbShowModMasses.UseVisualStyleBackColor = true;
             this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
+            // 
+            // textPeptide
+            // 
+            resources.ApplyResources(this.textPeptide, "textPeptide");
+            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.textPeptide.Name = "textPeptide";
+            this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
+            this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
             // 
             // PageCount
             // 
@@ -207,10 +236,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
+            this.PeptideEditPanel.Controls.Add(this.comboFilterType);
+            this.PeptideEditPanel.Controls.Add(this.label1);
             this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
-            this.PeptideEditPanel.Controls.Add(this.textPeptide);
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
             // 
@@ -247,14 +277,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.PeptideLabel, "PeptideLabel");
             this.PeptideLabel.Name = "PeptideLabel";
             // 
-            // textPeptide
-            // 
-            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            resources.ApplyResources(this.textPeptide, "textPeptide");
-            this.textPeptide.Name = "textPeptide";
-            this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
-            this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
-            // 
             // GraphPanel
             // 
             this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -286,6 +308,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnAIons,
             this.btnBIons,
@@ -481,6 +504,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuSpectrum
             // 
+            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
@@ -809,5 +833,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label MoleculeLabel;
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox comboFilterType;
     }
 }
