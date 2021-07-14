@@ -215,7 +215,7 @@ PWIZ_API_DECL bool SpectrumList_Mobilion::hasCombinedIonMobility() const
 
 PWIZ_API_DECL bool SpectrumList_Mobilion::canConvertIonMobilityAndCCS() const
 {
-    return false;
+    return false; // TODO when API supplies it
 }
 
 PWIZ_API_DECL double SpectrumList_Mobilion::ionMobilityToCCS(double ionMobility, double mz, int charge) const
