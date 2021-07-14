@@ -103,7 +103,7 @@ void adjustScore(    const string& filename,
         throw invalid_argument( string( "unable to open file \"" ) + filename + "\"" );
 
     string line;
-    while( getline(fileStream, line))
+    while(getline(fileStream, line))
     {
         if (line.find("H\tBestTagScoreMean") != string::npos)
         {
