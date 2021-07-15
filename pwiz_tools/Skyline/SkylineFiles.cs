@@ -1880,6 +1880,7 @@ namespace pwiz.Skyline
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
             List<PeptideGroupDocNode> peptideGroups = new List<PeptideGroupDocNode>();
+            List<string> columnPositions = new List<string>();
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
             MassListImporter importer = null;
@@ -1931,6 +1932,7 @@ namespace pwiz.Skyline
                     irtPeptides = insParams.IrtPeptides;
                     librarySpectra = insParams.LibrarySpectra;
                     peptideGroups = insParams.PeptideGroups;
+                    columnPositions = insParams.ColumnHeaderList;
                 }
             }
 

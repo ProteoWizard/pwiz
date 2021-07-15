@@ -719,6 +719,20 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private void CheckMoleculeColumns()
+        {
+            var columns = Importer.RowReader.Indices;
+            if (columns.PrecursorAdductColumn == -1 && columns.PrecursorChargeColumn == -1)
+            {
+                MissingEssentialColumns.Add("Precursor Adduct and/or Precursor Charge");
+            }
+
+            if (columns.MolecularFormulaColumn == -1 && columns.PrecursorColumn == -1)
+            {
+                MissingEssentialColumns.Add("Molecular Formula and/or Precursor m/z");
+            }
+        }
+
         public class DocumentChecked
         {
             public SrmDocument Document;
@@ -726,6 +740,7 @@ namespace pwiz.Skyline.FileUI
             public List<MeasuredRetentionTime> IrtPeptides;
             public List<SpectrumMzInfo> LibrarySpectra;
             public List<PeptideGroupDocNode> PeptideGroups;
+            public List<string> ColumnHeaderList;
         }
 
         public DocumentChecked InsertionParams { get; private set; }
@@ -878,12 +893,19 @@ namespace pwiz.Skyline.FileUI
 
                     var columns = Importer.RowReader.Indices;
                     MissingEssentialColumns = new List<string>();
-                    CheckEssentialColumn(new Tuple<int, string>(columns.MoleculeNameColumn,
-                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name));
-                    CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-                    CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                    if (radioPeptide.Checked)
+                    {
+                        CheckEssentialColumn(new Tuple<int, string>(columns.MoleculeNameColumn,
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name));
+                        CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+                        CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                    }
+                    else
+                    {
+                        CheckMoleculeColumns();
+                    }
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
                         out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups);
@@ -913,7 +935,7 @@ namespace pwiz.Skyline.FileUI
                     // If the transition list is missing essential columns, tell the user in a 
                     // readable way
                     MessageDlg.Show(this, TextUtil.SpaceSeparate(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_,
-                        TextUtil.SpaceSeparate(MissingEssentialColumns)));
+                        TextUtil.LineSeparate(MissingEssentialColumns)));
                     return true; // There are errors
                 }
                 else
@@ -930,6 +952,14 @@ namespace pwiz.Skyline.FileUI
                 // No errors, confirm this to user
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
             }
+
+            // Before we close the window, if there are no errors, we want to ensure that the UI mode reflects the user's radio button selection
+            if (radioPeptide.Checked)
+                SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
+            else
+                SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
+
+            insertionParams.ColumnHeaderList = CurrentColumnPositions();
 
             InsertionParams = insertionParams;
             return false; // No errors
