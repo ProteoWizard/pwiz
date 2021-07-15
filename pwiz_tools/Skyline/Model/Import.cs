@@ -2052,14 +2052,14 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ColumnIndices
     {
-        public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn)
+        public ColumnIndices(int proteinColumn, int moleculeNameColumn, int precursorColumn, int productColumn)
             :this()
         {
-            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1, -1, -1);
+            AssignDetected(proteinColumn, moleculeNameColumn, precursorColumn, productColumn, -1, -1, -1);
         }
 
         public void AssignDetected(int proteinColumn,
-            int peptideColumn,
+            int moleculeNameColumn,
             int precursorColumn,
             int productColumn,
             int labelTypeColumn,
@@ -2067,7 +2067,7 @@ namespace pwiz.Skyline.Model
             int precursorChargeColumn)
         {
             ProteinColumn = proteinColumn;
-            MoleculeNameColumn = peptideColumn;
+            MoleculeNameColumn = moleculeNameColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
