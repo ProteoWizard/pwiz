@@ -401,7 +401,7 @@ namespace pwiz.Skyline.SettingsUI
                         return new ViewLibraryPepInfo(key, libInfo);
                     });
             }
-            _peptides = new ViewLibraryPepInfoList(pepInfos);
+            _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher);
             bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
@@ -1102,25 +1102,29 @@ namespace pwiz.Skyline.SettingsUI
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
             _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType, out var matchTypes);
-            _matchTypes = matchTypes;
             // Whenever the filter text changes, it's possible the current matches will change as well
             // If there are no items on our list, we want to hide the tip
-            if (matchTypes.Count > 0)
-            {
-                updateMatchTypes();
-            }
-
+            updateMatchTypes(matchTypes);
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
             UpdateUI();
         }
 
-        private void updateMatchTypes()
+        private void updateMatchTypes(List <string> matchTypes)
         {
-            var pt = textPeptide.Location;
-            MatchTypeTipProvider tipProvider = GetMatchTypeTipProvider(_matchTypes);
-            _matchTypesNodeTips.SetTipProvider(tipProvider, new Rectangle(comboLibrary.Location, tipProvider.GetSize), comboLibrary.Location);
+            if (matchTypes.Count > 0)
+            {
+                MatchTypeTipProvider tipProvider = GetMatchTypeTipProvider(matchTypes);
+                var location = textPeptide.Location;
+                _matchTypesNodeTips.SetTipProvider(tipProvider,
+                    new Rectangle(location, tipProvider.GetSize), location);
+            }
+            else
+            {
+                // If we have not found matches in any categories then hide the tip
+                _matchTypesNodeTips.HideTip();
+            }
         }
         /// <summary>
         /// Displays a tool tip with the current match types when the focus is in the text box
@@ -2656,6 +2660,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public static double getMz(ViewLibraryPepInfo info, LibKeyModificationMatcher _matcher)
+        {
+            GetPeptideInfo(info, _matcher, out var _settings, out var transitionGroup, out var mods);
+            if (info.Target != null)
+            {
+                var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                    .GetPrecursorMass(info.Target);
+                return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
+            }
+            else
+            {
+                var precursorKey = info.Key.LibraryKey as PrecursorLibraryKey;
+                if (precursorKey != null)
+                {
+                    return precursorKey.Mz;
+                }
+
+                return -1;
+            }
+        }
         public enum FilterType
         {
             startsWith, contains

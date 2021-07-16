@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NHibernate.Mapping;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.SettingsUI
@@ -29,10 +31,11 @@ namespace pwiz.Skyline.SettingsUI
     {
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
         private List<string> _matchTypes = new List<string>();
-
-        public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items)
+        private LibKeyModificationMatcher _matcher;
+        public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item=>item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
+            _matcher = matcher;
         }
 
         public override int Count
@@ -59,6 +62,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
+            _matchTypes = new List<string>();
             matchTypes = new List<string>();
             if (string.IsNullOrEmpty(filterText))
             {
@@ -78,13 +82,12 @@ namespace pwiz.Skyline.SettingsUI
 
             if (true)
             {
+                var filteredIndices = Enumerable.Empty<int>(); // The indices of entries in the peptide list that match our filter text
                 if (filterType == ViewLibraryDlg.FilterType.contains)
                 {
-                    var ret = (from entry in _allEntries
+                    filteredIndices = (from entry in _allEntries
                         let combinedFields = entry.UnmodifiedTargetText + "\0" + entry.Formula + "\0" + entry.InchiKey
                         where combinedFields.Contains(filterText) select IndexOf(entry)).ToList();
-
-                    return ImmutableList.ValueOf(ret);
                 }
                 else if(filterType == ViewLibraryDlg.FilterType.startsWith)
                 {
@@ -94,11 +97,38 @@ namespace pwiz.Skyline.SettingsUI
 
                     // Find the indices of entries that have field that could match the search term if something was appended to it 
                     var rangeList = Enumerable.Empty<int>();
-                    rangeList = stringSearchFields.Aggregate(rangeList, (current, str) =>
+                    filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
                         current.Union(SearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
                     matchTypes = _matchTypes;
-                    return ImmutableList.ValueOf(rangeList);
                 }
+                // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
+                if (double.TryParse(filterText, out var result))
+                {
+                    // Set an arbitrary tolerance for m/z matching
+                    const double MZ_FILTER_TOLERANCE = 0.1;
+
+                    //Create a list of object references sorted by their absolute difference from target mZ
+                    var sortedMzList = _allEntries.OrderBy(entry => Math.Abs(ViewLibraryDlg.getMz(entry, _matcher) - result));
+
+                    // Then find the first entry with a precursor m/z exceeding our match tolerance
+                    var results = new List<int>();
+                    foreach (var entry in sortedMzList)
+                    {
+                        if (Math.Abs(ViewLibraryDlg.getMz(entry, _matcher) - result) > MZ_FILTER_TOLERANCE)
+                        {
+                            break;
+                        }
+                        results.Add(IndexOf(entry));
+                    }
+                    filteredIndices = filteredIndices.Union(results);
+                    if (results.Count > 0)
+                    {
+                        matchTypes.Add("Precursor m/z");
+                    }
+                }
+
+                return ImmutableList.ValueOf(filteredIndices);
+
             }
             // Now look at all the entries which could match the target text, if they had something appended to them.
             range = CollectionUtil.BinarySearch(_allEntries,
