@@ -1907,6 +1907,18 @@ namespace pwiz.Skyline
                     return;
                 }
             }
+            if (importer.IsSmallMoleculeInput)
+            {
+                if (errorList.Any())
+                {
+                    // Currently small molecules show just one error with no ability to continue.
+                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    {
+                        errorDlg.ShowDialog(this);
+                        return;
+                    }
+                }
+            }
             using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
             {
                 if (columnDlg.ShowDialog(this) != DialogResult.OK)
@@ -1922,13 +1934,13 @@ namespace pwiz.Skyline
                 isSmallMoleculeList = insParams.IsSmallMoleculeList;
             }
 
-            if (isSmallMoleculeList)
+            /*if (isSmallMoleculeList)
             {
                 // If it is a small molecule list, we want to give the user provided headers to the SmallMolecule part of skyline and not go through with
                 // the rest of this
                 InsertSmallMoleculeTransitionList(inputs.InputText, Resources.SkylineWindow_Paste_Paste_transition_list, columnPositions);
                 return;
-            }
+            }*/
             
 
             /*if (importer.IsSmallMoleculeInput)

@@ -985,7 +985,7 @@ namespace pwiz.SkylineTestFunctional
             var textClean = textCSV;
             SkylineWindow.Invoke(new Action(() =>
             {
-                SkylineWindow.InsertSmallMoleculeTransitionList(textClean, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                SkylineWindow.InsertSmallMoleculeTransitionList(textClean, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List, null);
             }));
 
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -997,7 +997,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV2,
-                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List, null);
             })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                     TextUtil.LineSeparate(new[] { "grommet", "labbel", string.Empty }),
@@ -1015,7 +1015,7 @@ namespace pwiz.SkylineTestFunctional
             docOrig =  WaitForDocumentChange(pastedDoc);
             SkylineWindow.Invoke(new Action(() =>
             {
-                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV3, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV3, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List, null);
             }));
 
             pastedDoc = WaitForDocumentChange(docOrig);
@@ -1028,7 +1028,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
                 {
                     SkylineWindow.InsertSmallMoleculeTransitionList(textCSV4,
-                        Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                        Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List, null);
                 })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                     TextUtil.LineSeparate(new[] { nearly, string.Empty }),
@@ -1043,7 +1043,7 @@ namespace pwiz.SkylineTestFunctional
             SkylineWindow.Invoke(new Action(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV5,
-                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List, null);
             }));
             pastedDoc = WaitForDocumentChange(docOrig);
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
