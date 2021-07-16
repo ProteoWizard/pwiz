@@ -21,6 +21,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
@@ -31,14 +32,14 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf 
 {
     /// <summary>
-    /// Verify measured drift time operation for a MobiulIon .mbi file
+    /// Verify measured drift time operation for a MobilIon .mbi file and an Agilent SLIM file (not the same data set, but two ways to represent SLIM data)
     /// </summary>
     [TestClass]
     public class PerfMobilIonTest : AbstractFunctionalTestEx
     {
 
         [TestMethod]
-        public void TestMobilIon()  // N.B. the term "Drift Time Predictor" is a historical curiosity, leaving it alone for test history continuity
+        public void TestMobilIon()  
         {
             // RunPerfTests = true; // Enables perftests to run from the IDE (you don't want to commit this line without commenting it out)
 
@@ -47,7 +48,11 @@ namespace TestPerf
                 GetPerfTestDataURL(@"PerfMobilIonTest.zip"),
             };
 
-            TestFilesPersistent = new[] { "2020-12-28-18-21-56-20201228_PeptideMap-NISTmAbOxidized.mbi" };
+            TestFilesPersistent = new[]
+            {
+                "2020-12-28-18-21-56-20201228_PeptideMap-NISTmAbOxidized.mbi", // Mobilion HD5 format
+                "2021-03-18-21-07-12-IM_C_DC5_MA-d3-c3-Min20-Spk.d" // Agilent SLIM format
+            };
 
             RunFunctionalTest();
         }
@@ -56,11 +61,22 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            Test(@"PerfMobilIonTest.sky", 2, 163, 163, 1006, ".mbi", null, 95.07976, 6028.9375, true); // Mobilion HD5 format
+            Test(@"slim.sky", 12, 12, 30, 30, ".d", 258.3, 308.71, 4450.05859, false); // Agilent SLIM format
+        }
+
+        void Test(string docFile, int groups, int peptides, int tranGroups, int transitions, string dataExt, double? ccs, double drift, double areaExpected,  bool findDriftPeaks)
+        {
+
             // Empty doc with suitable full scan settings
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath(@"PerfMobilIonTest.sky")));
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath(docFile));
+            });
 
             var document = WaitForDocumentLoaded();
-            AssertEx.IsDocumentState(document, null, 2, 163, 163, 1006);
+            AssertEx.IsDocumentState(document, null, groups, peptides, tranGroups, transitions);
 
             // Importing raw data
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -69,7 +85,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 openDataSourceDialog.CurrentDirectory = new MsDataFilePath(DataPath);
-                openDataSourceDialog.SelectAllFileType(".mbi");
+                openDataSourceDialog.SelectAllFileType(dataExt);
             });
 
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
@@ -78,48 +94,52 @@ namespace TestPerf
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
             AssertEx.IsTrue(area > 0);
 
-            // Locate drift peaks
-// N.B. this provokes an error, test is incomplete until that's resolved
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
-            RunUI(() => transitionSettingsUI.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
-            RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
-            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
-            const string libName = "TestMBI";
-            var databasePath = TestFilesDir.GetTestPath(libName + IonMobilityDb.EXT);
-            RunUI(() =>
+            if (findDriftPeaks)
             {
-                editIonMobilityLibraryDlg.LibraryName = libName;
-                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
-                editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
-            });
-            OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
+                // Locate drift peaks
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+                RunUI(() => transitionSettingsUI.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
+                RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
+                var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+                var libName = docFile.Replace(SrmDocument.EXT, IonMobilityDb.EXT);
+                var databasePath = TestFilesDir.GetTestPath(libName);
+                RunUI(() =>
+                {
+                    editIonMobilityLibraryDlg.LibraryName = libName;
+                    editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                    editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                });
+                OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
-            RunUI(() =>
-            {
-                Assert.AreEqual(libName, transitionSettingsUI.IonMobilityControl.SelectedIonMobilityLibrary);
-            });
-            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                RunUI(() =>
+                {
+                    AssertEx.AreEqual(libName, transitionSettingsUI.IonMobilityControl.SelectedIonMobilityLibrary);
+                });
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
-            WaitForDocumentChangeLoaded(document);
+                WaitForDocumentChangeLoaded(document);
+                var docFiltered = SkylineWindow.Document;
 
-            var docFiltered = SkylineWindow.Document;
+                RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageDlg =>
+                {
+                    manageDlg.SelectedChromatograms = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Take(1);
+                    manageDlg.ReimportResults();
+                    manageDlg.OkDialog();
+                });
+                docFiltered = WaitForDocumentChangeLoaded(docFiltered);
 
-            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageDlg =>
-            {
-                manageDlg.SelectedChromatograms = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Take(1);
-                manageDlg.ReimportResults();
-                manageDlg.OkDialog();
-            });
-
-            docFiltered = WaitForDocumentChangeLoaded(docFiltered); 
-
-            // If drift filtering was engaged, peak area should be less
-            var areaFiltered = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
-            AssertEx.IsTrue(area > areaFiltered);
-            AssertEx.IsTrue(areaFiltered > 0);
-
+                // If drift filtering was engaged, peak area should be less
+                var transitionGroupChromInfo = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First();
+                var areaFiltered = transitionGroupChromInfo.AreaMs1;
+                AssertEx.IsTrue(area > areaFiltered);
+                AssertEx.IsTrue(areaFiltered > 0);
+            }
+            document = WaitForDocumentLoaded();
+            var chromInfo = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First();
+            AssertEx.AreEqual(ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection, .01);
+            AssertEx.AreEqual(drift, chromInfo.IonMobilityInfo.DriftTimeMS1, .01);
+            AssertEx.AreEqual(areaExpected, (double) chromInfo.AreaMs1, .01);
         }
-
     }
 }
