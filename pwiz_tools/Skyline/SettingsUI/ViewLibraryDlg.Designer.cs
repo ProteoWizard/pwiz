@@ -45,11 +45,11 @@ namespace pwiz.Skyline.SettingsUI
             this.PreviousLink = new System.Windows.Forms.LinkLabel();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
-            this.MoleculeLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
             this.btnLibDetails = new System.Windows.Forms.Button();
             this.PeptideLabel = new System.Windows.Forms.Label();
+            this.MoleculeLabel = new System.Windows.Forms.Label();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -144,7 +144,9 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideListPanel
             // 
+            this.PeptideListPanel.Controls.Add(this.comboFilterType);
             this.PeptideListPanel.Controls.Add(this.listPeptide);
+            this.PeptideListPanel.Controls.Add(this.label1);
             this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
             this.PeptideListPanel.Controls.Add(this.textPeptide);
             resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
@@ -190,7 +192,9 @@ namespace pwiz.Skyline.SettingsUI
             this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textPeptide.Name = "textPeptide";
             this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
+            this.textPeptide.GotFocus += new System.EventHandler(this.textPeptide_GotFocus);
             this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
+            this.textPeptide.LostFocus += new System.EventHandler(this.textPeptide_LostFocus);
             // 
             // PageCount
             // 
@@ -236,18 +240,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.comboFilterType);
-            this.PeptideEditPanel.Controls.Add(this.label1);
-            this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
+            this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
-            // 
-            // MoleculeLabel
-            // 
-            resources.ApplyResources(this.MoleculeLabel, "MoleculeLabel");
-            this.MoleculeLabel.Name = "MoleculeLabel";
             // 
             // tableLayoutPanel1
             // 
@@ -276,6 +273,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.PeptideLabel, "PeptideLabel");
             this.PeptideLabel.Name = "PeptideLabel";
+            // 
+            // MoleculeLabel
+            // 
+            resources.ApplyResources(this.MoleculeLabel, "MoleculeLabel");
+            this.MoleculeLabel.Name = "MoleculeLabel";
             // 
             // GraphPanel
             // 

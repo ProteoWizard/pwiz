@@ -93,6 +93,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool _activated;
 
+        private readonly NodeTip _matchTypesNodeTips;
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo _lastTipNode;
@@ -155,7 +156,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
-
+            _matchTypesNodeTips = new NodeTip(this) {Parent = this};
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;
             if (!size.IsEmpty)
@@ -198,13 +199,17 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries.LoadList(_selectedLibName);
         }
 
+        private void InitializeFilterTypeComboBox()
+        {
+            comboFilterType.SelectedIndex = 0;
+        }
         public bool AssociateMatchingProteins
         {
             get { return cbAssociateProteins.Checked; }
             set { cbAssociateProteins.Checked = value; }
         }
 
-        public FilterType selectedFilterType;
+        private FilterType selectedFilterType;
 
         public void ChangeSelectedPeptide(string text)
         {
@@ -226,6 +231,8 @@ namespace pwiz.Skyline.SettingsUI
             // we need to load, so as soon as the dialog loads, we need to
             // populate it and set a default selection for the library.
             InitializeLibrariesComboBox();
+            // We need to select a filter for our list as soon as the form opens
+            InitializeFilterTypeComboBox();
             UpdateViewLibraryDlg();
         }
 
@@ -399,7 +406,7 @@ namespace pwiz.Skyline.SettingsUI
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null);
+            _currentRange = _peptides.Filter(null, FilterType.startsWith, out _);
         }
 
         public bool MatchModifications()
@@ -1094,13 +1101,44 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
-            _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType);
+            _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType, out var matchTypes);
+            _matchTypes = matchTypes;
+            // Whenever the filter text changes, it's possible the current matches will change as well
+            // If there are no items on our list, we want to hide the tip
+            if (matchTypes.Count > 0)
+            {
+                updateMatchTypes();
+            }
+
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
             UpdateUI();
         }
 
+        private void updateMatchTypes()
+        {
+            var pt = textPeptide.Location;
+            MatchTypeTipProvider tipProvider = GetMatchTypeTipProvider(_matchTypes);
+            _matchTypesNodeTips.SetTipProvider(tipProvider, new Rectangle(comboLibrary.Location, tipProvider.GetSize), comboLibrary.Location);
+        }
+        /// <summary>
+        /// Displays a tool tip with the current match types when the focus is in the text box
+        /// </summary>
+        private void textPeptide_GotFocus(object sender, EventArgs e)
+        {
+            //updateMatchTypes();
+        }
+
+        /// <summary>
+        /// Hides the tip with current match types when the focus leaves
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void textPeptide_LostFocus(object sender, EventArgs e)
+        {
+            _matchTypesNodeTips.HideTip();
+        }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
             // We need to update the spectrum graph when the peptide
@@ -1791,6 +1829,9 @@ namespace pwiz.Skyline.SettingsUI
         // Temp variable to store a previously focused control
         private Control _focused;
 
+        // Store the current match types
+        public List<string> _matchTypes;
+
         private void splitMain_MouseDown(object sender, MouseEventArgs e)
         {
             // Get the focused control before the splitter is focused
@@ -2050,6 +2091,10 @@ namespace pwiz.Skyline.SettingsUI
             return split[1].Substring(0, split[1].LastIndexOf(' '));
         }
 
+        public MatchTypeTipProvider GetMatchTypeTipProvider(List<string> matchTypes)
+        {
+            return new MatchTypeTipProvider(matchTypes);
+        }
         public PeptideTipProvider GetTipProvider(int i)
         {
             return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
@@ -2240,6 +2285,71 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public class MatchTypeTipProvider : ITipProvider
+        {
+            public Size _size;
+            private List<string> typeMatches;
+            public MatchTypeTipProvider(List<string> matchTypes)
+            {
+                typeMatches = matchTypes;
+            }
+
+            public Size GetSize
+            {
+                get { return _size; }
+            }
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                var tableMatches = new TableDesc();
+                var size = new SizeF();
+                using (var rt = new RenderTools())
+                {
+                    // Draw title
+                    var parts = new List<String>();
+                    parts.Add("Matches found");
+                    size = tableMatches.CalcDimensions(g);
+                    var sizeLabel = DrawTextParts(g, 0, 0, parts, rt);
+                    var copy = typeMatches;
+                    // Draw the current fields with matches
+                    foreach (var str in typeMatches ?? new List<string>())
+                    {
+                        var format = string.Format(str);
+                        tableMatches.AddDetailRow(format, format, rt);
+                    }
+                    // Width is the max length of the longest match type name which might vary by language
+                    var width = (int)Math.Round(size.Width);
+
+                    var height = (int)Math.Round(size.Height);
+                    // Adjust the location of the table containing match types to below the height of the label
+                    g.TranslateTransform(0, sizeLabel.Height);
+                    tableMatches.Draw(g);
+                    g.TranslateTransform(0, -sizeLabel.Height);
+                    _size = new Size(width + 80, height + 40); // +8 width, +4 height padding
+                    return _size;
+                }
+            }
+            // draws text at a start (x,y) and returns the end (x,y) of the drawn text
+            // takes a list of <string, color> so that we can draw segments of different colors
+            private SizeF DrawTextParts(Graphics g, float startX, float startY, List<string> parts, RenderTools rt)
+            {
+                var size = new SizeF(startX, startY);
+                float height = 0;
+                foreach (var part in parts)
+                {
+                    g.DrawString(part, rt.FontNormal, Brushes.Black, new PointF(size.Width, size.Height));
+                    size.Width += g.MeasureString(part, rt.FontNormal).Width - 3;
+                    height = g.MeasureString(part, rt.FontNormal).Height;
+                }
+                size.Height = height;
+                return size;
+            }
+
+            public bool HasTip
+            {
+                get { return true; }
+            }
+        }
         public class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;
@@ -2301,7 +2411,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 get { return true; }
             }
-
+            
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
                 var table = new TableDesc();
@@ -2514,7 +2624,7 @@ namespace pwiz.Skyline.SettingsUI
             // takes a list of <string, color> so that we can draw segments of different colors
             private SizeF DrawTextParts(Graphics g, float startX, float startY, List<TextColor> parts, RenderTools rt)
             {
-                var size = new SizeF(startX, startY);
+                var size = new SizeF(startX, startY);               
                 float height = 0;
                 foreach (var part in parts)
                 {
@@ -2566,7 +2676,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 selectedFilterType = FilterType.contains;
             }
-            textPeptide_TextChanged(sender, e);
+            // textPeptide_TextChanged(sender, e);
         }
     }
 }

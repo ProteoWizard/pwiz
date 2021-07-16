@@ -28,6 +28,8 @@ namespace pwiz.Skyline.SettingsUI
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
     {
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
+        private List<string> _matchTypes = new List<string>();
+
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item=>item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
@@ -47,12 +49,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             var orderedList = _allEntries.OrderBy(property.GetValue).ToList();
             var matchRange = CollectionUtil.BinarySearch(orderedList,
-                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
+                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, info.UnmodifiedTargetText.Length,
                     StringComparison.OrdinalIgnoreCase));
+            if (matchRange.Length > 0)
+            {
+                _matchTypes.Add(property.Name);
+            }
             return orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
         }
-        public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType = ViewLibraryDlg.FilterType.startsWith)
+        public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
+            matchTypes = new List<string>();
             if (string.IsNullOrEmpty(filterText))
             {
                 return new RangeList(0, Count);
@@ -64,6 +71,8 @@ namespace pwiz.Skyline.SettingsUI
             var range = CollectionUtil.BinarySearch(_allEntries, info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0, filterText.Length, StringComparison.OrdinalIgnoreCase));
             if (range.Length > 0)
             {
+                _matchTypes.Add("Molecule name");
+                matchTypes = _matchTypes;
                 return new RangeList(range);
             }
 
@@ -87,7 +96,7 @@ namespace pwiz.Skyline.SettingsUI
                     var rangeList = Enumerable.Empty<int>();
                     rangeList = stringSearchFields.Aggregate(rangeList, (current, str) =>
                         current.Union(SearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
-
+                    matchTypes = _matchTypes;
                     return ImmutableList.ValueOf(rangeList);
                 }
             }
