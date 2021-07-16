@@ -48,17 +48,36 @@ namespace pwiz.Skyline.SettingsUI
             get { return _allEntries[index]; }
         }
 
-        private List<int> SearchByProperty(PropertyInfo property, string filterText)
+        private void UpdateMatchTypes(int numMatches, PropertyInfo property)
         {
+            // If there are items on our list of indices and our list of match types does not
+            // already include this match type, then add it to the list
+            if (numMatches > 0)
+            {
+                if (!_matchTypes.Contains(property.Name))
+                {
+                    _matchTypes.Add(property.Name);
+                }
+            }
+        }
+        private List<int> ContainsSearchByProperty(PropertyInfo property, string filterText)
+        {
+            // Return all the entries where the value of the given property matches the filter text
+            var indices = (from entry in _allEntries where property.GetValue(entry).ToString().Contains(filterText)
+                select IndexOf(entry)).ToList();
+            UpdateMatchTypes(indices.Count, property);
+            return indices;
+        }
+        private List<int> PrefixSearchByProperty(PropertyInfo property, string filterText)
+        {
+            // Sort with respect to the given property
             var orderedList = _allEntries.OrderBy(property.GetValue).ToList();
             var matchRange = CollectionUtil.BinarySearch(orderedList,
-                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, info.UnmodifiedTargetText.Length,
+                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
                     StringComparison.OrdinalIgnoreCase));
-            if (matchRange.Length > 0)
-            {
-                _matchTypes.Add(property.Name);
-            }
-            return orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
+            var matchIndices = orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
+            UpdateMatchTypes(matchIndices.Count, property);
+            return matchIndices;
         }
         public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
@@ -83,50 +102,51 @@ namespace pwiz.Skyline.SettingsUI
             if (true)
             {
                 var filteredIndices = Enumerable.Empty<int>(); // The indices of entries in the peptide list that match our filter text
+                var stringSearchFields = new List<string> { @"Formula", @"InchiKey", @"UnmodifiedTargetText" };
                 if (filterType == ViewLibraryDlg.FilterType.contains)
                 {
-                    filteredIndices = (from entry in _allEntries
-                        let combinedFields = entry.UnmodifiedTargetText + "\0" + entry.Formula + "\0" + entry.InchiKey
-                        where combinedFields.Contains(filterText) select IndexOf(entry)).ToList();
+                    var rangeList = Enumerable.Empty<int>();
+                    filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
+                        current.Union(ContainsSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
                 }
                 else if(filterType == ViewLibraryDlg.FilterType.startsWith)
                 {
 
                     // Fields of type string we want to compare to the search term
-                    var stringSearchFields = new List<string> { @"Formula", @"InchiKey", @"UnmodifiedTargetText" };
 
                     // Find the indices of entries that have field that could match the search term if something was appended to it 
                     var rangeList = Enumerable.Empty<int>();
                     filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
-                        current.Union(SearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
-                    matchTypes = _matchTypes;
+                        current.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText)));
                 }
                 // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
                 if (double.TryParse(filterText, out var result))
                 {
+                    // Find the precursor m/z for each entry
+                    foreach (var entry in _allEntries)
+                    {
+                        entry.PrecursorMz = ViewLibraryDlg.getMz(entry, _matcher);
+                    }
+                    // Add entries that match the m/z tolerance lexicographically
+                    filteredIndices =
+                        filteredIndices.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(@"PrecursorMz"),
+                            filterText));
+                    
+                    // Add entries that are close to the filter text numerically
                     // Set an arbitrary tolerance for m/z matching
                     const double MZ_FILTER_TOLERANCE = 0.1;
 
-                    //Create a list of object references sorted by their absolute difference from target mZ
+                    //Create a list of object references sorted by their absolute difference from target m/z
                     var sortedMzList = _allEntries.OrderBy(entry => Math.Abs(ViewLibraryDlg.getMz(entry, _matcher) - result));
 
                     // Then find the first entry with a precursor m/z exceeding our match tolerance
-                    var results = new List<int>();
-                    foreach (var entry in sortedMzList)
-                    {
-                        if (Math.Abs(ViewLibraryDlg.getMz(entry, _matcher) - result) > MZ_FILTER_TOLERANCE)
-                        {
-                            break;
-                        }
-                        results.Add(IndexOf(entry));
-                    }
+                    var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
+                        ViewLibraryDlg.getMz(entry, _matcher) - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
                     filteredIndices = filteredIndices.Union(results);
-                    if (results.Count > 0)
-                    {
-                        matchTypes.Add("Precursor m/z");
-                    }
+                    UpdateMatchTypes(filteredIndices.Count(), typeof(ViewLibraryPepInfo).GetProperty(@"PrecursorMz"));
                 }
 
+                matchTypes = _matchTypes;
                 return ImmutableList.ValueOf(filteredIndices);
 
             }

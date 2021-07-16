@@ -2342,7 +2342,7 @@ namespace pwiz.Skyline.SettingsUI
                 foreach (var part in parts)
                 {
                     g.DrawString(part, rt.FontNormal, Brushes.Black, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part, rt.FontNormal).Width - 3;
+                    size.Width += g.MeasureString(part, rt.FontNormal).Width;
                     height = g.MeasureString(part, rt.FontNormal).Height;
                 }
                 size.Height = height;

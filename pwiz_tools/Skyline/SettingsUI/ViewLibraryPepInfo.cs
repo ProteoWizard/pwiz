@@ -84,6 +84,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public double PrecursorMz { get; set; }
         /// <summary>
         /// The charge state of the peptide matched to a spectrum
         /// </summary>
