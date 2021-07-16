@@ -724,12 +724,12 @@ namespace pwiz.Skyline.FileUI
             var columns = Importer.RowReader.Indices;
             if (columns.PrecursorAdductColumn == -1 && columns.PrecursorChargeColumn == -1)
             {
-                MissingEssentialColumns.Add("Precursor Adduct and/or Precursor Charge");
+                MissingEssentialColumns.Add(Resources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge);
             }
 
             if (columns.MolecularFormulaColumn == -1 && columns.PrecursorColumn == -1)
             {
-                MissingEssentialColumns.Add("Molecular Formula and/or Precursor m/z");
+                MissingEssentialColumns.Add(Resources.ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z);
             }
         }
 
@@ -741,6 +741,7 @@ namespace pwiz.Skyline.FileUI
             public List<SpectrumMzInfo> LibrarySpectra;
             public List<PeptideGroupDocNode> PeptideGroups;
             public List<string> ColumnHeaderList;
+            public bool IsSmallMoleculeList;
         }
 
         public DocumentChecked InsertionParams { get; private set; }
@@ -954,13 +955,13 @@ namespace pwiz.Skyline.FileUI
             }
 
             // Before we close the window, if there are no errors, we want to ensure that the UI mode reflects the user's radio button selection
-            if (radioPeptide.Checked)
+            /*if (radioPeptide.Checked)
                 SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
             else
-                SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
+                SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);*/
 
             insertionParams.ColumnHeaderList = CurrentColumnPositions();
-
+            insertionParams.IsSmallMoleculeList = !radioPeptide.Checked;
             InsertionParams = insertionParams;
             return false; // No errors
         }

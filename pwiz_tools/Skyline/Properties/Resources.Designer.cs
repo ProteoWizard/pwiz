@@ -15883,6 +15883,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecular Formula and/or Precursor m/z.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or" +
+                        "_Precursor_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Adduct and/or Precursor Charge.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_" +
+                        "Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Delustering Potential.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential {

@@ -1716,7 +1716,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void InsertSmallMoleculeTransitionList(string csvText, string description)
+        public void InsertSmallMoleculeTransitionList(string csvText, string description, List<string> columnPositions = null)
         {
             IdentityPath selectPath = null;
             Exception modifyingDocumentException = null;
@@ -1729,7 +1729,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText), columnPositions);
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -1876,6 +1876,7 @@ namespace pwiz.Skyline
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
+            bool isSmallMoleculeList = false;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
@@ -1906,8 +1907,31 @@ namespace pwiz.Skyline
                     return;
                 }
             }
+            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+            {
+                if (columnDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
 
-            if (importer.IsSmallMoleculeInput)
+                var insParams = columnDlg.InsertionParams;
+                docNew = insParams.Document;
+                selectPath = insParams.SelectPath;
+                irtPeptides = insParams.IrtPeptides;
+                librarySpectra = insParams.LibrarySpectra;
+                peptideGroups = insParams.PeptideGroups;
+                columnPositions = insParams.ColumnHeaderList;
+                isSmallMoleculeList = insParams.IsSmallMoleculeList;
+            }
+
+            if (isSmallMoleculeList)
+            {
+                // If it is a small molecule list, we want to give the user provided headers to the SmallMolecule part of skyline and not go through with
+                // the rest of this
+                InsertSmallMoleculeTransitionList(inputs.InputText, Resources.SkylineWindow_Paste_Paste_transition_list, columnPositions);
+                return;
+            }
+            
+
+            /*if (importer.IsSmallMoleculeInput)
             {
                 if (errorList.Any())
                 {
@@ -1934,7 +1958,7 @@ namespace pwiz.Skyline
                     peptideGroups = insParams.PeptideGroups;
                     columnPositions = insParams.ColumnHeaderList;
                 }
-            }
+            }*/
 
             if (assayLibrary)
             {

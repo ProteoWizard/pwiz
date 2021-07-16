@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Menus
                     }
                 }
 
-                if (MassListImporter.HasNumericColumn(columnTypes))
+                if (MassListImporter.HasNumericColumn(columnTypes)) 
                     SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
                         Resources.SkylineWindow_Paste_Paste_transition_list, false);
                 // Handle unusual corner case where data is found to be columnar and contains numbers, 

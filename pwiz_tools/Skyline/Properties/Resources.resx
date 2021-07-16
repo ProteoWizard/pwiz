@@ -11525,4 +11525,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula" xml:space="preserve">
     <value>Molecular Formula</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z" xml:space="preserve">
+    <value>Molecular Formula and/or Precursor m/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Adduct and/or Precursor Charge</value>
+  </data>
 </root>
