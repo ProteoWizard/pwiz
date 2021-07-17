@@ -1423,7 +1423,8 @@ namespace pwiz.Skyline.Model
                                           out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
-                                          out List<PeptideGroupDocNode> peptideGroups)
+                                          out List<PeptideGroupDocNode> peptideGroups,
+                                          List<string> columnPositions = null)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1439,7 +1440,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     var lines = inputs.ReadLines(progressMonitor);
-                    var reader = new SmallMoleculeTransitionListCSVReader(lines);
+                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
                 }
                 catch (LineColNumberedIoException x)

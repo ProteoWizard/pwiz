@@ -701,6 +701,7 @@ namespace pwiz.Skyline.Util.Extensions
         private char _separator;
         private string[] _currentFields;
         private string _titleLine;
+        private string userHeaders;
         private bool _rereadTitleLine; // set true for first readline if the file didn't actually have a header line
         private TextReader _reader;
         
@@ -733,7 +734,7 @@ namespace pwiz.Skyline.Util.Extensions
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
             if (columnPositions != null && !_rereadTitleLine)
             {
-                string userHeaders = TextUtil.TextSeparate(separator.ToString(), columnPositions);
+                userHeaders = TextUtil.TextSeparate(separator.ToString(), columnPositions);
                 userHeaders = userHeaders.Replace(@" ", string.Empty);
                 _titleLine = userHeaders;
             }

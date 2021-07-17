@@ -456,6 +456,28 @@ namespace pwiz.Skyline.Model
                 IsSmallMoleculeInput = true;
                 if (progressMonitor != null)
                     progressMonitor.UpdateProgress(status.Complete());
+
+                // Now that we use ColumnSelectDlg to look at Small Molecule transition lists,
+                // we need to create a RowReader for these too
+                // Check first line for validity
+                var line = lines.FirstOrDefault();
+                if (string.IsNullOrEmpty(line))
+                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+                indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+                if (indices.Headers != null)
+                {
+                    lines.RemoveAt(0);
+                    _linesSeen++;
+                }
+
+                // If no numeric columns in the first row
+                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
+                if (RowReader == null)
+                {
+                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
+                    if (RowReader == null)
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                }
                 return true;
             }
 

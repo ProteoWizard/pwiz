@@ -1895,28 +1895,10 @@ namespace pwiz.Skyline
                 {
                     // PreImport of mass list
                     importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
-                    if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
-                    {
-                        docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
-                            insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                            out peptideGroups);
-                    }
                 });
                 if (importer == null || status.IsCanceled)
                 {
                     return;
-                }
-            }
-            if (importer.IsSmallMoleculeInput)
-            {
-                if (errorList.Any())
-                {
-                    // Currently small molecules show just one error with no ability to continue.
-                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
-                    {
-                        errorDlg.ShowDialog(this);
-                        return;
-                    }
                 }
             }
             using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
@@ -1934,16 +1916,29 @@ namespace pwiz.Skyline
                 isSmallMoleculeList = insParams.IsSmallMoleculeList;
             }
 
-            /*if (isSmallMoleculeList)
+            if (isSmallMoleculeList)
             {
-                // If it is a small molecule list, we want to give the user provided headers to the SmallMolecule part of skyline and not go through with
-                // the rest of this
-                InsertSmallMoleculeTransitionList(inputs.InputText, Resources.SkylineWindow_Paste_Paste_transition_list, columnPositions);
-                return;
-            }*/
-            
-
-            /*if (importer.IsSmallMoleculeInput)
+                using (var longWaitDlg0 = new LongWaitDlg(this)
+                {
+                    Text = analyzingMessage,
+                })
+                {
+                    var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
+                    {
+                        if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
+                        {
+                            docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
+                                insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                                out peptideGroups, columnPositions);
+                        }
+                    });
+                    if (importer == null || status.IsCanceled)
+                    {
+                        return;
+                    }
+                }
+            }
+            if (importer.IsSmallMoleculeInput)
             {
                 if (errorList.Any())
                 {
@@ -1955,22 +1950,6 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            else
-            {
-                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
-                {
-                    if (columnDlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-
-                    var insParams = columnDlg.InsertionParams;
-                    docNew = insParams.Document;
-                    selectPath = insParams.SelectPath;
-                    irtPeptides = insParams.IrtPeptides;
-                    librarySpectra = insParams.LibrarySpectra;
-                    peptideGroups = insParams.PeptideGroups;
-                    columnPositions = insParams.ColumnHeaderList;
-                }
-            }*/
 
             if (assayLibrary)
             {
@@ -1988,6 +1967,7 @@ namespace pwiz.Skyline
                 }
             }
 
+            // TODO: This no longer looks at what it was intended to and should be revisited
             bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (isDocumentSame)
