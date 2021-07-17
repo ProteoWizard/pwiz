@@ -56,7 +56,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!_matchTypes.Contains(property.Name))
                 {
-                    _matchTypes.Add(property.Name);
+                    if (property.Name == "UnmodifiedTargetText")
+                    {
+                        _matchTypes.Add("Molecule Name");
+                    }
+                    else
+                    {
+                        _matchTypes.Add(property.Name);
+                    }
                 }
             }
         }

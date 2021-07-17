@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
         public Adduct Adduct { get { return Key.Adduct; } }
 
         /// <summary>
-        /// The modified peptide sequence associated with a spectrum
+        /// The modified peptide sequence or small molecule associated with a spectrum
         /// </summary>
         public Target Target { get { return Key.Target; } }
 

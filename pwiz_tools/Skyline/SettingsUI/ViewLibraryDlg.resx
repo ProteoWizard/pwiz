@@ -148,7 +148,7 @@
     <value>64, 32</value>
   </data>
   <data name="comboFilterType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>186, 21</value>
+    <value>190, 21</value>
   </data>
   <data name="comboFilterType.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>

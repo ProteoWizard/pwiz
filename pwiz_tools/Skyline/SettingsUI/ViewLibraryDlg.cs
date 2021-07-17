@@ -1116,10 +1116,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (matchTypes.Count > 0)
             {
-                MatchTypeTipProvider tipProvider = GetMatchTypeTipProvider(matchTypes);
+                MatchTypeTipProvider tipProvider = new MatchTypeTipProvider(matchTypes);
                 var pt = textPeptide.Location;
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 40, pt.Y - 60, 0, 0),
+                    new Rectangle(pt.X + 80, pt.Y - 60, 0, 0),
                     pt);
             }
             else
@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void textPeptide_GotFocus(object sender, EventArgs e)
         {
-            //updateMatchTypes();
+            textPeptide_TextChanged(sender, e);
         }
 
         /// <summary>
@@ -2095,10 +2095,6 @@ namespace pwiz.Skyline.SettingsUI
             return split[1].Substring(0, split[1].LastIndexOf(' '));
         }
 
-        public MatchTypeTipProvider GetMatchTypeTipProvider(List<string> matchTypes)
-        {
-            return new MatchTypeTipProvider(matchTypes);
-        }
         public PeptideTipProvider GetTipProvider(int i)
         {
             return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
@@ -2305,31 +2301,25 @@ namespace pwiz.Skyline.SettingsUI
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                var tableMatches = new TableDesc();
-                var size = new SizeF();
                 using (var rt = new RenderTools())
                 {
                     // Draw title
                     var parts = new List<String>();
                     parts.Add("Fields containing matches:");
-                    size = tableMatches.CalcDimensions(g);
-                    var sizeLabel = DrawTextParts(g, 0, 0, parts, rt);
+                    var sizeLastString = DrawTextParts(g, 0, 0, parts, rt);
+                    var width = sizeLastString.Width;
+                    var height = sizeLastString.Height;
                     // Draw the current fields with matches
                     foreach (var str in typeMatches ?? new List<string>())
                     {
-                        g.TranslateTransform(0, sizeLabel.Height);
+                        g.TranslateTransform(0, sizeLastString.Height);
                         var matchType = new List<string> {str};
-                        sizeLabel = DrawTextParts(g, 0, 0, matchType, rt);
+                        sizeLastString = DrawTextParts(g, 0, 0, matchType, rt);
+                        width = Math.Max(width, sizeLastString.Width);
+                        height += sizeLastString.Height;
                     }
                     // Width is the max length of the longest match type name which might vary by language
-                    var width = (int)Math.Round(size.Width);
-
-                    var height = (int)Math.Round(size.Height);
-                    // Adjust the location of the table containing match types to below the height of the label
-                    g.TranslateTransform(0, sizeLabel.Height);
-                    tableMatches.Draw(g);
-                    g.TranslateTransform(0, -sizeLabel.Height);
-                    _size = new Size(width + 800, height + 400); // +8 width, +4 height padding
+                    _size = new Size((int)width + 8, (int)height + 4); // +8 width, +4 height padding
                     return _size;
                 }
             }
