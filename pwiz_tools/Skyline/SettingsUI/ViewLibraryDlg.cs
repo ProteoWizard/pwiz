@@ -1101,9 +1101,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
+            // Filter the list by the new text and the filter type
             _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType, out var matchTypes);
-            // Whenever the filter text changes, it's possible the current matches will change as well
-            // If there are no items on our list, we want to hide the tip
+            
+            // Whenever the filter text changes, it's possible the categories with matches will change as well
             updateMatchTypes(matchTypes);
             UpdatePageInfo();
             UpdateStatusArea();
@@ -1116,9 +1117,10 @@ namespace pwiz.Skyline.SettingsUI
             if (matchTypes.Count > 0)
             {
                 MatchTypeTipProvider tipProvider = GetMatchTypeTipProvider(matchTypes);
-                var location = textPeptide.Location;
+                var pt = textPeptide.Location;
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(location, tipProvider.GetSize), location);
+                    new Rectangle(pt.X + 40, pt.Y - 60, 0, 0),
+                    pt);
             }
             else
             {
@@ -1137,8 +1139,6 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Hides the tip with current match types when the focus leaves
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void textPeptide_LostFocus(object sender, EventArgs e)
         {
             _matchTypesNodeTips.HideTip();
@@ -2311,15 +2311,15 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Draw title
                     var parts = new List<String>();
-                    parts.Add("Matches found");
+                    parts.Add("Fields containing matches:");
                     size = tableMatches.CalcDimensions(g);
                     var sizeLabel = DrawTextParts(g, 0, 0, parts, rt);
-                    var copy = typeMatches;
                     // Draw the current fields with matches
                     foreach (var str in typeMatches ?? new List<string>())
                     {
-                        var format = string.Format(str);
-                        tableMatches.AddDetailRow(format, format, rt);
+                        g.TranslateTransform(0, sizeLabel.Height);
+                        var matchType = new List<string> {str};
+                        sizeLabel = DrawTextParts(g, 0, 0, matchType, rt);
                     }
                     // Width is the max length of the longest match type name which might vary by language
                     var width = (int)Math.Round(size.Width);
@@ -2329,7 +2329,7 @@ namespace pwiz.Skyline.SettingsUI
                     g.TranslateTransform(0, sizeLabel.Height);
                     tableMatches.Draw(g);
                     g.TranslateTransform(0, -sizeLabel.Height);
-                    _size = new Size(width + 80, height + 40); // +8 width, +4 height padding
+                    _size = new Size(width + 800, height + 400); // +8 width, +4 height padding
                     return _size;
                 }
             }
@@ -2475,7 +2475,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 int width = (int)Math.Round(Math.Max(sizeMz.Width, sizeSeq.Width));
                 int height = (int)Math.Round(sizeMz.Height + sizeSeq.Height);
-                return new Size(width + 8, height + 4); // +8 width, +4 height padding
+                return new Size(width + 80, height + 40); // +8 width, +4 height padding
             }
 
             private List<TextColor> GetMzRangeItemsToDraw(double mz)
@@ -2700,7 +2700,13 @@ namespace pwiz.Skyline.SettingsUI
             {
                 selectedFilterType = FilterType.contains;
             }
-            // textPeptide_TextChanged(sender, e);
+
+            // If there is a filter term in the search box we need to update the search
+            // results whenever the filter changes
+            if (textPeptide.Text.Length > 0)
+            {
+                textPeptide_TextChanged(sender, e);
+            }
         }
     }
 }

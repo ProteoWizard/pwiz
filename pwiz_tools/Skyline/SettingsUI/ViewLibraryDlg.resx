@@ -136,7 +136,7 @@
     <value>Horizontal</value>
   </data>
   <data name="comboFilterType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="comboFilterType.Items" xml:space="preserve">
     <value>Starts with</value>
@@ -145,7 +145,7 @@
     <value>Contains</value>
   </data>
   <data name="comboFilterType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>71, 29</value>
+    <value>64, 32</value>
   </data>
   <data name="comboFilterType.Size" type="System.Drawing.Size, System.Drawing">
     <value>186, 21</value>
@@ -166,7 +166,7 @@
     <value>0</value>
   </data>
   <data name="listPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listPeptide.ItemHeight" type="System.Int32, mscorlib">
     <value>16</value>
@@ -256,7 +256,7 @@
     <value>3</value>
   </data>
   <data name="textPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 6</value>
@@ -694,7 +694,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 95</value>
+    <value>331, 17</value>
   </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -1141,7 +1141,7 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>155, 17</value>
   </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

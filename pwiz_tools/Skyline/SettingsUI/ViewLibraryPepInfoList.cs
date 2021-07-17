@@ -63,7 +63,7 @@ namespace pwiz.Skyline.SettingsUI
         private List<int> ContainsSearchByProperty(PropertyInfo property, string filterText)
         {
             // Return all the entries where the value of the given property matches the filter text
-            var indices = (from entry in _allEntries where property.GetValue(entry).ToString().Contains(filterText)
+            var indices = (from entry in _allEntries where property.GetValue(entry).ToString().IndexOf(filterText, StringComparison.CurrentCultureIgnoreCase) >= 0
                 select IndexOf(entry)).ToList();
             UpdateMatchTypes(indices.Count, property);
             return indices;
@@ -92,12 +92,12 @@ namespace pwiz.Skyline.SettingsUI
 
             // First see if there are any entries whose UnmodifiedTargetText alone matches the entire filter string
             var range = CollectionUtil.BinarySearch(_allEntries, info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0, filterText.Length, StringComparison.OrdinalIgnoreCase));
-            if (range.Length > 0)
-            {
-                _matchTypes.Add("Molecule name");
-                matchTypes = _matchTypes;
-                return new RangeList(range);
-            }
+            //if (range.Length > 0)
+            //{
+            //    _matchTypes.Add("Molecule name");
+            //    matchTypes = _matchTypes;
+            //    return new RangeList(range);
+            //}
 
             if (true)
             {
