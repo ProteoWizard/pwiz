@@ -156,7 +156,7 @@ void mapPeptidesToFasta(string fastafile, string peptidesfile)
 
     vector<shared_string> keywords;
     string input;
-    while(getline(reader,input))
+    while(getlinePortable(reader,input))
     {
         bal::trim(input);
         if(input.size()>2)
