@@ -465,7 +465,7 @@ void testDone()
     parse(is, handler); // parses <AnotherRootElement> and aborts
     
     string buffer;
-    getline(is, buffer, '<');
+    getlinePortable(is, buffer, '<');
     
     if (os_) *os_ << "buffer: " << buffer << "\n\n";
     unit_assert_operator_equal("The quick brown fox jumps over the lazy dog.", buffer);

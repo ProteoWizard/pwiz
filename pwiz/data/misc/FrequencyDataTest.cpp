@@ -41,7 +41,7 @@ void diff(const string& filename1, const string& filename2)
 {
 	ifstream file1(filename1.c_str()), file2(filename2.c_str());
 	string line1, line2;
-	while (getline(file1, line1) && getline(file2, line2))
+	while (std::getline(file1, line1) && std::getline(file2, line2))
 	    unit_assert(line1 == line2);
     if (os_) *os_ << "diff " << filename1 << " " << filename2 << ": success\n";
 }
