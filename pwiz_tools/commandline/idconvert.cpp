@@ -269,7 +269,7 @@ Config parseCommandLine(int argc, const char* argv[])
         while (is)
         {
             string filename;
-            getline(is, filename);
+            getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
         }
     }

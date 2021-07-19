@@ -225,6 +225,7 @@ namespace SkylineBatchTest
 
         public void TestRootReplacement(MainForm mainForm)
         {
+            // Remove existing configurations and import from InvalidPathConfigurations.bcfg
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathConfigurations.bcfg");
             RunUI(() =>
@@ -232,15 +233,16 @@ namespace SkylineBatchTest
                 mainForm.DoImport(invalidConfigFile);
                 FunctionalTestUtil.CheckConfigs(3, 3, mainForm);
             });
-
+            // Bring up the Configuration Set Up Manager (invalidConfigForm) by editing an invalid configuration at index 0
             RunUI(() => { mainForm.ClickConfig(0); });
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
+            // Change the template file path in the Configuration Set Up Manager
             RunUI(() =>
             {
                 invalidConfigForm.CurrentControl.SetInput(
                     Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky"));
             });
-            
+            // Click next to bring up the alert asking if you want to do path replacement. Click yes.
              RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
                  dlg =>
                  {
@@ -252,9 +254,12 @@ namespace SkylineBatchTest
                          dlg.Message);
                      dlg.ClickYes();
                  });
+             // Get the edit config form that appears after the Configuration Set Up Manager closes
              var editConfigForm = ShowDialog<SkylineBatchConfigForm>(() => { });
+             // Click cancel and wait for close.
              RunUI(() => { editConfigForm.CancelButton.PerformClick(); });
              WaitForClosedForm(editConfigForm);
+             // Check that the configurations are all valid now.
              RunUI(() =>
              {
                  FunctionalTestUtil.CheckConfigs(3, 0, mainForm);

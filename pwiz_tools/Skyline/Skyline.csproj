@@ -4397,6 +4397,10 @@
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\Shared\Lib\Microsoft.VC90.CRT\x64\msvcr90.dll">
+      <Link>percolator\msvcr90.DLL</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\Lib\Microsoft.VC90.MFC\x86\mfc90u.dll">
       <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
