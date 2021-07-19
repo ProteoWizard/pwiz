@@ -1922,27 +1922,15 @@ namespace pwiz.Skyline
 
             if (isSmallMoleculeList)
             {
-                using (var longWaitDlg0 = new LongWaitDlg(this)
+                if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
                 {
-                    Text = analyzingMessage,
-                })
-                {
-                    var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
-                    {
-                        if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
-                        {
-                            docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
-                                insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                                out peptideGroups, columnPositions);
-                        }
-                    });
-                    if (importer == null || status.IsCanceled)
-                    {
-                        return;
-                    }
+                    docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                        out peptideGroups, columnPositions);
                 }
+               
             }
-            if (importer.IsSmallMoleculeInput)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
                 if (errorList.Any())
                 {
@@ -2025,7 +2013,7 @@ namespace pwiz.Skyline
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
-                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
+                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath, columnPositions);
                     }
                     var newSettings = doc.Settings;
                     if (retentionTimeRegressionStore != null)

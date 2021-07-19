@@ -1410,10 +1410,11 @@ namespace pwiz.Skyline.Model
                                           out IdentityPath firstAdded,
                                           out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
-                                          out List<TransitionImportErrorInfo> errorList)
+                                          out List<TransitionImportErrorInfo> errorList,
+                                          List<string> columnPositions = null)
         {
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs, 
