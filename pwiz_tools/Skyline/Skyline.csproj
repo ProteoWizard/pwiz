@@ -148,9 +148,6 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodConverter">
-      <HintPath>Method\Shimadzu\x86\MethodConverter.dll</HintPath>
-    </Reference>
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
@@ -162,9 +159,6 @@
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodWriter">
-      <HintPath>Method\Shimadzu\x86\MethodWriter.dll</HintPath>
     </Reference>
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
       <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
@@ -3266,6 +3260,19 @@
     <Content Include="Instruments.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.pdb" />
+    <Content Include="Method\Shimadzu\MethodConverter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\MethodWriter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Thermo\BuildThermoMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3312,6 +3319,7 @@
       <Link>unimod.obo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Method\Shimadzu\BuildShimadzuMethod.exe.config" />
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
