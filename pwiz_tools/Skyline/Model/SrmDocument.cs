@@ -1436,7 +1436,7 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            if (importer != null && importer.IsSmallMoleculeInput)
+            if (importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules)
             {
                 try
                 {
@@ -1484,11 +1484,17 @@ namespace pwiz.Skyline.Model
             return docNew;
         }
 
-        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors)
+        /// <summary>
+        /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
+        /// </summary>
+        public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors, 
+            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
-            var importer = new MassListImporter(this, inputs);
+            var importer = new MassListImporter(this, inputs,  inputType);
             if (importer.PreImport(progressMonitor, null, tolerateErrors))
+            {
                 return importer;
+            }
             return null;
         }
 

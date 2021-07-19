@@ -1871,7 +1871,11 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
+        /// <summary>
+        /// Process and then add the mass list to the document
+        /// </summary>
+        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
