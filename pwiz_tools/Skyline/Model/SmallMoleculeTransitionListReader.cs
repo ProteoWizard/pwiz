@@ -2109,6 +2109,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
                     Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
+                    Tuple.Create(formulaPrecursor, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
                     Tuple.Create(mzPrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z),

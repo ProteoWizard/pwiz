@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -892,7 +893,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestEditTransitionNoFormula()
         {
             // Clear out the document
-            RunUI(() =>
+            /*RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
                 var transitionList =
@@ -902,6 +903,38 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(transitionList);
                 SkylineWindow.Paste();
             });
+            */
+            RunUI(() => SkylineWindow.NewDocument(true));
+            WaitForDocumentLoaded();
+
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,";
+            SetClipboardText(transitionList);
+
+            var molTransitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+
+            RunUI(() =>
+            {
+                var transitionBoxes = molTransitions.ComboBoxes;
+                // Set the correct headers
+                transitionBoxes[0].SelectedIndex = 1;
+                transitionBoxes[1].SelectedIndex = 2;
+                transitionBoxes[2].SelectedIndex = 5;
+                transitionBoxes[3].SelectedIndex = 6;
+                transitionBoxes[4].SelectedIndex = 4;
+                transitionBoxes[5].SelectedIndex = 7;
+                transitionBoxes[6].SelectedIndex = 12;
+                transitionBoxes[7].SelectedIndex = 9;
+                transitionBoxes[8].SelectedIndex = 10;
+                transitionBoxes[9].SelectedIndex = 8;
+                transitionBoxes[10].SelectedIndex = 11;
+                // moleculeBoxes[11].SelectedIndex = 25;
+            });
+            OkDialog(molTransitions, molTransitions.OkDialog);
+            WaitForDocumentLoaded();
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 1);
         }
 
@@ -938,19 +971,42 @@ namespace pwiz.SkylineTestFunctional
         private void TestEditWithIsotopeDistribution()
         {
             // Clear out the document
+
+            RunUI(() => SkylineWindow.NewDocument());
+
+            WaitForDocumentLoaded();
+            
+            var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
+            SetClipboardText(transitionList);
+
+            var transitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+
             RunUI(() =>
             {
-                SkylineWindow.NewDocument(true);
-                var transitionList =
-                    "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
-                    "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
-                SetClipboardText(transitionList);
-                SkylineWindow.Paste();
+                var moleculeBoxes = transitions.ComboBoxes;
+                // Set the correct headers
+                moleculeBoxes[0].SelectedIndex = 1;
+                moleculeBoxes[1].SelectedIndex = 2;
+                moleculeBoxes[2].SelectedIndex = 5;
+                moleculeBoxes[3].SelectedIndex = 6;
+                moleculeBoxes[4].SelectedIndex = 4;
+                moleculeBoxes[5].SelectedIndex = 7;
+                moleculeBoxes[6].SelectedIndex = 12;
+                moleculeBoxes[7].SelectedIndex = 9;
+                moleculeBoxes[8].SelectedIndex = 10;
+                moleculeBoxes[9].SelectedIndex = 8;
+                moleculeBoxes[10].SelectedIndex = 11;
+                // moleculeBoxes[11].SelectedIndex = 25;
             });
-            var doc = WaitForDocumentLoaded();
+            OkDialog(transitions, transitions.OkDialog);
+            WaitForDocumentLoaded();
+            var doc = SkylineWindow.Document;
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
 
             // Use transition filter settings to add isotope distribution
