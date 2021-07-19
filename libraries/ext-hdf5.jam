@@ -121,7 +121,7 @@ rule init ( version ? : location : options * )
 
 rule H5pubconf-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <include>$(HDF5_SRC)/src/windows ;
     }
@@ -152,7 +152,7 @@ rule link-requirements ( properties * )
 
 rule hdf5-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <source>$(HDF5_SRC)/src/H5FDwindows.c
                <conditional>@link-requirements ;
@@ -178,7 +178,7 @@ rule hdf5-requirements ( properties * )
 
 rule hdf5-usage-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <conditional>@link-requirements ;
     }

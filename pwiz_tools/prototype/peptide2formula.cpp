@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     ifstream peptideFile(argv[1]);
     string sequence;
-    while (getline(peptideFile, sequence))
+    while (getlinePortable(peptideFile, sequence))
     {
         Peptide peptide(sequence);
         cout << sequence << '\t' << peptide.formula() << '\n';
