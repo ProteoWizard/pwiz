@@ -33,6 +33,8 @@ namespace SkylineBatch
                 zippedFilePath = filePath;
             else
                 path = filePath;
+            if (panoramaFile != null)
+                zippedFilePath = panoramaFile.FilePath;
             return new SkylineTemplate(path, zippedFilePath, dependentConfigName, panoramaFile);
         }
 
