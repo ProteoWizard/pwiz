@@ -735,7 +735,7 @@ namespace pwiz.Skyline.Util.Extensions
             if (columnPositions != null && !_rereadTitleLine)
             {
                 userHeaders = TextUtil.TextSeparate(separator.ToString(), columnPositions);
-                userHeaders = userHeaders.Replace(@" ", string.Empty);
+                // userHeaders = userHeaders.Replace(@" ", string.Empty);
                 _titleLine = userHeaders;
             }
             var fields = _titleLine.ParseDsvFields(separator);

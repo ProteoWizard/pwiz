@@ -2026,6 +2026,7 @@ namespace pwiz.Skyline.Model
         public const string idHMDB = "HMDB";
         public const string idSMILES = "SMILES";
         public const string idKEGG = "KEGG";
+        public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
 
         public static readonly List<string> KnownHeaders;
 
@@ -2069,6 +2070,7 @@ namespace pwiz.Skyline.Model
                 idSMILES,
                 idKEGG,
                 neutralLossProduct,
+                ignoreColumn, // Does not contain useful data, can be more than one in a list
             });
 
             // A dictionary of terms that can be understood as column headers - this includes
@@ -2083,13 +2085,16 @@ namespace pwiz.Skyline.Model
                 foreach (var pair in new[] {
                     Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
                     Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
+                    Tuple.Create(namePrecursor, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
                     Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
+                    Tuple.Create(mzPrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z),
                     Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),
+                    Tuple.Create(mzProduct, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
                     Tuple.Create(chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge),
                     Tuple.Create(chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge),
                     Tuple.Create(adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct),
@@ -2118,6 +2123,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idSMILES, idSMILES),
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
+                    Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
                 })
                 {
                     if (!knownColumnHeadersAllCultures.ContainsKey(pair.Item2))

@@ -2017,7 +2017,7 @@ namespace pwiz.Skyline
                     // If the document was changed during the operation, try all the changes again
                     // using the information given by the user.
                     docCurrent = DocumentUI;
-                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
+                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath, columnPositions);
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
