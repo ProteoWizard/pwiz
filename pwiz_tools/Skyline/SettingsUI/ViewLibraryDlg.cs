@@ -156,6 +156,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
+            // A tip which displays categories contianing matches to the filter text
             _matchTypesNodeTips = new NodeTip(this) {Parent = this};
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;
@@ -174,7 +175,6 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
-            comboFilterType.SelectedText = "Starts with";
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -199,6 +199,9 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries.LoadList(_selectedLibName);
         }
 
+        /// <summary>
+        /// // Set 'starts with' as the initial filter type
+        /// </summary>
         private void InitializeFilterTypeComboBox()
         {
             comboFilterType.SelectedIndex = 0;
@@ -401,8 +404,7 @@ namespace pwiz.Skyline.SettingsUI
                         return new ViewLibraryPepInfo(key, libInfo);
                     });
             }
-            _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher);
-            bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
+            _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, out var allPeptides);
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
@@ -1101,7 +1103,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
-            // Filter the list by the new text and the filter type
+            // Filter the list by the new text according to the current filter type
             _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType, out var matchTypes);
             
             // Whenever the filter text changes, it's possible the categories with matches will change as well
@@ -1133,7 +1135,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void textPeptide_GotFocus(object sender, EventArgs e)
         {
-            textPeptide_TextChanged(sender, e);
+            // textPeptide_TextChanged(sender, e);
         }
 
         /// <summary>
@@ -2465,7 +2467,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 int width = (int)Math.Round(Math.Max(sizeMz.Width, sizeSeq.Width));
                 int height = (int)Math.Round(sizeMz.Height + sizeSeq.Height);
-                return new Size(width + 80, height + 40); // +8 width, +4 height padding
+                return new Size(width + 8, height + 4); // +8 width, +4 height padding
             }
 
             private List<TextColor> GetMzRangeItemsToDraw(double mz)

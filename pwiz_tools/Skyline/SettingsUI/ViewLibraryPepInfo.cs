@@ -110,6 +110,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }
         }
+
+        public string OtherKeys
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.OtherKeys; }
+        }
         /// <summary>
         /// True if a <see cref="PeptideDocNode"/> has been successfully associated
         /// with this entry
