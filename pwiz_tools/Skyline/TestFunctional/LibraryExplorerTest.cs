@@ -683,7 +683,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var annotation in from item in graphControl.GraphPane.CurveList let info = item.Tag as IMSGraphItemExtended from pt in (MSPointList) 
                 item.Points select info.AnnotatePoint(pt) into annotation where annotation != null where annotation.ZOrder != null select annotation)
             {
-                Assert.AreEqual(annotation.FontSpec,
+                Assert.AreEqual(annotation.FontSpec.FontColor,
                     IonTypeExtension.GetTypeColor(IonType.custom, annotation.ZOrder.Value));
             }
 
