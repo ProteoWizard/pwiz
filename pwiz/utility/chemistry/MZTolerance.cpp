@@ -44,7 +44,7 @@ PWIZ_API_DECL istream& operator>>(istream& is, MZTolerance& mzt)
     string temp;
 
     // in order to handle both '10ppm' and '10 ppm', this is easier than istream (which may or may not have skipws flag set)
-    getline(is, temp);
+    getlinePortable(is, temp);
     size_t startOfValue = temp.find_first_of("0123456789.-");
     size_t endOfValue = temp.find_first_not_of("0123456789.-", startOfValue);
     size_t startOfUnits = temp.find_first_not_of(" ", endOfValue);
