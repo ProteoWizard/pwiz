@@ -93,7 +93,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool _activated;
 
-        private readonly NodeTip _matchTypesNodeTips;
+        public readonly NodeTip _matchTypesNodeTips; // Public for testing purposes
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo _lastTipNode;
@@ -2097,6 +2097,10 @@ namespace pwiz.Skyline.SettingsUI
             return split[1].Substring(0, split[1].LastIndexOf(' '));
         }
 
+        public MatchTypeTipProvider GetMatchTypeTipProvider(List<string> matchTypes)
+        {
+            return new MatchTypeTipProvider(matchTypes);
+        }
         public PeptideTipProvider GetTipProvider(int i)
         {
             return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
@@ -2294,11 +2298,6 @@ namespace pwiz.Skyline.SettingsUI
             public MatchTypeTipProvider(List<string> matchTypes)
             {
                 typeMatches = matchTypes;
-            }
-
-            public Size GetSize
-            {
-                get { return _size; }
             }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
