@@ -1121,7 +1121,7 @@ namespace pwiz.Skyline.SettingsUI
                 MatchTypeTipProvider tipProvider = new MatchTypeTipProvider(matchTypes);
                 var pt = textPeptide.Location;
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 80, pt.Y - 60, 0, 0),
+                    new Rectangle(pt.X + 120, pt.Y - 60, 0, 0),
                     pt);
             }
             else
@@ -2320,7 +2320,7 @@ namespace pwiz.Skyline.SettingsUI
                         width = Math.Max(width, sizeLastString.Width);
                         height += sizeLastString.Height;
                     }
-                    // Width is the max length of the longest match type name which might vary by language
+                    // Width is the max length of the longest match type name which might vary by language and matches present
                     _size = new Size((int)width + 8, (int)height + 4); // +8 width, +4 height padding
                     return _size;
                 }

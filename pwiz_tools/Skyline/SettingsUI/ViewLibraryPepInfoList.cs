@@ -82,7 +82,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Find entries which contain the filter text in the given property
         /// </summary>
-        private List<int> ContainsSearchByProperty(PropertyInfo property, string filterText)
+        private List<int> SubstringSearchByProperty(PropertyInfo property, string filterText)
         {
             // Return all the entries where the value of the given property matches the filter text
             var indices = (from entry in _allEntries where property.GetValue(entry).ToString()
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Find the indices of entries that contain the filter text
                 filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
-                    current.Union(ContainsSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
+                    current.Union(SubstringSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
             }
             else if(filterType == ViewLibraryDlg.FilterType.startsWith)
             {
@@ -165,9 +165,10 @@ namespace pwiz.Skyline.SettingsUI
 
             matchTypes = _matchTypes;
 
+            var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
             if (_allPeptides)
             {
-                if (!filteredIndices.Any())
+                if (!enumerable.Any())
                 {
                     // Now look at all the entries which could match the target text, if they had something appended to them.
                     var range = CollectionUtil.BinarySearch(_allEntries,
@@ -180,7 +181,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => _allEntries[info].DisplayText));
+            return ImmutableList.ValueOf(enumerable.OrderBy(info => _allEntries[info].DisplayText));
         }
 
         public int IndexOf(LibraryKey libraryKey)
