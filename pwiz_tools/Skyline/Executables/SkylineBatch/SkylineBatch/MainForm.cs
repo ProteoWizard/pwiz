@@ -624,6 +624,12 @@ namespace SkylineBatch
             _outputLog.Tick += OutputLog;
         }
 
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            // force the log to be redrawn
+            textBoxLog.Invalidate();
+        }
+
         private void tabLog_Leave(object sender, EventArgs e)
         {
             _scrolling = _configManager.SelectedLog == 0;
@@ -790,9 +796,10 @@ namespace SkylineBatch
         public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
 
         public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
-        
+
 
         #endregion
+
     }
 
     // ListView that prevents a double click from toggling checkbox
