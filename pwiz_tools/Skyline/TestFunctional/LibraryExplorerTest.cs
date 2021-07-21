@@ -677,15 +677,6 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(_viewLibUI);
                 return;
             }
-            
-            // Verify that the color of annotations for ranked ions are being retrieved correctly
-            var graphControl = (MSGraphControl)_viewLibUI.Controls.Find("graphControl", true).First();
-            foreach (var annotation in from item in graphControl.GraphPane.CurveList let info = item.Tag as IMSGraphItemExtended from pt in (MSPointList) 
-                item.Points select info.AnnotatePoint(pt) into annotation where annotation != null where annotation.ZOrder != null select annotation)
-            {
-                Assert.AreEqual(annotation.FontSpec.FontColor,
-                    IonTypeExtension.GetTypeColor(IonType.custom, annotation.ZOrder.Value));
-            }
 
             RunUI(() =>
             {
@@ -699,6 +690,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(pepList);
             });
             Assert.AreEqual(_testLibs[libIndex].Name, libSelected);
+
+            // Verify that the color of annotations for ranked ions are being retrieved correctly
+            var graphControl = (MSGraphControl)_viewLibUI.Controls.Find("graphControl", true).First();
+            foreach (var annotation in from item in graphControl.GraphPane.CurveList
+                let info = item.Tag as IMSGraphItemExtended
+                from pt in (MSPointList)
+                    item.Points
+                select info.AnnotatePoint(pt) into annotation
+                where annotation != null
+                where annotation.ZOrder != null
+                select annotation)
+            {
+                Assert.AreEqual(annotation.FontSpec.FontColor,
+                    IonTypeExtension.GetTypeColor(IonType.custom, annotation.ZOrder.Value));
+            }
 
             // Test valid peptide search
             TextBox pepTextBox = null;
