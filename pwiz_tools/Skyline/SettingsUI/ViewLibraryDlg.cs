@@ -1116,18 +1116,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private void updateMatchTypes(List <string> matchTypes)
         {
+            _matchTypesNodeTips.HideTip(); // Hide the old tip
             if (matchTypes.Count > 0)
             {
-                MatchTypeTipProvider tipProvider = new MatchTypeTipProvider(matchTypes);
+                var tipProvider = new MatchTypeTipProvider(matchTypes);
                 var pt = textPeptide.Location;
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
                     new Rectangle(pt.X + 120, pt.Y - 60, 0, 0),
                     pt);
-            }
-            else
-            {
-                // If we have not found matches in any categories then hide the tip
-                _matchTypesNodeTips.HideTip();
             }
         }
         /// <summary>
@@ -1135,7 +1131,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void textPeptide_GotFocus(object sender, EventArgs e)
         {
-            // textPeptide_TextChanged(sender, e);
+            textPeptide_TextChanged(sender, e);
         }
 
         /// <summary>
