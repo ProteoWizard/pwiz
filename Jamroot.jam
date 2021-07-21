@@ -318,6 +318,7 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on

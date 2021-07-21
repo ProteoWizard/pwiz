@@ -82,7 +82,7 @@ rule msvc-shimadzu-requirement ( properties * )
 {
     # Must be msvc
     if ! <toolset>msvc in $(properties) { return <build>no ; }
-    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1"
+    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1" "14.2"
     {
         return <build>no ;
     }
