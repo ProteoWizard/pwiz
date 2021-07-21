@@ -89,11 +89,30 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting to server....
+        /// </summary>
+        public static string AddServerForm_CheckServer_Connecting_to_server___ {
+            get {
+                return ResourceManager.GetString("AddServerForm_CheckServer_Connecting_to_server___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string AddServerForm_FinishConnectToServer_Save {
             get {
                 return ResourceManager.GetString("AddServerForm_FinishConnectToServer_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server cannot be empty. Please enter the server information..
+        /// </summary>
+        public static string AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_ {
+            get {
+                return ResourceManager.GetString("AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server" +
+                        "_information_", resourceCulture);
             }
         }
         
