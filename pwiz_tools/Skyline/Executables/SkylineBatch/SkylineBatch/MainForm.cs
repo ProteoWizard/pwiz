@@ -797,9 +797,7 @@ namespace SkylineBatch
 
         public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
 
-
         #endregion
-
     }
 
     // ListView that prevents a double click from toggling checkbox
