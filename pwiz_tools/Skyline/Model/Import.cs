@@ -1546,7 +1546,6 @@ namespace pwiz.Skyline.Model
                     if (iFragmentName == -1)
                         iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
                     iLabelType = prec.LabelIndex;
-
                     indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
                 }
                 return new GeneralRowReader(provider, separator, indices, settings, lines, progressMonitor, status);
@@ -2312,11 +2311,15 @@ namespace pwiz.Skyline.Model
             // Remove spaces and make lowercase. This matches the format of the names they are tested against
             return col.ToLowerInvariant().Replace(@" ", string.Empty);
         }
+
+        // Detect column headers that we recognize and set the column variable to the appropriate index
         public void FindColumns(string[] headers)
         {
+            if (headers == null)
+                return;
             Headers = headers;
             ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(FormatHeader(col)));
-            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
+            // PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
             ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(FormatHeader(col)));
             DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(FormatHeader(col)));
             IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(FormatHeader(col)));
@@ -2335,6 +2338,17 @@ namespace pwiz.Skyline.Model
             CollisionCrossSectionColumn = headers.IndexOf(col => CollisionalCrossSectionNames.Contains(FormatHeader(col)));
             ExplicitDelusteringPotentialColumn = headers.IndexOf(col => ExplicitDelusteringPotentialNames.Contains(FormatHeader(col)));
             ExplicitCompensationVoltageColumn = headers.IndexOf(col => ExplicitCompensationVoltageNames.Contains(FormatHeader(col)));
+            MoleculeListNameColumn = headers.IndexOf(col => MoleculeListNameNames.Contains(FormatHeader(col)));
+            ProteinDescriptionColumn = headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col)));
+            MoleculeNameColumn = headers.IndexOf(col => MoleculeNameNames.Contains(FormatHeader(col)));
+            MolecularFormulaColumn = headers.IndexOf(col => MolecularFormulaNames.Contains(FormatHeader(col)));
+            PrecursorAdductColumn = headers.IndexOf(col => PrecursorAdductNames.Contains(FormatHeader(col)));
+            ProductColumn = headers.IndexOf(col => ProductNames.Contains(FormatHeader(col)));
+            PrecursorColumn = headers.IndexOf(col => PrecursorNames.Contains(FormatHeader(col)));
+            ProductFormulaColumn = headers.IndexOf(col => ProductFormulaNames.Contains(FormatHeader(col)));
+            ProductAdductColumn = headers.IndexOf(col => ProductAdductNames.Contains(FormatHeader(col)));
+            ProductNameColumn = headers.IndexOf(col => ProductNameNames.Contains(FormatHeader(col)));
+            ProductNeutralLossColumn = headers.IndexOf(col => ProductNeutralLossNames.Contains(FormatHeader(col)));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
@@ -2429,7 +2443,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-
+        // Column header names that we can recognize
         // ReSharper disable StringLiteralTypo
         public static IEnumerable<string> ProteinNames { get { return new[] { @"proteinname", @"protein.name", @"protein", @"proteinid", @"uniprotid" }; } }
         public static IEnumerable<string> PrecursorChargeNames { get { return new[] { @"precursorcharge" }; } }
@@ -2449,8 +2463,19 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ExplicitIonMobilityUnitsNames { get { return new[] { @"explicitionmobilityunits" }; } }
         public static IEnumerable<string> ExplicitIonMobilityHighEnergyOffsetNames { get { return new[] { @"explicitionmobilityhighenergyoffset" }; } }
         public static IEnumerable<string> CollisionalCrossSectionNames { get { return new[] { @"collisionalcrosssection", @"collisionalcrosssection(sqa)", @"collisionalcrosssectionsqa" }; } }
-        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
+        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential", @"explicitdeclusteringpotential" }; } }
         public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
+        public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
+        public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
+        public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname", @"peptidemodifiedsequence", @"peptide" }; } }
+        public static IEnumerable<string> MolecularFormulaNames { get { return new[] { @"molecularformula", @"precursorformula" }; } }
+        public static IEnumerable<string> PrecursorAdductNames { get { return new[] { @"precursoradduct" }; } }
+        public static IEnumerable<string> ProductNames { get { return new[] { @"productmz", @"productm/z" }; } }
+        public static IEnumerable<string> PrecursorNames { get { return new[] { @"precursormz", @"precursorm/z" }; } }
+        public static IEnumerable<string> ProductFormulaNames { get { return new[] { @"productformula" }; } }
+        public static IEnumerable<string> ProductAdductNames { get { return new[] { @"productadduct" }; } }
+        public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname" }; } }
+        public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
         // ReSharper restore StringLiteralTypo
     }
 

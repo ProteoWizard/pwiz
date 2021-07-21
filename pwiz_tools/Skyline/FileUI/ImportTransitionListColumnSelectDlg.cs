@@ -208,7 +208,9 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
-            // Commented out because this is only used for small molecules and is not currently detected
+            SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+            SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
             // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
@@ -588,10 +590,7 @@ namespace pwiz.Skyline.FileUI
                 CheckForComboBoxOverlap(columns.MolecularFormulaColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.MolecularFormulaColumn = comboBoxIndex;
-            }
-
-            
-            else
+            } else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
                 if (columns.IrtColumn == comboBoxIndex) columns.IrtColumn = -1;
