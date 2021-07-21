@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -84,9 +85,10 @@ namespace SkylineBatchTest
             RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile1),
                 dlg =>
                 {
-                    Assert.AreEqual(SharedBatch.Properties.Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
-                        dlg.Message);
-                    dlg.ClickNo();
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1001.1.0.187", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
                 });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
@@ -94,9 +96,10 @@ namespace SkylineBatchTest
             RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile2),
                 dlg =>
                 {
-                    Assert.AreEqual(SharedBatch.Properties.Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
-                        dlg.Message);
-                    dlg.ClickNo();
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1000.1.9.255", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
                 });
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
@@ -104,9 +107,10 @@ namespace SkylineBatchTest
             RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile3),
                 dlg =>
                 {
-                    Assert.AreEqual(SharedBatch.Properties.Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
-                        dlg.Message);
-                    dlg.ClickNo();
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1100.3.3.100", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
                 });
         }
 
