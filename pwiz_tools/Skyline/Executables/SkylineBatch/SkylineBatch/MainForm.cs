@@ -796,7 +796,7 @@ namespace SkylineBatch
         public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
 
         public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
-
+        
 
         #endregion
     }
