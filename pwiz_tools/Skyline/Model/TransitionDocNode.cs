@@ -575,6 +575,9 @@ namespace pwiz.Skyline.Model
 
         public double? GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
+            if (ExplicitValues.CollisionEnergy.HasValue)
+                return ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
+
             double? ce = null;
             TransitionPrediction predict = settings.TransitionSettings.Prediction;
             var optimizationMethod = predict.OptimizedMethodType;
@@ -608,9 +611,6 @@ namespace pwiz.Skyline.Model
                         SrmDocument.GetCollisionEnergy);
                 }
             }
-
-            if (ExplicitValues.CollisionEnergy.HasValue)
-                ce = ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
 
             return ce;
         }
