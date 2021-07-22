@@ -110,10 +110,23 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }
         }
-
+        /// <summary>
+        /// Other Keys such as CAS registry number
+        /// </summary>
         public string OtherKeys
         {
-            get { return Key.SmallMoleculeLibraryAttributes.OtherKeys; }
+            // This property is used to filter spectra. The prefix "cas:" should be removed because
+            // otherwise a search for "cas" would bring up every entry with a CAS registry number
+            get
+            {
+                var keys = Key.SmallMoleculeLibraryAttributes.OtherKeys;
+                var prefix = "cas:";
+                if (keys.Contains(prefix))
+                {
+                    keys = keys.Replace(prefix, "");
+                }
+                return keys;
+            }
         }
         /// <summary>
         /// True if a <see cref="PeptideDocNode"/> has been successfully associated

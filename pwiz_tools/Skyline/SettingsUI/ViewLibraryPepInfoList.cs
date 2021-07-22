@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
+using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -31,8 +32,8 @@ namespace pwiz.Skyline.SettingsUI
     {
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
         private List<string> _matchTypes = new List<string>();
-        private LibKeyModificationMatcher _matcher;
-        private bool _allPeptides;
+        private readonly LibKeyModificationMatcher _matcher;
+        private readonly bool _allPeptides;
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
@@ -60,22 +61,25 @@ namespace pwiz.Skyline.SettingsUI
             // already include this match type, then add it to the list
             if (numMatches > 0)
             {
-                if (!_matchTypes.Contains(property.Name))
+                if (property.Name == @"UnmodifiedTargetText")
                 {
-                    if (property.Name == @"UnmodifiedTargetText")
-                    {
-                        // The target text can be a molecule name or a peptide sequence
-                        // so only display peptide if every entry on the list is a peptide
-                        _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
-                    }
-                    else if (property.Name == @"PrecursorMz")
+                    // The target text can be a molecule name or a peptide sequence
+                    // so only display peptide if every entry on the list is a peptide
+                    _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
+                }
+                else if (property.Name == @"PrecursorMz")
+                {
+                    if (!_matchTypes.Contains(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass))
                     {
                         _matchTypes.Add(ColumnCaptions.PrecursorMz);
                     }
-                    else
-                    {
-                        _matchTypes.Add(property.Name);
-                    }
+                } else if (property.Name == @"OtherKeys")
+                {
+                    _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs);
+                }
+                else
+                {
+                    _matchTypes.Add(property.Name);
                 }
             }
         }
@@ -106,12 +110,20 @@ namespace pwiz.Skyline.SettingsUI
             UpdateMatchTypes(matchIndices.Count, property);
             return matchIndices;
         }
+        /// <summary>
+        /// Find the indices of entries matching the filter text
+        /// </summary>
+        /// <param name="filterText"> Search term </param>
+        /// <param name="filterType"> "Starts with" or "Contains"</param>
+        /// <param name="matchTypes"> Categories in which matches were found</param>
         public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
             _matchTypes = new List<string>();
-            matchTypes = new List<string>();
+
             if (string.IsNullOrEmpty(filterText))
             {
+                // Don't filter anything out and don't indicate matches in any category
+                matchTypes = new List<string>();
                 return new RangeList(0, Count);
             }
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
@@ -153,7 +165,7 @@ namespace pwiz.Skyline.SettingsUI
                 const double MZ_FILTER_TOLERANCE = 0.1;
 
                 // Add entries that are close to the filter text numerically
-                //Create a list of object references sorted by their absolute difference from target m/z
+                // Create a list of object references sorted by their absolute difference from target m/z
                 var sortedMzList = _allEntries.OrderBy(entry => Math.Abs(entry.PrecursorMz - result));
 
                 // Then find the first entry with a precursor m/z exceeding our match tolerance
@@ -166,21 +178,19 @@ namespace pwiz.Skyline.SettingsUI
             matchTypes = _matchTypes;
 
             var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
-            if (_allPeptides)
+            // If we have not found any matches yet and it is a peptide list look at all the entries which could match
+            // the target text, if they had something appended to them.
+            if (_allPeptides && !enumerable.Any())
             {
-                if (!enumerable.Any())
-                {
-                    // Now look at all the entries which could match the target text, if they had something appended to them.
-                    var range = CollectionUtil.BinarySearch(_allEntries,
-                        info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
-                            info.UnmodifiedTargetText.Length,
-                            StringComparison.OrdinalIgnoreCase));
-                    // Return the elements from the range whose DisplayText actually matches the filter text.
-                    return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
-                        .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
-                }
+                var range = CollectionUtil.BinarySearch(_allEntries,
+                    info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
+                        info.UnmodifiedTargetText.Length,
+                        StringComparison.OrdinalIgnoreCase));
+                // Return the elements from the range whose DisplayText actually matches the filter text.
+                return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
+                    .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
             }
-
+            // Return the indices of the matches sorted alphabetically by display text
             return ImmutableList.ValueOf(enumerable.OrderBy(info => _allEntries[info].DisplayText));
         }
 

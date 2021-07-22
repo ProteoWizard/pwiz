@@ -1831,8 +1831,6 @@ namespace pwiz.Skyline.SettingsUI
         // Temp variable to store a previously focused control
         private Control _focused;
 
-        // Store the current match types
-        public List<string> _matchTypes;
 
         private void splitMain_MouseDown(object sender, MouseEventArgs e)
         {
@@ -2290,7 +2288,7 @@ namespace pwiz.Skyline.SettingsUI
         public class MatchTypeTipProvider : ITipProvider
         {
             public Size _size;
-            private List<string> typeMatches;
+            private readonly List<string> typeMatches;
             public MatchTypeTipProvider(List<string> matchTypes)
             {
                 typeMatches = matchTypes;
@@ -2302,7 +2300,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Draw title
                     var parts = new List<String>();
-                    parts.Add("Fields containing matches:");
+                    parts.Add(Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_);
                     var sizeLastString = DrawTextParts(g, 0, 0, parts, rt);
                     var width = sizeLastString.Width;
                     var height = sizeLastString.Height;
@@ -2652,9 +2650,7 @@ namespace pwiz.Skyline.SettingsUI
             GetPeptideInfo(info, _matcher, out var _settings, out var transitionGroup, out var mods);
             if (info.Target != null)
             {
-                var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                    .GetPrecursorMass(info.Target);
-                return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
+                return calcMz(info, _settings, transitionGroup, mods);
             }
             else
             {
@@ -2667,6 +2663,15 @@ namespace pwiz.Skyline.SettingsUI
                 return -1;
             }
         }
+
+        private static double calcMz(ViewLibraryPepInfo info, SrmSettings _settings, TransitionGroupDocNode transitionGroup,
+            ExplicitMods mods)
+        {
+            var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                .GetPrecursorMass(info.Target);
+            return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
+        }
+
         public enum FilterType
         {
             startsWith, contains

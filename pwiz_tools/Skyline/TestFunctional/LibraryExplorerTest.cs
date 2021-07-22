@@ -26,7 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -109,9 +108,10 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             SetUpTestLibraries();
-            TestSearchFunctionality();
             if (asSmallMolecules)
             {
+                TestSearchFunctionality();
+                TestMatchTypeTip();
                 TestSmallMoleculeFunctionality(6, 2, null, 3); // .blib with wonky fragment annotations
                 TestSmallMoleculeFunctionality(5, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
                 TestSmallMoleculeFunctionality(4, 5); // .blib with fragment annotations
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-
+            OkayAllModificationsDlg();
             ComboBox libComboBox = null;
             ListBox pepList = null;
             ComboBox filterComboBox = null;
@@ -209,7 +209,19 @@ namespace pwiz.SkylineTestFunctional
             EnterFilterText(filterTextBox, pepList,"C", 6);
 
             // Verify that the entries are in alphabetical order of molecule name, despite being filtered by formula
-            var stringResults = pepList.Items.ToString();
+            var pepItems = pepList.Items;
+            ViewLibraryPepInfo selPeptide;
+            for (var i = 1; i < pepItems.Count; i++)
+            {
+                var x = (ViewLibraryPepInfo) pepItems[i - 1];
+                var y = (ViewLibraryPepInfo) pepItems[i];
+                Assert.IsTrue(StringComparer.OrdinalIgnoreCase.Compare(x.DisplayText, y.DisplayText) <= 0);
+            }
+            RunUI(() =>
+            {
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
+                Assert.AreEqual("Name", selPeptide.DisplayText);
+            });
             // Entering the formula for Midazolam should filter out all other spectra
             var midazolamFormula = "C18H13ClFN3";
             EnterFilterText(filterTextBox, pepList, midazolamFormula, 1);
@@ -222,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Entering 'SD' should filter out all entries as nothing starts with SD
             EnterFilterText(filterTextBox, pepList, "SD", 0);
-            //PauseTest();
+
             // Switching to the 'Contains' filter type should bring up LSD as the molecule name contains
             // the substring 'SD'
             RunUI(() =>
@@ -238,24 +250,54 @@ namespace pwiz.SkylineTestFunctional
 
             // Entering '32' should narrow the match types down to Precursor Mz and filter the list down to three entries
             EnterFilterText(filterTextBox, pepList, "32", 3);
-            PauseTest();
+
             // Entering the exact precursor Mz of Midazolam should narrow the list down to only Midazolam
             EnterFilterText(filterTextBox, pepList,"326.0855", 1);
 
             // An Mz value within our search tolerance should narrow it down to Midazolam
             EnterFilterText(filterTextBox, pepList, "326.1", 1);
-            //var matchTypes = getMatchTypes(new ViewLibraryPepInfoList(), filterTextBox.Text, ViewLibraryDlg.FilterType.contains);
-            //var expectedMatchTypes = new List<string> { ColumnCaptions.PrecursorMz };
-            // Assert.AreEqual(expectedMatchTypes, matchTypes);
 
             // Now test search behavior on a peptide list
+            var modDlg = ShowDialog<AddModificationsDlg>(() => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
+            OkayAllModificationsDlg();
+
+            // Precursor searching should work here as well
+            EnterFilterText(filterTextBox, pepList, "6", 6);
+
+            // 
+        }
+
+        private void TestMatchTypeTip()
+        {
+            // Check tip sizing with one match type
+            var matchTypes = new List<string> { "Formula" };
+            var tip = new ViewLibraryDlg.MatchTypeTipProvider(matchTypes);
+            var expectedSize = new Size();
+            Assert.AreEqual(expectedSize, tip._size);
+            // Check tip sizing with multiple match types
+            matchTypes = new List<string> {"Formula", "Precursor Mz"};
+            tip = new ViewLibraryDlg.MatchTypeTipProvider(matchTypes);
+            expectedSize = new Size();
+            Assert.AreEqual(expectedSize, tip._size);
+
+            // Load a small molecule library
+            ComboBox libComboBox = null;
+            TextBox filterTextBox = null;
             RunUI(() =>
             {
-                libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB);
-                OkayAllModificationsDlg(); // Click 'OK' on modifications window
+                // Find the combo box which controls the selected library
+                libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
+                // Select a library of small molecules to test small molecule search
+                libComboBox.SelectedIndex = libComboBox.FindStringExact(SHIMADZU_MLB);
+
+                // Find the filter text box
+                filterTextBox = (TextBox)_viewLibUI.Controls.Find("textPeptide", true)[0];
+
+
             });
-
-
+            // Check that tip appears when typing valid search term
+            
+            // Check that tip disappears when writing invalid search term
 
         }
 
