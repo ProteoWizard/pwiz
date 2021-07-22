@@ -797,6 +797,7 @@ namespace SkylineBatch
 
         public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
 
+
         #endregion
     }
 
