@@ -392,6 +392,7 @@ namespace pwiz.Skyline.Model
 
         public virtual double? IntensityThresholdPercent { get; set; }
         public virtual double? IntensityThresholdValue { get; set; }
+        public virtual double? IntensityThresholdMin { get; set; }
 
         public virtual bool RetentionStartAndEnd { get; set; }
 
@@ -785,6 +786,7 @@ namespace pwiz.Skyline.Model
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.IntensityThresholdPercent = IntensityThresholdPercent;
             exporter.IntensityThresholdValue = IntensityThresholdValue;
+            exporter.IntensityThresholdMin = IntensityThresholdMin;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -799,6 +801,7 @@ namespace pwiz.Skyline.Model
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.IntensityThresholdPercent = IntensityThresholdPercent;
             exporter.IntensityThresholdValue = IntensityThresholdValue;
+            exporter.IntensityThresholdMin = IntensityThresholdMin;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -1934,6 +1937,7 @@ namespace pwiz.Skyline.Model
 
         public double? IntensityThresholdPercent { get; set; }
         public double? IntensityThresholdValue { get; set; }
+        public double? IntensityThresholdMin { get; set; }
 
         protected override string InstrumentType => _instrumentType;
 
@@ -2093,6 +2097,8 @@ namespace pwiz.Skyline.Model
             {
                 maxHeight = IntensityThresholdValue.Value;
             }
+            if (IntensityThresholdMin.HasValue && maxHeight.GetValueOrDefault() < IntensityThresholdMin)
+                maxHeight = IntensityThresholdMin;
             writer.Write(FieldSeparator);
             writer.Write(maxHeight);
 

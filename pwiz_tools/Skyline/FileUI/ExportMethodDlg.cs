@@ -201,14 +201,17 @@ namespace pwiz.Skyline.FileUI
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
             cbSureQuant.Checked = Settings.Default.ExportSureQuant;
-            textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(LocalizationHelper.CurrentCulture);
+            textIntensityThreshold.Text = cbSureQuant.Checked
+                ? Settings.Default.IntensityThresholdPercent.ToString(LocalizationHelper.CurrentCulture)
+                : Settings.Default.IntensityThresholdValue.ToString(LocalizationHelper.CurrentCulture);
+            textIntensityThresholdMin.Text = Settings.Default.IntensityThresholdMin.ToString(LocalizationHelper.CurrentCulture);
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
             cbWriteCoV.Top = cbSlens.Bottom;
-            panelSureQuant.Top = labelMethods.Top;
+            panelSureQuant.Top = labelMaxTransitions.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
             foreach (var control in panelThermoColumns.Controls.Cast<Control>())
@@ -230,7 +233,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var controlObj in Controls)
             {
                 var control = controlObj as Control;
-                if ((control != null) && (control.Left > btnOk.Right))
+                if (control != null && control.Left > btnOk.Right)
                 {
                     control.Left = cbIgnoreProteins.Left; // Align with a known-good control
                 }
@@ -532,6 +535,12 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.IntensityThresholdValue = value; }
         }
 
+        public double? IntensityThresholdMin
+        {
+            get { return _exportProperties.IntensityThresholdMin; }
+            set { _exportProperties.IntensityThresholdMin = value; }
+        }
+
         public bool ExportEdcMass
         {
             get { return _exportProperties.ExportEdcMass; }
@@ -653,6 +662,10 @@ namespace pwiz.Skyline.FileUI
                     lblIntensityThresholdType.Show();
                     textIntensityThreshold.Width = textPrimaryCount.Width;
                     textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(CultureInfo.CurrentCulture);
+                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_);
+                    lblIntensityThresholdMin.Show();
+                    textIntensityThresholdMin.Show();
+                    textIntensityThresholdMin.Text = Settings.Default.IntensityThresholdMin.ToString(CultureInfo.CurrentCulture);
                 }
             }
             else
@@ -660,8 +673,11 @@ namespace pwiz.Skyline.FileUI
                 if (lblIntensityThresholdType.Visible)
                 {
                     lblIntensityThresholdType.Hide();
-                    textIntensityThreshold.Width = textDwellTime.Width;
+                    textIntensityThreshold.Width = textIntensityThresholdMin.Width;
                     textIntensityThreshold.Text = Settings.Default.IntensityThresholdValue.ToString(CultureInfo.CurrentCulture);
+                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_);
+                    lblIntensityThresholdMin.Hide();
+                    textIntensityThresholdMin.Hide();
                 }
             }
         }
@@ -1111,6 +1127,8 @@ namespace pwiz.Skyline.FileUI
                 else
                     Settings.Default.IntensityThresholdValue = IntensityThresholdValue.GetValueOrDefault();
             }
+            if (textIntensityThresholdMin.Visible)
+                Settings.Default.IntensityThresholdMin = IntensityThresholdMin.GetValueOrDefault();
             if (cbExportEdcMass.Visible)
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
@@ -1307,6 +1325,13 @@ namespace pwiz.Skyline.FileUI
                     _exportProperties.IntensityThresholdPercent = intensityThreshold;
                 else
                     _exportProperties.IntensityThresholdValue = intensityThreshold;
+            }
+            if (textIntensityThresholdMin.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textIntensityThresholdMin, 0, null, out var intensityThresholdMin))
+                    return false;
+
+                _exportProperties.IntensityThresholdMin = intensityThresholdMin;
             }
 
             if (textRunLength.Visible)

@@ -62,6 +62,7 @@
             this.cbWriteCoV = new System.Windows.Forms.CheckBox();
             this.textPrimaryCount = new System.Windows.Forms.TextBox();
             this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
+            this.textIntensityThresholdMin = new System.Windows.Forms.TextBox();
             this.textIntensityThreshold = new System.Windows.Forms.TextBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
@@ -83,6 +84,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.cbSureQuant = new System.Windows.Forms.CheckBox();
             this.panelSureQuant = new System.Windows.Forms.Panel();
+            this.lblIntensityThresholdMin = new System.Windows.Forms.Label();
             this.lblIntensityThresholdType = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
@@ -329,11 +331,16 @@
             this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
             this.helpTip.SetToolTip(this.textMs1RepetitionTime, resources.GetString("textMs1RepetitionTime.ToolTip"));
             // 
+            // textIntensityThresholdMin
+            // 
+            resources.ApplyResources(this.textIntensityThresholdMin, "textIntensityThresholdMin");
+            this.textIntensityThresholdMin.Name = "textIntensityThresholdMin";
+            this.helpTip.SetToolTip(this.textIntensityThresholdMin, resources.GetString("textIntensityThresholdMin.ToolTip"));
+            // 
             // textIntensityThreshold
             // 
             resources.ApplyResources(this.textIntensityThreshold, "textIntensityThreshold");
             this.textIntensityThreshold.Name = "textIntensityThreshold";
-            this.helpTip.SetToolTip(this.textIntensityThreshold, resources.GetString("textIntensityThreshold.ToolTip"));
             // 
             // comboOptimizing
             // 
@@ -452,12 +459,19 @@
             // 
             // panelSureQuant
             // 
+            this.panelSureQuant.Controls.Add(this.textIntensityThresholdMin);
+            this.panelSureQuant.Controls.Add(this.lblIntensityThresholdMin);
             this.panelSureQuant.Controls.Add(this.lblIntensityThresholdType);
             this.panelSureQuant.Controls.Add(this.textIntensityThreshold);
             this.panelSureQuant.Controls.Add(this.label7);
             this.panelSureQuant.Controls.Add(this.cbSureQuant);
             resources.ApplyResources(this.panelSureQuant, "panelSureQuant");
             this.panelSureQuant.Name = "panelSureQuant";
+            // 
+            // lblIntensityThresholdMin
+            // 
+            resources.ApplyResources(this.lblIntensityThresholdMin, "lblIntensityThresholdMin");
+            this.lblIntensityThresholdMin.Name = "lblIntensityThresholdMin";
             // 
             // lblIntensityThresholdType
             // 
@@ -598,5 +612,7 @@
         private System.Windows.Forms.Label lblIntensityThresholdType;
         private System.Windows.Forms.TextBox textIntensityThreshold;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textIntensityThresholdMin;
+        private System.Windows.Forms.Label lblIntensityThresholdMin;
     }
 }

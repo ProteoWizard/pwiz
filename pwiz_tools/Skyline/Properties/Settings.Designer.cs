@@ -3141,5 +3141,17 @@ namespace pwiz.Skyline.Properties {
                 this["SyncMZScale"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double IntensityThresholdMin {
+            get {
+                return ((double)(this["IntensityThresholdMin"]));
+            }
+            set {
+                this["IntensityThresholdMin"] = value;
+            }
+        }
     }
 }

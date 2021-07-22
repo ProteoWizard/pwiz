@@ -11496,4 +11496,10 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
+    <value>Percentage of peak max height to use as intensity threshold.</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_" xml:space="preserve">
+    <value>Absolute relative intensity threshold value.</value>
+  </data>
 </root>
