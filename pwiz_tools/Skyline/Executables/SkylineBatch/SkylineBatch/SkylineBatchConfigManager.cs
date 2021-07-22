@@ -1027,7 +1027,7 @@ namespace SkylineBatch
             lock (_lock)
             {
                 newState.ValidateState();
-                base.SetState(newState.baseState);
+                SetState(newState.baseState); // sets the base state in ConfigManager
                 _refinedTemplates = newState.templates;
                 _configRunners = newState.configRunners;
                 _uiControl?.UpdateUiConfigurations();
