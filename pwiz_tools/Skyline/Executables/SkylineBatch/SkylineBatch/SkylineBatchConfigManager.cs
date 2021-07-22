@@ -41,9 +41,9 @@ namespace SkylineBatch
         private ImmutableDictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private ImmutableDictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
-        private SkylineBatchConfigManagerState _checkedRunState;
-        private RunBatchOptions? _checkedRunOption;
-        private ServerFilesManager _runServerFiles;
+        private SkylineBatchConfigManagerState _checkedRunState; // a state of the SkylineBatchConfigManager that was verified to be able to start a run, null when no state verified
+        private RunBatchOptions? _checkedRunOption; // the run option that was verified to run _checkedRunState (selected by the user in the dropdown run options menu)
+        private ServerFilesManager _runServerFiles; // the verified set of server files that will be used when _checkedRunSTate is run
 
         // Shared variables with ConfigManager:
         //  Protected -
