@@ -676,7 +676,7 @@
     <value>5, 5, 5, 5</value>
   </data>
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>449, 329</value>
+    <value>450, 329</value>
   </data>
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -703,7 +703,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>A-ions</value>
@@ -712,7 +712,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>B-ions</value>
@@ -721,7 +721,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCIons.ToolTipText" xml:space="preserve">
     <value>C-ions</value>
@@ -730,7 +730,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnXIons.ToolTipText" xml:space="preserve">
     <value>X-ions</value>
@@ -739,7 +739,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnYIons.ToolTipText" xml:space="preserve">
     <value>Y-ions</value>
@@ -748,7 +748,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnZIons.ToolTipText" xml:space="preserve">
     <value>Z-ions</value>
@@ -757,19 +757,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
     <value>fragment ions</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 6</value>
+    <value>21, 6</value>
   </data>
   <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
     <value>Charge 1 ions</value>
@@ -778,19 +778,19 @@
     <value>Magenta</value>
   </data>
   <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
     <value>Charge 2 ions</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 6</value>
+    <value>21, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
     <value>Copy Metafile</value>
@@ -799,7 +799,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCopy.ToolTipText" xml:space="preserve">
     <value>Copy Bitmap</value>
@@ -808,7 +808,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnSave.ToolTipText" xml:space="preserve">
     <value>Save</value>
@@ -817,16 +817,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnPrint.ToolTipText" xml:space="preserve">
     <value>Print</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>449, 0</value>
+    <value>450, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 329</value>
+    <value>24, 329</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1294,7 +1294,7 @@
     <value>190, 6</value>
   </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 436</value>
+    <value>194, 458</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
