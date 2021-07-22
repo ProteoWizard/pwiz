@@ -150,10 +150,13 @@ namespace pwiz.Skyline.SettingsUI
             // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
             if (double.TryParse(filterText, out var result))
             {
-                // Calculate or retrieve the precursor m/z for each entry
+                // Calculate the mz of each entry to search if we can
                 foreach (var entry in _allEntries)
                 {
-                    entry.PrecursorMz = ViewLibraryDlg.getMz(entry, _matcher);
+                    if (entry.Target != null)
+                    {
+                        entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
+                    }
                 }
                 
                 // Find the entries that match the m/z lexicographically
@@ -170,7 +173,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Then find the first entry with a precursor m/z exceeding our match tolerance
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
-                    ViewLibraryDlg.getMz(entry, _matcher) - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                    entry.PrecursorMz - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results);
                 UpdateMatchTypes(results.Count, typeof(ViewLibraryPepInfo).GetProperty(@"PrecursorMz"));
             }

@@ -2372,9 +2372,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
-                    var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                        .GetPrecursorMass(_pepInfo.Target);
-                    _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
+                    _mz = CalcMz(_pepInfo, _settings, transitionGroup, mods);
                     _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
                 }
                 else
@@ -2645,33 +2643,18 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static double getMz(ViewLibraryPepInfo info, LibKeyModificationMatcher _matcher)
+        public static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
+            TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
-            GetPeptideInfo(info, _matcher, out var _settings, out var transitionGroup, out var mods);
-            if (info.Target != null)
-            {
-                return calcMz(info, _settings, transitionGroup, mods);
-            }
-            else
-            {
-                var precursorKey = info.Key.LibraryKey as PrecursorLibraryKey;
-                if (precursorKey != null)
-                {
-                    return precursorKey.Mz;
-                }
-
-                return -1;
-            }
-        }
-
-        private static double calcMz(ViewLibraryPepInfo info, SrmSettings _settings, TransitionGroupDocNode transitionGroup,
-            ExplicitMods mods)
-        {
-            var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+            var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
                 .GetPrecursorMass(info.Target);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
-
+        public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
+        {
+            GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
+            return CalcMz(info, _settings, transitionGroup, mods);
+        }
         public enum FilterType
         {
             startsWith, contains
