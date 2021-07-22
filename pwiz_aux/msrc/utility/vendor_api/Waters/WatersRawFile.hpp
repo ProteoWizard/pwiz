@@ -210,25 +210,15 @@ struct PWIZ_API_DECL RawData
     {
         // Per email from HansV at Water, function number doesn't matter under normal operation, so find one that works and stick with that
         FindSonarFunction();
-        // We don't know what the acceptable SONAR mz range is, so try/catch and return false if we wind up outside the range
-        try
+        // API doesn't seem to do actual bin range checking in m/z to bin conversion, so do it here
+        if ((precursorMz - tolerance) <= sonarMassUpperLimit_ && (precursorMz + tolerance) >= sonarMassLowerLimit_)
         {
-            float massLowerLimit, massUpperLimit;
-            Info.GetPrecursorMassRange(workingSonarFunctionIndex_, massLowerLimit, massUpperLimit);
-            // API doesn't seem to do actual bin range checking in m/z to bin conversion, so do it here
-            if ((precursorMz - tolerance) > massUpperLimit || (precursorMz + tolerance) < massLowerLimit)
+            if (Info.GetSonarRange(workingSonarFunctionIndex_, (float)precursorMz, (float)tolerance, driftBinStart, driftBinStop))
             {
-                driftBinStart = driftBinStop = -1;  // Out of range, presumably
-            }
-            else
-            {
-                Info.GetSonarRange(workingSonarFunctionIndex_, (float)precursorMz, (float)tolerance, driftBinStart, driftBinStop);
+                return;
             }
         }
-        catch (...)
-        {
-            driftBinStart = driftBinStop = -1;  // Out of range, presumably
-        }
+        driftBinStart = driftBinStop = -1;  // Out of range
     }
 
     // Return the nominal m/z for the bin, generally just for display purposes
@@ -421,8 +411,8 @@ struct PWIZ_API_DECL RawData
     mutable MassLynxRawProcessorWithProgress PeakPicker;
     mutable boost::shared_ptr<RawData> centroidRaw_;
     mutable int workingDriftTimeFunctionIndex_;
-    mutable int workingSonarFunctionIndex_;
-    mutable vector<double> sonarBinAverageMz;
+    mutable int workingSonarFunctionIndex_; // We're assuming that the Sonar calibration is the same across all functions
+    mutable float sonarMassLowerLimit_, sonarMassUpperLimit_;  // We're assuming that the Sonar calibration is the same across all functions
 
     string rawpath_, empty_;
     vector<int> functionIndexList;
@@ -448,7 +438,7 @@ struct PWIZ_API_DECL RawData
             return;
 
         string line;
-        while(getline(in, line))
+        while(getlinePortable(in, line))
         {
             size_t c_pos = line.find(": ");
             if (line.find("$$ ") != 0 || c_pos == string::npos)
@@ -471,6 +461,7 @@ struct PWIZ_API_DECL RawData
                 if (Info.TryGetPrecursorMass(function, 1, mass))
                 {
                     workingSonarFunctionIndex_ = function;
+                    Info.GetPrecursorMassRange(workingSonarFunctionIndex_, sonarMassLowerLimit_, sonarMassUpperLimit_);
                     break;
                 }
             }
