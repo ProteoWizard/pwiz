@@ -69,7 +69,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (property.Name == @"PrecursorMz")
                 {
-                    if (!_matchTypes.Contains(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass))
+                    if (!_matchTypes.Contains(ColumnCaptions.PrecursorMz))
                     {
                         _matchTypes.Add(ColumnCaptions.PrecursorMz);
                     }
@@ -100,7 +100,12 @@ namespace pwiz.Skyline.SettingsUI
         private List<int> PrefixSearchByProperty(PropertyInfo property, string filterText)
         {
             // Sort with respect to the given property
-            var orderedList = _allEntries.OrderBy(property.GetValue).ToList();
+            // Use ToString to sort correctly in case of double value
+            var orderedList = _allEntries.OrderBy(info => property.GetValue(info).ToString()).ToList();
+            foreach (var item in orderedList)
+            {
+                Console.WriteLine(property.GetValue(item).ToString());
+            }
             // Binary search for entries matching the filter text
             var matchRange = CollectionUtil.BinarySearch(orderedList,
                 info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
@@ -183,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI
             var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match
             // the target text, if they had something appended to them.
-            if (_allPeptides && !enumerable.Any())
+            if (!enumerable.Any())
             {
                 var range = CollectionUtil.BinarySearch(_allEntries,
                     info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,

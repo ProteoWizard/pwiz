@@ -2299,8 +2299,7 @@ namespace pwiz.Skyline.SettingsUI
                 using (var rt = new RenderTools())
                 {
                     // Draw title
-                    var parts = new List<String>();
-                    parts.Add(Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_);
+                    var parts = new List<string> {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
                     var sizeLastString = DrawTextParts(g, 0, 0, parts, rt);
                     var width = sizeLastString.Width;
                     var height = sizeLastString.Height;
