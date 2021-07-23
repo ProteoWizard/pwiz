@@ -542,6 +542,8 @@ namespace BiblioSpec
             return columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ||
                    columnExists(msfFile_, "TargetPsms", "qValue") ||
                    columnExists(msfFile_, "TargetPsms", "ExpectationValue");
+        } else if (!tableExists(msfFile_, "CustomDataFields")) {
+            return false;
         }
 
          statement = getStmt(
