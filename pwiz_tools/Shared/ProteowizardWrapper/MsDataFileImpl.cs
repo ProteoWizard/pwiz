@@ -926,7 +926,7 @@ namespace pwiz.ProteowizardWrapper
                         data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                         {
-                            data = TryGetIonMobilityData(s, CVID.MS_mean_drift_time_array, ref _cvidIonMobility);
+                            data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
                             if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
                             {
                                 _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
