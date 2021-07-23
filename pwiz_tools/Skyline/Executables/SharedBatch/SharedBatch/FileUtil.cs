@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Ionic.Zip;
 using Microsoft.Win32;
@@ -56,6 +57,19 @@ namespace SharedBatch
             return Path.GetDirectoryName(path);
         }
 
+        // Extension of Path.GetDirectoryName that handles null file paths and returns an empty string if the directory cannot be found
+        public static string GetDirectorySafe(string path)
+        {
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         public static bool DirectoryExists(string path)
         {
             var exists = false;
@@ -68,6 +82,12 @@ namespace SharedBatch
                 // pass incorrectly formatted paths
             }
             return exists;
+        }
+
+        public static bool PathHasDriveName(string path)
+        {
+            var driveRegex = new Regex(@"^[A-Z]|[a-z]:\\");
+            return driveRegex.IsMatch(path);
         }
 
         // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
@@ -92,6 +112,50 @@ namespace SharedBatch
                 return null;
             }
             return GetInitialDirectory(directoryName);
+        }
+
+        // Returns the directory of the path regardless of whether it exists.
+        // If the path is already a directory it returns the path, if it does not have a directory it returns an empty string
+        public static string GetPathDirectory(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            if (!Path.HasExtension(path)) return path;
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
+        public static void CreateDirectory(string path)
+        {
+            string directory = null;
+            try
+            {
+                directory = GetDirectory(path);
+            }
+            catch (Exception)
+            {
+                // pass
+            }
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+        }
+
+        public static string ForceReplaceRoot(string oldText, string newText, string originalString)
+        {
+            if (!originalString.StartsWith(oldText))
+                throw new ArgumentException(string.Format("The path to be replaced {0} did not start with the expected root {1}", originalString, oldText));
+            if (!Directory.Exists(newText))
+                throw new ArgumentException(string.Format("The folder {0} does not exist.", newText));
+
+            var newPath = newText + originalString.Substring(oldText.Length);
+            CreateDirectory(newPath);
+            return newPath;
         }
 
         public static List<string> GetFilesInFolder(string folder, string fileType)

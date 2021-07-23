@@ -73,6 +73,7 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
@@ -520,7 +521,7 @@ Config parseCommandLine(int argc, char** argv)
         while (is)
         {
             string filename;
-            getline(is, filename);
+            getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
         }
     }

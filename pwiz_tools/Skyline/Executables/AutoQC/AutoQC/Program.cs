@@ -19,19 +19,19 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
 using SharedBatch;
-using SharedBatch.Properties;
 using Resources = AutoQC.Properties.Resources;
 using Settings = AutoQC.Properties.Settings;
 
@@ -106,6 +106,7 @@ namespace AutoQC
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format("user.config path: {0}", configFile));
                     if (!InitSkylineSettings()) return;
+                    UpgradeSettingsIfRequired();
                 }
                 catch (Exception e)
                 {
@@ -160,8 +161,6 @@ namespace AutoQC
 
                 if (!doRestart)
                 {
-                    UpgradeSettingsIfRequired(configFile);
-
                     var openFile = GetFirstArg(args);
                     if (!string.IsNullOrEmpty(openFile))
                     {
@@ -199,50 +198,57 @@ namespace AutoQC
             }
         }
 
-        private static void UpgradeSettingsIfRequired(string configFile)
+        private static void UpgradeSettingsIfRequired()
         {
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade(); // This should copy all the settings from the previous version
                 Settings.Default.SettingsUpgradeRequired = false;
                 Settings.Default.Save();
+                Settings.Default.Reload();
             }
-            Settings.Default.Reload();
-
             GetCurrentAndLastInstalledVersions();
-
-            if (ConfigMigrationRequired())
-            {
-                if (SharedBatch.Properties.Settings.Default.ConfigList.Count > 0)
-                {
-                    // This should not happen
-                    ProgramLog.Error("Configuration migration is required but config list in SharedBatch properties is not empty. Skipping migration.");
-                    return;
-                }
-
-                ProgramLog.Info("Migrating configurations from previous version.");
-                
-                var list = ReadOldConfigList(configFile);
-                if (list.Count > 0)
-                {
-                    ProgramLog.Info($"Found {list.Count} configurations to migrate.");
-                    SharedBatch.Properties.Settings.Default.ConfigList = list;
-                    SharedBatch.Properties.Settings.Default.Save();
-                    ProgramLog.Info($"Migrated {list.Count} configurations.");
-                }
-                else
-                {
-                    ProgramLog.Info("No configurations found to migrate.");
-                }
-            }
+            Settings.Default.UpdateIfNecessary(_version.ToString(), ConfigMigrationRequired());
         }
 
         private static void GetCurrentAndLastInstalledVersions()
         {
-            // CurrentDeployment is null if it isn't network deployed.
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion
-                : null;
+            if (ApplicationDeployment.IsNetworkDeployed) // clickOnce installation
+            {
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion;
+            }
+            else // developer build
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion != null ? new Version(productVersion) : null;
+                }
+                catch (Exception)
+                {
+                    _version = null;
+                }
+            }
 
             _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
 
@@ -252,13 +258,12 @@ namespace AutoQC
                     ? $"This is a first install and run of version: {_version}."
                     : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
 
-                Settings.Default.InstalledVersion = _version.ToString();
-                Settings.Default.Save();
                 return;
             }
 
             var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
             ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
+            
         }
 
         private static bool ConfigMigrationRequired()
@@ -267,6 +272,7 @@ namespace AutoQC
             {
                 if (string.IsNullOrEmpty(_lastInstalledVersion))
                 {
+                    ProgramLog.Info("Last installed version not found. Config migration is required.");
                     return true;
                 }
 
@@ -276,6 +282,7 @@ namespace AutoQC
                     // ProgramLog.Info($"Previous Version: {lastVersion.Major}-{lastVersion.MajorRevision}-{lastVersion.Minor}-{lastVersion.MinorRevision}");
                     if (lastVersion.Major == 1 && lastVersion.Minor == 1 && lastVersion.MinorRevision <= 20237)
                     {
+                        ProgramLog.Info($"Last installed version was {_lastInstalledVersion}. Config migration is required.");
                         return true;
                     }
                 }
@@ -286,113 +293,8 @@ namespace AutoQC
                 }
             }
 
-            ProgramLog.Info("Configuration migration not required.");
+            ProgramLog.Info("Configuration migration is not required.");
             return false;
-        }
-
-        private static ConfigList ReadOldConfigList(string configFile)
-        {
-            string skylineType = null;
-            string skylineInstallDir = string.Empty;
-            ConfigList configList = null;
-            try
-            {
-                using (var stream = new FileStream(configFile, FileMode.Open))
-                {
-                    using (var reader = XmlReader.Create(stream))
-                    {
-                        var inAutoQcProps = false;
-                        while (reader.Read())
-                        {
-                            if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals("AutoQC.Properties.Settings"))
-                            {
-                                inAutoQcProps = true;
-                                continue;
-                            }
-
-                            if (reader.NodeType == XmlNodeType.EndElement && reader.Name.Equals("AutoQC.Properties.Settings"))
-                            {
-                                break;
-                            }
-
-                            if (!inAutoQcProps)
-                            {
-                                continue;
-                            }
-
-                            if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals("setting"))
-                            {
-                                var propName = reader.GetAttribute("name");
-                                if ("SkylineInstallDir".Equals(propName))
-                                {
-                                    skylineInstallDir = ReadValue(reader);
-                                }
-                                else if ("SkylineType".Equals(propName))
-                                {
-                                    skylineType = ReadValue(reader);
-                                }
-                            }
-                            else if (reader.Name.Equals("ConfigList"))
-                            {
-                                configList = new ConfigList();
-                                ConfigList.Importer = AutoQcConfig.ReadXml;
-                                configList.ReadXml(reader);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                // possible xml format error
-                ProgramLog.Error(string.Format(Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__, configFile) + Environment.NewLine +
-                             e.Message);
-                return new ConfigList();
-            }
-
-            var updatedConfigs = new ConfigList();
-
-            if (configList != null && configList.Count > 0)
-            {
-                SkylineType type;
-                if (!string.IsNullOrEmpty(skylineInstallDir))
-                {
-                    type = SkylineType.Custom;
-                }
-                else
-                {
-                    type = "Skyline-daily".Equals(skylineType) ? SkylineType.SkylineDaily : SkylineType.Skyline;
-                }
-
-                foreach (var iconfig in configList.ToList())
-                {
-                    var config = (AutoQcConfig)iconfig;
-
-                    var skySettings = new SkylineSettings(type, skylineInstallDir);
-
-                    AutoQcConfig updatedConfig = new AutoQcConfig(config.Name, false,
-                        config.Created, config.Modified,
-                        config.MainSettings, config.PanoramaSettings, skySettings);
-                    updatedConfigs.Add(updatedConfig);
-                }
-            }
-
-            return updatedConfigs;
-        }
-
-        private static string ReadValue(XmlReader reader)
-        {
-            if (reader.ReadToDescendant("value"))
-            {
-                if (reader.IsEmptyElement)
-                {
-                    return string.Empty;
-                }
-                reader.Read();
-                return reader.Value;
-            }
-
-            return string.Empty;
         }
 
         private static bool InitSkylineSettings()

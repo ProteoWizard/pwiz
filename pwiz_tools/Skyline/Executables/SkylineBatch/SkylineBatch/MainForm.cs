@@ -157,6 +157,8 @@ namespace SkylineBatch
 
         public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
         {
+            if (listViewConfigs.Items.Count < 2)
+                return null;
             try
             {
                 skylineSettings.Validate();
@@ -532,7 +534,7 @@ namespace SkylineBatch
             var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, shareForm.IndiciesToSave);
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
         }
         
         #endregion

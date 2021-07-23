@@ -43,6 +43,11 @@
             this.btnRemoveServer = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.labelFileInfo = new System.Windows.Forms.Label();
+            this.btnUpdate = new System.Windows.Forms.Button();
+            this.listBoxFileNames = new System.Windows.Forms.ListBox();
+            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -69,16 +74,19 @@
             // 
             resources.ApplyResources(this.textUrl, "textUrl");
             this.textUrl.Name = "textUrl";
+            this.textUrl.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // textPassword
             // 
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
+            this.textPassword.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // textUserName
             // 
             resources.ApplyResources(this.textUserName, "textUserName");
             this.textUserName.Name = "textUserName";
+            this.textUserName.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // btnCancel
             // 
@@ -113,6 +121,7 @@
             // 
             resources.ApplyResources(this.textNamingPattern, "textNamingPattern");
             this.textNamingPattern.Name = "textNamingPattern";
+            this.textNamingPattern.TextChanged += new System.EventHandler(this.textNamingPattern_TextChanged);
             // 
             // btnRemoveServer
             // 
@@ -131,12 +140,50 @@
             this.linkLabelRegex.UseCompatibleTextRendering = true;
             this.linkLabelRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegex_LinkClicked);
             // 
+            // linkLabel1
+            // 
+            resources.ApplyResources(this.linkLabel1, "linkLabel1");
+            this.linkLabel1.Name = "linkLabel1";
+            this.toolTip1.SetToolTip(this.linkLabel1, resources.GetString("linkLabel1.ToolTip"));
+            this.linkLabel1.UseCompatibleTextRendering = true;
+            // 
+            // labelFileInfo
+            // 
+            resources.ApplyResources(this.labelFileInfo, "labelFileInfo");
+            this.labelFileInfo.Name = "labelFileInfo";
+            this.toolTip1.SetToolTip(this.labelFileInfo, resources.GetString("labelFileInfo.ToolTip"));
+            // 
+            // btnUpdate
+            // 
+            resources.ApplyResources(this.btnUpdate, "btnUpdate");
+            this.btnUpdate.Name = "btnUpdate";
+            this.btnUpdate.UseVisualStyleBackColor = true;
+            this.btnUpdate.Click += new System.EventHandler(this.btnUpdate_Click);
+            // 
+            // listBoxFileNames
+            // 
+            resources.ApplyResources(this.listBoxFileNames, "listBoxFileNames");
+            this.listBoxFileNames.BackColor = System.Drawing.Color.White;
+            this.listBoxFileNames.Name = "listBoxFileNames";
+            // 
+            // checkBoxNoEncryption
+            // 
+            resources.ApplyResources(this.checkBoxNoEncryption, "checkBoxNoEncryption");
+            this.checkBoxNoEncryption.Name = "checkBoxNoEncryption";
+            this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
+            this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
+            // 
             // AddServerForm
             // 
             this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelFileInfo);
+            this.Controls.Add(this.checkBoxNoEncryption);
+            this.Controls.Add(this.listBoxFileNames);
+            this.Controls.Add(this.btnUpdate);
+            this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.btnRemoveServer);
             this.Controls.Add(this.textNamingPattern);
             this.Controls.Add(this.splitContainer1);
@@ -176,5 +223,10 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnRemoveServer;
         private System.Windows.Forms.LinkLabel linkLabelRegex;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.Button btnUpdate;
+        private System.Windows.Forms.ListBox listBoxFileNames;
+        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
+        private System.Windows.Forms.Label labelFileInfo;
     }
 }

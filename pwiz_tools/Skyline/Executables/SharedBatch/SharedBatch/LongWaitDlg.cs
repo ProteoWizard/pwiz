@@ -11,6 +11,8 @@ namespace SharedBatch
 
         private int _maxPercent;
         private Timer _timer;
+        private bool _loaded;
+        private int _percent;
 
         public LongWaitDlg(Form parent, string programName, string labelText)
         {
@@ -23,10 +25,19 @@ namespace SharedBatch
             Location = new Point(parent.Location.X + parent.Size.Width / 2 - Width / 2,
                 parent.Location.Y + parent.Size.Height / 2 - Height / 2);
 
-            Shown += ((sender, args) => { Text = programName; });
+            _timer = new Timer { Interval = 10 };
+            _timer.Tick += UpdateProgress;
+            _timer.Start();
+
+            Shown += ((sender, args) =>
+            {
+                Text = programName;
+                progressBar.Value = _percent;
+                _loaded = true;
+            });
         }
 
-        public Form ParentForm { get; private set; }
+        public new Form ParentForm { get; private set; }
 
         // for testing only
         public LongWaitDlg()
@@ -39,36 +50,20 @@ namespace SharedBatch
         public bool Completed { get; private set; }
 
         public readonly CancellationTokenSource CancelToken;
-
-        private void LongWaitDlg_Shown(object sender, EventArgs e)
-        {
-            _maxPercent = -1;
-            _timer = new Timer { Interval = 10 };
-            _timer.Tick += UpdateProgress;
-            _timer.Start();
-
-        }
-
+        
         private void UpdateProgress(object sender, EventArgs e)
         {
+            if (!_loaded) return;
             if (progressBar.Value < Math.Min(_maxPercent, 99)) progressBar.Value++;
+            if (progressBar.Value < _percent) progressBar.Value = _percent;
         }
 
         public void UpdateProgress(int percentComplete, int maxPercent)
         {
-            if (Cancelled) return;
-            try
-            {
-                Invoke(new Action(() =>
-                {
-                    progressBar.Value = percentComplete;
-                    _maxPercent = Math.Min(maxPercent, 100);
-                }));
-            }
-            catch (InvalidOperationException)
-            {
-                if (!Cancelled) throw;
-            }
+            if (Cancelled)
+                return;
+            _maxPercent = Math.Min(maxPercent, 100);
+            _percent = percentComplete;
         }
 
         private void LongWaitDlg_FormClosing(object sender, FormClosingEventArgs e)

@@ -6,19 +6,19 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class AddPanoramaTemplate : Form
+    public partial class PanoramaFileForm : Form
     {
         //private FilePathControl _folderControl;
         private string _folderPath;
         private CancellationTokenSource _cancelSource;
 
-        public AddPanoramaTemplate(Server editingServer, string path)
+        public PanoramaFileForm(Server editingServer, string path, string title)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
             path = path ?? string.Empty;
-            _folderPath = FileUtil.GetInitialDirectory(path);
+            _folderPath = FileUtil.GetPathDirectory(path);
 
 
             if (editingServer != null)
@@ -26,7 +26,11 @@ namespace SkylineBatch
                 textUrl.Text = editingServer.URI.AbsoluteUri;
                 textUserName.Text = editingServer.Username;
                 textPassword.Text = editingServer.Password;
+                checkBoxNoEncryption.Enabled = !string.IsNullOrEmpty(editingServer.Password);
+                checkBoxNoEncryption.Checked = !editingServer.Encrypt;
             }
+
+            Shown += (sender, args) => Text = title;
 
         }
 
@@ -71,7 +75,6 @@ namespace SkylineBatch
 
             PanoramaServer = panoramaFile;
             DialogResult = DialogResult.OK;
-            RunUi(Close);
         }
 
         private void CancelValidate()
@@ -93,7 +96,7 @@ namespace SkylineBatch
                 textUserName.Text == string.Empty &&
                 textPassword.Text == string.Empty)
                 return null;
-            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text), _folderPath, cancelToken);
+            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked), _folderPath, cancelToken);
         }
 
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
@@ -114,6 +117,18 @@ namespace SkylineBatch
             catch (InvalidOperationException)
             {
             }
+        }
+
+        private void textPassword_TextChanged(object sender, EventArgs e)
+        {
+            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
+            if (textPassword.Text.Length == 0)
+                checkBoxNoEncryption.Checked = false;
+        }
+
+        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
+        {
+            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
         }
     }
 }

@@ -617,23 +617,19 @@ namespace DiaUmpire {
         for (size_t index = startIndex; index <= endIndex; ++index)
         {
             auto s = sl_.spectrum(index, true);
-
-            boost::asio::post(nestedPool_, [&, index, s]
+            int msLevel = msLevelAndScanTimeByIndex_[s->index].first;
+            if (MS1Included && msLevel == 1 ||
+                MS2Included && msLevel == 2)
             {
-                int msLevel = msLevelAndScanTimeByIndex_[s->index].first;
-                if (MS1Included && msLevel == 1 ||
-                    MS2Included && msLevel == 2)
+                ScanData* scan = &result->AddScan(s);
+                boost::asio::post(nestedPool_, [&, scan]
                 {
-                    ScanData* scan;
-                    {
-                        boost::lock_guard<boost::mutex> g(m);
-                        scan = &result->AddScan(s);
-                    }
                     scan->Preprocessing(config_.instrumentParameters);
-                }
-
+                    ++scansRead;
+                });
+            }
+            else
                 ++scansRead;
-            });
         }
 
         while (scansRead < totalScans)
@@ -820,7 +816,7 @@ namespace DiaUmpire {
 
             //Create a thread unit for doing isotope clustering given a peak curve as the monoisotope peak
             clusterJobs.emplace_back(peakCurves, targetCurveIndex, peakCurveSearchTree, config_.instrumentParameters, isotopePatternMap_, chiSquaredGof, msd_,
-                                     StartCharge, EndCharge, MaxNoPeakCluster, MinNoPeakCluster);
+                                     StartCharge, EndCharge, MaxNoPeakCluster, MinNoPeakCluster, m);
 
         }
 
@@ -1573,14 +1569,14 @@ namespace DiaUmpire {
         string line;
         vector<string> tokens;
 
-        while (/*pwiz::util::*/getline(reader, line))
+        while (getlinePortable(reader, line))
         {
             if (line.empty() || line[0] == '#')
                 continue;
 
             if (line == ("==window setting begin"))
             {
-                while (/*pwiz::util::*/getline(reader, line) && line != "==window setting end")
+                while (getlinePortable(reader, line) && line != "==window setting end")
                 {
                     if (line.empty())
                         continue;
@@ -1801,6 +1797,15 @@ namespace DiaUmpire {
             else if (type == "MultithreadOverWindows")
             {
                 multithreadOverWindows = lexical_cast<bool>(value);
+            }
+            else if (type == "SpillFileFormat")
+            {
+                if (value == "mzml")
+                    spillFileFormat = MSDataFile::Format_mzML;
+                else if (value == "mz5")
+                    spillFileFormat = MSDataFile::Format_MZ5;
+                else
+                    throw runtime_error("only mzML and mz5 are supported spill file formats");
             }
         }
 

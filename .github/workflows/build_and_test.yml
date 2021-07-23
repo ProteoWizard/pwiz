@@ -9,21 +9,28 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/BiblioSpec/*'
-    - 'pwiz_tools/MSConvertGUI/*'
-    - 'pwiz_tools/SeeMS/*'
-    - 'pwiz_tools/Shared/*'
-    - 'pwiz_tools/Skyline/*'
-    - 'pwiz_tools/Topograph/*'
+    - 'pwiz_tools/BiblioSpec/**'
+    - 'pwiz_tools/MSConvertGUI/**'
+    - 'pwiz_tools/SeeMS/**'
+    - 'pwiz_tools/Shared/**'
+    - 'pwiz_tools/Skyline/**'
+    - 'pwiz_tools/Topograph/**'
+    - 'scripts/Topograph/**'
+    - 'doc/**'
+    - 'clean.*'
+    - '.github/workflows/cherrypick-to-release.yml'
   pull_request:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/BiblioSpec/*'
-    - 'pwiz_tools/MSConvertGUI/*'
-    - 'pwiz_tools/SeeMS/*'
-    - 'pwiz_tools/Shared/*'
-    - 'pwiz_tools/Skyline/*'
-    - 'pwiz_tools/Topograph/*'
+    - 'pwiz_tools/BiblioSpec/**'
+    - 'pwiz_tools/MSConvertGUI/**'
+    - 'pwiz_tools/SeeMS/**'
+    - 'pwiz_tools/Shared/**'
+    - 'pwiz_tools/Skyline/**'
+    - 'pwiz_tools/Topograph/**'
+    - 'doc/**'
+    - 'clean.*'
+    - '.github/workflows/cherrypick-to-release.yml'
  
 # There is a single job here called "build" (The word "build" is NOT a keyword, you can use anything there)
 jobs:
