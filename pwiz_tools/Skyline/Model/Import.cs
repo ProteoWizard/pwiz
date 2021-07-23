@@ -879,7 +879,7 @@ namespace pwiz.Skyline.Model
             private Dictionary<string, PeptideDocNode> NodeDictionary { get; set; } 
             public ColumnIndices Indices { get; private set; }
             protected int ProteinColumn { get { return Indices.ProteinColumn; } }
-            protected int PeptideColumn { get { return Indices.MoleculeNameColumn; } }
+            protected int PeptideColumn { get { return Indices.PeptideColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
             protected int FragmentNameColumn { get { return Indices.FragmentNameColumn; } }
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
@@ -1877,7 +1877,7 @@ namespace pwiz.Skyline.Model
 
             private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices)
             {
-                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvField(separator, indices.MoleculeNameColumn)));
+                return lines.Select(line => RemoveModifiedSequenceNotes(line.ParseDsvField(separator, indices.PeptideColumn)));
             }
         }
 
@@ -2030,7 +2030,7 @@ namespace pwiz.Skyline.Model
 
             private static IEnumerable<string> GetSequencesFromLines(IEnumerable<string> lines, char separator, ColumnIndices indices, Regex exPeptideRegex)
             {
-                return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.MoleculeNameColumn])));
+                return lines.Select(line => GetModifiedSequence(exPeptideRegex.Match(line.ParseDsvFields(separator)[indices.PeptideColumn])));
             }
         }
 
@@ -2160,7 +2160,7 @@ namespace pwiz.Skyline.Model
             int precursorChargeColumn)
         {
             ProteinColumn = proteinColumn;
-            MoleculeNameColumn = moleculeNameColumn;
+            PeptideColumn = moleculeNameColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
@@ -2171,7 +2171,7 @@ namespace pwiz.Skyline.Model
         public string[] Headers { get; private set; }
 
         public int ProteinColumn { get; set; }
-        public int MoleculeNameColumn { get; set; }
+        public int PeptideColumn { get; set; }
         public int PrecursorColumn { get; set; }
         public int PrecursorChargeColumn { get; set; }
         public int ProductColumn { get; set; }
@@ -2259,10 +2259,12 @@ namespace pwiz.Skyline.Model
 
         public int MolecularFormulaColumn { get; set; }
 
+        public int MoleculeNameColumn { get; set; }
+
         public ColumnIndices()
         {
             ProteinColumn = -1;
-            MoleculeNameColumn = -1;
+            PeptideColumn = -1;
             PrecursorColumn = -1;
             PrecursorChargeColumn = -1;
             ProductColumn = -1;
@@ -2298,6 +2300,7 @@ namespace pwiz.Skyline.Model
             KEGGColumn = -1;
             MoleculeListNameColumn = -1;
             MolecularFormulaColumn = -1;
+            MoleculeNameColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2343,7 +2346,7 @@ namespace pwiz.Skyline.Model
             ExplicitCompensationVoltageColumn = headers.IndexOf(col => ExplicitCompensationVoltageNames.Contains(FormatHeader(col)));
             MoleculeListNameColumn = headers.IndexOf(col => MoleculeListNameNames.Contains(FormatHeader(col)));
             ProteinDescriptionColumn = headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col)));
-            MoleculeNameColumn = headers.IndexOf(col => MoleculeNameNames.Contains(FormatHeader(col)));
+            PeptideColumn = headers.IndexOf(col => PeptideNames.Contains(FormatHeader(col)));
             MolecularFormulaColumn = headers.IndexOf(col => MolecularFormulaNames.Contains(FormatHeader(col)));
             PrecursorAdductColumn = headers.IndexOf(col => PrecursorAdductNames.Contains(FormatHeader(col)));
             ProductColumn = headers.IndexOf(col => ProductNames.Contains(FormatHeader(col)));
@@ -2365,8 +2368,8 @@ namespace pwiz.Skyline.Model
                 LabelTypeColumn = -1;
             if (LibraryColumn == index)
                 LibraryColumn = -1;
-            if (MoleculeNameColumn == index)
-                MoleculeNameColumn = -1;
+            if (PeptideColumn == index)
+                PeptideColumn = -1;
             if (PrecursorColumn == index)
                 PrecursorColumn = -1;
             if (ProductColumn == index)
@@ -2429,6 +2432,8 @@ namespace pwiz.Skyline.Model
                 MoleculeListNameColumn = -1;
             if (MolecularFormulaColumn == index)
                 MolecularFormulaColumn = -1;
+            if (MoleculeNameColumn == index)
+                MoleculeNameColumn = 1;
         }
 
         /// <summary>
@@ -2438,11 +2443,11 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public void PrioritizePeptideColumn()
         {
-            if (MoleculeNameColumn != -1)
+            if (PeptideColumn != -1)
             {
-                var save = MoleculeNameColumn;
-                ResetDuplicateColumns(MoleculeNameColumn);
-                MoleculeNameColumn = save;
+                var save = PeptideColumn;
+                ResetDuplicateColumns(PeptideColumn);
+                PeptideColumn = save;
             }
         }
 
@@ -2470,7 +2475,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
         public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
         public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
-        public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname", @"peptidemodifiedsequence", @"peptide" }; } }
+        public static IEnumerable<string> PeptideNames { get { return new[] { @"precursorname", @"peptidemodifiedsequence", @"peptide" }; } }
         public static IEnumerable<string> MolecularFormulaNames { get { return new[] { @"molecularformula", @"precursorformula" }; } }
         public static IEnumerable<string> PrecursorAdductNames { get { return new[] { @"precursoradduct" }; } }
         public static IEnumerable<string> ProductNames { get { return new[] { @"productmz", @"productm/z" }; } }
