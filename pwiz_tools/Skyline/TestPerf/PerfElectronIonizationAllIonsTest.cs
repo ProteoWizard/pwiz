@@ -20,9 +20,11 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -50,8 +52,25 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             OpenDocument(skyfile);
             
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));
-            RunUI(SkylineWindow.Paste); // Paste into targets window
-            
+
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+            // Correct the header assignments
+            RunUI(() => {
+                colDlg.radioMolecule.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+            });
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             // Enable fragments only
             RunUI(() => SkylineWindow.ModifyDocument("fragments only", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                 f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom })))));
