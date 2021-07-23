@@ -298,7 +298,7 @@
     <value>dataGrid</value>
   </data>
   <data name="&gt;&gt;dataGrid.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.190, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.204, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGrid.Parent" xml:space="preserve">
     <value>$this</value>
@@ -368,6 +368,9 @@
   </data>
   <data name="&gt;&gt;radioPeptide.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="radioMolecule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="radioMolecule.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -843,12 +846,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.190, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.204, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportTransitionListColumnSelectDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=21.1.1.190, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=21.1.1.204, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
