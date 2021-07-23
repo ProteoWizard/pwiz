@@ -789,7 +789,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
                 SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
                 SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity);
-                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
                 SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
                 // Ignore Small Molecule only columns
@@ -806,6 +806,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.InChiColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.SMILESColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.KEGGColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
             }
             else
             {
@@ -817,6 +818,7 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
                 SetComboBoxText(columns.ProductAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
                 SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
                 SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
                 SetComboBoxText(columns.CASColumn, @"CAS");
                 SetComboBoxText(columns.HMDBColumn, @"HMDB");
@@ -896,7 +898,7 @@ namespace pwiz.Skyline.FileUI
             var insertionParams = new DocumentChecked();
             List<TransitionImportErrorInfo> testErrorList = null;
             var errorCheckCanceled = true;
-
+            insertionParams.ColumnHeaderList = CurrentColumnPositions();
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ })
             {
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
@@ -907,7 +909,7 @@ namespace pwiz.Skyline.FileUI
                     if (radioPeptide.Checked)
                     {
                         CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name));
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
                         CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
                             Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
                         CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
@@ -919,7 +921,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups);
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
