@@ -835,4 +835,10 @@
   <data name="SkylineTemplate_ValidateTemplateFile_Please_provide_a_valid_folder_to_download_the_template_file_into_" xml:space="preserve">
     <value>Please provide a valid folder to download the template file into.</value>
   </data>
+  <data name="AddServerForm_CheckServer_Connecting_to_server___" xml:space="preserve">
+    <value>Connecting to server...</value>
+  </data>
+  <data name="AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_" xml:space="preserve">
+    <value>The server cannot be empty. Please enter the server information.</value>
+  </data>
 </root>
