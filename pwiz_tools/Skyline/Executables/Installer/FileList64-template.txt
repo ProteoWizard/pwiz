@@ -152,6 +152,10 @@ Method\Agilent\MethodCreator.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe
+Method\Shimadzu\BuildShimadzuMethod.exe
+Method\Shimadzu\MethodConverter.dll
+Method\Shimadzu\MethodWriter.dll
+Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll
 Method\Thermo\BuildLTQMethod.exe
 Method\Thermo\BuildThermoMethod.exe
 Method\Thermo\BuildTSQEZMethod.exe
