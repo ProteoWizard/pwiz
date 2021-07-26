@@ -1871,7 +1871,11 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
+        /// <summary>
+        /// Process and then add the mass list to the document
+        /// </summary>
+        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
@@ -1892,8 +1896,9 @@ namespace pwiz.Skyline
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
-                    if (importer != null && !longWaitBroker.IsCanceled && importer.IsSmallMoleculeInput)
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, inputType);
+
+                    if (importer != null && !longWaitBroker.IsCanceled && importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
                     {
                         docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
                             insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
@@ -1906,7 +1911,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (importer.IsSmallMoleculeInput)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
                 if (errorList.Any())
                 {
@@ -1920,6 +1925,7 @@ namespace pwiz.Skyline
             }
             else
             {
+                // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
