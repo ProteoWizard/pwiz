@@ -87,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<LibrarySpec> _driverLibraries;
 
-        private ViewLibraryPepInfoList _peptides;
+        public ViewLibraryPepInfoList _peptides;
         private IList<int> _currentRange;
 
         private LibKeyModificationMatcher _matcher;

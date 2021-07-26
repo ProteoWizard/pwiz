@@ -36,6 +36,13 @@ namespace pwiz.Skyline.SettingsUI
         private readonly LibKeyModificationMatcher _matcher;
         private readonly bool _allPeptides;
 
+        // String names for properties
+        private const string PRECURSOR_MZ = @"PrecursorMz";
+        private const string UNMODIFIED_TARGET_TEXT = @"UnmodifiedTargetText";
+        private const string INCHI_KEY = @"InchiKey";
+        private const string OTHER_KEYS = @"OtherKeys";
+        private const string FORMULA = @"Formula";
+
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
@@ -55,15 +62,15 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Find the type of an accession number (HMDB, SMILES, etc.) from the format of a string
+        /// Find the type of a molecule ID (HMDB, SMILES, etc.) from the format of a string
         /// </summary>
         [CanBeNull]
-        private string FindAccessionNumberType(string str)
+        private static string FindMoleculeIDType(string id)
         {
-            if (SmallMoleculeTransitionListReader.IsValidCAS(str))
+            if (SmallMoleculeTransitionListReader.IsValidCAS(id))
             {
                 return ColumnCaptions.CAS;
-            } else if (SmallMoleculeTransitionListReader.IsValidHMDB(str))
+            } else if (SmallMoleculeTransitionListReader.IsValidHMDB(id))
             {
                 return ColumnCaptions.HMDB;
             }
@@ -83,21 +90,21 @@ namespace pwiz.Skyline.SettingsUI
             // already include this match type, then add it to the list
             if (numMatches > 0)
             {
-                if (propertyName == @"UnmodifiedTargetText")
+                if (propertyName == UNMODIFIED_TARGET_TEXT)
                 {
                     // The target text can be a molecule name or a peptide sequence
                     // so only display peptide if every entry on the list is a peptide
                     _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
                 }
-                else if (propertyName == @"PrecursorMz")
+                else if (propertyName == PRECURSOR_MZ)
                 {
                     if (!_matchTypes.Contains(ColumnCaptions.PrecursorMz))
                     {
                         _matchTypes.Add(ColumnCaptions.PrecursorMz);
                     }
-                } else if (propertyName == @"OtherKeys" && matchIndices != null)
+                } else if (propertyName == OTHER_KEYS && matchIndices != null)
                 {
-                    foreach (var type in matchIndices.Select(index => FindAccessionNumberType(_allEntries[index].OtherKeys)))
+                    foreach (var type in matchIndices.Select(index => FindMoleculeIDType(_allEntries[index].OtherKeys)))
                     {
                         if (type != null)
                         {
@@ -142,7 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             // Use ToString to sort correctly in case of double value
             var orderedList = _allEntries.OrderBy(info => property.GetValue(info).ToString()).ToList();
 
-            // Binary search for entries matching the filter text
+            // Binary search for entries starting with the filter text
             var matchRange = CollectionUtil.BinarySearch(orderedList,
                 info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
                     StringComparison.OrdinalIgnoreCase));
@@ -153,7 +160,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Find the indices of entries matching the filter text
+        /// Find the indices of entries matching the filter text according to the filter type
         /// </summary>
         /// <param name="filterText"> Search term </param>
         /// <param name="filterType"> "Starts with" or "Contains"</param>
@@ -173,8 +180,8 @@ namespace pwiz.Skyline.SettingsUI
 
             // If there are small molecules in the library then search by multiple fields instead of just molecule name
             var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string>{ @"UnmodifiedTargetText", @"Formula", @"InchiKey", @"OtherKeys" } // Order of properties does not matter as results are sorted by molecule or peptide name
-                : new List<string> {@"UnmodifiedTargetText"};
+                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, OTHER_KEYS } // Order of properties does not matter as results are sorted by molecule or peptide name
+                : new List<string> {UNMODIFIED_TARGET_TEXT};
             var filteredIndices = Enumerable.Empty<int>(); // The indices of entries in the peptide list that match our filter text
             var rangeList = Enumerable.Empty<int>();
             if (filterType == ViewLibraryDlg.FilterType.contains)
@@ -203,11 +210,10 @@ namespace pwiz.Skyline.SettingsUI
                 
                 // Find the entries that match the m/z lexicographically
                 filteredIndices =
-                    filteredIndices.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(@"PrecursorMz"),
+                    filteredIndices.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(PRECURSOR_MZ),
                         filterText)).ToList();
                 
-                // Set a tolerance for the numeric proximity to the filter text
-                const double MZ_FILTER_TOLERANCE = 0.1;
+                const double mzFilterTolerance = 0.1; // Tolerance for the numeric proximity to the filter text
 
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z
@@ -215,14 +221,15 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Then find the first entry with a precursor m/z exceeding our match tolerance
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
-                    entry.PrecursorMz - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                    entry.PrecursorMz - result) > mzFilterTolerance)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results);
-                UpdateMatchTypes(results.Count, typeof(ViewLibraryPepInfo).GetProperty(@"PrecursorMz").Name);
+                UpdateMatchTypes(results.Count, PRECURSOR_MZ);
             }
 
             matchTypes = _matchTypes;
 
             var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
+
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match
             // the target text, if they had something appended to them.
             if (!enumerable.Any())

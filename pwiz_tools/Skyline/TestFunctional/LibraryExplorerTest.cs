@@ -27,6 +27,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -248,6 +249,15 @@ namespace pwiz.SkylineTestFunctional
             // Now test search functionality when filter text can be parsed as a double
             // Entering in '3' should bring up five entries and three separate match types
             EnterFilterText(filterTextBox, pepList,"3", 5);
+
+            var matchTypes = _viewLibUI._peptides.Filter(filterTextBox.Text,
+                filterComboBox.SelectedText == "Starts with"
+                    ? ViewLibraryDlg.FilterType.startsWith
+                    : ViewLibraryDlg.FilterType.contains, out var typeMatches);
+            var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(typeMatches);
+            var expectedResults = new List<string>
+                {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_, ColumnCaptions.PrecursorMz};
+            Assert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
 
             // Entering '32' should narrow the match types down to Precursor Mz and filter the list down to three entries
             EnterFilterText(filterTextBox, pepList, "32", 3);
