@@ -14713,6 +14713,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Centroided.
+        /// </summary>
+        public static string GraphFullScan_PeakType_Centroided {
+            get {
+                return ResourceManager.GetString("GraphFullScan_PeakType_Centroided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string GraphFullScan_PeakType_ChromDefault {
+            get {
+                return ResourceManager.GetString("GraphFullScan_PeakType_ChromDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Profile.
+        /// </summary>
+        public static string GraphFullScan_PeakType_Profile {
+            get {
+                return ResourceManager.GetString("GraphFullScan_PeakType_Profile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {

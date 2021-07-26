@@ -31,6 +31,14 @@ namespace pwiz.Skyline.Model.Results
     public class MsDataFileScanHelper : IDisposable
     {
         private ChromSource _chromSource;
+
+        public enum PeakType : byte
+        {
+            chromDefault,
+            centroided,
+            profile
+        };
+
         public MsDataFileScanHelper(Action<MsDataSpectrum[]> successAction, Action<Exception> failureAction, bool ignoreZeroIntensityPoints)
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction, ignoreZeroIntensityPoints);
@@ -38,6 +46,11 @@ namespace pwiz.Skyline.Model.Results
             SourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
             SourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
             SourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+
+            PeakTypeNames = new string[Helpers.CountEnumValues<PeakType>()];
+            PeakTypeNames[(int) PeakType.chromDefault] = Resources.GraphFullScan_PeakType_ChromDefault;
+            PeakTypeNames[(int)PeakType.centroided] = Resources.GraphFullScan_PeakType_Centroided;
+            PeakTypeNames[(int)PeakType.profile] = Resources.GraphFullScan_PeakType_Profile;
         }
 
         public BackgroundScanProvider ScanProvider { get; private set; }
@@ -51,6 +64,8 @@ namespace pwiz.Skyline.Model.Results
         public int ScanIndex { get; set; }
 
         public string[] SourceNames { get; set; }
+
+        public string[] PeakTypeNames { get; set; }
 
         public ChromSource Source
         {
@@ -83,6 +98,16 @@ namespace pwiz.Skyline.Model.Results
         public ChromSource SourceFromName(string name)
         {
             return (ChromSource) SourceNames.IndexOf(e => e == name);
+        }
+
+        public PeakType PeakTypeFromName(string name)
+        {
+            return (PeakType) PeakTypeNames.IndexOf(e => e == name);
+        }
+
+        public string GetPeakTypeName(PeakType peakType)
+        {
+            return PeakTypeNames[(int) peakType];
         }
 
         public string NameFromSource(ChromSource source)
@@ -289,6 +314,7 @@ namespace pwiz.Skyline.Model.Results
 
             private bool _disposing;
             private int _scanIndexNext;
+            private bool? _centroidedMs1, _centroidedMs2;
             private IScanProvider _scanProvider;
             private readonly List<IScanProvider> _cachedScanProviders;
             private readonly List<IScanProvider> _oldScanProviders;
@@ -402,7 +428,8 @@ namespace pwiz.Skyline.Model.Results
                         {
                             try
                             {
-                                var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex, _ignoreZeroIntensityPoints); // Get a collection of scans with changing ion mobility but same retention time, or single scan if no ion mobility info
+                                // Get a collection of scans with changing ion mobility but same retention time, or single scan if no ion mobility info
+                                var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex, _ignoreZeroIntensityPoints, _centroidedMs1, _centroidedMs2); 
                                 _successAction(msDataSpectra);
                             }
                             catch (Exception ex)
@@ -479,11 +506,16 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            public void SetScanForBackgroundLoad(int scanIndex)
+            public void SetScanForBackgroundLoad(int scanIndex, bool? centroided = null)
             {
                 lock (this)
                 {
                     _scanIndexNext = scanIndex;
+                    _centroidedMs1 = _centroidedMs2 = null;
+                    if (Source == ChromSource.fragment)
+                        _centroidedMs2 = centroided;
+                    else
+                        _centroidedMs1 = centroided;
 
                     if (_scanIndexNext != -1)
                         Monitor.PulseAll(this);

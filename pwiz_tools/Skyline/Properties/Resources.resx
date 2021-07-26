@@ -2231,6 +2231,15 @@
   <data name="GraphFullScan_GraphFullScan_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
+  <data name="GraphFullScan_PeakType_ChromDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Centroided" xml:space="preserve">
+    <value>Centroided</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
   <data name="SkylineWindow_FindIrtDatabase_Find_iRT_Calculator" xml:space="preserve">
     <value>Find iRT Calculator</value>
   </data>

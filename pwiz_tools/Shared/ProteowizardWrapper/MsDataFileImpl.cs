@@ -1186,7 +1186,7 @@ namespace pwiz.ProteowizardWrapper
         private MsDataSpectrum _lastSpectrumInfo;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
-            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
+            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel || _lastSpectrum == null)
             {
                 _lastScanIndex = scanIndex;
                 _lastDetailLevel = detailLevel;
