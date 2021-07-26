@@ -777,7 +777,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="FullScanPeakType" Type="System.String" Scope="User">
-      <Value Profile="(Default)">default</Value>
+      <Value Profile="(Default)">Default</Value>
     </Setting>
   </Settings>
 </SettingsFile>

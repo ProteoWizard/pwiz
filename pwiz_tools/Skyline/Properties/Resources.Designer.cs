@@ -14740,6 +14740,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} spectra are not available in this data file. Showing {1} instead..
+        /// </summary>
+        public static string GraphFullScan_SetSpectraUI__peak_type_not_available {
+            get {
+                return ResourceManager.GetString("GraphFullScan_SetSpectraUI__peak_type_not_available", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {

@@ -120,13 +120,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _rmis = null;
 
             var peakType = _msDataFileScanHelper.PeakTypeFromName(Settings.Default.FullScanPeakType);
-            if (peakType != MsDataFileScanHelper.PeakType.chromDefault)
+            if (peakType != PeakType.chromDefault)
             {
-                var requestedCentroids = (peakType == MsDataFileScanHelper.PeakType.centroided);
+                var requestedCentroids = (peakType == PeakType.centroided);
                 if (spectra[0].Centroided != requestedCentroids)
                 {
                     MessageDlg.Show(this, string.Format(
-                        "{0} spectra are not available in this data file. Showing {1} instead",
+                        Resources.GraphFullScan_SetSpectraUI__peak_type_not_available,
                         _msDataFileScanHelper.GetPeakTypeName(requestedCentroids
                             ? PeakType.centroided
                             : PeakType.profile),
@@ -260,10 +260,10 @@ namespace pwiz.Skyline.Controls.Graphs
             RunBackground(LoadingTextIfNoChange);
 
             var peakType = _msDataFileScanHelper.PeakTypeFromName(Settings.Default.FullScanPeakType);
-            if (peakType == MsDataFileScanHelper.PeakType.chromDefault)
+            if (peakType == PeakType.chromDefault)
                 _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
             else
-                _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == MsDataFileScanHelper.PeakType.centroided);
+                _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == PeakType.centroided);
         }
 
         private void RunBackground(Action action)
