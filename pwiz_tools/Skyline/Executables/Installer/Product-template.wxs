@@ -148,9 +148,6 @@
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
       </Component>
-      <Component Id="DataReader.dll"> <!-- no longer used by pwiz but required by Shimadzu method export -->
-        <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
