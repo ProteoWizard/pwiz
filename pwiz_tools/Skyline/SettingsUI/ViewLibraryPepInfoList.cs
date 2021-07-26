@@ -190,7 +190,7 @@ namespace pwiz.Skyline.SettingsUI
                 filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
                     current.Union(SubstringSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
             }
-            else if(filterType == ViewLibraryDlg.FilterType.startsWith)
+            else if(filterType == ViewLibraryDlg.FilterType.starts_with)
             {
                 // Find the indices of entries that have a field that could match the search term if something was appended to it 
                 filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>

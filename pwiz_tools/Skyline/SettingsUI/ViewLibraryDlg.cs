@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using NHibernate.Bytecode.Lightweight;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -409,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null, FilterType.startsWith, out _);
+            _currentRange = _peptides.Filter(null, FilterType.starts_with, out _);
         }
 
         public bool MatchModifications()
@@ -1832,7 +1831,6 @@ namespace pwiz.Skyline.SettingsUI
         // Temp variable to store a previously focused control
         private Control _focused;
 
-
         private void splitMain_MouseDown(object sender, MouseEventArgs e)
         {
             // Get the focused control before the splitter is focused
@@ -2666,7 +2664,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         public enum FilterType
         {
-            startsWith, contains
+            starts_with, contains
         }
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -2676,9 +2674,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboOperation1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboFilterType.SelectedItem.ToString() == "Starts with")
+
+            if (comboFilterType.SelectedItem.ToString() == Resources.ViewLibraryDlg_comboOperation1_SelectedIndexChanged_Starts_with)
             {
-                selectedFilterType = FilterType.startsWith;
+                selectedFilterType = FilterType.starts_with;
             }
             else
             {

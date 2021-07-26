@@ -11499,4 +11499,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="MatchTypeTipProvider_RenderTip_Fields_containing_matches_" xml:space="preserve">
     <value>Fields containing matches:</value>
   </data>
+  <data name="ViewLibraryDlg_comboOperation1_SelectedIndexChanged_Starts_with" xml:space="preserve">
+    <value>Starts with</value>
+  </data>
 </root>

@@ -252,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
 
             var matchTypes = _viewLibUI._peptides.Filter(filterTextBox.Text,
                 filterComboBox.SelectedText == "Starts with"
-                    ? ViewLibraryDlg.FilterType.startsWith
+                    ? ViewLibraryDlg.FilterType.starts_with
                     : ViewLibraryDlg.FilterType.contains, out var typeMatches);
             var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(typeMatches);
             var expectedResults = new List<string>
