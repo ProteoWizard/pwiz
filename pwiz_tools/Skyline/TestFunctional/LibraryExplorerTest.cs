@@ -203,14 +203,15 @@ namespace pwiz.SkylineTestFunctional
             });
             // Verify that the correct filter type is selected upon form opening
             Assert.AreEqual("Starts with", filterTypeSelected); // Localize
-            // Match type tip should not be visible
-            Assert.IsFalse(_viewLibUI._matchTypesNodeTips.Visible);
+            
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
             EnterFilterText(filterTextBox, pepList,"C", 6);
 
             // Match type tip should appear if the text box gains focus
-            filterTextBox.Focus();
-            Assert.IsTrue(_viewLibUI._matchTypesNodeTips.Visible);
+            //filterTextBox.Focus();
+
+            // Check the match type node tip
+            var textParts = _viewLibUI._matchTypesNodeTips;
 
             // Verify that the entries are in alphabetical order of molecule name, despite being filtered by formula
             var pepItems = pepList.Items;

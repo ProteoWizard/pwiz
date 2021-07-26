@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate.Bytecode.Lightweight;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -2316,6 +2317,15 @@ namespace pwiz.Skyline.SettingsUI
                     _size = new Size((int)width + 8, (int)height + 4); // +8 width, +4 height padding
                     return _size;
                 }
+            }
+            /// <summary>
+            /// Returns a list containing all text parts to draw
+            /// </summary>
+            public List<string> GetTextPartsToDraw()
+            {
+                var textParts = new List<string>{Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
+                typeMatches.AddRange(typeMatches);
+                return textParts;
             }
             // draws text at a start (x,y) and returns the end (x,y) of the drawn text
             // takes a list of <string, color> so that we can draw segments of different colors
