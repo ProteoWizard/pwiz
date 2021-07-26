@@ -155,7 +155,7 @@ Method\Bruker\BuildBrukerMethod.exe
 Method\Shimadzu\BuildShimadzuMethod.exe
 Method\Shimadzu\MethodConverter.dll
 Method\Shimadzu\MethodWriter.dll
-Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll
+Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Method\Thermo\BuildLTQMethod.exe
 Method\Thermo\BuildThermoMethod.exe
 Method\Thermo\BuildTSQEZMethod.exe
