@@ -24,7 +24,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
@@ -67,22 +66,7 @@ namespace TestPerf
             var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
             // Transition list is suitably formatted with headers to just drop into the targets tree
             SetCsvFileClipboardText(transitionList);
-
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForDocumentLoaded();
-            // Correct the header assignments
-            RunUI(() => {
-                colDlg.radioMolecule.PerformClick();
-                var comboBoxes = colDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-            });
-
-            OkDialog(colDlg, colDlg.OkDialog);
-
+            RunUI(() => SkylineWindow.Paste());
             var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, 1, 4, 4, 4);
             {
