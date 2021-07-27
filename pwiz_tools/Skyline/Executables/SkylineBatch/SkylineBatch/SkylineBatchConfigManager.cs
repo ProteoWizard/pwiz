@@ -644,13 +644,6 @@ namespace SkylineBatch
                 throw new Exception("Run state was never checked, should never get here.");
 
             _runServerFiles = new ServerFilesManager();
-            // Servers don't need to connect for steps after refine
-            if (_checkedRunOption >= RunBatchOptions.FROM_REFINE)
-            {
-                FinishCheckingServers(true, new List<SkylineBatchConfig>(), callback);
-                return;
-            }
-            
             var enabledConfigs = GetEnabledConfigs(_checkedRunState);
             var downloadingConfigs = new List<SkylineBatchConfig>();
             // Try connecting to all necessary servers
