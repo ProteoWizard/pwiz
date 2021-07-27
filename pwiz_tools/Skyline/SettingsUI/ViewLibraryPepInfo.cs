@@ -34,11 +34,6 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepInfo : Immutable
     {
-        public string SMILES;
-        public string CAS;
-        public string HMDB;
-        public string HMDBMinusTag;
-
         public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo = null)
         {
             Key = key;
@@ -120,14 +115,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public string OtherKeys
         {
-            // This property is used to filter spectra. The prefix "cas:" should be removed because
-            // otherwise a search for "cas" would bring up every entry with a CAS registry number
-            get
-            {
-                var keys = Key.SmallMoleculeLibraryAttributes.OtherKeys;
-                keys = keys.Replace(@"cas:", "");
-                return keys;
-            }
+            get { return Key.SmallMoleculeLibraryAttributes.OtherKeys; }
         }
         /// <summary>
         /// True if a <see cref="PeptideDocNode"/> has been successfully associated

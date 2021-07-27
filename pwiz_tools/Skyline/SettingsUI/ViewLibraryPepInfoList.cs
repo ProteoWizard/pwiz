@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -40,7 +39,6 @@ namespace pwiz.Skyline.SettingsUI
         private const string PRECURSOR_MZ = @"PrecursorMz";
         private const string UNMODIFIED_TARGET_TEXT = @"UnmodifiedTargetText";
         private const string INCHI_KEY = @"InchiKey";
-        private const string OTHER_KEYS = @"OtherKeys";
         private const string FORMULA = @"Formula";
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
@@ -62,47 +60,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Store the molecular IDs in separate categories for searching 
-        /// </summary>
-        private void StoreMolecularIDs(ViewLibraryPepInfo info, string ids)
-        {
-            const string prefixCAS = "cas: ";
-            const string prefixSMILES = "SMILES: ";
-            const string prefixHMDB = "HMDB: ";
-
-
-
-            // Pull apart the string into separate IDs
-            var parts = ids.Split('b');
-            // Assign them to their respective properties in the entry
-            // Do not store the identifying prefix, only the ID itself
-            foreach (var id in parts)
-            {
-                if (id.StartsWith(prefixSMILES))
-                {
-                    info.SMILES = id.Substring(prefixCAS.Length);
-                } else if (id.StartsWith(prefixCAS))
-                {
-                    info.CAS = id;
-                } else if (id.StartsWith(prefixHMDB))
-                {
-                    info.HMDB = id.Substring(prefixHMDB.Length);
-                    info.HMDBMinusTag = id.Substring(4 + prefixHMDB.Length);
-                }
-            }
-            // Assign any we do not recognize to their own category
-        }
-
-        /// <summary>
-        /// Find the type of a molecule ID (HMDB, CAS, etc.) from the format of a string
-        /// </summary>
-        [CanBeNull]
-        private static string FindMoleculeIDType(string id)
-        {
-            return null;
-        }
-
-        /// <summary>
         /// Add a string to display to our list based on the given property
         /// </summary>
         private void UpdateMatchTypes(int numMatches, string propertyName, 
@@ -114,8 +71,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (propertyName == UNMODIFIED_TARGET_TEXT)
                 {
-                    // The target text can be a molecule name or a peptide sequence
-                    // so only display peptide if every entry on the list is a peptide
+                    // Because the target text can be a molecule name or a peptide sequence only display
+                    // peptide if every entry on the list is a peptide
                     _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
                 }
                 else if (propertyName == PRECURSOR_MZ)
@@ -128,28 +85,12 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
                 }
-                else if (propertyName == OTHER_KEYS && matchIndices != null)
-                {
-                    foreach (var type in matchIndices.Select(index => FindMoleculeIDType(_allEntries[index].OtherKeys)))
-                    {
-                        if (type != null)
-                        {
-                            if (!_matchTypes.Contains(type))
-                            {
-                                _matchTypes.Add(type);
-                            }
-                        }
-                        else if (!_matchTypes.Contains(
-                            Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs))
-                        {
-                            // In the case where we found a match in the OtherIDs category but did not recognize the format of the ID
-                            _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs);
-                        }
-                    }
-                }
                 else
                 {
-                    _matchTypes.Add(propertyName);
+                    if (!_matchTypes.Contains(propertyName))
+                    {
+                        _matchTypes.Add(propertyName);
+                    }
                 }
             }
         }
@@ -186,6 +127,30 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
+        /// Find the indices of entries whose "OtherIDs" field contain matches, and update the match types
+        /// with the correct category (HMDB, SMILES, etc.)
+        /// </summary>
+        private List<int> AccessionNumberSearch(string filterText, ViewLibraryDlg.FilterType filterType)
+        {
+            var matchIndices = new List<int>();
+            foreach (var entry in _allEntries)
+            {
+                if (entry.OtherKeys != null)
+                {
+                    var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
+                    foreach (var pair in accessionNumDict.Where(pair => filterType == ViewLibraryDlg.FilterType.contains ? 
+                        pair.Value.Contains(filterText) : pair.Value.StartsWith(filterText)))
+                    {
+                        matchIndices.Add(IndexOf(entry));
+                        UpdateMatchTypes(1, pair.Key);
+                    }
+                }
+            }
+
+            return matchIndices;
+        }
+
+        /// <summary>
         /// Find the indices of entries matching the filter text according to the filter type
         /// </summary>
         /// <param name="filterText"> Search term </param>
@@ -207,9 +172,10 @@ namespace pwiz.Skyline.SettingsUI
 
             // If there are small molecules in the library then search by multiple fields instead of just molecule name
             var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, OTHER_KEYS } // Order of properties does not matter as results are sorted by molecule or peptide name
+                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY } // Order of properties does not matter as results are sorted by molecule or peptide name
                 : new List<string> {UNMODIFIED_TARGET_TEXT};
-            var filteredIndices = Enumerable.Empty<int>(); // The indices of entries in the peptide list that match our filter text
+
+            var filteredIndices = Enumerable.Empty<int>().ToList(); // The indices of entries in the peptide list that match our filter text
             var rangeList = Enumerable.Empty<int>();
             if (filterType == ViewLibraryDlg.FilterType.contains)
             {
@@ -247,12 +213,13 @@ namespace pwiz.Skyline.SettingsUI
                 // Then find the first entry with a precursor m/z exceeding our match tolerance
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
                     entry.PrecursorMz - result) > mzFilterTolerance)).Select(IndexOf).ToList();
-                filteredIndices = filteredIndices.Union(results);
+                filteredIndices = filteredIndices.Union(results).ToList();
                 UpdateMatchTypes(results.Count, PRECURSOR_MZ);
             }
 
             matchTypes = _matchTypes;
 
+            filteredIndices = filteredIndices.Union(AccessionNumberSearch(filterText, filterType)).ToList();
             var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
 
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match

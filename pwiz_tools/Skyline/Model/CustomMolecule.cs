@@ -72,9 +72,10 @@ namespace pwiz.Skyline.Model
             AccessionNumbers = ImmutableSortedList<string, string>.FromValues(nonEmptyKeys, ACCESSION_TYPE_SORTER); 
         }
 
-        public MoleculeAccessionNumbers(string keysTSV, string inChiKey = null)
+        public static Dictionary<string, string> FormatAccessionNumbers(string keysTSV, string inChiKey = null)
         {
-            var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); // Treat "cas" and "CAS" as identical lookups
+            var keys = new Dictionary<string, string>(StringComparer
+                .OrdinalIgnoreCase); // Treat "cas" and "CAS" as identical lookups
             if (!string.IsNullOrEmpty(keysTSV) || !string.IsNullOrEmpty(inChiKey))
             {
                 if (!string.IsNullOrEmpty(keysTSV))
@@ -94,13 +95,20 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                if (!string.IsNullOrEmpty(inChiKey))
-                {
-                    if (keys.ContainsKey(TagInChiKey))
-                        Assume.AreEqual(inChiKey, keys[TagInChiKey]);
-                    else
-                        keys.Add(TagInChiKey, inChiKey);
-                }
+            }
+
+            return keys;
+        }
+
+        public MoleculeAccessionNumbers(string keysTSV, string inChiKey = null)
+        {
+            var keys = FormatAccessionNumbers(keysTSV, inChiKey);
+            if (!string.IsNullOrEmpty(inChiKey))
+            {
+                if (keys.ContainsKey(TagInChiKey))
+                    Assume.AreEqual(inChiKey, keys[TagInChiKey]);
+                else
+                    keys.Add(TagInChiKey, inChiKey);
             }
             AccessionNumbers = ImmutableSortedList<string, string>.FromValues(keys, ACCESSION_TYPE_SORTER); 
         }
