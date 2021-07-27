@@ -791,20 +791,6 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
-        public static bool IsValidCAS(string str)
-        {
-            var parts = str.Split('-');
-            return parts.Length == 3 && !parts.Any(part => !part.All(char.IsDigit));
-        }
-
-        public static bool IsValidHMDB(string str)
-        {
-            if (!str.StartsWith(MoleculeAccessionNumbers.TagHMDB) && !str.All(char.IsDigit))
-            {
-                str = MoleculeAccessionNumbers.TagHMDB + str;
-            }
-            return (str.Length < 5) || !str.Skip(4).All(char.IsDigit);
-        }
         private MoleculeAccessionNumbers ReadMoleculeAccessionNumberColumns(Row row)
         {
             var moleculeIdKeys = new Dictionary<string, string>();
@@ -838,7 +824,7 @@ namespace pwiz.Skyline.Model
                 {
                     hmdb = MoleculeAccessionNumbers.TagHMDB + hmdb;
                 }
-                if (IsValidHMDB(hmdb))
+                if ((hmdb.Length < 5) || !hmdb.Skip(4).All(char.IsDigit))
                 {
                     ShowTransitionError(new PasteError
                     {
@@ -887,7 +873,8 @@ namespace pwiz.Skyline.Model
             if (cas != null)
             {
                 // Should have form like "123-45-6", 
-                if (!IsValidCAS(cas))
+                var parts = cas.Split('-');
+                if (parts.Length != 3 || parts.Any(part => !part.All(char.IsDigit)))
                 {
                     ShowTransitionError(new PasteError
                     {

@@ -62,22 +62,44 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Find the type of a molecule ID (HMDB, SMILES, etc.) from the format of a string
+        /// Store the molecular IDs in separate categories for searching 
+        /// </summary>
+        private void StoreMolecularIDs(ViewLibraryPepInfo info, string ids)
+        {
+            const string prefixCAS = "cas: ";
+            const string prefixSMILES = "SMILES: ";
+            const string prefixHMDB = "HMDB: ";
+
+
+
+            // Pull apart the string into separate IDs
+            var parts = ids.Split('b');
+            // Assign them to their respective properties in the entry
+            // Do not store the identifying prefix, only the ID itself
+            foreach (var id in parts)
+            {
+                if (id.StartsWith(prefixSMILES))
+                {
+                    info.SMILES = id.Substring(prefixCAS.Length);
+                } else if (id.StartsWith(prefixCAS))
+                {
+                    info.CAS = id;
+                } else if (id.StartsWith(prefixHMDB))
+                {
+                    info.HMDB = id.Substring(prefixHMDB.Length);
+                    info.HMDBMinusTag = id.Substring(4 + prefixHMDB.Length);
+                }
+            }
+            // Assign any we do not recognize to their own category
+        }
+
+        /// <summary>
+        /// Find the type of a molecule ID (HMDB, CAS, etc.) from the format of a string
         /// </summary>
         [CanBeNull]
         private static string FindMoleculeIDType(string id)
         {
-            if (SmallMoleculeTransitionListReader.IsValidCAS(id))
-            {
-                return ColumnCaptions.CAS;
-            } else if (SmallMoleculeTransitionListReader.IsValidHMDB(id))
-            {
-                return ColumnCaptions.HMDB;
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         /// <summary>

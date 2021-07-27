@@ -2258,7 +2258,7 @@ namespace pwiz.Skyline.SettingsUI
                 _library = lib;
                 _key = key;
             }
-
+            
             protected override bool IsMatch(double predictedMz)
             {
                 return false;
@@ -2340,7 +2340,7 @@ namespace pwiz.Skyline.SettingsUI
                 size.Height = height;
                 return size;
             }
-
+            
             public bool HasTip
             {
                 get { return true; }

@@ -34,6 +34,11 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepInfo : Immutable
     {
+        public string SMILES;
+        public string CAS;
+        public string HMDB;
+        public string HMDBMinusTag;
+
         public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo = null)
         {
             Key = key;
@@ -120,11 +125,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var keys = Key.SmallMoleculeLibraryAttributes.OtherKeys;
-                var prefix = "cas:";
-                if (keys.Contains(prefix))
-                {
-                    keys = keys.Replace(prefix, "");
-                }
+                keys = keys.Replace(@"cas:", "");
                 return keys;
             }
         }

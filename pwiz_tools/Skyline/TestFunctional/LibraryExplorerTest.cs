@@ -209,15 +209,9 @@ namespace pwiz.SkylineTestFunctional
             });
             // Verify that the correct filter type is selected upon form opening
             Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with, filterTypeSelected); // Localize
-            
+
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
             FilterListAndVerifyCount(filterTextBox, pepList,"C", 6);
-
-            // Match type tip should appear if the text box gains focus
-            //filterTextBox.Focus();
-
-            // Check the match type node tip
-            var textParts = _viewLibUI._matchTypesNodeTips;
 
             // Verify that the entries are in alphabetical order of molecule name, despite being filtered by formula
             var pepItems = pepList.Items;
@@ -230,7 +224,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Entering the formula for Midazolam should filter out all other spectra
             var midazolamFormula = "C18H13ClFN3";
-            var midazolamMz = "326.0855";
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula, 1);
 
             // Check case insensitivity
@@ -252,6 +245,7 @@ namespace pwiz.SkylineTestFunctional
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Now test search functionality when filter text can be parsed as a double
+            var midazolamMz = "326.0855";
             // Entering in '3' should bring up five entries and three separate match types
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0,1), 5);
 
@@ -276,6 +270,11 @@ namespace pwiz.SkylineTestFunctional
 
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, "326.1", 1);
+
+            // Test that we distinguish between molecule IDs when displaying match types
+            FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
+            CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text),
+                new List<string> {ColumnCaptions.CAS});
 
             // Now test search behavior on a peptide list
             ShowDialog<AddModificationsDlg>(() => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
