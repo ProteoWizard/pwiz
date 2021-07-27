@@ -1123,6 +1123,8 @@ namespace pwiz.Skyline.FileUI
                 TransitionFullScan.MassAnalyzerToString(
                     _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
+            _exportProperties.PrimaryTransitionCount = 0;
+
             _exportProperties.OptimizeType = null;
             if (comboOptimizing.SelectedItem != null)
             {
@@ -1182,7 +1184,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 _exportProperties.OptimizeType = null;
-                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = _exportProperties.PrimaryTransitionCount = 0;
+                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = 0;
             }
 
             string maxTran = textMaxTransitions.Text;
