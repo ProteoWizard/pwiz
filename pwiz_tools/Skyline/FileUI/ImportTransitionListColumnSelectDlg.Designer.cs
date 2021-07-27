@@ -163,6 +163,6 @@
         public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
         private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
         private System.Windows.Forms.RadioButton radioPeptide;
-        private System.Windows.Forms.RadioButton radioMolecule;
+        public System.Windows.Forms.RadioButton radioMolecule; // Public for testing only
     }
 }
