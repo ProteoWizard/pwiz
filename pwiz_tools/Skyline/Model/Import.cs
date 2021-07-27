@@ -302,6 +302,8 @@ namespace pwiz.Skyline.Model
 
         private IList<string> _lines;
 
+        public IList<string> Lines { get { return _lines; } }
+
         public MassListInputs(string initText, bool fullText = false)
         {
             if (fullText)

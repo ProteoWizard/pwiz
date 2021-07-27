@@ -92,9 +92,10 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(@"SMILES",SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(@"KEGG",SrmDocument.DOCUMENT_TYPE.small_molecules),
             };
+        // When we switch modes we want to keep the column positions that were set in the mode not being used
+        private List<string> smallMolColPositions;
+        private List<string> peptideColPositions;
 
-        
-        
         public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath)
         {
             Importer = importer;
@@ -359,7 +360,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         private bool comboBoxChanged;
-
+        
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
         {
@@ -807,6 +808,11 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.SMILESColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.KEGGColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.MoleculeNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                // Set the column headers to what they were last time we were in peptide mode
+                if (peptideColPositions != null)
+                {
+                    SetColumnPositions(peptideColPositions);
+                }
             }
             else
             {
@@ -832,6 +838,11 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                // Set the column headers to what they were last time we were in small molecule mode
+                if (smallMolColPositions != null)
+                {
+                    SetColumnPositions(smallMolColPositions);
+                }
             }
             // Both columns
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
@@ -1005,6 +1016,14 @@ namespace pwiz.Skyline.FileUI
 
         private void radioPeptide_CheckedChanged(object sender, EventArgs e)
         {
+            if (radioPeptide.Checked)
+            {
+                smallMolColPositions = CurrentColumnPositions();
+            }
+            else
+            {
+                peptideColPositions = CurrentColumnPositions();
+            }
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Items.Clear();
