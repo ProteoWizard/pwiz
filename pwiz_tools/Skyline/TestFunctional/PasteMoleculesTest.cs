@@ -1956,10 +1956,8 @@ namespace pwiz.SkylineTestFunctional
                 comboBoxes[31].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
             });
 
-            // This should produce a bad header error
-            RunDlg<ImportTransitionListErrorDlg>(badDlg.OkDialog, msgDlg => msgDlg.Close()); // Dismiss it
-
-            OkDialog(badDlg, badDlg.CancelDialog);
+            // This should work because we manually set the headers
+            OkDialog(badDlg, badDlg.OkDialog);
 
             // var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
             // OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error

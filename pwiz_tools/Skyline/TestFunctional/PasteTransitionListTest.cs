@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     {
         private string precursor => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z;
         private string product => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z;
-        private string moleculeName => Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name;
+        private string peptide => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
         private string protName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
                 var thermBoxes = therm.ComboBoxes;
                 // Checks that automatically assigning column headers works properly
                 Assert.AreEqual(protName, thermBoxes[0].Text);
-                Assert.AreEqual(moleculeName, thermBoxes[1].Text);
+                Assert.AreEqual(peptide, thermBoxes[1].Text);
                 Assert.AreEqual(precursor, thermBoxes[2].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4].Text);
                 Assert.AreEqual(product, thermBoxes[5].Text);
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new List<string> {protName, moleculeName, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
+            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
             CollectionAssert.AreEqual(expectedColumns, Settings.Default.CustomImportTransitionListColumnTypesList);
             
@@ -172,12 +172,15 @@ namespace pwiz.SkylineTestFunctional
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
             var transitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-
+            RunUI(() =>
+            {
+                var transitionBoxes = transitions.ComboBoxes;
+                transitionBoxes[0].SelectedIndex = 0; // Set precursor m/z column to 'ignore column'
+                transitionBoxes[1].SelectedIndex = 0; // Set product m/z column to 'ignore column'
+                transitionBoxes[3].SelectedIndex = 0; // Set peptide modified sequence column to 'ignore column'
+            });
             // Change headers of the key columns so that our document will not import
-            var transitionBoxes = transitions.ComboBoxes;
-            transitionBoxes[0].SelectedIndex = 0; // Set precursor m/z column to 'ignore column'
-            transitionBoxes[1].SelectedIndex = 0; // Set product m/z column to 'ignore column'
-            transitionBoxes[3].SelectedIndex = 0; // Set peptide modified sequence column to 'ignore column'
+            
 
             // Click Ok and when it doesn't import due to missing columns close the document
             RunDlg<MessageDlg>(transitions.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
@@ -185,16 +188,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Paste in the same list and verify that the invalid column positions were not saved
             LoadNewDocument(true);
-
             var transitions1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            var transitions1Boxes = transitions1.ComboBoxes;
-            Assert.AreNotEqual(transitions1Boxes[0].SelectedIndex, 0);
-            Assert.AreNotEqual(transitions1Boxes[1].SelectedIndex, 0);
-            Assert.AreNotEqual(transitions1Boxes[3].SelectedIndex, 0);
-
+            WaitForConditionUI(() => transitions1.WindowShown);
+            
+            RunUI(() =>
+            {
+                var transitions1Boxes = transitions1.ComboBoxes;
+                Assert.AreNotEqual(transitions1Boxes[0].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                Assert.AreNotEqual(transitions1Boxes[1].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                Assert.AreNotEqual(transitions1Boxes[3].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+            });
             // Close the document
             OkDialog(transitions1, transitions1.CancelDialog);
-
             // Now verify that we do not use saved column positions on newly pasted
             // transition lists when they do not work
             LoadNewDocument(true);
@@ -213,7 +218,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the change and other columns were saved in the settings
             Assert.AreEqual(ignoreColumn,Settings.Default.CustomImportTransitionListColumnTypesList[7]);
             Assert.AreEqual(protName, Settings.Default.CustomImportTransitionListColumnTypesList[0]);
-            Assert.AreEqual(moleculeName, Settings.Default.CustomImportTransitionListColumnTypesList[1]);
+            Assert.AreEqual(peptide, Settings.Default.CustomImportTransitionListColumnTypesList[1]);
 
             // Verify the document state we expect
             AssertEx.IsDocumentState(SkylineWindow.Document, null, null, 2, 2, 9);
@@ -224,11 +229,15 @@ namespace pwiz.SkylineTestFunctional
             var pep1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             // We should realize our saved column positions are invalid and discard them
             // Verify that we did not use the saved position of "precursor m/z"
-            var pep1Boxes = pep1.ComboBoxes;
-            Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
-            // Verify that we did use the detected values instead
-            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 8);
-            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 9);
+            RunUI(() =>
+            {
+                var pep1Boxes = pep1.ComboBoxes;
+                Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
+                // Verify that we did use the detected values instead
+                Assert.AreEqual(pep1Boxes[4].SelectedIndex, 8);
+                Assert.AreEqual(pep1Boxes[11].SelectedIndex, 9);
+            });
+            
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
@@ -244,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
                 // Correct the header assignments
                 RunUI(() => {
                     var comboBoxes = dlg.ComboBoxes;
-                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
                     comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
                     comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 });
