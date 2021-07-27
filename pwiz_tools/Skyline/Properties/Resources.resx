@@ -1320,7 +1320,7 @@
   <data name="ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool" xml:space="preserve">
     <value>You must enter a valid title for the tool.</value>
   </data>
-  s<data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
+  <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
   <data name="UndoManager_Commit_Commit_called_with_no_pending_undo_record" xml:space="preserve">
