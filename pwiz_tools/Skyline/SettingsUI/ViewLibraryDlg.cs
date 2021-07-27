@@ -2322,7 +2322,7 @@ namespace pwiz.Skyline.SettingsUI
             public List<string> GetTextPartsToDraw()
             {
                 var textParts = new List<string>{Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
-                typeMatches.AddRange(typeMatches);
+                textParts.AddRange(typeMatches);
                 return textParts;
             }
             // draws text at a start (x,y) and returns the end (x,y) of the drawn text
@@ -2675,7 +2675,7 @@ namespace pwiz.Skyline.SettingsUI
         private void comboOperation1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
-            if (comboFilterType.SelectedItem.ToString() == Resources.ViewLibraryDlg_comboOperation1_SelectedIndexChanged_Starts_with)
+            if (comboFilterType.SelectedItem.ToString() == Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with)
             {
                 selectedFilterType = FilterType.starts_with;
             }

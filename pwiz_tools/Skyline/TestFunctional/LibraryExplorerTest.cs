@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Focus on the search box, enter text, and then verify that the specified number of spectra appear
         /// </summary>
-        private void EnterFilterText(Control filterBox, ListBox spectraList, string filterText, int count)
+        private static void FilterListAndVerifyCount(Control filterBox, ListBox spectraList, string filterText, int count)
         {
             RunUI(() =>
             {
@@ -168,11 +168,6 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private List<string> getMatchTypes(ViewLibraryPepInfoList pepList ,string filterText, ViewLibraryDlg.FilterType filterType)
-        {
-            pepList.Filter(filterText, filterType, out var matchTypes);
-            return matchTypes;
-        }
         private void TestSearchFunctionality()
         {
             // Launch the Library Explorer dialog
@@ -204,10 +199,10 @@ namespace pwiz.SkylineTestFunctional
 
             });
             // Verify that the correct filter type is selected upon form opening
-            Assert.AreEqual("Starts with", filterTypeSelected); // Localize
+            Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with, filterTypeSelected); // Localize
             
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
-            EnterFilterText(filterTextBox, pepList,"C", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList,"C", 6);
 
             // Match type tip should appear if the text box gains focus
             //filterTextBox.Focus();
@@ -226,16 +221,17 @@ namespace pwiz.SkylineTestFunctional
 
             // Entering the formula for Midazolam should filter out all other spectra
             var midazolamFormula = "C18H13ClFN3";
-            EnterFilterText(filterTextBox, pepList, midazolamFormula, 1);
+            var midazolamMz = "326.0855";
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula, 1);
 
             // Check case insensitivity
-            EnterFilterText(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
             
             // Clearing search box should bring up every entry and hide match type tip
-            EnterFilterText(filterTextBox, pepList, "", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Entering 'SD' should filter out all entries as nothing starts with SD
-            EnterFilterText(filterTextBox, pepList, "SD", 0);
+            FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
 
             // Switching to the 'Contains' filter type should bring up LSD as the molecule name contains
             // the substring 'SD'
@@ -244,39 +240,44 @@ namespace pwiz.SkylineTestFunctional
                 filterComboBox.SelectedIndex = filterComboBox.FindString("Contains"); // Localize
             });
             // Clearing search box should bring up every entry and hide match type tip
-            EnterFilterText(filterTextBox, pepList, "", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Now test search functionality when filter text can be parsed as a double
             // Entering in '3' should bring up five entries and three separate match types
-            EnterFilterText(filterTextBox, pepList,"3", 5);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0,1), 5);
 
-            var matchTypes = _viewLibUI._peptides.Filter(filterTextBox.Text,
-                filterComboBox.SelectedText == "Starts with"
+            // Find the match types by filtering according to the current filter type
+            _viewLibUI._peptides.Filter(filterTextBox.Text,
+                filterComboBox.SelectedText == Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with
                     ? ViewLibraryDlg.FilterType.starts_with
                     : ViewLibraryDlg.FilterType.contains, out var typeMatches);
+
+            // Create a new tip using those filter types so we can test the match type text
             var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(typeMatches);
             var expectedResults = new List<string>
-                {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_, ColumnCaptions.PrecursorMz};
-            Assert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
+                {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.CAS, ColumnCaptions.PrecursorMz};
+
+            // Compare our expected tip text to the text actually in the new tip
+            CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
 
             // Entering '32' should narrow the match types down to Precursor Mz and filter the list down to three entries
-            EnterFilterText(filterTextBox, pepList, "32", 3);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0, 2), 3);
 
             // Entering the exact precursor Mz of Midazolam should narrow the list down to only Midazolam
-            EnterFilterText(filterTextBox, pepList,"326.0855", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz, 1);
 
             // An Mz value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
-            EnterFilterText(filterTextBox, pepList, "326.1", 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, "326.1", 1);
 
             // Now test search behavior on a peptide list
             ShowDialog<AddModificationsDlg>(() => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
             OkayAllModificationsDlg();
 
             // Precursor searching should work here as well
-            EnterFilterText(filterTextBox, pepList, "6", 13);
+            FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
 
             // Searching for a peptide sequence should work as well
-            EnterFilterText(filterTextBox, pepList, "CY", 31);
+            FilterListAndVerifyCount(filterTextBox, pepList, "CY", 31);
             RunUI(() => _viewLibUI.CancelDialog());
             WaitForClosedForm(_viewLibUI);
         }

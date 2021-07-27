@@ -102,7 +102,11 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         _matchTypes.Add(ColumnCaptions.PrecursorMz);
                     }
-                } else if (propertyName == OTHER_KEYS && matchIndices != null)
+                }else if (propertyName == FORMULA)
+                {
+                    _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
+                }
+                else if (propertyName == OTHER_KEYS && matchIndices != null)
                 {
                     foreach (var type in matchIndices.Select(index => FindMoleculeIDType(_allEntries[index].OtherKeys)))
                     {
@@ -167,6 +171,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="matchTypes"> Categories in which matches were found</param>
         public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
+            const double mzFilterTolerance = 0.1; // Tolerance for the numeric proximity to the filter text
             _matchTypes = new List<string>();
 
             if (string.IsNullOrEmpty(filterText))
@@ -202,7 +207,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Calculate the mz of each entry to search if we can
                 foreach (var entry in _allEntries)
                 {
-                    if (entry.Target != null)
+                    if (entry.Target != null && entry.PrecursorMz == 0)
                     {
                         entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
                     }
@@ -212,8 +217,6 @@ namespace pwiz.Skyline.SettingsUI
                 filteredIndices =
                     filteredIndices.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(PRECURSOR_MZ),
                         filterText)).ToList();
-                
-                const double mzFilterTolerance = 0.1; // Tolerance for the numeric proximity to the filter text
 
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z
