@@ -1107,31 +1107,15 @@ namespace pwiz.SkylineTestFunctional
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
                 "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
             NewDocument();
-            SetClipboardText(textCSV7);
-
-            var omitDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForDocumentLoaded();
-            // Correct the header assignments
-            RunUI(() => {
-                omitDlg.radioMolecule.PerformClick();
-                var comboBoxes = omitDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
-                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV7);
+                SkylineWindow.Paste();
             });
-
-            OkDialog(omitDlg, omitDlg.OkDialog);
-
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
-            // TODO: once column header autodetection is better this test will be valuable again
             // Check case insensitivity, m/z vs mz
-            /*var textCSV8 =
+            var textCSV8 =
                 "MOLECULE LIST NAME,PRECURSOR NAME,PRECURSOR FORMULA,PRECURSOR ADDUCT,EXPLICIT RETENTION TIME,COLLISIONAL CROSS SECTION (SQ A),PRODUCT MZ,PRODUCT CHARGE\n" +
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
@@ -1143,7 +1127,7 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(textCSV8);
                 SkylineWindow.Paste();
             });
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);*/
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
             // Paste in a peptide transition list with some distinctive small molecule headers
             var textCSV9 =
@@ -1314,28 +1298,8 @@ namespace pwiz.SkylineTestFunctional
             "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 283.2879,,[M-H]1-,283.2879,-1,,21\n";
             SetClipboardText(precursorsTransitionList);
 
-            var fullDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForDocumentLoaded();
-            // Correct the header assignments
-            RunUI(() => {
-                fullDlg.radioMolecule.PerformClick();
-                var comboBoxes = fullDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
-                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                comboBoxes[11].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
-                comboBoxes[12].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-            });
-
-            OkDialog(fullDlg, fullDlg.OkDialog);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
 
             var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
@@ -1871,45 +1835,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
+                SkylineWindow.ImportMassList(filename);
             });
-
-            var goodDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
-            RunUI(() => {
-                goodDlg.radioMolecule.PerformClick();
-                var comboBoxes = goodDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                comboBoxes[11].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
-                comboBoxes[12].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-                comboBoxes[13].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
-                comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                comboBoxes[15].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
-                comboBoxes[18].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
-                comboBoxes[19].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_S_Lens);
-                comboBoxes[20].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
-                comboBoxes[21].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-                comboBoxes[22].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
-                comboBoxes[23].SelectedIndex = comboBoxes[1].FindStringExact(@"InChiKey");
-                comboBoxes[24].SelectedIndex = comboBoxes[1].FindStringExact(@"HMDB");
-                comboBoxes[25].SelectedIndex = comboBoxes[1].FindStringExact(@"InChi");
-                comboBoxes[26].SelectedIndex = comboBoxes[1].FindStringExact(@"CAS");
-                comboBoxes[27].SelectedIndex = comboBoxes[1].FindStringExact(@"SMILES");
-                comboBoxes[28].SelectedIndex = comboBoxes[1].FindStringExact(@"KEGG");
-                comboBoxes[29].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
-                comboBoxes[30].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                comboBoxes[31].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
-            });
-            OkDialog(goodDlg, goodDlg.OkDialog);
-
             WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
 
             // Now verify error handling
@@ -1919,48 +1846,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument(true);
             });
-
-            var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
-            RunUI(() => {
-                badDlg.radioMolecule.PerformClick();
-                var comboBoxes = badDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                comboBoxes[11].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
-                comboBoxes[12].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-                comboBoxes[13].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
-                comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                comboBoxes[15].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
-                comboBoxes[18].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
-                comboBoxes[19].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_S_Lens);
-                comboBoxes[20].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
-                comboBoxes[21].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-                comboBoxes[22].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
-                comboBoxes[23].SelectedIndex = comboBoxes[1].FindStringExact(@"InChiKey");
-                comboBoxes[24].SelectedIndex = comboBoxes[1].FindStringExact(@"HMDB");
-                comboBoxes[25].SelectedIndex = comboBoxes[1].FindStringExact(@"InChi");
-                comboBoxes[26].SelectedIndex = comboBoxes[1].FindStringExact(@"CAS");
-                comboBoxes[27].SelectedIndex = comboBoxes[1].FindStringExact(@"SMILES");
-                comboBoxes[28].SelectedIndex = comboBoxes[1].FindStringExact(@"KEGG");
-                comboBoxes[29].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
-                comboBoxes[30].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                comboBoxes[31].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
-            });
-
-            // This should work because we manually set the headers
-            OkDialog(badDlg, badDlg.OkDialog);
-
-            // var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
-            // OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+            var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
+            OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
         }
 
     }
