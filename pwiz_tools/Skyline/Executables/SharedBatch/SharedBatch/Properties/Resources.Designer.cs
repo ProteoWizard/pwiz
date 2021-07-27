@@ -810,6 +810,16 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to WARNING: Could not parse Skyline version. Running earliest supported Skyline commands..
+        /// </summary>
+        public static string SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_earliest_supported_Skyline_commands_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_e" +
+                        "arliest_supported_Skyline_commands_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing Skyline version..
         /// </summary>
         public static string SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_ {

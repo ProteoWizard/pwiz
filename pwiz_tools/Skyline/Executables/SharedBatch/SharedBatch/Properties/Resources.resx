@@ -423,4 +423,7 @@ with:
   <data name="SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_" xml:space="preserve">
     <value>Error parsing Skyline version.</value>
   </data>
+  <data name="SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_earliest_supported_Skyline_commands_" xml:space="preserve">
+    <value>WARNING: Could not parse Skyline version. Running earliest supported Skyline commands.</value>
+  </data>
 </root>
