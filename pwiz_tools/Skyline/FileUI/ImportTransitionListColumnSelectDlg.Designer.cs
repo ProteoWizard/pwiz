@@ -156,13 +156,13 @@
 
         public Controls.DataGridViewEx dataGrid; // Public for testing only
         public System.Windows.Forms.Button buttonOk; // Public for testing only
-        public System.Windows.Forms.Button buttonCancel; // Public for testing only
+        private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Label fileLabel;
         private System.Windows.Forms.Panel comboPanelOuter;
         private System.Windows.Forms.Panel comboPanelInner;
         public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
         private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
         private System.Windows.Forms.RadioButton radioPeptide;
-        public System.Windows.Forms.RadioButton radioMolecule; // Public for testing only
+        private System.Windows.Forms.RadioButton radioMolecule;
     }
 }

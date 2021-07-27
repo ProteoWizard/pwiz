@@ -1551,6 +1551,7 @@ namespace pwiz.Skyline.Model
                     if (iFragmentName == -1)
                         iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
                     iLabelType = prec.LabelIndex;
+
                     indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
                 }
                 return new GeneralRowReader(provider, separator, indices, settings, lines, progressMonitor, status);
@@ -2319,15 +2320,11 @@ namespace pwiz.Skyline.Model
             // Remove spaces and make lowercase. This matches the format of the names they are tested against
             return col.ToLowerInvariant().Replace(@" ", string.Empty);
         }
-
-        // Detect column headers that we recognize and set the column variable to the appropriate index
         public void FindColumns(string[] headers)
         {
-            if (headers == null)
-                return;
             Headers = headers;
             ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(FormatHeader(col)));
-            // PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
+            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
             ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(FormatHeader(col)));
             DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(FormatHeader(col)));
             IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(FormatHeader(col)));
@@ -2453,7 +2450,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        // Column header names that we can recognize
+
         // ReSharper disable StringLiteralTypo
         public static IEnumerable<string> ProteinNames { get { return new[] { @"proteinname", @"protein.name", @"protein", @"proteinid", @"uniprotid" }; } }
         public static IEnumerable<string> PrecursorChargeNames { get { return new[] { @"precursorcharge" }; } }
@@ -2473,7 +2470,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ExplicitIonMobilityUnitsNames { get { return new[] { @"explicitionmobilityunits" }; } }
         public static IEnumerable<string> ExplicitIonMobilityHighEnergyOffsetNames { get { return new[] { @"explicitionmobilityhighenergyoffset" }; } }
         public static IEnumerable<string> CollisionalCrossSectionNames { get { return new[] { @"collisionalcrosssection", @"collisionalcrosssection(sqa)", @"collisionalcrosssectionsqa" }; } }
-        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential", @"explicitdeclusteringpotential" }; } }
+        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
         public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
         public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
         public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
