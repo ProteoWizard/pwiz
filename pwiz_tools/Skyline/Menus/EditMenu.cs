@@ -389,135 +389,145 @@ namespace pwiz.Skyline.Menus
                     }
                 }
             }
-            // Perhaps it's a small molecule list with headers
-            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text) &&
-                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
-            {
-                SkylineWindow.InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
-            }
-            // If the text contains numbers, see if it can be imported as a mass list.
-            // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
-            // allow internal white space including tabs.
-            else if (MassListImporter.IsColumnar(
-                Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE),
-                out formatProvider, out separator, out columnTypes))
-            {
-                // If no numeric type is found, try the second line.  The first may be
-                // a header row.
-                if (!MassListImporter.HasNumericColumn(columnTypes))
-                {
-                    int endLine = text.IndexOf('\n');
-                    if (endLine != -1)
-                    {
-                        MassListImporter.IsColumnar(text.Substring(endLine + 1),
-                            out formatProvider, out separator, out columnTypes);
-                    }
-                }
-
-                if (MassListImporter.HasNumericColumn(columnTypes))
-                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                        Resources.SkylineWindow_Paste_Paste_transition_list, false);
-                // Handle unusual corner case where data is found to be columnar and contains numbers, 
-                // but first line is missing
-                else if (columnTypes.Length == 0)
-                {
-                    throw new InvalidDataException(Resources
-                        .CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
-                }
-                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)
-                ) // Name, Description, Sequence
-                {
-                    var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
-                        Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
-                    throw new InvalidDataException(message);
-                }
-                else
-                {
-                    string textFasta;
-                    try
-                    {
-                        textFasta = FastaImporter.ToFasta(text, separator);
-                    }
-                    catch (LineColNumberedIoException x)
-                    {
-                        throw new InvalidDataException(x.Message, x);
-                    }
-
-                    SkylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                        false, Resources.SkylineWindow_Paste_Paste_proteins,
-                        new SkylineWindow.ImportFastaInfo(false, textFasta));
-                }
-
-                return;
-            }
-            // Otherwise, look for a list of peptides, or a bare sequence
             else
             {
-                // First make sure it looks like a sequence.
-                List<double> lineLengths = new List<double>();
-                int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
-                foreach (char c in textNoMods)
+                var inputType =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings)
+                        ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+                
+                // Perhaps it's a small molecule list with headers
+                if (inputType == SrmDocument.DOCUMENT_TYPE.small_molecules && 
+                    MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
                 {
-                    if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
-                    {
-                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
-                        return;
-                    }
-                    if (c == '\n')
-                    {
-                        lineLengths.Add(lineLen);
-                        lineLen = 0;
-                    }
-                    else if (!char.IsWhiteSpace(c))
-                    {
-                        lineLen++;
-                    }
+                    SkylineWindow.InsertSmallMoleculeTransitionList(text,
+                        Resources.SkylineWindow_Paste_Paste_transition_list);
                 }
-                lineLengths.Add(lineLen);
-
-                // Check to see if the pasted text looks like a peptide list.
-                PeptideFilter filter = DocumentUI.Settings.PeptideSettings.Filter;
-                if (lineLengths.Count == 1 && lineLen < filter.MaxPeptideLength)
-                    peptideList = true;
-                else
+                // If the text contains numbers, see if it can be imported as a mass list.
+                // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
+                // allow internal white space including tabs.
+                else if (MassListImporter.IsColumnar(
+                    Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE,
+                        TransitionGroup.MAX_PRECURSOR_CHARGE),
+                    out formatProvider, out separator, out columnTypes))
                 {
-                    Statistics stats = new Statistics(lineLengths);
-                    // All lines smaller than the peptide filter
-                    if (stats.Max() <= filter.MaxPeptideLength ||
-                        // 3 out of 4 are peptide length
-                        (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
-                        peptideList = true;
-                    // Probably a FASTA sequence, but ask if average line length is less than 40
-                    else if (stats.Mean() < 40)
+                    // If no numeric type is found, try the second line.  The first may be
+                    // a header row.
+                    if (!MassListImporter.HasNumericColumn(columnTypes))
                     {
-                        using (PasteTypeDlg dlg = new PasteTypeDlg())
+                        int endLine = text.IndexOf('\n');
+                        if (endLine != -1)
                         {
-                            if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
-                                return;
-                            peptideList = dlg.PeptideList;
+                            MassListImporter.IsColumnar(text.Substring(endLine + 1),
+                                out formatProvider, out separator, out columnTypes);
                         }
                     }
-                }
 
-                if (peptideList)
-                {
-                    text = FilterPeptideList(text);
-                    if (text == null)
-                        return; // Canceled
-                }
-                else if (text.Contains(@"."))
-                {
-                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                    if (MassListImporter.HasNumericColumn(columnTypes))
+                    {
+                        SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false, inputType);
+                    }
+                    // Handle unusual corner case where data is found to be columnar and contains numbers, 
+                    // but first line is missing
+                    else if (columnTypes.Length == 0)
+                    {
+                        throw new InvalidDataException(Resources
+                            .CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
+                    }
+                    else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)
+                    ) // Name, Description, Sequence
+                    {
+                        var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
+                            Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
+                        throw new InvalidDataException(message);
+                    }
+                    else
+                    {
+                        string textFasta;
+                        try
+                        {
+                            textFasta = FastaImporter.ToFasta(text, separator);
+                        }
+                        catch (LineColNumberedIoException x)
+                        {
+                            throw new InvalidDataException(x.Message, x);
+                        }
+
+                        SkylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                            false, Resources.SkylineWindow_Paste_Paste_proteins,
+                            new SkylineWindow.ImportFastaInfo(false, textFasta));
+                    }
+
                     return;
                 }
+                // Otherwise, look for a list of peptides, or a bare sequence
+                else
+                {
+                    // First make sure it looks like a sequence.
+                    List<double> lineLengths = new List<double>();
+                    int lineLen = 0;
+                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                    foreach (char c in textNoMods)
+                    {
+                        if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
+                        {
+                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
+                            return;
+                        }
+                        if (c == '\n')
+                        {
+                            lineLengths.Add(lineLen);
+                            lineLen = 0;
+                        }
+                        else if (!char.IsWhiteSpace(c))
+                        {
+                            lineLen++;
+                        }
+                    }
+                    lineLengths.Add(lineLen);
 
-                // Choose an unused ID
-                string seqId = Document.GetPeptideGroupId(peptideList);
+                    // Check to see if the pasted text looks like a peptide list.
+                    PeptideFilter filter = DocumentUI.Settings.PeptideSettings.Filter;
+                    if (lineLengths.Count == 1 && lineLen < filter.MaxPeptideLength)
+                        peptideList = true;
+                    else
+                    {
+                        Statistics stats = new Statistics(lineLengths);
+                        // All lines smaller than the peptide filter
+                        if (stats.Max() <= filter.MaxPeptideLength ||
+                            // 3 out of 4 are peptide length
+                            (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
+                            peptideList = true;
+                        // Probably a FASTA sequence, but ask if average line length is less than 40
+                        else if (stats.Mean() < 40)
+                        {
+                            using (PasteTypeDlg dlg = new PasteTypeDlg())
+                            {
+                                if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
+                                    return;
+                                peptideList = dlg.PeptideList;
+                            }
+                        }
+                    }
 
-                // Construct valid FASTA format (with >> to indicate custom name)
-                text = @">>" + TextUtil.LineSeparate(seqId, text);
+                    if (peptideList)
+                    {
+                        text = FilterPeptideList(text);
+                        if (text == null)
+                            return; // Canceled
+                    }
+                    else if (text.Contains(@"."))
+                    {
+                        MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                        return;
+                    }
+
+                    // Choose an unused ID
+                    string seqId = Document.GetPeptideGroupId(peptideList);
+
+                    // Construct valid FASTA format (with >> to indicate custom name)
+                    text = @">>" + TextUtil.LineSeparate(seqId, text);
+                }
             }
 
             string description = (peptideList ? Resources.SkylineWindow_Paste_Paste_peptide_list : Resources.SkylineWindow_Paste_Paste_FASTA);

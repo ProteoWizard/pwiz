@@ -69,7 +69,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>13.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.1 in $(properties) )
+       ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.2 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -151,6 +152,7 @@ rule init ( version : location : options * )
             <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
