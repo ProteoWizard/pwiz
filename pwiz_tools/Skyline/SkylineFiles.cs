@@ -1899,7 +1899,18 @@ namespace pwiz.Skyline
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
+<<<<<<< HEAD
                     importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true);
+=======
+                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, inputType);
+
+                    if (importer != null && !longWaitBroker.IsCanceled && importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    {
+                        docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
+                            insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                            out peptideGroups);
+                    }
+>>>>>>> remotes/origin/master
                 });
                 if (importer == null || status.IsCanceled)
                 {
@@ -1923,6 +1934,7 @@ namespace pwiz.Skyline
 
             if (useColSelectDlg)
             {
+                // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
