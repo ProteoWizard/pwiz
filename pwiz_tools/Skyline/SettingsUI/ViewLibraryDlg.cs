@@ -1937,7 +1937,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary, _selectedFilterType, textPeptide.Text);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2103,7 +2103,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         public PeptideTipProvider GetTipProvider(int i)
         {
-            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary, _selectedFilterType, textPeptide.Text);
         }
 
         private ViewLibraryPepInfo GetPepInfo(int i)
@@ -2363,14 +2363,18 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SrmSettings _settings;
             private readonly double _mz;
             private readonly IonMobilityAndCCS _ionMobility;
+            private readonly FilterType _filterType;
+            private readonly string _filterText;
 
             public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
-                Library selectedLibrary)
+                Library selectedLibrary, FilterType filterType, string filterText)
             {
                 ExplicitMods mods;
                 TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
                 _matcher = matcher;
+                _filterType = filterType;
+                _filterText = filterText;
                 GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
                 _seqPartsToDraw = GetSequencePartsToDraw(mods);
@@ -2465,7 +2469,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         table.Draw(g);
                         g.TranslateTransform(0, sizeSeq.Height);
-                        tableMz.Draw(g);
+                        tableMz.SearchSensitiveDraw(g, _filterType, _filterText);
                         g.TranslateTransform(0, -sizeSeq.Height);
                     }
                 }

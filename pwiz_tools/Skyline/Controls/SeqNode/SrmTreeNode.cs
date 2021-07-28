@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1292,7 +1293,72 @@ namespace pwiz.Skyline.Controls.SeqNode
                 y += row[0].Height;
             }
         }
+
+        /// <summary>
+        /// Draw the table and bold entries matching the search text, according to the filter type
+        /// </summary>
+        public void SearchSensitiveDraw(Graphics g, ViewLibraryDlg.FilterType filterType, string filterText)
+        {
+            StringFormat sf = new StringFormat();
+            float y = 0f;
+            bool isField = true;
+            foreach (RowDesc row in this)
+            {
+                float x = 0f;
+                foreach (CellDesc cell in row)
+                {
+                    int matchIndex;
+                    if (isField)
+                    {
+                        isField = false;
+                        matchIndex = -1;
+                    }
+                    else
+                    {
+                        isField = true;
+                        if (filterType == ViewLibraryDlg.FilterType.contains)
+                        {
+                            matchIndex = cell.Text.IndexOf(filterText, StringComparison.OrdinalIgnoreCase);
+                        }
+                        else
+                        {
+                            matchIndex = cell.Text.IndexOf(filterText, 0, filterText.Length,
+                                StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+
+                    sf.Alignment = cell.Align;
+                    sf.LineAlignment = StringAlignment.Near;
+                    RectangleF rect = new RectangleF(x, y, cell.Width, cell.Height);
+                    Font font = cell.Font;
+                    Brush brush = cell.Brush;
+                    if (matchIndex != -1)
+                    {
+                        var matchEnd = matchIndex + filterText.Length;
+                        var preMatch = cell.Text.Substring(0, matchIndex);
+                        g.DrawString(preMatch, font, brush, rect, sf);
+                        rect.X += g.MeasureString(preMatch, font).Width;
+                        g.DrawString(cell.Text.Substring(matchIndex, filterText.Length), font, Brushes.BlueViolet,
+                            rect, sf);
+                        rect.X += g.MeasureString(filterText, font).Width;
+                        brush = cell.Brush;
+                        var postMatch = cell.Text.Substring(matchEnd, cell.Text.Length - matchEnd);
+                        g.DrawString(postMatch, font, brush, rect, sf);
+                        rect.X += g.MeasureString(postMatch, font).Width;
+
+                    }
+                    else
+                    {
+                        g.DrawString(cell.Text, font, brush, rect, sf);
+                    }
+
+                    x += cell.Width;
+                }
+                y += row[0].Height;
+            }
+        }
     }
+
 
     internal class RowDesc : List<CellDesc>
     {
