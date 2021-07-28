@@ -88,8 +88,8 @@ namespace pwiz.Skyline.SettingsUI
                 _matchTypes.Add(ColumnCaptions.InChiKey);
             } else if (propertyName == ADDUCT || propertyName == ADDUCT_MINUS_BRACKETS)
             {
-                if(!_matchTypes.Contains(ColumnCaptions.PrecursorAdduct))
-                _matchTypes.Add(ColumnCaptions.PrecursorAdduct);
+                if(!_matchTypes.Contains(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct))
+                _matchTypes.Add(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
             }
             else if (!_matchTypes.Contains(propertyName))
             {
@@ -151,8 +151,18 @@ namespace pwiz.Skyline.SettingsUI
                     foreach (var pair in accessionNumDict.Where(pair => filterType == ViewLibraryDlg.FilterType.contains ? 
                         pair.Value.Contains(filterText) : pair.Value.StartsWith(filterText)))
                     {
-                        matchIndices.Add(IndexOf(entry));
-                        UpdateMatchTypes(pair.Key);
+                        if (filterType == ViewLibraryDlg.FilterType.contains
+                            ? pair.Value.Contains(filterText)
+                            : pair.Value.StartsWith(filterText))
+                        {
+                            matchIndices.Add(IndexOf(entry));
+                            UpdateMatchTypes(pair.Key);
+                        }
+                        // If there is an HMDB number that does not match, try matching without the "HMDB" prefix
+                        else if (pair.Value.StartsWith(MoleculeAccessionNumbers.TagHMDB))
+                        {
+                            accessionNumDict.Add(pair.Key, pair.Value.Replace(MoleculeAccessionNumbers.TagHMDB, ""));
+                        }
                     }
                 }
             }
@@ -180,7 +190,7 @@ namespace pwiz.Skyline.SettingsUI
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // If there are small molecules in the library then search by multiple fields instead of just molecule name
+            // Base our search fields on whether there are small molecules in the library
             var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
                 new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS } // Order of properties does not matter as results are sorted by molecule or peptide name
                 : new List<string> {UNMODIFIED_TARGET_TEXT};

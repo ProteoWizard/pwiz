@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
         public Adduct Adduct { get { return Key.Adduct; } }
 
         /// <summary>
-        /// The charge state of a peptide or small molecule without the associated brackets,
+        /// The adduct of the small molecule without the associated brackets,
         /// for searching purposes
         /// </summary>
         public string AdductMinusBrackets
