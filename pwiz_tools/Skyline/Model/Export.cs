@@ -2033,20 +2033,6 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
-        protected override bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
-                nodeGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
-            {
-                // If we know the top ranked transition for every precursor and this is not it, skip writing it
-                int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
-                return !rank.HasValue || rank.Value > PrimaryTransitionCount;
-            }
-            return false;
-        }
-
         protected virtual string GetOptionalColumns(string dp,
                                           string ce,
                                           string precursorWindow,
