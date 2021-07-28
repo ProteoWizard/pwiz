@@ -1896,10 +1896,11 @@ namespace pwiz.Skyline
                 Text = analyzingMessage,
             })
             {
+                var current = docCurrent;
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true);                  
+                    importer = current.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true);                  
                 });
                 if (importer == null || status.IsCanceled)
                 {
