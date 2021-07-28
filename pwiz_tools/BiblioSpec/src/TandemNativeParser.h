@@ -72,6 +72,15 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
               RESIDUE_MASS_PARAMETERS_STATE
   };
 
+  struct Mod {
+    char aa;
+    int pos; // 0-based
+    double mass;
+
+    Mod(char aminoAcid, int position, double deltaMass)
+      : aa(aminoAcid), pos(position), mass(deltaMass) { };
+  };
+
   void parseGroup(const XML_Char** attr);
   void endGroup();
   void parseDomain(const XML_Char** attr);
@@ -107,6 +116,7 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   STATE curState_;              ///< current state (not on the stack)
   double mass_;        // precursor m/z doesn't appear to be stored in file
   int seqStart_;  // mod positions are given relative to the protein
+  vector<Mod> mods_;
   double retentionTime_;
   string retentionTimeStr_;
   string descriptionStr_; // filename, scan, charge

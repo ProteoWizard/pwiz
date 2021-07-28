@@ -249,23 +249,25 @@ void TandemNativeParser::parseMod(const XML_Char** attr){
 
     // change the position to be relative to the seq start, not the
     // protein start
-    int seqPosition = protPosition - seqStart_; // + 1?
+    int seqPosition = protPosition - seqStart_; // 0-based position
 
-    // confirm that the modified aa is present in that position in the seq
-    if( curPSM_->unmodSeq.at(seqPosition) != *aa ){
-        throw BlibException(false,
-                            "Specified modification does not match sequence. "
-                            "Given a modified %c at position %d which is a "
-                            "%c in %s.", *aa, seqPosition, 
-                            curPSM_->unmodSeq.at(seqPosition), 
-                            curPSM_->unmodSeq.c_str());
+    const char* pm = getAttrValue("pm", attr);
+    if (strcmp(pm, "") == 0) {
+        // store mod
+        mods_.push_back(Mod(*aa, seqPosition, deltaMass));
+    } else {
+        // point mutation
+        if (curPSM_->unmodSeq.at(seqPosition) != *aa) {
+            throw BlibException(false,
+                "Point mutation expected '%c' but was '%c' in sequence '%s'.",
+                *aa, curPSM_->unmodSeq[seqPosition], curPSM_->unmodSeq.c_str());
+        } else if (fabs(aaMasses_[*aa] + deltaMass - aaMasses_[*pm]) >= 0.1) {
+            throw BlibException(false,
+                "Point mutation expected mass shift %f but was %f in sequence '%s' (%c -> %c).",
+                aaMasses_[*pm] - aaMasses_[*aa], deltaMass, curPSM_->unmodSeq.c_str(), *aa, *pm);
+        }
+        curPSM_->unmodSeq[seqPosition] = *pm;
     }
-    
-    // create a new mod
-    SeqMod mod;
-    mod.deltaMass = deltaMass;
-    mod.position = seqPosition + 1; // mods are 1-based
-    curPSM_->mods.push_back(mod);
 }
 
 /**
@@ -466,6 +468,19 @@ void TandemNativeParser::endDomain(){
 
     curState_ = getLastState();
     if( curPSM_->score <= probCutOff_ ){
+
+        // process modifications
+        for (vector<Mod>::const_iterator i = mods_.begin(); i != mods_.end(); i++) {
+            // confirm that the modified aa is present in that position in the seq
+            if (curPSM_->unmodSeq.at(i->pos) != i->aa) {
+                throw BlibException(false,
+                    "Specified modification does not match sequence. "
+                    "Given a modified %c at position %d which is a %c in %s.",
+                    i->aa, i->pos + 1, curPSM_->unmodSeq[i->pos], curPSM_->unmodSeq.c_str());
+            }
+            curPSM_->mods.push_back(SeqMod(i->pos + 1, i->mass));
+        }
+
         psms_.push_back(curPSM_);
 
         // create a copy of the current
@@ -478,6 +493,7 @@ void TandemNativeParser::endDomain(){
         curPSM_->unmodSeq.clear();
         curPSM_->mods.clear();
     }
+    mods_.clear();
 }
 
 /**
