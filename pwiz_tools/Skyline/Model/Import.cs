@@ -2204,7 +2204,6 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public int LibraryColumn { get; set; }
 
-<<<<<<< HEAD
         // After this point are new columns added that were initially only supported for small molecule transition lists
         // TODO: add appropriate comments detailing what each of these does, make sure skyline is using this info
 
@@ -2265,8 +2264,6 @@ namespace pwiz.Skyline.Model
 
         public int MoleculeNameColumn { get; set; }
 
-=======
->>>>>>> remotes/origin/master
         public ColumnIndices()
         {
             ProteinColumn = -1;

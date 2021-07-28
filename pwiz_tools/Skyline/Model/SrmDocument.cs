@@ -1489,7 +1489,7 @@ namespace pwiz.Skyline.Model
         /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
         /// </summary>
         public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors, 
-            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none, bool rowReadRequired = false) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             var importer = new MassListImporter(this, inputs,  inputType);
             if (importer.PreImport(progressMonitor, null, tolerateErrors, rowReadRequired))
