@@ -115,11 +115,11 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.Properties.Contains("DeploymentDirectory"); }
         }
 
-        public static string PerfTestDataDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files/perftests";
+        public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
 
         public static string GetPerfTestDataURL(string filename)
         {
-            return @"https://" + PerfTestDataDomainAndPath + @"/" + filename;
+            return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
 
         protected bool GetBoolValue(string property, bool defaultValue)
@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var zipURL = downloadFromS3
                     ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
-                        .Replace(PerfTestDataDomainAndPath, s3hostname)
+                        .Replace(PanoramaDomainAndPath, s3hostname)
                     : zipPath;
 
                 try
