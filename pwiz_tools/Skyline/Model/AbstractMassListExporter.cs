@@ -574,13 +574,20 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+
+            // When exporting CoV optimization methods, only write top ranked transitions.
+            var onlyTopRankedTransitions =
+                PrimaryTransitionCount > 0 &&
+                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
+                Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+
             foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
             {
                 if (OptimizeType == null)
                 {
                     fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0, SortByMz);
                 }
-                else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
+                else if (!onlyTopRankedTransitions || nodeGroup.TransitionCount == 1 || GetRank(nodeGroup, nodeGroupPrimary, nodeTran) <= PrimaryTransitionCount)
                 {
                     // -step through step
                     bool transitionWritten = false;
@@ -601,13 +608,6 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-
-        protected virtual bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            return false;
-        }
-
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
         {
