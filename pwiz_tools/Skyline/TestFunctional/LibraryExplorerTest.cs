@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestFunctional
 
             });
             // Verify that the correct filter type is selected upon form opening
-            Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with, filterTypeSelected); // Localize
+            Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with, filterTypeSelected);
 
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
             FilterListAndVerifyCount(filterTextBox, pepList,"C", 6);

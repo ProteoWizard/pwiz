@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1126,8 +1127,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var tipProvider = new MatchTypeTipProvider(matchTypes);
                 var pt = textPeptide.Location;
+                var size = tipProvider.getSize();
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 120, pt.Y - 60, 0, 0),
+                    new Rectangle(pt.X + 120, pt.Y - 65 - size.Height, 0, 0),
                     pt);
             }
         }
@@ -2298,6 +2300,12 @@ namespace pwiz.Skyline.SettingsUI
                 typeMatches = matchTypes;
             }
 
+            public Size getSize()
+            {
+                Bitmap bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+                Graphics g = Graphics.FromImage(bitmap1);
+                return RenderTip(g, _size, false);
+            }
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
                 using (var rt = new RenderTools())

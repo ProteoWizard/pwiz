@@ -40,6 +40,8 @@ namespace pwiz.Skyline.SettingsUI
         private const string UNMODIFIED_TARGET_TEXT = @"UnmodifiedTargetText";
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
+        private const string ADDUCT = @"Adduct";
+        private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
@@ -84,6 +86,10 @@ namespace pwiz.Skyline.SettingsUI
             } else if (propertyName == INCHI_KEY)
             {
                 _matchTypes.Add(ColumnCaptions.InChiKey);
+            } else if (propertyName == ADDUCT || propertyName == ADDUCT_MINUS_BRACKETS)
+            {
+                if(!_matchTypes.Contains(ColumnCaptions.PrecursorAdduct))
+                _matchTypes.Add(ColumnCaptions.PrecursorAdduct);
             }
             else if (!_matchTypes.Contains(propertyName))
             {
@@ -176,7 +182,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If there are small molecules in the library then search by multiple fields instead of just molecule name
             var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY } // Order of properties does not matter as results are sorted by molecule or peptide name
+                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS } // Order of properties does not matter as results are sorted by molecule or peptide name
                 : new List<string> {UNMODIFIED_TARGET_TEXT};
 
             var filteredIndices = Enumerable.Empty<int>().ToList(); // The indices of entries in the peptide list that match our filter text

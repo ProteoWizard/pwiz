@@ -86,9 +86,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public double PrecursorMz { get; set; }
         /// <summary>
-        /// The charge state of the peptide matched to a spectrum
+        /// The charge state of the peptide or molecule matched to a spectrum
         /// </summary>
         public Adduct Adduct { get { return Key.Adduct; } }
+
+        /// <summary>
+        /// The charge state of a peptide or small molecule without the associated brackets,
+        /// for searching purposes
+        /// </summary>
+        public string AdductMinusBrackets
+        {
+            get { return Key.Adduct.ToString().Replace(@"[", "").Replace(@"]", ""); }
+        }
 
         /// <summary>
         /// The modified peptide sequence or small molecule associated with a spectrum
