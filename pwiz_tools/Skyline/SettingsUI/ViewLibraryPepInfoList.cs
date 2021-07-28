@@ -44,7 +44,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
-            _matcher = matcher;
+            _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in the library?
             _allPeptides = allPeptides;
         }
@@ -62,36 +62,32 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Add a string to display to our list based on the given property
         /// </summary>
-        private void UpdateMatchTypes(int numMatches, string propertyName, 
-            List<int> matchIndices = null) // In the case of a match in OtherKeys we will need to check each of the matches
+        private void UpdateMatchTypes(string propertyName)
         {
             // If there are items on our list of indices and our list of match types does not
             // already include this match type, then add it to the list
-            if (numMatches > 0)
+            if (propertyName == UNMODIFIED_TARGET_TEXT)
             {
-                if (propertyName == UNMODIFIED_TARGET_TEXT)
+                // Because the target text can be a molecule name or a peptide sequence only display
+                // peptide if every entry on the list is a peptide
+                _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
+            }
+            else if (propertyName == PRECURSOR_MZ)
+            {
+                if (!_matchTypes.Contains(ColumnCaptions.PrecursorMz))
                 {
-                    // Because the target text can be a molecule name or a peptide sequence only display
-                    // peptide if every entry on the list is a peptide
-                    _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
+                    _matchTypes.Add(ColumnCaptions.PrecursorMz);
                 }
-                else if (propertyName == PRECURSOR_MZ)
-                {
-                    if (!_matchTypes.Contains(ColumnCaptions.PrecursorMz))
-                    {
-                        _matchTypes.Add(ColumnCaptions.PrecursorMz);
-                    }
-                }else if (propertyName == FORMULA)
-                {
-                    _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
-                }
-                else
-                {
-                    if (!_matchTypes.Contains(propertyName))
-                    {
-                        _matchTypes.Add(propertyName);
-                    }
-                }
+            }else if (propertyName == FORMULA)
+            {
+                _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
+            } else if (propertyName == INCHI_KEY)
+            {
+                _matchTypes.Add(ColumnCaptions.InChiKey);
+            }
+            else if (!_matchTypes.Contains(propertyName))
+            {
+                _matchTypes.Add(propertyName);
             }
         }
 
@@ -103,7 +99,11 @@ namespace pwiz.Skyline.SettingsUI
             // Return all the entries where the value of the given property matches the filter text
             var indices = (from entry in _allEntries where property.GetValue(entry).ToString()
                 .IndexOf(filterText, StringComparison.CurrentCultureIgnoreCase) >= 0 select IndexOf(entry)).ToList();
-            UpdateMatchTypes(indices.Count, property.Name, indices);
+            if (indices.Any())
+            {
+                UpdateMatchTypes(property.Name);
+            }
+
             return indices;
         }
 
@@ -122,7 +122,10 @@ namespace pwiz.Skyline.SettingsUI
                     StringComparison.OrdinalIgnoreCase));
             // Return the indices of entries that matched the filter text
             var matchIndices = orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
-            UpdateMatchTypes(matchIndices.Count, property.Name, matchIndices);
+            if (matchIndices.Any())
+            {
+                UpdateMatchTypes(property.Name);
+            }
             return matchIndices;
         }
 
@@ -137,12 +140,13 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (entry.OtherKeys != null)
                 {
+                    // Split the string containing all molecular IDs into separate entries
                     var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
                     foreach (var pair in accessionNumDict.Where(pair => filterType == ViewLibraryDlg.FilterType.contains ? 
                         pair.Value.Contains(filterText) : pair.Value.StartsWith(filterText)))
                     {
                         matchIndices.Add(IndexOf(entry));
-                        UpdateMatchTypes(1, pair.Key);
+                        UpdateMatchTypes(pair.Key);
                     }
                 }
             }
@@ -214,7 +218,10 @@ namespace pwiz.Skyline.SettingsUI
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
                     entry.PrecursorMz - result) > mzFilterTolerance)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results).ToList();
-                UpdateMatchTypes(results.Count, PRECURSOR_MZ);
+                if (results.Any())
+                {
+                    UpdateMatchTypes(PRECURSOR_MZ);
+                }
             }
 
             matchTypes = _matchTypes;

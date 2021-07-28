@@ -86,14 +86,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<LibrarySpec> _driverLibraries;
 
-        public ViewLibraryPepInfoList _peptides;
+        public ViewLibraryPepInfoList _peptides; // Public for testing purposes
         private IList<int> _currentRange;
 
         private LibKeyModificationMatcher _matcher;
 
         private bool _activated;
 
-        public readonly NodeTip _matchTypesNodeTips; // Public for testing purposes
+        private readonly NodeTip _matchTypesNodeTips;
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo _lastTipNode;
@@ -102,6 +102,7 @@ namespace pwiz.Skyline.SettingsUI
         private bool _hasChromatograms;
         private bool _hasScores;
         private readonly GraphHelper _graphHelper;
+        private FilterType _selectedFilterType; // 'Starts with' or 'contains'
 
         private ModFontHolder ModFonts { get; set; }
 
@@ -204,15 +205,16 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeFilterTypeComboBox()
         {
-            comboFilterType.SelectedIndex = 0;
+            comboFilterType.SelectedIndex =
+                comboFilterType.FindStringExact(Resources
+                    .ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with);
         }
+
         public bool AssociateMatchingProteins
         {
             get { return cbAssociateProteins.Checked; }
             set { cbAssociateProteins.Checked = value; }
         }
-
-        private FilterType selectedFilterType;
 
         public void ChangeSelectedPeptide(string text)
         {
@@ -1104,17 +1106,20 @@ namespace pwiz.Skyline.SettingsUI
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
             // Filter the list by the new text according to the current filter type
-            _currentRange = _peptides.Filter(textPeptide.Text, selectedFilterType, out var matchTypes);
+            _currentRange = _peptides.Filter(textPeptide.Text, _selectedFilterType, out var matchTypes);
             
             // Whenever the filter text changes, it's possible the categories with matches will change as well
-            updateMatchTypes(matchTypes);
+            UpdateMatchTypes(matchTypes);
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
             UpdateUI();
         }
 
-        private void updateMatchTypes(List <string> matchTypes)
+        /// <summary>
+        /// If there are no match types then hide the tip, otherwise show the current match types
+        /// </summary>
+        private void UpdateMatchTypes(List <string> matchTypes)
         {
             _matchTypesNodeTips.HideTip(); // Hide the old tip
             if (matchTypes.Count > 0)
@@ -2650,18 +2655,27 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
+        /// <summary>
+        /// Get the information necessary to calculate precursor m/z and then calculate it
+        /// </summary>
+        public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
+        {
+            GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
+            return CalcMz(info, _settings, transitionGroup, mods);
+        }
+
+        /// <summary>
+        /// Calculate precursor m/z
+        /// </summary>
+        private static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
             TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
             var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
                 .GetPrecursorMass(info.Target);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
-        public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
-        {
-            GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
-            return CalcMz(info, _settings, transitionGroup, mods);
-        }
+        
+        
         public enum FilterType
         {
             starts_with, contains
@@ -2672,16 +2686,16 @@ namespace pwiz.Skyline.SettingsUI
             UpdateUI();
         }
 
-        private void comboOperation1_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboFilterType_SelectedIndexChanged(object sender, EventArgs e)
         {
 
             if (comboFilterType.SelectedItem.ToString() == Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with)
             {
-                selectedFilterType = FilterType.starts_with;
+                _selectedFilterType = FilterType.starts_with;
             }
             else
             {
-                selectedFilterType = FilterType.contains;
+                _selectedFilterType = FilterType.contains;
             }
 
             // If there is a filter term in the search box we need to update the search

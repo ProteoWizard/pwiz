@@ -161,7 +161,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.GetString("comboFilterType.Items"),
             resources.GetString("comboFilterType.Items1")});
             this.comboFilterType.Name = "comboFilterType";
-            this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboOperation1_SelectedIndexChanged);
+            this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboFilterType_SelectedIndexChanged);
             // 
             // listPeptide
             // 
