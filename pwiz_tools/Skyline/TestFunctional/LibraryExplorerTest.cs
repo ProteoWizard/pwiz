@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestFunctional
         private const string YEAST = "Yeast";
         private const string SHIMADZU_MLB = "Shimadzu MLB";
         private const string NIST_SMALL_MOL = "NIST Small Molecules";
+        private const string MULTIPLE_MOL_IDS = "MultipleMolecularIDs";
 
         private readonly TestLibInfo[] _testLibs = {
                                                        new TestLibInfo(HUMANB2MG_LIB, "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
@@ -79,7 +80,8 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"), // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo(MULTIPLE_MOL_IDS, "MultipleMolecularIDs.blib", "")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -253,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
             var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
             var expectedResults = new List<string>
                 {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                    Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.CAS, ColumnCaptions.PrecursorMz};
+                    Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.PrecursorMz, "cas"};
 
             // Compare our expected tip text to the text actually in the new tip
             CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
@@ -274,7 +276,21 @@ namespace pwiz.SkylineTestFunctional
             // Test that we distinguish between molecule IDs when displaying match types
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
             CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text),
-                new List<string> {ColumnCaptions.CAS});
+                new List<string> {"cas"});
+            // Now switch to a list with multiple molecular IDs
+            RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
+            // Test that different ID types are displayed correctly
+            FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
+
+            // Find the current match types and create a new tip with them so we can test the match type text
+            nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
+            expectedResults = new List<string>
+            {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.InChiKey,
+                "InChi", ColumnCaptions.SMILES, "MadeUpFakeKey" };
+
+            // Compare our expected tip text to the text actually in the new tip
+            CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
 
             // Now test search behavior on a peptide list
             ShowDialog<AddModificationsDlg>(() => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
@@ -800,7 +816,7 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             string libSelected = null;
-            var libIndex = _testLibs.Length - index;
+            var libIndex = _testLibs.Length - index -1;
             bool isNIST = (index < 3);
             bool isLipidCreator = (index == 4);
             bool isSketchyFragmentAnnotations = (index == 6);
