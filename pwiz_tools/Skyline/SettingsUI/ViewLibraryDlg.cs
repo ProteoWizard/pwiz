@@ -2302,20 +2302,29 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var rt = new RenderTools())
                 {
-                    // Draw title
-                    var parts = new List<string> {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
-                    var sizeLastString = DrawTextParts(g, 0, 0, parts, rt);
-                    var width = sizeLastString.Width;
-                    var height = sizeLastString.Height;
-                    // Draw the current fields with matches
-                    foreach (var str in typeMatches ?? new List<string>())
+                    var textParts = GetTextPartsToDraw();
+                    float height = 0;
+                    float width = 0;
+
+                    // First find the size of the rectangle
+                    foreach (var sizeString in textParts.Select(str => g.MeasureString(str, rt.FontNormal)))
                     {
-                        g.TranslateTransform(0, sizeLastString.Height);
-                        var matchType = new List<string> {str};
-                        sizeLastString = DrawTextParts(g, 0, 0, matchType, rt);
-                        width = Math.Max(width, sizeLastString.Width);
-                        height += sizeLastString.Height;
+                        height += sizeString.Height;
+                        width = Math.Max(width, sizeString.Width);
                     }
+
+
+                    if (draw)
+                    {
+                        var sizeLastString = new SizeF();
+                        foreach (var str in textParts)
+                        {
+                            g.TranslateTransform(0, sizeLastString.Height);
+                            g.DrawString(str, rt.FontNormal, Brushes.Black, new PointF(0, 0));
+                            sizeLastString = g.MeasureString(str, rt.FontNormal);
+                        }
+                    }
+
                     // Width is the max length of the longest match type name which might vary by language and matches present
                     _size = new Size((int)width + 8, (int)height + 4); // +8 width, +4 height padding
                     return _size;
@@ -2330,22 +2339,7 @@ namespace pwiz.Skyline.SettingsUI
                 textParts.AddRange(typeMatches);
                 return textParts;
             }
-            // draws text at a start (x,y) and returns the end (x,y) of the drawn text
-            // takes a list of <string, color> so that we can draw segments of different colors
-            private SizeF DrawTextParts(Graphics g, float startX, float startY, List<string> parts, RenderTools rt)
-            {
-                var size = new SizeF(startX, startY);
-                float height = 0;
-                foreach (var part in parts)
-                {
-                    g.DrawString(part, rt.FontNormal, Brushes.Black, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part, rt.FontNormal).Width;
-                    height = g.MeasureString(part, rt.FontNormal).Height;
-                }
-                size.Height = height;
-                return size;
-            }
-            
+
             public bool HasTip
             {
                 get { return true; }
