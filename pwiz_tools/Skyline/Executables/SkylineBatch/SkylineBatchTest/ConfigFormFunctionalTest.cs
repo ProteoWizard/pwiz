@@ -32,9 +32,9 @@ namespace SkylineBatchTest
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
-            //TestAddInvalidConfiguration(mainForm);
+            TestAddInvalidConfiguration(mainForm);
 
-            //TestEditInvalidDownloadingFolderPath(mainForm);
+            TestEditInvalidDownloadingFolderPath(mainForm);
 
             TestZipFiles(mainForm);
         }
@@ -58,7 +58,6 @@ namespace SkylineBatchTest
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
             });
 
-            //RunUI(() => { mainForm.ClickConfig(0); });
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
             var tenSeconds = new TimeSpan(0, 0, 10);
@@ -67,7 +66,6 @@ namespace SkylineBatchTest
             var oneMinute = new TimeSpan(0, 0, 30);
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
-            RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
             RunUI(() => { mainForm.ClickRun(0); });
             var longWaitDialog2 = FindOpenForm<LongWaitDlg>();
             WaitForClosedForm(longWaitDialog2);
@@ -75,7 +73,6 @@ namespace SkylineBatchTest
                 "Config did not start");
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
-
         }
 
         public void TestEditInvalidDownloadingFolderPath(MainForm mainForm)
