@@ -1,4 +1,5 @@
 using MathNet.Numerics.Properties;
+using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -197,8 +198,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboFilterType.FormattingEnabled = true;
             this.comboFilterType.Items.AddRange(new object[] {
-            resources.GetString("comboFilterType.Items"),
-            resources.GetString("comboFilterType.Items1")});
+            global::pwiz.Skyline.Properties.Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with,
+            "Contains"});
             this.comboFilterType.Name = "comboFilterType";
             this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboFilterType_SelectedIndexChanged);
             // 
