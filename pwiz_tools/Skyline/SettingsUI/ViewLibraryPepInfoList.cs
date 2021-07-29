@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -34,6 +36,9 @@ namespace pwiz.Skyline.SettingsUI
         private List<string> _matchTypes = new List<string>();
         private readonly LibKeyModificationMatcher _matcher;
         private readonly bool _allPeptides;
+
+        // Tolerance for the numeric proximity of the precursor m/z to the filter text
+        public const double MZ_FILTER_TOLERANCE = 0.1;
 
         // String names for properties
         private const string PRECURSOR_MZ = @"PrecursorMz";
@@ -72,20 +77,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Because the target text can be a molecule name or a peptide sequence only display
                 // peptide if every entry on the list is a peptide
-                _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : ColumnCaptions.MoleculeName);
+                _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
             }
             else if (propertyName == PRECURSOR_MZ)
             {
-                if (!_matchTypes.Contains(ColumnCaptions.PrecursorMz))
+                if (!_matchTypes.Contains(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
                 {
-                    _matchTypes.Add(ColumnCaptions.PrecursorMz);
+                    _matchTypes.Add(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
                 }
             }else if (propertyName == FORMULA)
             {
                 _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
             } else if (propertyName == INCHI_KEY)
             {
-                _matchTypes.Add(ColumnCaptions.InChiKey);
+                _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
             } else if (propertyName == ADDUCT || propertyName == ADDUCT_MINUS_BRACKETS)
             {
                 if(!_matchTypes.Contains(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct))
@@ -178,7 +183,6 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="matchTypes"> Categories in which matches were found</param>
         public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
         {
-            const double mzFilterTolerance = 0.1; // Tolerance for the numeric proximity to the filter text
             _matchTypes = new List<string>();
 
             if (string.IsNullOrEmpty(filterText))
@@ -210,7 +214,7 @@ namespace pwiz.Skyline.SettingsUI
                     current.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
             }
             // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
-            if (double.TryParse(filterText, out var result))
+            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
             {
                 // Calculate the mz of each entry to search if we can
                 foreach (var entry in _allEntries)
@@ -232,7 +236,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Then find the first entry with a precursor m/z exceeding our match tolerance
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
-                    entry.PrecursorMz - result) > mzFilterTolerance)).Select(IndexOf).ToList();
+                    entry.PrecursorMz - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results).ToList();
                 if (results.Any())
                 {

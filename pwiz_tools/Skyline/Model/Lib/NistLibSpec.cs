@@ -1417,7 +1417,7 @@ namespace pwiz.Skyline.Model.Lib
             return isMinutes ? rt : rt / 60;
         }
 
-        private static bool TryParseDoubleUncertainCulture(string valString, out double dval)
+        public static bool TryParseDoubleUncertainCulture(string valString, out double dval)
         {
             // .MSP from Golm GMD may have European decimals
             if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&

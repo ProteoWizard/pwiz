@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -1297,21 +1298,22 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         /// <summary>
-        /// Draw the table and bold entries matching the search text, according to the filter type
+        /// Draw the table and bold and highlight text matching the search text, according to the filter type
         /// </summary>
         public void SearchSensitiveDraw(Graphics g, ViewLibraryDlg.FilterType filterType, string filterText, RenderTools rt)
         {
-            StringFormat sf = new StringFormat();
-            float y = 0f;
-            bool isField = true;
-            foreach (RowDesc row in this)
+            var sf = new StringFormat();
+            var y = 0f;
+            var isField = true; // The first cell will be a field cell
+            foreach (var row in this)
             {
-                float x = 0f;
-                foreach (CellDesc cell in row)
+                var x = 0f;
+                foreach (var cell in row)
                 {
                     IEnumerable<int> matchIndices = new List<int>();
                     if (isField)
                     {
+                        // The cells alternate between field and value
                         isField = false;
                     }
                     else
@@ -1319,53 +1321,63 @@ namespace pwiz.Skyline.Controls.SeqNode
                         isField = true;
                         if (filterType == ViewLibraryDlg.FilterType.contains)
                         {
+                            // Find the indices of all substrings matching the filter text
                             matchIndices = Regex.Matches(cell.Text, filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index).ToList();
                         }
                         else
                         {
-                            var startsWithIndex = cell.Text.IndexOf(filterText, 0, filterText.Length,
-                                StringComparison.OrdinalIgnoreCase);
-                            if (startsWithIndex != -1)
+                            // If the text starts with the filter text, indicate a match at index 0
+                            if (cell.Text.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
                             {
-                                matchIndices = new List<int>
-                                {
-                                    cell.Text.IndexOf(filterText, 0, filterText.Length,
-                                        StringComparison.OrdinalIgnoreCase)
-                                };
+                                matchIndices = new List<int> {0};
+                            }
+                        }
+                        // If there's a numeric match, simply bold everything in the cell
+                        if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) && double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum))
+                        {
+                            if (Math.Abs(filterNum - cellNum) < ViewLibraryPepInfoList.MZ_FILTER_TOLERANCE)
+                            {
+                                matchIndices = matchIndices.Concat(new[] { 0 });
+                                filterText = cell.Text;
                             }
                         }
                     }
 
                     sf.Alignment = cell.Align;
                     sf.LineAlignment = StringAlignment.Near;
-                    var sfMatch = new StringFormat(sf);
-                    sfMatch.Alignment = 0;
-                    
-                    RectangleF rect = new RectangleF(x, y, cell.Width, cell.Height);
-                    Font font = cell.Font;
-                    Brush brush = cell.Brush;
+
+                    var rect = new RectangleF(x, y, cell.Width, cell.Height);
+                    var font = cell.Font;
+                    var brush = cell.Brush;
                     var startIndex = 0;
                     var matchEnd = 0;
+
+                    // We need to use a different StringFormat object when drawing the strings piece by piece because the default one
+                    // overestimates the width of text 
                     var format = new StringFormat(StringFormat.GenericTypographic);
                     if(matchIndices.Any() && !filterText.IsNullOrEmpty()){
                         foreach (var index in matchIndices)
                         {
+                            // Draw the text preceding the match in a normal font
                             matchEnd = index + filterText.Length;
                             var preMatch = cell.Text.Substring(startIndex, index - startIndex);
                             g.DrawString(preMatch, font, brush, rect, format);
                             rect.X += g.MeasureString(preMatch, font, rect.Location, format).Width;
+                            // Draw the match in bold
                             var match = cell.Text.Substring(index, filterText.Length);
-                            g.DrawString(match, rt.FontBold, Brushes.Green, rect, format);
+                            g.DrawString(match, rt.FontBold, brush, rect, format);
                             rect.X += g.MeasureString(match, rt.FontBold, rect.Location, format).Width;
                             brush = cell.Brush;
                             startIndex = matchEnd;
                         }
+                        // Draw all text after the last match 
                         var postMatch = cell.Text.Substring(matchEnd, cell.Text.Length - matchEnd);
                         g.DrawString(postMatch, font, brush, rect, sf);
                         rect.X += g.MeasureString(postMatch, font).Width;
                     }
                     else
                     {
+                        // If there are no matches draw the string as we normally would
                         g.DrawString(cell.Text, font, brush, rect, sf);
                     }
 

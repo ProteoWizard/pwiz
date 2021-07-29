@@ -20,9 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -255,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
             var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
             var expectedResults = new List<string>
                 {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                    Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.PrecursorMz, "cas"};
+                    Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, Resources.PeptideTipProvider_RenderTip_Precursor_m_z, "cas"};
 
             // Compare our expected tip text to the text actually in the new tip
             CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
@@ -268,7 +270,7 @@ namespace pwiz.SkylineTestFunctional
             
             // The only match type here should be precursor m/z 
             CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text),
-                new List<string> {ColumnCaptions.PrecursorMz});
+                new List<string> { Resources.PeptideTipProvider_RenderTip_Precursor_m_z });
 
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, "326.1", 1);
@@ -286,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
             nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
             expectedResults = new List<string>
             {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.InChiKey,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,
                 "InChi", ColumnCaptions.SMILES, "MadeUpFakeKey" };
 
             // Compare our expected tip text to the text actually in the new tip

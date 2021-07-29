@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -1129,7 +1130,7 @@ namespace pwiz.Skyline.SettingsUI
                 var pt = textPeptide.Location;
                 var size = tipProvider.getSize();
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 120, pt.Y - 65 - size.Height, 0, 0),
+                    new Rectangle(pt.X + 120, pt.Y - 104 - size.Height, 0, 0),
                     pt);
             }
         }
@@ -2509,6 +2510,28 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+
+                    var matchIndices = new List<int>();
+                    var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
+                    if (_filterType == FilterType.contains)
+                    {
+                        matchIndices = Regex.Matches(strSeq, _filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index)
+                            .ToList();
+                    }
+                    else
+                    {
+                        if (strSeq.StartsWith(_filterText, StringComparison.OrdinalIgnoreCase))
+                        {
+                            matchIndices = new List<int> { 0 };
+                        }
+                    }
+
+                    var charLocations = new List<int>();
+                    foreach (var index in matchIndices)
+                    {
+                        charLocations.AddRange(Enumerable.Range(index, _filterText.Length));
+                    }
+
                     for (var i = 0; i < splitMods.Count; i++)
                     {
                         var piece = splitMods[i];
@@ -2524,7 +2547,7 @@ namespace pwiz.Skyline.SettingsUI
                                 drawColor = Brushes.Red;
                             }
                         }
-                        toDrawParts.Add(new TextColor(drawStr, drawColor));
+                        toDrawParts.Add(new TextColor(drawStr, drawColor, charLocations.Contains(i)));
                     }
                 }
                 return toDrawParts;
@@ -2633,9 +2656,10 @@ namespace pwiz.Skyline.SettingsUI
                 float height = 0;
                 foreach (var part in parts)
                 {
-                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
-                    height = g.MeasureString(part.Text, rt.FontNormal).Height;
+                    var font = part.Bold ? rt.FontBold : rt.FontNormal;
+                    g.DrawString(part.Text, font, part.Color, new PointF(size.Width, size.Height));
+                    size.Width += g.MeasureString(part.Text, font).Width - 3;
+                    height = g.MeasureString(part.Text, font).Height;
                 }
                 size.Height = height;
                 return size;
@@ -2650,14 +2674,16 @@ namespace pwiz.Skyline.SettingsUI
 
             public struct TextColor
             {
-                public TextColor(string text, Brush color = null) : this()
+                public TextColor(string text, Brush color = null, bool bold = false) : this()
                 {
                     Text = text;
                     Color = color ?? Brushes.Black;
+                    Bold = bold;
                 }
 
                 public string Text { get; private set; }
                 public Brush Color { get; private set; }
+                public bool Bold { get; private set; }
             }
         }
 

@@ -130,40 +130,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitPeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 40</value>
+    <value>0, 88</value>
   </data>
   <data name="splitPeptideList.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
-  </data>
-  <data name="comboFilterType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="comboFilterType.Items" xml:space="preserve">
-    <value>Starts with</value>
-  </data>
-  <data name="comboFilterType.Items1" xml:space="preserve">
-    <value>Contains</value>
-  </data>
-  <data name="comboFilterType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>64, 32</value>
-  </data>
-  <data name="comboFilterType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 21</value>
-  </data>
-  <data name="comboFilterType.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;comboFilterType.Name" xml:space="preserve">
-    <value>comboFilterType</value>
-  </data>
-  <data name="&gt;&gt;comboFilterType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboFilterType.Parent" xml:space="preserve">
-    <value>PeptideListPanel</value>
-  </data>
-  <data name="&gt;&gt;comboFilterType.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="listPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -172,10 +142,10 @@
     <value>16</value>
   </data>
   <data name="listPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 60</value>
+    <value>0, 3</value>
   </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>254, 180</value>
+    <value>254, 116</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -190,37 +160,7 @@
     <value>PeptideListPanel</value>
   </data>
   <data name="&gt;&gt;listPeptide.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 32</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Filter type:</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>PeptideListPanel</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="cbShowModMasses.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -229,7 +169,7 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 253</value>
+    <value>0, 205</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
     <value>257, 17</value>
@@ -253,31 +193,7 @@
     <value>PeptideListPanel</value>
   </data>
   <data name="&gt;&gt;cbShowModMasses.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="textPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 6</value>
-  </data>
-  <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 20</value>
-  </data>
-  <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
-    <value>textPeptide</value>
-  </data>
-  <data name="&gt;&gt;textPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPeptide.Parent" xml:space="preserve">
-    <value>PeptideListPanel</value>
-  </data>
-  <data name="&gt;&gt;textPeptide.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="PeptideListPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -286,7 +202,7 @@
     <value>0, 3</value>
   </data>
   <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 270</value>
+    <value>257, 222</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -454,10 +370,10 @@
     <value>50</value>
   </data>
   <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 349</value>
+    <value>257, 301</value>
   </data>
   <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>273</value>
+    <value>225</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -473,6 +389,90 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="comboFilterType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="comboFilterType.Items" xml:space="preserve">
+    <value>Starts with</value>
+  </data>
+  <data name="comboFilterType.Items1" xml:space="preserve">
+    <value>Contains</value>
+  </data>
+  <data name="comboFilterType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>64, 66</value>
+  </data>
+  <data name="comboFilterType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 21</value>
+  </data>
+  <data name="comboFilterType.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboFilterType.Name" xml:space="preserve">
+    <value>comboFilterType</value>
+  </data>
+  <data name="&gt;&gt;comboFilterType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboFilterType.Parent" xml:space="preserve">
+    <value>PeptideEditPanel</value>
+  </data>
+  <data name="&gt;&gt;comboFilterType.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 69</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>&amp;Filter type:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>PeptideEditPanel</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 40</value>
+  </data>
+  <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>254, 20</value>
+  </data>
+  <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
+    <value>textPeptide</value>
+  </data>
+  <data name="&gt;&gt;textPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPeptide.Parent" xml:space="preserve">
+    <value>PeptideEditPanel</value>
+  </data>
+  <data name="&gt;&gt;textPeptide.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="splitMain.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -565,7 +565,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="comboLibrary" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="btnLibDetails" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,90.31007,Percent,9.689922" /&gt;&lt;Rows Styles="Percent,50" /&gt;&lt;/TableLayoutSettings&gt;</value>
@@ -574,7 +574,7 @@
     <value>True</value>
   </data>
   <data name="PeptideLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 24</value>
+    <value>0, 24</value>
   </data>
   <data name="PeptideLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 13</value>
@@ -595,7 +595,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;PeptideLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="MoleculeLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -628,7 +628,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;MoleculeLabel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="PeptideEditPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -637,7 +637,7 @@
     <value>0, 0</value>
   </data>
   <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 40</value>
+    <value>257, 88</value>
   </data>
   <data name="PeptideEditPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

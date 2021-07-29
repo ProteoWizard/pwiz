@@ -2167,6 +2167,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 if (!string.IsNullOrEmpty(OtherKeys))
                 {
+                    // Add a seperate line for each molecule accession number
                     var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(OtherKeys);
                     foreach (var pair in accessionNumDict)
                     {
