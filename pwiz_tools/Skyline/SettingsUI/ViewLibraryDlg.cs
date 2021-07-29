@@ -1130,7 +1130,7 @@ namespace pwiz.Skyline.SettingsUI
                 var pt = textPeptide.Location;
                 var size = tipProvider.getSize();
                 _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 120, pt.Y - 104 - size.Height, 0, 0),
+                    new Rectangle(pt.X + 120, pt.Y - 80 - size.Height, 0, 0),
                     pt);
             }
         }
@@ -2503,7 +2503,7 @@ namespace pwiz.Skyline.SettingsUI
             private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
             {
                 var toDrawParts = new List<TextColor>();
-                if (!_pepInfo.Key.HasModifications)
+                if (false)
                 {
                     toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
                 }
@@ -2625,26 +2625,30 @@ namespace pwiz.Skyline.SettingsUI
             private List<Tuple<char, string>> SplitModifications(string modifiedSequence)
             {
                 var result = new List<Tuple<char, string>>();
-                for (int ich = 0; ich < modifiedSequence.Length; ich++)
+                if (!modifiedSequence.IsNullOrEmpty())
                 {
-                    char ch = modifiedSequence[ich];
-                    if (ich == modifiedSequence.Length - 1 || modifiedSequence[ich + 1] != '[')
+                    for (int ich = 0; ich < modifiedSequence.Length; ich++)
                     {
-                        result.Add(Tuple.Create(ch, (string) null));
-                    }
-                    else
-                    {
-                        int ichEndBracket = modifiedSequence.IndexOf(']', ich + 1);
-                        if (ichEndBracket == -1)
-                            ichEndBracket = modifiedSequence.Length;
-                        int ichStart = ich + 1;
-                        string modText = ichStart < ichEndBracket
-                            ? modifiedSequence.Substring(ich + 1, ichEndBracket - ich)
-                            : null;
-                        result.Add(Tuple.Create(ch, modText));
-                        ich = ichEndBracket;
+                        char ch = modifiedSequence[ich];
+                        if (ich == modifiedSequence.Length - 1 || modifiedSequence[ich + 1] != '[')
+                        {
+                            result.Add(Tuple.Create(ch, (string) null));
+                        }
+                        else
+                        {
+                            int ichEndBracket = modifiedSequence.IndexOf(']', ich + 1);
+                            if (ichEndBracket == -1)
+                                ichEndBracket = modifiedSequence.Length;
+                            int ichStart = ich + 1;
+                            string modText = ichStart < ichEndBracket
+                                ? modifiedSequence.Substring(ich + 1, ichEndBracket - ich)
+                                : null;
+                            result.Add(Tuple.Create(ch, modText));
+                            ich = ichEndBracket;
+                        }
                     }
                 }
+
                 return result;
             }
 

@@ -199,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboFilterType.FormattingEnabled = true;
             this.comboFilterType.Items.AddRange(new object[] {
             global::pwiz.Skyline.Properties.Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with,
-            "Contains"});
+            global::pwiz.Skyline.Properties.Resources.ViewLibraryDlg_InitializeComponent_Contains});
             this.comboFilterType.Name = "comboFilterType";
             this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboFilterType_SelectedIndexChanged);
             // 
@@ -238,12 +238,12 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.comboFilterType);
             this.PeptideEditPanel.Controls.Add(this.label1);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
             this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.textPeptide);
+            this.PeptideEditPanel.Controls.Add(this.comboFilterType);
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
             // 

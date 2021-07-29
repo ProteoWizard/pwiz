@@ -1333,11 +1333,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                             }
                         }
                         // If there's a numeric match, simply bold everything in the cell
-                        if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) && double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum))
+                        if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) && 
+                            double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum)&&
+                            !matchIndices.Any())
                         {
                             if (Math.Abs(filterNum - cellNum) < ViewLibraryPepInfoList.MZ_FILTER_TOLERANCE)
                             {
-                                matchIndices = matchIndices.Concat(new[] { 0 });
+                                matchIndices = new List<int> { 0 };
                                 filterText = cell.Text;
                             }
                         }
@@ -1372,8 +1374,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                         }
                         // Draw all text after the last match 
                         var postMatch = cell.Text.Substring(matchEnd, cell.Text.Length - matchEnd);
-                        g.DrawString(postMatch, font, brush, rect, sf);
-                        rect.X += g.MeasureString(postMatch, font).Width;
+                        g.DrawString(postMatch, font, brush, rect, format);
+                        rect.X += g.MeasureString(postMatch, font, rect.Location, format).Width;
                     }
                     else
                     {

@@ -11502,4 +11502,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with" xml:space="preserve">
     <value>Starts with</value>
   </data>
+  <data name="ViewLibraryDlg_InitializeComponent_Contains" xml:space="preserve">
+    <value>Contains</value>
+  </data>
 </root>
