@@ -44,10 +44,10 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.labelFileInfo = new System.Windows.Forms.Label();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.listBoxFileNames = new System.Windows.Forms.ListBox();
             this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
-            this.labelFileInfo = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -147,6 +147,12 @@
             this.toolTip1.SetToolTip(this.linkLabel1, resources.GetString("linkLabel1.ToolTip"));
             this.linkLabel1.UseCompatibleTextRendering = true;
             // 
+            // labelFileInfo
+            // 
+            resources.ApplyResources(this.labelFileInfo, "labelFileInfo");
+            this.labelFileInfo.Name = "labelFileInfo";
+            this.toolTip1.SetToolTip(this.labelFileInfo, resources.GetString("labelFileInfo.ToolTip"));
+            // 
             // btnUpdate
             // 
             resources.ApplyResources(this.btnUpdate, "btnUpdate");
@@ -158,7 +164,6 @@
             // 
             resources.ApplyResources(this.listBoxFileNames, "listBoxFileNames");
             this.listBoxFileNames.BackColor = System.Drawing.Color.White;
-            this.listBoxFileNames.FormattingEnabled = true;
             this.listBoxFileNames.Name = "listBoxFileNames";
             // 
             // checkBoxNoEncryption
@@ -167,12 +172,6 @@
             this.checkBoxNoEncryption.Name = "checkBoxNoEncryption";
             this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
             this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
-            // 
-            // labelFileInfo
-            // 
-            resources.ApplyResources(this.labelFileInfo, "labelFileInfo");
-            this.labelFileInfo.Name = "labelFileInfo";
-            this.toolTip1.SetToolTip(this.labelFileInfo, resources.GetString("labelFileInfo.ToolTip"));
             // 
             // AddServerForm
             // 
