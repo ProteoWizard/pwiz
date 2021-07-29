@@ -34103,7 +34103,13 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError", resourceCulture);
             }
         }
-        
+        /// <summary>
+        ///   Looks up a localized string similar to Contains.
+        /// </summary>
+        public static string ViewLibraryDlg_InitializeComponent_Contains
+        {
+            get { return ResourceManager.GetString("ViewLibraryDlg_InitializeComponent_Contains", resourceCulture); }
+        }
         /// <summary>
         ///   Looks up a localized string similar to {0}{1} library {2} will be ignored..
         /// </summary>
