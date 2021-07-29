@@ -2469,7 +2469,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         table.Draw(g);
                         g.TranslateTransform(0, sizeSeq.Height);
-                        tableMz.SearchSensitiveDraw(g, _filterType, _filterText);
+                        tableMz.SearchSensitiveDraw(g, _filterType, _filterText, rt);
                         g.TranslateTransform(0, -sizeSeq.Height);
                     }
                 }

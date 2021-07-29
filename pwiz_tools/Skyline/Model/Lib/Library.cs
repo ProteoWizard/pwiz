@@ -2167,7 +2167,11 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 if (!string.IsNullOrEmpty(OtherKeys))
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs, OtherKeys.Replace('\t','\n')));
+                    var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(OtherKeys);
+                    foreach (var pair in accessionNumDict)
+                    {
+                        smallMolLines.Add(new KeyValuePair<string, string>(pair.Key, pair.Value));
+                    }
                 }
                 return smallMolLines;
             }

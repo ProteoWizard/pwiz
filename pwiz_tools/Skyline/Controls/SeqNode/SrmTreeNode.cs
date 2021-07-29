@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.Text.RegularExpressions;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -1297,7 +1299,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// Draw the table and bold entries matching the search text, according to the filter type
         /// </summary>
-        public void SearchSensitiveDraw(Graphics g, ViewLibraryDlg.FilterType filterType, string filterText)
+        public void SearchSensitiveDraw(Graphics g, ViewLibraryDlg.FilterType filterType, string filterText, RenderTools rt)
         {
             StringFormat sf = new StringFormat();
             float y = 0f;
@@ -1307,45 +1309,60 @@ namespace pwiz.Skyline.Controls.SeqNode
                 float x = 0f;
                 foreach (CellDesc cell in row)
                 {
-                    int matchIndex;
+                    IEnumerable<int> matchIndices = new List<int>();
                     if (isField)
                     {
                         isField = false;
-                        matchIndex = -1;
                     }
                     else
                     {
                         isField = true;
                         if (filterType == ViewLibraryDlg.FilterType.contains)
                         {
-                            matchIndex = cell.Text.IndexOf(filterText, StringComparison.OrdinalIgnoreCase);
+                            matchIndices = Regex.Matches(cell.Text, filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index).ToList();
                         }
                         else
                         {
-                            matchIndex = cell.Text.IndexOf(filterText, 0, filterText.Length,
+                            var startsWithIndex = cell.Text.IndexOf(filterText, 0, filterText.Length,
                                 StringComparison.OrdinalIgnoreCase);
+                            if (startsWithIndex != -1)
+                            {
+                                matchIndices = new List<int>
+                                {
+                                    cell.Text.IndexOf(filterText, 0, filterText.Length,
+                                        StringComparison.OrdinalIgnoreCase)
+                                };
+                            }
                         }
                     }
 
                     sf.Alignment = cell.Align;
                     sf.LineAlignment = StringAlignment.Near;
+                    var sfMatch = new StringFormat(sf);
+                    sfMatch.Alignment = 0;
+                    
                     RectangleF rect = new RectangleF(x, y, cell.Width, cell.Height);
                     Font font = cell.Font;
                     Brush brush = cell.Brush;
-                    if (matchIndex != -1)
-                    {
-                        var matchEnd = matchIndex + filterText.Length;
-                        var preMatch = cell.Text.Substring(0, matchIndex);
-                        g.DrawString(preMatch, font, brush, rect, sf);
-                        rect.X += g.MeasureString(preMatch, font).Width;
-                        g.DrawString(cell.Text.Substring(matchIndex, filterText.Length), font, Brushes.BlueViolet,
-                            rect, sf);
-                        rect.X += g.MeasureString(filterText, font).Width;
-                        brush = cell.Brush;
+                    var startIndex = 0;
+                    var matchEnd = 0;
+                    var format = new StringFormat(StringFormat.GenericTypographic);
+                    if(matchIndices.Any() && !filterText.IsNullOrEmpty()){
+                        foreach (var index in matchIndices)
+                        {
+                            matchEnd = index + filterText.Length;
+                            var preMatch = cell.Text.Substring(startIndex, index - startIndex);
+                            g.DrawString(preMatch, font, brush, rect, format);
+                            rect.X += g.MeasureString(preMatch, font, rect.Location, format).Width;
+                            var match = cell.Text.Substring(index, filterText.Length);
+                            g.DrawString(match, rt.FontBold, Brushes.Green, rect, format);
+                            rect.X += g.MeasureString(match, rt.FontBold, rect.Location, format).Width;
+                            brush = cell.Brush;
+                            startIndex = matchEnd;
+                        }
                         var postMatch = cell.Text.Substring(matchEnd, cell.Text.Length - matchEnd);
                         g.DrawString(postMatch, font, brush, rect, sf);
                         rect.X += g.MeasureString(postMatch, font).Width;
-
                     }
                     else
                     {
