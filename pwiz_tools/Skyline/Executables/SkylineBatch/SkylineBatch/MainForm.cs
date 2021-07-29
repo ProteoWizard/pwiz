@@ -44,14 +44,14 @@ namespace SkylineBatch
             Icon = Program.Icon();
             var roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
-            var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
+            var logPath = Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
-            toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            toolStrip1.Items.Insert(3, new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
-            
+
             _outputLog = new Timer { Interval = 500 };
             _outputLog.Tick += OutputLog;
             _outputLog.Start();
@@ -99,7 +99,7 @@ namespace SkylineBatch
         }
 
         #region Manipulating configuration list
-        
+
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
             ProgramLog.Info(Resources.MainForm_btnNewConfig_Click_Creating_a_new_configuration_);
@@ -221,7 +221,7 @@ namespace SkylineBatch
             var index = listViewConfigs.GetItemAt(e.X, e.Y) != null ? listViewConfigs.GetItemAt(e.X, e.Y).Index : -1;
             SelectConfig(index);
         }
-        
+
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             // Disable automatic item selection - selected configuration set through _configManager
@@ -261,7 +261,7 @@ namespace SkylineBatch
             UpdateUiConfigurations();
             ListViewSizeChanged();
         }
-        
+
         #endregion
 
         #region Open File/Folder
@@ -307,7 +307,7 @@ namespace SkylineBatch
         }
 
         #endregion
-        
+
         #region Running configurations
 
         private void btnRunOptions_Click(object sender, EventArgs e)
@@ -372,11 +372,11 @@ namespace SkylineBatch
         {
             _configManager.CancelRunners();
             btnStop.Enabled = false;
-            btnLogStop.Enabled = false; 
+            btnLogStop.Enabled = false;
         }
 
         #endregion
-        
+
         #region Update UI
 
         // Reload configurations from configManager
@@ -477,13 +477,13 @@ namespace SkylineBatch
                     newChecked += 1;
                 else if (newChecked > (int)RunBatchOptions.FROM_REFINE)
                     newChecked = _showRefineStep ? oldChecked + 1 : oldChecked - 1;
-                
+
                 CheckDropDownOption(newChecked);
             }
         }
 
         #endregion
-        
+
         #region Import / export
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -536,9 +536,9 @@ namespace SkylineBatch
                 return;
             _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
         }
-        
+
         #endregion
-        
+
         #region Logging
 
         private bool _scrolling = true;
@@ -653,7 +653,7 @@ namespace SkylineBatch
             var arg = "/select, \"" + logger.LogFile + "\"";
             Process.Start("explorer.exe", arg);
         }
-        
+
         #endregion
 
         #region Mainform event handlers and errors
