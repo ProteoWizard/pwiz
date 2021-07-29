@@ -115,9 +115,11 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.Properties.Contains("DeploymentDirectory"); }
         }
 
+        public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
+
         public static string GetPerfTestDataURL(string filename)
         {
-            return @"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/" + filename;
+            return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
 
         protected bool GetBoolValue(string property, bool defaultValue)
@@ -202,26 +204,40 @@ namespace pwiz.SkylineTestUtil
 
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
-            if (downloadFromS3)
-                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
-
-            WebClient webClient = new WebClient();
-            using (var fs = new FileSaver(zipFilePath))
+            string message = string.Empty;
+            for (var retry = downloadFromS3; ; retry = false)
             {
+                var zipURL = downloadFromS3
+                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
+                        .Replace(PanoramaDomainAndPath, s3hostname)
+                    : zipPath;
+
                 try
                 {
-                    webClient.DownloadFile(zipPath.Split('\\')[0],
-                        fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                    WebClient webClient = new WebClient();
+                    using (var fs = new FileSaver(zipFilePath))
+                    {
+                        var timer = new Stopwatch();
+                        Console.Write(@"# Downloading test data file {0}...", zipURL);
+                        timer.Start();
+                        webClient.DownloadFile(zipURL.Split('\\')[0],
+                            fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                        Console.Write(@" done. Download time (hh:mm:ss) {0} ", timer.Elapsed);
+                        fs.Commit();
+                    }
+                    return zipURL;
                 }
                 catch (Exception x)
                 {
-                    Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
+                    message += string.Format("Could not download {0}: {1} ", zipURL, x.Message);
+                    if (!retry)
+                    {
+                        AssertEx.Fail(message);
+                    }
+                    Console.Write(message);
+                    downloadFromS3 = false; // Maybe it just never got copied to S3
                 }
-
-                fs.Commit();
             }
-
-            return zipPath;
         }
 
         private static string GetTargetZipFilePath(string zipPath, out string zipFilePath)
