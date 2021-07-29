@@ -2154,7 +2154,7 @@ namespace pwiz.Skyline.Model
         }
 
         public void AssignDetected(int proteinColumn,
-            int moleculeNameColumn,
+            int peptideColumn,
             int precursorColumn,
             int productColumn,
             int labelTypeColumn,
@@ -2162,7 +2162,7 @@ namespace pwiz.Skyline.Model
             int precursorChargeColumn)
         {
             ProteinColumn = proteinColumn;
-            PeptideColumn = moleculeNameColumn;
+            PeptideColumn = peptideColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
