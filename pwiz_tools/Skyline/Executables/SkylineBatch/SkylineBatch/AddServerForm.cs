@@ -83,7 +83,7 @@ namespace SkylineBatch
 
 
             _cancelValidate = new CancellationTokenSource();
-            var connectToServer = new LongWaitOperation(new LongWaitDlg(this, Program.AppName(), "Connecting to server..."));
+            var connectToServer = new LongWaitOperation(new LongWaitDlg(this, Program.AppName(), Resources.AddServerForm_CheckServer_Connecting_to_server___));
             serverConnector = new ServerConnector(Server);
             Exception connectionException = null;
             List<ConnectedFileInfo> files = null;
@@ -142,7 +142,7 @@ namespace SkylineBatch
                 string.IsNullOrWhiteSpace(textNamingPattern.Text))
             {
                 if (_serverRequired)
-                    throw new ArgumentException("The server cannot be empty. Please enter the server information.");
+                    throw new ArgumentException(Resources.AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_);
                 return null;
             }
             return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, textNamingPattern.Text, _dataFolder);
@@ -214,28 +214,34 @@ namespace SkylineBatch
             long totalSize = 0;
             foreach (var file in files)
             {
-                listBoxFileNames.Items.Add(file.FileName);
+                listBoxFileNames.Items.Add(file.FileName + "\t" + GetSizeString(file.Size));
                 totalSize += file.Size;
             }
-
-            var sizeInGB = Math.Round(totalSize / 1000000000.0, 2);
-            var sizeInKB = -1.0;
-            if (sizeInGB < 1)
-            {
-                sizeInGB = -1;
-                sizeInKB = Math.Round(totalSize / 1000.0);
-            }
-
-            var sizeString = sizeInGB > 0 ? string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB) : string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
+            
             if (files.Count != 1)
-                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__0__files___1_, listBoxFileNames.Items.Count, sizeString);
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__0__files___1_, listBoxFileNames.Items.Count, GetSizeString(totalSize));
             else
-                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, sizeString);
+                labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, GetSizeString(totalSize));
         }
 
         private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
         {
             textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
+        }
+
+        private string GetSizeString(long bytes)
+        {
+            var sizeInGB = Math.Round(bytes / 1000000000.0, 2);
+            var sizeInKB = -1.0;
+            if (sizeInGB < 1)
+            {
+                sizeInGB = -1;
+                sizeInKB = Math.Round(bytes / 1000.0);
+            }
+
+            if (sizeInGB > 0)
+                return string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB);
+            return string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
         }
     }
 }
