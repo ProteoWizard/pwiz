@@ -642,68 +642,19 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.PeptideColumn = comboBoxIndex;
             }
+            // If any of the columns are set to the index being changed, we want to set their index to -1 now to get them out of the way
             else
             {
-                if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
-                if (columns.IrtColumn == comboBoxIndex) columns.IrtColumn = -1;
-                if (columns.LabelTypeColumn == comboBoxIndex) columns.LabelTypeColumn = -1;
-                if (columns.LibraryColumn == comboBoxIndex) columns.LibraryColumn = -1;
-                if (columns.PeptideColumn == comboBoxIndex) columns.PeptideColumn = -1;
-                if (columns.PrecursorColumn == comboBoxIndex) columns.PrecursorColumn = -1;
-                if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
-                if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
-                if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
-                if (columns.ExplicitRetentionTimeWindowColumn == comboBoxIndex)
-                    columns.ExplicitRetentionTimeWindowColumn = -1;
-                if (columns.ExplicitCollisionEnergyColumn == comboBoxIndex) columns.ExplicitCollisionEnergyColumn = -1;
-                if (columns.ExplicitRetentionTimeColumn == comboBoxIndex) columns.ExplicitRetentionTimeColumn = -1;
-                if (columns.NoteColumn == comboBoxIndex) columns.NoteColumn = -1;
-                if (columns.SLensColumn == comboBoxIndex) columns.SLensColumn = -1;
-                if (columns.ConeVoltageColumn == comboBoxIndex) columns.ConeVoltageColumn = -1;
-                if (columns.ExplicitIonMobilityColumn == comboBoxIndex) columns.ExplicitIonMobilityColumn = -1;
-                if (columns.ExplicitIonMobilityUnitsColumn == comboBoxIndex)
-                    columns.ExplicitIonMobilityUnitsColumn = -1;
-                if (columns.ExplicitIonMobilityHighEnergyOffsetColumn == comboBoxIndex)
-                    columns.ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-                if (columns.ExplicitCompensationVoltageColumn == comboBoxIndex)
-                    columns.ExplicitCompensationVoltageColumn = -1;
-                if (columns.ExplicitDelusteringPotentialColumn == comboBoxIndex)
-                    columns.ExplicitDelusteringPotentialColumn = -1;
-                if (columns.ProteinDescriptionColumn == comboBoxIndex)
-                    columns.ProteinDescriptionColumn = -1;
-                // Small Molecule only columns
-                if (columns.PrecursorAdductColumn == comboBoxIndex)
-                    columns.PrecursorAdductColumn = -1;
-                if (columns.PrecursorChargeColumn == comboBoxIndex)
-                    columns.PrecursorChargeColumn = -1;
-                if (columns.ProductNameColumn == comboBoxIndex)
-                    columns.ProductNameColumn = -1;
-                if (columns.ProductFormulaColumn == comboBoxIndex)
-                    columns.ProductFormulaColumn = -1;
-                if (columns.ProductNeutralLossColumn == comboBoxIndex)
-                    columns.ProductNeutralLossColumn = -1;
-                if (columns.ProductAdductColumn == comboBoxIndex)
-                    columns.ProductAdductColumn = -1;
-                if (columns.ProductChargeColumn == comboBoxIndex)
-                    columns.ProductChargeColumn = -1;
-                if (columns.InChiKeyColumn == comboBoxIndex)
-                    columns.InChiKeyColumn = -1;
-                if (columns.CASColumn == comboBoxIndex)
-                    columns.CASColumn = -1;
-                if (columns.HMDBColumn == comboBoxIndex)
-                    columns.HMDBColumn = -1;
-                if (columns.InChiColumn == comboBoxIndex)
-                    columns.InChiColumn = -1;
-                if (columns.SMILESColumn == comboBoxIndex)
-                    columns.SMILESColumn = -1;
-                if (columns.KEGGColumn == comboBoxIndex)
-                    columns.KEGGColumn = -1;
-                if (columns.MoleculeListNameColumn == comboBoxIndex)
-                    columns.MoleculeListNameColumn = -1;
-                if (columns.MolecularFormulaColumn == comboBoxIndex)
-                    columns.MolecularFormulaColumn = -1;
-                if (columns.MoleculeNameColumn == comboBoxIndex)
-                    columns.MoleculeNameColumn = -1;
+                foreach (var property in columns.GetType().GetProperties())
+                {
+                    if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                    {
+                        if ((int)property.GetValue(columns, null) == comboBoxIndex)
+                        {
+                            property.SetValue(columns, -1);
+                        }
+                    }
+                }
             }
         }
 

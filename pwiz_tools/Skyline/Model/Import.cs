@@ -2171,7 +2171,8 @@ namespace pwiz.Skyline.Model
         }
 
         public string[] Headers { get; private set; }
-
+        // All of these column variables must end with the string "Column" so that the reflection code in 
+        // ColumnSelectDlg works
         public int ProteinColumn { get; set; }
         public int PeptideColumn { get; set; }
         public int PrecursorColumn { get; set; }
