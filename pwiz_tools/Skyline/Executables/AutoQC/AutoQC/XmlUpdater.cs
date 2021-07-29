@@ -11,16 +11,58 @@ namespace AutoQC
 
         private enum OLD_XML_TAGS
         {
-            SavedConfigsFilePath, // deprecated since SkylineBatch release 20.2.0.475
-            SavedPathRoot
+            SavedConfigsFilePath, // deprecated since 20.2.0.475
+            SavedPathRoot,
+            version
         }
 
-        public static string GetUpdatedXml(string oldFile, string newVersion)
+        public static string GetUpdatedXml(string file, decimal currentXmlVersion)
         {
-            var guid = Guid.NewGuid();
-            var uniqueFileName = guid + TextUtil.EXT_TMP;
-            var filePath = Path.Combine(Path.GetDirectoryName(oldFile) ?? string.Empty, uniqueFileName);
+            decimal importingXmlVersion = -1;
+            using (var stream = new FileStream(file, FileMode.Open))
+            {
+                using (var reader = XmlReader.Create(stream))
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
+                        {
+                            importingXmlVersion = reader.GetAttribute(Attr.xml_version) != null ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version)) : -1;
+                            var importingVersion = reader.GetAttribute(OLD_XML_TAGS.version);
+                            if (importingXmlVersion < 0)
+                                importingXmlVersion = importingVersion != null ? 21.1M : 20.1M;
+                            break;
+                        }
+                    }
+                }
+            }
 
+            if (importingXmlVersion == currentXmlVersion)
+                return file;
+            if (importingXmlVersion > currentXmlVersion)
+            {
+                throw new ArgumentException(string.Format(
+                    Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                    importingXmlVersion, currentXmlVersion));
+            }
+
+
+            switch (importingXmlVersion)
+            {
+                case 20.1M:
+                    return UpdateVersion20_1(file, currentXmlVersion);
+                default:
+                    return UpdateVersion20_1(file, currentXmlVersion);
+            }
+        }
+
+
+        #region 20.1
+
+        private static string UpdateVersion20_1(string oldFile, decimal currentXmlVersion)
+        {
+            var newFile = CreateTempFile(oldFile);
             var configList = new ConfigList();
             string oldFolder = null;
             var inConfigList = false;
@@ -57,13 +99,13 @@ namespace AutoQC
                 }
             }
 
-            using (var streamWriter = new StreamWriter(File.Create(filePath)))
+            using (var streamWriter = new StreamWriter(File.Create(newFile)))
             {
                 using (var writer = XmlWriter.Create(streamWriter, new XmlWriterSettings { Indent = true, NewLineChars = Environment.NewLine }))
                 {
                     writer.WriteStartElement("config_list");
                     writer.WriteAttributeIfString(ConfigManager.Attr.saved_path_root, oldFolder);
-                    writer.WriteAttributeString(ConfigManager.Attr.version, newVersion);
+                    writer.WriteAttribute(ConfigManager.Attr.xml_version, currentXmlVersion);
 
                     foreach (var config in configList)
                     {
@@ -72,7 +114,20 @@ namespace AutoQC
                     writer.WriteEndElement();
                 }
             }
+            return newFile;
+        }
 
+        #endregion
+
+
+        private static string CreateTempFile(string oldFile)
+        {
+            Guid guid = Guid.NewGuid();
+            string uniqueFileName = guid + TextUtil.EXT_TMP;
+            var filePath = Path.Combine(Path.GetDirectoryName(oldFile) ?? string.Empty, uniqueFileName);
+            using (File.Create(filePath))
+            {
+            }
             return filePath;
         }
     }

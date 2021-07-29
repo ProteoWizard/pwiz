@@ -53,7 +53,7 @@ namespace AutoQC.Properties
         public void UpdateIfNecessary(string currentVersion, bool migrate)
         {
             // set ConfigList methods
-            ConfigList.Version = currentVersion;
+            ConfigList.XmlVersion = Default.XmlVersion;
             ConfigList.Importer = AutoQcConfig.ReadXml;
             // return if settings are already correct version
             if (Equals(Default.InstalledVersion, currentVersion))
@@ -64,8 +64,8 @@ namespace AutoQC.Properties
             }
 
             // get file path of user.config file with old settings
-            var xmlVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
-            var possibleOldSettingsVersion = xmlVersion != null && xmlVersion.Major > 1
+            var savedVersion = !string.IsNullOrEmpty(Default.InstalledVersion) ? new Version(Default.InstalledVersion) : null;
+            var possibleOldSettingsVersion = savedVersion != null && savedVersion.Major > 1
                 ? Default.InstalledVersion
                 : "1.0.0.0";
             var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
@@ -76,9 +76,9 @@ namespace AutoQC.Properties
             {
                 ProgramLog.Info($"Reading old settings from: {possibleOldConfigFile}");
                 // update ConfigList using old user.config
-                if (xmlVersion == null || xmlVersion.Major < 21)
+                if (savedVersion == null || savedVersion.Major < 21)
                 {
-                    SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, currentVersion,
+                    SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, Default.XmlVersion,
                         Program.AppName, XmlUpdater.GetUpdatedXml);
                 }
 

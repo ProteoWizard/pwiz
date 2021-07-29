@@ -63,7 +63,7 @@ namespace AutoQC
 
         private void LoadConfigList()
         {
-            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
+            var configs = base.LoadConfigList(Settings.Default.XmlVersion);
             foreach (var iconfig in configs)
             {
                 var config = (AutoQcConfig)iconfig;
@@ -213,7 +213,7 @@ namespace AutoQC
             _logList.RemoveAt(i);
             // TODO: what happens here?
             //_uiControl?.ClearLog();
-            var configRunners = new Dictionary<string, IConfigRunner>(_configRunners);
+            var configRunners = new Dictionary<string, IConfigRunner>(state.configRunners);
             configRunners.Remove(config.Name);
             state.configRunners = ImmutableDictionary<string, IConfigRunner>.Empty.AddRange(configRunners);
             return state;
@@ -633,7 +633,7 @@ namespace AutoQC
 
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var addedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
+            var addedConfigs = ImportFrom(filePath, Settings.Default.XmlVersion, showDownloadedFileForm);
             var state = new AutoQcConfigManagerState(this);
             foreach (var config in addedConfigs)
             {

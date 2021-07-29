@@ -75,13 +75,11 @@ namespace SharedBatch.Properties
         }
 
         // Upgrades the settings from the previous version and rewrites the XML to the current version
-        public void Update(decimal currentXmlVersion, string appName, XmlUpdater updater)
+        public void Update(string xmlFile, decimal currentXmlVersion, string appName, XmlUpdater updater)
         {
-           var xmlFile = string.Empty;
             var updatedXmlFile = string.Empty;
             try
             {
-                xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
                 if (!File.Exists(xmlFile))
                     return;
                 ProgramLog.Info(string.Format(Resources.Settings_Update_Saved_configurations_were_found_in___0_, xmlFile));
