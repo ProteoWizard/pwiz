@@ -32,7 +32,7 @@ namespace SharedBatch
 {
     public delegate IConfig Importer(XmlReader reader);
 
-    public delegate string XmlUpdater(string oldXmlFile, string newVersion);
+    public delegate string XmlUpdater(string oldXmlFile, decimal currentXmlVersion);
 
     public class ConfigManager
     {
@@ -82,10 +82,10 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        protected List<IConfig> LoadConfigList(string version)
+        protected List<IConfig> LoadConfigList(decimal currentXmlVersion)
         {
             ConfigList.Importer = importer;
-            ConfigList.Version = version;
+            ConfigList.XmlVersion = currentXmlVersion;
             // Do not load saved configurations in test mode
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
@@ -455,26 +455,39 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string filePath, string installedVersion, ShowDownloadedFileForm showDownloadedFileForm)
+        protected List<IConfig> ImportFrom(string originalFilePath, decimal currentXmlVersion, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
             
-            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
+            if (originalFilePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
-                var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
+                var dialogResult = showDownloadedFileForm(originalFilePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
-                copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
-                var file = new FileInfo(filePath);
+                copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(originalFilePath));
+                var file = new FileInfo(originalFilePath);
                 file.CopyTo(copiedConfigFile, true);
-                filePath = copiedConfigFile;
+                originalFilePath = copiedConfigFile;
             }
 
             var readConfigs = new List<IConfig>();
             var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
+
+            string filePath;
+            // update the XML to current version
+            try
+            {
+                filePath = getUpdatedXml(originalFilePath, currentXmlVersion);
+            }
+            catch (Exception e)
+            {
+                DisplayError(string.Format(e.Message));
+                return new List<IConfig>();
+            }
+
             // read configs from file
             try
             {
@@ -486,41 +499,6 @@ namespace SharedBatch
                         {
                             if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
                             {
-                                var fileVersion = reader.GetAttribute(Attr.version);
-                                // check if the configuration file needs to be updated
-                                if (fileVersion == null)
-                                {
-                                    reader.Dispose(); // Close the file first so that we don't get an exception when it is opened again below.
-                                    stream.Dispose();
-                                    var newFile = getUpdatedXml(filePath, installedVersion);
-                                    if (newFile == null)
-                                    {
-                                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
-                                            filePath));
-                                        return new List<IConfig>();
-                                    }
-                                    return ImportFrom(newFile, installedVersion, null);
-                                }
-                                // check that the configuration file is not newer than the program version
-                                var importingVersion = new Version(fileVersion);
-                                var currentVersion = new Version(installedVersion);
-                                bool versionError;
-                                if (importingVersion.Major == currentVersion.Major)
-                                {
-                                    if (importingVersion.Minor == currentVersion.Minor)
-                                    {
-                                        versionError = importingVersion.Revision > currentVersion.Revision;
-                                    }
-                                    else
-                                        versionError = importingVersion.Minor > currentVersion.Minor;
-                                }
-                                else
-                                    versionError = importingVersion.Major > currentVersion.Major;
-                                if (versionError)
-                                {
-                                    DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
-                                    return new List<IConfig>();
-                                }
 
                                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
                                 if (!string.IsNullOrEmpty(oldFolder))
@@ -577,7 +555,7 @@ namespace SharedBatch
                 DisplayError(
                     string.Format(
                         Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__,
-                        filePath) + Environment.NewLine +
+                        originalFilePath) + Environment.NewLine +
                     e.Message);
                 return addedConfigs;
             }
@@ -590,7 +568,7 @@ namespace SharedBatch
             {
                 // warn if no configs found
                 DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
-                    filePath));
+                    originalFilePath));
                 return addedConfigs;
             }
 
@@ -670,7 +648,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, string version, int[] indiciesToSave)
+        public void ExportConfigs(string filePath, decimal xmlVersion, int[] indiciesToSave)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -709,7 +687,7 @@ namespace SharedBatch
                     {
                         writer.WriteStartElement("config_list");
                         writer.WriteAttributeString(Attr.saved_path_root, directory);
-                        writer.WriteAttributeString(Attr.version, version);
+                        writer.WriteAttribute(Attr.xml_version, xmlVersion);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -722,7 +700,7 @@ namespace SharedBatch
         public enum Attr
         {
             saved_path_root,
-            version
+            xml_version
         }
 
         #endregion

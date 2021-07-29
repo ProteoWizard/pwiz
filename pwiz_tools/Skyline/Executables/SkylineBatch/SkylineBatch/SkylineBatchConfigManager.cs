@@ -93,7 +93,7 @@ namespace SkylineBatch
 
         public void LoadConfigList()
         {
-            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
+            var configs = base.LoadConfigList(Settings.Default.XmlVersion);
             var state = new SkylineBatchConfigManagerState(this);
             configs = AssignDependencies(configs, true, state, out _); // ignore warning
             foreach (var config in configs)
@@ -986,7 +986,7 @@ namespace SkylineBatch
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var state = new SkylineBatchConfigManagerState(this);
-            var importedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
+            var importedConfigs = ImportFrom(filePath, Settings.Default.XmlVersion, showDownloadedFileForm);
             foreach (var config in importedConfigs)
             {
                 if (state.configRunners.ContainsKey(config.GetName()))

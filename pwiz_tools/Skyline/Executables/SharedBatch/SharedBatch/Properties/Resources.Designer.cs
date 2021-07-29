@@ -801,6 +801,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Saved configurations were found in: {0}.
+        /// </summary>
+        public static string Settings_Update_Saved_configurations_were_found_in___0_ {
+            get {
+                return ResourceManager.GetString("Settings_Update_Saved_configurations_were_found_in___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No parsable Skyline version found..
         /// </summary>
         public static string SkylineSettings_GetVersion_No_parsable_Skyline_version_found_ {

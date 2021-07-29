@@ -74,40 +74,27 @@ namespace SharedBatch.Properties
             private set => this["InstallationId"] = value;
         }
 
-        [ApplicationScopedSetting]
-        public Dictionary<string,string> RVersions
-        {
-            get
-            {
-                var dict = (Dictionary<string, string>)this["RVersions"]; // Not L10N
-                if (dict == null)
-                {
-                    dict = new Dictionary<string,string>();
-                    RVersions = dict;
-                }
-                return dict;
-            }
-            set => this["RVersions"] = value; // Not L10N
-        }
-
         // Upgrades the settings from the previous version and rewrites the XML to the current version
-        public void Update(string oldXmlPath, string newVersion, string appName, XmlUpdater updater)
+        public void Update(decimal currentXmlVersion, string appName, XmlUpdater updater)
         {
-            Upgrade();
-            var newXmlPath = string.Empty;
+           var xmlFile = string.Empty;
+            var updatedXmlFile = string.Empty;
             try
             {
-                newXmlPath = updater(oldXmlPath, newVersion);
-                if (newXmlPath == null)
+                xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+                if (!File.Exists(xmlFile))
                     return;
+                ProgramLog.Info(string.Format(Resources.Settings_Update_Saved_configurations_were_found_in___0_, xmlFile));
+
+                updatedXmlFile = updater(xmlFile, currentXmlVersion);
                 var configList = new ConfigList();
-                using (var stream = new FileStream(newXmlPath, FileMode.Open))
+                using (var stream = new FileStream(updatedXmlFile, FileMode.Open))
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
                         while (reader.Read())
                         {
-                            if (!reader.IsStartElement("config_list")) continue;
+                            if (!reader.IsStartElement("config_list") && !reader.IsStartElement("ConfigList")) continue;
                             configList.ReadXml(reader);
                             break;
                         }
@@ -125,8 +112,8 @@ namespace SharedBatch.Properties
                     Resources
                         .Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
                     appName);
-                File.Copy(oldXmlPath, newFileName, true);
-                File.Delete(oldXmlPath);
+                File.Copy(xmlFile, newFileName, true);
+                File.Delete(xmlFile);
                 message += Environment.NewLine + Environment.NewLine +
                            string.Format(
                                Resources
@@ -139,8 +126,8 @@ namespace SharedBatch.Properties
             }
             finally
             {
-                if (newXmlPath != null && File.Exists(newXmlPath))
-                    File.Delete(newXmlPath);
+                if (File.Exists(updatedXmlFile) && Path.GetExtension(updatedXmlFile).Equals(TextUtil.EXT_TMP))
+                    File.Delete(updatedXmlFile);
             }
         }
     }
@@ -151,8 +138,7 @@ namespace SharedBatch.Properties
 
         public static Importer Importer;
 
-        public static string Version;
-        public const string DUMMY_VER = "0.0.0.0";
+        public static decimal XmlVersion = -1;
 
         public XmlSchema GetSchema()
         {
@@ -210,7 +196,7 @@ namespace SharedBatch.Properties
 
         enum Attr
         {
-            version
+            xml_version
         }
 
         public void WriteXml(XmlWriter writer)
@@ -223,7 +209,7 @@ namespace SharedBatch.Properties
             // The version should never be blank but if it is write a dummy version "0.0.0.0". An exception thrown here while
             // running the program will not be caught, and any existing configurations will not be written to user.config. 
             // As a result, the user will not see any saved configurations next time they start the application.
-            writer.WriteAttributeString(Attr.version, string.IsNullOrEmpty(Version) ? DUMMY_VER : Version);
+            writer.WriteAttribute(Attr.xml_version, XmlVersion);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

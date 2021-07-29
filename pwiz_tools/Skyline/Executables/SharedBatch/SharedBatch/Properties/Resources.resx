@@ -426,4 +426,7 @@ with:
   <data name="SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_earliest_supported_Skyline_commands_" xml:space="preserve">
     <value>WARNING: Could not parse Skyline version. Running earliest supported Skyline commands.</value>
   </data>
+  <data name="Settings_Update_Saved_configurations_were_found_in___0_" xml:space="preserve">
+    <value>Saved configurations were found in: {0}</value>
+  </data>
 </root>
