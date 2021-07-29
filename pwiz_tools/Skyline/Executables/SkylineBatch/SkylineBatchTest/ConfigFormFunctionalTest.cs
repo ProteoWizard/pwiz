@@ -68,13 +68,21 @@ namespace SkylineBatchTest
             var oneMinute = new TimeSpan(0, 1, 0);
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
-            RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
-            var longWaitDialog2 = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(0));
+            
+            RunUI(() => { mainForm.ClickRun(); });
+            var longWaitDialog2 = FindOpenForm<LongWaitDlg>();
             WaitForClosedForm(longWaitDialog2);
-            //FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
-                //"Config did not start");
-            //FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
-                //"Config ran past timeout");
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+                "Config did not start");
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
+                "Config ran past timeout");
+            var alertDlg = FindOpenForm<AlertDlg>();
+            if (alertDlg != null)
+            {
+                alertDlg.ClickOk();
+                WaitForClosedForm(alertDlg);
+                Assert.Fail("An unexpected alert appeared with message: " + alertDlg.Message);
+            }
 
         }
 
