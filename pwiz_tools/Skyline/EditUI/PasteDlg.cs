@@ -1710,11 +1710,10 @@ namespace pwiz.Skyline.EditUI
         private void UpdateMoleculeType()
         {
             bool isPeptide = radioPeptide.Checked;
-            btnCustomMoleculeColumns.Enabled = true;
+            btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
             Settings.Default.TransitionListInsertPeptides = isPeptide; // Remember for next time
 
-            // Skip updating if nothing needs to be changed
-            // This should probably be taken out when we add smarter column selection as its currently hard coded for the number of columns
+            //Skip updating if nothing needs to be changed
             if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
                 return;
 
@@ -1730,7 +1729,7 @@ namespace pwiz.Skyline.EditUI
                     DialogResult.Cancel)
                 {
                     radioPeptide.Checked = !isPeptide;
-                    btnCustomMoleculeColumns.Enabled = true;
+                    btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
                     return;
                 }
             }
@@ -1757,48 +1756,8 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(@"Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide);
                 gridViewTransitionList.Columns.Add(@"Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
                 gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
-                gridViewTransitionList.Columns.Add(@"Protein", Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-                gridViewTransitionList.Columns.Add(@"Description", Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
-                // These really should be supported but we're not going to use this window in the future and this was causing test
-                // errors
-                //gridViewTransitionList.Columns.Add(@"Label", Resources.PasteDlg_UpdateMoleculeType_Label_Type);
-                //gridViewTransitionList.Columns.Add(@"iRT", Resources.PasteDlg_UpdateMoleculeType_iRT);
-                //gridViewTransitionList.Columns.Add(@"Decoy", Resources.PasteDlg_UpdateMoleculeType_Decoy);
-                //gridViewTransitionList.Columns.Add(@"Library", Resources.PasteDlg_UpdateMoleculeType_Library_Intensity);
-                //gridViewTransitionList.Columns.Add(@"Fragment", Resources.PasteDlg_UpdateMoleculeType_Fragment_Name);
-
-                // Code designed to be used with the commented out headers that will only show the default headers upon
-                // opening a new document
-                /*
-                // Makes an array of the headers which we want to show by default
-                string[] defaultCol = new string[5];
-                defaultCol[0] = @"Peptide";
-                defaultCol[1] = @"Precursor";
-                defaultCol[2] = @"Product";
-                defaultCol[3] = @"Protein";
-                defaultCol[4] = @"Description";
-
-                // Only show the default headers unless the user selects others later
-                for (int gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
-                {
-                    gridViewTransitionList.Columns[gridcol].Visible = false;
-                }
-                var order = 0;
-                foreach (var colName in defaultCol)
-                {
-                    // Make corresponding column visible, and next in column order               
-                    for (var gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
-                    {
-                        var dataGridViewColumn = gridViewTransitionList.Columns[gridcol];
-                        if (dataGridViewColumn.Name.Equals(colName))
-                        {
-                            dataGridViewColumn.Visible = true;
-                            dataGridViewColumn.DisplayIndex = order++;
-                            break;
-                        }
-                    }
-                }
-                */
+                gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name);
+                gridViewTransitionList.Columns.Add(@"Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description);
             }
             else
             {
@@ -1839,7 +1798,7 @@ namespace pwiz.Skyline.EditUI
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+                AddColumn(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
                 AddColumn(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
 
