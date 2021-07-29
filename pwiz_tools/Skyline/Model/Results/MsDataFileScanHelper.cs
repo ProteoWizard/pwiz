@@ -506,16 +506,14 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            public void SetScanForBackgroundLoad(int scanIndex, bool? centroided = null)
+            public void SetScanForBackgroundLoad(int scanIndex, bool? centroidedMs1 = null, bool? centroidedMs2 = null)
             {
                 lock (this)
                 {
                     _scanIndexNext = scanIndex;
                     _centroidedMs1 = _centroidedMs2 = null;
-                    if (Source == ChromSource.fragment)
-                        _centroidedMs2 = centroided;
-                    else
-                        _centroidedMs1 = centroided;
+                    _centroidedMs2 = centroidedMs2;
+                    _centroidedMs1 = centroidedMs1;
 
                     if (_scanIndexNext != -1)
                         Monitor.PulseAll(this);

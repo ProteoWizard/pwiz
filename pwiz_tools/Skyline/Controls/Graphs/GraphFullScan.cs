@@ -260,10 +260,17 @@ namespace pwiz.Skyline.Controls.Graphs
             RunBackground(LoadingTextIfNoChange);
 
             var peakType = _msDataFileScanHelper.PeakTypeFromName(Settings.Default.FullScanPeakType);
+            var scanType = _msDataFileScanHelper.Source;
             if (peakType == PeakType.chromDefault)
                 _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
             else
-                _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == PeakType.centroided);
+            {
+                if(_msDataFileScanHelper.Source == ChromSource.fragment)
+                    _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, null, peakType == PeakType.centroided);
+                else
+                    _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == PeakType.centroided);
+
+            }
         }
 
         private void RunBackground(Action action)
@@ -1304,6 +1311,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             toolStripButtonShowAnnotations.Checked = isChecked;
         }
+
+        public void SetPeakTypeSelection(PeakType peakType)
+        {
+            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeName(peakType);
+        }
+
+        public MsDataFileScanHelper MsDataFileScanHelper
+        {
+            get => _msDataFileScanHelper;
+        }
+
         #endregion Test support
 
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)

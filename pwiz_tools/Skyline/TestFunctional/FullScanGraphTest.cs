@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -121,6 +122,10 @@ namespace pwiz.SkylineTestFunctional
             SetScanType(ChromSource.fragment, 33.23, 27.9);
             ClickFullScan(517, 1000);
             TestScale(516, 520, 0, 80);
+
+            var noVendorCentroidedMessage = ShowDialog<MessageDlg>(() =>
+                SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided));
+            OkDialog(noVendorCentroidedMessage, noVendorCentroidedMessage.OkDialog);
 
             //Check the rank and annotate functionality if we run in 
             //onscreen mode
