@@ -1980,7 +1980,6 @@ namespace pwiz.Skyline
                 }
             }
 
-            // TODO: This no longer looks at what it was intended to and should be revisited
             bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (isDocumentSame)
