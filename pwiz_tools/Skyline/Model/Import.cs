@@ -2147,10 +2147,10 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ColumnIndices
     {
-        public ColumnIndices(int proteinColumn, int moleculeNameColumn, int precursorColumn, int productColumn)
+        public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn)
             :this()
         {
-            AssignDetected(proteinColumn, moleculeNameColumn, precursorColumn, productColumn, -1, -1, -1);
+            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1, -1, -1);
         }
 
         public void AssignDetected(int proteinColumn,
@@ -2205,7 +2205,6 @@ namespace pwiz.Skyline.Model
         public int LibraryColumn { get; set; }
 
         // After this point are new columns added that were initially only supported for small molecule transition lists
-        // TODO: add appropriate comments detailing what each of these does, make sure skyline is using this info
 
         public int ExplicitRetentionTimeColumn { get; set; }
 

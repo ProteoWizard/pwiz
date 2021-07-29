@@ -413,7 +413,7 @@ namespace pwiz.Skyline.FileUI
 
             // Grey out any ignored column
             SetColumnColor(comboBox);
-            
+
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
                 CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
@@ -642,9 +642,9 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.PeptideColumn = comboBoxIndex;
             }
-            // If any of the columns are set to the index being changed, we want to set their index to -1 now to get them out of the way
             else
             {
+                // If any of the columns are set to the index being changed, we want to set their index to -1 now to get them out of the way
                 foreach (var property in columns.GetType().GetProperties())
                 {
                     if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
