@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
             // the substring 'SD'
             RunUI(() =>
             {
-                filterComboBox.SelectedIndex = filterComboBox.FindString("Contains"); // Localize
+                filterComboBox.SelectedIndex = filterComboBox.FindString(Resources.ViewLibraryDlg_InitializeComponent_Contains); 
             });
             // Clearing search box should bring up every entry and hide match type tip
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);

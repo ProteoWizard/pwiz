@@ -40,6 +40,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -52,6 +53,8 @@ using pwiz.Skyline.Model.Proteome;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Label = System.Windows.Forms.Label;
+using Peptide = pwiz.Skyline.Model.Peptide;
+using Transition = pwiz.Skyline.Model.Transition;
 
 
 namespace pwiz.Skyline.SettingsUI
@@ -1124,14 +1127,21 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateMatchTypes(List <string> matchTypes)
         {
             _matchTypesNodeTips.HideTip(); // Hide the old tip
-            if (matchTypes.Count > 0)
+            // Only show the tip if there is at least one match type, and it is not "Peptide" or "Name"
+            if (matchTypes.Count > 0 && 
+                !matchTypes.SequenceEqual(new List<string> { ColumnCaptions.Peptide }) &&
+                !matchTypes.SequenceEqual(new List<string> { Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name }))
             {
                 var tipProvider = new MatchTypeTipProvider(matchTypes);
-                var pt = textPeptide.Location;
                 var size = tipProvider.getSize();
-                _matchTypesNodeTips.SetTipProvider(tipProvider,
-                    new Rectangle(pt.X + 120, pt.Y - 80 - size.Height, 0, 0),
-                    pt);
+                var rect = textPeptide.DisplayRectangle;
+                rect.X = rect.Width - size.Width;
+                rect.Y = -70 - size.Height;
+                var pt = textPeptide.Location;
+                _matchTypesNodeTips.SetTipProvider(tipProvider, rect, pt);
+                //_matchTypesNodeTips.SetTipProvider(tipProvider,
+                //    new Rectangle(pt.X + 120, pt.Y - 80 - size.Height, 0, 0),
+                //    pt);
             }
         }
         /// <summary>
@@ -2503,52 +2513,45 @@ namespace pwiz.Skyline.SettingsUI
             private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
             {
                 var toDrawParts = new List<TextColor>();
-                if (false)
+                var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+
+                var matchIndices = new List<int>();
+                var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
+                if (_filterType == FilterType.contains)
                 {
-                    toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                    matchIndices = Regex.Matches(strSeq, _filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index)
+                        .ToList();
                 }
                 else
                 {
-                    var splitMods = SplitModifications(_pepInfo.Key.Sequence);
-
-                    var matchIndices = new List<int>();
-                    var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
-                    if (_filterType == FilterType.contains)
+                    if (strSeq.StartsWith(_filterText, StringComparison.OrdinalIgnoreCase))
                     {
-                        matchIndices = Regex.Matches(strSeq, _filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index)
-                            .ToList();
+                        matchIndices = new List<int> { 0 };
                     }
-                    else
+                }
+
+                var charLocations = new List<int>();
+                foreach (var index in matchIndices)
+                {
+                    charLocations.AddRange(Enumerable.Range(index, _filterText.Length));
+                }
+
+                for (var i = 0; i < splitMods.Count; i++)
+                {
+                    var piece = splitMods[i];
+                    string drawStr = piece.Item1.ToString();
+                    var drawColor = Brushes.Black;
+                    if (piece.Item2 != null) // if is modified AA
                     {
-                        if (strSeq.StartsWith(_filterText, StringComparison.OrdinalIgnoreCase))
+                        drawStr += piece.Item2;
+                        var currentMod = GetCurrentMod(mods, i, piece);
+                        if (!IsMatched(currentMod, piece)) // not match if color is red
                         {
-                            matchIndices = new List<int> { 0 };
+                            drawStr = drawStr.Replace(@"]", @"?]");
+                            drawColor = Brushes.Red;
                         }
                     }
-
-                    var charLocations = new List<int>();
-                    foreach (var index in matchIndices)
-                    {
-                        charLocations.AddRange(Enumerable.Range(index, _filterText.Length));
-                    }
-
-                    for (var i = 0; i < splitMods.Count; i++)
-                    {
-                        var piece = splitMods[i];
-                        string drawStr = piece.Item1.ToString();
-                        var drawColor = Brushes.Black;
-                        if (piece.Item2 != null) // if is modified AA
-                        {
-                            drawStr += piece.Item2;
-                            var currentMod = GetCurrentMod(mods, i, piece);
-                            if (!IsMatched(currentMod, piece)) // not match if color is red
-                            {
-                                drawStr = drawStr.Replace(@"]", @"?]");
-                                drawColor = Brushes.Red;
-                            }
-                        }
-                        toDrawParts.Add(new TextColor(drawStr, drawColor, charLocations.Contains(i)));
-                    }
+                    toDrawParts.Add(new TextColor(drawStr, drawColor, charLocations.Contains(i)));
                 }
                 return toDrawParts;
             }
