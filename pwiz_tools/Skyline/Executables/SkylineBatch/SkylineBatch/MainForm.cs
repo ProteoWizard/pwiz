@@ -788,6 +788,8 @@ namespace SkylineBatch
 
         public void ClickRun(int option = 0)
         {
+            if (_configManager.ConfigRunning() || !btnRunBatch.Enabled)
+                throw new Exception("Configurations are still running");
             CheckDropDownOption(option);
             RunBatch();
         }
