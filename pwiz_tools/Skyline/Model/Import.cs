@@ -2265,44 +2265,14 @@ namespace pwiz.Skyline.Model
 
         public ColumnIndices()
         {
-            ProteinColumn = -1;
-            PeptideColumn = -1;
-            PrecursorColumn = -1;
-            PrecursorChargeColumn = -1;
-            ProductColumn = -1;
-            ProductChargeColumn = -1;
-            DecoyColumn = -1;
-            IrtColumn = -1;
-            LibraryColumn = -1;
-            LabelTypeColumn = -1;
-            FragmentNameColumn = -1;
-            ExplicitRetentionTimeColumn = -1;
-            ExplicitRetentionTimeWindowColumn = -1;
-            ExplicitCollisionEnergyColumn = -1;
-            NoteColumn = -1;
-            SLensColumn = -1;
-            ConeVoltageColumn = -1;
-            ExplicitIonMobilityColumn = -1;
-            ExplicitIonMobilityUnitsColumn = -1;
-            ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-            ExplicitCompensationVoltageColumn = -1;
-            ExplicitDelusteringPotentialColumn = -1;
-            CollisionCrossSectionColumn = -1;
-            ProteinDescriptionColumn = -1;
-            PrecursorAdductColumn = -1;
-            ProductNameColumn = -1;
-            ProductFormulaColumn = -1;
-            ProductNeutralLossColumn = -1;
-            ProductAdductColumn = -1;
-            InChiKeyColumn = -1;
-            CASColumn = -1;
-            HMDBColumn = -1;
-            InChiColumn = -1;
-            SMILESColumn = -1;
-            KEGGColumn = -1;
-            MoleculeListNameColumn = -1;
-            MolecularFormulaColumn = -1;
-            MoleculeNameColumn = -1;
+            // Iterates through the column indices and initializes them all to -1
+            foreach (var property in GetType().GetProperties())
+            {
+                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                {
+                    property.SetValue(this, -1);
+                }
+            }
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2358,80 +2328,17 @@ namespace pwiz.Skyline.Model
         // Checks all the column indices and resets any that have the given index to -1
         public void ResetDuplicateColumns(int index)
         {
-            if (DecoyColumn == index)
-                DecoyColumn = -1;
-            if (IrtColumn == index)
-                IrtColumn = -1;
-            if (LabelTypeColumn == index)
-                LabelTypeColumn = -1;
-            if (LibraryColumn == index)
-                LibraryColumn = -1;
-            if (PeptideColumn == index)
-                PeptideColumn = -1;
-            if (PrecursorColumn == index)
-                PrecursorColumn = -1;
-            if (ProductColumn == index)
-                ProductColumn = -1;
-            if (ProteinColumn == index)
-                ProteinColumn = -1;
-            if (FragmentNameColumn == index)
-                FragmentNameColumn = -1;
-            if (PrecursorChargeColumn == index)
-                PrecursorChargeColumn = -1;
-            if (ExplicitRetentionTimeColumn == index)
-                ExplicitRetentionTimeColumn = -1;
-            if (ExplicitRetentionTimeWindowColumn == index)
-                ExplicitRetentionTimeWindowColumn = -1;
-            if (ExplicitCollisionEnergyColumn == index)
-                ExplicitCollisionEnergyColumn = -1;
-            if (NoteColumn == index)
-                NoteColumn = -1;
-            if (SLensColumn == index)
-                SLensColumn = -1;
-            if (ConeVoltageColumn == index)
-                ConeVoltageColumn = -1;
-            if (ExplicitIonMobilityColumn == index)
-                ExplicitIonMobilityColumn = -1;
-            if (ExplicitIonMobilityUnitsColumn == index)
-                ExplicitIonMobilityUnitsColumn = -1;
-            if (ExplicitIonMobilityHighEnergyOffsetColumn == index)
-                ExplicitIonMobilityHighEnergyOffsetColumn = -1;
-            if (ExplicitCompensationVoltageColumn == index)
-                ExplicitCompensationVoltageColumn = -1;
-            if (ExplicitDelusteringPotentialColumn == index)
-                ExplicitDelusteringPotentialColumn = -1;
-            if (CollisionCrossSectionColumn == index)
-                CollisionCrossSectionColumn = -1;
-            if (ProteinDescriptionColumn == index)
-                ProteinDescriptionColumn = -1;
-            if (PrecursorAdductColumn == index)
-                PrecursorAdductColumn = -1;
-            if (ProductNameColumn == index)
-                ProductNameColumn = -1;
-            if (ProductFormulaColumn == index)
-                ProductFormulaColumn = -1;
-            if (ProductNeutralLossColumn == index)
-                ProductNeutralLossColumn = -1;
-            if (ProductAdductColumn == index)
-                ProductAdductColumn = -1;
-            if (InChiKeyColumn == index)
-                InChiKeyColumn = -1;
-            if (CASColumn == index)
-                CASColumn = -1;
-            if (HMDBColumn == index)
-                HMDBColumn = -1;
-            if (InChiColumn == index)
-                InChiColumn = -1;
-            if (SMILESColumn == index)
-                SMILESColumn = -1;
-            if (KEGGColumn == index)
-                KEGGColumn = -1;
-            if (MoleculeListNameColumn == index)
-                MoleculeListNameColumn = -1;
-            if (MolecularFormulaColumn == index)
-                MolecularFormulaColumn = -1;
-            if (MoleculeNameColumn == index)
-                MoleculeNameColumn = 1;
+            // Iterates through the column indices, if they share an index with index they are reset to -1
+            foreach (var property in GetType().GetProperties())
+            {
+                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                {
+                    if ((int)property.GetValue(this, null) == index)
+                    {
+                        property.SetValue(this, -1);
+                    }
+                }
+            }
         }
 
         /// <summary>
