@@ -27,7 +27,7 @@ namespace AutoQC
                     {
                         if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
                         {
-                            importingXmlVersion = reader.GetAttribute(Attr.xml_version) != null ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version)) : -1;
+                            importingXmlVersion = reader.GetAttribute(ConfigManager.Attr.xml_version) != null ? Convert.ToDecimal(reader.GetAttribute(ConfigManager.Attr.xml_version)) : -1;
                             var importingVersion = reader.GetAttribute(OLD_XML_TAGS.version);
                             if (importingXmlVersion < 0)
                                 importingXmlVersion = importingVersion != null ? 21.1M : 20.1M;
