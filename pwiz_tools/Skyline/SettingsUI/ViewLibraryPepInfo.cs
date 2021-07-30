@@ -83,7 +83,9 @@ namespace pwiz.Skyline.SettingsUI
                            : Transition.GetChargeIndicator(Key.Adduct));
             }
         }
-
+        /// <summary>
+        /// The precursor m/z of the peptide or small molecule
+        /// <summary>
         public double PrecursorMz { get; set; }
         /// <summary>
         /// The charge state of the peptide or molecule matched to a spectrum

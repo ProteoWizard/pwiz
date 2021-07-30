@@ -45,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
         private const string ADDUCT = @"Adduct";
+        // The user may type in the adduct without including bracketss
         private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Add a string to display to our list based on the given property
+        /// Add a string to display on the match type tip based on the given property
         /// </summary>
         private void UpdateMatchTypes(string matchName)
         {
@@ -196,9 +197,9 @@ namespace pwiz.Skyline.SettingsUI
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // Base our search fields on whether there are small molecules in the library
+            // If there are any small molecules in the library, search by multiple fields at once
             var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS } // Order of properties does not matter as results are sorted by molecule or peptide name
+                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS }
                 : new List<string> {UNMODIFIED_TARGET_TEXT};
 
             var filteredIndices = Enumerable.Empty<int>().ToList(); // The indices of entries in the peptide list that match our filter text

@@ -1133,15 +1133,12 @@ namespace pwiz.Skyline.SettingsUI
                 !matchTypes.SequenceEqual(new List<string> { Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name }))
             {
                 var tipProvider = new MatchTypeTipProvider(matchTypes);
-                var size = tipProvider.getSize();
+                var size = tipProvider.GetSize();
                 var rect = textPeptide.DisplayRectangle;
                 rect.X = rect.Width - size.Width;
                 rect.Y = -70 - size.Height;
                 var pt = textPeptide.Location;
                 _matchTypesNodeTips.SetTipProvider(tipProvider, rect, pt);
-                //_matchTypesNodeTips.SetTipProvider(tipProvider,
-                //    new Rectangle(pt.X + 120, pt.Y - 80 - size.Height, 0, 0),
-                //    pt);
             }
         }
         /// <summary>
@@ -1493,6 +1490,26 @@ namespace pwiz.Skyline.SettingsUI
             
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
+        }
+
+        public static List<int> FindMatchesInTipText(string tipText, string filterText, FilterType filterType)
+        {
+            var matchIndices = new List<int>();
+            if (filterType == FilterType.contains)
+            {
+                // Find the indices of all substrings matching the filter text
+                matchIndices = Regex.Matches(tipText, filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index).ToList();
+            }
+            else
+            {
+                // If the text starts with the filter text, indicate a match at index 0
+                if (tipText.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchIndices = new List<int> { 0 };
+                }
+            }
+
+            return matchIndices;
         }
 
         public ViewLibrarySettings FormSettings
@@ -2108,10 +2125,6 @@ namespace pwiz.Skyline.SettingsUI
             return split[1].Substring(0, split[1].LastIndexOf(' '));
         }
 
-        public MatchTypeTipProvider GetMatchTypeTipProvider(List<string> matchTypes)
-        {
-            return new MatchTypeTipProvider(matchTypes);
-        }
         public PeptideTipProvider GetTipProvider(int i)
         {
             return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary, _selectedFilterType, textPeptide.Text);
@@ -2304,17 +2317,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public class MatchTypeTipProvider : ITipProvider
         {
-            public Size _size;
-            private readonly List<string> typeMatches;
+            private Size _size;
+            private readonly List<string> _typeMatches;
             public MatchTypeTipProvider(List<string> matchTypes)
             {
-                typeMatches = matchTypes;
+                _typeMatches = matchTypes;
             }
 
-            public Size getSize()
+            public Size GetSize()
             {
-                Bitmap bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
-                Graphics g = Graphics.FromImage(bitmap1);
+                var bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+                var g = Graphics.FromImage(bitmap1);
                 return RenderTip(g, _size, false);
             }
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
@@ -2355,7 +2368,7 @@ namespace pwiz.Skyline.SettingsUI
             public List<string> GetTextPartsToDraw()
             {
                 var textParts = new List<string>{Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
-                textParts.AddRange(typeMatches);
+                textParts.AddRange(_typeMatches);
                 return textParts;
             }
 
@@ -2364,6 +2377,7 @@ namespace pwiz.Skyline.SettingsUI
                 get { return true; }
             }
         }
+
         public class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;
@@ -2515,20 +2529,8 @@ namespace pwiz.Skyline.SettingsUI
                 var toDrawParts = new List<TextColor>();
                 var splitMods = SplitModifications(_pepInfo.Key.Sequence);
 
-                var matchIndices = new List<int>();
                 var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
-                if (_filterType == FilterType.contains)
-                {
-                    matchIndices = Regex.Matches(strSeq, _filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index)
-                        .ToList();
-                }
-                else
-                {
-                    if (strSeq.StartsWith(_filterText, StringComparison.OrdinalIgnoreCase))
-                    {
-                        matchIndices = new List<int> { 0 };
-                    }
-                }
+                var matchIndices = FindMatchesInTipText(strSeq, _filterText, _filterType);
 
                 var charLocations = new List<int>();
                 foreach (var index in matchIndices)

@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
+            this.filterLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
             this.btnLibDetails = new System.Windows.Forms.Button();
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.label2);
+            this.PeptideEditPanel.Controls.Add(this.filterLabel);
             this.PeptideEditPanel.Controls.Add(this.label1);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
@@ -249,10 +249,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
             // 
-            // label2
+            // filterLabel
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            resources.ApplyResources(this.filterLabel, "filterLabel");
+            this.filterLabel.Name = "filterLabel";
             // 
             // tableLayoutPanel1
             // 
@@ -843,6 +843,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboFilterType;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label filterLabel;
     }
 }

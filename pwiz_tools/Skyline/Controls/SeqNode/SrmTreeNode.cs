@@ -1320,19 +1320,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     else
                     {
                         isField = true;
-                        if (filterType == ViewLibraryDlg.FilterType.contains)
-                        {
-                            // Find the indices of all substrings matching the filter text
-                            matchIndices = Regex.Matches(cell.Text, filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index).ToList();
-                        }
-                        else
-                        {
-                            // If the text starts with the filter text, indicate a match at index 0
-                            if (cell.Text.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
-                            {
-                                matchIndices = new List<int> {0};
-                            }
-                        }
+                        matchIndices = ViewLibraryDlg.FindMatchesInTipText(cell.Text, filterText, filterType);
+
                         // If there's a numeric match, simply bold everything in the cell
                         if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) &&
                             double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum) &&
