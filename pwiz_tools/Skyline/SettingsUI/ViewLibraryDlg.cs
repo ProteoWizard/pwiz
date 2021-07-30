@@ -162,7 +162,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
-            // A tip which displays categories contianing matches to the filter text
+            // A tip which displays categories containing matches to the filter text
             _matchTypesNodeTips = new NodeTip(this) {Parent = this};
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;

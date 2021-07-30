@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Versioning;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -69,36 +68,39 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Add a string to display to our list based on the given property
         /// </summary>
-        private void UpdateMatchTypes(string propertyName)
+        private void UpdateMatchTypes(string matchName)
         {
             // If there are items on our list of indices and our list of match types does not
             // already include this match type, then add it to the list
-            if (propertyName == UNMODIFIED_TARGET_TEXT)
+            if (matchName == UNMODIFIED_TARGET_TEXT)
             {
                 // Because the target text can be a molecule name or a peptide sequence only display
                 // peptide if every entry on the list is a peptide
                 _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
             }
-            else if (propertyName == PRECURSOR_MZ)
+            else if (matchName == PRECURSOR_MZ)
             {
                 if (!_matchTypes.Contains(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
                 {
                     _matchTypes.Add(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
                 }
-            }else if (propertyName == FORMULA)
+            }else if (matchName == FORMULA)
             {
                 _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
-            } else if (propertyName == INCHI_KEY)
+            } else if (matchName == INCHI_KEY)
             {
                 _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
-            } else if (propertyName == ADDUCT || propertyName == ADDUCT_MINUS_BRACKETS)
+            } else if (matchName == ADDUCT || matchName == ADDUCT_MINUS_BRACKETS)
             {
-                if(!_matchTypes.Contains(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct))
-                _matchTypes.Add(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
+                if (!_matchTypes.Contains(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct))
+                {
+                    _matchTypes.Add(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
+                }
             }
-            else if (!_matchTypes.Contains(propertyName))
+            // In the case of molecule accession numbers just add directly add the name
+            else if (!_matchTypes.Contains(matchName))
             {
-                _matchTypes.Add(propertyName);
+                _matchTypes.Add(matchName);
             }
         }
 

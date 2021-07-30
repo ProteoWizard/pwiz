@@ -31,6 +31,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1333,8 +1334,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                             }
                         }
                         // If there's a numeric match, simply bold everything in the cell
-                        if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) && 
-                            double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum)&&
+                        if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) &&
+                            double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var filterNum) &&
                             !matchIndices.Any())
                         {
                             if (Math.Abs(filterNum - cellNum) < ViewLibraryPepInfoList.MZ_FILTER_TOLERANCE)

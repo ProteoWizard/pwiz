@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -192,12 +193,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Find the combo box which controls the selected library
-                libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
+                libComboBox = (ComboBox) _viewLibUI.Controls.Find("comboLibrary", true)[0];
                 // Select a library of small molecules to test small molecule search
                 libComboBox.SelectedIndex = libComboBox.FindStringExact(SHIMADZU_MLB);
 
                 // Find the peptides list control
-                pepList = (ListBox)_viewLibUI.Controls.Find("listPeptide", true)[0];
+                pepList = (ListBox) _viewLibUI.Controls.Find("listPeptide", true)[0];
 
                 // Find the filter type combo box
                 filterComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterType", true)[0];
@@ -205,15 +206,16 @@ namespace pwiz.SkylineTestFunctional
                 filterTypeSelected = filterComboBox.SelectedItem.ToString();
 
                 // Find the filter text box
-                filterTextBox = (TextBox)_viewLibUI.Controls.Find("textPeptide", true)[0];
+                filterTextBox = (TextBox) _viewLibUI.Controls.Find("textPeptide", true)[0];
 
 
             });
             // Verify that the correct filter type is selected upon form opening
-            Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with, filterTypeSelected);
+            Assert.AreEqual(Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with,
+                filterTypeSelected);
 
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
-            FilterListAndVerifyCount(filterTextBox, pepList,"C", 6);
+            FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
 
             // Verify that the entries are in alphabetical order of molecule name, despite being filtered by formula
             var pepItems = pepList.Items;
@@ -230,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check case insensitivity
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
-            
+
             // Clearing search box should bring up every entry and hide match type tip
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
@@ -241,21 +243,32 @@ namespace pwiz.SkylineTestFunctional
             // the substring 'SD'
             RunUI(() =>
             {
-                filterComboBox.SelectedIndex = filterComboBox.FindString(Resources.ViewLibraryDlg_InitializeComponent_Contains); 
+                filterComboBox.SelectedIndex =
+                    filterComboBox.FindString(Resources.ViewLibraryDlg_InitializeComponent_Contains);
             });
             // Clearing search box should bring up every entry and hide match type tip
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
-            // Now test search functionality when filter text can be parsed as a double
+            // Now test search functionality when filter text can be understood as a double
+            // If the test is running in french, use a comma as a decimal separator
             var midazolamMz = "326.0855";
-            // Entering in '3' should bring up five entries and three separate match types
-            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0,1), 5);
+            var inFrench = CultureInfo.CurrentCulture.Equals(CultureInfo.GetCultureInfo("fr-FR"));
+            midazolamMz = inFrench ? midazolamMz.Replace(".", ",") : midazolamMz;
+
+            // Entering in '3' should bring up five entries
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0, 1), 5);
 
             // Find the current match types and create a new tip with them so we can test the match type text
-            var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
+
+            var casName = "cas";
+            var nodeTip =
+                new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
             var expectedResults = new List<string>
-                {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                    Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, Resources.PeptideTipProvider_RenderTip_Precursor_m_z, "cas"};
+            {
+                Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
+                Resources.PeptideTipProvider_RenderTip_Precursor_m_z, casName
+            };
 
             // Compare our expected tip text to the text actually in the new tip
             CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
@@ -265,35 +278,43 @@ namespace pwiz.SkylineTestFunctional
 
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz, 1);
-            
+
             // The only match type here should be precursor m/z 
             CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text),
-                new List<string> { Resources.PeptideTipProvider_RenderTip_Precursor_m_z });
+                new List<string> {Resources.PeptideTipProvider_RenderTip_Precursor_m_z});
 
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
-            FilterListAndVerifyCount(filterTextBox, pepList, "326.1", 1);
+            var inexactMidazolamMz = "326.1";
+            FilterListAndVerifyCount(filterTextBox, pepList,
+                inFrench ? inexactMidazolamMz.Replace(".", ",") : inexactMidazolamMz, 1);
 
             // Test that we distinguish between molecule IDs when displaying match types
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
             CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text),
-                new List<string> {"cas"});
+                new List<string> { casName });
+
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
             // Test that different ID types are displayed correctly
             FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
 
             // Find the current match types and create a new tip with them so we can test the match type text
-            nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox, filterTextBox.Text));
+            nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI, filterComboBox,
+                filterTextBox.Text));
             expectedResults = new List<string>
-            {Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,
-                "InChi", ColumnCaptions.SMILES, "MadeUpFakeKey" };
+            {
+                Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,
+                "InChi", ColumnCaptions.SMILES, "MadeUpFakeKey"
+            };
 
             // Compare our expected tip text to the text actually in the new tip
             CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
 
             // Now test search behavior on a peptide list
-            ShowDialog<AddModificationsDlg>(() => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
+            ShowDialog<AddModificationsDlg>(
+                () => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
             OkayAllModificationsDlg();
 
             // Precursor searching should work here as well
@@ -301,6 +322,17 @@ namespace pwiz.SkylineTestFunctional
 
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 31);
+
+            // Check that the search result is highlighted in the peptide tool tip
+            RunUI(() => {
+                var pep = _viewLibUI.GetTipProvider(1);
+                var seqParts = pep.GetSeqParts();
+                Assert.AreEqual(seqParts[0].Bold, true);
+                Assert.AreEqual(seqParts[1].Bold, true);
+
+                // Text not matching the filter text should not be in bold
+                Assert.AreEqual(seqParts[2].Bold, false);
+            });
 
             // Close the spectral library explorer
             RunUI(() => _viewLibUI.CancelDialog());
@@ -1118,7 +1150,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0]");
                 Assert.AreEqual(pep1.GetSeqParts()[10].Color, Brushes.Black);
                 var pep3 = _viewLibUI.GetTipProvider(2);
-                Assert.AreEqual(pep3.GetSeqParts().Count, 1); // No mods so seq parts will only have one which is the whole sequence
+                Assert.AreEqual(pep3.GetSeqParts().Count, 13); // Sequences without mods are also split into parts
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });
