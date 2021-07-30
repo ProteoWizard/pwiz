@@ -2379,6 +2379,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error getting database Id for score {0}.
+        /// </summary>
+        public static string BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_ {
+            get {
+                return ResourceManager.GetString("BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Libraries must be fully loaded before they can be minimized..
         /// </summary>
         public static string BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed {
