@@ -975,7 +975,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
                 dictScoreTypes.Add(scoreName, scoreTypeId);
             }
-            return (ushort) scoreTypeId;
+            return scoreTypeId;
         }
 
         private static long SaveSourceFile(ISession session, string filePath)
