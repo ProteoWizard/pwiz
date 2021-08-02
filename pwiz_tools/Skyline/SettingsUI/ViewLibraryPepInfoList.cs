@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -45,8 +46,10 @@ namespace pwiz.Skyline.SettingsUI
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
         private const string ADDUCT = @"Adduct";
-        // The user may type in the adduct without including bracketss
+        // The user may type in the adduct without including brackets
         private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
+
+        private OrderedListCache _listCache = new OrderedListCache();
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
@@ -105,6 +108,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public class OrderedListCache
+        {
+            Dictionary<PropertyInfo, ImmutableList<int>> _cache = new Dictionary<PropertyInfo, ImmutableList<int>>();
+
+            public ImmutableList<int> GetOrCreate(PropertyInfo key, ImmutableList<ViewLibraryPepInfo> allEntries)
+            {
+                if (!_cache.ContainsKey(key))
+                {
+                    _cache[key] = createItem(key, allEntries);
+                }
+                return _cache[key];
+            }
+
+            private ImmutableList<int> createItem(PropertyInfo property, ImmutableList<ViewLibraryPepInfo> allEntries)
+            {
+                var intList = new RangeList(new Range(0, allEntries.Count)).ToList();
+                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(allEntries[index]).ToString()));
+            }
+        }
+
         /// <summary>
         /// Find entries which contain the filter text in the given property
         /// </summary>
@@ -126,21 +149,17 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private List<int> PrefixSearchByProperty(PropertyInfo property, string filterText)
         {
-            // Sort with respect to the given property
-            // Use ToString to sort correctly in case of double value
-            var orderedList = _allEntries.OrderBy(info => property.GetValue(info).ToString()).ToList();
-
-            // Binary search for entries starting with the filter text
-            var matchRange = CollectionUtil.BinarySearch(orderedList,
-                info => string.Compare(property.GetValue(info).ToString(), 0, filterText, 0, filterText.Length,
+            
+            var orderedList = _listCache.GetOrCreate(property, _allEntries);
+            var matchRange  = CollectionUtil.BinarySearch(orderedList,
+                info => string.Compare(property.GetValue(_allEntries[info]).ToString(), 0, filterText, 0, filterText.Length,
                     StringComparison.OrdinalIgnoreCase));
-            // Return the indices of entries that matched the filter text
-            var matchIndices = orderedList.Skip(matchRange.Start).Take(matchRange.Length).Select(item => _allEntries.IndexOf(item)).ToList();
-            if (matchIndices.Any())
+            if (matchRange.Length != 0)
             {
                 UpdateMatchTypes(property.Name);
             }
-            return matchIndices;
+            return orderedList.Skip(matchRange.Start).Take(matchRange.Length).ToList();
+
         }
 
         /// <summary>
@@ -250,11 +269,10 @@ namespace pwiz.Skyline.SettingsUI
             matchTypes = _matchTypes;
 
             filteredIndices = filteredIndices.Union(AccessionNumberSearch(filterText, filterType)).ToList();
-            var enumerable = filteredIndices.ToList(); // Avoid multiple enumeration
 
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match
             // the target text, if they had something appended to them.
-            if (!enumerable.Any())
+            if (!filteredIndices.Any())
             {
                 var range = CollectionUtil.BinarySearch(_allEntries,
                     info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
@@ -265,7 +283,7 @@ namespace pwiz.Skyline.SettingsUI
                     .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
             }
             // Return the indices of the matches sorted alphabetically by display text
-            return ImmutableList.ValueOf(enumerable.OrderBy(info => _allEntries[info].DisplayText));
+            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => _allEntries[info].DisplayText));
         }
 
         public int IndexOf(LibraryKey libraryKey)
