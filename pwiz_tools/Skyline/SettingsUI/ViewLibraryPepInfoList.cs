@@ -36,6 +36,7 @@ namespace pwiz.Skyline.SettingsUI
         private List<string> _matchTypes = new List<string>();
         private readonly LibKeyModificationMatcher _matcher;
         private readonly bool _allPeptides;
+        private readonly List<string> _stringSearchFields;
 
         // Tolerance for the numeric proximity of the precursor m/z to the filter text
         public const double MZ_FILTER_TOLERANCE = 0.1;
@@ -57,6 +58,17 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in the library?
             _allPeptides = allPeptides;
+
+            // If there are any small molecules in the library, search by multiple fields at once
+            _stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
+                new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS }
+                : new List<string> { UNMODIFIED_TARGET_TEXT };
+
+            // Initialize all lists for  searching
+            foreach (var field in _stringSearchFields)
+            {
+                _listCache.GetOrCreate(typeof(ViewLibraryPepInfo).GetProperty(field), _allEntries);
+            }
         }
 
         public override int Count
@@ -216,23 +228,19 @@ namespace pwiz.Skyline.SettingsUI
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // If there are any small molecules in the library, search by multiple fields at once
-            var stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string>{ UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS }
-                : new List<string> {UNMODIFIED_TARGET_TEXT};
 
             var filteredIndices = Enumerable.Empty<int>().ToList(); // The indices of entries in the peptide list that match our filter text
             var rangeList = Enumerable.Empty<int>();
             if (filterType == ViewLibraryDlg.FilterType.contains)
             {
                 // Find the indices of entries that contain the filter text
-                filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
+                filteredIndices = _stringSearchFields.Aggregate(rangeList, (current, str) =>
                     current.Union(SubstringSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
             }
             else if(filterType == ViewLibraryDlg.FilterType.starts_with)
             {
                 // Find the indices of entries that have a field that could match the search term if something was appended to it 
-                filteredIndices = stringSearchFields.Aggregate(rangeList, (current, str) =>
+                filteredIndices = _stringSearchFields.Aggregate(rangeList, (current, str) =>
                     current.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
             }
             // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
