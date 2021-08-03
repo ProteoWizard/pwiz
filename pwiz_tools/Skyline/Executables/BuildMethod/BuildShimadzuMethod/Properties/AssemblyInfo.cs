@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("BuildShimadzuMethod")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Build Shimadzu Methods for Skyline")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BuildShimadzuMethod")]
-[assembly: AssemblyCopyright("Copyright ©  2021")]
+[assembly: AssemblyCompany("University of Washington")]
+[assembly: AssemblyProduct("Skyline")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
