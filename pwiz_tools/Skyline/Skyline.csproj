@@ -3324,6 +3324,12 @@
       <Link>unimod.obo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
@@ -3346,8 +3352,12 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RTBEADS.sky" />
-    <None Include="Method\Agilent\BuildAgilentMethod.exe.config" />
-    <None Include="Method\Bruker\BuildBrukerMethod.exe.config" />
+    <Content Include="Method\Agilent\BuildAgilentMethod.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Bruker\BuildBrukerMethod.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Method\Thermo\BuildThermoMethod.exe.config" />
     <None Include="Method\Waters\BuildWatersMethod.exe.config" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
