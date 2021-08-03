@@ -4153,7 +4153,7 @@ namespace pwiz.Skyline.Model
                     status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
                     status = status.ChangeSegments(0, dictTranLists.Count);
                 }
-                progressMonitor.UpdateProgress(status);
+                progressMonitor?.UpdateProgress(status);
 
                 psiExporter.RunProcess(stdinBuilder.ToString(), @"MESSAGE: ", progressMonitor, ref status); 
 
