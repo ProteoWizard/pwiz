@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Find the indices of entries whose "OtherIDs" field contain matches, and update the match types
         /// with the correct category (HMDB, SMILES, etc.)
         /// </summary>
-        private List<int> AccessionNumberSearch(string filterText, ViewLibraryDlg.FilterType filterType)
+        private List<int> AccessionNumberSearch(string filterText)
         {
             var matchIndices = new List<int>();
             foreach (var entry in _allEntries)
@@ -187,12 +186,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Split the string containing all molecular IDs into separate entries
                     var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
-                    foreach (var pair in accessionNumDict.Where(pair => filterType == ViewLibraryDlg.FilterType.contains ? 
-                        pair.Value.Contains(filterText) : pair.Value.StartsWith(filterText)))
+                    foreach (var pair in accessionNumDict)
                     {
-                        if (filterType == ViewLibraryDlg.FilterType.contains
-                            ? pair.Value.Contains(filterText)
-                            : pair.Value.StartsWith(filterText))
+                        if (pair.Value.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
                         {
                             matchIndices.Add(IndexOf(entry));
                             UpdateMatchTypes(pair.Key);
@@ -215,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="filterText"> Search term </param>
         /// <param name="filterType"> "Starts with" or "Contains"</param>
         /// <param name="matchTypes"> Categories in which matches were found</param>
-        public IList<int> Filter(string filterText, ViewLibraryDlg.FilterType filterType, out List<string> matchTypes)
+        public IList<int> Filter(string filterText, out List<string> matchTypes)
         {
             _matchTypes = new List<string>();
 
@@ -231,19 +227,12 @@ namespace pwiz.Skyline.SettingsUI
 
             var filteredIndices = Enumerable.Empty<int>().ToList(); // The indices of entries in the peptide list that match our filter text
             var rangeList = Enumerable.Empty<int>();
-            if (filterType == ViewLibraryDlg.FilterType.contains)
-            {
-                // Find the indices of entries that contain the filter text
-                filteredIndices = _stringSearchFields.Aggregate(rangeList, (current, str) =>
-                    current.Union(SubstringSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
-            }
-            else if(filterType == ViewLibraryDlg.FilterType.starts_with)
-            {
+
                 // Find the indices of entries that have a field that could match the search term if something was appended to it 
                 filteredIndices = _stringSearchFields.Aggregate(rangeList, (current, str) =>
                     current.Union(PrefixSearchByProperty(typeof(ViewLibraryPepInfo).GetProperty(str), filterText))).ToList();
-            }
-            // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
+
+                // If the filter text can be read as a number, we want to include spectra that match the precursor m/z as well
             if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
             {
                 // Calculate the mz of each entry to search if we can
@@ -276,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
 
             matchTypes = _matchTypes;
 
-            filteredIndices = filteredIndices.Union(AccessionNumberSearch(filterText, filterType)).ToList();
+            filteredIndices = filteredIndices.Union(AccessionNumberSearch(filterText)).ToList();
 
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match
             // the target text, if they had something appended to them.

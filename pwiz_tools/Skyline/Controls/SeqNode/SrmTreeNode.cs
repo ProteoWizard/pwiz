@@ -1301,7 +1301,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// Draw the table and bold and highlight text matching the search text, according to the filter type
         /// </summary>
-        public void SearchSensitiveDraw(Graphics g, ViewLibraryDlg.FilterType filterType, string filterText, RenderTools rt)
+        public void SearchSensitiveDraw(Graphics g,  string filterText, RenderTools rt)
         {
             var sf = new StringFormat();
             var y = 0f;
@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     else
                     {
                         isField = true;
-                        matchIndices = ViewLibraryDlg.FindMatchesInTipText(cell.Text, filterText, filterType);
+                        matchIndices = ViewLibraryDlg.FindMatchesInTipText(cell.Text, filterText);
 
                         // If there's a numeric match, simply bold everything in the cell
                         if (double.TryParse(cell.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out var cellNum) &&

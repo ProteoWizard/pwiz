@@ -107,7 +107,6 @@ namespace pwiz.Skyline.SettingsUI
         private bool _hasChromatograms;
         private bool _hasScores;
         private readonly GraphHelper _graphHelper;
-        private FilterType _selectedFilterType; // 'Starts with' or 'contains'
 
         private ModFontHolder ModFonts { get; set; }
 
@@ -205,15 +204,6 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries.LoadList(_selectedLibName);
         }
 
-        /// <summary>
-        /// // Set 'starts with' as the initial filter type
-        /// </summary>
-        private void InitializeFilterTypeComboBox()
-        {
-            comboFilterType.SelectedIndex =
-                comboFilterType.FindStringExact(Resources
-                    .ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with);
-        }
 
         public bool AssociateMatchingProteins
         {
@@ -241,8 +231,6 @@ namespace pwiz.Skyline.SettingsUI
             // we need to load, so as soon as the dialog loads, we need to
             // populate it and set a default selection for the library.
             InitializeLibrariesComboBox();
-            // We need to select a filter for our list as soon as the form opens
-            InitializeFilterTypeComboBox();
             UpdateViewLibraryDlg();
         }
 
@@ -415,7 +403,7 @@ namespace pwiz.Skyline.SettingsUI
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null, FilterType.starts_with, out _);
+            _currentRange = _peptides.Filter(null,  out _);
         }
 
         public bool MatchModifications()
@@ -1111,7 +1099,7 @@ namespace pwiz.Skyline.SettingsUI
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
             // Filter the list by the new text according to the current filter type
-            _currentRange = _peptides.Filter(textPeptide.Text, _selectedFilterType, out var matchTypes);
+            _currentRange = _peptides.Filter(textPeptide.Text, out var matchTypes);
             
             // Whenever the filter text changes, it's possible the categories with matches will change as well
             UpdateMatchTypes(matchTypes);
@@ -1492,23 +1480,14 @@ namespace pwiz.Skyline.SettingsUI
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        public static List<int> FindMatchesInTipText(string tipText, string filterText, FilterType filterType)
+        public static List<int> FindMatchesInTipText(string tipText, string filterText)
         {
             var matchIndices = new List<int>();
-            if (filterType == FilterType.contains)
+            // If the text starts with the filter text, indicate a match at index 0
+            if (tipText.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
             {
-                // Find the indices of all substrings matching the filter text
-                matchIndices = Regex.Matches(tipText, filterText, RegexOptions.IgnoreCase).Cast<Match>().Select(m => m.Index).ToList();
+                matchIndices = new List<int> { 0 };
             }
-            else
-            {
-                // If the text starts with the filter text, indicate a match at index 0
-                if (tipText.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
-                {
-                    matchIndices = new List<int> { 0 };
-                }
-            }
-
             return matchIndices;
         }
 
@@ -1965,7 +1944,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary, _selectedFilterType, textPeptide.Text);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary, textPeptide.Text);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2127,7 +2106,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public PeptideTipProvider GetTipProvider(int i)
         {
-            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary, _selectedFilterType, textPeptide.Text);
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary, textPeptide.Text);
         }
 
         private ViewLibraryPepInfo GetPepInfo(int i)
@@ -2388,17 +2367,15 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SrmSettings _settings;
             private readonly double _mz;
             private readonly IonMobilityAndCCS _ionMobility;
-            private readonly FilterType _filterType;
             private readonly string _filterText;
 
             public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
-                Library selectedLibrary, FilterType filterType, string filterText)
+                Library selectedLibrary, string filterText)
             {
                 ExplicitMods mods;
                 TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
                 _matcher = matcher;
-                _filterType = filterType;
                 _filterText = filterText;
                 GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
@@ -2494,7 +2471,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         table.Draw(g);
                         g.TranslateTransform(0, sizeSeq.Height);
-                        tableMz.SearchSensitiveDraw(g, _filterType, _filterText, rt);
+                        tableMz.SearchSensitiveDraw(g, _filterText, rt);
                         g.TranslateTransform(0, -sizeSeq.Height);
                     }
                 }
@@ -2530,7 +2507,7 @@ namespace pwiz.Skyline.SettingsUI
                 var splitMods = SplitModifications(_pepInfo.Key.Sequence);
 
                 var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
-                var matchIndices = FindMatchesInTipText(strSeq, _filterText, _filterType);
+                var matchIndices = FindMatchesInTipText(strSeq, _filterText);
 
                 var charLocations = new List<int>();
                 foreach (var index in matchIndices)
@@ -2716,35 +2693,10 @@ namespace pwiz.Skyline.SettingsUI
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
         
-        
-        public enum FilterType
-        {
-            starts_with, contains
-        }
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;
             UpdateUI();
-        }
-
-        private void comboFilterType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-            if (comboFilterType.SelectedItem.ToString() == Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with)
-            {
-                _selectedFilterType = FilterType.starts_with;
-            }
-            else
-            {
-                _selectedFilterType = FilterType.contains;
-            }
-
-            // If there is a filter term in the search box we need to update the search
-            // results whenever the filter changes
-            if (textPeptide.Text.Length > 0)
-            {
-                textPeptide_TextChanged(sender, e);
-            }
         }
     }
 }

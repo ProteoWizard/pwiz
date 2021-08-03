@@ -1,6 +1,3 @@
-using MathNet.Numerics.Properties;
-using Resources = pwiz.Skyline.Properties.Resources;
-
 namespace pwiz.Skyline.SettingsUI
 {
     partial class ViewLibraryDlg
@@ -41,17 +38,14 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideCount = new System.Windows.Forms.Label();
             this.NextLink = new System.Windows.Forms.LinkLabel();
             this.PreviousLink = new System.Windows.Forms.LinkLabel();
-            this.comboFilterType = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textPeptide = new System.Windows.Forms.TextBox();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
-            this.filterLabel = new System.Windows.Forms.Label();
+            this.MoleculeLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
             this.btnLibDetails = new System.Windows.Forms.Button();
             this.PeptideLabel = new System.Windows.Forms.Label();
-            this.MoleculeLabel = new System.Windows.Forms.Label();
+            this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -193,32 +187,6 @@ namespace pwiz.Skyline.SettingsUI
             this.PreviousLink.TabStop = true;
             this.PreviousLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.PreviousLink_LinkClicked);
             // 
-            // comboFilterType
-            // 
-            resources.ApplyResources(this.comboFilterType, "comboFilterType");
-            this.comboFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboFilterType.FormattingEnabled = true;
-            this.comboFilterType.Items.AddRange(new object[] {
-            global::pwiz.Skyline.Properties.Resources.ViewLibraryDlg_comboFilterType_SelectedIndexChanged_Starts_with,
-            global::pwiz.Skyline.Properties.Resources.ViewLibraryDlg_InitializeComponent_Contains});
-            this.comboFilterType.Name = "comboFilterType";
-            this.comboFilterType.SelectedIndexChanged += new System.EventHandler(this.comboFilterType_SelectedIndexChanged);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // textPeptide
-            // 
-            resources.ApplyResources(this.textPeptide, "textPeptide");
-            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textPeptide.Name = "textPeptide";
-            this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
-            this.textPeptide.GotFocus += new System.EventHandler(this.textPeptide_GotFocus);
-            this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
-            this.textPeptide.LostFocus += new System.EventHandler(this.textPeptide_LostFocus);
-            // 
             // splitMain
             // 
             resources.ApplyResources(this.splitMain, "splitMain");
@@ -239,20 +207,17 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.filterLabel);
-            this.PeptideEditPanel.Controls.Add(this.label1);
+            this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
-            this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.textPeptide);
-            this.PeptideEditPanel.Controls.Add(this.comboFilterType);
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
             // 
-            // filterLabel
+            // MoleculeLabel
             // 
-            resources.ApplyResources(this.filterLabel, "filterLabel");
-            this.filterLabel.Name = "filterLabel";
+            resources.ApplyResources(this.MoleculeLabel, "MoleculeLabel");
+            this.MoleculeLabel.Name = "MoleculeLabel";
             // 
             // tableLayoutPanel1
             // 
@@ -282,10 +247,13 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.PeptideLabel, "PeptideLabel");
             this.PeptideLabel.Name = "PeptideLabel";
             // 
-            // MoleculeLabel
+            // textPeptide
             // 
-            resources.ApplyResources(this.MoleculeLabel, "MoleculeLabel");
-            this.MoleculeLabel.Name = "MoleculeLabel";
+            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            resources.ApplyResources(this.textPeptide, "textPeptide");
+            this.textPeptide.Name = "textPeptide";
+            this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
+            this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
             // 
             // GraphPanel
             // 
@@ -841,8 +809,5 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label MoleculeLabel;
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox comboFilterType;
-        private System.Windows.Forms.Label filterLabel;
     }
 }
