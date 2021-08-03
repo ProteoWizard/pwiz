@@ -256,6 +256,8 @@ namespace pwiz.Skyline.SettingsUI
             this.textPeptide.Name = "textPeptide";
             this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
             this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
+            this.textPeptide.GotFocus += new System.EventHandler(this.textPeptide_GotFocus);
+            this.textPeptide.LostFocus += new System.EventHandler(this.textPeptide_LostFocus);
             // 
             // GraphPanel
             // 

@@ -96,7 +96,7 @@ namespace pwiz.Skyline.SettingsUI
         private LibKeyModificationMatcher _matcher;
 
         private bool _activated;
-
+        private List<string> _matchTypes = new List<string>();
         private readonly NodeTip _matchTypesNodeTips;
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
@@ -1099,9 +1099,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Filter the list by the new text according to the current filter type
             _currentRange = _peptides.Filter(textPeptide.Text, out var matchTypes);
-            
+            _matchTypes = matchTypes;
             // Whenever the filter text changes, it's possible the categories with matches will change as well
-            UpdateMatchTypes(matchTypes);
+            UpdateMatchTypeTip();
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
@@ -1111,15 +1111,15 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// If there are no match types then hide the tip, otherwise show the current match types
         /// </summary>
-        private void UpdateMatchTypes(List <string> matchTypes)
+        private void UpdateMatchTypeTip()
         {
             _matchTypesNodeTips.HideTip(); // Hide the old tip
             // Only show the tip if there is at least one match type, and it is not "Peptide" or "Name"
-            if (matchTypes.Count > 0 && 
-                !matchTypes.SequenceEqual(new List<string> { ColumnCaptions.Peptide }) &&
-                !matchTypes.SequenceEqual(new List<string> { Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name }))
+            if (_matchTypes.Count > 0 && 
+                !_matchTypes.SequenceEqual(new List<string> { ColumnCaptions.Peptide }) &&
+                !_matchTypes.SequenceEqual(new List<string> { Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name }))
             {
-                var tipProvider = new MatchTypeTipProvider(matchTypes);
+                var tipProvider = new MatchTypeTipProvider(_matchTypes);
                 var size = tipProvider.GetSize();
                 var rect = textPeptide.DisplayRectangle;
                 rect.X = rect.Width - size.Width;
@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void textPeptide_GotFocus(object sender, EventArgs e)
         {
-            textPeptide_TextChanged(sender, e);
+            UpdateMatchTypeTip();
         }
 
         /// <summary>
