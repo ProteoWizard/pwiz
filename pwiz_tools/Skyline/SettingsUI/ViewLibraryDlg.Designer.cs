@@ -102,6 +102,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.filterLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
             this.splitPeptideList.Panel2.SuspendLayout();
@@ -207,6 +208,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
+            this.PeptideEditPanel.Controls.Add(this.filterLabel);
             this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
@@ -249,8 +251,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // textPeptide
             // 
-            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             resources.ApplyResources(this.textPeptide, "textPeptide");
+            this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textPeptide.Name = "textPeptide";
             this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
             this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
@@ -689,6 +691,11 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
             // 
+            // filterLabel
+            // 
+            resources.ApplyResources(this.filterLabel, "filterLabel");
+            this.filterLabel.Name = "filterLabel";
+            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -809,5 +816,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label MoleculeLabel;
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
+        private System.Windows.Forms.Label filterLabel;
     }
 }
