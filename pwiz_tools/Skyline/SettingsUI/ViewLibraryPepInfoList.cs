@@ -78,13 +78,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeSearchVariables()
         {
-            // Initialize all lists for searching
-            _listCache = new OrderedListCache();
-            foreach (var field in _stringSearchFields)
-            {
-                _listCache.GetOrCreate(typeof(ViewLibraryPepInfo).GetProperty(field), _allEntries);
-            }
-
             // Calculate the mz of each entry to search if we can
             foreach (var entry in _allEntries)
             {
@@ -93,6 +86,14 @@ namespace pwiz.Skyline.SettingsUI
                     entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
                 }
             }
+
+            // Initialize all lists for searching
+            _listCache = new OrderedListCache();
+            foreach (var field in _stringSearchFields.Append(PRECURSOR_MZ))
+            {
+                _listCache.GetOrCreate(typeof(ViewLibraryPepInfo).GetProperty(field), _allEntries);
+            }
+
         }
         /// <summary>
         /// Add a string to display on the match type tip based on the given property
