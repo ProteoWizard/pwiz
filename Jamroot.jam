@@ -1062,7 +1062,7 @@ rule shimadzu-dll-location ( api-path : properties * )
 
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        $(result) &&
-       [ path.exists $(result)\\DataReader.dll ]
+       [ path.exists $(result)\\CompressedTLMRawDataReader.dll ]
     {
         return $(result) ;
     }
