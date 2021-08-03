@@ -820,7 +820,7 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.cpp">
       <AdditionalUsingDirectories>%(Directory);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
-      <ForcedUsingFiles>Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;DataReader.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
+      <ForcedUsingFiles>Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
       <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReaderTest.cpp" />
