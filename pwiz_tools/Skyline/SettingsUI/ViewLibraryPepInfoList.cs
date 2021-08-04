@@ -20,18 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
-using System.Windows.Forms;
-using EnvDTE;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
-using Resources = pwiz.Skyline.Properties.Resources;
-
 namespace pwiz.Skyline.SettingsUI
 {
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
@@ -93,13 +85,6 @@ namespace pwiz.Skyline.SettingsUI
                     entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
                 }
             }
-
-            // Initialize all lists for searching
-            foreach (var field in _stringSearchFields.Append(PRECURSOR_MZ))
-            {
-                _listCache.GetOrCreate(field);
-            }
-
         }
 
         /// <summary>
@@ -151,7 +136,7 @@ namespace pwiz.Skyline.SettingsUI
                     // We need to sort the adduct list in a different way
                     return ImmutableList.ValueOf(intList.OrderBy(index => index, Comparer<int>.Create(CompareAdductsFromIndices))); ;
                 }
-
+                
                 if (_accessionCategories.Contains(propertyName))
                 {
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
