@@ -37,7 +37,6 @@ namespace pwiz.Skyline.SettingsUI
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
     {
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
-        private List<string> _matchTypes = new List<string>();
         private readonly LibKeyModificationMatcher _matcher;
         private readonly bool _allPeptides;
         private readonly List<string> _stringSearchFields;
@@ -56,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
 
         private OrderedListCache _listCache;
-        private const string _selectedFilterCategory = "cas";
+        private const string _selectedFilterCategory = UNMODIFIED_TARGET_TEXT;
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
         {
@@ -124,44 +123,6 @@ namespace pwiz.Skyline.SettingsUI
 
             return matchCategories;
         }
-        /// <summary>
-        /// Add a string to display on the match type tip based on the given property
-        /// </summary>
-        private void UpdateMatchTypes(string matchName)
-        {
-            // If there are items on our list of indices and our list of match types does not
-            // already include this match type, then add it to the list
-            if (matchName == UNMODIFIED_TARGET_TEXT)
-            {
-                // Because the target text can be a molecule name or a peptide sequence only display
-                // peptide if every entry on the list is a peptide
-                _matchTypes.Add(_allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
-            }
-            else if (matchName == PRECURSOR_MZ)
-            {
-                if (!_matchTypes.Contains(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
-                {
-                    _matchTypes.Add(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
-                }
-            }else if (matchName == FORMULA)
-            {
-                _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
-            } else if (matchName == INCHI_KEY)
-            {
-                _matchTypes.Add(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
-            } else if (matchName == ADDUCT || matchName == ADDUCT_MINUS_BRACKETS)
-            {
-                if (!_matchTypes.Contains(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct))
-                {
-                    _matchTypes.Add(Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
-                }
-            }
-            // In the case of molecule accession numbers just add directly add the name
-            else if (!_matchTypes.Contains(matchName))
-            {
-                _matchTypes.Add(matchName);
-            }
-        }
 
         private class OrderedListCache
         {
@@ -228,60 +189,20 @@ namespace pwiz.Skyline.SettingsUI
                         StringComparison.OrdinalIgnoreCase));
             }
 
-            if (matchRange.Length != 0)
-            {
-                UpdateMatchTypes(_selectedFilterCategory);
-            }
             return orderedList.Skip(matchRange.Start).Take(matchRange.Length).ToList();
 
         }
 
-        /// <summary>
-        /// Find the indices of entries whose "OtherIDs" field contain matches, and update the match types
-        /// with the correct category (HMDB, SMILES, etc.)
-        /// </summary>
-        private List<int> AccessionNumberSearch(string filterText)
-        {
-            var matchIndices = new List<int>();
-            foreach (var entry in _allEntries)
-            {
-                if (entry.OtherKeys != null)
-                {
-                    // Split the string containing all molecular IDs into separate entries
-                    var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
-                    foreach (var pair in accessionNumDict)
-                    {
-                        if (pair.Value.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
-                        {
-                            matchIndices.Add(IndexOf(entry));
-                            UpdateMatchTypes(pair.Key);
-                        }
-                        // If there is an HMDB number that does not match, try matching without the "HMDB" prefix
-                        else if (pair.Value.StartsWith(MoleculeAccessionNumbers.TagHMDB))
-                        {
-                            accessionNumDict.Add(pair.Key, pair.Value.Replace(MoleculeAccessionNumbers.TagHMDB, ""));
-                        }
-                    }
-                }
-            }
-
-            return matchIndices;
-        }
 
         /// <summary>
         /// Find the indices of entries matching the filter text according to the filter type
         /// </summary>
         /// <param name="filterText"> Search term </param>
-        /// <param name="matchTypes"> Categories in which matches were found</param>
-        public IList<int> Filter(string filterText, out List<string> matchTypes)
+        public IList<int> Filter(string filterText)
         {
-            // Reset the list of match types
-            _matchTypes = new List<string>();
 
             if (string.IsNullOrEmpty(filterText))
             {
-                // Don't filter anything out and don't indicate matches in any category
-                matchTypes = new List<string>();
                 return new RangeList(0, Count);
             }
 
@@ -294,11 +215,6 @@ namespace pwiz.Skyline.SettingsUI
             // If the filter text can be read as a number, we want to include spectra with a matching precursor m/z value
             if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
             {
-                // Find the entries that match the m/z lexicographically
-                filteredIndices =
-                    filteredIndices.Union(PrefixSearchByProperty(
-                        filterText)).ToList();
-
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z
                 var sortedMzList = _allEntries.OrderBy(entry => Math.Abs(entry.PrecursorMz - result));
@@ -307,16 +223,8 @@ namespace pwiz.Skyline.SettingsUI
                 var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
                     entry.PrecursorMz - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results).ToList();
-                if (results.Any())
-                {
-                    UpdateMatchTypes(PRECURSOR_MZ);
-                }
             }
 
-            // Look for matches in the accession number category
-            filteredIndices = filteredIndices.Union(AccessionNumberSearch(filterText)).ToList();
-
-            matchTypes = _matchTypes;
             // If we have not found any matches yet and it is a peptide list look at all the entries which could match
             // the target text, if they had something appended to them.
             if (!filteredIndices.Any())

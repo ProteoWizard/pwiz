@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -39,7 +38,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -96,8 +94,6 @@ namespace pwiz.Skyline.SettingsUI
         private LibKeyModificationMatcher _matcher;
 
         private bool _activated;
-        private List<string> _matchTypes = new List<string>();
-        private readonly NodeTip _matchTypesNodeTips;
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo _lastTipNode;
@@ -160,8 +156,6 @@ namespace pwiz.Skyline.SettingsUI
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
-            // A tip which displays categories containing matches to the filter text
-            _matchTypesNodeTips = new NodeTip(this) {Parent = this};
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;
             if (!size.IsEmpty)
@@ -402,7 +396,7 @@ namespace pwiz.Skyline.SettingsUI
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null,  out _);
+            _currentRange = _peptides.Filter(null);
         }
 
         public bool MatchModifications()
@@ -1098,51 +1092,13 @@ namespace pwiz.Skyline.SettingsUI
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
             // Filter the list by the new text according to the current filter type
-            _currentRange = _peptides.Filter(textPeptide.Text, out var matchTypes);
-            _matchTypes = matchTypes;
-            // Whenever the filter text changes, it's possible the categories with matches will change as well
-            UpdateMatchTypeTip();
+            _currentRange = _peptides.Filter(textPeptide.Text);
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
             UpdateUI();
         }
 
-        /// <summary>
-        /// If there are no match types then hide the tip, otherwise show the current match types
-        /// </summary>
-        private void UpdateMatchTypeTip()
-        {
-            _matchTypesNodeTips.HideTip(); // Hide the old tip
-            // Only show the tip if there is at least one match type, and it is not "Peptide" or "Name"
-            if (_matchTypes.Count > 0 && 
-                !_matchTypes.SequenceEqual(new List<string> { ColumnCaptions.Peptide }) &&
-                !_matchTypes.SequenceEqual(new List<string> { Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name }))
-            {
-                var tipProvider = new MatchTypeTipProvider(_matchTypes);
-                var size = tipProvider.GetSize();
-                var rect = textPeptide.DisplayRectangle;
-                rect.X = rect.Width - size.Width;
-                rect.Y = -70 - size.Height;
-                var pt = textPeptide.Location;
-                _matchTypesNodeTips.SetTipProvider(tipProvider, rect, pt);
-            }
-        }
-        /// <summary>
-        /// Displays a tool tip with the current match types when the focus is in the text box
-        /// </summary>
-        private void textPeptide_GotFocus(object sender, EventArgs e)
-        {
-            UpdateMatchTypeTip();
-        }
-
-        /// <summary>
-        /// Hides the tip with current match types when the focus leaves
-        /// </summary>
-        private void textPeptide_LostFocus(object sender, EventArgs e)
-        {
-            _matchTypesNodeTips.HideTip();
-        }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
             // We need to update the spectrum graph when the peptide
@@ -2290,69 +2246,6 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
                 }
-            }
-        }
-
-        public class MatchTypeTipProvider : ITipProvider
-        {
-            private Size _size;
-            private readonly List<string> _typeMatches;
-            public MatchTypeTipProvider(List<string> matchTypes)
-            {
-                _typeMatches = matchTypes;
-            }
-
-            public Size GetSize()
-            {
-                var bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
-                var g = Graphics.FromImage(bitmap1);
-                return RenderTip(g, _size, false);
-            }
-            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-            {
-                using (var rt = new RenderTools())
-                {
-                    var textParts = GetTextPartsToDraw();
-                    float height = 0;
-                    float width = 0;
-
-                    // First find the size of the rectangle
-                    foreach (var sizeString in textParts.Select(str => g.MeasureString(str, rt.FontNormal)))
-                    {
-                        height += sizeString.Height;
-                        width = Math.Max(width, sizeString.Width);
-                    }
-
-
-                    if (draw)
-                    {
-                        var sizeLastString = new SizeF();
-                        foreach (var str in textParts)
-                        {
-                            g.TranslateTransform(0, sizeLastString.Height);
-                            g.DrawString(str, rt.FontNormal, Brushes.Black, new PointF(0, 0));
-                            sizeLastString = g.MeasureString(str, rt.FontNormal);
-                        }
-                    }
-
-                    // Width is the max length of the longest match type name which might vary by language and matches present
-                    _size = new Size((int)width + 8, (int)height + 4); // +8 width, +4 height padding
-                    return _size;
-                }
-            }
-            /// <summary>
-            /// Returns a list containing all text parts to draw
-            /// </summary>
-            public List<string> GetTextPartsToDraw()
-            {
-                var textParts = new List<string>{Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_};
-                textParts.AddRange(_typeMatches);
-                return textParts;
-            }
-
-            public bool HasTip
-            {
-                get { return true; }
             }
         }
 

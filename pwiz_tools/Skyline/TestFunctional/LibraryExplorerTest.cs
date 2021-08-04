@@ -28,7 +28,6 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -171,12 +170,6 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private static List<string> FindMatchTypes(ViewLibraryDlg viewLibUI, string filterText)
-        {
-            viewLibUI._peptides.Filter(filterText, out var typeMatches);
-            return typeMatches;
-        }
-
         private void TestSearchFunctionality()
         {
             // Launch the Library Explorer dialog
@@ -242,36 +235,20 @@ namespace pwiz.SkylineTestFunctional
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz, 1);
 
-            // The only match type here should be precursor m/z 
-            CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterTextBox.Text),
-                new List<string> {Resources.PeptideTipProvider_RenderTip_Precursor_m_z});
 
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
             var inexactMidazolamMz = "326.1";
             FilterListAndVerifyCount(filterTextBox, pepList,
                 inFrench ? inexactMidazolamMz.Replace(".", ",") : inexactMidazolamMz, 1);
 
-            // Test that we distinguish between molecule IDs when displaying match types
+            // Test molecule ID search
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
-            CollectionAssert.AreEqual(FindMatchTypes(_viewLibUI, filterTextBox.Text),
-                new List<string> { "cas" });
 
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
             // Test that different ID types are displayed correctly
             FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
 
-            // Find the current match types and create a new tip with them so we can test the match type text
-            var nodeTip = new ViewLibraryDlg.MatchTypeTipProvider(FindMatchTypes(_viewLibUI,
-                filterTextBox.Text));
-            var expectedResults = new List<string>
-            {
-                Resources.MatchTypeTipProvider_RenderTip_Fields_containing_matches_,
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ColumnCaptions.SMILES
-            };
-
-            // Compare our expected tip text to the text actually in the new tip
-            CollectionAssert.AreEqual(expectedResults, nodeTip.GetTextPartsToDraw());
 
             // Now test search behavior on a peptide list
             ShowDialog<AddModificationsDlg>(
