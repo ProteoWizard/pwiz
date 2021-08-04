@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -68,6 +70,7 @@ namespace pwiz.Skyline.SettingsUI
             } 
         }
 
+        public Dictionary<string, string> OtherKeysDict { get; set; }
         /// <summary>
         /// Returns the unmodified peptide sequence. This, plus the Adduct is what gets displayed
         /// in the list box.
