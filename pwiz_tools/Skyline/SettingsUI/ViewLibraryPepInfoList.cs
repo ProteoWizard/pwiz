@@ -21,10 +21,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
+using EnvDTE;
 using pwiz.Common.Collections;
+using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Util;
 using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
@@ -95,6 +100,28 @@ namespace pwiz.Skyline.SettingsUI
             }
 
         }
+
+        /// <summary>
+        /// Go through our list and find categories in which we could find matches
+        /// </summary>
+        private void FindMatchCategories()
+        {
+            var matchCategories = new List<string>();
+            foreach (var entry in _allEntries)
+            {
+                if (entry.OtherKeys != null)
+                {
+                    var accDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
+                    foreach (var pair in accDict)
+                    {
+                        if (!matchCategories.Contains(pair.Key))
+                        {
+                            matchCategories.Add(pair.Key);
+                        }
+                    }
+                }
+            }
+        }
         /// <summary>
         /// Add a string to display on the match type tip based on the given property
         /// </summary>
@@ -134,23 +161,33 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public class OrderedListCache
+        private class OrderedListCache
         {
             Dictionary<PropertyInfo, ImmutableList<int>> _cache = new Dictionary<PropertyInfo, ImmutableList<int>>();
-
+            private ImmutableList<ViewLibraryPepInfo> _pepInfos;
             public ImmutableList<int> GetOrCreate(PropertyInfo key, ImmutableList<ViewLibraryPepInfo> allEntries)
             {
+                _pepInfos = allEntries;
                 if (!_cache.ContainsKey(key))
                 {
-                    _cache[key] = createItem(key, allEntries);
+                    _cache[key] = createItem(key);
                 }
                 return _cache[key];
             }
 
-            private ImmutableList<int> createItem(PropertyInfo property, ImmutableList<ViewLibraryPepInfo> allEntries)
+            private ImmutableList<int> createItem(PropertyInfo property)
             {
-                var intList = new RangeList(new Range(0, allEntries.Count)).ToList();
-                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(allEntries[index]).ToString()));
+                var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
+                if (property.Name.Equals(ADDUCT))
+                {
+                    // We need to sort the adduct list in a different way
+                    return ImmutableList.ValueOf(intList.OrderBy(index => index, Comparer<int>.Create(CompareAdductsFromIndices))); ;
+                } 
+                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString()));
+            }
+            private int CompareAdductsFromIndices(int adduct1, int adduct2)
+            {
+                return Adduct.Compare(_pepInfos[adduct1].Adduct, _pepInfos[adduct2].Adduct);
             }
         }
 
