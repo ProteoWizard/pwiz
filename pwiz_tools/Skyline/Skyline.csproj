@@ -3325,7 +3325,9 @@
       <Link>unimod.obo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Method\Shimadzu\BuildShimadzuMethod.exe.config" />
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
