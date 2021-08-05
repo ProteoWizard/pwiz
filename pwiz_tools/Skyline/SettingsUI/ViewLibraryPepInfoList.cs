@@ -20,12 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using MathNet.Numerics.Properties;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Resources = pwiz.Skyline.Properties.Resources;
 
@@ -48,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
         private const string ADDUCT = @"Adduct";
-        public Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
+        public readonly Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
 
         private OrderedListCache _listCache;
         private string _selectedFilterCategory;

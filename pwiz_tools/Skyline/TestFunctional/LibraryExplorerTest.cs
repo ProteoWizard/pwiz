@@ -178,6 +178,7 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             TextBox filterTextBox = null;
+            ComboBox filterCategoryComboBox = null;
             RunUI(() =>
             {
                 // Find the combo box which controls the selected library
@@ -191,7 +192,20 @@ namespace pwiz.SkylineTestFunctional
                 // Find the filter text box
                 filterTextBox = (TextBox) _viewLibUI.Controls.Find("textPeptide", true)[0];
 
+                // Find the filter category combo box
+                filterCategoryComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterCategory", true)[0];
 
+            });
+
+            // Filter category combo box should be set to "Name" by default
+            Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
+
+            // Test filtering by formula
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources
+                        .SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
             });
 
             // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
@@ -222,7 +236,13 @@ namespace pwiz.SkylineTestFunctional
             // Clearing search box should bring up every entry and hide match type tip
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
-            // Now test search functionality when filter text can be understood as a double
+            // Now test filtering by precursor m/z
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
+            });
+
             // If the test is running in french, use a comma as a decimal separator
             var midazolamMz = "326.0855";
             var inFrench = CultureInfo.CurrentCulture.Equals(CultureInfo.GetCultureInfo("fr-FR"));
@@ -241,13 +261,25 @@ namespace pwiz.SkylineTestFunctional
             FilterListAndVerifyCount(filterTextBox, pepList,
                 inFrench ? inexactMidazolamMz.Replace(".", ",") : inexactMidazolamMz, 1);
 
-            // Test molecule ID search
+            // Test filtering by CAS registry number
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact("cas");
+            });
             FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
 
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
-            // Test that different ID types are displayed correctly
-            FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
+
+            // Test filtering when only some entries have our search field
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact("MadeUpFakeKey");
+            });
+
+            FilterListAndVerifyCount(filterTextBox, pepList, "123", 1);
 
 
             // Now test search behavior on a peptide list
@@ -255,8 +287,6 @@ namespace pwiz.SkylineTestFunctional
                 () => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
             OkayAllModificationsDlg();
 
-            // Precursor searching should work here as well
-            FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
 
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
@@ -271,6 +301,16 @@ namespace pwiz.SkylineTestFunctional
                 // Text not matching the filter text should not be in bold
                 Assert.AreEqual(seqParts[2].Bold, false);
             });
+
+            // Now test filtering by precursor m/z
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
+            });
+
+            // Precursor searching should work here as well
+            FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
 
             // Close the spectral library explorer
             RunUI(() => _viewLibUI.CancelDialog());
