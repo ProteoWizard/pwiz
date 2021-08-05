@@ -747,8 +747,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
-                LineWidth = Settings.Default.SpectrumLineWidth,
-                IsHighRes =  isHighRes
+                LineWidth = Settings.Default.SpectrumLineWidth
             };
         }
 

@@ -301,6 +301,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            double[] massErrors = null;
             if (useHeatMap)
             {
                 ZoomYAxis(); // Call this again now that cues are there to indicate need for drift scale
@@ -308,7 +309,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                CreateSingleScan();
+                CreateSingleScan(out massErrors);
             }
 
             // Add extraction boxes.
@@ -344,7 +345,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                     if (transition.Source != _msDataFileScanHelper.Source)
                         continue;
-                    var label = new TextObj(transition.Name, transition.ProductMz, 0.02, CoordType.XScaleYChartFraction,
+                    var labelBuilder = new StringBuilder(transition.Name);
+                    if (massErrors != null && Settings.Default.ShowFullScanMassError)
+                    {
+                        var massError = SequenceMassCalc.GetPpm(transition.ProductMz, massErrors[i]);
+                        massError = Math.Round(massError, 1);
+                        labelBuilder.AppendLine().Append(string.Format("{0}{1} ppm",
+                            (massError > 0 ? "+" : string.Empty), massError));
+                    }
+
+                    var label = new TextObj(labelBuilder.ToString(), transition.ProductMz, 0.02, CoordType.XScaleYChartFraction,
                         AlignH.Center, AlignV.Top)
                     {
                         ZOrder = ZOrder.D_BehindAxis,
@@ -625,10 +635,11 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Create stick graph of a single scan.
         /// </summary>
-        private void  CreateSingleScan()
+        private void  CreateSingleScan(out double[] massErrors)
         {
             GraphPane.YAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
+            massErrors = null;
 
             // Create a point list for each transition, and a default point list for points not 
             // associated with a transition.
@@ -722,6 +733,8 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 // Create a graph item for each point list with its own color.
+                if (Settings.Default.ShowFullScanMassError)
+                    massErrors = new double[_msDataFileScanHelper.ScanProvider.Transitions.Length];
                 for (int i = 0; i < pointLists.Length; i++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
@@ -730,6 +743,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                     curveItem.Label.IsVisible = false;
+                    if (massErrors != null)
+                    {
+                        var errorAccumulator =
+                            new SpectrumFilterPair.MeanErrorAccumulator(true, ChromExtractor.summed,
+                                transition.ProductMz);
+                        pointLists[i].ForEach(pt => errorAccumulator.AddPoint(pt.X, pt.Y));
+                        massErrors[i] = errorAccumulator.MeanError;
+                    }
                 }
 
                 // Add points that aren't associated with a transition.
@@ -738,16 +759,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                     curveItem.Label.IsVisible = false;
                 }
-
-                // Create curve for all points to provide shading behind stick graph.
-                if (_msDataFileScanHelper.MsDataSpectra.Length > 0 && !_msDataFileScanHelper.MsDataSpectra[0].Centroided)
-                {
-                    var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150), @"all");
-                    var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
-                    curveItem.Label.IsVisible = false;
-                }
             }
-
+            // Create curve for all points to provide shading behind stick graph.
+            if (_msDataFileScanHelper.MsDataSpectra.Length > 0 && !_msDataFileScanHelper.MsDataSpectra[0].Centroided)
+            {
+                var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150), @"all");
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
+                curveItem.Label.IsVisible = false;
+            }
             GraphPane.SetScale(CreateGraphics());
         }
 
