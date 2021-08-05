@@ -189,15 +189,18 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeMatchCategoryComboBox()
         {
+            comboFilterCategory.Items.Clear();
             foreach (var category in _peptides._stringSearchFields)
             {
-                comboFilterCategory.Items.Add(category);
+                comboFilterCategory.Items.Add(_peptides.comboFilterCategoryDict[category]);
             }
 
             foreach (var accNumCategory in _peptides._accessionNumberTypes)
             {
                 comboFilterCategory.Items.Add(accNumCategory);
             }
+
+            comboFilterCategory.SelectedIndex = 0;
         }
         /// <summary>
         /// Gets names of libraries in the Peptide Settings --> Library tab,
@@ -408,8 +411,8 @@ namespace pwiz.Skyline.SettingsUI
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null, null);
             InitializeMatchCategoryComboBox();
+            _currentRange = _peptides.Filter(null, comboFilterCategory.SelectedItem.ToString());
         }
 
         public bool MatchModifications()
@@ -1112,6 +1115,10 @@ namespace pwiz.Skyline.SettingsUI
             UpdateUI();
         }
 
+        private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _peptides.CreateCachedList(comboFilterCategory.SelectedItem.ToString());
+        }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
             // We need to update the spectrum graph when the peptide

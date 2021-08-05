@@ -20,10 +20,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using MathNet.Numerics.Properties;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using Resources = pwiz.Skyline.Properties.Resources;
+
 namespace pwiz.Skyline.SettingsUI
 {
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
@@ -43,11 +48,10 @@ namespace pwiz.Skyline.SettingsUI
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
         private const string ADDUCT = @"Adduct";
-        // The user may type in the adduct without including brackets
-        private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
+        public Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
 
         private OrderedListCache _listCache;
-        private string _selectedFilterCategory = UNMODIFIED_TARGET_TEXT;
+        private string _selectedFilterCategory;
 
         public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
@@ -58,12 +62,18 @@ namespace pwiz.Skyline.SettingsUI
             _allPeptides = allPeptides;
             _accessionNumberTypes = FindMatchCategories();
             // If there are any small molecules in the library, search by multiple fields at once
-            _stringSearchFields = !_allPeptides ?  // Fields of type string we want to compare to the search term
-                new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, ADDUCT_MINUS_BRACKETS }
-                : new List<string> { UNMODIFIED_TARGET_TEXT };
+            _stringSearchFields = !_allPeptides ? 
+                new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ }
+                : new List<string> { UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ };
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
             InitializeSearchVariables();
+
+            comboFilterCategoryDict.Add(UNMODIFIED_TARGET_TEXT, _allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
+            comboFilterCategoryDict.Add(PRECURSOR_MZ, Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
+            comboFilterCategoryDict.Add(INCHI_KEY, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
+            comboFilterCategoryDict.Add(FORMULA, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
+            comboFilterCategoryDict.Add(ADDUCT, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
         }
 
         public override int Count
@@ -86,6 +96,14 @@ namespace pwiz.Skyline.SettingsUI
                     entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
                 }
             }
+        }
+
+        public void CreateCachedList(string propertyName)
+        {
+            _selectedFilterCategory = comboFilterCategoryDict.ContainsValue(propertyName)
+                ? comboFilterCategoryDict.FirstOrDefault(x => x.Value == propertyName).Key
+                : propertyName;
+            _listCache.GetOrCreate(_selectedFilterCategory);
         }
 
         /// <summary>
@@ -140,6 +158,7 @@ namespace pwiz.Skyline.SettingsUI
                 
                 if (_accessionCategories.Contains(propertyName))
                 {
+                    // Narrow the list down to entries that actually contain the search field
                     intList = intList.Where(index => _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ToList();
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
@@ -184,10 +203,13 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Find the indices of entries matching the filter text according to the filter type
         /// </summary>
-        /// <param name="filterText"> Search term </param>
         public IList<int> Filter(string filterText, string filterCategory)
         {
-            _selectedFilterCategory = filterCategory;
+            _selectedFilterCategory = comboFilterCategoryDict.ContainsValue(filterCategory)
+                ? comboFilterCategoryDict.FirstOrDefault(x => x.Value == filterCategory).Key
+                : filterCategory;
+
+            var cat = _selectedFilterCategory;
             if (string.IsNullOrEmpty(filterText))
             {
                 return new RangeList(0, Count);
