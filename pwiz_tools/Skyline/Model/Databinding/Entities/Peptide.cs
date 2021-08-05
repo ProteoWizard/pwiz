@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -113,18 +114,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                     return null;
-                return Sequence.Length;
+                return Sequence.Replace(@"-", string.Empty).Length;
             }
         }
 
         [InvariantDisplayName("PeptideModifiedSequence")]
         [ChildDisplayName("PeptideModifiedSequence{0}")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
-        public ModifiedSequence ModifiedSequence
+        public ProteomicSequence ModifiedSequence
         {
             get
             {
-                return ModifiedSequence.GetModifiedSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
+                return ProteomicSequence.GetProteomicSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
             }
         }
 
@@ -174,8 +175,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, DocNode);
-                    return molecule.Formula ?? string.Empty;
+                    var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.Peptide,
+                        DocNode.ExplicitMods, IsotopeLabelType.light);
+                    return crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
                 }
             }
         }
@@ -312,7 +314,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
-        [Importable]
+        [Importable(Formatter = typeof(NormalizationMethod.PropertyFormatter))]
         public NormalizationMethod NormalizationMethod
         {
             get { return DocNode.NormalizationMethod; }
@@ -343,10 +345,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            var peptide = DocNode.Peptide;
-            return peptide.IsCustomMolecule
-                ? DocNode.CustomMolecule.ToString()
-                : peptide.Target.Sequence;
+            if (DocNode.Peptide.IsCustomMolecule)
+            {
+                return DocNode.CustomMolecule.ToString();
+            }
+
+            return DocNode.GetCrosslinkedSequence();
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]

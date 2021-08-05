@@ -18,8 +18,10 @@
  */
 
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -111,11 +113,13 @@ namespace pwiz.SkylineTestData
                 "--import-search-file=" + searchFilePath,
                 "--import-fasta=" + fastaPath);
 
+            // only check the error message up to and including "In any of the following directories:"
+            string externalSpectrumFileErrorPrefix = System.Text.RegularExpressions.Regex.Replace(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError, "\\{2\\}.*", "{2}",
+                System.Text.RegularExpressions.RegexOptions.Singleline);
             AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
                 Path.GetFileName(searchFilePath)));
-            AssertEx.Contains(output, string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                "wine yeast sampleA_2", searchFilePath));
-            AssertEx.Contains(output, string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+            AssertEx.Contains(output, string.Format(externalSpectrumFileErrorPrefix, searchFilePath, "wine yeast sampleA_2", "", BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
+            AssertEx.Contains(output,Resources.CommandLine_ShowLibraryMissingExternalSpectraError_Description);
 
             output = RunCommand("--in=" + docPath,
                 "--out=" + outPath2,
@@ -125,9 +129,34 @@ namespace pwiz.SkylineTestData
 
             AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
                 Path.GetFileName(searchFilePath)));
-            Assert.IsTrue(!output.Contains(string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                "wine yeast sampleA_2", searchFilePath)));
-            Assert.IsTrue(!output.Contains(string.Format(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions)));
+            Assert.IsTrue(!output.Contains(string.Format(externalSpectrumFileErrorPrefix, searchFilePath, "wine yeast sampleA_2", "", BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions)));
+            Assert.IsTrue(!output.Contains(Resources.CommandLine_ShowLibraryMissingExternalSpectraError_Description));
+
+            // iRTs
+            File.Copy(testFilesDir.GetTestPath("cirts.mqpar.xml"), testFilesDir.GetTestPath("mqpar.xml"), true);
+            searchFilePath = testFilesDir.GetTestPath("cirts.msms.txt");
+            // test setting num cirts and recalibrate when no irts
+            output = RunCommand("--in=" + docPath,
+                "--import-search-file=" + searchFilePath,
+                "--import-search-num-cirts=10",
+                "--import-search-recalibrate-irts");
+            AssertEx.Contains(output,
+                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_IRTS),
+                CommandArgs.WarnArgRequirementText(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_IRTS));
+            // test cirt without num cirts set
+            output = RunCommand("--in=" + docPath,
+                "--import-search-file=" + searchFilePath,
+                "--import-search-irts=CiRT (iRT-C18)");
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name));
+            // test with irts
+            output = RunCommand("--in=" + docPath,
+                "--import-search-file=" + searchFilePath,
+                "--import-search-irts=CiRT (iRT-C18)",
+                "--import-search-num-cirts=10");
+            var libIrts = IrtDb.GetIrtDb(testFilesDir.GetTestPath("blank.blib"), null).StandardPeptides.ToArray();
+            AssertEx.AreEqual(10, libIrts.Length);
+            foreach (var libIrt in libIrts)
+                AssertEx.IsTrue(IrtStandard.CIRT.Contains(libIrt));
         }
 
         [TestMethod]

@@ -41,7 +41,7 @@ namespace msdata {
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : MSLevelsNone(), hash_(), spectrum_id_mismatch_hash_(hash_("spectrum id mismatch")) {};
+    SpectrumListBase() : MSLevelsNone(), /*hash_(),*/ spectrum_id_mismatch_hash_(hash("spectrum id mismatch")) {};
 
     /// implementation of SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
@@ -64,8 +64,9 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 
     private:
 
+    size_t hash(const char*) const;
     mutable std::set<size_t> warn_msg_hashes_; // for warn_once use
-    boost::hash<const char*> hash_;
+    //boost::hash<const char*> hash_;
     size_t spectrum_id_mismatch_hash_;
 };
 

@@ -165,8 +165,11 @@ PWIZ_API_DECL void read(std::istream& is, ScanList& scanList);
 PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
-PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, const MSData* msd = 0);
-    
+PWIZ_API_DECL
+void write(minimxml::XMLWriter& writer, const IntegerDataArray& binaryDataArray,
+           const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
+PWIZ_API_DECL void read(std::istream& is, std::vector<BinaryDataArrayPtr>& binaryDataArrayPtrs, std::vector<IntegerDataArrayPtr>& integerDataArrayPtrs, const MSData* msd = 0);
+
 //
 // enum for preference in binary data read - ignore, read, read only binary if possible
 //

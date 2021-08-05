@@ -6,13 +6,17 @@ All Info  :
 导入结果设置 > 文件名称 : 包含 "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 导入结果设置 > 添加一个新的重复测定 是 真
 导入结果设置 > 要同步导入的文件 是 "许多个"
+导入结果设置 > 已删除前缀 是 "A_D110907_SiRT_HELA_11_nsMRM_150selected_"
+导入结果设置 > 已删除后缀 是 "_30min-5-35"
 Extra Info: 文件名称 = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 ],
 添加一个新的重复测定 = 真,
-要同步导入的文件 = "许多个"
+要同步导入的文件 = "许多个",
+已删除前缀 = "A_D110907_SiRT_HELA_11_nsMRM_150selected_",
+已删除后缀 = "_30min-5-35"
 
 Undo Redo : 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
 Summary   : 设置 > 肽段设置 -- 预测 > 保留时间预测器 从 "None" 更改到 "iRT-C18"
@@ -67,6 +71,12 @@ Extra Info: 文件名称 =
 添加一个新的重复测定 = 真,
 重复测定名称 = "色谱图",
 要同步导入的文件 = "许多个"
+
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
+All Info  :
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
 
 Undo Redo : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
 Summary   : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]

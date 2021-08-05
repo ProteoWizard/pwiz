@@ -43,6 +43,8 @@ using namespace System::IO;
 namespace NativeEmbedder = NativeIDPicker::Embedder;
 namespace NativeXIC = NativeIDPicker::XIC;
 
+int Embedder::MAX_ITRAQ_REPORTER_IONS::get() { return NativeEmbedder::MAX_ITRAQ_REPORTER_IONS; }
+int Embedder::MAX_TMT_REPORTER_IONS::get() { return NativeEmbedder::MAX_TMT_REPORTER_IONS; }
 
 String^ Embedder::DefaultSourceExtensionPriorityList::get() { return ToSystemString(NativeEmbedder::defaultSourceExtensionPriorityList()); }
 

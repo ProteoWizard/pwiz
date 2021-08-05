@@ -209,7 +209,7 @@
     <value>ピーク面積比を濃度に変換するには、{0}の内部標準濃度を指定します。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
-    <value>校正曲線を適合させるには、いくつかの繰り返し測定のサンプルタイプを標準に設定し、それらの濃度を指定します。</value>
+    <value>校正曲線を適合させるには、いくつかの繰り返し測定の試料タイプを標準に設定し、それらの濃度を指定します。</value>
   </data>
   <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
     <value>{0}：{1} 濃度比</value>
@@ -280,5 +280,53 @@
   </data>
   <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
     <value>（すべての繰り返し測定）</value>
+  </data>
+  <data name="ValueStatus_UNDEFINED_Undefined" xml:space="preserve">
+    <value>未定義</value>
+  </data>
+  <data name="ValueStatus_PRESENT_Present" xml:space="preserve">
+    <value>あり</value>
+  </data>
+  <data name="ValueStatus_EQUAL_Equal" xml:space="preserve">
+    <value>等しい</value>
+  </data>
+  <data name="ValueStatus_LOW_Low" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="ValueStatus_HIGH_High" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="ValueStatus_PASS_Pass" xml:space="preserve">
+    <value>合格</value>
+  </data>
+  <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
+    <value>不合格</value>
+  </data>
+  <data name="RatioToLabel_GetAxisTitle__0__Ratio_To__1_" xml:space="preserve">
+    <value>{1}に対する{0}の比</value>
+    <comment>Example: Peak Area Ratio To Global Standards</comment>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0_" xml:space="preserve">
+    <value>{0}をサロゲート</value>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__" xml:space="preserve">
+    <value>{0}をサロゲート ({1})</value>
+    <comment>Example: Surrogate Leucine (Heavy)</comment>
+  </data>
+  <data name="NormalizeOption_MAXIMUM_Maximum" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="NormalizeOption_TOTAL_Total" xml:space="preserve">
+    <value>合計</value>
+  </data>
+  <data name="NormalizeOption_DEFAULT_Default_Normalization_Method" xml:space="preserve">
+    <value>デフォルトの正規化メソッド</value>
+  </data>
+  <data name="NormalizeOption_CALIBRATED_Calibration_Curve" xml:space="preserve">
+    <value>校正曲線</value>
+  </data>
+  <data name="SkylineWindow_MakeNormalizeToMenuItem_Default___0__" xml:space="preserve">
+    <value>デフォルト ({0})</value>
+    <comment>Example: Default (Global Standards)</comment>
   </data>
 </root>

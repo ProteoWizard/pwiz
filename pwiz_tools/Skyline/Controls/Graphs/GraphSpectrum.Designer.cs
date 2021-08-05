@@ -39,7 +39,6 @@
             this.comboCE = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             this.toolBar.SuspendLayout();
             this.GraphPanel.SuspendLayout();
             this.SuspendLayout();
@@ -120,6 +119,7 @@
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             // 
             // GraphSpectrum
             // 
@@ -132,7 +132,6 @@
             this.Name = "GraphSpectrum";
             this.VisibleChanged += new System.EventHandler(this.GraphSpectrum_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSpectrum_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             this.GraphPanel.ResumeLayout(false);

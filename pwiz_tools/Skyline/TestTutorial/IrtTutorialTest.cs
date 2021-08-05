@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -50,17 +51,19 @@ namespace pwiz.SkylineTestTutorial
         public void TestIrtTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsCoverShotMode = true;
+            CoverShotName = "iRT";
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-20_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/iRTMzml.zip",
+                    ? @"https://skyline.ms/tutorials/iRT.zip"
+                    : @"https://skyline.ms/tutorials/iRTMzml.zip",
                 @"TestTutorial\IrtViews.zip"
             };
             RunFunctionalTest();
@@ -82,10 +85,10 @@ namespace pwiz.SkylineTestTutorial
 
             // Load raw files for iRT calculator calibration p. 2 
             const string unschedHuman1Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35"; // Not L10N
-            string unschedHuman1Name = unschedHuman1Fileroot.Substring(41);
+            string unschedHuman1Name = unschedHuman1Fileroot.Substring(41, 7);
             const string unschedHuman2Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35"; // Not L10N
-            string unschedHuman2Name = unschedHuman2Fileroot.Substring(41);
-            ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 41, false, false);
+            string unschedHuman2Name = unschedHuman2Fileroot.Substring(41, 7);
+            ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 5, false, true, "Names form", 3);
             var docCalibrate = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             const int pepCount = 11, tranCount = 33;
             AssertEx.IsDocumentState(docCalibrate, null, 1, pepCount, pepCount, tranCount);
@@ -114,12 +117,13 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.ShowRTReplicateGraph();
                           SkylineWindow.AutoZoomBestPeak();
                           SkylineWindow.SelectedPath = docCalibrate.GetPathTo((int) SrmDocument.Level.Molecules, 0);
+                          SkylineWindow.Size = new Size(914, 560);
                       });
-            // Ensure graphs look like p. 3 and 4
+            // Ensure graphs look like p. 5
             WaitForGraphs();
 
-            RestoreViewOnScreen(04);
-            PauseForScreenShot("Main window showing chromatograms and RT graph", 4);   // Skyline window with docked RT replicate comparison graph
+            RestoreViewOnScreen(5);
+            PauseForScreenShot("Main window showing chromatograms and RT graph", 5);   // Skyline window with docked RT replicate comparison graph
 
             RunUI(() =>
                       {
@@ -150,20 +154,22 @@ namespace pwiz.SkylineTestTutorial
                           });
             }
 
-            // Calibrate a calculator p. 4-5
+            // Calibrate a calculator p. 7
             const string irtCalcName = "iRT-C18";
+            string irtCalcPath = GetTestPath(irtCalcName + IrtDb.EXT);
+            const string irtCalcPathScreenShot = @"C:\Users\Brendan\Documents\iRT\iRT-C18.irtdb";
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editIrtCalc1 = ShowDialog<EditIrtCalcDlg>(peptideSettingsUI1.AddCalculator);
             RunUI(() =>
                       {
                           editIrtCalc1.CalcName = irtCalcName;
-                          editIrtCalc1.CreateDatabase(GetTestPath("iRT-C18.irtdb")); // Not L10N
+                          editIrtCalc1.CreateDatabase(irtCalcPath); // Not L10N
                       });
             {
                 var calibrateDlg = ShowDialog<CalibrateIrtDlg>(editIrtCalc1.Calibrate);
                 RunUI(() =>
                 {
-                    calibrateDlg.StandardName = "Document";
+                    calibrateDlg.StandardName = "Biognosys (30 min cal)";
                     calibrateDlg.UseResults();
                     Assert.AreEqual(11, calibrateDlg.StandardPeptideCount);
                     calibrateDlg.SetFixedPoints(1, 10);
@@ -173,15 +179,23 @@ namespace pwiz.SkylineTestTutorial
                     }
                 });
 
-                PauseForScreenShot<CalibrateIrtDlg>("Calibrate iRT Calculator form", 5);   // Calibrate iRT Calculator form
+                PauseForScreenShot<CalibrateIrtDlg>("Calibrate iRT Calculator form", 6);   // Calibrate iRT Calculator form
+
+                RunDlg<GraphRegression>(calibrateDlg.GraphRegression, dlg => dlg.CloseDialog());
+                RunDlg<GraphRegression>(calibrateDlg.GraphIrts, dlg => dlg.CloseDialog());
 
                 RunUI(calibrateDlg.OkDialog);
             }
             Assert.IsTrue(WaitForConditionUI(() => editIrtCalc1.StandardPeptideCount == 11));
 
-            PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculater form", 6);   // Edit iRT Caclulator form
+            if (IsPauseForScreenShots)
+            {
+                RunUI(() => editIrtCalc1.CalcPath = irtCalcPathScreenShot);
+                PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form", 7);   // Edit iRT Calculator form
+                RunUI(() => editIrtCalc1.CalcPath = irtCalcPath);
+            }
 
-            // Check iRT values and update to defined values p. 6-7
+            // Check iRT values and update to defined values p. 7-8
             var irtDefinitionPath = GetTestPath("iRT definition.xlsx"); // Not L10N
             string irtDefText = GetExcelFileText(irtDefinitionPath, "iRT-C18", 2, true); // Not L10N
 
@@ -205,12 +219,12 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editIrtCalc1, editIrtCalc1.OkDialog);
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
-            // Inspect RT regression graph p. 8
+            // Inspect RT regression graph p. 9
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
 
-            RestoreViewOnScreen(08);
-            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times Regression graph metafile", 8);   // RT Regression graph
+            RestoreViewOnScreen(9);
+            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times Regression graph metafile", 9);   // RT Regression graph
 
             RunUI(() =>
                       {
@@ -236,18 +250,18 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowAverageReplicates());
             RunUI(() => SkylineWindow.SaveDocument());
 
-            // Create a document containing human and standard peptides, p. 9
+            // Create a document containing human and standard peptides, p. 10
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("iRT Human.sky")));
             WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let peptide metadata background loader do its work
             RunUI(() =>
                       {
-                          SkylineWindow.SelectedPath = new IdentityPath(SequenceTree.NODE_INSERT_ID);
+                          SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                           SkylineWindow.ImportFiles(standardDocumentFile);
                       });
             WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let peptide metadata background loader do its work
 
-            RestoreViewOnScreen(09);
-            PauseForScreenShot("Targets tree clipped out of main winodw", 9);   // Target tree
+            RestoreViewOnScreen(10);
+            PauseForScreenShot("Targets tree clipped out of main window", 10);   // Target tree
 
             RunUI(() =>
                       {
@@ -259,7 +273,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.SaveDocument(GetTestPath("iRT Human+Standard Calibrate.sky")); // Not L10N
                       }); 
 
-            // Remove heavy precursors, p. 10
+            // Remove heavy precursors, p. 11
             var docHumanAndStandard = SkylineWindow.Document;
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
                     {
@@ -269,7 +283,7 @@ namespace pwiz.SkylineTestTutorial
             var docLightOnly = WaitForDocumentChange(docHumanAndStandard);
             Assert.AreEqual(632, docLightOnly.PeptideTransitionCount);
 
-            // Create auto-calculate regression RT predictor, p. 10
+            // Create auto-calculate regression RT predictor, p. 11
             const string irtPredictorName = "iRT-C18"; // Not L10N
             {
                 var docPre = SkylineWindow.Document;
@@ -284,7 +298,7 @@ namespace pwiz.SkylineTestTutorial
                     regressionDlg.SetTimeWindow(5);
                 });
 
-                PauseForScreenShot("Edit Retention Time Predictor form", 10);   // Edit retention time predictor form
+                PauseForScreenShot("Edit Retention Time Predictor form", 11);   // Edit retention time predictor form
 
                 OkDialog(regressionDlg, regressionDlg.OkDialog);
                 OkDialog(peptideSettingsUI1, peptideSettingsUI2.OkDialog);
@@ -292,7 +306,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForDocumentChangeLoaded(docPre);
             }
 
-            // Export unscheduled transition list, p. 11
+            // Export unscheduled transition list, p. 12
             {
                 const string calibrateBasename = "iRT Human+Standard Calibrate"; // Not L10N
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
@@ -303,7 +317,7 @@ namespace pwiz.SkylineTestTutorial
                     exportMethodDlg.MaxTransitions = 335;
                 });
 
-                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 11);
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 12);
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath(calibrateBasename + TextUtil.EXT_CSV)));
                 WaitForClosedForm(exportMethodDlg);
@@ -312,15 +326,15 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(333, File.ReadAllLines(GetTestPath(calibrateBasename + "_0002.csv")).Length); // Not L10N
             }
 
-            // Import human peptide calibration results p. 12
+            // Import human peptide calibration results p. 13
             ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, -1, true);
 
-            // Review iRT-C18 graph p. 12-13
+            // Review iRT-C18 graph p. 13-14
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalcName));
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 13);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 14);
 
             RunUI(() =>
                       {
@@ -329,7 +343,7 @@ namespace pwiz.SkylineTestTutorial
                               SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
-            // Find all unintegrated transitions, p. 13-14
+            // Find all unintegrated transitions, p. 14-15
             {
                 var findDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
                 RunUI(() =>
@@ -338,7 +352,7 @@ namespace pwiz.SkylineTestTutorial
                         .ChangeCustomFinders(Finders.ListAllFinders().Where(f => f is UnintegratedTransitionFinder));
                 });
 
-                PauseForScreenShot<FindNodeDlg>("Find form", 14);
+                PauseForScreenShot<FindNodeDlg>("Find form", 15);
 
                 RestoreViewOnScreen(15);
 
@@ -350,7 +364,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(findDlg);
             }
 
-            PauseForScreenShot<FindResultsForm>("Find Results pane", 14);
+            PauseForScreenShot<FindResultsForm>("Find Results pane", 15);
 
             var findAllForm = WaitForOpenForm<FindResultsForm>();
 
@@ -362,9 +376,10 @@ namespace pwiz.SkylineTestTutorial
 
                           SkylineWindow.ShowAllTransitions();
                           SkylineWindow.AutoZoomBestPeak();
+                          SkylineWindow.Size = new Size(657, 632);
                       });
 
-            // Review peaks with missing transitions, p. 15
+            // Review peaks with missing transitions, p. 16
             for (int i = 0; i < expectedItems; i++)
             {
                 int iItem = i;
@@ -373,10 +388,13 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => Assert.AreEqual((int)SequenceTree.StateImageId.no_peak,
                     SkylineWindow.SelectedNode.StateImageIndex));
 
+                if (i == 1)
+                {
+                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (1 of 2)", 16);   // Chromatogram graph
+                }
                 if (i == 2)
                 {
-                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (1 of 2)", 15);
-                    
+                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (2 of 2)", 16);
                 }
                 if (i == 3)
                 {
@@ -399,11 +417,7 @@ namespace pwiz.SkylineTestTutorial
 //                        graph.FirePickedPeak(nodeGroupGraph, nodeTranGraph, scaledRT);
                     });
                 }
-                if (i == 4)
-                {
-                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (2 of 2)", 15);   // Chromatogram graph
                 }
-            }
 
            // New peak picking picks correct peak
 //            RunUI(() => findAllForm.ActivateItem(3));
@@ -413,15 +427,19 @@ namespace pwiz.SkylineTestTutorial
             RunUI(findAllForm.Close);
             WaitForClosedForm(findAllForm);
 
-            RestoreViewOnScreen(17);
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
 
-            // Calculate new iRT values for human peptides, p. 16
+            // Calculate new iRT values for human peptides, p. 18
             {
+                WaitForConditionUI(() =>
+                    SkylineWindow.IsGraphRetentionTimeShown(GraphTypeSummary.score_to_run_regression) &&
+                    SkylineWindow.RTGraphController.RegressionRefined != null);
+
                 var editIrtCalc2 = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 RunUI(() => Assert.AreEqual(0, editIrtCalc2.LibraryPeptideCount));
                 var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc2.AddResults);
 
-                PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 15);
+                PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 17);
 
                 RunUI(() =>
                 {
@@ -432,17 +450,22 @@ namespace pwiz.SkylineTestTutorial
                 var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
 
-                PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form", 16);
+                if (IsPauseForScreenShots)
+                {
+                    RunUI(() => editIrtCalc2.CalcPath = irtCalcPathScreenShot);
+                    PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form", 18);   // Edit iRT Calculator form
+                    RunUI(() => editIrtCalc2.CalcPath = irtCalcPath);
+                }
 
                 RunUI(() => Assert.AreEqual(148, editIrtCalc2.LibraryPeptideCount));
-                RunUI(editIrtCalc2.OkDialog);
-                WaitForClosedForm(editIrtCalc2);
+
+                CommitIrtCalcChange(editIrtCalc2);
             }
 
-            // Check the RT regression, p. 17
+            // Check the RT regression, p. 19
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 17);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 19);
 
             RunUI(() =>
                       {
@@ -453,7 +476,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.HideFindResults();
                       });
 
-            // Recalibrate method to 90-minute gradient, p. 18
+            // Recalibrate method to 90-minute gradient, p. 20
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("iRT Human+Standard.sky"))); // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
                     {
@@ -473,7 +496,7 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUI.TimeWindow = 5;
                 });
 
-                PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 18);
+                PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 21);
 
                 RunUI(peptideSettingsUI.OkDialog);
                 WaitForClosedForm(peptideSettingsUI);
@@ -487,7 +510,7 @@ namespace pwiz.SkylineTestTutorial
             // Verify regression graph, p. 19
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 19);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 22);
             RunUI(() =>
                       {
                           VerifyRTRegression(0.40, 24.77, 0.9998);
@@ -503,7 +526,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             WaitForGraphs();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Scheduling graph metafile", 20);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Scheduling graph metafile", 23);
 
             // Export new 90-minute scheduled transition list, p. 22
             const string scheduledBasename = "iRT Human+Standard"; // Not L10N
@@ -516,7 +539,7 @@ namespace pwiz.SkylineTestTutorial
                         exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                     });
 
-                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 21);
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 24);
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath(scheduledBasename + TextUtil.EXT_CSV)));
                 WaitForClosedForm(exportMethodDlg);
@@ -539,7 +562,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 23);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 26);
 
             // Review regression and outliers, p. 24
             RunUI(() =>
@@ -554,19 +577,55 @@ namespace pwiz.SkylineTestTutorial
                         thresholdDlg.OkDialog();
                     });
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 24);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 27);
 
-            // Verify 2 outliers highlighed and removed, p. 25
+            // Verify 2 outliers highlighted and removed, p. 25
             WaitForConditionUI(() => SkylineWindow.RTGraphController.Outliers.Length == 2);
             RunUI(() =>
                       {
                           VerifyRTRegression(0.393, 24.85, 0.9989);
 
                           SkylineWindow.RemoveRTOutliers();
+                          SkylineWindow.ShowPlotType(PlotTypeRT.residuals);
                       });
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 25);
+            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 28);
+
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+
+                RestoreCoverViewOnScreen();
+
+                var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                RenameReplicate(manageResultsDlg, 0, "HELA_11_sMRM_150selected_90min");
+                OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() =>
+                {
+                    peptideSettingsUI.Top = SkylineWindow.Top;
+                    peptideSettingsUI.Left = SkylineWindow.Left - peptideSettingsUI.Width - 20;
+                });
+                var irtEditor = ShowDialog<EditIrtCalcDlg>(peptideSettingsUI.EditCalculator);
+                RunUI(() =>
+                {
+                    irtEditor.Height = SkylineWindow.DockPanel.Height + 10;
+                    irtEditor.Width += 25;
+                    irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
+                    irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
+                });
+                TakeCoverShot();
+                OkDialog(irtEditor, irtEditor.CancelDialog);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
+                return;
+            }
 
             // Check outlier removal, p. 25
             RunUI(() =>
@@ -574,6 +633,13 @@ namespace pwiz.SkylineTestTutorial
                           VerifyRTRegression(0.393, 24.85, 0.9989);
                           Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
+                SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression);
+                SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.schedule);
+            });
 
             // Review a peak and its predicted retention time, p. 26
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
@@ -584,8 +650,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             WaitForGraphs();
 
-            RestoreViewOnScreen(27);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 26);   // Chromatogram graph
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 29);   // Chromatogram graph
 
             RunUI(() =>
                       {
@@ -596,22 +661,28 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(47.6, graphChrom.PredictedRT.Value, 0.05);
                       });
 
-            // Import retention times from a spectral library, p. 27
-            RestoreViewOnScreen(17); // get regression graph back
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
+
+            // Import retention times from a spectral library, p. 31
             {
+                WaitForConditionUI(() =>
+                    SkylineWindow.IsGraphRetentionTimeShown(GraphTypeSummary.score_to_run_regression) &&
+                    SkylineWindow.RTGraphController.RegressionRefined != null);
+
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
-                var addLibrayDlg = ShowDialog<AddIrtSpectralLibrary>(editIrtCalc.AddLibrary);
+                var addLibraryDlg = ShowDialog<AddIrtSpectralLibrary>(editIrtCalc.AddLibrary);
                 RunUI(() =>
                           {
-                              addLibrayDlg.Source = SpectralLibrarySource.file;
-                              addLibrayDlg.FilePath = GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
+                              addLibraryDlg.Source = SpectralLibrarySource.file;
+                              addLibraryDlg.FilePath = GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
                                                                                "Yeast_iRT_C18_0_00001.blib")); // Not L10N
+                              addLibraryDlg.FilePathFocus();
                           });
 
-                PauseForScreenShot<AddIrtSpectralLibrary>("Add Spectral Library form", 27);
+                PauseForScreenShot<AddIrtSpectralLibrary>("Add Spectral Library form", 31);
 
-                // Verify converted peptide iRT values and OK dialogs, p. 28
-                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addLibrayDlg.OkDialog);
+                // Verify converted peptide iRT values and OK dialogs, p. 31
+                var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addLibraryDlg.OkDialog);
                 RunUI(() =>
                 {
                     Assert.AreEqual(558, addPeptidesDlg.PeptidesCount);
@@ -619,17 +690,17 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(3, addPeptidesDlg.KeepPeptidesCount);
                 });
 
-                PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 28);
+                PauseForScreenShot<AddIrtPeptidesDlg>("Add Peptides form", 31);
 
                 var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
 
                 Assert.IsTrue(WaitForConditionUI(() => editIrtCalc.LibraryPeptideCount == 706));
-                RunUI(editIrtCalc.OkDialog);
-                WaitForClosedForm(editIrtCalc);
+
+                CommitIrtCalcChange(editIrtCalc);
             }
 
-            // Inspect MS1 filtered Skyline file created from library DDA data, p. 29
+            // Inspect MS1 filtered Skyline file created from library DDA data, p. 32
             RunUI(() => SkylineWindow.OpenFile(GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
                                                                         "Yeast+Standard (refined) - 2min.sky"))));
             WaitForDocumentLoaded();
@@ -652,12 +723,16 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(37.6, graphChrom.RetentionMsMs[1], 0.05);
                           Assert.IsTrue(graphChrom.BestPeakTime.HasValue);
                           Assert.AreEqual(37.4, graphChrom.BestPeakTime.Value, 0.05);
+
+                          SkylineWindow.Size = new Size(1250, 660);
                       });
 
-            PauseForScreenShot("Main window", 29);
+            PauseForScreenShot("Main window", 33);
 
-            // Add results and verify add dialog counts, p. 29-30
+            // Add results and verify add dialog counts, p. 33
             {
+                RunUI(() => SkylineWindow.Width = 500); // Make room for the form below
+
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 var addPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalc.AddResults);
                 RunUI(() =>
@@ -666,9 +741,11 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(2, addPeptidesDlg.RunsConvertedCount);
                     Assert.AreEqual(558, addPeptidesDlg.OverwritePeptidesCount);
                     Assert.AreEqual(3, addPeptidesDlg.ExistingPeptidesCount);
+
+                    addPeptidesDlg.Left = SkylineWindow.Right + 20;
                 });
 
-                PauseForScreenShot <AddIrtPeptidesDlg>("Add Peptides form", 30);
+                PauseForScreenShot <AddIrtPeptidesDlg>("Add Peptides form", 34);
 
                 var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
@@ -680,7 +757,21 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.NewDocument);
         }
 
-        private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile, bool? removeFix = null)
+        private static void CommitIrtCalcChange(EditIrtCalcDlg editIrtCalc)
+        {
+            // TODO(brendanx): For now just allow audit logging to skip this operation until we can figure out how to handle it
+            RunUI(() => SkylineWindow.AssumeNonNullModificationAuditLogging = false);
+
+            using (new WaitDocumentChange())
+            {
+                OkDialog(editIrtCalc, editIrtCalc.OkDialog);
+            }
+
+            RunUI(() => SkylineWindow.AssumeNonNullModificationAuditLogging = true);
+        }
+
+        private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile,
+            bool? removeFix = null, string pauseText = null, int? pausePage = null)
         {
             var listNamedPathSets = new List<KeyValuePair<string, MsDataFileUri[]>>();
             var listPaths = new List<string>();
@@ -690,11 +781,8 @@ namespace pwiz.SkylineTestTutorial
                 if (multiFile)
                     listPaths.Add(fileName);
                 else
-                {
-                    string replicateName = suffixLength != -1 ? baseName.Substring(suffixLength) : baseName;
-                    listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(replicateName, new[] { MsDataFileUri.Parse(fileName)}));
+                    listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(baseName, new[] { MsDataFileUri.Parse(fileName)}));
                 }
-            }
             if (multiFile)
                 listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(Resources.ImportResultsDlg_DefaultNewName_Default_Name, listPaths.Select(MsDataFileUri.Parse).ToArray()));
 
@@ -708,13 +796,20 @@ namespace pwiz.SkylineTestTutorial
                 });
                 if (removeFix.HasValue)
                 {
-                    RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, resultsNames =>
+                    var resultsNames = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
+                    RunUI(() =>
                     {
-                        if (removeFix.Value)
-                            resultsNames.YesDialog();
-                        else
-                            resultsNames.NoDialog();
+                        if (suffixLength != -1)
+                            resultsNames.Suffix = resultsNames.Suffix.Substring(resultsNames.Suffix.Length - suffixLength);
                     });
+
+                    if (pauseText != null && pausePage.HasValue)
+                        PauseForScreenShot<ImportResultsNameDlg>(pauseText, pausePage.Value);
+
+                        if (removeFix.Value)
+                        OkDialog(resultsNames, resultsNames.YesDialog);
+                        else
+                        OkDialog(resultsNames, resultsNames.NoDialog);
                 }
                 else
                 {

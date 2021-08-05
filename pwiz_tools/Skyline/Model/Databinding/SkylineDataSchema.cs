@@ -407,6 +407,10 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return docPair =>
             {
+                if (EqualExceptAuditLog(docPair.OldDoc, docPair.NewDoc))
+                {
+                    return AuditLogEntry.SKIP;
+                }
                 MessageType singular, plural;
                 var detailType = MessageType.set_to_in_document_grid;
                 Func<EditDescription, object[]> getArgsFunc = descr => new object[]
@@ -472,8 +476,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (SkylineWindow != null)
                 {
                     SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-                        logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid, docPair.NewDocumentType,
-                            editDescription.AuditLogParseString, editDescription.ElementRefName, CellValueToString(editDescription.Value))));
+                        logFunc ?? (docPair => LogEntryFromEditDescription(editDescription, docPair)));
                 }
                 else
                 {
@@ -555,6 +558,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             return uiMode;
+        }
+
+        public AuditLogEntry LogEntryFromEditDescription(EditDescription editDescription, SrmDocumentPair docPair)
+        {
+            if (EqualExceptAuditLog(docPair.OldDoc, docPair.NewDoc))
+            {
+                return AuditLogEntry.SKIP;
+            }
+
+            return AuditLogEntry.CreateSimpleEntry(MessageType.set_to_in_document_grid, docPair.NewDocumentType,
+                editDescription.AuditLogParseString, editDescription.ElementRefName,
+                CellValueToString(editDescription.Value));
+        }
+
+        public static bool EqualExceptAuditLog(SrmDocument document1, SrmDocument document2)
+        {
+            return document1.ChangeAuditLog(AuditLogEntry.ROOT).Equals(document2.ChangeAuditLog(AuditLogEntry.ROOT));
         }
     }
 }

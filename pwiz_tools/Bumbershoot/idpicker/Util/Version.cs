@@ -31,7 +31,7 @@ namespace IDPicker
 {
     public static partial class Util
     {
-        public static string Version { get { return GetAssemblyVersion(Assembly.GetCallingAssembly().GetName()); } }
+        public static string Version { get { return GetAssemblyVersion(Assembly.GetCallingAssembly()); } }
         public static DateTime LastModified { get { return GetAssemblyLastModified(Assembly.GetCallingAssembly().GetName()); } }
 
         public static AssemblyName GetAssemblyByName (string assemblyName)
@@ -47,10 +47,23 @@ namespace IDPicker
             return null;
         }
 
-        public static string GetAssemblyVersion (AssemblyName assembly)
+        public static string GetAssemblyVersion (Assembly assembly)
         {
-            Match versionMatch = Regex.Match(assembly.ToString(), @"Version=([\d.]+)");
-            return versionMatch.Groups[1].Success ? versionMatch.Groups[1].Value : "unknown";
+            // custom attribute
+            object[] attrs = assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+            // Play it safe with a null check no matter what ReSharper thinks
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (attrs != null && attrs.Length > 0)
+            {
+                return ((AssemblyInformationalVersionAttribute) attrs[0]).InformationalVersion;
+            }
+            else
+            {
+                // win32 version info
+                //productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                Match versionMatch = Regex.Match(assembly.ToString(), @"Version=([\d.]+)");
+                return versionMatch.Groups[1].Success ? versionMatch.Groups[1].Value : "unknown";
+            }
         }
 
         public static DateTime GetAssemblyLastModified (AssemblyName assembly)

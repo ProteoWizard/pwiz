@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 flags &= ~FlagValues.polarity_negative;
             }
-            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues) ((int) ionMobilityUnits << 8);
+            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
@@ -402,7 +402,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return (eIonMobilityUnits)((int)(Flags & FlagValues.ion_mobility_type_bitmask) >> 8);
+                var ionMobilityBits = Flags & FlagValues.ion_mobility_type_bitmask;
+                if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+                {
+                    return (eIonMobilityUnits)(-1);
+                }
+                return (eIonMobilityUnits)((int)ionMobilityBits >> 8);
             }
         }
 
@@ -1244,6 +1249,10 @@ namespace pwiz.Skyline.Model.Results
             : this()
         {
             var times = timeIntensities.Times;
+            if (times.Count == 0)
+            {
+                return;
+            }
             var intensities = timeIntensities.Intensities;
             var massErrors = timeIntensities.MassErrors;
             // Get the interval being used to convert from Crawdad index based numbers
@@ -1553,7 +1562,12 @@ namespace pwiz.Skyline.Model.Results
 
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
-            return (eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
+            var ionMobilityBits = flags & FlagValues.ion_mobility_type_bitmask;
+            if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+            {
+                return (eIonMobilityUnits)(-1);
+            }
+            return (eIonMobilityUnits)((int)ionMobilityBits >> 4);
         }
 
         private static bool UsedMs1CentroidsFlags(FlagValues flags)
@@ -1597,7 +1611,7 @@ namespace pwiz.Skyline.Model.Results
             if (fileUri.LegacyGetCentroidMs2())
                 flags |= FlagValues.used_ms2_centroids;
             FilePath = fileUri.RemoveLegacyParameters();
-            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues)((int)ionMobilityUnits << 4);
+            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | ((FlagValues)((int)ionMobilityUnits << 4) & FlagValues.ion_mobility_type_bitmask);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
             MaxRetentionTime = maxRT;
@@ -1829,14 +1843,18 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public enum ChromSource { fragment, sim, ms1, unknown  }
+    public enum ChromSource : byte { fragment, sim, ms1, unknown  }
 
-    public enum ChromExtractor { summed, base_peak, qc }
+    public enum ChromExtractor : byte { summed, base_peak, qc }
 
-    public class ChromKey : IComparable<ChromKey>
+    public class ChromKey : Immutable, IComparable<ChromKey>
     {
         public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, null,
-            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false, null, null);
+            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false);
+
+        private double _optionalMinTime;
+        private double _optionalMaxTime;
+        private bool _hasOptionalTimes;
 
         public ChromKey(byte[] textIdBytes,
                         int textIdIndex,
@@ -1848,10 +1866,7 @@ namespace pwiz.Skyline.Model.Results
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
-                        bool hasScanIds,
-                        double? optionalMinTime,
-                        double? optionalMaxTime,
-                        double? optionalCenterOfGravityTime = null)
+                        bool hasScanIds)
             : this(textIdIndex != -1 ? Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)) : null,
                    precursor,
                    ionMobility,
@@ -1861,10 +1876,7 @@ namespace pwiz.Skyline.Model.Results
                    source,
                    extractor,
                    calculatedMzs,
-                   hasScanIds,
-                   optionalMinTime,
-                   optionalMaxTime,
-                   optionalCenterOfGravityTime)
+                   hasScanIds)
         {
         }
 
@@ -1877,10 +1889,7 @@ namespace pwiz.Skyline.Model.Results
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
-                        bool hasScanIds,
-                        double? optionalMinTime,
-                        double? optionalMaxTime,
-                        double? optionalCenterOfGravityTime = null)
+                        bool hasScanIds)
         {
             Target = target;
             Precursor = precursor;
@@ -1892,20 +1901,15 @@ namespace pwiz.Skyline.Model.Results
             Extractor = extractor;
             HasCalculatedMzs = calculatedMzs;
             HasScanIds = hasScanIds;
-            OptionalMinTime = optionalMinTime;
-            OptionalMaxTime = optionalMaxTime;
-            OptionalCenterOfGravityTime = optionalCenterOfGravityTime;
             // Calculating these values on the fly shows up in a profiler in the CompareTo function
             // So, probably not worth the space saved in this class
             IsEmpty = Precursor == 0 && Product == 0 && source == ChromSource.unknown;
-            if (OptionalMaxTime.HasValue && OptionalMinTime.HasValue && (OptionalMaxTime > OptionalMinTime))
-                OptionalMidTime = (OptionalMaxTime.Value + OptionalMinTime.Value) / 2;
         }
 
         public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
-        public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter == null ? null : IonMobilityFilter.CollisionalCrossSectionSqA; }  }
-        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter == null ? eIonMobilityUnits.none : IonMobilityFilter.IonMobility.Units; } }
+        public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter.CollisionalCrossSectionSqA; }  }
+        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnits; } }
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
@@ -1915,10 +1919,16 @@ namespace pwiz.Skyline.Model.Results
         public bool HasCalculatedMzs { get; private set; }
         public bool HasScanIds { get; private set; }
         public bool IsEmpty { get; private set; }
-        public double? OptionalMinTime { get; private set; }
-        public double? OptionalMaxTime { get; private set; }
-        public double? OptionalCenterOfGravityTime { get; private set; } // Only used in SRM, to help disambiguate chromatograms with same Q1>Q3 but different retention time intervals
-        public double? OptionalMidTime { get; private set; }
+
+        public double? OptionalMinTime
+        {
+            get { return _hasOptionalTimes ? (double?) _optionalMinTime : null; }
+        }
+
+        public double? OptionalMaxTime
+        {
+            get { return _hasOptionalTimes ? (double?) _optionalMaxTime : null; }
+        }
 
         /// <summary>
         /// Adjust the product m/z to look like it does for vendors that allow
@@ -1928,36 +1938,21 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>A new ChromKey with adjusted product m/z and cleared CE value</returns>
         public ChromKey ChangeOptimizationStep(int step)
         {
-            return new ChromKey(Target,
-                                Precursor,
-                                IonMobilityFilter,
-                                Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
-                                0,
-                                ExtractionWidth,
-                                Source,
-                                Extractor,
-                                HasCalculatedMzs,
-                                HasScanIds,
-                                OptionalMinTime,
-                                OptionalMaxTime,
-                                OptionalCenterOfGravityTime);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Product = Product + step * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
+                im.CollisionEnergy = 0;
+            });
         }
 
-        public ChromKey ChangeOptionalTimes(double? start, double? end, double? centerOfGravity)
+        public ChromKey ChangeOptionalTimes(double start, double end)
         {
-            return new ChromKey(Target,
-                                Precursor,
-                                IonMobilityFilter,
-                                Product,
-                                CollisionEnergy,
-                                ExtractionWidth,
-                                Source,
-                                Extractor,
-                                HasCalculatedMzs,
-                                HasScanIds,
-                                start,
-                                end,
-                                centerOfGravity);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._optionalMinTime = start;
+                im._optionalMaxTime = end;
+                im._hasOptionalTimes = true;
+            });
         }
 
         /// <summary>
@@ -2127,7 +2122,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor, false, true, null, null);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor, false, true);
             }
             catch (FormatException)
             {
@@ -2138,7 +2133,7 @@ namespace pwiz.Skyline.Model.Results
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
             var qcTextBytes = Encoding.UTF8.GetBytes(qcTrace.Name);
-            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc, false, false, null, null);
+            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc, false, false);
         }
 
         #region object overrides
@@ -2720,7 +2715,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IonMobilityFilter GetIonMobilityFilter()
         {
-            return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits), IonMobilityExtractionWidth, _groupInfo.PrecursorCollisionalCrossSection);
+            return IonMobilityFilter.GetIonMobilityFilter(
+                IonMobilityAndCCS.GetIonMobilityAndCCS(
+                    IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits),
+                    _groupInfo.PrecursorCollisionalCrossSection, null), IonMobilityExtractionWidth);
         }
 
         private static double? FloatToNullableDouble(float value)

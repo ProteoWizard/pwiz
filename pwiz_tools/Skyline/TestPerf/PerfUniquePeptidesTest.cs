@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -52,7 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         void scenario(PeptideFilter.PeptideUniquenessConstraint cancellationCheckType, string initialBackgroundProteome, string newBackgroundProteome = null)
         {
             AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfUniquePeptidesTest.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfUniquePeptidesTest.zip");
             _skyfile = "lots_of_human_proteins.sky";
             _cancellationCheckType = cancellationCheckType;
             _initialBackgroundProteome = initialBackgroundProteome;
@@ -73,6 +74,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
+using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermittent failure is diagnosed
             scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb");
         }
 
@@ -102,7 +104,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             // Just verify that we've fixed a problem with opening files with uniqueness mode already turned on
             AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfUniquePeptidesTest5.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfUniquePeptidesTest5.zip");
             _skyfile = "minimal.sky";
             _quickexit = true;
             RunFunctionalTest();

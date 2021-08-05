@@ -35,7 +35,8 @@
             this.labelMessage = new System.Windows.Forms.Label();
             this.timerUpdate = new System.Windows.Forms.Timer(this.components);
             this.timerClose = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -67,19 +68,26 @@
             // 
             this.timerClose.Tick += new System.EventHandler(this.timerClose_Tick);
             // 
+            // panel1
+            // 
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.labelMessage);
+            this.panel1.Name = "panel1";
+            // 
             // LongWaitDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.labelMessage);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.panel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "LongWaitDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -91,5 +99,6 @@
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Timer timerUpdate;
         private System.Windows.Forms.Timer timerClose;
+        private System.Windows.Forms.Panel panel1;
     }
 }

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 
 namespace pwiz.Common.DataBinding
@@ -91,11 +90,24 @@ namespace pwiz.Common.DataBinding
                 return DisplayColumn.GetColumnCaption(PivotKey, ColumnCaptionType.localized);
             }
         }
-        public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);
 
         public override string Description
         {
             get { return DisplayColumn.GetColumnDescription(PivotKey); }
+        }
+
+        public override PivotedColumnId PivotedColumnId
+        {
+            get
+            {
+                IColumnCaption pivotCaption = null;
+                if (PivotKey != null)
+                {
+                    pivotCaption = CaptionComponentList.SpaceSeparate(PivotKey.KeyPairs.Select(kvp => kvp.Value));
+                }
+
+                return new PivotedColumnId(PivotKey, pivotCaption, DisplayColumn.PropertyPath, DisplayColumn.GetColumnCaption(null));
+            }
         }
 
         #region Equality Members

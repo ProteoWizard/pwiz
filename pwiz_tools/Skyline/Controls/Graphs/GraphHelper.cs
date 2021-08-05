@@ -24,6 +24,7 @@ using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -103,14 +104,20 @@ namespace pwiz.Skyline.Controls.Graphs
             _displayState = newDisplayState;
         }
 
-        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false)
+        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false, bool forceLegendDisplay = false)
         {
-            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected));
+            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected, forceLegendDisplay));
         }
 
-        public void FinishedAddingChromatograms(double bestStartTime, double bestEndTime, bool forceZoom,
-            double leftPeakWidth = 0, double rightPeakWidth = 0)
+        public void FinishedAddingChromatograms(double bestPeakStartTime, double bestPeakEndTime, bool forceZoom)
         {
+            var retentionTimeValues = new RetentionTimeValues((bestPeakStartTime + bestPeakEndTime) / 2, bestPeakStartTime, bestPeakEndTime, 0, null);
+            FinishedAddingChromatograms(new[] { retentionTimeValues }, forceZoom);
+        }
+
+        public void FinishedAddingChromatograms(IEnumerable<RetentionTimeValues> bestPeaks, bool forceZoom)
+        {
+            var bestPeakList = bestPeaks.Where(peak => null != peak).ToList();
             if (!_zoomLocked)
             {
                 if (forceZoom || !_displayState.ZoomStateValid)
@@ -118,7 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var chromDisplayState = _displayState as ChromDisplayState;
                     if (chromDisplayState != null)
                     {
-                        AutoZoomChromatograms(bestStartTime, bestEndTime, leftPeakWidth, rightPeakWidth);
+                        AutoZoomChromatograms(bestPeakList);
                     }
                 }
             }
@@ -140,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             SetDisplayState(new SpectrumDisplayState(Settings.Default, transitionGroups));
         }
 
-        private void AutoZoomChromatograms(double bestStartTime, double bestEndTime, double leftPeakWidth, double rightPeakWidth)
+        private void AutoZoomChromatograms(IList<RetentionTimeValues> bestPeaks)
         {
             var chromDisplayState = (ChromDisplayState) _displayState;
             if (chromDisplayState.ZoomStateValid)
@@ -160,16 +167,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
                 case AutoZoomChrom.peak:
-                    if (bestEndTime != 0)
+                    var firstPeak = bestPeaks.OrderBy(peak => peak.StartRetentionTime).FirstOrDefault();
+                    var lastPeak = bestPeaks.OrderByDescending(peak => peak.EndRetentionTime).FirstOrDefault();
+                    if (firstPeak != null && lastPeak != null)
                     {
+                        var bestStartTime = firstPeak.StartRetentionTime;
+                        var bestEndTime = lastPeak.EndRetentionTime;
                         // If relative zooming, scale to the best peak
                         if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
                         {
                             double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
-                            if (leftPeakWidth <= 0)
-                                leftPeakWidth = rightPeakWidth = bestEndTime - bestStartTime;
-                            bestStartTime -= leftPeakWidth * (multiplier - 1) / 2;
-                            bestEndTime += rightPeakWidth * (multiplier - 1) / 2;
+                            bestStartTime -= firstPeak.Fwb * (multiplier - 1) / 2;
+                            bestEndTime += lastPeak.Fwb * (multiplier - 1) / 2;
                         }
                         // Otherwise, use an absolute peak width
                         else
@@ -200,10 +209,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         double start = double.MaxValue;
                         double end = 0;
-                        if (bestEndTime != 0)
+                        if (bestPeaks.Any())
                         {
-                            start = bestStartTime;
-                            end = bestEndTime;
+                            start = bestPeaks.Min(peak => peak.StartRetentionTime);
+                            end = bestPeaks.Max(peak=>peak.EndRetentionTime);
                         }
                         var chromGraph = GetRetentionTimeGraphItem(chromDisplayState);
                         if (chromGraph != null)
@@ -439,7 +448,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly bool _proteinSelected;
 
-            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected) : base(transitionGroups)
+            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected, bool forceLegendDisplay = false) : base(transitionGroups)
             {
                 AutoZoomChrom = GraphChromatogram.AutoZoom;
                 MinIntensity = settings.ChromatogramMinIntensity;
@@ -448,7 +457,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeakRelativeTime = settings.ChromatogramTimeRangeRelative;
                 AllowSplitPanes = settings.SplitChromatogramGraph;
                 ChromGraphItems = new List<KeyValuePair<PaneKey, ChromGraphItem>>();
-                ShowLegend = settings.ShowChromatogramLegend;
+                ShowLegend = forceLegendDisplay || settings.ShowChromatogramLegend;
                 _proteinSelected = proteinSelected;
             }
             

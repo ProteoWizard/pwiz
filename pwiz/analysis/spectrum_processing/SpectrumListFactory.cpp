@@ -39,6 +39,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
@@ -405,7 +406,7 @@ SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg, 
     if (!bRemover && ("addMissing"!=action))
         throw user_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
     string msLevelSets;
-    getline(parser, msLevelSets);
+    getlinePortable(parser, msLevelSets);
     if (""==msLevelSets) msLevelSets="1-"; // default is all msLevels
 
     IntegerSet msLevelsToFilter;
@@ -849,6 +850,24 @@ UsageInfo usage_demux = {
     " interpolateRT=<bool (true)>"
     " minWindowSize=<real (0.2)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
+
+SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    string paramsFilepath = parseKeyValuePair<string>(arg, "params=", "");
+    if (!bfs::exists(paramsFilepath))
+        throw user_error("[diaUmpire] params filepath is required (params=path/to/diaumpire.params)");
+
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
+
+    return SpectrumListPtr(new SpectrumList_DiaUmpire(msd, msd.run.spectrumListPtr, DiaUmpire::Config(paramsFilepath), ilr));
+}
+UsageInfo usage_diaUmpire = {
+    "params=<filepath to DiaUmpire .params file>",
+    "Separates DIA spectra into pseudo-DDA spectra using the DIA Umpire algorithm." };
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -1350,7 +1369,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     if (parser)
     {
         string msLevelSets;
-        getline(parser, msLevelSets);
+        getlinePortable(parser, msLevelSets);
 
         if (!msLevelSets.empty())
         {
@@ -1434,6 +1453,25 @@ UsageInfo usage_polarity = { "<polarity>",
     "   <polarity> is any one of \"positive\" \"negative\" \"+\" or \"-\"."
 };
 
+SpectrumListPtr filterCreator_collisionEnergy(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg(carg);
+    double low = parseKeyValuePair<double>(arg, "low=", -1);
+    double high = parseKeyValuePair<double>(arg, "high=", -1);
+    if (low < 0 || high < 0)
+        throw user_error("[SpectrumListFactory::filterCreator_collisionEnergy] low and high CE both must be specified and greater than or equal to 0");
+
+    bool acceptNonCID = parseKeyValuePair<bool>(arg, "acceptNonCID=", true);
+    bool acceptMissingCE = parseKeyValuePair<bool>(arg, "acceptMissingCE=", false);
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, SpectrumList_FilterPredicate_CollisionEnergy(min(low, high), max(low, high), acceptNonCID, acceptMissingCE, mode), ilr));
+}
+UsageInfo usage_collisionEnergy = { "low=<real> high=<real> [mode=<include|exclude (include)>] [acceptNonCID=<true|false (true)] [acceptMissingCE=<true|false (false)]",
+    "Includes/excludes MSn spectra with CID collision energy within the specified range [<low>, <high>].\n"
+    "   Non-MS and MS1 spectra are always included. Non-CID MS2s and MS2s with missing CE are optionally included/excluded."
+};
+
 SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
@@ -1442,7 +1480,7 @@ SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const st
     string includeArg;
     string matchStringArg;
     parser >> matchExactArg >> includeArg;
-    getline(parser, matchStringArg);
+    getlinePortable(parser, matchStringArg);
     bal::trim(matchStringArg);
 
     bool matchExact;
@@ -1526,9 +1564,11 @@ JumpTableEntry jumpTable_[] =
     {"chargeStatePredictor", usage_chargeStatePredictor, filterCreator_chargeStatePredictor},
     {"turbocharger", usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
     {"activation", usage_activation, filterCreator_ActivationType},
+    {"collisionEnergy", usage_collisionEnergy, filterCreator_collisionEnergy},
     {"analyzer", usage_analyzerType, filterCreator_AnalyzerType},
     {"analyzerType", usage_analyzerTypeOld, filterCreator_AnalyzerType},
-    {"polarity", usage_polarity, filterCreator_polarityFilter}
+    {"polarity", usage_polarity, filterCreator_polarityFilter},
+    {"diaUmpire", usage_diaUmpire, filterCreator_diaUmpire}
 };
 
 
@@ -1594,8 +1634,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper, pwiz::util::I
     }
     if (entry == jumpTableEnd_)
     {
-        cerr << "[SpectrumListFactory] Ignoring wrapper: " << wrapper << endl;
-        return;
+        throw user_error("[SpectrumListFactory] Unknown wrapper: " + wrapper);
     }
 
     SpectrumListPtr filter = entry->creator(msd, arg, ilr);

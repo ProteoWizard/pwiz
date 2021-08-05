@@ -118,91 +118,91 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MethodEdit_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/MethodEdit.zip</value>
+    <value>https://skyline.ms/tutorials/MethodEdit.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodEdit_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-2_5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodRefine_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/MethodRefine.zip</value>
+    <value>https://skyline.ms/tutorials/MethodRefine.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodRefine_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-1_4.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="ExistingQuant_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip</value>
+    <value>https://skyline.ms/tutorials/ExistingQuant.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="ExistingQuant_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="AbsoluteQuant_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip</value>
+    <value>https://skyline.ms/tutorials/AbsoluteQuant.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="AbsoluteQuant_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MS1Filtering_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/MS1Filtering_2.zip</value>
+    <value>https://skyline.ms/tutorials/MS1Filtering_2.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MS1Filtering_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip</value>
+    <value>https://skyline.ms/tutorials/TargetedMSMS_2.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/CustomReports.zip</value>
+    <value>https://skyline.ms/tutorials/CustomReports.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="PeakPicking_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/PeakPicking.zip</value>
+    <value>https://skyline.ms/tutorials/PeakPicking.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="PeakPicking_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/PeakPicking_2-5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PeakPicking_2-5.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="iRT_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/iRT.zip</value>
+    <value>https://skyline.ms/tutorials/iRT.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="iRT_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="OptimizeCE_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip</value>
+    <value>https://skyline.ms/tutorials/OptimizeCE.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="OptimizeCE_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="LibraryExplorer_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip</value>
+    <value>https://skyline.ms/tutorials/LibraryExplorer.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="LibraryExplorer_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_sky" xml:space="preserve">
@@ -230,51 +230,59 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/GroupedStudies1.zip</value>
+    <value>https://skyline.ms/tutorials/GroupedStudies1.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-3_1.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-3_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/DIASmall.zip</value>
+    <value>https://skyline.ms/tutorials/DIASmall.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_6.zip</value>
+    <value>https://skyline.ms/tutorials/SmallMolecule_3_6.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip</value>
+    <value>https://skyline.ms/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeQuantification_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification.zip</value>
+    <value>https://skyline.ms/tutorials/SmallMoleculeQuantification.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeQuantification_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="HiResMetabolomics_zip" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/tutorials/HiResMetabolomics.zip</value>
+    <value>https://skyline.ms/tutorials/HiResMetabolomics.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="HiResMetabolomics_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf</value>
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Hi-Res%20Metabolomics.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMolLibraries_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/SmallMoleculeLibraries.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMolLibraries_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_sky" xml:space="preserve">
@@ -284,5 +292,26 @@
   <data name="DIA_sky" xml:space="preserve">
     <value>DIABlank.sky</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="DIA_TTOF_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/DIA-TTOF.zip</value>
+  </data>
+  <data name="DIA_TTOF_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-TTOF-20_1.pdf</value>
+  </data>
+  <data name="IMSFiltering_zip" xml:space="preserve">
+    <value>http://skyline.ms/tutorials/IMSFiltering.zip</value>
+  </data>
+  <data name="IMSFiltering_pdf" xml:space="preserve">
+    <value>https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-3_7.pdf</value>
+  </data>
+  <data name="IMSFiltering_sky" xml:space="preserve">
+    <value>BSA-Training.sky</value>
+  </data>
+  <data name="AuditLog_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/AuditLog.zip</value>
+  </data>
+  <data name="AuditLog_pdf" xml:space="preserve">
+    <value>https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf</value>
   </data>
 </root>

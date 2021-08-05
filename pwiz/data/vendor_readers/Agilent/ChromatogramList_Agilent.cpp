@@ -111,6 +111,19 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
                 result->getTimeArray()->data.assign(rawfile_->getTicTimes(onlyMs1).begin(), rawfile_->getTicTimes(onlyMs1).end());
                 result->getIntensityArray()->data.assign(rawfile_->getTicIntensities(onlyMs1).begin(), rawfile_->getTicIntensities(onlyMs1).end());
 
+
+                auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                if (onlyMs1)
+                    msLevelArray->data.resize(rawfile_->getTicTimes(onlyMs1).size(), 1);
+                else
+                {
+                    msLevelArray->data.resize(rawfile_->getTicTimes(onlyMs1).size());
+                    for (size_t i = 0, end = msLevelArray->data.size(); i < end; ++i)
+                        msLevelArray->data[i] = rawfile_->getScanRecord(i)->getMSLevel();
+                }
+
                 result->defaultArrayLength = result->getTimeArray()->data.size();
             }
             else
@@ -261,6 +274,7 @@ size_t ChromatogramList_Agilent::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Agilent::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

@@ -72,7 +72,6 @@ namespace pwiz.Skyline.EditUI
             this.btnCustomMoleculeColumns = new System.Windows.Forms.Button();
             this.radioMolecule = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
@@ -396,7 +395,6 @@ namespace pwiz.Skyline.EditUI
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PasteDlg_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPageFasta.ResumeLayout(false);
             this.tabPageFasta.PerformLayout();

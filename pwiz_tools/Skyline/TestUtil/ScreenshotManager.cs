@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestUtil
             /**
              * Factory method
              */
-            public static SkylineScreenshot createScreenshot(SkylineWindow pSkylineWindow, [NotNull] XmlNode shotNode)
+            public static SkylineScreenshot CreateScreenshot(SkylineWindow pSkylineWindow, [NotNull] XmlNode shotNode)
             {
                 // ReSharper disable PossibleNullReferenceException
                 if (shotNode.Attributes[SHOT_TYPE_ATTRIBUTE] == null)
@@ -132,8 +132,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     if (frm.ParentForm is FloatingWindow)
                         frm = frm.ParentForm;
-                    int frameWidth = (frm.DesktopBounds.Width - frm.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width;
-                    Size imageSize = frm.Size + new PointAdditive(-2 * frameWidth, -frameWidth - 1);
+                    int frameWidth = (frm.DesktopBounds.Width - frm.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+                    Size imageSize = frm.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
                     Point sourcePoint = frm.Location + new PointAdditive(frameWidth, 0);
                     snapshotBounds = new Rectangle(sourcePoint, imageSize);
 
@@ -171,8 +171,20 @@ namespace pwiz.SkylineTestUtil
                 Rectangle shotFrame = GetWindowRectangle(activeWindow);
                 Bitmap bmCapture = new Bitmap(shotFrame.Width, shotFrame.Height, PixelFormat.Format32bppArgb);
                 Graphics graphCapture = Graphics.FromImage(bmCapture);
-                graphCapture.CopyFromScreen(shotFrame.Location,
-                    new Point(0, 0), shotFrame.Size);
+                bool captured = false;
+                while (!captured)
+                {
+                    try
+                    {
+                        graphCapture.CopyFromScreen(shotFrame.Location,
+                            new Point(0, 0), shotFrame.Size);
+                        captured = true;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(1000); // Try again in one second - remote desktop may be minimized
+                    }
+                }
                 graphCapture.Dispose();
                 return bmCapture;
             }
@@ -242,7 +254,7 @@ namespace pwiz.SkylineTestUtil
 
         }
 
-        private string filePath
+        private string FilePath
         {
             get
             {
@@ -261,15 +273,15 @@ namespace pwiz.SkylineTestUtil
 
             _storage = new XmlDocument();
 
-            if (File.Exists(filePath))
+            if (File.Exists(FilePath))
             {
-                _storage.Load(filePath);
+                _storage.Load(FilePath);
                 XmlNode root = _storage.DocumentElement;
                 if (root.HasChildNodes)
                 {
                     foreach (XmlNode shotNode in root.ChildNodes)
                     {
-                        _shotSequence.Add(SkylineScreenshot.createScreenshot(pSkylineWindow, shotNode));
+                        _shotSequence.Add(SkylineScreenshot.CreateScreenshot(pSkylineWindow, shotNode));
                     }
                 }
             }
@@ -280,7 +292,7 @@ namespace pwiz.SkylineTestUtil
         }
 
 
-        public void TakeNextShot(Form activeWindow)
+        public Bitmap TakeNextShot(Form activeWindow, string pathToSave = null, Action<Bitmap> processShot = null, double? scale = null)
         {
             _skylineWindow = Program.MainWindow;
             if (activeWindow == null)
@@ -303,20 +315,48 @@ namespace pwiz.SkylineTestUtil
 
             if (shotPic != null)
             {
-                //Have to do it this way because of the limitation on OLE access from background threads.
-                Thread clipThread = new Thread(() => Clipboard.SetImage(shotPic));
-                clipThread.SetApartmentState(ApartmentState.STA);
-                clipThread.Start();
-                clipThread.Join();
+                processShot?.Invoke(shotPic);
+                if (scale.HasValue)
+                {
+                    shotPic = new Bitmap(shotPic,
+                        (int) Math.Round(shotPic.Width * scale.Value),
+                        (int) Math.Round(shotPic.Height * scale.Value));
+                }
+                if (pathToSave != null)
+                {
+                    SaveToFile(pathToSave, shotPic);
+                }
+                else
+                {
+                    //Have to do it this way because of the limitation on OLE access from background threads.
+                    Thread clipThread = new Thread(() => Clipboard.SetImage(shotPic));
+                    clipThread.SetApartmentState(ApartmentState.STA);
+                    clipThread.Start();
+                    clipThread.Join();
+                }
             }
+
+            return shotPic;
+        }
+
+        private void SaveToFile(string filePath, Bitmap bmp)
+        {
+            filePath = filePath ?? FilePath;
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            var dirPath = Path.GetDirectoryName(filePath);
+            if (dirPath != null && !Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+
+            bmp.Save(filePath);
         }
 
         private void SaveToFile()
         {
-            if(File.Exists(filePath))
-                File.Delete(filePath);
+            if (File.Exists(FilePath))
+                File.Delete(FilePath);
 
-            _storage.Save(filePath);
+            _storage.Save(FilePath);
         }
     }
 

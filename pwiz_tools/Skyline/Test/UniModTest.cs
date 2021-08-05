@@ -133,6 +133,8 @@ namespace pwiz.SkylineTest
                 Indent = true
             };
             XmlWriter xmlWriter = XmlWriter.Create(fileStream, settings);
+            // Some versions of ReSharper think XmlWriter.Create can return a null, others don't, disable this check to satisfy either
+            // ReSharper disable PossibleNullReferenceException
             xmlWriter.WriteStartElement(tagName);
             foreach (var dict in dicts)
             {
@@ -140,6 +142,7 @@ namespace pwiz.SkylineTest
             }
             xmlWriter.WriteEndElement();
             xmlWriter.Close();
+            // ReSharper restore PossibleNullReferenceException
             fileStream.Close();
         }
 

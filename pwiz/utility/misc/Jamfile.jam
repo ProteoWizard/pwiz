@@ -31,7 +31,7 @@ project
 
 lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
 lib psapi : : <name>psapi ; # for GetMappedFileNameW
-lib SHA1 : SHA1.cpp : <link>static ;
+lib SHA1 : SHA1.cpp : <link>static <library>/ext/boost//filesystem ;
 
 # testing with precompiled header support
 #cpp-pch Std : Std.hpp : <include>. ;
@@ -48,6 +48,7 @@ lib pwiz_utility_misc
         Filesystem.cpp
         random_access_compressed_ifstream.cpp
         SHA1Calculator.cpp
+        String.cpp
         TabReader.cpp
         MSIHandler.cpp
         SHA1

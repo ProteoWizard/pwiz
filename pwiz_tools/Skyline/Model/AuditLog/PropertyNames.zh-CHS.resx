@@ -231,6 +231,9 @@
   <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
     <value>动态最小子离子质荷比</value>
   </data>
+  <data name="TransitionInstrument_TriggeredAcquisition" xml:space="preserve">
+    <value>触发采集</value>
+  </data>
   <data name="MeasuredIon_IsFragment" xml:space="preserve">
     <value>高强度的片断</value>
   </data>
@@ -302,6 +305,9 @@
   </data>
   <data name="StaticMod_Terminus" xml:space="preserve">
     <value>末端</value>
+  </data>
+  <data name="StaticMod_IsCrosslinker" xml:space="preserve">
+    <value>交联剂</value>
   </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>使用高选择性提取</value>
@@ -417,6 +423,9 @@
   <data name="ViewSpecList_Views" xml:space="preserve">
     <value>报告</value>
   </data>
+  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
+    <value>布局</value>
+  </data>
   <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
     <value>列标题</value>
   </data>
@@ -475,7 +484,7 @@
     <value>符号</value>
   </data>
   <data name="GroupComparisonDef_QValueCutoff" xml:space="preserve">
-    <value>Q值界限</value>
+    <value>Q 值截止</value>
   </data>
   <data name="GroupComparisonDef_SummarizationMethod" xml:space="preserve">
     <value>总结方法</value>
@@ -556,6 +565,21 @@
   </data>
   <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
     <value>Dt0 时的宽度</value>
+  </data>
+  <data name="IonMobilityLibrary_Status" xml:space="preserve">
+    <value>内容已更改</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Added" xml:space="preserve">
+    <value>项目已添加</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Deleted" xml:space="preserve">
+    <value>项目已删除</value>
+  </data>
+  <data name="IonMobilityLibraryChange_LSID" xml:space="preserve">
+    <value>LSID</value>
+  </data>
+  <data name="IonMobilityLibraryChange_CreationTime" xml:space="preserve">
+    <value>时间戳</value>
   </data>
   <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
     <value>测量过的肽段</value>
@@ -754,6 +778,9 @@
   </data>
   <data name="Annotations_ColorBrush" xml:space="preserve">
     <value>颜色</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitModsTyped" xml:space="preserve">
+    <value>同位素修饰</value>
   </data>
   <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
     <value>重修饰</value>
@@ -993,7 +1020,7 @@
     <value>重新合并</value>
   </data>
   <data name="ReintegrateDlgSettings_Cutoff" xml:space="preserve">
-    <value>Q 值阈值</value>
+    <value>Q 值截止</value>
   </data>
   <data name="ReintegrateDlgSettings_OverwriteManualIntegration" xml:space="preserve">
     <value>覆盖手动合并</value>
@@ -1008,7 +1035,7 @@
     <value>仅积分有显著性 q 值的峰</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
-    <value>阈值</value>
+    <value>截止值</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
     <value>文档肽段筛选器</value>
@@ -1116,10 +1143,10 @@
     <value>已添加修饰</value>
   </data>
   <data name="PropertiesCutoffSettings_Log2FoldChangeCutoff" xml:space="preserve">
-    <value>Log2 倍数变化阈值</value>
+    <value>Log2 倍数变化截止值</value>
   </data>
   <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
-    <value>P 值阈值</value>
+    <value>P 值截止</value>
   </data>
   <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
     <value>每个肽段的最大离子对数目</value>
@@ -1202,7 +1229,7 @@
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>同位素标记类型</value>
   </data>
-  <data name="TransitionGroupDocNode_PrecursorConcentration">
+  <data name="TransitionGroupDocNode_PrecursorConcentration" xml:space="preserve">
     <value>母离子浓度</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
@@ -1350,7 +1377,7 @@
     <value>管理结果</value>
   </data>
   <data name="PropertiesCutoffSettings" xml:space="preserve">
-    <value>火山图阈值设置</value>
+    <value>火山图截止值设置</value>
   </data>
   <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
     <value>iRT 数据库路径</value>
@@ -1374,7 +1401,7 @@
     <value>列分类</value>
   </data>
   <data name="BatchModifyInfo_ViewName" xml:space="preserve">
-    <value>查看名称</value>
+    <value>报告名称</value>
   </data>
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>方位</value>
@@ -1447,5 +1474,170 @@
   </data>
   <data name="RefinementSettings_MSLevel" xml:space="preserve">
     <value>MS 级别</value>
+  </data>
+  <data name="RefinementSettings_AdjustedPValueCutoff" xml:space="preserve">
+    <value>已调整的 p 值截止值</value>
+  </data>
+  <data name="RefinementSettings_FoldChangeCutoff" xml:space="preserve">
+    <value>倍数变化截止值</value>
+  </data>
+  <data name="RefinementSettings_MSLevelGroupComparison" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>群组比较</value>
+  </data>
+  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
+    <value>从校准中排除</value>
+  </data>
+  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
+    <value>分析物浓度</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>定量</value>
+  </data>
+  <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
+    <value>全部整合</value>
+  </data>
+  <data name="TransitionSettings_Integration" xml:space="preserve">
+    <value>整合</value>
+  </data>
+  <data name="PeptideIntegration_PeakScoringModel" xml:space="preserve">
+    <value>峰得分模型</value>
+  </data>
+  <data name="PeptideSettings_Integration" xml:space="preserve">
+    <value>整合</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
+    <value>子离子选择开始</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
+    <value>子离子选择结束</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MinIonMz" xml:space="preserve">
+    <value>最小离子质荷比</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MaxIonMz" xml:space="preserve">
+    <value>最大离子质荷比</value>
+  </data>
+  <data name="LoggableExplicitMod_LinkedPeptide" xml:space="preserve">
+    <value>关联的肽段</value>
+  </data>
+  <data name="LinkedPeptide_ExplicitModsStatic" xml:space="preserve">
+    <value>修饰</value>
+  </data>
+  <data name="LinkedPeptide_PeptideSequence" xml:space="preserve">
+    <value>序列</value>
+  </data>
+  <data name="LinkedPeptide_Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
+    <value>离子迁移过滤窗口固定宽度值</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
+    <value>离子迁移过滤窗口宽度计算类型</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_IonMobilityLibrary" xml:space="preserve">
+    <value>离子迁移库</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>使用谱图库离子迁移值</value>
+  </data>
+  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
+    <value>离子迁移</value>
+  </data>
+  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
+    <value>文件路径</value>
+  </data>
+  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
+    <value>规则集</value>
+  </data>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>库离子迁移值</value>
+  </data>
+  <data name="MetadataRule_Source" xml:space="preserve">
+    <value>源</value>
+  </data>
+  <data name="MetadataRule_Pattern" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="MetadataRule_Replacement" xml:space="preserve">
+    <value>替换</value>
+  </data>
+  <data name="MetadataRule_Target" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="MetadataRuleSet_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
+    <value>行来源</value>
+  </data>
+  <data name="MetadataRuleSet_Rules" xml:space="preserve">
+    <value>规则</value>
+  </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
+    <value>定性离子比阈值</value>
+  </data>
+  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
+    <value>样本比率</value>
+  </data>
+  <data name="ViewLayout_ClusterSpec">
+    <value>去簇规格</value>
+  </data>
+  <data name="ClusteringSpec_Values">
+    <value>值</value>
+  </data>
+  <data name="ClusteringSpec_DistanceMetric">
+    <value>距离度量</value>
+  </data>
+  <data name="ValueSpec_ColumnRef">
+    <value>列参考</value>
+  </data>
+  <data name="ExplicitMods_CrosslinkStructure">
+    <value>交联结构</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedPeptides">
+    <value>关联的肽段</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedExplicitMods">
+    <value>关联的明确修饰</value>
+  </data>
+  <data name="CrosslinkStructure_Crosslinks">
+    <value>交联</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
+    <value>输入文件类型</value>
+  </data>
+  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
+    <value>用于导入目标的 FASTA 文件</value>
+  </data>
+  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
+    <value>仪器预设</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
+    <value>碎片离子类型</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>片段耐受性</value>
+  </data>
+  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
+    <value>每个肽段的最大可变修饰数</value>
+  </data>
+  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
+    <value>母离子耐受性</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
+    <value>DDA 转换器设置</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
+    <value>DDA 搜索设置</value>
+  </data>
+  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>DDA 转换非默认设置</value>
+  </data>
+  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
+    <value>DDA 转换程序</value>
   </data>
 </root>

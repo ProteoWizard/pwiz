@@ -3,7 +3,7 @@ Summary   : Settings > Peptide Settings changed
 All Info  :
 Peptide Settings changed
 Settings > Peptide Settings > Background proteome changed from "None" to "Yeast"
-Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast"
+Settings > Peptide Settings > Background proteome > Background proteome database path is "Yeast.protdb"
 Settings > Peptide Settings -- Library > Libraries : "Yeast (Atlas)" was added
 Settings > Peptide Settings -- Library > Libraries > "Yeast (Atlas)" > Path is "Yeast_Atlas.blib"
 

@@ -24,11 +24,54 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
+    public class MeasuredPeptide : IPeptideData
+    {
+        public MeasuredPeptide()
+        {
+        }
+
+        public MeasuredPeptide(Target seq, double rt)
+        {
+            Target = seq;
+            RetentionTime = rt;
+        }
+
+        public MeasuredPeptide(MeasuredPeptide other) : this(other.Target, other.RetentionTime)
+        {
+        }
+
+        public Target Target { get; set; }
+        public double RetentionTime { get; set; }
+        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
+
+        public static string ValidateSequence(Target sequence)
+        {
+            if (sequence.IsEmpty)
+                return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
+            if (sequence.IsProteomic)
+            {
+                if (!FastaSequence.IsExSequence(sequence.Sequence))
+                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            }
+            return null;
+        }
+
+        public static string ValidateRetentionTime(string rtText, bool allowNegative)
+        {
+            double rtValue;
+            if (rtText == null || !double.TryParse(rtText, out rtValue))
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
+            if (!allowNegative && rtValue <= 0)
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
+            return null;
+        }
+    }
+
     public class IrtPeptidePicker
     {
         private ScoredPeptide[] _scoredPeptides;
@@ -315,6 +358,85 @@ namespace pwiz.Skyline.Model.Irt
                         yield break;
                 }
             }
+        }
+
+        public static IEnumerable<DbIrtPeptide> Pick(IEnumerable<IRetentionTimeProvider> providers, int numPick)
+        {
+            double minRt = double.MaxValue;
+            double maxRt = double.MinValue;
+
+            var times = new Dictionary<Target, List<double>>();
+            foreach (var provider in providers)
+            {
+                foreach (var rt in provider.PeptideRetentionTimes)
+                {
+                    if (rt.RetentionTime < minRt)
+                        minRt = rt.RetentionTime;
+                    if (rt.RetentionTime > maxRt)
+                        maxRt = rt.RetentionTime;
+                    if (!times.ContainsKey(rt.PeptideSequence))
+                        times[rt.PeptideSequence] = new List<double>();
+                    times[rt.PeptideSequence].Add(rt.RetentionTime);
+                }
+            }
+
+            numPick = Math.Min(numPick, times.Keys.Count);
+            var targetStats = times.ToDictionary(pair => pair.Key, pair => new Statistics(pair.Value));
+
+            var binSize = (maxRt - minRt) / numPick;
+            var curBinLimit = minRt;
+            var picked = new List<DbIrtPeptide>();
+            while (targetStats.Count > 0)
+            {
+                Dictionary<Target, Statistics> curBinCandidates;
+                if (picked.Count < numPick - 1)
+                {
+                    curBinLimit += binSize;
+                    curBinCandidates = targetStats.Where(pair => pair.Value.Median() <= curBinLimit).ToDictionary(pair => pair.Key, pair => pair.Value);
+                    foreach (var target in curBinCandidates.Select(pair => pair.Key))
+                        targetStats.Remove(target);
+                }
+                else
+                {
+                    curBinCandidates = new Dictionary<Target, Statistics>(targetStats);
+                    targetStats.Clear();
+                }
+                if (curBinCandidates.Count == 0)
+                    continue;
+                var maxCount = curBinCandidates.Max(x => x.Value.Length);
+                curBinCandidates = curBinCandidates.Where(pair => pair.Value.Length == maxCount).ToDictionary(pair => pair.Key, pair => pair.Value);
+                Target best = null;
+                if (maxCount == 1)
+                {
+                    var minDiff = double.MaxValue;
+                    var binCenter = curBinLimit - binSize / 2;
+                    foreach (var target in curBinCandidates)
+                    {
+                        var diff = Math.Abs(target.Value.Mean() - binCenter);
+                        if (diff < minDiff)
+                        {
+                            minDiff = diff;
+                            best = target.Key;
+                        }
+                    }
+                }
+                else
+                {
+                    var minVariance = double.MaxValue;
+                    foreach (var target in curBinCandidates)
+                    {
+                        var variance = target.Value.Variance();
+                        if (variance < minVariance)
+                        {
+                            minVariance = variance;
+                            best = target.Key;
+                        }
+                    }
+                }
+                // ReSharper disable once AssignNullToNotNullAttribute
+                picked.Add(new DbIrtPeptide(best, curBinCandidates[best].Median(), true, TimeSource.peak));
+            }
+            return picked;
         }
     }
 }

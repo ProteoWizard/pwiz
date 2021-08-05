@@ -60,6 +60,8 @@ BOOST_ENUM(QuantitationMethod,
     (TMT2plex)
     (TMT6plex)
     (TMT10plex)
+    (TMT11plex)
+    (TMTpro16plex)
 );
 
 // allow enum values to be the LHS of an equality expression
@@ -76,16 +78,20 @@ using std::pair;
 using pwiz::chemistry::MZTolerance;
 namespace sqlite = sqlite3pp;
 
+static const int MAX_ITRAQ_REPORTER_IONS = 8;
+static const int MAX_TMT_REPORTER_IONS = 16;
 
 struct QuantitationConfiguration
 {
     QuantitationConfiguration(QuantitationMethod quantitationMethod = QuantitationMethod::None,
                               MZTolerance reporterIonMzTolerance = MZTolerance(0.015, MZTolerance::MZ),
-                              bool normalizeIntensities = true);
+                              bool normalizeIntensities = true,
+                              bool extractFromMS3 = true);
 
     QuantitationMethod quantitationMethod;
     MZTolerance reporterIonMzTolerance;
     bool normalizeIntensities;
+    bool extractFromMS3;
 
     operator std::string() const;
 };
@@ -129,6 +135,9 @@ void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, v
 
 /// retrieves the mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
 map<string, vector<string> > getIsobaricSampleMapping(const string& idpDbFilepath);
+
+/// returns the number of channels for the given method
+int channelsByQuantitationMethod(QuantitationMethod quantitationMethod);
 
 /// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
 bool hasGeneMetadata(const string& idpDbFilepath);

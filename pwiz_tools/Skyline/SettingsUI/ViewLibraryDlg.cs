@@ -98,6 +98,8 @@ namespace pwiz.Skyline.SettingsUI
         private ViewLibraryPepInfo _lastTipNode;
         private ITipProvider _lastTipProvider;
         private bool _showChromatograms;
+        private bool _hasChromatograms;
+        private bool _hasScores;
         private readonly GraphHelper _graphHelper;
 
         private ModFontHolder ModFonts { get; set; }
@@ -170,6 +172,7 @@ namespace pwiz.Skyline.SettingsUI
 
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
+            _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -346,6 +349,10 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                             return;
                         }
+                        else if (!string.IsNullOrEmpty(status.WarningMessage))
+                        {
+                            MessageDlg.Show(this, status.WarningMessage);
+                        }
                     }
                     catch (Exception x)
                     {
@@ -375,7 +382,14 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 pepInfos = _selectedLibrary.Keys.Select(
-                    key => new ViewLibraryPepInfo(key));
+                    key =>
+                    {
+                        if (!_selectedLibrary.TryGetLibInfo(key, out var libInfo))
+                        {
+                            libInfo = null;
+                        }
+                        return new ViewLibraryPepInfo(key, libInfo);
+                    });
             }
             _peptides = new ViewLibraryPepInfoList(pepInfos);
             bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
@@ -544,7 +558,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (null != pepInfo.Key.LibraryKey.Target)
             {
-                var peptide = new Peptide(pepInfo.Key.LibraryKey.StripModifications().Target);
+                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
                                                       IsotopeLabelType.light, true, null), null);
                 if (pepInfo.Key.IsSmallMoleculeKey)
@@ -690,7 +704,7 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,
@@ -702,10 +716,13 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankTypes,
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
                         LibraryChromGroup libraryChromGroup = null;
-                        if (spectrumInfo != null && _showChromatograms)
+                        if (spectrumInfo != null)
                         {
                             libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                         }
+                        _hasChromatograms = libraryChromGroup != null;
+                        _hasScores = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo) != null;
+
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
                             ShowTypes = types,
@@ -726,7 +743,7 @@ namespace pwiz.Skyline.SettingsUI
                             IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
                         if (bestSpectrum != null)
                         {
-                            double? rt = bestSpectrum.RetentionTime;
+                            double? rt = libraryChromGroup?.RetentionTime ?? bestSpectrum.RetentionTime;
                             string filename = bestSpectrum.FileName;
 
                             if (!string.IsNullOrEmpty(filename))
@@ -740,17 +757,19 @@ namespace pwiz.Skyline.SettingsUI
                             IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
-                                var dtText = string.Empty;
-                                if (dt.HasCollisionalCrossSection)
-                                    dtText = @"CCS" + COLON_SEP + string.Format(@"{0:F4} ", dt.CollisionalCrossSectionSqA.Value);
+                                var ccsText = string.Empty;
+                                var imText = string.Empty;
+                                var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
+                                if (ccs.HasValue)
+                                    ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
                                 if (dt.HasIonMobilityValue)
-                                    dtText += @"IM" + COLON_SEP + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
+                                    imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
-                                    dtText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
-                                labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
+                                    imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
+                                labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }
                         }
-                        if (null == libraryChromGroup)
+                        if (!_showChromatograms || !_hasChromatograms)
                         {
                             _graphHelper.ResetForSpectrum(null);
                             _graphHelper.AddSpectrum(GraphItem);
@@ -758,7 +777,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         else
                         {
-                            _graphHelper.ResetForChromatograms(new[]{transitionGroupDocNode.TransitionGroup});
+                            _graphHelper.ResetForChromatograms(new[]{transitionGroupDocNode.TransitionGroup}, forceLegendDisplay:true);
                             double maxHeight = libraryChromGroup.ChromDatas.Max(chromData => chromData.Height);
                             int iChromDataPrimary = libraryChromGroup.ChromDatas.IndexOf(chromData => maxHeight == chromData.Height);
                             for (int iChromData = 0; iChromData < libraryChromGroup.ChromDatas.Count; iChromData++)
@@ -918,8 +937,11 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            scoreContextMenuItem.Checked = set.ShowLibraryScores;
-            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            if (_hasScores)
+            {
+                scoreContextMenuItem.Checked = set.ShowLibraryScores;
+                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            }
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -931,8 +953,11 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            showChromatogramsContextMenuItem.Checked = _showChromatograms;
-            menuStrip.Items.Insert(iInsert++, showChromatogramsContextMenuItem);
+            if (_hasChromatograms)
+            {
+                showChromatogramsContextMenuItem.Checked = _showChromatograms;
+                menuStrip.Items.Insert(iInsert++, showChromatogramsContextMenuItem);
+            }
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1862,7 +1887,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -1921,9 +1946,15 @@ namespace pwiz.Skyline.SettingsUI
         private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
-            if (!pep.Target.IsProteomic)
+            string sequence;
+            if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
+            {
+                sequence = peptideLibraryKey.ModifiedSequence;
+            }
+            else
+            {
                 return modList;
-            string sequence = pep.Target.Sequence;
+            }
             int iMod = -1;
             for (int i = 0; i < sequence.Length; i++)
             {
@@ -1986,6 +2017,8 @@ namespace pwiz.Skyline.SettingsUI
             set { listPeptide.SelectedIndex = value; }
         }
 
+        public bool HasSelectedLibrary => _selectedLibrary != null;
+
         public string SourceFile
         {
             get { return GetLabelValue(labelFilename); }
@@ -2016,7 +2049,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public PeptideTipProvider GetTipProvider(int i)
         {
-            return new PeptideTipProvider(GetPepInfo(i), _matcher);
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
         }
 
         private ViewLibraryPepInfo GetPepInfo(int i)
@@ -2213,8 +2246,10 @@ namespace pwiz.Skyline.SettingsUI
             private readonly List<KeyValuePair<string, string>> _smallMoleculePartsToDraw;
             private readonly SrmSettings _settings;
             private readonly double _mz;
+            private readonly IonMobilityAndCCS _ionMobility;
 
-            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher)
+            public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
+                Library selectedLibrary)
             {
                 ExplicitMods mods;
                 TransitionGroupDocNode transitionGroup;
@@ -2231,6 +2266,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
                     _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
                 }
+
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
@@ -2247,6 +2283,14 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         _mz = precursorKey.Mz;
                     }
+                }
+
+                // Ion mobility
+                var bestSpectrum = selectedLibrary.GetSpectra(_pepInfo.Key,
+                    IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+                if (bestSpectrum != null)
+                {
+                    _ionMobility = bestSpectrum.IonMobilityInfo;
                 }
             }
 
@@ -2279,6 +2323,23 @@ namespace pwiz.Skyline.SettingsUI
                     
                     // Draw mz
                     tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format(@"{0:F04}", _mz), rt);
+
+                    // Draw ion mobility
+                    if (!IonMobilityAndCCS.IsNullOrEmpty(_ionMobility))
+                    {
+                        if (_ionMobility.HasIonMobilityValue)
+                        {
+                            var details = string.Format(@"{0:F04} {1}", _ionMobility.IonMobility.Mobility.Value,
+                                _ionMobility.IonMobility.UnitsString);
+                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Ion_Mobility, details, rt);
+                        }
+                        if (_ionMobility.HasCollisionalCrossSection)
+                        { 
+                            var details = string.Format(@"{0:F04}", _ionMobility.CollisionalCrossSectionSqA.Value);
+                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_CCS, details, rt);
+                        }
+                    }
+
                     sizeMz = tableMz.CalcDimensions(g);
                     sizeSeq.Height += 2;    // Spacing between details and fragments
 

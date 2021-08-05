@@ -19,9 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
@@ -96,13 +98,18 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditColumnDescription(nameof(DetailReason), value),
-                    doc => AuditLogRow.ChangeEntry(doc, entry), docPair => null);
+                    doc => AuditLogRow.ChangeEntry(doc, entry));
             }
         }
 
         public override string ToString()
         {
             return TextUtil.SpaceSeparate(AllInfoMessage.Text, DetailReason);
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            return AuditLogEntryRef.PROTOTYPE.ChangeParent(AuditLogRow.GetElementRef()).ChangeName(Id.Minor.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

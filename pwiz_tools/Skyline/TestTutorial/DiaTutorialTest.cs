@@ -20,7 +20,9 @@
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -55,13 +57,15 @@ namespace pwiz.SkylineTestTutorial
         /// to regenerate checkpoint files for non-full-import mode,
         /// when something changes in the test.
         /// </summary>
-        private bool IsFullImportMode { get { return false; } }
+        private bool IsFullImportMode { get { return IsCoverShotMode || IsPauseForScreenShots; } }
 
         [TestMethod]
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsCoverShotMode = true;
+            CoverShotName = "DIA";
 
             LinkPdf = "https://skyline.gs.washington.edu/tutorials/DIA-2_6.pdf";
 
@@ -133,7 +137,8 @@ namespace pwiz.SkylineTestTutorial
             var isolationSchemeGraphDlg = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeDlg.OpenGraph);
             PauseForScreenShot<DiaIsolationWindowsGraphForm>("Graph of Isolation Scheme", 8);
             OkDialog(isolationSchemeGraphDlg, isolationSchemeGraphDlg.CloseButton);
-            RunUI(() => isolationSchemeDlg.IsolationSchemeName = "500 to 900 by 20");
+            const string isolationSchemeName = "500 to 900 by 20";
+            RunUI(() => isolationSchemeDlg.IsolationSchemeName = isolationSchemeName);
             OkDialog(isolationSchemeDlg, isolationSchemeDlg.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
@@ -174,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 24);
+            PauseForScreenShot<ImportPeptideSearchDlg>("Build Library form - input files", 24);
 
             const string prefixKeep = "DIA_Pit0";
             if (IsFullImportMode)
@@ -216,12 +221,12 @@ namespace pwiz.SkylineTestTutorial
                     importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = new[] { modCarbamidomethyl };
                     Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 });
-                WaitForDocumentChange(doc);
+                WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
+                                         ImportPeptideSearchDlg.Pages.transition_settings_page);
                 
                 // "Configure Transition Settings" page
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                     importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = Adduct.ProtonatedFromCharges(1, 2, 3, 4);
                     importPeptideSearchDlg.TransitionSettingsControl.PeptideIonCharges = Adduct.ProtonatedFromCharges(1, 2);
                     importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[] { IonType.y, IonType.b, IonType.precursor };
@@ -235,6 +240,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                    importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
                     Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 });
 
@@ -242,9 +248,25 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("pituitary_database.fasta"));
-                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 });
 
+                var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+                RunUI(() =>
+                {
+                    int proteinCount, peptideCount, precursorCount, transitionCount;
+                    peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                    Assert.AreEqual(6, proteinCount);
+                    Assert.AreEqual(26, peptideCount);
+                    Assert.AreEqual(31, precursorCount);
+                    Assert.AreEqual(246, transitionCount);
+                    peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                    Assert.AreEqual(6, proteinCount);
+                    Assert.AreEqual(26, peptideCount);
+                    Assert.AreEqual(31, precursorCount);
+                    Assert.AreEqual(246, transitionCount);
+                });
+                OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
                 WaitForClosedForm(importPeptideSearchDlg);
                 WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 10 minutes
 
@@ -305,12 +327,14 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(27);
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 26);
 
+            RunUI(() => SkylineWindow.SelectedNode.Expand()); 
+
             RunUI(() =>
             {
-                SkylineWindow.SelectedNode.Expand();
                 var nodeTree = SkylineWindow.SelectedNode.Nodes[0].Nodes[0] as SrmTreeNode;
                 Assert.IsNotNull(nodeTree);
-                Assert.AreEqual((int) SequenceTree.StateImageId.no_peak, nodeTree.StateImageIndex);
+                var expectedImageId = IsFullImportMode ? SequenceTree.StateImageId.peak : SequenceTree.StateImageId.no_peak;
+                Assert.AreEqual((int) expectedImageId, nodeTree.StateImageIndex);
             });
 
             PauseForScreenShot<SequenceTreeForm>("Targets view - ", 27);
@@ -365,6 +389,52 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 35);
 
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+
+                RestoreCoverViewOnScreen();
+//                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                ClickChromatogram("DIA_Pit01", 75.3468, 104968093, PaneKey.PRODUCTS);
+                TreeNode selectedNode = null;
+                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() =>
+                {
+                    transitionSettingsUI.Top = SkylineWindow.Top;
+                    transitionSettingsUI.Left = SkylineWindow.Left - transitionSettingsUI.Width - 20;
+                });
+                var isolationSchemeForm = ShowDialog<EditIsolationSchemeDlg>(transitionSettingsUI.EditCurrentIsolationScheme);
+                RunUI(() =>
+                {
+                    isolationSchemeForm.Top = SkylineWindow.Bottom - isolationSchemeForm.Height - 34;
+                    isolationSchemeForm.Left = SkylineWindow.Left + 40;
+                    isolationSchemeForm.Width = 400;
+                });
+                var isolationSchemeGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeForm.OpenGraph);
+                RunUI(() =>
+                {
+                    isolationSchemeGraph.Height -= 58;
+                    isolationSchemeGraph.Top = SkylineWindow.Bottom - isolationSchemeGraph.Height;
+                    isolationSchemeGraph.Left = SkylineWindow.Left;
+                    isolationSchemeGraph.Width = 480;
+                });
+                TakeCoverShot();
+                OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
+                OkDialog(isolationSchemeForm, isolationSchemeForm.OkDialog);
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                return;
+            }
+
             RunUI(() =>
             {
                 SkylineWindow.SelectedNode.Expand();
@@ -417,6 +487,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => {
                 Settings.Default.PeakScoringModelList.Clear();
                 Settings.Default.IsolationSchemeList.Clear();
+                Settings.Default.IsolationSchemeList.AddDefaults();
                 Settings.Default.HeavyModList.Clear();
                 Settings.Default.StaticModList.Clear();
                 Settings.Default.SpectralLibraryList.Clear();

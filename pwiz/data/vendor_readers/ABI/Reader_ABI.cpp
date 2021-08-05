@@ -113,7 +113,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
         // otherwise add the sample name as a suffix
         if(sampleName.find(msd.id) != string::npos)
             msd.id = sampleName;
-        else
+        else if (msd.id.find(sampleName) == string::npos)
             msd.id += "-" + sampleName;
     }
 
@@ -146,10 +146,10 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     {
         instrumentModel = wifffile->getInstrumentModel();
     }
-    catch (runtime_error&)
+    catch (runtime_error& e)
     {
         if (config.unknownInstrumentIsError)
-            throw;
+            throw runtime_error("[Reader_ABI::fillInMetadata] unable to determine instrument model (" + string(e.what()) + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");
     }
 
     InstrumentConfigurationPtr ic = translateAsInstrumentConfiguration(instrumentModel, IonSpray);

@@ -19,10 +19,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -65,20 +67,22 @@ namespace pwiz.SkylineTestTutorial
 
         private void RunCEOptimizationTutorialTest()
         {
-        // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+            // Set true to look at tutorial screenshots.
+//            IsPauseForScreenShots = true;
+//            IsCoverShotMode = true;
+            CoverShotName = "OptimizeCE";
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-20_2.pdf";
 
             TestFilesZipPaths = new[]
-                {
-                    UseRawFiles
-                        ? @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
-                        : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip",
-                    @"TestTutorial\CEOptimizationViews.zip"
-                };
+            {
+                UseRawFiles
+                    ? @"https://skyline.ms/tutorials/OptimizeCE.zip"
+                    : @"https://skyline.ms/tutorials/OptimizeCEMzml.zip",
+                @"TestTutorial\CEOptimizationViews.zip"
+            };
             RunFunctionalTest();
         }
 
@@ -170,6 +174,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
             });
 
+            RestoreViewOnScreen(5);
             PauseForScreenShot("Main Skyline window", 5);
 
             // Creating Optimization Methods, p. 5
@@ -221,16 +226,34 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode(decorator + "IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
-
+            RunUI(() => SkylineWindow.Size = new Size(984, 553));
             PauseForScreenShot("Main Skyline window", 8);
-            
+
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                });
+
+                RestoreCoverViewOnScreen();
+
+                RunUI(SkylineWindow.FocusDocument);
+
+                TakeCoverShot();
+                return;
+            }
+
             // p. 8
             // Not L10N
             RemoveTargetByDisplayName(decorator + "EGIHAQQK");
 
             FindNode(decorator + "IDALNENK");
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
             PauseForScreenShot("Main Skyline window", 9);
 

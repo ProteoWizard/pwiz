@@ -3,7 +3,7 @@ Summary   : 设置 > 肽段设置 已更改
 All Info  :
 肽段设置 已更改
 设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "Yeast"
-设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "Yeast"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "Yeast.protdb"
 设置 > 肽段设置 -- 库 > 库 : "Yeast (Atlas)" 已添加
 设置 > 肽段设置 -- 库 > 库 > "Yeast (Atlas)" > 路径 是 "Yeast_Atlas.blib"
 

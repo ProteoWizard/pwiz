@@ -21,17 +21,25 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
+    // N.B this order (starting with none=0) should agree with:
+    //    enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
+    // and
+    //    enum IonMobilityUnits in pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp
     public enum eIonMobilityUnits
     {
+        waters_sonar = -1, // Not really ion mobility, but SONAR uses IMS hardware for precursor isolation
         none,
         drift_time_msec,
         inverse_K0_Vsec_per_cm2,
-        compensation_V
+        compensation_V,
+        unknown // Keep this as last in list, used only in XML deserialization of older Skyline document
     }
 
-    public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
+    public sealed class IonMobilityValue : Immutable, IComparable<IonMobilityValue>
     {
         public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
+
+        public static bool IsNullOrEmpty(IonMobilityValue val) { return val == null || Equals(val, EMPTY); }
 
         // Private so we can issue EMPTY in the common case of no ion mobility info
         private IonMobilityValue(double? mobility, eIonMobilityUnits units)
@@ -76,8 +84,50 @@ namespace pwiz.Common.Chemistry
         }
         public IonMobilityValue ChangeIonMobility(double? value)
         {
-            return value == Mobility  ?this : GetIonMobilityValue(value, Units);
+            return value == Mobility ? this : GetIonMobilityValue(value, Units);
         }
+        public IonMobilityValue ChangeIonMobilityUnits(eIonMobilityUnits units)
+        {
+            if (Equals(units, Units))
+            {
+                return this;
+            }
+            if (Equals(units, eIonMobilityUnits.none))
+            {
+                return EMPTY;
+            }
+            return ChangeProp(ImClone(this), im => im.Units = units);
+        }
+
+        /// <summary>
+        /// Merge non-empty parts of other into a copy of this
+        /// </summary>
+        public IonMobilityValue Merge(IonMobilityValue other)
+        {
+            var val = this;
+            if (other.Units != eIonMobilityUnits.none)
+            {
+                if (Equals(other.Units, eIonMobilityUnits.unknown))
+                {
+                    if (other.HasValue)
+                        val = val.ChangeIonMobility(other.Mobility, Units);
+                }
+                else if (other.HasValue)
+                {
+                    val = other;
+                }
+                else
+                {
+                    val = val.ChangeIonMobility(Mobility, other.Units);
+                }
+            }
+            else if (other.HasValue)
+            {
+                val = val.ChangeIonMobility(other.Mobility);
+            }
+            return val;
+        }
+
         [Track]
         public double? Mobility { get; private set; }
         public eIonMobilityUnits Units { get; private set; }
@@ -95,6 +145,8 @@ namespace pwiz.Common.Chemistry
                     return @"Vs/cm^2";
                 case eIonMobilityUnits.compensation_V:
                     return @"V";
+                case eIonMobilityUnits.waters_sonar:
+                    return @"m/z";
             }
             return @"unknown ion mobility type";
         }

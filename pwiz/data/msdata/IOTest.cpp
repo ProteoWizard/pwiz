@@ -414,8 +414,10 @@ void testBinaryDataArray(const BinaryDataEncoder::Config& config)
     if (os_) *os_ << "testBinaryDataArray():\n";
 
     BinaryDataArray a;
+    IntegerDataArray aInt;
     for (int i=0; i<10; i++) a.data.push_back(i);
-    a.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
+    for (int i=0; i<10; i++) aInt.data.push_back(i);
+    a.dataProcessingPtr = aInt.dataProcessingPtr = DataProcessingPtr(new DataProcessing("msdata"));
 
     // write 'a' out to a stream
 
@@ -424,17 +426,37 @@ void testBinaryDataArray(const BinaryDataEncoder::Config& config)
     IO::write(writer, a, config);
     if (os_) *os_ << oss.str() << endl;
 
+    ostringstream ossInt;
+    XMLWriter writerInt(ossInt);
+    IO::write(writerInt, aInt, config);
+    if (os_) *os_ << ossInt.str() << endl;
+
     // read 'b' in from stream
 
-    BinaryDataArray b; 
+    vector<BinaryDataArrayPtr> binaryDataArrayPtrs;
+    vector<IntegerDataArrayPtr> integerDataArrayPtrs;
+
     istringstream iss(oss.str());
-    IO::read(iss, b);
+    IO::read(iss, binaryDataArrayPtrs, integerDataArrayPtrs);
+
+    unit_assert_operator_equal(1, binaryDataArrayPtrs.size());
+    unit_assert_operator_equal(0, integerDataArrayPtrs.size());
+
+    istringstream issInt(ossInt.str());
+    IO::read(issInt, binaryDataArrayPtrs, integerDataArrayPtrs);
+
+    unit_assert_operator_equal(1, binaryDataArrayPtrs.size());
+    unit_assert_operator_equal(1, integerDataArrayPtrs.size());
 
     // compare 'a' and 'b'
 
-    Diff<BinaryDataArray> diff(a,b);
+    Diff<BinaryDataArray> diff(a, *binaryDataArrayPtrs.back());
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
+
+    Diff<IntegerDataArray> diffInt(aInt, *integerDataArrayPtrs.back());
+    if (diffInt && os_) *os_ << "diffInt:\n" << diffInt << endl;
+    unit_assert(!diffInt);
 }
 
 
@@ -476,11 +498,13 @@ void testBinaryDataArrayExternalMetadata()
     msd.paramGroupPtrs.push_back(pg);
 
     istringstream is(bdaWithExternalMetadata);
-    BinaryDataArray bda;
+    vector<BinaryDataArrayPtr> binaryDataArrayPtrs;
+    vector<IntegerDataArrayPtr> integerDataArrayPtrs;
 
     // test read with MSData reference
 
-    IO::read(is, bda, &msd);
+    IO::read(is, binaryDataArrayPtrs, integerDataArrayPtrs, &msd);
+    auto& bda = *binaryDataArrayPtrs.back();
 
     unit_assert(bda.data.size() == 15);
     for (size_t i=0; i<15; i++)

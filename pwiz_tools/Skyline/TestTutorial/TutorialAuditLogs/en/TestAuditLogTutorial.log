@@ -1,0 +1,137 @@
+Undo Redo : Transition Settings -- Filter changed
+Summary   : Settings > Transition Settings -- Filter changed
+All Info  :
+Transition Settings -- Filter changed
+Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 3"
+Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion - 1"
+
+Undo Redo : Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Summary   : Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+All Info  :
+Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
+
+Undo Redo : Inserted peptide IEAIPQIDK
+Summary   : Inserted peptide IEAIPQIDK
+All Info  :
+Inserted peptide IEAIPQIDK
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+IEAIPQIDK	GST-tag	
+		
+
+Undo Redo : Imported results from 9 files
+Summary   : Imported results from 9 files
+All Info  :
+Imported results from 9 files
+Import results settings > File names : contains "FOXN1-GST.mzML"
+Import results settings > File names : contains "Standard_1.mzML"
+Import results settings > File names : contains "Standard_2.mzML"
+Import results settings > File names : contains "Standard_3.mzML"
+Import results settings > File names : contains "Standard_4.mzML"
+Import results settings > File names : contains "Standard_5.mzML"
+Import results settings > File names : contains "Standard_6.mzML"
+Import results settings > File names : contains "Standard_7.mzML"
+Import results settings > File names : contains "Standard_8.mzML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "FOXN1-GST.mzML",
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Peptide Settings -- Quantification changed
+Summary   : Settings > Peptide Settings -- Quantification changed
+All Info  :
+Peptide Settings -- Quantification changed
+Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Peptide Settings -- Quantification > Units changed from Missing to "fmol/ul"
+
+Undo Redo : Pasted 16 values into the document grid
+Summary   : Pasted 16 values into the document grid
+All Info  :
+Pasted 16 values into the document grid
+Document grid > Report name is "Replicates"
+Set Sample Type of Standard_1 to "Standard"
+Set Analyte Concentration of Standard_1 to "40"
+Set Sample Type of Standard_2 to "Standard"
+Set Analyte Concentration of Standard_2 to "12.5"
+Set Sample Type of Standard_3 to "Standard"
+Set Analyte Concentration of Standard_3 to "5"
+Set Sample Type of Standard_4 to "Standard"
+Set Analyte Concentration of Standard_4 to "2.5"
+Set Sample Type of Standard_5 to "Standard"
+Set Analyte Concentration of Standard_5 to "1"
+Set Sample Type of Standard_6 to "Standard"
+Set Analyte Concentration of Standard_6 to "0.5"
+Set Sample Type of Standard_7 to "Standard"
+Set Analyte Concentration of Standard_7 to "0.25"
+Set Sample Type of Standard_8 to "Standard"
+Set Analyte Concentration of Standard_8 to "0.1"
+Extra Info: Standard	40
+Standard	12.5
+Standard	5
+Standard	2.5
+Standard	1
+Standard	0.5
+Standard	0.25
+Standard	0.1
+
+Report name = "Replicates"
+
+Undo Redo : Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
+Summary   : Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
+All Info  :
+Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
+Changed start time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 20.54 to 20.64
+Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.15
+
+Reason Changed: Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy) 
+Reason: '' to 'Changed peak integration as instructed by the tutorial'
+
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
+All Info  :
+Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
+
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
+All Info  :
+Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
+
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
+All Info  :
+Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
+
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
+All Info  :
+Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+

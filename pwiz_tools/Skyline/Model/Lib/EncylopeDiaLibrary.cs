@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper disable LocalizableElement
         private bool LoadLibraryFromDatabase(ILoadMonitor loader)
         {
-            var status = new ProgressStatus(
+            IProgressStatus status = new ProgressStatus(
                 string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_,
                     Name));
             try
@@ -216,7 +216,6 @@ namespace pwiz.Skyline.Model.Lib
                 var scores = new EncyclopeDiaScores();
                 scores.ReadScores(_pooledSqliteConnection.Connection);
                 HashSet<Tuple<string, int>> quantPeptides = new HashSet<Tuple<string, int>>();
-
                 using (var cmd = new SQLiteCommand(_pooledSqliteConnection.Connection))
                 {
                     // From the "entries" table, read all of the peptides that were actually found
@@ -294,7 +293,7 @@ namespace pwiz.Skyline.Model.Lib
                 var spectrumInfos = libKeySourceFileDatas
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key.Item1, entry.Key.Item2, entry.Value, sourceFileIds));
-                SetLibraryEntries(spectrumInfos);
+                SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
                 _sourceFiles = ImmutableList.ValueOf(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
@@ -524,7 +523,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info)
         {
-            return new ChromLibSpectrumHeaderInfo(Name, 0);
+            return new ChromLibSpectrumHeaderInfo(Name, 0, null);
         }
 
         public override LibraryFiles LibraryFiles
@@ -586,7 +585,7 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 })
                 .Select(kvp =>
-                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null,
+                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null, null,
                         kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
                     {
                         SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)

@@ -121,6 +121,8 @@ struct PWIZ_API_DECL RawData
           Info(Reader),
           ChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
+          workingDriftTimeFunctionIndex_(-1),
+          workingSonarFunctionIndex_(-1),
           rawpath_(rawpath),
           numSpectra_(0),
           hasProfile_(false),
@@ -188,12 +190,53 @@ struct PWIZ_API_DECL RawData
 
     double GetDriftTime(int functionIndex, int driftBin) const
     {
-        return Info.GetDriftTime(functionIndex, driftBin);
+        if (workingDriftTimeFunctionIndex_ < 0)
+        {
+            // according to a MassLynx SDK developer, all functions will return the same drift time for a given scan number,
+            // and we've found some files that will throw errors when asking for drift time from functions not listed in _extern.inf,
+            // so we just try all functions once until we find one that works, then use that one all the time (no matter what functionIndex is passed in)
+            for (int function : functionIndexList)
+            {
+                try { Info.GetDriftTime(function, driftBin); workingDriftTimeFunctionIndex_ = function; break; }
+                catch (...) {}
+            }
+            if (workingDriftTimeFunctionIndex_ < 0)
+                throw std::runtime_error("[MassLynxRaw::GetDriftTime] error requesting drift time from all functions");
+        }
+        return Info.GetDriftTime(workingDriftTimeFunctionIndex_, driftBin);
     }
+
+    void GetSonarRange(double precursorMz, double tolerance, int &driftBinStart, int &driftBinStop)
+    {
+        // Per email from HansV at Water, function number doesn't matter under normal operation, so find one that works and stick with that
+        FindSonarFunction();
+        // API doesn't seem to do actual bin range checking in m/z to bin conversion, so do it here
+        if ((precursorMz - tolerance) <= sonarMassUpperLimit_ && (precursorMz + tolerance) >= sonarMassLowerLimit_)
+        {
+            if (Info.GetSonarRange(workingSonarFunctionIndex_, (float)precursorMz, (float)tolerance, driftBinStart, driftBinStop))
+            {
+                return;
+            }
+        }
+        driftBinStart = driftBinStop = -1;  // Out of range
+    }
+
+    // Return the nominal m/z for the bin, generally just for display purposes
+    double SonarBinToPrecursorMz(int bin)
+    {
+        FindSonarFunction();
+        float mz;
+        if (Info.TryGetPrecursorMass(workingSonarFunctionIndex_, bin, mz))
+        {
+            return mz;
+        }
+        return 0; // Bin is outside of valid range
+    }
+
 
     bool HasCcsCalibration() const
     {
-        return bfs::exists(rawpath_ + "/mob_cal.csv");
+        return !hasSONAR_ &&  bfs::exists(rawpath_ + "/mob_cal.csv");
     }
 
     float DriftTimeToCCS(float driftTime, float mass, int charge) const
@@ -367,6 +410,9 @@ struct PWIZ_API_DECL RawData
     MassLynxLockMassProcessor LockMass;
     mutable MassLynxRawProcessorWithProgress PeakPicker;
     mutable boost::shared_ptr<RawData> centroidRaw_;
+    mutable int workingDriftTimeFunctionIndex_;
+    mutable int workingSonarFunctionIndex_; // We're assuming that the Sonar calibration is the same across all functions
+    mutable float sonarMassLowerLimit_, sonarMassUpperLimit_;  // We're assuming that the Sonar calibration is the same across all functions
 
     string rawpath_, empty_;
     vector<int> functionIndexList;
@@ -392,7 +438,7 @@ struct PWIZ_API_DECL RawData
             return;
 
         string line;
-        while(getline(in, line))
+        while(getlinePortable(in, line))
         {
             size_t c_pos = line.find(": ");
             if (line.find("$$ ") != 0 || c_pos == string::npos)
@@ -404,6 +450,28 @@ struct PWIZ_API_DECL RawData
             //std::cout << name << " = " << value << std::endl;
         }
     }
+
+    void inline FindSonarFunction() 
+    {
+        if (workingSonarFunctionIndex_ < 0)
+        {
+            float mass;
+            for (int function : functionIndexList)
+            {
+                if (Info.TryGetPrecursorMass(function, 1, mass))
+                {
+                    workingSonarFunctionIndex_ = function;
+                    Info.GetPrecursorMassRange(workingSonarFunctionIndex_, sonarMassLowerLimit_, sonarMassUpperLimit_);
+                    break;
+                }
+            }
+            if (workingSonarFunctionIndex_ < 0)
+            {
+                throw std::runtime_error("[MassLynxRaw::FindSonarFunction] could not identify any function index for SONAR mz-to-bin conversion");
+            }
+        }
+    }
+
 };
 
 typedef shared_ptr<RawData> RawDataPtr;

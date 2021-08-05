@@ -197,12 +197,12 @@ namespace SkylineTester
                 commandShell.Add("# Checking out {0} source files...", branchName);
                 if (branchName.Contains("master"))
                 {
-                    commandShell.Add("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.Add("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 

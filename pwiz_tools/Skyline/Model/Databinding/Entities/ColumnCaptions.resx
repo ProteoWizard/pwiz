@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
   </data>
+  <data name="Abundance">
+    <value>Abundance</value>
+  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
@@ -198,6 +201,9 @@
   <data name="BatchName">
     <value>Batch Name</value>
   </data>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>Batch Target Qualitative Ion Ratio</value>
+  </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
   </data>
@@ -245,6 +251,9 @@
   </data>
   <data name="Coeluting">
     <value>Coeluting</value>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>Collision Cross Section</value>
   </data>
   <data name="CollisionalCrossSection">
     <value>Collisional Cross Section</value>
@@ -396,6 +405,9 @@
   <data name="FileName">
     <value>File Name</value>
   </data>
+  <data name="FilePath">
+    <value>File Path</value>
+  </data>
   <data name="Files">
     <value>Files</value>
   </data>
@@ -469,11 +481,20 @@
   <data name="InterpolatedTimes">
     <value>Interpolated Times</value>
   </data>
+  <data name="IonFormula">
+    <value>Ion Formula</value>
+  </data>
   <data name="IonMobilityFragment">
     <value>Ion Mobility Fragment</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>Ion Mobility High Energy Offset</value>
+  </data>
   <data name="IonMobilityMS1">
     <value>Ion Mobility MS1</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>Ion Mobility Value</value>
   </data>
   <data name="IonMobilityWindow">
     <value>Ion Mobility Window</value>
@@ -483,9 +504,6 @@
   </data>
   <data name="IonName">
     <value>Ion Name</value>
-  </data>
-  <data name="IonFormula">
-    <value>Ion Formula</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -511,11 +529,26 @@
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>Library Collision Cross Section</value>
+  </data>
   <data name="LibraryDotProduct">
     <value>Library Dot Product</value>
   </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>Library Ion Mobility High Energy Offset</value>
+  </data>
   <data name="LibraryIntensity">
     <value>Library Intensity</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>Library Ion Mobility</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>Library Ion Mobility Units</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>Library Ion Mobility Value</value>
   </data>
   <data name="LibraryName">
     <value>Library Name</value>
@@ -571,6 +604,9 @@
   <data name="MaxBestRetentionTime">
     <value>Max Best Retention Time</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>Max Detection Q Value</value>
+  </data>
   <data name="MaxEndTime">
     <value>Max End Time</value>
   </data>
@@ -585,6 +621,12 @@
   </data>
   <data name="MaxRetentionTime">
     <value>Max Retention Time</value>
+  </data>
+  <data name="Median">
+    <value>Median</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>Median Detection Q Value</value>
   </data>
   <data name="Mean">
     <value>Mean</value>
@@ -628,6 +670,9 @@
   <data name="MinBestRetentionTime">
     <value>Min Best Retention Time</value>
   </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>Min Detection Q Value</value>
+  </data>
   <data name="MinFoldChange">
     <value>Min Fold Change</value>
   </data>
@@ -657,8 +702,17 @@
   <data name="Molecule">
     <value>Molecule</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>Molecule List Abundance</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>Molecule List Result</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>Molecule List Results</value>
   </data>
   <data name="MoleculeName">
     <value>Molecule Name</value>
@@ -789,6 +843,9 @@
   <data name="PointsAcrossPeak">
     <value>Points Across Peak</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle Time Across Peak</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
@@ -806,6 +863,9 @@
   </data>
   <data name="PrecursorConcentration">
     <value>Precursor Concentration</value>
+  </data>
+  <data name="PrecursorExplicitCollisionEnergy">
+    <value>Precursor Explicit Collision Energy</value>
   </data>
   <data name="PrecursorIonName">
     <value>Precursor Ion Name</value>
@@ -888,6 +948,9 @@
   <data name="Protein">
     <value>Protein</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>Protein Abundance</value>
+  </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
@@ -909,11 +972,20 @@
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
   </data>
+  <data name="ProteinResult">
+    <value>Protein Result</value>
+  </data>
+  <data name="ProteinResults">
+    <value>Protein Results</value>
+  </data>
   <data name="Proteins">
     <value>Proteins</value>
   </data>
   <data name="ProteinSequence">
     <value>Protein Sequence</value>
+  </data>
+  <data name="ProteinSequenceCoverage">
+    <value>Protein Sequence Coverage</value>
   </data>
   <data name="ProteinSpecies">
     <value>Protein Species</value>
@@ -923,6 +995,12 @@
   </data>
   <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
+  </data>
+  <data name="QualitativeIonRatio">
+    <value>Qualitative Ion Ratio</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>Qualitative Ion Ratio Status</value>
   </data>
   <data name="Quantification">
     <value>Quantification</value>
@@ -969,11 +1047,20 @@
   <data name="Replicate">
     <value>Replicate</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>Replicate Abundance</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>Replicate Abundances</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>Replicate Calibration Curve</value>
   </data>
   <data name="ReplicateCount">
     <value>Replicate Count</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>Replicate Group</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>Replicate Error Message</value>
@@ -1002,6 +1089,9 @@
   <data name="ReplicateRSquared">
     <value>Replicate R Squared</value>
   </data>
+  <data name="ReplicateSampleIdentity">
+    <value>Replicate Sample Identity</value>
+  </data>
   <data name="ReplicateSlope">
     <value>Replicate Slope</value>
   </data>
@@ -1016,9 +1106,6 @@
   </data>
   <data name="ResultFileLocator">
     <value>Result File Locator</value>
-  </data>
-  <data name="Results">
-    <value>Results</value>
   </data>
   <data name="RetentionTime">
     <value>Retention Time</value>
@@ -1098,6 +1185,9 @@
   <data name="SummaryMessage">
     <value>Summary Message</value>
   </data>
+  <data name="TargetQualitativeIonRatio">
+    <value>Target Qualitative Ion Ratio</value>
+  </data>
   <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
   <data name="TicArea">
     <value>Total Ion Current Area</value>
@@ -1155,6 +1245,12 @@
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>Transition Result Is MS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>Transition Result Is Quantitative</value>
   </data>
   <data name="TransitionResultLocator">
     <value>Transition Result Locator</value>

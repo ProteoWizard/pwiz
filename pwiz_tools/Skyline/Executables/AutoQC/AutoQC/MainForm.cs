@@ -17,502 +17,572 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
 using AutoQC.Properties;
+using SharedBatch;
 
 namespace AutoQC
 {
     public partial class MainForm : Form, IMainUiControl
     {
-        private Dictionary<string, ConfigRunner> _configRunners;
 
-        private readonly ListViewColumnSorter columnSorter;
+        private readonly AutoQcConfigManager _configManager;
 
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
+        private readonly ColumnWidthCalculator _listViewColumnWidths;
+        private Timer _outputLog;
 
-        public const bool IS_DAILY = false;
-        public const string SKYLINE_RUNNER = IS_DAILY ? "SkylineDailyRunner.exe" : "SkylineRunner.exe";
-
-        // Path to SkylineRunner.exe / SkylineDailyRunner.exe
-        // Expect SkylineRunner to be in the same directory as AutoQC
-        public static readonly string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-            SKYLINE_RUNNER);
-
-        private IAutoQcLogger _currentAutoQcLogger;
-
-        public MainForm()
+        public MainForm(string openFile)
         {
             InitializeComponent();
+            
+            toolStrip.Items.Insert(1,new ToolStripSeparator());
+            _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
 
-            columnSorter = new ListViewColumnSorter();
-            listViewConfigs.ListViewItemSorter = columnSorter;
+            ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
+            _configManager = new AutoQcConfigManager(this);
 
-            btnCopy.Enabled = false;
-            btnDelete.Enabled = false;
-            btnEdit.Enabled = false;
+            UpdateUiConfigurations();
+            ListViewSizeChanged();
+            UpdateUiLogFiles();
+            UpdateSettingsTab();
 
-            ReadSavedConfigurations();
-
-            UpdateLabelVisibility();
+            _outputLog = new Timer { Interval = 500 };
+            _outputLog.Tick += OutputLog;
+            _outputLog.Start();
 
             Shown += ((sender, args) =>
             {
                 _loaded = true;
-                RunEnabledConfigurations();
+                UpdateUiConfigurations();
+                if (Settings.Default.KeepAutoQcRunning)
+                    _configManager.RunEnabled();
+                _configManager.DoServerValidation();
+                if (!string.IsNullOrEmpty(openFile))
+                    FileOpened(openFile);
             });
+
         }
 
-        private void ReadSavedConfigurations()
+        private void RunUi(Action action)
         {
-            Program.LogInfo("Reading configurations from saved settings.");
-            var configList = Settings.Default.ConfigList;
-            var sortedConfig = configList.OrderByDescending(c => c.Created);
-            _configRunners = new Dictionary<string, ConfigRunner>();
-            foreach (var config in sortedConfig)
+            if (!_loaded)
             {
-                AddConfiguration(config);
+                action();
+                return;
             }
-        }
 
-        private ConfigRunner GetSelectedConfigRunner()
-        {
-            if (listViewConfigs.SelectedItems.Count == 0)
-                return null;
-
-            var selectedConfig = listViewConfigs.SelectedItems[0].SubItems[0].Text;
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(selectedConfig, out configRunner);
-            if (configRunner == null)
-            {
-                Program.LogError(string.Format("Could not get a config runner for configuration \"{0}\"", selectedConfig));
-            }
-            return configRunner;
-        }
-
-        private static void ShowConfigForm(AutoQcConfigForm configForm)
-        {
-            configForm.StartPosition = FormStartPosition.CenterParent;
-            configForm.ShowDialog();
-        }
-        // TODO: Do we need this? 
-        private void RunEnabledConfigurations()
-        {
-            foreach (var configRunner in _configRunners.Values)
-            {
-                if (!configRunner.IsConfigEnabled())
-                    continue;
-                Program.LogInfo(string.Format("Starting configuration {0}", configRunner.GetConfigName()));
-                StartConfigRunner(configRunner); 
-            }
-        }
-
-        private void StartConfigRunner(ConfigRunner configRunner)
-        {
             try
             {
-                configRunner.Start();
+                Invoke(action);
             }
-            catch (Exception e)
+            catch (ObjectDisposedException)
             {
-                var title = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
-                var msg = string.Format("{0}\n\nMore details can be found in the program log: {1}", e.Message, Program.GetProgramLogFilePath());
-                ShowErrorDialog(title, msg);
-                Program.LogError(title, e);
             }
         }
 
-        private void ChangeConfigState(AutoQcConfig config)
+        #region Configuration list
+
+        private void btnAdd_Click(object sender, EventArgs e)
         {
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(config.Name, out configRunner);
-            if (configRunner == null)
-            {
-                return;
-            }
-            if (config.IsEnabled)
-            {
-                Program.LogInfo(string.Format("Starting configuration \"{0}\"", config.Name));
-                StartConfigRunner(configRunner);
-            }
-            else
-            {
-                Program.LogInfo(string.Format("Stopping configuration \"{0}\"", config.Name));
-                configRunner.Stop();
-            }
+            ProgramLog.Info("Creating a new configuration");
+            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add);
+            configForm.ShowDialog();
         }
 
-        private void ShowErrorDialog(string title, string message)
+        private void HandleEditEvent(object sender, EventArgs e)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK);    
-        }
-
-        #region event handlers
-
-        private void btnNewConfig_Click(object sender, EventArgs e)
-        {
-//            MessageBox.Show(Application.UserAppDataPath + " directory");
-            Program.LogInfo("Creating new configuration");
-            var configForm = new AutoQcConfigForm(this);
-            configForm.StartPosition = FormStartPosition.CenterParent;
-            ShowConfigForm(configForm);
-        }
-
-        private void btnEdit_Click(object sender, EventArgs e)
-        {
-            // Get the selected configuration    
-            var configRunner = GetSelectedConfigRunner();
-
-            if (configRunner == null)
+            var configRunner = _configManager.GetSelectedConfigRunner();
+            var config = configRunner.Config;
+            if (!_configManager.IsSelectedConfigValid())
             {
-                return;
+                if (configRunner.IsRunning())
+                {
+                    // This should not happen.  But we will display an error instead of throwing an exception 
+                    DisplayError(Resources.MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_, config.Name);
+                    return;
+                }
+                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
+                if (validateConfigForm.ShowDialog() != DialogResult.OK)
+                    return;
             }
-
-            Program.LogInfo(string.Format("{0} configuration \"{1}\"", (configRunner.IsStopped() ? "Editing" : "Viewing"),
-                configRunner.GetConfigName()));
-
-            var configForm = new AutoQcConfigForm(configRunner.Config, configRunner, this);
-            ShowConfigForm(configForm);
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.GetStatus());
+            configForm.ShowDialog();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            // Get the selected configuration
-            var configRunner = GetSelectedConfigRunner();
-            if (configRunner == null)
+            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy);
+            configForm.ShowDialog();
+        }
+
+        public void AssertUniqueConfigName(string newName, bool replacing)
+        {
+            _configManager.AssertUniqueName(newName, replacing);
+        }
+
+        public void AddConfiguration(IConfig config)
+        {
+            _configManager.UserAddConfig(config);
+            UpdateUiConfigurations();
+            ListViewSizeChanged();
+            UpdateUiLogFiles();
+            _configManager.SaveConfigList();
+        }
+
+        public void ReplaceSelectedConfig(IConfig config)
+        {
+            _configManager.ReplaceSelectedConfig(config);
+            UpdateUiConfigurations();
+            UpdateUiLogFiles();
+            _configManager.SaveConfigList();
+        }
+
+        public void SetConfigInvalid(IConfig config)
+        {
+            _configManager.SetConfigInvalid(config);
+        }
+
+        public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
+        {
+            try
             {
-                return;
+                skylineSettings.Validate();
             }
-            Program.LogInfo(string.Format("Copying configuration \"{0}\"", configRunner.GetConfigName()));
-            var newConfig = configRunner.Config.Copy();
-            newConfig.Name = null;
-            var configForm = new AutoQcConfigForm(newConfig, null, this);
-            ShowConfigForm(configForm);
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return null;
+            }
+            if (DialogResult.Yes ==
+                DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
+            {
+                try
+                {
+                    _configManager.ReplaceSkylineSettings(skylineSettings);
+                }
+                catch (ArgumentException e)
+                {
+                    DisplayError(e.Message);
+                }
+                UpdateUiConfigurations();
+                return true;
+            }
+
+            return false;
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            Program.LogInfo("Delete clicked");
-            // Get the selected configuration
-            var configRunner = GetSelectedConfigRunner();
-            if (configRunner == null)
+            var selectedConfig = _configManager.GetSelectedConfig();
+            if (selectedConfig == null)
             {
                 return;
             }
-            // Check if this configuration is running or in one of the intermidiate (starting, stopping) stages
-            if (configRunner.IsBusy())
+            if (DialogResult.Yes == DisplayQuestion(string.Format(
+                Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___,
+                selectedConfig.Name)))
             {
-                string message = null;
-                if (configRunner.IsStarting() || configRunner.IsRunning())
+                if (_configManager.UserRemoveSelected())
                 {
-                    message =
-                        string.Format(
-                            @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
-                            configRunner.GetConfigName());
+                    UpdateUiConfigurations();
+                    ListViewSizeChanged();
+                    UpdateUiLogFiles();
+                    _configManager.SaveConfigList();
                 }
-                else if (configRunner.IsStopping())
-                {
-                    message =
-                        string.Format(
-                            @"Please wait for the configuration ""{0}"" to stop and try again.",
-                            configRunner.GetConfigName());
-                }
-                MessageBox.Show(message,
-                    "Cannot Delete",
-                    MessageBoxButtons.OK);
-                return;
             }
-            var doDelete =
-                MessageBox.Show(
-                    string.Format(@"Are you sure you want to delete configuration ""{0}""?",
-                        configRunner.GetConfigName()),
-                    "Confirm Delete",
-                    MessageBoxButtons.YesNo);
-
-            if (doDelete != DialogResult.Yes) return;
-
-            RemoveConfiguration(configRunner.Config);
         }
 
-        private void btnExport_Click(object sender, EventArgs e)
+        public void FileOpened(string filePath)
         {
-            Settings.Default.Save();
+            var importConfigs = true;
+            if (!filePath.Contains(FileUtil.DOWNLOADS_FOLDER)) // Only show dialog if configs are not in downloads folder
+            {
+                importConfigs = DialogResult.Yes == DisplayQuestion(string.Format(
+                    Resources.MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__,
+                    Path.GetFileName(filePath)));
+            }
 
-            var dialog = new SaveFileDialog { Title = "Save configurations...", Filter = "XML Files(*.xml)|*.xml" };
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-            var filePath = dialog.FileName;
-            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-            config.SaveAs(filePath);
+            if (!importConfigs) return;
+            ProgramLog.Info($"Importing configurations from {filePath}");
+            DoImport(filePath);
         }
 
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = "XML Files(*.xml)|*.xml";
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-            var filePath = dialog.FileName;
-
-            List<AutoQcConfig> readConfigs = new List<AutoQcConfig>();
-            try
-            {
-                using (var stream = new FileStream(filePath, FileMode.Open))
-                {
-                    using (var reader = XmlReader.Create(stream))
-                    {
-                        while (reader.IsStartElement())
-                        {  
-                            if (reader.Name == "autoqc_config")
-                            {
-                                AutoQcConfig config = AutoQcConfig.Deserialize(reader);
-                                readConfigs.Add(config);
-                            }
-                            reader.Read();
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
-                    "Import Configurations Error",
-                    MessageBoxButtons.OK);
+            dialog.Filter = TextUtil.FILTER_QCFG;
+            if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            }
 
-            if (readConfigs.Count == 0)
-            {
-                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
-                    "Import Configurations",
-                    MessageBoxButtons.OK);  
-            }
+            DoImport(dialog.FileName);
+        }
 
-            var validationErrors = new List<string>();
-            var duplicateConfigs = new List<string>();
-            var numAdded = 0;
-            foreach (AutoQcConfig config in readConfigs)
-            {
-                // Make sure that the configuration name is unique
-                if (GetConfig(config.Name) != null)
-                {
-                    // If a configuration with the same name already exists, don't add it
-                    duplicateConfigs.Add(config.Name);
-                    continue;
-                }
-                
-                try
-                {
-                    config.Validate();
-                }
-                catch (Exception ex)
-                {
-                    validationErrors.Add(string.Format("\"{0}\" Error: {1}", config.Name, ex.Message));
-                    continue;
-                }
+        public void DoImport(string filePath)
+        {
+            _configManager.Import(filePath, ShowDownloadedFileForm);
+            UpdateUiConfigurations();
+            UpdateUiLogFiles();
+        }
 
-                config.IsEnabled = false;
-                AddConfiguration(config);
-                numAdded++;
-            }
+        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
+        {
+            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
+            var dialogResult = fileOpenedForm.ShowDialog(this);
+            newRootDirectory = fileOpenedForm.NewRootDirectory;
+            return dialogResult;
+        }
 
-            var message = new StringBuilder("Number of configurations imported: ");
-            message.Append(numAdded).Append(Environment.NewLine);
-            if (duplicateConfigs.Count > 0)
-            {
-                message.Append("The following configurations already exist and were not imported:")
-                    .Append(Environment.NewLine);
-                foreach (var name in duplicateConfigs)
-                {
-                    message.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
-                }
-            }
-            if (validationErrors.Count > 0)
-            {
-                message.Append("The following configurations could not be validated and were not imported:")
-                    .Append(Environment.NewLine);
-                foreach (var error in validationErrors)
-                {
-                    message.Append(error).Append(Environment.NewLine);
-                }
-            }
-            MessageBox.Show(message.ToString(), "Import Configurations", MessageBoxButtons.OK);
-            
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog {Filter = TextUtil.FILTER_QCFG};
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (!_loaded)
-                return;
-
-            var configName = listViewConfigs.Items[e.Index].SubItems[0].Text;
-
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(configName, out configRunner);
-            if (configRunner == null)
-                return;
-
-            if (configRunner.IsStarting() || configRunner.IsStopping())
-            {
-                e.NewValue = e.CurrentValue;
-                var message = string.Format("Configuration is {0}. Please wait.",
-                    configRunner.IsStarting() ? "starting" : "stopping");
-
-                MessageBox.Show(message,
-                    "Please Wait",
-                    MessageBoxButtons.OK);
-                return;
-            }
-
-            if (e.NewValue == CheckState.Checked) return;
-
-            var doChange =
-                MessageBox.Show(
-                    string.Format(@"Are you sure you want to stop configuration ""{0}""?", configRunner.GetConfigName()),
-                    "Confirm Stop",
-                    MessageBoxButtons.YesNo);
-
-            if (doChange != DialogResult.Yes)
-            {
-                e.NewValue = e.CurrentValue;
-            }
+            if (!_loaded || e.NewValue == e.CurrentValue) return;
+            var newIsEnabled = e.NewValue == CheckState.Checked;
+            e.NewValue = e.CurrentValue;
+            if (_configManager.UpdateSelectedEnabled(newIsEnabled))
+                UpdateUiConfigurations();
         }
 
-        private void listViewConfigs_ItemChecked(object sender, ItemCheckedEventArgs e)
+        private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (!_loaded)
-                return;
-
-            var configName = e.Item.SubItems[0].Text; // Name of the configuration
-            var configRunner = ChangeConfigEnabledSetting(configName, e.Item.Checked);
-
-            if (configRunner != null)
-            {
-                ChangeConfigState(configRunner.Config);
-            }
+            // Disable automatic item selection - selected configuration set through _configManager
+            //      Automatic selection disables red text, can't see invalid configurations
+            listViewConfigs.SelectedIndices.Clear();
         }
 
-        private ConfigRunner ChangeConfigEnabledSetting(string configName, bool enabled)
+        private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
         {
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(configName, out configRunner);
-            if (configRunner == null)
-                return null;
-            configRunner.Config.IsEnabled = enabled;
-            return configRunner;
-        }
-
-        private void listViewConfigs_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            var lvi = e.Item;
-
-            if (!lvi.Selected)
+            // Select configuration through _configManager
+            var item = listViewConfigs.GetItemAt(e.X, e.Y);
+            if (item == null)
             {
-                UpdateButtons(null);
+                _configManager.DeselectConfig();
             }
             else
             {
-                ConfigRunner configRunner;
-                _configRunners.TryGetValue(lvi.Text, out configRunner);
-                UpdateButtons(configRunner);
+                _configManager.SelectConfig(item.Index);
             }
-
         }
 
         private void listViewConfigs_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-            // Determine if clicked column is already the column that is being sorted.
-            if (e.Column == columnSorter.SortColumn)
+            _configManager.SortByValue(e.Column);
+            UpdateUiConfigurations();
+        }
+
+        #endregion
+
+        #region Open File/Folder
+        
+
+        private void btnOpenResults_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            if (config != null && File.Exists(config.MainSettings.SkylineFilePath))
             {
-                // Reverse the current sort direction for this column.
-                if (columnSorter.Order == SortOrder.Ascending)
-                {
-                    columnSorter.Order = SortOrder.Descending;
-                }
-                else
-                {
-                    columnSorter.Order = SortOrder.Ascending;
-                }
+                SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
             }
             else
             {
-                // Set the column number that is to be sorted; default to ascending.
-                columnSorter.SortColumn = e.Column;
-                columnSorter.Order = SortOrder.Ascending;
+                DisplayError(config == null ? "No configuration is selected." : 
+                    $"Skyline file \"{config.MainSettings.SkylineFilePath}\" for configuration \"{config.Name}\" does not exist. Please fix the configuration.");
             }
-
-            // Perform the sort with these new sort options.
-            listViewConfigs.Sort();
         }
 
-        // Event triggered by button on the main tab that lists all configurations
-        private void btnViewLog1_Click(object sender, EventArgs e)
+        private void btnOpenPanoramaFolder_Click(object sender, EventArgs e)
         {
-            var selectedItems = listViewConfigs.SelectedItems;
-            if (selectedItems.Count > 0)
+            var config = _configManager.GetSelectedConfig();
+            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
+                string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
-                var selectedConfigName = selectedItems[0].Text;
-                comboConfigs.SelectedItem = selectedConfigName;
-                ViewLog(selectedConfigName);
+                var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
+                Process.Start(uri.AbsoluteUri);
             }
-            tabMain.SelectTab(tabLog);
         }
 
-        // Event triggered by button on the "Log" tab
-        private void btnViewLog2_Click(object sender, EventArgs e)
+        private void btnOpenFolder_Click(object sender, EventArgs e)
         {
-            var selectedConfig = comboConfigs.SelectedItem;
-            if (selectedConfig == null)
-                return;
-            ViewLog(selectedConfig.ToString());
+            openFolderMenuStrip.Show(toolStrip, new Point(0, btnOpenFolder.Height * toolStrip.Items.Count));
         }
 
-        private async void ViewLog(string configName)
+        private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
-            ConfigRunner runner;
-            _configRunners.TryGetValue(configName, out runner);
-            var logger = runner != null ? runner.GetLogger() : null;
+            var config = _configManager.GetSelectedConfig();
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                config.MainSettings.FolderToWatch,
+                Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
+        }
 
-            if (_currentAutoQcLogger != null && logger == _currentAutoQcLogger)
+        private void toolStripLogFolder_Click(object sender, EventArgs e)
+        {
+            var config = _configManager.GetSelectedConfig();
+            var logger = _configManager.GetLogger(config.Name);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+                logger.LogDirectory, 
+                Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
+        }
+
+        #endregion
+
+        #region Update UI
+
+        public void UpdateUiConfigurations()
+        {
+            RunUi(() =>
             {
+                if (!_loaded) return;
+                var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
+                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
+                listViewConfigs.Items.Clear();
+                listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
+                foreach (var lvi in listViewItems)
+                    listViewConfigs.Items.Add(lvi);
+                listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
+                if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
+                    listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
+                UpdateLabelVisibility();
+                UpdateButtonsEnabled();
+            });
+        }
+
+        public void UpdateButtonsEnabled()
+        {
+            RunUi(() =>
+            {
+                var configSelected = _configManager.HasSelectedConfig();
+                var config = configSelected ? _configManager.GetSelectedConfig() : null;
+                btnDelete.Enabled = configSelected;
+                btnOpenResults.Enabled = configSelected;
+                btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
+                btnOpenFolder.Enabled = configSelected;
+
+                btnEdit.Enabled = configSelected;
+                btnCopy.Enabled = configSelected;
+                btnViewLog.Enabled = configSelected;
+            });
+        }
+
+        public void UpdateUiLogFiles()
+        {
+            RunUi(() =>
+            {
+                comboConfigs.Items.Clear();
+                comboConfigs.Items.AddRange(_configManager.GetLogList());
+                comboConfigs.SelectedIndex = _configManager.SelectedLog;
+            });
+        }
+
+        private void UpdateLabelVisibility()
+        {
+            lblNoConfigs.Hide();
+            if (!_configManager.HasConfigs())
+            {
+                lblNoConfigs.Show();
+            }
+        }
+
+        #endregion
+
+        #region Logging
+
+        private bool _scrolling = true;
+
+        private void OutputLog(object sender, EventArgs e)
+        {
+            if (textBoxLog.IsDisposed) return;
+            _outputLog.Tick -= OutputLog;
+            if (WindowState != FormWindowState.Minimized && tabLog.Visible && textBoxLog.TextLength > 0)
+            {
+                _scrolling = textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <=
+                             textBoxLog.Height;
+            }
+
+            if (_configManager.SelectedLog < 0)
+            {
+                textBoxLog.Clear();
+            }
+            else
+            {
+                var logger = _configManager.GetSelectedLogger();
+                if (textBoxLog.TextLength == 0)
+                {
+                    if (logger.WillTruncate)
+                        LogErrorToUi(string.Format(Resources.AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_, _configManager.GetSelectedLogger().LogFile));
+                }
+                var logChanged = logger.OutputLog(LogToUi, LogErrorToUi);
+                if (logChanged)
+                    TrimDisplayedLog();
+                if (logChanged && _scrolling)
+                    ScrollToLogEnd();
+            }
+            _outputLog.Tick += OutputLog;
+        }
+
+        private void TrimDisplayedLog()
+        {
+            var numLines = textBoxLog.Lines.Length;
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
+            {
+                textBoxLog.Text = string.Empty;
+                _configManager.GetSelectedLogger().DisplayLogFromFile();
+                ScrollToLogEnd();
+            }
+        }
+
+        private void ScrollToLogEnd()
+        {
+            _scrolling = true;
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.ScrollToCaret();
+        }
+
+        private void LogToUi(string text)
+        {
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
+        }
+
+        private void LogErrorToUi(string text)
+        {
+            textBoxLog.SelectionStart = textBoxLog.TextLength;
+            textBoxLog.SelectionLength = 0;
+            textBoxLog.SelectionColor = Color.Red;
+            textBoxLog.AppendText(text);
+            textBoxLog.AppendText(Environment.NewLine);
+            textBoxLog.SelectionColor = textBoxLog.ForeColor;
+        }
+
+        private async void SwitchLogger()
+        {
+            _outputLog.Tick -= OutputLog;
+            textBoxLog.Clear();
+
+            var logger = _configManager.GetSelectedLogger();
+            try
+            {
+                await Task.Run(() =>
+                {
+                    // Read the log contents and display in the log tab.
+                    logger.DisplayLogFromFile();
+                });
+            }
+            catch (Exception ex)
+            {
+                DisplayError(ex.Message);
+            }
+
+            _scrolling = true;
+            _outputLog.Tick += OutputLog;
+        }
+
+        private void tabLog_Leave(object sender, EventArgs e)
+        {
+            _scrolling = _configManager.SelectedLog == 0;
+        }
+        
+        private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _configManager.SelectLog(comboConfigs.SelectedIndex);
+            if (_configManager.SelectedLog >= 0)
+                btnOpenLogFolder.Enabled = true;
+            SwitchLogger();
+        }
+        
+        private void btnOpenLogFolder_Click(object sender, EventArgs e)
+        {
+            var logger = _configManager.GetSelectedLogger();
+            if (!File.Exists(logger.LogFile))
+            {
+                var logFolder = Path.GetDirectoryName(logger.LogFile);
+                if (!Directory.Exists(logFolder))
+                {
+                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_, logger.LogFile));
+                    return;
+                }
+                Process.Start(logFolder);
                 return;
             }
 
-            foreach (var configRunner in _configRunners.Values)
-            {
-                configRunner.DisableUiLogging(); // Disable logging on all configurations first
-            }
+            var arg = "/select, \"" + logger.LogFile + "\"";
+            Process.Start("explorer.exe", arg);
+        }
 
-            textBoxLog.Clear(); // clear any existing log
-
-            if (runner == null) 
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            tabMain.SelectTab(tabLog); // Select the log tab first
+            // Set the focus on the combobox.
+            // If the focus is on the textbox we will see a lot of scrolling for big log files.
+            comboConfigs.Focus();
+            var config = _configManager.GetSelectedConfig();
+            // Switch the displayed log only if it is for a different configuration than the one already displayed
+            if (config != null && !string.Equals(config.Name, _configManager.GetSelectedLogger()?.Name))
             {
-                MessageBox.Show(string.Format("No configuration found for name \"{0}\"", configName), "",
-                    MessageBoxButtons.OK);
-                return;
+                _configManager.SelectLogOfSelectedConfig();
+                UpdateUiLogFiles();
+                // SwitchLogger(); // We don't need this. UpdateUiLogFiles will change the selected index in the log combobox which will end up calling SwitchLogger.
             }
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            ScrollToLogEnd();
+        }
+
+
+
+        /*
+
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            tabMain.SelectTab(tabLog); // Select the log tab first
+            // Set the focus on the combobox.
+            // If the focus is on the textbox we will see a lot of scrolling for big log files.
+            comboConfigs.Focus();
+            if (_configManager.HasSelectedConfig())
+            {
+                _configManager.SelectLogOfSelectedConfig();
+                UpdateUiLogFiles();
+                // SwitchLogger(); // We don't need this. UpdateUiLogFiles will change the selected index in the log combobox which will end up calling SwitchLogger.
+            }
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            ScrollToLogEnd(true);
+        }
+
+        private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _configManager.SelectLog(comboConfigs.SelectedIndex);
+            if (_configManager.SelectedLog >= 0)
+                btnOpenLogFolder.Enabled = true;
+            SwitchLogger();
+        }
+
+        private async void SwitchLogger()
+        {
+            textBoxLog.Clear();
             
-            if (logger == null)
-            {
-                MessageBox.Show("Log for this configuration is not yet initialized.", "",
-                    MessageBoxButtons.OK);
-                return;
-            }
-
-            _currentAutoQcLogger = logger;
-            runner.EnableUiLogging();
-
+            var logger = _configManager.GetSelectedLogger();
             try
             {
                 await Task.Run(() =>
@@ -523,276 +593,84 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                ShowErrorDialog("Error Reading Log", ex.Message);
+                DisplayErrorWithException(Resources.MainForm_SwitchLogger_Error_reading_log_ + Environment.NewLine + ex.Message, ex);
             }
 
-            ScrollToLogEnd();
+            ScrollToLogEnd(true);
         }
 
-        private void ScrollToLogEnd()
+        private void ScrollToLogEnd(bool forceScroll = false)
         {
-            textBoxLog.SelectionStart = textBoxLog.Text.Length;
-            textBoxLog.ScrollToCaret();
-        }
-
-        private void btnOpenFolder_Click(object sender, EventArgs e)
-        {
-            var selectedConfig = comboConfigs.SelectedItem;
-            if (selectedConfig == null)
-                return;
-
-            ConfigRunner runner;
-            _configRunners.TryGetValue(selectedConfig.ToString(), out runner);
-            if (runner == null)
-                return;
-
-            if (File.Exists(runner.GetLogger().GetFile()))
+            // Only scroll to end if forced or user is already scrolled to bottom of log
+            if (forceScroll || textBoxLog.GetPositionFromCharIndex(textBoxLog.Text.Length - 1).Y <= textBoxLog.Height)
             {
-                var arg = "/select, \"" + runner.GetLogger().GetFile() + "\"";
-                Process.Start("explorer.exe", arg);
+                textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                textBoxLog.ScrollToCaret();
             }
-            else if(Directory.Exists(runner.GetLogDirectory()))
-            {
-                Process.Start(runner.GetLogDirectory());
-            }
-            else
-            {
-                var err = string.Format("Directory does not exist: {0}", runner.GetLogDirectory());
-                ShowErrorDialog("Directory Not Found", err);
-            }
-
         }
 
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void btnOpenLogFolder_Click(object sender, EventArgs e)
         {
-            Settings.Default.Save();
-            // TODO
-//            foreach (var configRunner in _configRunners.Values)
-//            {
-//                configRunner.Stop();
-//            }
-        }
-
-        #endregion
-
-
-        #region Implementation of IMainUiControl
-
-        public void ChangeConfigUiStatus(ConfigRunner configRunner)
-        {
-            RunUI(() =>
+            var logger = _configManager.GetSelectedLogger();
+            if (!File.Exists(logger.GetFile()))
             {
-                var lvi = listViewConfigs.FindItemWithText(configRunner.GetConfigName(), false, 0, false); // Do not allow partial match
-
-                if (lvi == null) return;
-
-                const int index = 3;
-                lvi.SubItems[index].Text = configRunner.GetDisplayStatus();
-                if (configRunner.IsRunning())
+                if (!Directory.Exists(logger.GetDirectory()))
                 {
-                    lvi.SubItems[index].ForeColor = Color.Green;
-                }
-                else if (configRunner.IsDisconnected())
-                {
-                    lvi.SubItems[index].ForeColor = Color.Orange;
-                }
-                else if (configRunner.IsError())
-                {
-                    lvi.SubItems[index].ForeColor = Color.Red;
-                    listViewConfigs.ItemChecked -= listViewConfigs_ItemChecked;
-                    listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
-                    lvi.Checked = false;
-                    ChangeConfigEnabledSetting(lvi.SubItems[0].Text, false);
-                    listViewConfigs.ItemChecked += listViewConfigs_ItemChecked;
-                    listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
-                }
-                else if (!configRunner.IsStopped())
-                {
-                    lvi.SubItems[index].ForeColor = Color.DarkOrange;
-                }
-                else
-                {
-                    lvi.SubItems[index].ForeColor = Color.Black;
-                }
-                if (!lvi.Selected)
-                {
+                    DisplayError(string.Format(Resources.MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_, logger.GetFile()));
                     return;
                 }
-                UpdateButtons(configRunner);
-            });
+                Process.Start(logger.GetDirectory());
+                return;
+            }
+
+            var arg = "/select, \"" + logger.GetFile() + "\"";
+            Process.Start("explorer.exe", arg);
         }
 
-        private void UpdateButtons(ConfigRunner configRunner)
+        public void LogToUi(string name, string text, bool trim)
         {
-            if (configRunner == null)
+            RunUi(() =>
             {
-                btnCopy.Enabled = false;
-                btnEdit.Text = "Edit";
-                btnEdit.Enabled = false;
-                btnDelete.Enabled = false;
-            }
-            else
-            {
-                btnCopy.Enabled = true;
-                btnDelete.Enabled = true;
-                btnEdit.Enabled = true;
-                btnEdit.Text = configRunner.IsStopped() ? "Edit" : "View";
-            }
-        }
-
-        public void AddConfiguration(AutoQcConfig config)
-        {
-            AddConfiguration(config, -1);
-        }
-
-        public void AddConfiguration(AutoQcConfig config, int index)
-        {
-            Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
-            var lvi = new ListViewItem(config.Name);
-            lvi.Checked = config.IsEnabled;
-            lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
-            lvi.SubItems.Add(config.User);
-            lvi.SubItems.Add(config.Created.ToShortDateString());
-            lvi.SubItems.Add(ConfigRunner.RunnerStatus.Stopped.ToString());
-            if (index == -1)
-            {
-                listViewConfigs.Items.Add(lvi);
-            }
-            else
-            {
-                listViewConfigs.Items.Insert(index, lvi);
-            }
-
-            comboConfigs.Items.Add(config.Name);
-
-            // Add a ConfigRunner for this configuration
-            var configRunner = new ConfigRunner(config, this);
-            _configRunners.Add(config.Name, configRunner);
-
-            var configList = Settings.Default.ConfigList;
-            if (!configList.Contains(config))
-            {
-                configList.Add(config);
-                Settings.Default.Save();
-            }
-            UpdateLabelVisibility();
-        }
-
-        private int RemoveConfiguration(AutoQcConfig config)
-        {
-            Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
-            var lvi = listViewConfigs.FindItemWithText(config.Name);
-            var lviIndex = lvi == null ? -1 : lvi.Index;
-            if (lvi != null)
-            {
-                listViewConfigs.Items.Remove(lvi);
-            }
-
-            comboConfigs.Items.Remove(config.Name); // On the log tab
-
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(config.Name, out configRunner);
-            if (configRunner != null)
-            {
-                configRunner.Stop();
-            }
-            _configRunners.Remove(config.Name);
-
-            var configList = Settings.Default.ConfigList;
-            configList.Remove(config);
-            Settings.Default.Save();
-
-            UpdateLabelVisibility();
-
-            return lviIndex;
-        }
-
-        private void UpdateLabelVisibility()
-        {
-            if (_configRunners.Keys.Count > 0)
-            {
-                lblNoConfigs.Hide();
-            }
-            else
-            {
-                lblNoConfigs.Show();
-            }
-        }
-
-        public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
-        {
-            var index = -1;
-            if (_configRunners.ContainsKey(oldConfig.Name))
-            {
-                index = RemoveConfiguration(oldConfig);
-            }
-            AddConfiguration(newConfig, index);
-        }
-
-        public void UpdatePanoramaServerUrl(AutoQcConfig config)
-        {
-            var configList = Settings.Default.ConfigList;
-            if (configList.Contains(config))
-            {
-                Settings.Default.Save();
-            }
-        }
-
-        public AutoQcConfig GetConfig(string name)
-        {
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(name, out configRunner);
-            return configRunner == null ? null : configRunner.Config;
-        }
-
-        public void LogToUi(string text, bool scrollToEnd, bool trim)
-        {
-            RunUI(() =>
-            {
+                if (!_configManager.LoggerIsDisplayed(name))
+                    return;
                 if (trim)
                 {
                     TrimDisplayedLog();
                 }
+                
                 textBoxLog.AppendText(text);
                 textBoxLog.AppendText(Environment.NewLine);
-
-                if (!scrollToEnd) return;
-
+                
                 ScrollToLogEnd();
             });
-            
         }
 
         private void TrimDisplayedLog()
         {
             var numLines = textBoxLog.Lines.Length;
-            const int buffer = AutoQcLogger.MaxLogLines / 10;
-            if (numLines > AutoQcLogger.MaxLogLines + buffer)
+            const int buffer = Logger.MaxLogLines / 10;
+            if (numLines > Logger.MaxLogLines + buffer)
             {
-                textBoxLog.ReadOnly = false; // Make text box editable. This is required for the following to work
+                var unTruncated = textBoxLog.Text;
+                var startIndex = textBoxLog.GetFirstCharIndexFromLine(numLines - Logger.MaxLogLines);
+                var message = (_configManager.GetSelectedLogger() != null)
+                    ? string.Format(Logger.LogTruncatedMessage, _configManager.GetSelectedLogger().GetFile())
+                    : Resources.MainForm_ViewLog_Log_Truncated;
+                message += Environment.NewLine;
+                textBoxLog.Text = message + unTruncated.Substring(startIndex);
                 textBoxLog.SelectionStart = 0;
-                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MaxLogLines);
-                textBoxLog.SelectedText = string.Empty;
-
-                var message = (_currentAutoQcLogger != null) ? 
-                    string.Format(AutoQcLogger.LogTruncatedMessage, _currentAutoQcLogger.GetFile()) 
-                    : "... Log truncated ...";
-                textBoxLog.Text = textBoxLog.Text.Insert(0, message + Environment.NewLine);
-                textBoxLog.SelectionStart = 0;
-                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(1); // 0-based index
+                textBoxLog.SelectionLength = message.Length;
                 textBoxLog.SelectionColor = Color.Red;
-               
-                textBoxLog.SelectionStart = textBoxLog.TextLength;
-                textBoxLog.SelectionColor = textBoxLog.ForeColor;
-                textBoxLog.ReadOnly = true; // Make text box read-only
             }
         }
 
-        public void LogErrorToUi(string text, bool scrollToEnd, bool trim)
+        public void LogErrorToUi(string name, string text, bool trim)
         {
-            RunUI(() =>
+            RunUi(() =>
             {
-                if (trim )
+                if (!_configManager.LoggerIsDisplayed(name))
+                    return;
+                if (trim)
                 {
                     TrimDisplayedLog();
                 }
@@ -800,197 +678,227 @@ namespace AutoQC
                 textBoxLog.SelectionStart = textBoxLog.TextLength;
                 textBoxLog.SelectionLength = 0;
                 textBoxLog.SelectionColor = Color.Red;
-                LogToUi(text, scrollToEnd, 
+                LogToUi(name, text,
                     false); // Already trimmed
                 textBoxLog.SelectionColor = textBoxLog.ForeColor;
-            });      
+            });
         }
 
-        public void LogLinesToUi(List<string> lines)
+        public void LogLinesToUi(string name, List<string> lines)
         {
-            RunUI(() =>
+            RunUi(() =>
             {
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
-            });   
+                if (!_configManager.LoggerIsDisplayed(name))
+                    return;
+                var text = TextUtil.LineSeparate(lines);
+                textBoxLog.AppendText(text + Environment.NewLine);
+            });
         }
 
-        public void LogErrorLinesToUi(List<string> lines)
+        public void LogErrorLinesToUi(string name, List<string> lines)
         {
-            RunUI(() =>
+            RunUi(() =>
             {
+                if (!_configManager.LoggerIsDisplayed(name))
+                    return;
                 var selectionStart = textBoxLog.SelectionStart;
-                foreach (var line in lines)
-                {
-                    textBoxLog.AppendText(line);
-                    textBoxLog.AppendText(Environment.NewLine);
-                }
+                var text = TextUtil.LineSeparate(lines);
+                textBoxLog.AppendText(text + Environment.NewLine);
                 textBoxLog.Select(selectionStart, textBoxLog.TextLength);
                 textBoxLog.SelectionColor = Color.Red;
-            });      
+            });
         }
 
-        public void DisplayError(string title, string message)
+        public void ClearLog()
         {
-            RunUI(() =>
+            textBoxLog.Clear();
+        }*/
+
+        #endregion
+
+        #region Settings Tab
+
+        private void UpdateSettingsTab()
+        {
+            cb_minimizeToSysTray.Checked = Settings.Default.MinimizeToSystemTray;
+            cb_keepRunning.Checked = Settings.Default.KeepAutoQcRunning;
+
+            cb_minimizeToSysTray.CheckedChanged += cb_minimizeToSysTray_CheckedChanged;
+            cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
+
+            
+        }
+
+        private void cb_keepRunning_CheckedChanged(object sender, EventArgs e)
+        {
+            cb_keepRunning.Enabled = false;
+            var enable = cb_keepRunning.Checked;
+            try
             {
-                ShowErrorDialog(title, message);
-            }); 
+                _configManager.ChangeKeepRunningState(enable);
+            }
+            catch (Exception ex)
+            {
+                var err = enable ? string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_, Program.AppName)
+                    : string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_, Program.AppName);
+                // ReSharper disable once LocalizableElement
+                ProgramLog.Error($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
+
+                DisplayErrorWithException(TextUtil.LineSeparate(
+                        $"{err},{ex.Message},{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}"),
+                    ex);
+
+                cb_keepRunning.CheckedChanged -= cb_keepRunning_CheckedChanged;
+                cb_keepRunning.Checked = !enable;
+                cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
+                cb_keepRunning.Enabled = true;
+                return;
+            }
+
+            Settings.Default.KeepAutoQcRunning = cb_keepRunning.Checked;
+            Settings.Default.Save();
+            cb_keepRunning.Enabled = true;
+        }
+
+        private void cb_minimizeToSysTray_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.MinimizeToSystemTray = cb_minimizeToSysTray.Checked;
+            Settings.Default.Save();
         }
 
         #endregion
 
-        private void RunUI(Action action)
+        #region Form event handlers and errors
+
+        private void MainForm_Resize(object sender, EventArgs e)
         {
-            if (InvokeRequired)
+            ListViewSizeChanged();
+
+            //If the form is minimized hide it from the task bar  
+            //and show the system tray icon (represented by the NotifyIcon control)  
+            if (WindowState == FormWindowState.Minimized && Settings.Default.MinimizeToSystemTray)
             {
-                try
-                {
-                    Invoke(action);
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-            }
-            else
-            {
-                action();
+                Hide();
+                systray_icon.Visible = true;
             }
         }
 
-        private T RunUI<T>(Func<T> function)
+        private void tabConfigs_Enter(object sender, EventArgs e)
         {
-            if (InvokeRequired)
-            {
-                try
-                {
-                    return (T)Invoke(function);
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-            }
-            else
-            {
-                return function();
-            }
-            return default(T);
-        }
-    }
-
-    //
-    // Code from https://support.microsoft.com/en-us/kb/319401
-    //
-    class ListViewColumnSorter : IComparer
-    {
-        /// <summary>
-        /// Specifies the column to be sorted
-        /// </summary>
-        private int ColumnToSort;
-        /// <summary>
-        /// Specifies the order in which to sort (i.e. 'Ascending').
-        /// </summary>
-        private SortOrder OrderOfSort;
-        /// <summary>
-        /// Case insensitive comparer object
-        /// </summary>
-        private CaseInsensitiveComparer ObjectCompare;
-
-        /// <summary>
-        /// Class constructor.  Initializes various elements
-        /// </summary>
-        public ListViewColumnSorter()
-        {
-            // Initialize the column to '0'
-            ColumnToSort = 0;
-
-            // Initialize the sort order to 'none'
-            OrderOfSort = SortOrder.None;
-
-            // Initialize the CaseInsensitiveComparer object
-            ObjectCompare = new CaseInsensitiveComparer();
+            // only toggle paint event when switching to main tab
+            tabConfigs.Paint += tabConfigs_Paint;
         }
 
-        /// <summary>
-        /// Gets or sets the number of the column to which to apply the sorting operation (Defaults to '0').
-        /// </summary>
-        public int SortColumn
+        private void tabConfigs_Paint(object sender, PaintEventArgs e)
         {
-            set
-            {
-                ColumnToSort = value;
-            }
-            get
-            {
-                return ColumnToSort;
-            }
+            ListViewSizeChanged();
+            tabConfigs.Paint -= tabConfigs_Paint;
         }
 
-        /// <summary>
-        /// Gets or sets the order of sorting to apply (for example, 'Ascending' or 'Descending').
-        /// </summary>
-        public SortOrder Order
+        private void ListViewSizeChanged()
         {
-            set
-            {
-                OrderOfSort = value;
-            }
-            get
-            {
-                return OrderOfSort;
-            }
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.ListViewContainerResize();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
         }
 
-        #region Implementation of IComparer
-
-        /// <summary>
-        /// This method is inherited from the IComparer interface.  It compares the two objects passed using a case insensitive comparison.
-        /// </summary>
-        /// <param name="x">First object to be compared</param>
-        /// <param name="y">Second object to be compared</param>
-        /// <returns>The result of the comparison. "0" if equal, negative if 'x' is less than 'y' and positive if 'x' is greater than 'y'</returns>
-        public int Compare(object x, object y)
+        private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
-            ListViewItem listviewX, listviewY;
+            listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
+            _listViewColumnWidths.WidthsChangedByUser();
+            listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+        }
 
-            // Cast the objects to be compared to ListViewItem objects
-            listviewX = (ListViewItem)x;
-            listviewY = (ListViewItem)y;
+        private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            systray_icon.Visible = false;
+        }
 
-            // Compare the two items
-            var compareResult = ObjectCompare.Compare(listviewX.SubItems[ColumnToSort].Text, listviewY.SubItems[ColumnToSort].Text);
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _configManager.Close();
+        }
 
-            // Calculate correct return value based on object comparison
-            switch (OrderOfSort)
+        public void DisplayError(string message)
+        {
+            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, message); });
+        }
+
+        public void DisplayError(string message, params object[] args)
+        {
+            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, string.Format(message, args)); });
+        }
+
+        public void DisplayWarning(string message)
+        {
+            RunUi(() => { AlertDlg.ShowWarning(this, Program.AppName, message); });
+        }
+
+        public void DisplayInfo(string message)
+        {
+            RunUi(() => { AlertDlg.ShowInfo(this, Program.AppName, message); });
+        }
+
+        public void DisplayErrorWithException(string message, Exception exception)
+        {
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, Program.AppName, message, exception); });
+        }
+
+        public DialogResult DisplayQuestion(string message)
+        {
+            return AlertDlg.ShowQuestion(this, Program.AppName, message);
+        }
+
+        public DialogResult DisplayLargeOkCancel(string message)
+        {
+            return AlertDlg.ShowLargeOkCancel(this, Program.AppName, message);
+        }
+
+        public void UpdateRunningButtons(bool canStart, bool canStop)
+        {
+            // Implements interface member, AutoQC does not use running buttons
+        }
+
+        public void DisplayForm(Form form)
+        {
+            RunUi(() =>
             {
-                case SortOrder.Ascending:
-                    // Ascending sort is selected, return normal result of compare operation
-                    return compareResult;
-                case SortOrder.Descending:
-                    // Descending sort is selected, return negative result of compare operation
-                    return (-compareResult);
-                default:
-                    return 0;
-            }
+                form.ShowDialog(this);
+            });
         }
 
         #endregion
     }
 
-    public interface IMainUiControl
+    // ListView that prevents a double click from toggling checkbox
+    class MyListView : ListView
     {
-        void ChangeConfigUiStatus(ConfigRunner configRunner);
-        void AddConfiguration(AutoQcConfig config);
-        void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig);
-        void UpdatePanoramaServerUrl(AutoQcConfig config);
-        AutoQcConfig GetConfig(string name);
-        void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
-        void LogLinesToUi(List<string> lines);
-        void LogErrorLinesToUi(List<string> lines);
-        void DisplayError(string title, string message);
+        private bool checkFromDoubleClick;
+
+        public void SimulateItemCheck(ItemCheckEventArgs ice) => OnItemCheck(ice);
+
+        protected override void OnItemCheck(ItemCheckEventArgs ice)
+        {
+            if (this.checkFromDoubleClick)
+            {
+                ice.NewValue = ice.CurrentValue;
+                this.checkFromDoubleClick = false;
+            }
+            else
+                base.OnItemCheck(ice);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            // Is this a double-click?
+            if ((e.Button == MouseButtons.Left) && (e.Clicks > 1))
+            {
+                this.checkFromDoubleClick = true;
+            }
+            base.OnMouseDown(e);
+        }
     }
+
 }

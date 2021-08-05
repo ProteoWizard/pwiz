@@ -104,7 +104,17 @@ namespace pwiz.Skyline.Model
         {
             if (_libKeys.Current.IsSmallMoleculeKey)
                 return new AAModInfo[0];
-            return EnumerateSequenceInfos(_libKeys.Current.LibraryKey as PeptideLibraryKey, false);
+            if (_libKeys.Current.LibraryKey is PeptideLibraryKey peptideLibraryKey)
+            {
+                return EnumerateSequenceInfos(peptideLibraryKey, false);
+            }
+            else if (_libKeys.Current.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
+            {
+                return crosslinkLibraryKey.PeptideLibraryKeys.SelectMany(
+                    libKey => EnumerateSequenceInfos(libKey, false));
+            }
+
+            return new AAModInfo[0];
         }
 
         private IEnumerable<AAModInfo> EnumerateSequenceInfos(PeptideLibraryKey peptideLibraryKey, bool allowDuplicates)
@@ -308,6 +318,11 @@ namespace pwiz.Skyline.Model
                 peptide = new Peptide(null, peptideKey.UnmodifiedSequence, null, null,
                     settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideKey.UnmodifiedSequence));
             }
+            else if (key.LibraryKey is CrosslinkLibraryKey crosslinkKey)
+            {
+                string unmodifiedSequence = crosslinkKey.PeptideLibraryKeys.First().UnmodifiedSequence;
+                peptide = new Peptide(null, unmodifiedSequence, null, null, settings.PeptideSettings.Enzyme.CountCleavagePoints(unmodifiedSequence));
+            }
             else
             {
                 return null;
@@ -361,6 +376,11 @@ namespace pwiz.Skyline.Model
                 nodePep = (PeptideDocNode)nodePep.ChangeAutoManageChildren(false);
             }
             return nodePep;
+        }
+
+        public override PeptideDocNode GetModifiedNode(string sequence)
+        {
+            return GetModifiedNode(new LibKey(new PeptideLibraryKey(sequence, 1)), Settings, SrmSettingsDiff.ALL);
         }
 
         protected override bool IsMatch(Target seqMod, PeptideDocNode nodePepMod, out TransitionGroupDocNode nodeGroup)

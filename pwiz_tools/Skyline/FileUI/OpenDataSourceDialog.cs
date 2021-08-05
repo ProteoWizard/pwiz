@@ -427,7 +427,7 @@ namespace pwiz.Skyline.FileUI
                         Application.DoEvents();
                         if (_abortPopulateList)
                         {
-                            //MessageBox.Show( "abort" );
+                            //MessageDlg.Show( "abort" );
                             break;
                         }
                     }
@@ -440,7 +440,7 @@ namespace pwiz.Skyline.FileUI
                             Application.DoEvents();
                             if (_abortPopulateList)
                             {
-                                //MessageBox.Show( "abort" );
+                                //MessageDlg.Show( "abort" );
                                 break;
                             }
                         }
@@ -662,9 +662,14 @@ namespace pwiz.Skyline.FileUI
 
         private void OpenFolderItem(ListViewItem listViewItem)
         {
+            OpenFolder(((SourceInfo) listViewItem.Tag).MsDataFileUri);
+        }
+
+        private void OpenFolder(MsDataFileUri uri)
+        {
             if (_currentDirectory != null)
                 _previousDirectories.Push(_currentDirectory);
-            CurrentDirectory = ((SourceInfo) listViewItem.Tag).MsDataFileUri;
+            CurrentDirectory = uri;
             _abortPopulateList = true;
         }
 
@@ -741,11 +746,20 @@ namespace pwiz.Skyline.FileUI
                     fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
                     triedAddingDirectory = true;
                 }
-                if (exists && DataSourceUtil.IsDataSource(fileOrDirName))
+
+                if (exists)
                 {
-                    DataSources = new[] {MsDataFileUri.Parse(fileOrDirName)};
-                    DialogResult = DialogResult.OK;
-                    return;
+                    if (DataSourceUtil.IsDataSource(fileOrDirName))
+                    {
+                        DataSources = new[] {MsDataFileUri.Parse(fileOrDirName)};
+                        DialogResult = DialogResult.OK;
+                        return;
+                    }
+                    else if (Directory.Exists(fileOrDirName))
+                    {
+                        OpenFolder(new MsDataFilePath(fileOrDirName));
+                        return;
+                    }
                 }
             }
 // ReSharper disable once EmptyGeneralCatchClause

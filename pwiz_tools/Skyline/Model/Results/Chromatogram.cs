@@ -26,9 +26,12 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
@@ -159,6 +162,10 @@ namespace pwiz.Skyline.Model.Results
                 if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
                 {
                     return false;
+                }
+                if (IonMobilityLibraryManager.IsNotLoadedDocumentExplained(document) != null)
+                {
+                    return false; // Need to wait for imsdb file to load into memory
                 }
             }
             // Make sure any iRT calculater gets loaded before starting to import
@@ -297,6 +304,7 @@ namespace pwiz.Skyline.Model.Results
                                 if (results != null)
                                     results = results.UpdateCaches(documentPath, resultsLoad);
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
+                                docNew = _manager.ApplyMetadataRules(docNew);
                             }
                         }
                         catch (OperationCanceledException)
@@ -308,6 +316,21 @@ namespace pwiz.Skyline.Model.Results
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
             }
+        }
+
+        public SrmDocument ApplyMetadataRules(SrmDocument document)
+        {
+            var progressDictionary = Status.ProgressList.ToDictionary(status => status.FilePath);
+            document = MetadataExtractor.ApplyRules(document, progressDictionary.Keys.ToHashSet(),
+                out CommonException<MetadataExtractor.RuleError> error);
+            if (error != null)
+            {
+                ChangeStatus(
+                    (ChromatogramLoadingStatus)
+                    progressDictionary[error.ExceptionDetail.MsDataFileUri].ChangeWarningMessage(error.Message));
+            }
+
+            return document;
         }
     }
 

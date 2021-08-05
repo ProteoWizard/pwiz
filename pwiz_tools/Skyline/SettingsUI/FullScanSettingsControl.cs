@@ -29,7 +29,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -50,6 +49,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             _documentContainer = documentContainer;
 
+            Initialize();
+        }
+
+        public void Initialize()
+        {
             InitializeComponent();
 
             InitializeMs1FilterUI();
@@ -72,7 +76,7 @@ namespace pwiz.Skyline.SettingsUI
         public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
-        public IonMobility.UseSpectralLibraryIonMobilityValuesControl UseSpectralLibraryIonMobilityValuesControl { get { return useSpectralLibraryIonMobilityValuesControl; } }
+        public IonMobility.IonMobilityFilteringUserControl IonMobilityFiltering { get { return usercontrolIonMobilityFiltering; } }
 
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
@@ -615,6 +619,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverIsolationScheme.AddItem();
         }
 
+        public void EditCurrentIsolationScheme()
+        {
+            _driverIsolationScheme.EditCurrent();
+        }
+
         public void EditIsolationScheme()
         {
             _driverIsolationScheme.EditList();
@@ -880,12 +889,17 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeUseSpectralLibraryIonMobilityUI()
         {
-            useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer);
+            usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
-        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, Library lib)
+        private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
+        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
         {
             var settings = _documentContainer.Document.Settings;
+
+            if (_lastPeptideSearchWorkflow == workflow)
+                return;
+            _lastPeptideSearchWorkflow = workflow;
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
@@ -944,7 +958,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1)
+                // If there is no isolation scheme set, select the 2nd item if it exists.
+                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count >= 2 &&
+                    settings.TransitionSettings.FullScan.IsolationScheme == null)
                 {
                     comboIsolationScheme.SelectedIndex = 1;
                 }
@@ -960,19 +976,18 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Ask about ion mobility filtering if any IM values in library
-            if (lib != null && PeptideLibraries.HasIonMobilities(lib, null))
+            if (libIonMobilities)
             {
-                useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
-                useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);
-                useSpectralLibraryIonMobilityValuesControl.Width = groupBoxMS1.Width;
-                useSpectralLibraryIonMobilityValuesControl.HideControls();
-                var adjustedHeight = useSpectralLibraryIonMobilityValuesControl.Bottom + label1.Height; // Add control height plus a margin
+                usercontrolIonMobilityFiltering.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
+                usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer, true);
+                usercontrolIonMobilityFiltering.ShowOnlyResolvingPowerControls(groupBoxMS1.Width);
+                var adjustedHeight = usercontrolIonMobilityFiltering.Bottom + label1.Height; // Add control height plus a margin
                 MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
                 Height = adjustedHeight;
             }
             else
             {
-                useSpectralLibraryIonMobilityValuesControl.Visible = false;
+                usercontrolIonMobilityFiltering.Visible = false;
             }
         }
 
@@ -1003,7 +1018,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 groupBoxRetentionTimeToKeep.Enabled = true;
             }
-            if (radioKeepAllTime.Checked && !disabled)
+            if (radioKeepAllTime.Checked && !disabled && AcquisitionMethod != FullScanAcquisitionMethod.Targeted)
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,

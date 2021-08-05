@@ -513,8 +513,8 @@ namespace IDPicker.DataModel
 
     public interface IHasSizeConstant { int Size { get; } }
 
-    public class iTRAQArray : IHasSizeConstant { public int Size { get { return 8; } } }
-    public class TMTArray : IHasSizeConstant { public int Size { get { return 10; } } }
+    public class iTRAQArray : IHasSizeConstant { public int Size { get { return Embedder.MAX_ITRAQ_REPORTER_IONS; } } }
+    public class TMTArray : IHasSizeConstant { public int Size { get { return Embedder.MAX_TMT_REPORTER_IONS; } } }
 
     public class iTRAQArrayUserType : DoubleArrayUserType<iTRAQArray> {}
     public class TMTArrayUserType : DoubleArrayUserType<TMTArray> {}

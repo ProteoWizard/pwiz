@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     public class TextImageCell : DataGridViewTextBoxCell
     {
         private TextImageColumnItem[] _items;
-        private TextImageColumnItem[] Items
+        public TextImageColumnItem[] Items
         {
             get { return _items ?? (_items = Column.Images.Select(img => new TextImageColumnItem(img)).ToArray()); }
         }
@@ -67,6 +67,11 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 if (Items[i].MouseOver)
                     Column.OnClick(DataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value, i);
             }
+        }
+
+        public void ClickImage(int imageIndex)
+        {
+            Column.OnClick(Value, imageIndex);
         }
 
         protected override void OnMouseMove(DataGridViewCellMouseEventArgs e)

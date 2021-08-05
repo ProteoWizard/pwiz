@@ -45,7 +45,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         [TestMethod]
         public void TestThermoFAIMS()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PerfThermoFAIMS.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfThermoFAIMS.zip");
             TestFilesPersistent = new[] { "032818_Lumos_FAIMS_SILAC_3CVstep_fx_03.pdResult", "032818_Lumos_FAIMS_SILAC_3CVstep_fx_03.raw" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             RunFunctionalTest();
         }
@@ -75,10 +75,10 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 .ChangeTransitionSettings(ts => ts.ChangeFilter(ts.Filter
                 .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
                 .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
-                .ChangePeptideIonTypes(new[] { IonType.y, IonType.precursor }))).
-                    ChangePeptideSettings(ps => ps.ChangePrediction(ps.Prediction
-                        .ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))
-                        .ChangeUseLibraryIonMobilityValues(true))))));
+                .ChangePeptideIonTypes(new[] { IonType.y, IonType.precursor })))
+                .ChangeTransitionSettings(ts => ts.ChangeIonMobilityFiltering(ts.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(
+                        new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 20, 0, 0, 0))
+                        .ChangeUseSpectralLibraryIonMobilityValues(true))))));
 
             TestWizardBuildDocumentLibraryAndFinish(documentFile);
 

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,8 +39,9 @@ namespace pwiz.Skyline.Model.Lib
             {
                 new PeptideSubIndex(allItems),
                 new MoleculeSubIndex(allItems),
-                new PrecursorSubIndex(allItems)
-            });
+                new PrecursorSubIndex(allItems),
+                new CrosslinkSubIndex(allItems),
+            }.Where(subIndex => subIndex.Any()));
             Count = _subIndexes.Sum(index => index.Count);
         }
 
@@ -336,7 +338,7 @@ namespace pwiz.Skyline.Model.Lib
         /// unmodified sequence to the keys.
         /// For any particular unmodified sequence, the keys are sorted by the modification indexes 
         /// (the amino acid locations that are modified). The fuzzy modification comparison only
-        /// has to compare pepties that have modifications in the same locations.
+        /// has to compare peptides that have modifications in the same locations.
         /// </summary>
         private class PeptideSubIndex : SubIndex<PeptideLibraryKey>
         {
@@ -549,6 +551,139 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return _entries[libraryKey.Mz];
             }
+        }
+
+        private class CrosslinkSubIndex : SubIndex<CrosslinkLibraryKey>
+        {
+            private readonly IDictionary<ImmutableList<string>, ImmutableList<CrosslinkItem>> _entries;
+
+            public CrosslinkSubIndex(IEnumerable<IndexItem> items)
+            {
+                _entries = new Dictionary<ImmutableList<string>, ImmutableList<CrosslinkItem>>();
+                var crosslinkItems = items.Where(item=>item.LibraryKey is CrosslinkLibraryKey)
+                    .Select(item => new CrosslinkItem(item));
+                var lookup = crosslinkItems.ToLookup(item => item.GetUnmodifiedSequences());
+                foreach (var grouping in lookup)
+                {
+                    _entries.Add(grouping.Key, ImmutableList.ValueOf(grouping));
+                }
+
+                Count = _entries.Values.Sum(list => list.Count);
+            }
+
+            public override IEnumerator<IndexItem> GetEnumerator()
+            {
+                return _entries.Values.SelectMany(list => list.Select(item => item.IndexItem)).GetEnumerator();
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatching(CrosslinkLibraryKey key)
+            {
+                var crosslinkItem = new CrosslinkItem(new IndexItem(key, -1));
+                foreach (var match in CrosslinkItemsMatchingWithoutModifications(crosslinkItem))
+                {
+                    if (match.ModificationsMatch(crosslinkItem))
+                    {
+                        yield return match.IndexItem;
+                    }
+                }
+            }
+
+            protected override IEnumerable<IndexItem> ItemsMatchingWithoutModifications(CrosslinkLibraryKey key)
+            {
+                var crosslinkItem = new CrosslinkItem(new IndexItem(key, -1));
+                return CrosslinkItemsMatchingWithoutModifications(crosslinkItem).Select(item => item.IndexItem);
+            }
+
+            private IEnumerable<CrosslinkItem> CrosslinkItemsMatchingWithoutModifications(CrosslinkItem key)
+            {
+                ImmutableList<CrosslinkItem> matches;
+                if (!_entries.TryGetValue(key.GetUnmodifiedSequences(), out matches))
+                {
+                    return ImmutableList.Empty<CrosslinkItem>();
+                }
+
+                return matches;
+            }
+        }
+
+        private class CrosslinkItem
+        {
+            public CrosslinkItem(IndexItem indexItem)
+            {
+                IndexItem = indexItem;
+                var crosslinkLibraryKey = (CrosslinkLibraryKey) indexItem.LibraryKey;
+                var peptideLibraryKeyEntries = crosslinkLibraryKey.PeptideLibraryKeys
+                    .Select((entry, index) => Tuple.Create(entry.UnmodifiedSequence, index, entry)).ToList();
+                peptideLibraryKeyEntries.Sort();
+                PeptideLibraryKeys = ImmutableList.ValueOf(peptideLibraryKeyEntries.Select(tuple=>tuple.Item3));
+                var newOrder = peptideLibraryKeyEntries.Select(tuple => tuple.Item2).ToList();
+                Crosslinks = ImmutableList.ValueOf(crosslinkLibraryKey.Crosslinks.Select(crosslink => Reorder(crosslink, newOrder)));
+            }
+
+            public IndexItem IndexItem { get; private set; }
+            public ImmutableList<PeptideLibraryKey> PeptideLibraryKeys { get; private set; }
+            public ImmutableList<CrosslinkLibraryKey.Crosslink> Crosslinks { get; private set; }
+
+            public ImmutableList<string> GetUnmodifiedSequences()
+            {
+                return ImmutableList.ValueOf(PeptideLibraryKeys.Select(key => key.UnmodifiedSequence));
+            }
+
+            public bool ModificationsMatch(CrosslinkItem other)
+            {
+                if (PeptideLibraryKeys.Count != other.PeptideLibraryKeys.Count)
+                {
+                    return false;
+                }
+
+                if (Crosslinks.Count != other.Crosslinks.Count)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < PeptideLibraryKeys.Count; i++)
+                {
+                    if (!KeysMatch(PeptideLibraryKeys[i], other.PeptideLibraryKeys[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                for (int i = 0; i < Crosslinks.Count; i++)
+                {
+                    if (!LibKeyIndex.ModificationsMatch(Crosslinks[i].Name, other.Crosslinks[i].Name))
+                    {
+                        return false;
+                    }
+
+                    if (!Equals(Crosslinks[i].Positions, other.Crosslinks[i].Positions))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            private CrosslinkLibraryKey.Crosslink Reorder(CrosslinkLibraryKey.Crosslink crosslink, IEnumerable<int> newOrdering)
+            {
+                var newPositions = new List<ImmutableList<int>>();
+                foreach (var index in newOrdering)
+                {
+                    ImmutableList<int> positions;
+                    if (index >= crosslink.Positions.Count)
+                    {
+                        positions = ImmutableList<int>.EMPTY;
+                    }
+                    else
+                    {
+                        positions = crosslink.Positions[index];
+                    }
+                    newPositions.Add(positions);
+                }
+                return new CrosslinkLibraryKey.Crosslink(crosslink.Name, newPositions);
+            }
+
         }
     }
 }

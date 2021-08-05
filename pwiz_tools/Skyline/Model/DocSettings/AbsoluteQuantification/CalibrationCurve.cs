@@ -92,6 +92,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         [Format("0.####", NullValue = TextUtil.EXCEL_NA)]
         public double? RSquared { get; private set; }
 
+        public static string RSquaredDisplayText(double rSquared)
+        {
+            return QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
+                   rSquared.ToString(@"0.####");
+        }
+
         public CalibrationCurve ChangeRSquared(double? rSquared)
         {
             return ChangeProp(ImClone(this), im => im.RSquared = rSquared);
@@ -125,29 +131,33 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return TextUtil.SpaceSeparate(QuantificationStrings.CalibrationCurve_ToString_Error__, ErrorMessage);
             }
-            List<string> parts = new List<string>();
+            return Format(Slope, Intercept, QuadraticCoefficient, TurningPoint);
+        }
 
-            if (QuadraticCoefficient.HasValue)
+        public static string Format(double? slope, double? intercept, double? quadraticCoefficient = null, double? turningPoint = null)
+        {
+            List<string> parts = new List<string>();
+            if (quadraticCoefficient.HasValue)
             {
                 parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_y_x_2_x_c,
-                    QuadraticCoefficient.Value.ToString(Formats.CalibrationCurve),
-                    Slope.Value.ToString(Formats.CalibrationCurve),
-                    Intercept.Value.ToString(Formats.CalibrationCurve)));
+                    quadraticCoefficient.Value.ToString(Formats.CalibrationCurve),
+                    slope.Value.ToString(Formats.CalibrationCurve),
+                    intercept.Value.ToString(Formats.CalibrationCurve)));
             }
-            else if (Slope.HasValue)
+            else if (slope.HasValue)
             {
                 parts.Add(String.Format(QuantificationStrings.CalibrationCurve_ToString_Slope___0_,
-                    Slope.Value.ToString(Formats.CalibrationCurve)));
-                if (Intercept.HasValue)
+                    slope.Value.ToString(Formats.CalibrationCurve)));
+                if (intercept.HasValue)
                 {
-                    parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Intercept___0_, 
-                        Intercept.Value.ToString(Formats.CalibrationCurve)));
+                    parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Intercept___0_,
+                        intercept.Value.ToString(Formats.CalibrationCurve)));
                 }
             }
-            if (TurningPoint.HasValue)
+            if (turningPoint.HasValue)
             {
-                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Turning_Point___0_, 
-                    TurningPoint.Value.ToString(Formats.CalibrationCurve)));
+                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Turning_Point___0_,
+                    turningPoint.Value.ToString(Formats.CalibrationCurve)));
             }
             return TextUtil.SpaceSeparate(parts);
         }

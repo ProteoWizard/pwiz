@@ -336,21 +336,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             public PrositRequest(PrositPredictionClient client, PrositIntensityModel intensityModel,
                 PrositRetentionTimeModel rtModel, SrmSettings settings,
-                PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback)
+                PeptideDocNode peptide, TransitionGroupDocNode precursor, IsotopeLabelType labelType,
+                int nce, Action updateCallback)
             {
                 Client = client;
                 IntensityModel = intensityModel;
                 RTModel = rtModel;
                 Settings = settings;
                 Precursor = precursor;
+                LabelType = labelType;
                 Peptide = peptide;
                 NCE = nce;
                 _updateCallback = updateCallback;
             }
 
-            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor, Action updateCallback) :
+            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor, IsotopeLabelType labelType, Action updateCallback) :
                 this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
-                    settings, peptide, precursor, Properties.Settings.Default.PrositNCE, updateCallback)
+                    settings, peptide, precursor, labelType, Properties.Settings.Default.PrositNCE, updateCallback)
             {
             }
 
@@ -360,8 +362,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 {
                     try
                     {
+                        var labelType = LabelType ?? Precursor.LabelType;
                         var skyIn = new PrositIntensityModel.PeptidePrecursorNCE(Peptide,
-                            Precursor, Precursor.LabelType, NCE);
+                            Precursor, labelType, NCE);
                         var massSpectrum = IntensityModel.PredictSingle(Client,
                             Settings, skyIn,
                             _tokenSource.Token);
@@ -369,8 +372,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                             Settings,
                             Peptide, _tokenSource.Token);
                         Spectrum = new SpectrumDisplayInfo(
-                            new SpectrumInfoProsit(massSpectrum, Precursor,
-                                NCE),
+                            new SpectrumInfoProsit(massSpectrum, Precursor, labelType, NCE),
                             // ReSharper disable once AssignNullToNotNullAttribute
                             Precursor,
                             iRT[Peptide]);
@@ -404,16 +406,17 @@ namespace pwiz.Skyline.Model.Prosit.Models
             public PrositIntensityModel IntensityModel { get; protected set; }
             public PrositRetentionTimeModel RTModel { get; protected set; }
             public SrmSettings Settings { get; protected set; }
-            public TransitionGroupDocNode Precursor { get; protected set; }
             public PeptideDocNode Peptide { get; protected set; }
+            public TransitionGroupDocNode Precursor { get; protected set; }
+            public IsotopeLabelType LabelType { get; protected set; }
             public int NCE { get; protected set; }
 
             protected bool Equals(PrositRequest other)
             {
                 return Client.Server == other.Client.Server && ReferenceEquals(IntensityModel, other.IntensityModel) &&
                        ReferenceEquals(RTModel, other.RTModel) && ReferenceEquals(Settings, other.Settings) &&
-                       ReferenceEquals(Precursor, other.Precursor) && ReferenceEquals(Peptide, other.Peptide) &&
-                       NCE == other.NCE;
+                       ReferenceEquals(Peptide, other.Peptide) && ReferenceEquals(Precursor, other.Precursor) &&
+                       ReferenceEquals(LabelType, other.LabelType) && NCE == other.NCE;
             }
 
             public override bool Equals(object obj)
@@ -432,8 +435,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     hashCode = (hashCode * 397) ^ (IntensityModel != null ? IntensityModel.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (RTModel != null ? RTModel.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (Settings != null ? Settings.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Precursor != null ? Precursor.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (Peptide != null ? Peptide.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Precursor != null ? Precursor.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (LabelType != null ? LabelType.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ NCE;
                     return hashCode;
                 }
@@ -444,8 +448,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             get
             {
-                return Settings.Default.PrositIntensityModel != null &&
-                       Settings.Default.PrositRetentionTimeModel != null;
+                return !string.IsNullOrEmpty(Settings.Default.PrositIntensityModel) &&
+                       !string.IsNullOrEmpty(Settings.Default.PrositRetentionTimeModel);
             }
         }
 
@@ -553,7 +557,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static int[] EncodeSequence(SrmSettings settings, ISequenceContainer peptide, IsotopeLabelType label, out PrositException exception)
+        public static int[] EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
         {
             if (!peptide.Target.IsProteomic)
                 throw new PrositSmallMoleculeException(peptide.ModifiedTarget);
@@ -564,7 +568,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 return null;
             }
 
-            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide, label);
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide.ModifiedTarget.Sequence, peptide.ExplicitMods, label);
             var result = new int[PrositConstants.PEPTIDE_SEQ_LEN];
 
             for (var i = 0; i < sequence.Length; ++i) {
@@ -660,12 +664,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     {
                         break;
                     }
+                    // This essentially prioritizes unmodified AA over modified AA (e.g. unmodified C over Carbamidomethyl C)
                     else if (PrositConstants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
                     {
                         seq.Append(prositAA.AA);
                     }
-                    else if (PrositConstants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
+                    // Here a single "first" modification is given precedence over all others for any given AA
+                    else if (PrositConstants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMods))
                     {
+                        var prositAAMod = prositAAMods[0];
                         explicitMods.Add(new ExplicitMod(j, prositAAMod.Mod));
                         seq.Append(prositAAMod.AA);
                     }

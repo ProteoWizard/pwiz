@@ -90,13 +90,12 @@ namespace seems
 
 	public class SpectrumSource
 	{
-		private MSData msDataFile;
 		private string sourceFilepath;
 		private List<Chromatogram> chromatograms = new List<Chromatogram>();
 		private List<MassSpectrum> spectra = new List<MassSpectrum>();
 
-		public string Name { get { return Path.GetFileNameWithoutExtension( sourceFilepath ); } }
-		public MSData MSDataFile { get { return msDataFile; } }
+		public string Name { get { return MSDataFile.run.id; } }
+		public MSData MSDataFile { get; private set; }
 		public string CurrentFilepath { get { return sourceFilepath; } }
 
         public List<Chromatogram> Chromatograms { get { return chromatograms; } }
@@ -145,21 +144,18 @@ namespace seems
             };
         }
 
-		public SpectrumSource( string filepath )
+		public SpectrumSource(OpenDataSourceDialog.MSDataRunPath filepath)
 		{
-            MSDataList msdList = new MSDataList();
+            if (!File.Exists(filepath.Filepath) && !Directory.Exists(filepath.Filepath)) // Some mass spec "files" are really directory structures
+                throw new FileNotFoundException("Filepath not found: " + filepath, filepath.Filepath);
 
-            if (!File.Exists(filepath) && !Directory.Exists(filepath)) // Some mass spec "files" are really directory structures
-                throw new FileNotFoundException("Filepath not found: " + filepath, filepath);
-
-            ReaderList.FullReaderList.read(filepath, msdList, GetReaderConfig());
-            msDataFile = msdList[0];
-			//msDataFile = new MSDataFile(filepath);
-			sourceFilepath = filepath;
+		    MSDataFile = new MSData();
+            ReaderList.FullReaderList.read(filepath.Filepath, MSDataFile, filepath.RunIndex, GetReaderConfig());
+			sourceFilepath = filepath.ToString();
 
             // create dummy spectrum/chromatogram list to simplify logic
-            msDataFile.run.spectrumList = msDataFile.run.spectrumList ?? new SpectrumListSimple();
-            msDataFile.run.chromatogramList = msDataFile.run.chromatogramList ?? new ChromatogramListSimple();
+		    MSDataFile.run.spectrumList = MSDataFile.run.spectrumList ?? new SpectrumListSimple();
+		    MSDataFile.run.chromatogramList = MSDataFile.run.chromatogramList ?? new ChromatogramListSimple();
 
 			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
 			/*setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );

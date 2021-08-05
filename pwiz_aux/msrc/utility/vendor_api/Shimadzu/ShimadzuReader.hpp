@@ -44,7 +44,7 @@ PWIZ_API_DECL enum Polarity
 {
     Positive = 0,
     Negative = 1,
-    Undefined = 2
+    Undefined = -1
 };
 
 struct PWIZ_API_DECL SRMTransition
@@ -54,7 +54,10 @@ struct PWIZ_API_DECL SRMTransition
     short event;
     short segment;
     double collisionEnergy;
-    short polarity;
+    Polarity polarity;
+    int startMz;
+    int endMz;
+
     double Q1;
     double Q3;
     //TimeRange acquiredTimeRange;
@@ -81,6 +84,18 @@ struct PWIZ_API_DECL SRMChromatogram : public Chromatogram
 };
 
 typedef boost::shared_ptr<SRMChromatogram> SRMChromatogramPtr;
+
+
+struct PWIZ_API_DECL SpectrumInfo
+{
+    double scanTime;
+    int msLevel;
+    double precursorMz;
+    unsigned int precursorScan;
+    Polarity polarity;
+    int segment;
+    int event;
+};
 
 
 struct PWIZ_API_DECL Spectrum
@@ -128,7 +143,8 @@ public:
     virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     virtual int getScanCount() const = 0;
-    virtual SpectrumPtr getSpectrum(int scanNumber) const = 0;
+    virtual SpectrumPtr getSpectrum(int scanNumber, bool profileDesired) const = 0;
+    virtual SpectrumInfo getSpectrumInfo(int scanNumber) const = 0;
 
     virtual const std::set<int>& getMSLevels() const = 0;
 

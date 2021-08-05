@@ -65,7 +65,7 @@ namespace IDPicker.Forms
 
         public static bool IsIsobaric(QuantitationMethod quantitationMethod)
         {
-            return quantitationMethod >= QuantitationMethod.ITRAQ4plex && quantitationMethod <= QuantitationMethod.TMT10plex;
+            return quantitationMethod >= QuantitationMethod.ITRAQ4plex && quantitationMethod <= QuantitationMethod.TMTpro16plex;
         }
 
         public static bool IsLabelFree(QuantitationMethod quantitationMethod)

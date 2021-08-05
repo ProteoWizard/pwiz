@@ -32,6 +32,9 @@ namespace pwiz.Skyline.Controls
     {
         private readonly string _cancelMessage = string.Format(@" ({0})", Resources.LongWaitDlg_PerformWork_canceled);
 
+        private const int MAX_HEIGHT = 500;
+        private readonly int _originalFormHeight;
+        private readonly int _originalMessageHeight;
         private Control _parentForm;
         private Exception _exception;
         private int _progressValue = -1;
@@ -65,6 +68,8 @@ namespace pwiz.Skyline.Controls
 
             if (!IsCancellable)
                 Height -= Height - btnCancel.Bottom;
+            _originalFormHeight = Height;
+            _originalMessageHeight = labelMessage.Height;
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -165,8 +170,7 @@ namespace pwiz.Skyline.Controls
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);
-                if (_message != null)
-                    labelMessage.Text = _message;
+                UpdateLabelMessage();
 
                 ShowDialog(parent);
             }
@@ -278,7 +282,7 @@ namespace pwiz.Skyline.Controls
                 var runningTime = DateTime.UtcNow.Subtract(_startTime);
                 // Show complete status before returning.
                 progressBar.Value = _progressValue = 100;
-                labelMessage.Text = _message;
+                UpdateLabelMessage();
                 // Display the final complete status for one second, or 10% of the time the job ran for,
                 // whichever is shorter
                 int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
@@ -326,9 +330,30 @@ namespace pwiz.Skyline.Controls
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, progressBar.Value);
             }
 
+            UpdateLabelMessage();
+        }
 
-            if (_message != null && !Equals(_message, labelMessage.Text))
-                labelMessage.Text = _message + (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
+        private void UpdateLabelMessage()
+        {
+            if (_message == null)
+            {
+                return;
+            }
+
+            string newMessage = _message +
+                                (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
+            if (Equals(newMessage, labelMessage.Text))
+            {
+                return;
+            }
+
+            labelMessage.Text = newMessage;
+            int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight, 0);
+            int newHeight = _originalFormHeight + Math.Min(formGrowth, MAX_HEIGHT);
+            if (newHeight > Height)
+            {
+                Height = _originalFormHeight + formGrowth;
+            }
         }
 
         protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)

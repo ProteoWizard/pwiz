@@ -87,5 +87,23 @@ namespace pwiz.SkylineRunner.Properties {
                 return ResourceManager.GetString("Program_Program_Make_sure_you_have_a_valid__0__installation_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error:.
+        /// </summary>
+        internal static string Program_Run_Error_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for Skyline.
+        /// </summary>
+        internal static string Program_WaitForConnection_Waiting_for_Skyline {
+            get {
+                return ResourceManager.GetString("Program_WaitForConnection_Waiting_for_Skyline", resourceCulture);
+            }
+        }
     }
 }

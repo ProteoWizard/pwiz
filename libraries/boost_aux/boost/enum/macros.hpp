@@ -16,6 +16,7 @@
 #endif
 
 #include <boost/preprocessor.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <cstring>
 
 #define BOOST_ENUM_IS_COLUMN_2(i, k) \
@@ -51,11 +52,22 @@
 #define BOOST_ENUM_PARSE_ITEM(r, data, i, elem) \
 	if(strcmp(str, BOOST_PP_STRINGIZE(elem)) == 0) return optional(elem);
 
+#define BOOST_ENUM_PARSE_ITEM_CASE_INSENSITIVE(r, data, i, elem) \
+	if(boost::algorithm::iequals(str, BOOST_PP_STRINGIZE(elem))) return optional(elem);
+
 #define BOOST_ENUM_get_by_name(_name, _seq, _col, _colsize) \
 	static optional get_by_name(const char* str) \
 	{ \
 		BOOST_PP_CAT(BOOST_ENUM_VISITOR, _colsize) \
 			(_seq, BOOST_ENUM_PARSE_ITEM, _col) \
+		return optional(); \
+	}
+
+#define BOOST_ENUM_get_by_name_case_insensitive(_name, _seq, _col, _colsize) \
+	static optional get_by_name_case_insensitive(const char* str) \
+	{ \
+		BOOST_PP_CAT(BOOST_ENUM_VISITOR, _colsize) \
+			(_seq, BOOST_ENUM_PARSE_ITEM_CASE_INSENSITIVE, _col) \
 		return optional(); \
 	}
 
@@ -166,6 +178,7 @@
 		_name() {} \
 		_name(domain index) : boost::detail::enum_base<_name>(index) {} \
 		BOOST_ENUM_get_by_name(_name, _seq, 0, 1) \
+		BOOST_ENUM_get_by_name_case_insensitive(_name, _seq, 0, 1) \
 	private: \
 		friend class boost::detail::enum_base<_name>; \
 		BOOST_ENUM_names(_seq, 0, 1) \
@@ -182,6 +195,7 @@
 		_name() {} \
 		_name(domain index) : boost::detail::enum_base<_name, _type>(index) {} \
 		BOOST_ENUM_get_by_name(_name, _seq, 0, 2) \
+		BOOST_ENUM_get_by_name_case_insensitive(_name, _seq, 0, 2) \
 	private: \
 		friend class boost::detail::enum_base<_name, _type>; \
 		BOOST_ENUM_names(_seq, 0, 2) \
@@ -198,6 +212,7 @@
 		_name() {} \
 		_name(domain index) : boost::detail::bitfield_base<_name>(index) {} \
 		BOOST_ENUM_get_by_name(_name, _seq, 0, 2) \
+		BOOST_ENUM_get_by_name_case_insensitive(_name, _seq, 0, 2) \
 	private: \
 		friend class boost::detail::bitfield_access; \
 		_name(value_type raw, int) : boost::detail::bitfield_base<_name>(raw, 0) {} \

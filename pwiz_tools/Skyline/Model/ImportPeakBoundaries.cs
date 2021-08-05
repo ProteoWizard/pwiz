@@ -184,6 +184,10 @@ namespace pwiz.Skyline.Model
 
         public static double GetMaxRt(SrmDocument document)
         {
+            if (!document.Settings.HasResults)
+            {
+                return 0;
+            }
             var chromFileInfos = document.Settings.MeasuredResults.MSDataFileInfos;
             double maxRt = chromFileInfos.Select(info => info.MaxRetentionTime).Max();
             return maxRt != 0 ? maxRt : 720;    // 12 hours as default maximum RT in minutes
@@ -198,7 +202,7 @@ namespace pwiz.Skyline.Model
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             var sequenceToNode = MakeSequenceDictionary(Document);
-            var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
+            var fileNameToFileMatch = new Dictionary<Tuple<string, string>, ChromSetFileMatch>();
             var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
             var canonicalSequenceDict = new Dictionary<string, string>();
@@ -299,12 +303,32 @@ namespace pwiz.Skyline.Model
                         throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_, linesRead));
                     startTime = null;
                 }
+
+                Tuple<string, string> fileKey = Tuple.Create(fileName, sampleName);
                 // Add filename to second dictionary if not yet encountered
                 ChromSetFileMatch fileMatch;
-                if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch))
+                if (!fileNameToFileMatch.TryGetValue(fileKey, out fileMatch) && Document.Settings.HasResults)
                 {
-                    fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(fileName));
-                    fileNameToFileMatch.Add(fileName, fileMatch);
+                    var dataFileUri = MsDataFileUri.Parse(fileName);
+                    if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
+                    {
+                        var uriWithSample = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
+                        fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
+                        if (fileMatch == null)
+                        {
+                            var bareFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                            if (bareFileMatch != null)
+                            {
+                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__, sampleName, linesRead, fileName));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                    }
+
+                    fileNameToFileMatch.Add(fileKey, fileMatch);
                 }
                 if (fileMatch == null)
                 {
@@ -313,20 +337,7 @@ namespace pwiz.Skyline.Model
                 }
                 var chromSet = fileMatch.Chromatograms;
                 string nameSet = chromSet.Name;
-                ChromFileInfoId[] fileIds;
-                if (sampleName == null)
-                {
-                    fileIds = chromSet.MSDataFileInfos.Select(x => x.FileId).ToArray();
-                }
-                else
-                {
-                    var sampleFile = chromSet.MSDataFileInfos.FirstOrDefault(info => Equals(sampleName, info.FilePath.GetSampleName()));
-                    if (sampleFile == null)
-                    {
-                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__, sampleName, linesRead, fileName));
-                    }
-                    fileIds = new[] {sampleFile.FileId};
-                }
+                var fileId = chromSet.FindFile(fileMatch.FilePath);
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
                 if (!changePeaks)
@@ -355,25 +366,26 @@ namespace pwiz.Skyline.Model
 
                         // Loop over the files in this groupNode to find the correct sample
                         // Change peak boundaries for the transition group
-                        foreach (var fileId in GetApplicableFiles(fileIds, groupNode))
+                        if (!groupNode.ChromInfos.Any(info => ReferenceEquals(info.FileId, fileId)))
                         {
-                            var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                            // Attach annotations
-                            if (annotations.Any())
-                            {
-                                docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
-                            }
-                            // Change peak
-                            var filePath = chromSet.GetFileInfo(fileId).FilePath;
-                            if (changePeaks)
-                            {
-                                docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                    null, startTime, endTime, UserSet.IMPORTED, null, false);
-                            }
-                            // For removing peaks that are not in the file, if removeMissing = true
-                            trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
-                            foundSample = true;
+                            continue;
                         }
+                        var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                        // Attach annotations
+                        if (annotations.Any())
+                        {
+                            docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                        }
+                        // Change peak
+                        var filePath = chromSet.GetFileInfo(fileId).FilePath;
+                        if (changePeaks)
+                        {
+                            docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
+                                null, startTime, endTime, UserSet.IMPORTED, null, false);
+                        }
+                        // For removing peaks that are not in the file, if removeMissing = true
+                        trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
+                        foundSample = true;
                     }
                 }
                 if (!foundSample)
@@ -388,28 +400,6 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
-        }
-
-        private IEnumerable<ChromFileInfoId> GetApplicableFiles(ChromFileInfoId[] fileIds, TransitionGroupDocNode groupNode)
-        {
-            if (fileIds.Length > 0)
-            {
-                if (fileIds.Length == 1)
-                {
-                    var fileId = fileIds[0];
-                    if (groupNode.ChromInfos.Any(x => x.FileId.GlobalIndex == fileId.GlobalIndex))
-                        yield return fileId;
-                }
-                else
-                {
-                    var groupFileIndices = new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
-                    foreach (var fileId in fileIds)
-                    {
-                        if (groupFileIndices.Contains(fileId.GlobalIndex))
-                            yield return fileId;
-                    }
-                }
-            }
         }
 
         /// <summary>

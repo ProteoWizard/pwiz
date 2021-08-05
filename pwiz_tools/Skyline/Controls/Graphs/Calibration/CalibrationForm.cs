@@ -305,8 +305,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
                 if (CalibrationCurve.RSquared.HasValue)
                 {
-                    labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
-                                   CalibrationCurve.RSquared.Value.ToString(@"0.####"));
+                    labelLines.Add(CalibrationCurve.RSquaredDisplayText(CalibrationCurve.RSquared.Value));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
@@ -412,7 +411,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 else
                 {
-                    quantificationResult = curveFitter.GetQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
                 if (calculatedConcentration.HasValue)
@@ -479,8 +478,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             else
             {
-                if (_skylineWindow.Document.Settings.MeasuredResults.Chromatograms.Select(c => c.BatchName).Distinct()
-                        .Count() > 1)
+                if (_skylineWindow.Document.Settings.HasResults && _skylineWindow.Document.Settings.MeasuredResults
+                    .Chromatograms.Select(c => c.BatchName).Distinct().Count() > 1)
                 {
                     title = TextUtil.SpaceSeparate(title, QuantificationStrings.CalibrationForm_GetFormTitle__All_Replicates_);
                 }
@@ -639,7 +638,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
-        private ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
+        public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
             var document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)

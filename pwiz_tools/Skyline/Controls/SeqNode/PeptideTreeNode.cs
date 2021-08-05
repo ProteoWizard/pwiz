@@ -273,13 +273,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (nodePep.Peptide.IsCustomMolecule)
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             // If no modifications, use a single plain text sequence
-            else if (!heavyMods && !listTypeSequences[0].Text.Contains(@"[")) // For identifying modifications
+            else if (!heavyMods && !listTypeSequences[0].Text.Contains(@"[") && !nodePep.CrosslinkStructure.HasCrosslinks) // For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
                 var peptideFormatter = PeptideFormatter.MakePeptideFormatter(settings, nodePep, fonts);
-                peptideFormatter.DisplayModificationOption = DisplayModificationOption.Current;
-                peptideFormatter.DeviceContext = g;
                 string pepSequence = peptideFormatter.UnmodifiedSequence;
                 int startPep = label.IndexOf(pepSequence, StringComparison.Ordinal);
                 int endPep = startPep + pepSequence.Length;
@@ -293,13 +291,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                     rawTextSequences = rawTextSequences.Append(CreatePlainTextSequence(prefix, fonts));
                 }
                     
-                rawTextSequences = rawTextSequences.Concat(Enumerable.Range(0, pepSequence.Length).Select(aaIndex=>peptideFormatter.GetTextSequenceAtAaIndex(aaIndex)));
+                rawTextSequences = rawTextSequences.Concat(Enumerable.Range(0, pepSequence.Length).Select(aaIndex=>peptideFormatter.GetTextSequenceAtAaIndex(DisplayModificationOption.Current, aaIndex)));
+
+                rawTextSequences = rawTextSequences.Concat(peptideFormatter.GetTextSequencesForLinkedPeptides(DisplayModificationOption.Current));
+
                 if (endPep < label.Length)
                 {
                     string suffix = label.Substring(endPep);
                     rawTextSequences = rawTextSequences.Append(CreatePlainTextSequence(suffix, fonts));
                 }
-
                 listTextSequences.AddRange(TextSequence.Coalesce(rawTextSequences));
             }
 

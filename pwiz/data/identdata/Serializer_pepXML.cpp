@@ -409,7 +409,7 @@ struct EnzymePtr_minDistance
 void write_sample_enzyme(XMLWriter& xmlWriter, const IdentData& mzid)
 {
     const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
-    bool independent = sip.enzymes.independent;
+    bool independent = bool(sip.enzymes.independent);
 
     // create a cumulative enzyme name for multiple enzymes like "Trypsin + AspN + Chymotrypsin"
     string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
@@ -677,9 +677,6 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
     }
 }
 
-// we only write search_scores for numeric CVParams and UserParams;
-// examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
-boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
 
 void write_search_hit(XMLWriter& xmlWriter,
                       CVID analysisSoftwareCVID,
@@ -687,6 +684,10 @@ void write_search_hit(XMLWriter& xmlWriter,
                       const SpectrumIdentificationResult& sir,
                       const SpectrumIdentificationItem& sii)
 {
+    // we only write search_scores for numeric CVParams and UserParams;
+    // examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
+    static boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
+
     if (!sii.peptidePtr.get())
         throw runtime_error("[write_search_hit] PepXML requires SpectrumIdentificationItem elements to refer to Peptides.");
     if (sii.peptideEvidencePtr.empty())
@@ -1734,15 +1735,19 @@ struct HandlerSearchResults : public SAXParser::Handler
                 getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
                 if (spectrumNativeID.empty())
                 {
-                    if (nativeIdFormat != MS_scan_number_only_nativeID_format)
-                        spectrumNativeID = spectrum;
-                    else
+                    getAttribute(attributes, "native_id", spectrumNativeID);
+                    if (spectrumNativeID.empty())
                     {
-                        string start_scan;
-                        getAttribute(attributes, "start_scan", start_scan);
-                        spectrumNativeID = msdata::id::translateScanNumberToNativeID(nativeIdFormat, start_scan);
-                        if (spectrumNativeID.empty())
-                            spectrumNativeID = "scan=" + start_scan;
+                        if (nativeIdFormat != MS_scan_number_only_nativeID_format)
+                            spectrumNativeID = spectrum;
+                        else
+                        {
+                            string start_scan;
+                            getAttribute(attributes, "start_scan", start_scan);
+                            spectrumNativeID = msdata::id::translateScanNumberToNativeID(nativeIdFormat, start_scan);
+                            if (spectrumNativeID.empty())
+                                spectrumNativeID = "scan=" + start_scan;
+                        }
                     }
                 }
 
@@ -1929,7 +1934,11 @@ struct Handler_pepXML : public SAXParser::Handler
             string spectrumNativeID;
             getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
             if (spectrumNativeID.empty())
-                getAttribute(attributes, "spectrum", spectrumNativeID);
+            {
+                getAttribute(attributes, "native_id", spectrumNativeID);
+                if (spectrumNativeID.empty())
+                    getAttribute(attributes, "spectrum", spectrumNativeID);
+            }
 
             CVID nativeIdFormat = NativeIdTranslator::instance->translate(spectrumNativeID);
             if (nativeIdFormat == CVID_Unknown)
@@ -2011,16 +2020,16 @@ string& invertResidueSet(string& residues)
     return residues;
 }
 
-// match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
-// followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
-// 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
-const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
-
 } // namespace
 
 
 PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
 {
+    // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
+    // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
+    // 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
+    static bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+
     PepXMLSpecificity result;
     string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;
 
@@ -2040,6 +2049,7 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
             case MS_Formic_acid:            cut="D"; nocut=""; sense="C"; break;
             case MS_Lys_C:                  cut="K"; nocut="P"; sense="C"; break;
             case MS_Lys_C_P:                cut="K"; nocut=""; sense="C"; break;
+            case MS_Lys_N:                  cut="K"; nocut=""; sense="N"; break;
             case MS_PepsinA:                cut="FL"; nocut=""; sense="C"; break;
             case MS_TrypChymo:              cut="KRFYWL"; nocut="P"; sense="C"; break;
             case MS_Trypsin_P:              cut="KR"; nocut=""; sense="C"; break;

@@ -166,7 +166,7 @@
     <value>肽段</value>
   </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
-    <value>记录 2 文件夹更改</value>
+    <value>记录 2 倍数变化</value>
   </data>
   <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
     <value>网格</value>
@@ -246,7 +246,7 @@
     <value>属性…</value>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
-    <value>删除阈值以下</value>
+    <value>删除截止值以下</value>
   </data>
   <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
     <value>删除截止值以下的肽段</value>
@@ -270,10 +270,10 @@
     <value>肽段分子名称</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
-    <value>在左阈值以下</value>
+    <value>在左截止值以下</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
-    <value>在右阈值以上</value>
+    <value>在右截止值以上</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
     <value>以下</value>
@@ -346,5 +346,8 @@
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
     <value>星号</value>
+  </data>
+  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
+    <value>总离子电流</value>
   </data>
 </root>

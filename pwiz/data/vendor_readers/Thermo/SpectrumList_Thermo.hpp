@@ -26,13 +26,6 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/SpectrumListBase.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/data/msdata/Reader.hpp"
-#include <boost/container/flat_map.hpp>
 
 
 #ifdef PWIZ_READER_THERMO
@@ -43,6 +36,13 @@
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO
 
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
+#include <boost/container/flat_map.hpp>
 
 namespace pwiz {
 namespace msdata {
@@ -92,6 +92,9 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
         pwiz::vendor_api::Thermo::ScanType scanType;
         pwiz::vendor_api::Thermo::MSOrder msOrder;
         double isolationMz;
+
+        // TODO: store this here, but need a way to get it quickly in createIndex()
+        //std::vector<double> scanWindowLowMz, scanWindowHighMz;
     };
 
     vector<IndexEntry> index_;
@@ -111,9 +114,10 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     typedef MemoryMRUCache<CacheEntry, BOOST_MULTI_INDEX_MEMBER(CacheEntry, size_t, index) > CacheType;
     mutable CacheType precursorCache_;
 
-    size_t findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    size_t findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double isolationMz, double precursorIsolationMz, size_t index) const;
     double getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType) const;
 
 #endif // PWIZ_READER_THERMO
 };

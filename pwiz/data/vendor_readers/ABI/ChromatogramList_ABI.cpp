@@ -114,7 +114,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            map<double, double> fullFileTIC;
+            multimap<double, pair<int, double>> fullFileTIC;
 
             int periodCount = wifffile_->getPeriodCount(ie.sample);
             for (int ii=1; ii <= periodCount; ++ii)
@@ -129,11 +129,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                     if (config_.globalChromatogramsAreMs1Only && msExperiment->getExperimentType() != MS)
                         continue;
 
+                    int msLevel = msExperiment->getMsLevel(1);
+
                     // add current experiment TIC to full file TIC
                     vector<double> times, intensities;
                     msExperiment->getTIC(times, intensities);
                     for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                        fullFileTIC[times[iiii]] += intensities[iiii];
+                        fullFileTIC.insert(make_pair(times[iiii], make_pair(msLevel, intensities[iiii])));
                 }
             }
 
@@ -144,14 +146,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                 BinaryDataArrayPtr timeArray = result->getTimeArray();
                 BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
+                auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                msLevelArray->data.reserve(fullFileTIC.size());
+
                 timeArray->data.reserve(fullFileTIC.size());
                 intensityArray->data.reserve(fullFileTIC.size());
-                for (map<double, double>::iterator itr = fullFileTIC.begin();
-                     itr != fullFileTIC.end();
-                     ++itr)
+                for (auto itr = fullFileTIC.begin(); itr != fullFileTIC.end(); ++itr)
                 {
                     timeArray->data.push_back(itr->first);
-                    intensityArray->data.push_back(itr->second);
+                    intensityArray->data.push_back(itr->second.second);
+                    msLevelArray->data.push_back(itr->second.first);
                 }
             }
 
@@ -164,7 +170,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            map<double, double> fullFileBPC;
+            multimap<double, pair<int, double>> fullFileBPC;
 
             int periodCount = wifffile_->getPeriodCount(ie.sample);
             for (int ii = 1; ii <= periodCount; ++ii)
@@ -179,11 +185,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                     if (config_.globalChromatogramsAreMs1Only && msExperiment->getExperimentType() != MS)
                         continue;
 
+                    int msLevel = msExperiment->getMsLevel(1);
+
                     // add current experiment BPC to full file BPC
                     vector<double> times, intensities;
                     msExperiment->getBPC(times, intensities);
                     for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                        fullFileBPC[times[iiii]] += intensities[iiii];
+                        fullFileBPC.insert(make_pair(times[iiii], make_pair(msLevel, intensities[iiii])));
                 }
             }
 
@@ -194,12 +202,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
                 BinaryDataArrayPtr timeArray = result->getTimeArray();
                 BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
+                auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                msLevelArray->data.reserve(fullFileBPC.size());
+
                 timeArray->data.reserve(fullFileBPC.size());
                 intensityArray->data.reserve(fullFileBPC.size());
                 for (const auto& kvp : fullFileBPC)
                 {
                     timeArray->data.push_back(kvp.first);
-                    intensityArray->data.push_back(kvp.second);
+                    intensityArray->data.push_back(kvp.second.second);
+                    msLevelArray->data.push_back(kvp.second.first);
                 }
             }
 
@@ -449,6 +463,7 @@ size_t ChromatogramList_ABI::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_ABI::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_ABI::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

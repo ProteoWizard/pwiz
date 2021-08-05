@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -175,10 +175,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>386, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="comboStandardType.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 395</value>
@@ -414,7 +414,7 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>質量分析計に導入されるサンプルマトリックス内に存在し得る全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
+    <value>質量分析計に導入される試料マトリックス内に存在し得る全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -451,7 +451,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>2</value>
   </data>
   <data name="cbUseMeasuredRT.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -482,7 +482,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;cbUseMeasuredRT.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>3</value>
   </data>
   <data name="comboRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -507,7 +507,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>5</value>
   </data>
   <data name="cbAutoSelect.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -952,7 +952,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;btnUpdateCalculator.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>0</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -978,116 +978,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="btnUpdateIonMobilityLibraries.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnUpdateIonMobilityLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 214</value>
-  </data>
-  <data name="btnUpdateIonMobilityLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 24</value>
-  </data>
-  <data name="btnUpdateIonMobilityLibraries.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="btnUpdateIonMobilityLibraries.ToolTip" xml:space="preserve">
-    <value>イオンモビリティライブラリ</value>
-  </data>
-  <data name="&gt;&gt;btnUpdateIonMobilityLibraries.Name" xml:space="preserve">
-    <value>btnUpdateIonMobilityLibraries</value>
-  </data>
-  <data name="&gt;&gt;btnUpdateIonMobilityLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnUpdateIonMobilityLibraries.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;btnUpdateIonMobilityLibraries.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="comboDriftTimePredictor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 215</value>
-  </data>
-  <data name="comboDriftTimePredictor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboDriftTimePredictor.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="comboDriftTimePredictor.ToolTip" xml:space="preserve">
-    <value>イオンモビリティライブラリを併用してドリフト時間の予測をする一次方程式を指定します</value>
-  </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Name" xml:space="preserve">
-    <value>comboDriftTimePredictor</value>
-  </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;comboDriftTimePredictor.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 310</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度の許容誤差を決定する（例、ドリフト時間）： 
-ドリフト時間「T」における分解能が「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
-W = 2T/R</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesResolvingPower</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 262</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>270, 17</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>スペクトルライブラリのイオン移動度の値が存在する場合には使用する(&amp;S)</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
-    <value>これを選択すると、読み込まれたスペクトルライブラリのイオン移動度値がクロマトグラム抽出に使用されます。</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
-    <value>cbUseSpectralLibraryDriftTimes</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Items" xml:space="preserve">
     <value>なし</value>
@@ -1125,65 +1015,6 @@ W = 2T/R</value>
     <value>tabDigestion</value>
   </data>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 310</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>スペクトラルライブラリにおけるイオン移動度の許容誤差を決定する。ここで：
-imMax = 測定イオン移動度の最大値
-W0 = イオン移動度ゼロでの幅
-Wmax = imMaxでの幅
-「W」はイオン移動度「M」に中心のあるイオン移動度の一致ウィンドウの幅
-W = (W0 + M*(Wmax-W0)/imMax)
-</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
-    <value>137, 310</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるイオン移動度に一致する許容誤差を決定する。ここで：
-imMax = 測定イオン移動度の最大値
-W0 = イオン移動度ゼロでの幅
-Wmax = imMaxでの幅
-「W」はイオン移動度「M」に中心のあるイオン移動度の一致ウィンドウの幅
-W = (W0 + M*(Wmax-W0)/imMax)</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnFilter.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -1239,7 +1070,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="comboLodMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 95</value>
@@ -1263,10 +1094,10 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="tbxMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>155, 45</value>
+    <value>170, 45</value>
   </data>
   <data name="tbxMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1287,16 +1118,16 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 224</value>
+    <value>28, 239</value>
   </data>
   <data name="tbxQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="tbxQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="tbxQuantUnits.ToolTip" xml:space="preserve">
     <value>校正済み数量に適用される単位</value>
@@ -1311,7 +1142,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>すべて</value>
@@ -1323,13 +1154,13 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 177</value>
+    <value>28, 192</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="comboQuantMsLevel.ToolTip" xml:space="preserve">
     <value>定量化に用いる質量スペクトルレベル（1、2または両方）</value>
@@ -1344,7 +1175,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 83</value>
@@ -1368,7 +1199,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1392,16 +1223,16 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 130</value>
+    <value>28, 145</value>
   </data>
   <data name="comboWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
   </data>
   <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="comboWeighting.ToolTip" xml:space="preserve">
     <value>回帰を計算する点の影響に重みを付けるのに用いる式</value>
@@ -1416,7 +1247,33 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 95</value>
+  </data>
+  <data name="tbxIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
+  </data>
+  <data name="tbxIonRatioThreshold.ToolTip" xml:space="preserve">
+    <value>「合格」と考慮される、観測された定性イオン比に許可されるターゲット定性イオン比からのパーセント偏差です。
+定性イオン比は、非定量トランジションピーク面積の和を定量トランジションピーク面積の和で割ったものです。
+ターゲット定性イオン比は、校正から除外されていない外部標準全体での定性イオン比の平均です。</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Name" xml:space="preserve">
+    <value>tbxIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1559,156 +1416,6 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>276, 294</value>
-  </data>
-  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 13</value>
-  </data>
-  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="labelWidthDtMax.Text" xml:space="preserve">
-    <value>imMaxでの幅(&amp;X)：</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
-    <value>labelWidthDtMax</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthDtZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 294</value>
-  </data>
-  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 13</value>
-  </data>
-  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="labelWidthDtZero.Text" xml:space="preserve">
-    <value>im0での幅(&amp;0)：</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
-    <value>labelWidthDtZero</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 337</value>
-  </data>
-  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 17</value>
-  </data>
-  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="cbLinear.Text" xml:space="preserve">
-    <value>線形ピーク幅(&amp;L)</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
-    <value>cbLinear</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 292</value>
-  </data>
-  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
-    <value>89, 13</value>
-  </data>
-  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="labelResolvingPower.Text" xml:space="preserve">
-    <value>分解能(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
-    <value>labelResolvingPower</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="label19.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label19.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 200</value>
-  </data>
-  <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 13</value>
-  </data>
-  <data name="label19.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="label19.Text" xml:space="preserve">
-    <value>イオン移動度予測(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;label19.Name" xml:space="preserve">
-    <value>label19</value>
-  </data>
-  <data name="&gt;&gt;label19.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1734,7 +1441,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>1</value>
   </data>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1761,7 +1468,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>4</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1788,7 +1495,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>6</value>
   </data>
   <data name="tabPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2495,8 +2202,96 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 110</value>
+  </data>
+  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 17</value>
+  </data>
+  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbxSimpleRatios.Text" xml:space="preserve">
+    <value>単純プリカーサー比(&amp;S)</value>
+  </data>
+  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
+    <value>選択すると、プリカーサー間の比がトランジション面積の合計の比として計算されます。
+2個のプリカーサーからのトランジションは、欠損ピークの処理や、比率ドット積を計算する理由で対になることはありません。</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
+    <value>cbxSimpleRatios</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
+  </data>
+  <data name="label20.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label20.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
+    <value>273, 98</value>
+  </data>
+  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="label20.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="label20.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+    <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>167, 79</value>
+  </data>
+  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
+    <value>定性イオン比閾値(&amp;A)：</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
+    <value>lblIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="lblCaclulateLodBy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2523,7 +2318,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="lblMaxLoqBias.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2550,7 +2345,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="lblMaxLoqBiasPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2577,7 +2372,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBiasPct.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="lblMaxLoqCvPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2586,7 +2381,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 47</value>
+    <value>273, 48</value>
   </data>
   <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -2607,13 +2402,13 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCvPct.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="lblMaxLoqCv.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>152, 27</value>
+    <value>167, 27</value>
   </data>
   <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
@@ -2634,16 +2429,16 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 281</value>
+    <value>16, 270</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
     <value>327, 137</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Text" xml:space="preserve">
     <value>性能指数</value>
@@ -2658,7 +2453,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2667,13 +2462,13 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="lblQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 209</value>
+    <value>25, 224</value>
   </data>
   <data name="lblQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
   </data>
   <data name="lblQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="lblQuantUnits.Text" xml:space="preserve">
     <value>単位(&amp;U)</value>
@@ -2688,22 +2483,22 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 162</value>
+    <value>25, 177</value>
   </data>
   <data name="lblMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 13</value>
   </data>
   <data name="lblMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblMsLevel.Text" xml:space="preserve">
-    <value>MSレベル(&amp;L)</value>
+    <value>MSレベル(&amp;M)</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.Name" xml:space="preserve">
     <value>lblMsLevel</value>
@@ -2715,7 +2510,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2742,7 +2537,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2757,7 +2552,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>0</value>
   </data>
   <data name="lblRegressionFit.Text" xml:space="preserve">
-    <value>回帰適合(&amp;F)：</value>
+    <value>回帰適合(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.Name" xml:space="preserve">
     <value>lblRegressionFit</value>
@@ -2769,19 +2564,19 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblRegressionWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 115</value>
+    <value>25, 130</value>
   </data>
   <data name="lblRegressionWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 13</value>
   </data>
   <data name="lblRegressionWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblRegressionWeighting.Text" xml:space="preserve">
     <value>回帰の重み(&amp;W)：</value>
@@ -2796,7 +2591,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2844,10 +2639,10 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>478, 17</value>
+    <value>247, 17</value>
   </metadata>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
@@ -2868,7 +2663,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>リストを編集...</value>
   </data>
   <data name="contextMenuCalculator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>175, 70</value>
+    <value>147, 70</value>
   </data>
   <data name="&gt;&gt;contextMenuCalculator.Name" xml:space="preserve">
     <value>contextMenuCalculator</value>
@@ -2876,38 +2671,11 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;contextMenuCalculator.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <metadata name="contextMenuIonMobilityLibraries.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="addIonMobilityLibraryContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 22</value>
-  </data>
-  <data name="addIonMobilityLibraryContextMenuItem.Text" xml:space="preserve">
-    <value>追加...</value>
-  </data>
-  <data name="editIonMobilityLibraryCurrentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 22</value>
-  </data>
-  <data name="editIonMobilityLibraryCurrentContextMenuItem.Text" xml:space="preserve">
-    <value>現在の設定を編集...</value>
-  </data>
-  <data name="editIonMobilityLibraryListContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 22</value>
-  </data>
-  <data name="editIonMobilityLibraryListContextMenuItem.Text" xml:space="preserve">
-    <value>リストを編集...</value>
-  </data>
-  <data name="contextMenuIonMobilityLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>175, 70</value>
-  </data>
-  <data name="&gt;&gt;contextMenuIonMobilityLibraries.Name" xml:space="preserve">
-    <value>contextMenuIonMobilityLibraries</value>
-  </data>
-  <data name="&gt;&gt;contextMenuIonMobilityLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>97</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -2925,7 +2693,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2951,28 +2719,10 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
   <data name="&gt;&gt;editCalculatorListContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;addIonMobilityLibraryContextMenuItem.Name" xml:space="preserve">
-    <value>addIonMobilityLibraryContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;addIonMobilityLibraryContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;editIonMobilityLibraryCurrentContextMenuItem.Name" xml:space="preserve">
-    <value>editIonMobilityLibraryCurrentContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;editIonMobilityLibraryCurrentContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;editIonMobilityLibraryListContextMenuItem.Name" xml:space="preserve">
-    <value>editIonMobilityLibraryListContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;editIonMobilityLibraryListContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

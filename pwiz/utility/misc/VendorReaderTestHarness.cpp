@@ -42,6 +42,7 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
+#include "boost/locale/encoding_utf.hpp"
 
 
 using namespace pwiz::util;
@@ -301,6 +302,56 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
+        // test ion mobility conversion
+        auto imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(msd.run.spectrumListPtr);
+        if (imsl != nullptr && imsl->canConvertIonMobilityAndCCS())
+        {
+            double imTestValue = 0.832;
+            double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
+            double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
+            unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent
+        }
+      
+        // test that non-IMS peak picked data have unique m/z values
+        if (config.peakPicking && !config.combineIonMobilitySpectra && msd.run.spectrumListPtr)
+        {
+            const auto& sl = *msd.run.spectrumListPtr;
+            ostringstream ss;
+
+            for (size_t i = 0; i < sl.size(); ++i)
+            {
+                map<double, vector<size_t>> duplicateIndicesByMz;
+                auto s = sl.spectrum(i, true);
+                auto mzArray = s->getMZArray()->data;
+                for (size_t j=0; j < mzArray.size(); ++j)
+                    duplicateIndicesByMz[mzArray[j]].push_back(j);
+
+                bool hasDuplicates = false;
+                for (auto& mzIndicesPair : duplicateIndicesByMz)
+                    if (mzIndicesPair.second.size() > 1)
+                    {
+                        hasDuplicates = true;
+                        break;
+                    }
+
+                if (hasDuplicates)
+                {
+                    ss << "Spectrum " << s->id << " - " << duplicateIndicesByMz.size() << " duplicates (";
+                    for (auto& mzIndicesPair : duplicateIndicesByMz)
+                    {
+                        ss << mzIndicesPair.first << " [" << mzIndicesPair.second[0];
+                        for (size_t k = 0; k < mzIndicesPair.second.size(); ++k)
+                            ss << " " << mzIndicesPair.second[k];
+                        ss << "]";
+                    }
+                    ss << ")";
+                }
+            }
+
+            if (ss.tellp() > 0)
+                throw runtime_error(unit_assert_message(__FILE__, __LINE__, ("Duplicate m/z values detected in peak picked spectra:\n" + ss.str()).c_str()));
+        }
+
         // test serialization of this vendor format in and out of pwiz's supported open formats
         stringstream* stringstreamPtr = new stringstream;
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
@@ -325,6 +376,20 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bfs::remove(targetResultFilename_mz5);
         }
 #endif
+
+        // test SpectrumList::min_level_accepted() for vendors
+        if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
+        {
+            DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); });
+            unit_assert_operator_equal(DetailLevel_InstantMetadata, msLevelDetailLevel);
+
+            if (!bal::iequals(reader.getType(), "UIMF"))
+            {
+                DetailLevel polarityDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return s.hasCVParamChild(MS_scan_polarity); });
+                unit_assert(DetailLevel_FastMetadata >= polarityDetailLevel);
+            }
+        }
+
         DiffConfig diffConfig_non_mzML(diffConfig);
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
@@ -410,10 +475,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     // test non-ASCII characters in the source name, which in case of failure is conditionally an error or warning;
     // create a copy of the rawpath (file or directory) with non-ASCII characters in it
-    bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".试验"));
+    bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L"-试验"));
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
-    newRawPath.replace_extension(unicodeTestString + newRawPath.extension().native());
+    auto oldExtension = newRawPath.extension().native();
+    newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
         bfs::remove_all(newRawPath);
     if (bfs::is_directory(rawpathPath))
@@ -428,7 +494,29 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (bfs::exists(wiffscanPath))
             {
                 bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan");
+                if (bfs::exists(newWiffscanPath))
+                    bfs::remove(newWiffscanPath);
+                bfs::copy_file(wiffscanPath, newWiffscanPath);
+            }
+
+            wiffscanPath = rawpathPath;
+            wiffscanPath.replace_extension(".dad.scan");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.scan");
+                if (bfs::exists(newWiffscanPath))
+                    bfs::remove(newWiffscanPath);
+                bfs::copy_file(wiffscanPath, newWiffscanPath);
+            }
+
+            wiffscanPath = rawpathPath;
+            wiffscanPath.replace_extension(".dad.sidx");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.sidx");
                 if (bfs::exists(newWiffscanPath))
                     bfs::remove(newWiffscanPath);
                 bfs::copy_file(wiffscanPath, newWiffscanPath);
@@ -551,7 +639,6 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
     writeConfig.indexed = false;
     writeConfig.binaryDataEncoderConfig.precision = config.doublePrecision ? BinaryDataEncoder::Precision_64 : BinaryDataEncoder::Precision_32;
     writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-    if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
 
     for (auto runItr = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, (int) msds.size()); runItr.first < runItr.second; ++runItr.first)
     {
@@ -561,6 +648,7 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
 
         config.wrap(*msd);
 
+        if (os_) *os_ << "Converting " << rawpath << " to " << outputFilename << endl;
         MSDataFile::write(*msd, outputFilename.string(), writeConfig);
     }
 }
@@ -648,6 +736,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
     if (!allowMsMsWithoutPrecursor) bal::replace_all(result, ".mzML", "-noMsMsWithoutPrecursor.mzML");
     if (peakPicking) bal::replace_all(result, ".mzML", "-centroid.mzML");
+    if (peakPickingCWT) bal::replace_all(result, ".mzML", "-centroid-cwt.mzML");
     if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
     if (globalChromatogramsAreMs1Only) bal::replace_all(result, ".mzML", "-globalChromatogramsAreMs1Only.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
@@ -699,7 +788,7 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             {
                 ifstream urls(filepath.string().c_str());
                 string url;
-                while (getline(urls, url))
+                while (getlinePortable(urls, url))
                 {
                     if (isPathTestable(url))
                     {
@@ -781,6 +870,16 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
         // thresholding is always tested to check that mutating SpectrumListWrappers work as expected;
         // thresholding by itself does not create a separate mzML file
         result += testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+
+        /*if (!generateMzML && config.peakPicking)
+        {
+            // the config should also have thresholding (per above recursive call)
+            ReaderTestConfig newConfig = config;
+            newConfig.autoTest = true;
+            newConfig.peakPicking = false;
+            newConfig.peakPickingCWT = true;
+            result += testReader(reader, args, testAcceptOnly, requireUnicodeSupport, isPathTestable, newConfig);
+        }*/
     }
 
     /*if (!generateMzML && config.peakPicking)

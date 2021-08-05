@@ -39,7 +39,6 @@
             this.foldChangeUnitLabel = new System.Windows.Forms.Label();
             this.pValueLowerBoundLabel = new System.Windows.Forms.Label();
             this.checkBoxFilter = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -127,7 +126,6 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.VolcanoPlotProperties_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

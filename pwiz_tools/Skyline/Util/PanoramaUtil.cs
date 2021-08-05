@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.Util
         {
             const string https = "https://";
             const string http = "http://";
-            
+
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
 
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Util
             {
                 serverName = serverName.Insert(0, https);
             }
+
             return serverName;
         }
 
@@ -83,31 +85,43 @@ namespace pwiz.Skyline.Util
             switch (panoramaClient.GetServerState())
             {
                 case ServerState.missing:
-                    throw new PanoramaServerException(string.Format(Resources.EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(
+                        Resources.EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist,
+                        uriServer.AbsoluteUri));
                 case ServerState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(
+                        Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        uriServer.AbsoluteUri));
             }
 
             switch (panoramaClient.IsValidUser(username, password))
             {
                 case UserState.nonvalid:
-                    throw new PanoramaServerException(Resources.EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server);
+                    throw new PanoramaServerException(Resources
+                        .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server);
                 case UserState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(
+                        Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        uriServer.AbsoluteUri));
             }
+
             switch (panoramaClient.IsPanorama())
             {
                 case PanoramaState.other:
-                    throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(
+                        Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
+                        uriServer.AbsoluteUri));
                 case PanoramaState.unknown:
-                    throw new PanoramaServerException(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.AbsoluteUri));
+                    throw new PanoramaServerException(string.Format(
+                        Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        uriServer.AbsoluteUri));
             }
         }
 
         public static UserState ValidateServerAndUser(ref Uri serverUri, string username, string password)
         {
             var pServer = new PanoramaServer(serverUri, username, password);
-           
+
             try
             {
                 var userState = EnsureLogin(pServer);
@@ -135,6 +149,7 @@ namespace pwiz.Skyline.Util
                         return TryEnsureLogin(pServer, ref serverUri);
                     }
                 }
+
                 return UserState.unknown;
             }
         }
@@ -143,10 +158,11 @@ namespace pwiz.Skyline.Util
         {
             var requestUri = new Uri(pServer.ServerUri, ENSURE_LOGIN_PATH);
             var request = (HttpWebRequest) WebRequest.Create(requestUri);
-            request.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(pServer.Username, pServer.Password));
+            request.Headers.Add(HttpRequestHeader.Authorization,
+                Server.GetBasicAuthHeader(pServer.Username, pServer.Password));
             try
             {
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = (HttpWebResponse) request.GetResponse())
                 {
                     return response.StatusCode == HttpStatusCode.OK ? UserState.valid : UserState.unknown;
                 }
@@ -167,8 +183,10 @@ namespace pwiz.Skyline.Util
                             return EnsureLogin(pServer);
                         }
                     }
+
                     return UserState.nonvalid; // User cannot be authenticated
                 }
+
                 throw;
             }
         }
@@ -199,7 +217,8 @@ namespace pwiz.Skyline.Util
                             panoramaFolder, panoramaClient.ServerUri));
                 case FolderState.nopermission:
                     throw new PanoramaServerException(string.Format(
-                        Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                        Resources
+                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                         server.Username, panoramaFolder));
                 case FolderState.notpanorama:
                     throw new PanoramaServerException(string.Format(
@@ -218,11 +237,12 @@ namespace pwiz.Skyline.Util
             if (folderJson != null)
             {
 
-                var folderType = (string)folderJson[@"folderType"];
+                var folderType = (string) folderJson[@"folderType"];
                 var modules = folderJson[@"activeModules"];
                 return modules != null && ContainsTargetedMSModule(modules) &&
                        Equals(@"Targeted MS", folderType);
             }
+
             return false;
         }
 
@@ -238,6 +258,7 @@ namespace pwiz.Skyline.Util
                 var userPermissions = folderJson.Value<int?>(@"userPermissions");
                 return userPermissions != null && Equals(userPermissions & 2, 2);
             }
+
             return false;
         }
 
@@ -248,6 +269,7 @@ namespace pwiz.Skyline.Util
                 if (string.Equals(module.ToString(), @"TargetedMS"))
                     return true;
             }
+
             return false;
         }
 
@@ -256,7 +278,8 @@ namespace pwiz.Skyline.Util
             return Call(serverUri, controller, folderPath, method, null, isApi);
         }
 
-        public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
+        public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
+            bool isApi = false)
         {
             string path = controller + @"/" + (folderPath ?? string.Empty) + @"/" +
                           method + (isApi ? @".api" : @".view");
@@ -269,13 +292,27 @@ namespace pwiz.Skyline.Util
             return new Uri(serverUri, path);
         }
 
+        public static Uri CallNewInterface(Uri serverUri, string controller, string folderPath, string method,
+            string query,
+            bool isApi = false)
+        {
+            string apiString = isApi ? @"api" : @"view";
+            string queryString = string.IsNullOrEmpty(query) ? "" : @"?" + query;
+            string path = $@"{folderPath}/{controller}-{method}.{apiString}{queryString}";
+
+            return new Uri(serverUri, path);
+        }
+
         public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
         {
-            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS", includeSubfolders ? @"true" : @"false");
+            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
+                includeSubfolders ? @"true" : @"false");
             return Call(serverUri, @"project", folder, @"getContainers", queryString);
         }
 
-    }
+        public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
+        { return new WebPanoramaClient(serverUri);}
+}
 
     [XmlRoot("server")]
     public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
@@ -432,6 +469,7 @@ namespace pwiz.Skyline.Util
     public enum PanoramaState { panorama, other, unknown }
     public enum UserState { valid, nonvalid, unknown }
     public enum FolderState { valid, notpanorama, nopermission, notfound }
+    public enum FolderOperationStatus{OK, notpanorama, nopermission, notfound, alreadyexists, error}
 
     public interface IPanoramaClient
     {
@@ -440,6 +478,17 @@ namespace pwiz.Skyline.Util
         PanoramaState IsPanorama();
         UserState IsValidUser(string username, string password);
         FolderState IsValidFolder(string folderPath, string username, string password);
+
+        /**
+         * Returns FolderOperationStatus.OK if created successfully, otherwise returns the reason
+         * why the folder was not created.
+         */
+        FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password);
+        /**
+         * Returns FolderOperationStatus.OK if the folder was successfully deleted, otherwise returns the reason
+         * why the folder was not deleted.
+         */
+        FolderOperationStatus DeleteFolder(string folderPath, string username, string password);
     }
 
     class WebPanoramaClient : IPanoramaClient
@@ -516,19 +565,17 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Uri uri = new Uri(ServerUri, @"project/home/getContainers.view");
+                // Use the LabKey AdminController.HealthCheckAction instead of ProjectController.GetContainersAction which does not return the expected
+                // JSON key if the "Home" container on the LabKey Server is not public.
+                // (https://www.labkey.org/home/Developer/issues/Secure/issues-details.view?issueId=20686)
+                Uri uri = new Uri(ServerUri, @"admin/home/healthCheck.view");
                 using (var webClient = new UTF8WebClient())
                 {
                     JObject jsonResponse = webClient.Get(uri);
-                    string type = (string)jsonResponse[@"type"];
-                    if (string.Equals(type, @"project"))
-                    {
-                        return PanoramaState.panorama;
-                    }
-                    else
-                    {
-                        return PanoramaState.other;
-                    }
+                    var panoramaState = jsonResponse.ContainsKey(@"healthy")
+                        ? PanoramaState.panorama
+                        : PanoramaState.other;
+                    return panoramaState;
                 }
             }
             catch (WebException ex)
@@ -598,6 +645,84 @@ namespace pwiz.Skyline.Util
             }
            return FolderState.valid;
         }
+
+        public FolderOperationStatus CreateFolder(string folderPath, string folderName, string username, string password)
+        {
+
+            if (IsValidFolder($@"{folderPath}/{folderName}", username, password) == FolderState.valid)
+                return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
+            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            switch (parentFolderStatus)
+            {
+                case FolderState.nopermission:
+                    return FolderOperationStatus.nopermission;
+                case FolderState.notfound:
+                    return FolderOperationStatus.notfound;
+                case FolderState.notpanorama:
+                    return FolderOperationStatus.notpanorama;
+            }
+
+            //Create JSON body for the request
+            Dictionary<string, string> requestData = new Dictionary<string, string>();
+            requestData[@"name"] = folderName;
+            requestData[@"title"] = folderName;
+            requestData[@"description"] = folderName;
+            requestData[@"type"] = @"normal";
+            requestData[@"folderType"] = @"Targeted MS";
+            string createRequest = JsonConvert.SerializeObject(requestData);
+
+            try { 
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                {
+                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
+                    JObject result = webClient.Post(requestUri, createRequest);
+                    return FolderOperationStatus.OK;
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode != HttpStatusCode.OK)
+                {
+                    return FolderOperationStatus.error;
+                }
+                else throw;
+            }
+        }
+
+        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+        {
+            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            switch (parentFolderStatus)
+            {
+                case FolderState.nopermission:
+                    return FolderOperationStatus.nopermission;
+                case FolderState.notfound:
+                    return FolderOperationStatus.notfound;
+                case FolderState.notpanorama:
+                    return FolderOperationStatus.notpanorama;
+            }
+
+            try
+            {
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                {
+                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
+                    JObject result = webClient.Post(requestUri, "");
+                    return FolderOperationStatus.OK;
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode != HttpStatusCode.OK)
+                {
+                    return FolderOperationStatus.error;
+                }
+                else throw;
+            }
+        }
+
     }
 
     public interface IPanoramaPublishClient
@@ -607,6 +732,8 @@ namespace pwiz.Skyline.Util
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
         ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document);
+
+        Uri UploadedDocumentUri { get; }
     }
 
     public abstract class AbstractPanoramaPublishClient : IPanoramaPublishClient
@@ -614,6 +741,13 @@ namespace pwiz.Skyline.Util
         public abstract JToken GetInfoForFolders(Server server, string folder);
         public abstract Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         public abstract JObject SupportedVersionsJson(Server server);
+
+        private Uri _uploadedDocumentUri;
+
+        public Uri UploadedDocumentUri
+        {
+            get { return _uploadedDocumentUri; }
+        }
 
         public CacheFormatVersion GetSupportedSkydVersion(FolderInformation folderInfo)
         {
@@ -688,6 +822,7 @@ namespace pwiz.Skyline.Util
                 }
                 if (!isCanceled) // if user not canceled 
                 {
+                    _uploadedDocumentUri = result;
                     String message = Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
@@ -1134,7 +1269,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    class UTF8WebClient : WebClient
+    public class UTF8WebClient : WebClient
     {
         public UTF8WebClient()
         {
@@ -1148,7 +1283,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    internal class WebClientWithCredentials : UTF8WebClient
+    public class WebClientWithCredentials : UTF8WebClient
     {
         private CookieContainer _cookies = new CookieContainer();
         private string _csrfToken;
@@ -1176,6 +1311,18 @@ namespace pwiz.Skyline.Util
             }
             var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
             var response = Encoding.UTF8.GetString(responseBytes);
+            return JObject.Parse(response);
+        }
+
+        public JObject Post(Uri uri, string postData)
+        {
+            if (string.IsNullOrEmpty(_csrfToken))
+            {
+                // After this the client should have the X-LABKEY-CSRF token 
+                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+            }
+            Headers.Add(HttpRequestHeader.ContentType, "application/json");
+            var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
             return JObject.Parse(response);
         }
 

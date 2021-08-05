@@ -391,9 +391,9 @@ namespace pwiz.SkylineTestFunctional
             var expectedViewNames = new[] { AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info };
             var expectedColumns = new[]
             {
-                new[] {"Time", "UndoRedoMessage"},
-                new[] {"Time", "SummaryMessage"},
-                new[] {"Time", "Details!*.AllInfoMessage"}
+                new[] {"Time", "UndoRedoMessage", "Reason"},
+                new[] {"Time", "SummaryMessage", "Reason"},
+                new[] {"Time", "Details!*.AllInfoMessage", "Reason" }
             };
             Assert.AreEqual(expectedViewNames.Length, builtInViews.Length);
 

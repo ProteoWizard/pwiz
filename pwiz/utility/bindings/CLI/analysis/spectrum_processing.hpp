@@ -29,7 +29,7 @@
 //#include "SpectrumListWrapper.hpp"
 
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
-    #include "../msdata/MSData.hpp"
+    #include "../msdata/MSDataFile.hpp"
     #include "../common/IterationListener.hpp"
 #else
     #include "../common/SharedCLI.hpp"
@@ -47,6 +47,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
@@ -390,6 +391,11 @@ public ref class SpectrumList_PeakPicker : public msdata::SpectrumList
                             System::Collections::Generic::IEnumerable<int>^ msLevelsToPeakPick);
 
     static bool accept(msdata::SpectrumList^ inner);
+
+    /// <summary>
+    /// returns true iff the given file supports vendor peak picking
+    /// </summary>
+    static bool supportsVendorPeakPicking(System::String^ rawpath);
 };
 
 
@@ -482,7 +488,8 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 
-    enum class IonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
+    // N.B. there are a number of places in the pwiz code that assume this order (especially none=0), if you change this look at the other IonMobilityUnits enums
+    enum class IonMobilityUnits { waters_sonar = -1, none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
     virtual IonMobilityUnits getIonMobilityUnits();
 
@@ -497,6 +504,147 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
 
     /// returns the ion mobility (units depend on equipment type) associated with the given collisional cross-section
     virtual double ccsToIonMobility(double ccs, double mz, int charge);
+
+    /// applicable only to Waters SONAR files
+    /// returns true if the file is Waters SONAR data, which filters precursors for an m/z range using its ion mobility hardware
+    virtual bool isWatersSonarData();
+    virtual void sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh);
+    virtual void sonarBinToPrecursorMz(int bin, double% result);
+};
+
+/// <summary>
+/// SpectrumList wrapper that generates pseudo-MS/MS spectra from DIA spectra using the DiaUmpire algorithm
+/// </summary>
+public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_DiaUmpire, pwiz::analysis::SpectrumList_DiaUmpire)
+
+    public:
+
+    ref class Config
+    {
+        DEFINE_INTERNAL_BASE_CODE(Config, DiaUmpire::Config)
+
+        public:
+
+        ref class InstrumentParameter
+        {
+            DEFINE_INTERNAL_BASE_CODE(InstrumentParameter, DiaUmpire::InstrumentParameter)
+
+            public:
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, Resolution);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS1PPM);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2PPM);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SN);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSMSIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoPeakPerMin);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinRTRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, StartCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, EndCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2StartCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2EndCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MaxCurveRTRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTtol);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2SN);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxNoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinNoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxMS2NoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinMS2NoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, Denoise);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, EstimateBG);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetermineBGByID);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, RemoveGroupedPeaks);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, Deisotoping);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, BoostComplementaryIon);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, AdjustFragIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, RPmax);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, RFmax);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTOverlap);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, CorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, DeltaApex);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SymThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoMissedScan);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinPeakPerPeakCurve);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMZ);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinFrag);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MiniOverlapP);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, CheckMonoIsotopicApex);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetectByCWT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, FillGapByBK);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, IsoCorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RemoveGroupedPeaksCorr);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RemoveGroupedPeaksRTOverlap);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, HighCorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinHighCorrCnt);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocal);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocalRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, IsoPattern);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, StartRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, EndRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, TargetIDOnly);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, MassDefectFilter);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinPrecursorMass);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MaxPrecursorMass);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, UseOldVersion);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RT_window_Targeted);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, SmoothFactor);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetectSameChargePairOnly);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MassDefectOffset);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2PairTopN);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, MS2Pairing);
+        };
+
+        ref class MzRange
+        {
+            DEFINE_INTERNAL_BASE_CODE(MzRange, DiaUmpire::MzRange)
+
+            public:
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, begin);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, end);
+        };
+
+        ref class TargetWindow
+        {
+            DEFINE_INTERNAL_BASE_CODE(TargetWindow, DiaUmpire::TargetWindow)
+
+            public:
+            enum class Scheme
+            {
+                SWATH_Fixed,
+                SWATH_Variable
+            };
+
+            TargetWindow(double start, double end);
+
+            DEFINE_REFERENCE_PROPERTY(MzRange, mzRange);
+        };
+        
+        DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetWindowList, DiaUmpire::TargetWindow, TargetWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+        DEFINE_REFERENCE_PROPERTY(InstrumentParameter, instrumentParameters);
+
+        DEFINE_PRIMITIVE_PROPERTY(DiaUmpire::TargetWindow::Scheme, TargetWindow::Scheme, diaTargetWindowScheme);
+
+        property TargetWindowList^ diaVariableWindows
+        {
+            TargetWindowList^ get();
+        }
+
+        Config();
+
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, diaFixedWindowSize);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs1ClusterTable);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs2ClusterTable);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportSeparateQualityMGFs);
+
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, maxThreads);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, multithreadOverWindows);
+        DEFINE_PRIMITIVE_PROPERTY(pwiz::msdata::MSDataFile::Format, pwiz::CLI::msdata::MSDataFile::Format, spillFileFormat);
+    };
+
+    SpectrumList_DiaUmpire(pwiz::CLI::msdata::MSData^ msd, pwiz::CLI::msdata::SpectrumList^ inner, Config^ config);
+    SpectrumList_DiaUmpire(pwiz::CLI::msdata::MSData^ msd, pwiz::CLI::msdata::SpectrumList^ inner, Config^ config, util::IterationListenerRegistry^ ilr);
 };
 
 public ref class ChromatogramList_XICGenerator : public msdata::ChromatogramList

@@ -141,16 +141,15 @@ namespace pwiz.Skyline.Model.Proteome
 
         public override bool Equals(object obj)
         {
-            if (this == obj)
-            {
-                return true;
-            }
-            BackgroundProteomeSpec that = obj as BackgroundProteomeSpec;
-            if (that == null)
-            {
-                return false;
-            }
-            return Name == that.Name && DatabasePath == that.DatabasePath;
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (!(obj is BackgroundProteomeSpec)) return false;
+            return EqualsSpec((BackgroundProteomeSpec)obj);
+        }
+
+        public bool EqualsSpec(BackgroundProteomeSpec other)
+        {
+            return Name == other.Name && DatabasePath == other.DatabasePath;
         }
 
         public override int GetHashCode()

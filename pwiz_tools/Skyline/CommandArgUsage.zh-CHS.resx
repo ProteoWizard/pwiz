@@ -258,6 +258,15 @@
   <data name="_import_search_cutoff_score" xml:space="preserve">
     <value>定义要在从肽段搜索结果文件构建谱图库时使用的截止值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</value>
   </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>构建谱图库时要使用的 iRT 标准名称。</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>如果构建以 CiRT 肽段作为 iRT 标准的谱图库，请指定要用作 iRT 标准的 CiRT 肽段数量。</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>如果使用 iRT 标准构建谱图库，请重新校准相对于所添加肽段的 iRT 标准值。</value>
+  </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>将肽段搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“-–import-fasta”参数将匹配的肽段添加为目标。</value>
   </data>
@@ -319,13 +328,13 @@
     <value>可用于控制在模型创建期间执行的迭代次数。默认情况下，允许最多 10 个，并且当新模型产生较少的检测时迭代停止。</value>
   </data>
   <data name="_reintegrate_model_name" xml:space="preserve">
-    <value>用于重新整合操作的评分模型的名称。模型可以是预定义的（例如，使用“编辑&gt;细化&gt;重新整合”表单），也可以在此操作期间使用“--reintegrate-create-model”来自动创建。</value>
+    <value>用于重新合并操作的评分模型的名称。模型可以是预定义的（例如，使用“编辑&gt;细化&gt;重新整合”表单），也可以在此操作期间使用“--reintegrate-create-model”来自动创建。</value>
   </data>
   <data name="_reintegrate_model_second_best" xml:space="preserve">
     <value>在重新整合期间强制使用次佳峰值。默认是仅使用诱饵。</value>
   </data>
   <data name="_reintegrate_overwrite_peaks" xml:space="preserve">
-    <value>现有的手动整合的峰将被重新整合模型选择的峰覆盖。（需要“--reintegrate-model-name”）</value>
+    <value>现有的手动合并的峰将被重新整合模型选择的峰覆盖。（需要“--reintegrate-model-name”）</value>
   </data>
   <data name="_remove_all" xml:space="preserve">
     <value>从打开文档中删除所有结果。</value>
@@ -783,5 +792,26 @@ Waters</value>
   </data>
   <data name="_ims_library_res" xml:space="preserve">
     <value>离子迁移维度的分辨力用于过滤谱图库中的离子迁移值。</value>
+  </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>仅保留群组比较倍数变化高于该截止值的目标。(对群组比较细化为可选项）</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>MS 级别（1 或 2）用于计算峰面积，来进行群组比较细化。如果同时存在两种级别，则默认为级别 2，否则使用存在的任何一种级别。</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>先前定义的群组比较名称，用于显著变化目标的细化。用多个名称多次指定此参数，以保留多个比较的并集。</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>仅保留群组比较已调整的 p 值低于指定截止值的目标。（对群组比较细化为必要项）</value>
+  </data>
+  <data name="CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size" xml:space="preserve">
+    <value>最小化结果文件大小</value>
+  </data>
+  <data name="_chromatograms_discard_unused" xml:space="preserve">
+    <value>丢弃文档中所有未使用的色谱图。</value>
+  </data>
+  <data name="_chromatograms_limit_noise" xml:space="preserve">
+    <value>将色谱图长度限制在色谱峰周围的分钟数，即 ± 分钟。</value>
   </data>
 </root>

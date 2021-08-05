@@ -78,7 +78,7 @@
     <software id="MassHunter" version="6200 series TOF/6500 series Q-TOF B.06.00 (B6000)">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -437,7 +437,7 @@
     <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="8">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="56">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -449,6 +449,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxbxN/jtUC1zovhZqbXC7tIryO93l57BBy8friaebnc0PUCANhzDPY=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="8" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZGBgYMSDAQCwAAk=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

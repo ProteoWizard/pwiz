@@ -9,12 +9,13 @@ Undo Redo : Peptide Settings -- Modifications changed
 Summary   : Settings > Peptide Settings -- Modifications changed
 All Info  :
 Peptide Settings -- Modifications changed
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was added
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Amino acid is "Q"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Variable is True
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Chemical formula is "-NH3"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Monoisotopic mass is "-17.026549"
-Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu" > Average mass is "-17.03052"
+Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu (N-term Q)" was added
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Amino acid is "Q"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Terminus is "N"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Variable is True
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Chemical formula is "-H3N"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Monoisotopic mass is "-17.026549"
+Settings > Peptide Settings -- Modifications > Structural modifications > "Gln->pyro-Glu (N-term Q)" > Average mass is "-17.03052"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:15N" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:15N" > 15N is True
 
@@ -63,7 +64,7 @@ Peptide Settings changed
 Settings > Peptide Settings -- Library > Libraries : "Experiment 15N" was removed
 Settings > Peptide Settings -- Library > Libraries : "Human Phospho" was added
 Settings > Peptide Settings -- Library > Libraries > "Human Phospho" > Path is "phospho.blib"
-Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu" was removed
+Settings > Peptide Settings -- Modifications > Structural modifications : "Gln->pyro-Glu (N-term Q)" was removed
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy": removed all
 
 Undo Redo : Peptide Settings -- Modifications > Structural modifications : "Phospho (ST)" was added

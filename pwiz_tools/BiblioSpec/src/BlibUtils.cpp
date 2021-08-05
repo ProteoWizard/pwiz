@@ -32,7 +32,7 @@ namespace BiblioSpec {
  */
     
 enum PROBABILITY_TYPE { NONE, PROBABILITY_CORRECT, PROBABILITY_INCORRECT };
-struct scoreTypeInfo { char *name; PROBABILITY_TYPE probabilityType; };
+struct scoreTypeInfo { const char *name; PROBABILITY_TYPE probabilityType; };
 
 const scoreTypeInfo scoreTypes[NUM_PSM_SCORE_TYPES] = {
     {"UNKNOWN", NONE}, // default for ssl files

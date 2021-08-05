@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int SegmentCount { get { return 1; } }
+        public int Segment { get {  return 1; } }
         public object Id { get; private set; }
         public int Tag { get; private set; }
 
@@ -130,6 +131,15 @@ namespace pwiz.Skyline.Model
         public bool HasWarnings
         {
             get { return ProgressList.Any(status => !string.IsNullOrEmpty(status.WarningMessage)); }
+        }
+
+        public string  WarningMessage
+        {
+            get
+            {
+                return TextUtil.LineSeparate(ProgressList.Select(status => status.WarningMessage)
+                    .Where(status => !string.IsNullOrEmpty(status)));
+            }
         }
 
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
@@ -193,6 +203,8 @@ namespace pwiz.Skyline.Model
                 return percent / ProgressList.Count;
             }
         }
+
+        public int ZoomedPercentComplete => PercentComplete;
 
         public bool ProgressEqual(IProgressStatus status)
         {

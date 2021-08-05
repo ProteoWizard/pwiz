@@ -120,7 +120,6 @@ runDSS <- function() {
 	                             nameStandards=standardpepname,  
 	                             fillIncompleteRows=(inputmissingpeaks=="TRUE"), 
 	                             featureSubset=input_feature_selection, 
-	                             remove_noninformative_feature_outlier=(inputremoveproteins=="TRUE"), 
 	                             summaryMethod = "TMP", 
 	                             censoredInt="0"))
 

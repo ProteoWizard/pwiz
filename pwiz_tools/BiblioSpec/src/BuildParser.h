@@ -89,9 +89,6 @@ class BuildParser : protected SAXHandler{
   int calculateCharge(double neutralMass, double precursorMz);
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   void removeDuplicates();
-  string fileNotFoundMessage(std::string specfileroot,
-                             const vector<std::string>& extensions,
-                             const vector<std::string>& directories);
   double aaMasses_[128];
 
  protected:
@@ -127,6 +124,13 @@ class BuildParser : protected SAXHandler{
 
   static bool validInts(vector<string>::const_iterator begin, vector<string>::const_iterator end);
 
+  string fileNotFoundMessage(std::string specfileroot,
+      const vector<std::string>& extensions,
+      const vector<std::string>& directories);
+  string filesNotFoundMessage(const vector<std::string>& specfileroots,
+      const vector<std::string>& extensions,
+      const vector<std::string>& directories);
+
  public:
   BuildParser(BlibBuilder& maker,
               const char* filename,
@@ -134,8 +138,8 @@ class BuildParser : protected SAXHandler{
   virtual ~BuildParser();
   virtual bool parseFile() = 0; // pure virtual, force subclass to define
 
-  string getFileName();
-  string getSpecFileName();
+  const string& getFileName();
+  const string& getSpecFileName();
 };
 
 } // namespace

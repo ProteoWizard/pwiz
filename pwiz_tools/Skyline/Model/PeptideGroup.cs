@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -155,6 +156,11 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
+        public static bool IsValidPeptideSequence(string seq)
+        {
+            return IsExSequence(seq) || null != CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(seq, 0);
+        }
+
         private readonly string _name;
         private readonly string _description;
         private readonly string _sequence;
@@ -180,6 +186,7 @@ namespace pwiz.Skyline.Model
         }
 
         public override string Name { get { return _name; } }
+        public string DisplayName => string.IsNullOrEmpty(_name) ? _sequence : _name;
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
@@ -286,6 +293,32 @@ namespace pwiz.Skyline.Model
                 if (!AminoAcid.IsExAA(c) && c != '*' && c != '-')
                     throw new InvalidDataException(string.Format(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
             }
+        }
+
+        /// <summary>
+        /// Returns the fraction of amino acids in the protein sequence which could belong to one
+        /// or more of the peptide sequences. If the protein sequence has repeats, and a particular
+        /// peptide sequence can be found within it multiple times, the peptide is considered to
+        /// cover all of its repeats.
+        /// </summary>
+        public static double CalculateSequenceCoverage(string proteinSequence, IEnumerable<string> peptideSequences)
+        {
+            var bools = new bool[proteinSequence.Length];
+            foreach (var peptide in peptideSequences)
+            {
+                if (string.IsNullOrEmpty(peptide))
+                {
+                    continue;
+                }
+                int ichNext = -1;
+                while ((ichNext = proteinSequence.IndexOf(peptide, ichNext + 1, StringComparison.Ordinal)) >= 0)
+                {
+                    ReadOnlyList.Create(peptide.Length, i => true).CopyTo(bools, ichNext);
+                }
+            }
+
+            double coveredCount = bools.Count(b => b);
+            return coveredCount / proteinSequence.Length;
         }
 
         private void Validate()

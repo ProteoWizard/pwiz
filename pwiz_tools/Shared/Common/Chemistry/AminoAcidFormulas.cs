@@ -18,12 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
-    public class AminoAcidFormulas
+    public class AminoAcidFormulas : Immutable
     {
 // ReSharper disable InconsistentNaming
         // public const double ProtonMass = 1.007276466879;  // per http://physics.nist.gov/cgi-bin/cuu/Value?mpu|search_for=proton+mass 12/18/2016
@@ -86,11 +88,13 @@ namespace pwiz.Common.Chemistry
                 );
         // ReSharper restore LocalizableElement
 
+        private Dictionary<char, Molecule> _molecules;
+        private static readonly Molecule H2O = Molecule.Parse(@"H2O");
 
         public static readonly AminoAcidFormulas Default = new AminoAcidFormulas
                                                                {
                                                                    MassShifts = new ImmutableDictionary<char,double>(new Dictionary<char, double>()),
-                                                                   Formulas = DefaultFormulas,
+                                                                   _molecules = DefaultFormulas.ToDictionary(kvp=>kvp.Key, kvp=>Molecule.Parse(kvp.Value)),
                                                                    IsotopeAbundances = IsotopeAbundances.Default,
                                                                    MassResolution = .001,
                                                                };
@@ -98,15 +102,14 @@ namespace pwiz.Common.Chemistry
 
         public double MassResolution { get; private set; }
         public IDictionary<char, double> MassShifts { get; private set; }
-        public IDictionary<char, String> Formulas { get; private set; }
         public IsotopeAbundances IsotopeAbundances { get; private set; }
         public AminoAcidFormulas SetFormula(char aminoAcid, String formula)
         {
-            var newFormulas = new Dictionary<char, String>(Formulas);
-            newFormulas[aminoAcid] = formula;
-            var result = Clone();
-            result.Formulas = newFormulas;
-            return result;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._molecules = new Dictionary<char, Molecule>(_molecules);
+                im._molecules[aminoAcid] = Molecule.Parse(formula);
+            });
         }
         public AminoAcidFormulas SetMassShift(char aminoAcid, double massShift)
         {
@@ -119,15 +122,12 @@ namespace pwiz.Common.Chemistry
             {
                 newMassShifts[entry.Key] = entry.Value;
             }
-            var result = Clone();
-            result.MassShifts = new ImmutableDictionary<char, double>(newMassShifts);
-            return result;
+
+            return ChangeProp(ImClone(this), im => im.MassShifts = newMassShifts);
         }
         public AminoAcidFormulas SetIsotopeAbundances(IsotopeAbundances newAbundances)
         {
-            var result = Clone();
-            result.IsotopeAbundances = newAbundances;
-            return result;
+            return ChangeProp(ImClone(this), im => im.IsotopeAbundances = newAbundances);
         }
         public MassDistribution GetMassDistribution(Molecule molecule, int charge)
         {
@@ -145,9 +145,7 @@ namespace pwiz.Common.Chemistry
         }
         public AminoAcidFormulas SetMassResolution(double massResolution)
         {
-            var result = Clone();
-            result.MassResolution = massResolution;
-            return result;
+            return ChangeProp(ImClone(this), im=>im.MassResolution = massResolution);
         }
         public MassDistribution GetMassDistribution(String peptide, int charge)
         {
@@ -156,20 +154,20 @@ namespace pwiz.Common.Chemistry
         }
         public Molecule GetFormula(String peptide)
         {
-            var formula = new StringBuilder();
-            foreach (var ch in peptide)
-            {
-                String aaFormula;
-                if (!Formulas.TryGetValue(ch, out aaFormula))
-                {
-                    // TODO: error
-                    continue;
-                }
-                formula.Append(aaFormula);
-            }
-            formula.Append(@"H2O");
-            return Molecule.Parse(formula.ToString());
+            var formulas = peptide.Select(aa =>
+                _molecules.TryGetValue(aa, out Molecule aaFormula) ? aaFormula : Molecule.Empty
+            ).Append(H2O);
+            return Molecule.Sum(formulas);
         }
+
+        [CanBeNull]
+        public Molecule GetAminoAcidFormula(char aa)
+        {
+            Molecule molecule;
+            _molecules.TryGetValue(aa, out molecule);
+            return molecule;
+        }
+
         public Double GetMassShift(String peptide)
         {
             var result = 0.0;
@@ -189,17 +187,6 @@ namespace pwiz.Common.Chemistry
                 result += IsotopeAbundances[element.Key].MostAbundanceMass*element.Value;
             }
             return result;
-        }
-
-        public AminoAcidFormulas Clone()
-        {
-            return new AminoAcidFormulas
-                       {
-                           Formulas = Formulas,
-                           IsotopeAbundances = IsotopeAbundances,
-                           MassResolution = MassResolution,
-                           MassShifts = MassShifts
-                       };
         }
     }
 }

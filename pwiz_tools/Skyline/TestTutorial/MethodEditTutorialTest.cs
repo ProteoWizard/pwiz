@@ -56,14 +56,16 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
-            //IsPauseForAuditLog = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForAuditLog = true;
+//            IsCoverShotMode = true;
+            CoverShotName = "MethodEdit";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-20_1.pdf";
             
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip",
+                @"https://skyline.ms/tutorials/MethodEdit.zip",
                 @"TestTutorial\MethodEditCSVs.zip",
                 @"TestTutorial\MethodEditViews.zip"
             };
@@ -107,9 +109,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
-                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast")); // Not L10N
+                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB)); // Not L10N
             });
             AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
+            RunUI(buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath);
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
@@ -166,6 +169,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[3].Nodes[0];
+                SkylineWindow.Size = new Size(1035, 511);
             });
             RestoreViewOnScreen(07);
             PauseForScreenShot("Main window", 7); // Not L10N
@@ -203,6 +207,22 @@ namespace pwiz.SkylineTestTutorial
             }
             PauseForScreenShot("Targets tree clipped from main window", 11); // Not L10N
 
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.SpectrumFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+                RestoreCoverViewOnScreen(false);
+                RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SelectedNode.Parent.Parent.Parent);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                TakeCoverShot();
+                return;
+            }
+
             CheckTransitionCount("VDIIANDQGNR", 5); // Not L10N
 
             // Using a Public Spectral Library, p. 9
@@ -230,6 +250,9 @@ namespace pwiz.SkylineTestTutorial
                     () =>
                         SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
+                // The tutorial tells the reader they can see the library name in the spectrum graph title
+                VerifyPrecursorLibrary(12, YEAST_GPM);
+                VerifyPrecursorLibrary(13, YEAST_ATLAS);
             }
 
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
@@ -464,8 +487,17 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
-            PauseForAuditLog();
         }
+
+        private void VerifyPrecursorLibrary(int indexPrecursor, string libraryName)
+        {
+            RunUI(() => SkylineWindow.SelectPath(
+                SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, indexPrecursor)));
+            WaitForGraphs();
+            RunUI(() => Assert.IsTrue(SkylineWindow.GraphSpectrum.GraphTitle.StartsWith(libraryName),
+                string.Format("Graph title '{0}' does not start with {1}", SkylineWindow.GraphSpectrum.GraphTitle, libraryName)));
+        }
+
         private void ShowNodeTip(string nodeText)
         {
             RunUI(() =>

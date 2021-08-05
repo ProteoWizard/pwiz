@@ -84,6 +84,8 @@ typedef pair<string, int> SqlColumn;
     (TMT2plex) \
     (TMT6plex) \
     (TMT10plex) \
+    (TMT11plex) \
+    (TMTpro16plex) \
     (PivotMatchesByGroup) \
     (PivotMatchesBySource) \
     (PivotPeptidesByGroup) \
@@ -125,6 +127,8 @@ BOOST_ENUM_VALUES(QuantitationRollupMethod, const char*, \
     case ns::TMT2plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
     case ns::TMT6plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
     case ns::TMT10plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::TMT11plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
+    case ns::TMTpro16plex: return make_pair("IFNULL(DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities), 0)", SQLITE_BLOB); \
     case ns::PivotMatchesByGroup: return make_pair("0", SQLITE_INTEGER); \
     case ns::PivotMatchesBySource: return make_pair("0", SQLITE_INTEGER); \
     case ns::PivotPeptidesByGroup: return make_pair("0", SQLITE_INTEGER); \
@@ -354,7 +358,7 @@ ReporterIon iTRAQ_ions[8] =
 ReporterIon itraq4plexIons[4] = { iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4] };
 ReporterIon itraq8plexIons[8] = { iTRAQ_ions[0], iTRAQ_ions[1], iTRAQ_ions[2], iTRAQ_ions[3], iTRAQ_ions[4], iTRAQ_ions[5], iTRAQ_ions[6], iTRAQ_ions[7] };
 
-ReporterIon TMT_ions[10] =
+ReporterIon TMT_ions[16] =
 {
     { "126", 0, false, false },
     { "127N", 1, false, false },
@@ -365,11 +369,19 @@ ReporterIon TMT_ions[10] =
     { "129C", 6, false, false },
     { "130N", 7, false, false },
     { "130C", 8, false, false },
-    { "131", 9, false, false }
+    { "131N", 9, false, false },
+    { "131C", 10, false, false },
+    { "132N", 11, false, false },
+    { "132C", 12, false, false },
+    { "133N", 13, false, false },
+    { "133C", 14, false, false },
+    { "134", 15, false, false }
 };
 ReporterIon tmt2plexIons[2] = { TMT_ions[0], TMT_ions[2] };
 ReporterIon tmt6plexIons[6] = { TMT_ions[0], TMT_ions[1], TMT_ions[4], TMT_ions[5], TMT_ions[8], TMT_ions[9] };
 ReporterIon tmt10plexIons[10] = { TMT_ions[0], TMT_ions[1], TMT_ions[2], TMT_ions[3], TMT_ions[4], TMT_ions[5], TMT_ions[6], TMT_ions[7], TMT_ions[8], TMT_ions[9] };
+ReporterIon tmt11plexIons[11] = { TMT_ions[0], TMT_ions[1], TMT_ions[2], TMT_ions[3], TMT_ions[4], TMT_ions[5], TMT_ions[6], TMT_ions[7], TMT_ions[8], TMT_ions[9], TMT_ions[10] };
+ReporterIon tmt16plexIons[16] = { TMT_ions[0], TMT_ions[1], TMT_ions[2], TMT_ions[3], TMT_ions[4], TMT_ions[5], TMT_ions[6], TMT_ions[7], TMT_ions[8], TMT_ions[9], TMT_ions[10], TMT_ions[11], TMT_ions[12], TMT_ions[13], TMT_ions[14], TMT_ions[15] };
 
 
 template <typename ArrayType>
@@ -466,7 +478,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         else if (bal::contains(pivotMode, "TMT"))
         {
             countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
-            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 6 ";
+            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 8 ";
         }
         else if (bal::contains(pivotMode, "PrecursorIntensity"))
             countColumn = "IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)";
@@ -545,7 +557,7 @@ int parseColumns(const vector<string>& tokens, vector<ColumnType>& enumColumns, 
 
     for (size_t i = 0; i < tokens.size(); ++i)
     {
-        ColumnType newColumn = ColumnType::get_by_name(tokens[i].c_str()).get_value_or(ColumnType::Invalid);
+        ColumnType newColumn = ColumnType::get_by_name_case_insensitive(tokens[i].c_str()).get_value_or(ColumnType::Invalid);
         if (newColumn == ColumnType::Invalid)
             invalidTokens.push_back(tokens[i]);
         else
@@ -590,7 +602,13 @@ vector<string> getReporterIonHeaders(const ReporterIon ions[], const set<Quantit
     }
     else if (&ions[0] == &TMT_ions[0])
     {
-        if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
+        if (quantitationMethods.count(QuantitationMethod::TMTpro16plex) > 0)
+            for (size_t i = 0, end = sizeof(tmt16plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt16plexIons[i].name);
+        else if (quantitationMethods.count(QuantitationMethod::TMT11plex) > 0)
+            for (size_t i = 0, end = sizeof(tmt11plexIons) / sizeof(ReporterIon); i < end; ++i)
+                reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt11plexIons[i].name);
+        else if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
             for (size_t i = 0, end = sizeof(tmt10plexIons) / sizeof(ReporterIon); i < end; ++i)
                 reporterIonColumnHeaders.push_back(lexical_cast<string>("TMT-") + tmt10plexIons[i].name);
         else if (quantitationMethods.count(QuantitationMethod::TMT6plex) > 0)
@@ -671,7 +689,11 @@ int doQuery(GroupBy groupBy,
     else if (quantitationMethods.count(QuantitationMethod::ITRAQ4plex) > 0)
         itraqMethodIons.assign(itraq4plexIons, itraq4plexIons + 4);
 
-    if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
+    if (quantitationMethods.count(QuantitationMethod::TMTpro16plex) > 0)
+        tmtMethodIons.assign(tmt16plexIons, tmt16plexIons + 16);
+    else if (quantitationMethods.count(QuantitationMethod::TMT11plex) > 0)
+        tmtMethodIons.assign(tmt11plexIons, tmt11plexIons + 11);
+    else if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
         tmtMethodIons.assign(tmt10plexIons, tmt10plexIons + 10);
     else if (quantitationMethods.count(QuantitationMethod::TMT6plex) > 0)
         tmtMethodIons.assign(tmt6plexIons, tmt6plexIons + 6);
@@ -689,7 +711,7 @@ int doQuery(GroupBy groupBy,
             (bal::icontains(tokens[i], "tmt") && tmtMethodIons.empty()))
             visibleColumns[i] = false; // this column will not be written to the output file
 
-        if (tokens[i] == "iTRAQ4plex" && !hasITRAQ)
+        if (bal::istarts_with(tokens[i], "iTRAQ") && QuantitationMethod::get_by_name_case_insensitive(tokens[i].c_str()) && !hasITRAQ)
         {
             hasITRAQ = true;
             hasSpectrumQuantitation = true;
@@ -697,15 +719,7 @@ int doQuery(GroupBy groupBy,
                 BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
                     outputStream << header << '\t';
         }
-        else if (tokens[i] == "iTRAQ8plex" && !hasITRAQ)
-        {
-            hasITRAQ = true;
-            hasSpectrumQuantitation = true;
-            if (!itraqMethodIons.empty())
-                BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
-                    outputStream << header << '\t';
-        }
-        else if (tokens[i] == "TMT2plex" && !hasTMT)
+        else if (bal::istarts_with(tokens[i], "TMT") && QuantitationMethod::get_by_name_case_insensitive(tokens[i].c_str()) && !hasTMT)
         {
             hasTMT = true;
             hasSpectrumQuantitation = true;
@@ -713,23 +727,7 @@ int doQuery(GroupBy groupBy,
                 BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
                     outputStream << header << '\t';
         }
-        else if (tokens[i] == "TMT6plex" && !hasTMT)
-        {
-            hasTMT = true;
-            hasSpectrumQuantitation = true;
-            if (!tmtMethodIons.empty())
-                BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
-                    outputStream << header << '\t';
-        }
-        else if (tokens[i] == "TMT10plex" && !hasTMT)
-        {
-            hasTMT = true;
-            hasSpectrumQuantitation = true;
-            if (!tmtMethodIons.empty())
-                BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
-                    outputStream << header << '\t';
-        }
-        else if (bal::starts_with(tokens[i], "Pivot"))
+        else if (bal::istarts_with(tokens[i], "Pivot"))
         {
             bool groupBySource = bal::ends_with(tokens[i], "Source");
             string sql = groupBySource ? "SELECT Name, Id FROM SpectrumSource ORDER BY Name"
@@ -740,7 +738,7 @@ int doQuery(GroupBy groupBy,
             string groupOrSourceName, sampleNamesString;
             vector<string> sampleNames;
 
-            if (bal::contains(tokens[i], "ITRAQ"))
+            if (bal::icontains(tokens[i], "ITRAQ"))
             {
                 if (!itraqMethodIons.empty())
                     for(sqlite::query::rows row : q)
@@ -757,13 +755,13 @@ int doQuery(GroupBy groupBy,
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
                             for(const string& sample : sampleNames)
-                                if (sample != "Reference" && sample != "Empty")
+                                if (!bal::iequals(sample, "Reference") && !bal::iequals(sample, "Empty"))
                                     outputStream << sample << "\t";
 
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
                     }
             }
-            else if (bal::contains(tokens[i], "TMT"))
+            else if (bal::icontains(tokens[i], "TMT"))
             {
                 if (!tmtMethodIons.empty())
                     for(sqlite::query::rows row : q)
@@ -780,7 +778,7 @@ int doQuery(GroupBy groupBy,
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
                             for(const string& sample : sampleNames)
-                                if (sample != "Reference" && sample != "Empty")
+                                if (!bal::iequals(sample, "Reference") && !bal::iequals(sample, "Empty"))
                                     outputStream << sample << "\t";
 
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
@@ -806,7 +804,7 @@ int doQuery(GroupBy groupBy,
         }
         else
         {
-            if (bal::contains(tokens[i], "Precursor"))
+            if (bal::icontains(tokens[i], "Precursor"))
                 hasPrecursorQuantitation = true;
             outputStream << tokens[i] << '\t';
         }
@@ -924,6 +922,8 @@ int doQuery(GroupBy groupBy,
                         case ColumnType::TMT2plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
                         case ColumnType::TMT6plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
                         case ColumnType::TMT10plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, tmtMethodIons); break;
+                        case ColumnType::TMT11plex: writeBlobArray<double>(row.get<const void*>(i + 1), outputStream, tmtMethodIons); break;
+                        case ColumnType::TMTpro16plex: writeBlobArray<double>(row.get<const void*>(i + 1), outputStream, tmtMethodIons); break;
                             
                         case ColumnType::PivotITRAQByGroup:
                         case ColumnType::PivotITRAQBySource:
@@ -964,9 +964,9 @@ int doQuery(GroupBy groupBy,
                                         if (reporterIons.size() != sampleNames.size())
                                             throw runtime_error("sample name count does not match number of reporter ions");
                                         for (size_t k=0; k < sampleNames.size(); ++k)
-                                            if (sampleNames[k] == "Empty")
+                                            if (bal::iequals(sampleNames[k], "Empty"))
                                                 reporterIons[k].empty = true, reporterIons[k].reference = false;
-                                            else if (sampleNames[k] == "Reference")
+                                            else if (bal::iequals(sampleNames[k], "Reference"))
                                                 reporterIons[k].reference = true, reporterIons[k].empty = false;
                                             else
                                                 reporterIons[k].reference = reporterIons[k].empty = false;
@@ -988,9 +988,9 @@ int doQuery(GroupBy groupBy,
                                         if (reporterIons.size() != sampleNames.size())
                                             throw runtime_error("sample name count does not match number of reporter ions");
                                         for (size_t k = 0; k < sampleNames.size(); ++k)
-                                            if (sampleNames[k] == "Empty")
+                                            if (bal::iequals(sampleNames[k], "Empty"))
                                                 reporterIons[k].empty = true, reporterIons[k].reference = false;
-                                            else if (sampleNames[k] == "Reference")
+                                            else if (bal::iequals(sampleNames[k], "Reference"))
                                                 reporterIons[k].reference = true, reporterIons[k].empty = false;
                                             else
                                                 reporterIons[k].reference = reporterIons[k].empty = false;

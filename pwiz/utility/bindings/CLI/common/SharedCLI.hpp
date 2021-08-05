@@ -208,6 +208,14 @@ property System::String^ Name \
     void set(System::String^ value) {base().Name = ToStdString(value);} \
 }
 
+// wraps a const char* native member variable
+#define DEFINE_C_STRING_PROPERTY(Name) \
+property System::String^ Name \
+{ \
+    System::String^ get() {return ToSystemString(base().Name);} \
+    void set(System::String^ value) {base().Name = strdup(ToStdString(value).c_str());} \
+}
+
 // wraps a native member variable with no indirection (and owned by the class)
 #define DEFINE_REFERENCE_PROPERTY(Type, Name) \
 property Type^ Name \

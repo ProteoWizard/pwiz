@@ -698,6 +698,12 @@ namespace pwiz.Skyline.Model.Results
                 raw = new RawData(CacheFormat.EMPTY);
                 return 0;
             }
+
+            if (cacheHeader.IsCorrupted(stream.Length))
+            {
+                throw new InvalidDataException(Resources.ChromatogramCache_LoadStructs_FileCorrupted);
+            }
+
             var formatVersion = cacheHeader.formatVersion;
             CacheFormat cacheFormat = CacheFormat.FromCacheHeader(cacheHeader);
             raw = new RawData(cacheFormat);
@@ -1198,8 +1204,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromKey key = new ChromKey(_textIdBytes, groupInfo.TextIdIndex, groupInfo.TextIdLen,
                         groupInfo.Precursor, product, extractionWidth, 
                         IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityExtractionWidth, groupInfo.CollisionalCrossSection),
-                        source, groupInfo.Extractor, true, true,
-                        null, null);    // this provider can't provide these optional times
+                        source, groupInfo.Extractor, true, true);
 
                     int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
                     int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;
@@ -1333,7 +1338,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 else
                                 {
-                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, peaks.Skip(startIndex).Take(count));    
+                                    chromPeakSerializer.WriteItems(fsPeaks.FileStream, ReadOnlyList.Create(count, index => peaks[startIndex + index]));    
                                 }
                             },
                             start,

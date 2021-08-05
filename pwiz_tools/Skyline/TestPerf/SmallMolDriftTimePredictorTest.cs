@@ -21,10 +21,11 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf 
@@ -38,13 +39,15 @@ namespace TestPerf
         private const string SULFA_MIX = "Sulfa Mix 1.0ms.d";
 
         [TestMethod]
-        public void TestDriftTimePredictorSmallMolecules()
+        public void TestDriftTimePredictorSmallMolecules()  // N.B. the term "Drift Time Predictor" is a historical curiosity, leaving it alone for test history continuity
         {
             // RunPerfTests = true; // Enables perftests to run from the IDE (you don't want to commit this line without commenting it out)
 
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf";
+
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.ms/perftests/DriftTimePredictorSmallMoleculesTest.zip",
+                GetPerfTestDataURL(@"DriftTimePredictorSmallMoleculesTest.zip"),
             };
 
             TestFilesPersistent = new[] { SULFA_MIX };
@@ -85,31 +88,29 @@ namespace TestPerf
             document = WaitForDocumentLoaded();
 
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
+            AssertEx.IsTrue(area > 0);
 
             // Locate drift peaks
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-            var driftPredictor = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsUI.AddDriftTimePredictor);
-            const string predictorName = "Sulfa";
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            RunUI(() => transitionSettingsUI.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
+            RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+            const string libName = "Sulfa";
+            var databasePath = TestFilesDir.GetTestPath(libName + IonMobilityDb.EXT);
             RunUI(() =>
             {
-                driftPredictor.SetPredictorName(predictorName);
-                driftPredictor.SetResolvingPower(50);
-                driftPredictor.GetDriftTimesFromResults();
+                editIonMobilityLibraryDlg.LibraryName = libName;
+                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
-
-            // Check that a new value was calculated for all precursors
-            RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
-
-            OkDialog(driftPredictor, () => driftPredictor.OkDialog());
+            OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
             RunUI(() =>
             {
-                Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
-                Assert.AreEqual(2, peptideSettingsUI.TimeWindow);
-                Assert.AreEqual(predictorName, peptideSettingsUI.SelectedDriftTimePredictor);
+                Assert.AreEqual(libName, transitionSettingsUI.IonMobilityControl.SelectedIonMobilityLibrary);
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             WaitForDocumentChangeLoaded(document);
 
@@ -126,7 +127,8 @@ namespace TestPerf
 
             // If drift filtering was engaged, peak area should be less
             var areaFiltered = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
-            Assume.IsTrue(area > areaFiltered);
+            AssertEx.IsTrue(area > areaFiltered);
+            AssertEx.IsTrue(areaFiltered > 0);
 
         }
 

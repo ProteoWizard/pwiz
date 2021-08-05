@@ -31,275 +31,352 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btnEdit = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
-            this.btnNewConfig = new System.Windows.Forms.Button();
-            this.listViewConfigs = new System.Windows.Forms.ListView();
-            this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.listViewStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSavedConfigurations = new System.Windows.Forms.Label();
-            this.btnViewLog1 = new System.Windows.Forms.Button();
+            this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.tabFront = new System.Windows.Forms.TabPage();
+            this.tabConfigs = new System.Windows.Forms.TabPage();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.listViewConfigs = new AutoQC.MyListView();
+            this.columnName2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnUser2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnCreated2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btnAdd = new System.Windows.Forms.Button();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.btnDelete = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenPanoramaFolder = new System.Windows.Forms.ToolStripButton();
+            this.btnOpenFolder = new System.Windows.Forms.ToolStripButton();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
-            this.btnOpenFolder = new System.Windows.Forms.Button();
-            this.btnViewLog2 = new System.Windows.Forms.Button();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.btnOpenLogFolder = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
-            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
+            this.textBoxLog = new System.Windows.Forms.RichTextBox();
+            this.tabSettings = new System.Windows.Forms.TabPage();
+            this.groupBoxAutoQcSettings = new System.Windows.Forms.GroupBox();
+            this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
+            this.cb_keepRunning = new System.Windows.Forms.CheckBox();
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
+            this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.openFolderMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripFolderToWatch = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.tabMain.SuspendLayout();
-            this.tabFront.SuspendLayout();
+            this.tabConfigs.SuspendLayout();
+            this.panel4.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.toolStrip.SuspendLayout();
             this.tabLog.SuspendLayout();
+            this.panel3.SuspendLayout();
+            this.tabSettings.SuspendLayout();
+            this.groupBoxAutoQcSettings.SuspendLayout();
+            this.openFolderMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(603, 111);
+            resources.ApplyResources(this.btnEdit, "btnEdit");
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(75, 23);
-            this.btnEdit.TabIndex = 2;
-            this.btnEdit.Text = "Edit";
             this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
-            // 
-            // btnDelete
-            // 
-            this.btnDelete.Location = new System.Drawing.Point(603, 193);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(75, 23);
-            this.btnDelete.TabIndex = 3;
-            this.btnDelete.Text = "Delete";
-            this.btnDelete.UseVisualStyleBackColor = true;
-            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            this.btnEdit.Click += new System.EventHandler(this.HandleEditEvent);
             // 
             // btnCopy
             // 
-            this.btnCopy.Location = new System.Drawing.Point(603, 153);
+            resources.ApplyResources(this.btnCopy, "btnCopy");
             this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(75, 23);
-            this.btnCopy.TabIndex = 4;
-            this.btnCopy.Text = "Copy";
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // lblNoConfigs
             // 
-            this.lblNoConfigs.AutoSize = true;
-            this.lblNoConfigs.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
-            this.lblNoConfigs.Location = new System.Drawing.Point(81, 440);
+            resources.ApplyResources(this.lblNoConfigs, "lblNoConfigs");
+            this.lblNoConfigs.ForeColor = System.Drawing.Color.Crimson;
             this.lblNoConfigs.Name = "lblNoConfigs";
-            this.lblNoConfigs.Size = new System.Drawing.Size(539, 16);
-            this.lblNoConfigs.TabIndex = 5;
-            this.lblNoConfigs.Text = "There are no saved configurations. Click on the button below to create a new conf" +
-    "iguration.";
             // 
-            // btnNewConfig
+            // labelSavedConfigurations
             // 
-            this.btnNewConfig.Location = new System.Drawing.Point(260, 468);
-            this.btnNewConfig.Name = "btnNewConfig";
-            this.btnNewConfig.Size = new System.Drawing.Size(202, 23);
-            this.btnNewConfig.TabIndex = 6;
-            this.btnNewConfig.Text = "Create a new configuration";
-            this.btnNewConfig.UseVisualStyleBackColor = true;
-            this.btnNewConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
+            resources.ApplyResources(this.labelSavedConfigurations, "labelSavedConfigurations");
+            this.labelSavedConfigurations.Name = "labelSavedConfigurations";
+            // 
+            // btnViewLog
+            // 
+            resources.ApplyResources(this.btnViewLog, "btnViewLog");
+            this.btnViewLog.Name = "btnViewLog";
+            this.btnViewLog.UseVisualStyleBackColor = true;
+            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
+            // 
+            // tabMain
+            // 
+            resources.ApplyResources(this.tabMain, "tabMain");
+            this.tabMain.Controls.Add(this.tabConfigs);
+            this.tabMain.Controls.Add(this.tabLog);
+            this.tabMain.Controls.Add(this.tabSettings);
+            this.tabMain.Name = "tabMain";
+            this.tabMain.SelectedIndex = 0;
+            // 
+            // tabConfigs
+            // 
+            this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.panel4);
+            this.tabConfigs.Controls.Add(this.listViewConfigs);
+            this.tabConfigs.Controls.Add(this.panel1);
+            resources.ApplyResources(this.tabConfigs, "tabConfigs");
+            this.tabConfigs.Name = "tabConfigs";
+            this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
+            // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.labelSavedConfigurations);
+            this.panel4.Controls.Add(this.lblNoConfigs);
+            resources.ApplyResources(this.panel4, "panel4");
+            this.panel4.Name = "panel4";
             // 
             // listViewConfigs
             // 
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.listViewConfigName,
-            this.listViewUser,
-            this.listViewCreated,
-            this.listViewStatus});
+            this.columnName2,
+            this.columnUser2,
+            this.columnCreated2,
+            this.columnStatus2});
             this.listViewConfigs.FullRowSelect = true;
-            this.listViewConfigs.Location = new System.Drawing.Point(59, 54);
+            this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Size = new System.Drawing.Size(527, 373);
-            this.listViewConfigs.TabIndex = 7;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
             this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
-            this.listViewConfigs.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.listViewConfigs_ItemChecked);
-            this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_ItemSelectionChanged);
+            this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
+            this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
+            this.listViewConfigs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseDown);
             // 
-            // listViewConfigName
+            // columnName2
             // 
-            this.listViewConfigName.Text = "Configuration";
-            this.listViewConfigName.Width = 257;
+            resources.ApplyResources(this.columnName2, "columnName2");
             // 
-            // listViewUser
+            // columnUser2
             // 
-            this.listViewUser.Text = "User";
-            this.listViewUser.Width = 117;
+            resources.ApplyResources(this.columnUser2, "columnUser2");
             // 
-            // listViewCreated
+            // columnCreated2
             // 
-            this.listViewCreated.Text = "Created";
-            this.listViewCreated.Width = 80;
+            resources.ApplyResources(this.columnCreated2, "columnCreated2");
             // 
-            // listViewStatus
+            // columnStatus2
             // 
-            this.listViewStatus.Text = "Status";
-            this.listViewStatus.Width = 69;
+            resources.ApplyResources(this.columnStatus2, "columnStatus2");
             // 
-            // labelSavedConfigurations
+            // panel1
             // 
-            this.labelSavedConfigurations.AutoSize = true;
-            this.labelSavedConfigurations.Location = new System.Drawing.Point(56, 35);
-            this.labelSavedConfigurations.Name = "labelSavedConfigurations";
-            this.labelSavedConfigurations.Size = new System.Drawing.Size(110, 13);
-            this.labelSavedConfigurations.TabIndex = 8;
-            this.labelSavedConfigurations.Text = "Saved configurations:";
+            resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnViewLog);
+            this.panel1.Controls.Add(this.btnAdd);
+            this.panel1.Controls.Add(this.toolStrip);
+            this.panel1.Controls.Add(this.btnImportConfigs);
+            this.panel1.Controls.Add(this.btnExportConfigs);
+            this.panel1.Controls.Add(this.btnEdit);
+            this.panel1.Controls.Add(this.btnCopy);
+            this.panel1.Name = "panel1";
             // 
-            // btnViewLog1
+            // btnAdd
             // 
-            this.btnViewLog1.Location = new System.Drawing.Point(603, 286);
-            this.btnViewLog1.Name = "btnViewLog1";
-            this.btnViewLog1.Size = new System.Drawing.Size(75, 23);
-            this.btnViewLog1.TabIndex = 9;
-            this.btnViewLog1.Text = "View log";
-            this.btnViewLog1.UseVisualStyleBackColor = true;
-            this.btnViewLog1.Click += new System.EventHandler(this.btnViewLog1_Click);
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
-            // tabMain
+            // toolStrip
             // 
-            this.tabMain.Controls.Add(this.tabFront);
-            this.tabMain.Controls.Add(this.tabLog);
-            this.tabMain.Location = new System.Drawing.Point(12, 12);
-            this.tabMain.Name = "tabMain";
-            this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(739, 551);
-            this.tabMain.TabIndex = 10;
+            this.toolStrip.BackColor = System.Drawing.SystemColors.Control;
+            resources.ApplyResources(this.toolStrip, "toolStrip");
+            this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnDelete,
+            this.btnOpenResults,
+            this.btnOpenPanoramaFolder,
+            this.btnOpenFolder});
+            this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip.Name = "toolStrip";
             // 
-            // tabFront
+            // btnDelete
             // 
-            this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.btnImportConfigs);
-            this.tabFront.Controls.Add(this.btnExportConfigs);
-            this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.labelSavedConfigurations);
-            this.tabFront.Controls.Add(this.btnViewLog1);
-            this.tabFront.Controls.Add(this.lblNoConfigs);
-            this.tabFront.Controls.Add(this.btnNewConfig);
-            this.tabFront.Controls.Add(this.btnEdit);
-            this.tabFront.Controls.Add(this.btnCopy);
-            this.tabFront.Controls.Add(this.btnDelete);
-            this.tabFront.Location = new System.Drawing.Point(4, 22);
-            this.tabFront.Name = "tabFront";
-            this.tabFront.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFront.Size = new System.Drawing.Size(731, 525);
-            this.tabFront.TabIndex = 0;
-            this.tabFront.Text = "Configurations";
+            this.btnDelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnDelete, "btnDelete");
+            this.btnDelete.Image = global::AutoQC.Properties.Resources.Delete;
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // btnOpenResults
+            // 
+            this.btnOpenResults.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenResults, "btnOpenResults");
+            this.btnOpenResults.Image = global::AutoQC.Properties.Resources.SkylineData;
+            this.btnOpenResults.Name = "btnOpenResults";
+            this.btnOpenResults.Click += new System.EventHandler(this.btnOpenResults_Click);
+            // 
+            // btnOpenPanoramaFolder
+            // 
+            this.btnOpenPanoramaFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenPanoramaFolder, "btnOpenPanoramaFolder");
+            this.btnOpenPanoramaFolder.Image = global::AutoQC.Properties.Resources.Panorama;
+            this.btnOpenPanoramaFolder.Name = "btnOpenPanoramaFolder";
+            this.btnOpenPanoramaFolder.Click += new System.EventHandler(this.btnOpenPanoramaFolder_Click);
+            // 
+            // btnOpenFolder
+            // 
+            this.btnOpenFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
+            this.btnOpenFolder.Image = global::AutoQC.Properties.Resources.OpenFolder;
+            this.btnOpenFolder.Name = "btnOpenFolder";
+            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
             // 
             // btnImportConfigs
             // 
-            this.btnImportConfigs.Location = new System.Drawing.Point(603, 380);
+            resources.ApplyResources(this.btnImportConfigs, "btnImportConfigs");
             this.btnImportConfigs.Name = "btnImportConfigs";
-            this.btnImportConfigs.Size = new System.Drawing.Size(75, 23);
-            this.btnImportConfigs.TabIndex = 11;
-            this.btnImportConfigs.Text = "Import...";
-            this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, "Import saved configurations...");
+            this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, resources.GetString("btnImportConfigs.ToolTip"));
             this.btnImportConfigs.UseVisualStyleBackColor = true;
             this.btnImportConfigs.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // btnExportConfigs
             // 
-            this.btnExportConfigs.Location = new System.Drawing.Point(603, 340);
+            resources.ApplyResources(this.btnExportConfigs, "btnExportConfigs");
             this.btnExportConfigs.Name = "btnExportConfigs";
-            this.btnExportConfigs.Size = new System.Drawing.Size(75, 23);
-            this.btnExportConfigs.TabIndex = 10;
-            this.btnExportConfigs.Text = "Export...";
-            this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, "Export saved configurations...");
+            this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, resources.GetString("btnExportConfigs.ToolTip"));
             this.btnExportConfigs.UseVisualStyleBackColor = true;
             this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
-            this.tabLog.Controls.Add(this.btnOpenFolder);
-            this.tabLog.Controls.Add(this.btnViewLog2);
-            this.tabLog.Controls.Add(this.lblConfigSelect);
+            this.tabLog.Controls.Add(this.panel3);
             this.tabLog.Controls.Add(this.textBoxLog);
-            this.tabLog.Controls.Add(this.comboConfigs);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
+            resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
-            this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(731, 525);
-            this.tabLog.TabIndex = 1;
-            this.tabLog.Text = "Log";
+            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
-            // btnOpenFolder
+            // panel3
             // 
-            this.btnOpenFolder.Location = new System.Drawing.Point(627, 19);
-            this.btnOpenFolder.Name = "btnOpenFolder";
-            this.btnOpenFolder.Size = new System.Drawing.Size(81, 23);
-            this.btnOpenFolder.TabIndex = 5;
-            this.btnOpenFolder.Text = "Open folder";
-            this.btnOpenFolder.UseVisualStyleBackColor = true;
-            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            resources.ApplyResources(this.panel3, "panel3");
+            this.panel3.Controls.Add(this.btnOpenLogFolder);
+            this.panel3.Controls.Add(this.lblConfigSelect);
+            this.panel3.Controls.Add(this.comboConfigs);
+            this.panel3.Name = "panel3";
             // 
-            // btnViewLog2
+            // btnOpenLogFolder
             // 
-            this.btnViewLog2.Location = new System.Drawing.Point(546, 19);
-            this.btnViewLog2.Name = "btnViewLog2";
-            this.btnViewLog2.Size = new System.Drawing.Size(75, 23);
-            this.btnViewLog2.TabIndex = 4;
-            this.btnViewLog2.Text = "View log";
-            this.btnViewLog2.UseVisualStyleBackColor = true;
-            this.btnViewLog2.Click += new System.EventHandler(this.btnViewLog2_Click);
+            resources.ApplyResources(this.btnOpenLogFolder, "btnOpenLogFolder");
+            this.btnOpenLogFolder.Name = "btnOpenLogFolder";
+            this.btnOpenLogFolder.UseVisualStyleBackColor = true;
+            this.btnOpenLogFolder.Click += new System.EventHandler(this.btnOpenLogFolder_Click);
             // 
             // lblConfigSelect
             // 
-            this.lblConfigSelect.AutoSize = true;
-            this.lblConfigSelect.Location = new System.Drawing.Point(21, 19);
+            resources.ApplyResources(this.lblConfigSelect, "lblConfigSelect");
             this.lblConfigSelect.Name = "lblConfigSelect";
-            this.lblConfigSelect.Size = new System.Drawing.Size(72, 13);
-            this.lblConfigSelect.TabIndex = 2;
-            this.lblConfigSelect.Text = "Configuration:";
-            // 
-            // textBoxLog
-            // 
-            this.textBoxLog.Location = new System.Drawing.Point(24, 59);
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.Size = new System.Drawing.Size(684, 446);
-            this.textBoxLog.TabIndex = 1;
-            this.textBoxLog.Text = "";
             // 
             // comboConfigs
             // 
+            resources.ApplyResources(this.comboConfigs, "comboConfigs");
+            this.comboConfigs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboConfigs.FormattingEnabled = true;
-            this.comboConfigs.Location = new System.Drawing.Point(114, 19);
             this.comboConfigs.Name = "comboConfigs";
-            this.comboConfigs.Size = new System.Drawing.Size(414, 21);
-            this.comboConfigs.TabIndex = 0;
+            this.comboConfigs.SelectedIndexChanged += new System.EventHandler(this.comboConfigs_SelectedIndexChanged);
+            // 
+            // textBoxLog
+            // 
+            resources.ApplyResources(this.textBoxLog, "textBoxLog");
+            this.textBoxLog.Name = "textBoxLog";
+            this.textBoxLog.ReadOnly = true;
+            // 
+            // tabSettings
+            // 
+            this.tabSettings.BackColor = System.Drawing.SystemColors.Control;
+            this.tabSettings.Controls.Add(this.groupBoxAutoQcSettings);
+            resources.ApplyResources(this.tabSettings, "tabSettings");
+            this.tabSettings.Name = "tabSettings";
+            // 
+            // groupBoxAutoQcSettings
+            // 
+            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
+            this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
+            this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
+            this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
+            this.groupBoxAutoQcSettings.TabStop = false;
+            // 
+            // cb_minimizeToSysTray
+            // 
+            resources.ApplyResources(this.cb_minimizeToSysTray, "cb_minimizeToSysTray");
+            this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
+            this.cb_minimizeToSysTray.UseVisualStyleBackColor = true;
+            // 
+            // cb_keepRunning
+            // 
+            resources.ApplyResources(this.cb_keepRunning, "cb_keepRunning");
+            this.cb_keepRunning.Name = "cb_keepRunning";
+            this.toolTip_MainForm.SetToolTip(this.cb_keepRunning, resources.GetString("cb_keepRunning.ToolTip"));
+            this.cb_keepRunning.UseVisualStyleBackColor = true;
+            // 
+            // systray_icon
+            // 
+            resources.ApplyResources(this.systray_icon, "systray_icon");
+            this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
+            // 
+            // openFolderMenuStrip
+            // 
+            this.openFolderMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripFolderToWatch,
+            this.toolStripLogFolder});
+            this.openFolderMenuStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Table;
+            this.openFolderMenuStrip.Name = "openFolderMenuStrip";
+            this.openFolderMenuStrip.ShowImageMargin = false;
+            resources.ApplyResources(this.openFolderMenuStrip, "openFolderMenuStrip");
+            // 
+            // toolStripFolderToWatch
+            // 
+            this.toolStripFolderToWatch.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripFolderToWatch.Name = "toolStripFolderToWatch";
+            resources.ApplyResources(this.toolStripFolderToWatch, "toolStripFolderToWatch");
+            this.toolStripFolderToWatch.Click += new System.EventHandler(this.toolStripFolderToWatch_Click);
+            // 
+            // toolStripLogFolder
+            // 
+            this.toolStripLogFolder.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripLogFolder.Name = "toolStripLogFolder";
+            resources.ApplyResources(this.toolStripLogFolder, "toolStripLogFolder");
+            this.toolStripLogFolder.Click += new System.EventHandler(this.toolStripLogFolder_Click);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(763, 575);
             this.Controls.Add(this.tabMain);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = " AutoQC";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
-            this.tabFront.ResumeLayout(false);
-            this.tabFront.PerformLayout();
+            this.tabConfigs.ResumeLayout(false);
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.toolStrip.ResumeLayout(false);
+            this.toolStrip.PerformLayout();
             this.tabLog.ResumeLayout(false);
-            this.tabLog.PerformLayout();
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
+            this.tabSettings.ResumeLayout(false);
+            this.groupBoxAutoQcSettings.ResumeLayout(false);
+            this.groupBoxAutoQcSettings.PerformLayout();
+            this.openFolderMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -307,28 +384,41 @@
         #endregion
 
         private System.Windows.Forms.Button btnEdit;
-        private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Label lblNoConfigs;
-        private System.Windows.Forms.Button btnNewConfig;
-        private System.Windows.Forms.ListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
-        private System.Windows.Forms.ColumnHeader listViewUser;
-        private System.Windows.Forms.ColumnHeader listViewCreated;
         private System.Windows.Forms.Label labelSavedConfigurations;
-        private System.Windows.Forms.Button btnViewLog1;
+        private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.TabControl tabMain;
-        private System.Windows.Forms.TabPage tabFront;
+        private System.Windows.Forms.TabPage tabConfigs;
         private System.Windows.Forms.TabPage tabLog;
         private System.Windows.Forms.Label lblConfigSelect;
         private System.Windows.Forms.RichTextBox textBoxLog;
         private System.Windows.Forms.ComboBox comboConfigs;
-        private System.Windows.Forms.Button btnViewLog2;
-        private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.Button btnOpenLogFolder;
         private System.Windows.Forms.Button btnImportConfigs;
         private System.Windows.Forms.Button btnExportConfigs;
         private System.Windows.Forms.ToolTip toolTip_MainForm;
-
+        private System.Windows.Forms.TabPage tabSettings;
+        private System.Windows.Forms.CheckBox cb_minimizeToSysTray;
+        private System.Windows.Forms.GroupBox groupBoxAutoQcSettings;
+        private System.Windows.Forms.CheckBox cb_keepRunning;
+        private System.Windows.Forms.NotifyIcon systray_icon;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ToolStrip toolStrip;
+        private System.Windows.Forms.ToolStripButton btnDelete;
+        private System.Windows.Forms.ToolStripButton btnOpenResults;
+        private System.Windows.Forms.ToolStripButton btnOpenFolder;
+        private System.Windows.Forms.ToolStripButton btnOpenPanoramaFolder;
+        private System.Windows.Forms.ContextMenuStrip openFolderMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
+        private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
+        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
+        private MyListView listViewConfigs;
+        private System.Windows.Forms.ColumnHeader columnName2;
+        private System.Windows.Forms.ColumnHeader columnUser2;
+        private System.Windows.Forms.ColumnHeader columnCreated2;
+        private System.Windows.Forms.ColumnHeader columnStatus2;
     }
 }

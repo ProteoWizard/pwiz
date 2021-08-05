@@ -20,10 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -60,6 +62,8 @@ namespace pwiz.Skyline.Model.Lib
                     return new PrecursorLibraryKey(proto);
                 case LibraryKeyProto.Types.KeyType.SmallMolecule:
                     return new MoleculeLibraryKey(valueCache,proto);
+                case LibraryKeyProto.Types.KeyType.Crosslink:
+                    return new CrosslinkLibraryKey(proto);
             }
             return null;
         }
@@ -88,6 +92,13 @@ namespace pwiz.Skyline.Model.Lib
         {
             return new LibKey(libraryKey);
         }
+
+        /// <summary>
+        /// Creates a Peptide object corresponding to this LibraryKey. Will throw
+        /// an exception if this LibraryKey is malformed.
+        /// </summary>
+        /// <returns></returns>
+        public abstract Peptide CreatePeptideIdentityObj();
     }
 
     public class PeptideLibraryKey : LibraryKey
@@ -285,6 +296,11 @@ namespace pwiz.Skyline.Model.Lib
             newSequence.Append(UnmodifiedSequence.Substring(aaCount));
             return new PeptideLibraryKey(newSequence.ToString(), Charge);
         }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return new Peptide(UnmodifiedSequence);
+        }
     }
 
     public class MoleculeLibraryKey : LibraryKey
@@ -416,6 +432,11 @@ namespace pwiz.Skyline.Model.Lib
             }
             return Equals(PreferredKey, that.PreferredKey) && Equals(Adduct, that.Adduct);
         }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return new Peptide(Target);
+        }
     }
 
     public class PrecursorLibraryKey : LibraryKey
@@ -485,6 +506,257 @@ namespace pwiz.Skyline.Model.Lib
                 return precursor;
             var rt = RetentionTime.GetValueOrDefault().ToString(@"0.00", CultureInfo.CurrentCulture);
             return string.Format(@"{0} ({1})", precursor, rt);
+        }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return null;
+        }
+    }
+
+    public class CrosslinkLibraryKey : LibraryKey
+    {
+        public CrosslinkLibraryKey(IEnumerable<PeptideLibraryKey> peptideLibraryKeys, IEnumerable<Crosslink> crosslinks, int charge)
+        {
+            PeptideLibraryKeys = ImmutableList.ValueOf(peptideLibraryKeys);
+            Crosslinks = ImmutableList.ValueOf(crosslinks);
+            Charge = charge;
+        }
+
+        public CrosslinkLibraryKey(LibraryKeyProto libraryKeyProto)
+        {
+            PeptideLibraryKeys = ImmutableList.ValueOf(libraryKeyProto.CrosslinkedSequences
+                .Select(sequence => new PeptideLibraryKey(sequence, 0)));
+            Crosslinks = ImmutableList.ValueOf(libraryKeyProto.Crosslinkers.Select(crosslinkProto =>
+                new Crosslink(crosslinkProto.Name, crosslinkProto.Positions.Select(pos => pos.Position.ToArray()))));
+            Charge = libraryKeyProto.Charge;
+        }
+
+        public override Target Target
+        {
+            get { return PeptideLibraryKeys.First().Target; }
+        }
+
+        public int Charge { get; private set; }
+
+        public override Adduct Adduct
+        {
+            get { return Adduct.FromChargeProtonated(Charge); }
+        }
+        protected internal override LibraryKeyProto ToLibraryKeyProto()
+        {
+            var libraryKeyProto = new LibraryKeyProto()
+            {
+                KeyType = LibraryKeyProto.Types.KeyType.Crosslink,
+                Charge = Charge
+            };
+            foreach (var peptideLibraryKey in PeptideLibraryKeys)
+            {
+                libraryKeyProto.CrosslinkedSequences.Add(peptideLibraryKey.ModifiedSequence);
+            }
+            foreach (var crosslinker in Crosslinks)
+            {
+                var crosslinkProto = new LibraryKeyProto.Types.Crosslinker()
+                {
+                    Name = crosslinker.Name
+                };
+                foreach (var positions in crosslinker.Positions)
+                {
+                    var positionsProto = new LibraryKeyProto.Types.Positions();
+                    positionsProto.Position.AddRange(positions);
+                    crosslinkProto.Positions.Add(positionsProto);
+                }
+                libraryKeyProto.Crosslinkers.Add(crosslinkProto);
+            }
+            return libraryKeyProto;
+        }
+
+        public override LibraryKey StripModifications()
+        {
+            return PeptideLibraryKeys.First().StripModifications();
+        }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return PeptideLibraryKeys.First().CreatePeptideIdentityObj();
+        }
+
+        public ImmutableList<PeptideLibraryKey> PeptideLibraryKeys { get; private set; }
+
+        public ImmutableList<Crosslink> Crosslinks { get; private set; }
+
+        public class Crosslink : Immutable
+        {
+            public Crosslink(string name, IEnumerable<IEnumerable<int>> positions)
+            {
+                Name = name;
+                Positions = MakePositions(positions);
+            }
+
+            public string Name { get; private set; }
+
+            public ImmutableList<ImmutableList<int>> Positions { get; private set; }
+
+            public IList<IEnumerable<int>> AaIndexes
+            {
+                get { return ReadOnlyList.Create(Positions.Count, i => Positions[i].Select(x=>x - 1)); }
+            }
+
+            protected bool Equals(Crosslink other)
+            {
+                return Name == other.Name && Positions.Equals(other.Positions);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Crosslink) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Name.GetHashCode() * 397) ^ Positions.GetHashCode();
+                }
+            }
+
+            public override string ToString()
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append(@"[");
+                stringBuilder.Append(Name);
+                stringBuilder.Append(@"@");
+                string strComma = string.Empty;
+                foreach (var list in Positions)
+                {
+                    stringBuilder.Append(strComma);
+                    strComma = @",";
+                    if (list.Count == 0)
+                    {
+                        stringBuilder.Append(@"*");
+                    }
+                    else if (list.Count == 1)
+                    {
+                        stringBuilder.Append(list[0].ToString(CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        stringBuilder.Append(string.Join(@"-", list));
+                    }
+                }
+
+                stringBuilder.Append(@"]");
+                return stringBuilder.ToString();
+            }
+
+            public IEnumerable<int> PeptideIndexesWithLinks
+            {
+                get
+                {
+                    for (int i = 0; i < Positions.Count; i++)
+                    {
+                        if (Positions[i].Any())
+                        {
+                            yield return i;
+                        }
+                    }
+                }
+            }
+
+            public IEnumerable<CrosslinkSite> CrosslinkSites
+            {
+                get
+                {
+                    return Enumerable.Range(0, Positions.Count).SelectMany(peptideIndex =>
+                        Positions[peptideIndex].Select(aaPosition => new CrosslinkSite(peptideIndex, aaPosition - 1)));
+                }
+            }
+        }
+
+        public static ImmutableList<ImmutableList<int>> MakePositions(IEnumerable<IEnumerable<int>> positions)
+        {
+            if (positions is ImmutableList<ImmutableList<int>> immutableList && !immutableList.Contains(null))
+            {
+                return immutableList;
+            }
+
+            return ImmutableList.ValueOf(positions.Select(entry => ImmutableList.ValueOfOrEmpty(entry)));
+        }
+
+        public override string ToString()
+        {
+            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Join(String.Empty, Crosslinks) + Transition.GetChargeIndicator(Adduct);
+        }
+
+        /// <summary>
+        /// Returns true if Skyline can handle the structure of the crosslinks in this CrosslinkLibraryKey.
+        /// </summary>
+        public bool IsSupportedBySkyline()
+        {
+            var queue = new List<int>();
+            var remainingCrosslinks = new List<ImmutableList<int>>();
+            var consumedPeptides = new HashSet<int>();
+            foreach (var crosslink in Crosslinks)
+            {
+                var peptideIndexesWithLinks = ImmutableList.ValueOf(crosslink.PeptideIndexesWithLinks);
+                if (peptideIndexesWithLinks.Count == 1)
+                {
+                    if (crosslink.AaIndexes[peptideIndexesWithLinks[0]].Count() != 2)
+                    {
+                        return false;
+                    }
+                }
+                else if (peptideIndexesWithLinks.Count == 2)
+                {
+                    if (peptideIndexesWithLinks.Any(index => crosslink.AaIndexes[index].Count() != 1))
+                    {
+                        return false;
+                    }
+                    if (peptideIndexesWithLinks.Contains(0))
+                    {
+                        Assume.AreEqual(peptideIndexesWithLinks[0], 0);
+                        queue.Add(peptideIndexesWithLinks[1]);
+                    }
+                    else
+                    {
+                        remainingCrosslinks.Add(peptideIndexesWithLinks);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            consumedPeptides.Add(0);
+
+            while (queue.Count != 0)
+            {
+                int currentPeptideIndex = queue[0];
+                queue.RemoveAt(0);
+                consumedPeptides.Add(currentPeptideIndex);
+                for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
+                {
+                    var crosslinkIndexes = remainingCrosslinks[iCrosslink];
+                    if (!crosslinkIndexes.Contains(currentPeptideIndex))
+                    {
+                        continue;
+                    }
+
+                    int otherPeptideIndex = crosslinkIndexes.Except(new[] {currentPeptideIndex}).First();
+                    queue.Add(otherPeptideIndex);
+                    remainingCrosslinks.RemoveAt(iCrosslink);
+                }
+            }
+
+            if (consumedPeptides.Count != PeptideLibraryKeys.Count)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

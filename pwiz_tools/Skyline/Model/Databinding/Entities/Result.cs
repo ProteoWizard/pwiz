@@ -57,7 +57,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return;
             }
-            skylineWindow.SelectedPath = SkylineDocNode.IdentityPath;
+
+            if (!SkylineDocNode.IdentityPath.IsRoot)
+            {
+                skylineWindow.SelectedPath = SkylineDocNode.IdentityPath;
+            }
             skylineWindow.SelectedResultsIndex = GetResultFile().Replicate.ReplicateIndex;
         }
 

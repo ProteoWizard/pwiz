@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Alerts
 
             if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
             {
-               // Force replacement of "peptide" etc with "molecule" etc in all controls on open
+                // Force replacement of "peptide" etc with "molecule" etc in all controls on open
                 Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, ModeUI);
             }
         }
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Alerts
         /// <param name="btnNoText">The text to show in the second, non-default button (DialogResult.No)</param>
         /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
         /// right. Otherwise, only the two named buttons are visible.</param>
-        public MultiButtonMsgDlg(string message, string btnYesText, string btnNoText, bool allowCancel) 
+        public MultiButtonMsgDlg(string message, string btnYesText, string btnNoText, bool allowCancel)
             : base(message)
         {
             if (allowCancel)
@@ -82,6 +82,67 @@ namespace pwiz.Skyline.Alerts
                 // Force replacement of "peptide" etc with "molecule" etc in all controls on open
                 Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, ModeUI);
             }
+        }
+
+        /// <summary>
+        /// A dialog box with a custom control, a Cancel button and one other button.
+        /// </summary>
+        /// <param name="ctl">The control to show</param>
+        /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
+        public MultiButtonMsgDlg(Control ctl, string btnText) : this(string.Empty, btnText)
+        {
+            messageScrollPanel.Hide();
+            splitContainer.Panel1.Controls.Add(ctl);
+        }
+
+        /// <summary>
+        /// Show a message box with a set of standard buttons, and an optional custom title.
+        /// </summary>
+        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons)
+        {
+            return new MultiButtonMsgDlg(message, buttons, DialogResult.None)
+                .ShowAndDispose(parent);
+        }
+
+        /// <summary>
+        /// Show a message box with a set of standard buttons and a specified AcceptButton, and an optional custom title.
+        /// </summary>
+        public static DialogResult Show(IWin32Window parent, string message, MessageBoxButtons buttons, DialogResult defaultDialogResult)
+        {
+            return new MultiButtonMsgDlg(message, buttons, defaultDialogResult)
+                .ShowAndDispose(parent);
+        }
+
+        /// <summary>
+        /// Construct a message box with a set of standard buttons.
+        /// </summary>
+        /// <param name="message">The message to show</param>
+        /// <param name="buttons">The set of buttons to show, as also used in MessageBox.</param>
+        /// <param name="defaultDialogResult">The button to be assumed if user hits Enter in a different control in the window.</param>
+        public MultiButtonMsgDlg(string message, MessageBoxButtons buttons, DialogResult defaultDialogResult)
+            : base(message, buttons, defaultDialogResult)
+        {
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                // Force replacement of "peptide" etc with "molecule" etc in all controls on open
+                Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, ModeUI);
+            }
+        }
+
+
+        /// <summary>
+        /// A dialog box with a custom control, a Cancel button and two other buttons.
+        /// </summary>
+        /// <param name="ctl">The control to show</param>
+        /// <param name="btnYesText">The text to show in the left-most, default button (DialogResult.Yes)</param>
+        /// <param name="btnNoText">The text to show in the second, non-default button (DialogResult.No)</param>
+        /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
+        /// right. Otherwise, only the two named buttons are visible.</param>
+        public MultiButtonMsgDlg(Control ctl, string btnYesText, string btnNoText, bool allowCancel)
+        : this(string.Empty, btnYesText, btnNoText, allowCancel)
+        {
+            messageScrollPanel.Hide();
+            splitContainer.Panel1.Controls.Add(ctl);
         }
 
         /// <summary>

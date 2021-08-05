@@ -181,10 +181,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public RemoteServerException Exception { get; private set; }
         }
 
-        public interface IResponseData
-        {
-        }
-
         private struct RequestKey
         {
             public RequestKey(Type type, Uri uri) : this()

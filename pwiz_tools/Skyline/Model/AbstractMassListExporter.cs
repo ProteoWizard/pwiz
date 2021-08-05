@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -573,13 +574,20 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+
+            // When exporting CoV optimization methods, only write top ranked transitions.
+            var onlyTopRankedTransitions =
+                PrimaryTransitionCount > 0 &&
+                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
+                Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+
             foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
             {
                 if (OptimizeType == null)
                 {
                     fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0, SortByMz);
                 }
-                else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
+                else if (!onlyTopRankedTransitions || nodeGroup.TransitionCount == 1 || GetRank(nodeGroup, nodeGroupPrimary, nodeTran) <= PrimaryTransitionCount)
                 {
                     // -step through step
                     bool transitionWritten = false;
@@ -601,13 +609,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected virtual bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            return false;
-        }
-
-
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
         {
             public int TransitionCount { get; private set; }
@@ -620,6 +621,7 @@ namespace pwiz.Skyline.Model
 
             protected override void InsertItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount;
                 base.InsertItem(index, item);
             }
@@ -632,6 +634,7 @@ namespace pwiz.Skyline.Model
 
             protected override void SetItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount - this[index].TransitionCount;
                 base.SetItem(index, item);
             }
@@ -793,7 +796,7 @@ namespace pwiz.Skyline.Model
             double? explicitDP = ExplicitTransitionValues.Get(nodeTran).DeclusteringPotential;
             if (explicitDP.HasValue)
             {
-                return step == 0 ? explicitDP.Value : 0;  // No optimizing of explicit values
+                return explicitDP.Value;  // No optimizing of explicit values
             }
 
             var prediction = Document.Settings.TransitionSettings.Prediction;
@@ -819,9 +822,21 @@ namespace pwiz.Skyline.Model
             var tuneLevel = CompensationVoltageParameters.GetTuneLevel(OptimizeType);
             // Check for explicit value
             var cov = nodeGroup.ExplicitValues.CompensationVoltage;
+            // Check for CoV as an ion mobility parameter
+            if (!cov.HasValue)
+            {
+                var libKey = nodeGroup.GetLibKey(Document.Settings, nodePep);
+                var imInfo = Document.Settings.GetIonMobilities(new []{libKey}, null);
+                var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, nodeGroup.PrecursorMz, null);
+                if (im.IonMobility.Units == eIonMobilityUnits.compensation_V)
+                {
+                    cov = im.IonMobility.Mobility;
+                }
+            }
             if (cov.HasValue)
             {
-                // If optimizing use explicit value as center of optimization
+                // If optimizing use explicit CoV value, or appropriate ion mobility value, as center of optimization
+                // CONSIDER(bspratt) do we update either of these in light of a new optimized value?
                 var covPrediction = prediction.CompensationVoltage;
                 double stepSize;
                 switch (tuneLevel)
@@ -922,7 +937,7 @@ namespace pwiz.Skyline.Model
 
             private TransitionGroupDocNode _nodeGroupLast;
 
-            private readonly Dictionary<Identity, List<StoredTransition>> _storedTransitions;
+            private readonly SortedDictionary<double, List<StoredTransition>> _storedTransitions;
 
             public FileIterator(string fileName, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
             {
@@ -930,7 +945,7 @@ namespace pwiz.Skyline.Model
                 _single = single;
                 _isPrecursorLimited = isPrecursorLimited;
                 _writeHeaders = writeHeaders;
-                _storedTransitions = new Dictionary<Identity, List<StoredTransition>>();
+                _storedTransitions = new SortedDictionary<double, List<StoredTransition>>();
                 if (fileName == null)
                 {
                     BaseName = MEMORY_KEY_ROOT;
@@ -983,7 +998,7 @@ namespace pwiz.Skyline.Model
 
             public void Commit()
             {
-                foreach (var storedList in _storedTransitions.Select(pair => pair.Value).OrderBy(stored => stored.First().TransitionGroup.PrecursorMz))
+                foreach (var storedList in _storedTransitions.Values)
                 {
                     var storedEnumerable = storedList.First().Exporter.IsolationList
                         ? storedList.AsEnumerable()
@@ -1091,11 +1106,11 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // Store the transition to be sorted and written upon commit
-                    if (!_storedTransitions.ContainsKey(group.Id))
+                    if (!_storedTransitions.ContainsKey(group.PrecursorMz))
                     {
-                        _storedTransitions[group.Id] = new List<StoredTransition>();
+                        _storedTransitions[group.PrecursorMz] = new List<StoredTransition>();
                     }
-                    _storedTransitions[group.Id].Add(new StoredTransition(exporter, seq, peptide, group, groupPrimary, transition, step));
+                    _storedTransitions[group.PrecursorMz].Add(new StoredTransition(exporter, seq, peptide, group, groupPrimary, transition, step));
                 }
 
                 // If not full-scan, count transtions

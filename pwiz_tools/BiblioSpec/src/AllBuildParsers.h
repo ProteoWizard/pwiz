@@ -43,6 +43,7 @@
 #include "WatersMseReader.h"
 #include "ProxlXmlReader.h"
 #include "ShimadzuMLBReader.h"
+#include "DiaNNSpecLibReader.h"
 #include "TSVReader.h"
 #include "OSWReader.h"
 /*

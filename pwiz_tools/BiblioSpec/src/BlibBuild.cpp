@@ -105,7 +105,6 @@ int main(int argc, char* argv[])
                 progress.increment();
             
                 if(has_extension(result_file, ".pep.xml") || 
-                   has_extension(result_file, ".pep.XML") ||
                    has_extension(result_file, ".pepXML")) {
                     PepXMLreader tmpXMLreader(builder, 
                                               result_file,
@@ -159,7 +158,8 @@ int main(int argc, char* argv[])
                     MSFReader msfReader(builder, result_file, progress_cptr);
 
                     success = msfReader.parseFile();
-                } else if (has_extension(result_file, ".mzid")) {
+                } else if (has_extension(result_file, ".mzid") ||
+                           has_extension(result_file, ".mzid.gz")) {
                     MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
                     success = mzidReader.parseFile();
 
@@ -172,6 +172,9 @@ int main(int argc, char* argv[])
                 } else if (has_extension(result_file, ".mlb")) {
                     ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
                     success = mlbReader.parseFile();
+                } else if (has_extension(result_file, ".speclib")) {
+                    DiaNNSpecLibReader diannReader(builder, result_file, progress_cptr);
+                    success = diannReader.parseFile();
                 } else if (has_extension(result_file, ".tsv")) {
                     auto tsvReader = TSVReader::create(builder, result_file, progress_cptr);
                     success = tsvReader->parseFile();

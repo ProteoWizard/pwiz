@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
@@ -159,8 +160,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = Entry.ChangeReason(value);
-                ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry),
-                    docPair => null);
+                ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry));
             }
         }
 
@@ -183,6 +183,11 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
 
             return document;
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            return AuditLogEntryRef.PROTOTYPE.ChangeName(AuditLogEntryRef.GetEntryName(_entry));
         }
     }
 }

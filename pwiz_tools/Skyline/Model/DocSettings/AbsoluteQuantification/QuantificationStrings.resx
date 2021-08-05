@@ -282,4 +282,52 @@
   <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
     <value>(All Replicates)</value>
   </data>
+  <data name="ValueStatus_UNDEFINED_Undefined" xml:space="preserve">
+    <value>Undefined</value>
+  </data>
+  <data name="ValueStatus_PRESENT_Present" xml:space="preserve">
+    <value>Present</value>
+  </data>
+  <data name="ValueStatus_EQUAL_Equal" xml:space="preserve">
+    <value>Equal</value>
+  </data>
+  <data name="ValueStatus_LOW_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="ValueStatus_HIGH_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="ValueStatus_PASS_Pass" xml:space="preserve">
+    <value>Pass</value>
+  </data>
+  <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
+  <data name="RatioToLabel_GetAxisTitle__0__Ratio_To__1_" xml:space="preserve">
+    <value>{0} Ratio To {1}</value>
+    <comment>Example: Peak Area Ratio To Global Standards</comment>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0_" xml:space="preserve">
+    <value>Surrogate {0}</value>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__" xml:space="preserve">
+    <value>Surrogate {0} ({1})</value>
+    <comment>Example: Surrogate Leucine (Heavy)</comment>
+  </data>
+  <data name="NormalizeOption_MAXIMUM_Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="NormalizeOption_TOTAL_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="NormalizeOption_DEFAULT_Default_Normalization_Method" xml:space="preserve">
+    <value>Default Normalization Method</value>
+  </data>
+  <data name="NormalizeOption_CALIBRATED_Calibration_Curve" xml:space="preserve">
+    <value>Calibration Curve</value>
+  </data>
+  <data name="SkylineWindow_MakeNormalizeToMenuItem_Default___0__" xml:space="preserve">
+    <value>Default ({0})</value>
+    <comment>Example: Default (Global Standards)</comment>
+  </data>
 </root>

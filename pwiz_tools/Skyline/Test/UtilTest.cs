@@ -24,6 +24,7 @@ using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -218,6 +219,12 @@ namespace pwiz.SkylineTest
             // of telling the developer. Too confusing to decypher why this test would be failing
             if (ParallelEx.SINGLE_THREADED)
                 return;
+
+            // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs, so we lower the max thread count
+            var hasReducedLoadThreadCount = !System.Runtime.GCSettings.IsServerGC;
+            Assert.AreEqual(hasReducedLoadThreadCount ? MultiFileLoader.MAX_PARALLEL_LOAD_FILES_USER_GC : MultiFileLoader.MAX_PARALLEL_LOAD_FILES,
+                MultiFileLoader.GetMaxLoadThreadCount());
+
             // Make sure an explicit number of threads just returns that number of threads
             Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(4, null, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time));
             Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(4, null, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
@@ -227,23 +234,23 @@ namespace pwiz.SkylineTest
             int processors = 8;
             Assert.AreEqual(1, MultiFileLoader.GetOptimalThreadCount(null, 6, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time));
             Assert.AreEqual(processors/4, MultiFileLoader.GetOptimalThreadCount(null, 6, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
-            Assert.AreEqual(processors/2, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            Assert.AreEqual(Math.Min(processors/2, MultiFileLoader.GetMaxLoadThreadCount()), MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
             //   Load balancing 6 files into 2 cycles of 3
             Assert.AreEqual(3, MultiFileLoader.GetOptimalThreadCount(null, 6, 8, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
             // i7 6-core
             processors = 12;
             Assert.AreEqual(processors/4, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
-            Assert.AreEqual(processors/2, MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
-            //   Load balancing 8 files into 2 cycles of 4
-            Assert.AreEqual(4, MultiFileLoader.GetOptimalThreadCount(null, 8, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            Assert.AreEqual(Math.Min(processors / 2, MultiFileLoader.GetMaxLoadThreadCount()), MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
+            // Load balancing 8 files into 2 cycles of 4, or if not using server GC then 3 cycles (of 3,3,2) 
+            Assert.AreEqual(Math.Min(4, MultiFileLoader.GetMaxLoadThreadCount()), MultiFileLoader.GetOptimalThreadCount(null, 8, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
             // Xeon 24-core
             processors = 48;
-            Assert.AreEqual(Math.Min(processors/4, MultiFileLoader.MAX_PARALLEL_LOAD_FILES),
+            Assert.AreEqual(Math.Min(processors/4, MultiFileLoader.GetMaxLoadThreadCount()),
                 MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.several));
-            Assert.AreEqual(Math.Min(processors/2, MultiFileLoader.MAX_PARALLEL_LOAD_FILES),
+            Assert.AreEqual(Math.Min(processors/2, MultiFileLoader.GetMaxLoadThreadCount()),
                 MultiFileLoader.GetOptimalThreadCount(null, null, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
-            // Load balancing
-            Assert.AreEqual(MultiFileLoader.MAX_PARALLEL_LOAD_FILES/2 + 1,
+            // Load balancing 14 files into 2 cycles of 7, , or if not using server GC then 5 cycles (of 3,3,3,3,2) 
+            Assert.AreEqual(hasReducedLoadThreadCount ? MultiFileLoader.GetMaxLoadThreadCount() : MultiFileLoader.MAX_PARALLEL_LOAD_FILES/2 + 1,
                 MultiFileLoader.GetOptimalThreadCount(null, MultiFileLoader.MAX_PARALLEL_LOAD_FILES+2, processors, MultiFileLoader.ImportResultsSimultaneousFileOptions.many));
         }
 
@@ -269,5 +276,15 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqualDeep(arrayBase, array4);
         }
 
+        [TestMethod]
+        public void TestIsTempZipFolder()
+        {
+            string zipFileName;
+            Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.AreEqual("TargetedMSMS_2.zip", zipFileName);
+            Assert.IsFalse(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\ZipFile.zip\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.AreEqual("ZipFile.zip", zipFileName);
+        }
     }
 }

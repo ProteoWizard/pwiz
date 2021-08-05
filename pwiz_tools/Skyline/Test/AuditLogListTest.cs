@@ -26,7 +26,9 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Util;
+using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -38,26 +40,28 @@ namespace pwiz.SkylineTest
         public void TestAuditLogSerialization()
         {
             var datetime = AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T05:02:03+04", out var tzoffset); // Accept ISO format, which may omit minutes in offset
-            Assume.AreEqual(DateTimeKind.Utc, datetime.Kind);
-            Assume.AreEqual(1, datetime.Hour); // Local time was 5AM, 4 hour offset to GMT.
-            Assume.AreEqual(new TimeSpan(4, 0, 0), tzoffset);
+            AssertEx.AreEqual(DateTimeKind.Utc, datetime.Kind);
+            AssertEx.AreEqual(1, datetime.Hour); // Local time was 5AM, 4 hour offset to GMT.
+            AssertEx.AreEqual(new TimeSpan(4, 0, 0), tzoffset);
             var xsd = AuditLogEntry.FormatSerializationString(datetime, tzoffset);
-            Assume.AreEqual("2019-01-01T05:02:03+04:00", xsd);
+            AssertEx.AreEqual("2019-01-01T05:02:03+04:00", xsd);
             
             var zulu = AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T01:02:03Z", out tzoffset);
-            Assume.AreEqual(tzoffset, TimeSpan.Zero);
-            Assume.AreEqual(datetime, zulu);
+            AssertEx.AreEqual(tzoffset, TimeSpan.Zero);
+            AssertEx.AreEqual(datetime, zulu);
 
             AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T01:02:03-04:30", out tzoffset);
-            Assume.AreEqual(new TimeSpan(-4, -30, 0), tzoffset);
+            AssertEx.AreEqual(new TimeSpan(-4, -30, 0), tzoffset);
 
             datetime = AuditLogEntry.ParseSerializedTimeStamp("2018-12-31T23:02:03-04", out tzoffset);
-            Assume.AreEqual(datetime, AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T03:02:03Z", out tzoffset));
+            AssertEx.AreEqual(datetime, AuditLogEntry.ParseSerializedTimeStamp("2019-01-01T03:02:03Z", out tzoffset));
 
             // Test backward compatibility - this file with 4.2 log should load without any problems
-            Assume.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var loggedSkylineDocumentHash, out var old));
-            Assume.AreEqual("tgnQ8fDiKLMIS236kpdJIXNR+fw=", old.RootHash.ActualHash.HashString);
-            Assume.AreEqual("AjigWTmQeAO94/jAlwubVMp4FRg=", loggedSkylineDocumentHash); // Note that this is a base64 representation of the 4.2 hex representation "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>
+            AssertEx.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var old));
+            AssertEx.IsNull(old.RootHash);
+            var oldWithRootHash = old.RecalculateHashValues(DocumentFormat.VERSION_4_2, old.DocumentHash.HashString);
+            AssertEx.AreEqual("tgnQ8fDiKLMIS236kpdJIXNR+fw=", oldWithRootHash.RootHash.HashString);
+            AssertEx.AreEqual("AjigWTmQeAO94/jAlwubVMp4FRg=", old.DocumentHash.HashString); // Note that this is a base64 representation of the 4.2 hex representation "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>
 
             var then = DateTime.Parse("2019-03-08 00:02:03Z", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime(); // Just before DST
             const int entryCount = 20000; // Enough to ensure stack overflow in case of some design error per Nick
@@ -83,14 +87,19 @@ namespace pwiz.SkylineTest
             var auditLogList = new AuditLogList(headEntry);
             var serializedAuditLog = new StringWriter();
             var serializer = new XmlSerializer(typeof(AuditLogList));
-            serializer.Serialize(serializedAuditLog, auditLogList);
+            var auditLogListWithHashes = auditLogList.RecalculateHashValues(DocumentFormat.CURRENT, null);
+            serializer.Serialize(serializedAuditLog, auditLogListWithHashes);
             var currentCulture = Thread.CurrentThread.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture; // Logs are meant to be culture invariant
             var roundTrip = (AuditLogList) serializer.Deserialize(new StringReader(serializedAuditLog.ToString()));
             Assert.IsNotNull(roundTrip);
             Assert.AreEqual(auditLogList.AuditLogEntries.Count, roundTrip.AuditLogEntries.Count);
             var entries = auditLogList.AuditLogEntries.Enumerate().ToArray();
+            var entriesWithHashes = auditLogListWithHashes.AuditLogEntries.Enumerate().ToArray();
             var roundtripEntries = roundTrip.AuditLogEntries.Enumerate().ToArray();
+            for(var j = roundtripEntries.Length; j-- > 0;)
+                Assert.IsNotNull(roundtripEntries[j].Hash);
+
             for (var i = 0; i < auditLogList.AuditLogEntries.Count; i++)
             {
                 Assert.AreEqual(entries[i].TimeStampUTC, roundtripEntries[i].TimeStampUTC);
@@ -98,7 +107,7 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(entries[i].SkylineVersion, roundtripEntries[i].SkylineVersion);
                 Assert.AreEqual(entries[i].User, roundtripEntries[i].User);
                 Assert.AreEqual(entries[i].DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic ? SrmDocument.DOCUMENT_TYPE.none : entries[i].DocumentType, roundtripEntries[i].DocumentType);
-                Assert.AreEqual(entries[i].Hash.ActualHash, roundtripEntries[i].Hash.ActualHash);
+                Assert.AreEqual(entriesWithHashes[i].Hash, roundtripEntries[i].Hash);
                 // No Skyl hash until sserialized, so can't compare here
             }
             Thread.CurrentThread.CurrentCulture = currentCulture;
@@ -108,7 +117,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(8,  roundtripEntries[100].TimeStampUTC.Hour);
             Assert.AreEqual(27, roundtripEntries[10000].TimeStampUTC.Day);
             Assert.AreEqual(17, roundtripEntries[10000].TimeStampUTC.Hour);
-
         }
 
         private static string Test42FormatSkyl =
@@ -147,5 +155,37 @@ namespace pwiz.SkylineTest
           "</audit_log_entry>\n" +
          "</audit_log>\n" +
         "</audit_log_root>";
+
+        [TestMethod]
+        public void TestAuditLogRef()
+        {
+            const string TEST_PREFIX = "test";
+            const int TEST_ENTRY_COUNT = 3;
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            Assert.IsTrue(document.AuditLog.AuditLogEntries.IsRoot);
+            Assert.AreEqual(0, AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document).Count());
+            AuditLogEntry headEntry = document.AuditLog.AuditLogEntries;
+            for (int i = 0; i < TEST_ENTRY_COUNT; i++)
+            {
+                var auditLogEntry = AuditLogEntry.CreateTestOnlyEntry(DateTime.UtcNow, SrmDocument.DOCUMENT_TYPE.mixed, TEST_PREFIX + i);
+                headEntry = auditLogEntry.ChangeParent(headEntry);
+            }
+            Assert.IsNotNull(headEntry);
+            Assert.AreEqual(TEST_ENTRY_COUNT, headEntry.Count);
+            document = document.ChangeAuditLog(headEntry);
+            var auditLogRefs = AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document).Cast<AuditLogEntryRef>().ToList();
+            Assert.AreEqual(TEST_ENTRY_COUNT, auditLogRefs.Count);
+            var extraLogEntry = AuditLogEntry
+                .CreateTestOnlyEntry(DateTime.UtcNow, SrmDocument.DOCUMENT_TYPE.mixed, "extra entry")
+                .ChangeParent(document.AuditLog.AuditLogEntries);
+            var document2 = document.ChangeAuditLog(extraLogEntry);
+            Assert.AreEqual(TEST_ENTRY_COUNT + 1, AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document2).Count());
+            foreach (var auditLogRef in auditLogRefs)
+            {
+                var entry1 = auditLogRef.FindAuditLogEntry(document);
+                var entry2 = auditLogRef.FindAuditLogEntry(document2);
+                Assert.AreEqual(entry1, entry2);
+            }
+        }
     }
 }

@@ -20,7 +20,8 @@
 //
 
 #include "pwiz/utility/misc/Std.hpp"
-#include <stdlib.h>
+#include <cstdlib>
+#include <boost/core/cmath.hpp>
 #include <algorithm>
 
 
@@ -159,7 +160,7 @@ bool linesMatch(const string& expectedRaw,
         double observedField = getField(fieldIdx, observed,
             obsStart, obsEnd, parsedObserved);
 
-        if (isnan(observedField) || isnan(expectedField))
+        if (boost::core::isnan(observedField) || boost::core::isnan(expectedField))
         {
             if (parsedExpected.compare(parsedObserved) != 0)
                 return false;

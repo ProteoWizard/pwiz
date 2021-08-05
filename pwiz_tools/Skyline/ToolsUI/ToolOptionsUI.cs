@@ -18,12 +18,14 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -45,7 +47,7 @@ using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class ToolOptionsUI : FormEx
+    public partial class ToolOptionsUI : FormEx, IMultipleViewProvider
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
         private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
@@ -98,12 +100,14 @@ namespace pwiz.Skyline.ToolsUI
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
-            var iModels = PrositIntensityModel.Models.ToArray();
-            var rtModels = PrositRetentionTimeModel.Models.ToArray();
+            var iModels = PrositIntensityModel.Models.ToList();
+            iModels.Insert(0, string.Empty);
+            var rtModels = PrositRetentionTimeModel.Models.ToList();
+            rtModels.Insert(0, string.Empty);
 
             tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
-            intensityModelCombo.Items.AddRange(iModels);
-            iRTModelCombo.Items.AddRange(rtModels);
+            intensityModelCombo.Items.AddRange(iModels.ToArray());
+            iRTModelCombo.Items.AddRange(rtModels.ToArray());
             
             prositServerStatusLabel.Text = string.Empty;
             if (iModels.Contains(Settings.Default.PrositIntensityModel))
@@ -121,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
-                null, null, settings, peptide, precursor, nce, updateCallback)
+                null, null, settings, peptide, precursor, null, nce, updateCallback)
             {
                 Client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
                 IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
@@ -137,14 +141,15 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     try
                     {
+                        var labelType = Precursor.LabelType;
                         var ms = IntensityModel.PredictSingle(Client, Settings,
-                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, Precursor.LabelType, NCE), _tokenSource.Token);
+                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, labelType, NCE), _tokenSource.Token);
 
                         var iRTMap = RTModel.PredictSingle(Client,
                             Settings,
                             Peptide, _tokenSource.Token);
 
-                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, NCE);
+                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, labelType, NCE);
                         var irt = iRTMap[Peptide];
                         Spectrum = new SpectrumDisplayInfo(
                             spectrumInfo, Precursor, irt);
@@ -227,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
                 var pr = new PrositPingRequest(PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
-                    () => { Invoke((Action) UpdateServerStatus); });
+                    () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
@@ -271,10 +276,16 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            if (!e.Cancel)
+                _pingRequest?.Cancel();
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            _pingRequest?.Cancel();
-
             if (DialogResult == DialogResult.OK)
             {
                 var displayLanguageItem = listBoxLanguages.SelectedItem as DisplayLanguageItem;
@@ -292,9 +303,12 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
 
+                bool prositSettingsValidBefore = PrositHelpers.PrositSettingsValid;
                 Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
-                Settings.Default.PrositRetentionTimeModel = (string)iRTModelCombo.SelectedItem;
+                Settings.Default.PrositRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
                 Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
+                if (prositSettingsValidBefore != PrositHelpers.PrositSettingsValid)
+                    Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
             base.OnClosed(e);
         }
@@ -330,9 +344,9 @@ namespace pwiz.Skyline.ToolsUI
         public class DisplayTab : IFormView { }
         public class PrositTab : IFormView { }
 
-        private static readonly IFormView[] TAB_PAGES =
+        private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
+            new PanoramaTab(), new RemoteTab(), new PrositTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
         };
 
         public void NavigateToTab(TABS tab)
@@ -419,6 +433,7 @@ namespace pwiz.Skyline.ToolsUI
                         Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
             {
                 Settings.Default.Reset();
+                Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
             }
         }
 
@@ -429,11 +444,33 @@ namespace pwiz.Skyline.ToolsUI
 
         private void intensityModelCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                !string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedItem = string.Empty;
+            }
+            else if (!string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                     string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedIndex = 1;    // First non-empty iRT model
+            }
+
             UpdateServerStatus();
         }
 
         private void iRTModelCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedItem = string.Empty;
+            }
+            else if (string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                     !string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedIndex = 1;    // First non-empty intensity model
+            }
+
             UpdateServerStatus();
         }
 

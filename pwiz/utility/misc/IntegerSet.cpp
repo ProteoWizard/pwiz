@@ -309,6 +309,12 @@ PWIZ_API_DECL bool IntegerSet::Iterator::operator==(const Iterator& that) const
 }
 
 
+const IntegerSet IntegerSet::emptySet = IntegerSet();
+const IntegerSet IntegerSet::positive = IntegerSet(1, std::numeric_limits<int>::max());
+const IntegerSet IntegerSet::negative = IntegerSet(std::numeric_limits<int>::min(), -1);
+const IntegerSet IntegerSet::whole = IntegerSet(0, std::numeric_limits<int>::max());
+
+
 } // namespace util 
 } // namespace pwiz
 

@@ -310,6 +310,21 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ThermoScanFilter : public Spect
     bool inverse_;
 };
 
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_CollisionEnergy : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_CollisionEnergy(double collisionEnergyLow, double collisionEnergyHigh, bool acceptNonCID, bool acceptMissingCE, FilterMode mode);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const { return boost::logic::indeterminate; }
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+    virtual std::string describe() const { return "collision energy"; }
+
+    private:
+    double ceLow_, ceHigh_;
+    bool acceptNonCID_, acceptMissingCE_;
+    FilterMode mode_;
+};
+
 } // namespace analysis
 } // namespace pwiz
 

@@ -115,14 +115,27 @@ void createExampleWithArrays(const vector<double>& mzArray, const vector<double>
         for (size_t i = 0; i < 500; ++i)
         {
             sl->spectra.push_back(SpectrumPtr(new Spectrum));
-            sl->spectra.back()->id = "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(i + 1);
-            sl->spectra.back()->index = i;
-            sl->spectra.back()->set((i % 10 == 0) ? MS_MS1_spectrum : MS_MSn_spectrum);
-            sl->spectra.back()->set(MS_ms_level, (i % 10 == 0) ? 1 : 2);
-            sl->spectra.back()->set(MS_centroid_spectrum);
-            sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
-            sl->spectra.back()->scanList.scans.push_back(Scan());
-            sl->spectra.back()->scanList.scans[0].set(MS_scan_start_time, (i+1) / 100.0, UO_second);
+            auto& s = *sl->spectra.back();
+            s.id = "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(i + 1);
+            s.index = i;
+            if (i % 10 == 0)
+            {
+                s.set(MS_MS1_spectrum);
+                s.set(MS_ms_level, 1);
+            }
+            else
+            {
+                s.set(MS_MSn_spectrum);
+                s.set(MS_ms_level, 2);
+                s.precursors.push_back(Precursor(123.45));
+                size_t precursorScanIndex = i / 10;
+                s.precursors.back().spectrumID = sl->spectrumIdentity(precursorScanIndex).id;
+            }
+
+            s.set(MS_centroid_spectrum);
+            s.setMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
+            s.scanList.scans.push_back(Scan());
+            s.scanList.scans[0].set(MS_scan_start_time, (i+1) / 100.0, UO_second);
         }
 
         bfs::create_directories("testEmbedder.dir");
@@ -142,10 +155,10 @@ string testReporterIons(const vector<double>& expectedIntensities, const string&
             throw runtime_error("[testReporterIons] no non-null SpectrumQuantitation rows");
         sqlite3pp::query::rows row = *itr;
         int reporterIonCount = row.column_bytes(0) / sizeof(double);
+        unit_assert_operator_equal(expectedIntensities.size(), reporterIonCount);
         const void* reporterIonBlob = row.get<const void*>(0);
         const double* reporterIonArray = reinterpret_cast<const double*>(reporterIonBlob);
         vector<double> reporterIons(reporterIonArray, reporterIonArray + reporterIonCount);
-        unit_assert_operator_equal(expectedIntensities.size(), reporterIons.size());
         if (reporterIonCount > 0) unit_assert_equal(expectedIntensities[0], reporterIons[0], 1e-5);
         if (reporterIonCount > 1) unit_assert_equal(expectedIntensities[1], reporterIons[1], 1e-5);
         if (reporterIonCount > 2) unit_assert_equal(expectedIntensities[2], reporterIons[2], 1e-5);
@@ -156,6 +169,12 @@ string testReporterIons(const vector<double>& expectedIntensities, const string&
         if (reporterIonCount > 7) unit_assert_equal(expectedIntensities[7], reporterIons[7], 1e-5);
         if (reporterIonCount > 8) unit_assert_equal(expectedIntensities[8], reporterIons[8], 1e-5);
         if (reporterIonCount > 9) unit_assert_equal(expectedIntensities[9], reporterIons[9], 1e-5);
+        if (reporterIonCount > 10) unit_assert_equal(expectedIntensities[10], reporterIons[10], 1e-5);
+        if (reporterIonCount > 11) unit_assert_equal(expectedIntensities[11], reporterIons[11], 1e-5);
+        if (reporterIonCount > 12) unit_assert_equal(expectedIntensities[12], reporterIons[12], 1e-5);
+        if (reporterIonCount > 13) unit_assert_equal(expectedIntensities[13], reporterIons[13], 1e-5);
+        if (reporterIonCount > 14) unit_assert_equal(expectedIntensities[14], reporterIons[14], 1e-5);
+        if (reporterIonCount > 15) unit_assert_equal(expectedIntensities[15], reporterIons[15], 1e-5);
         return "";
     }
     catch (exception& e)
@@ -249,7 +268,7 @@ void test()
         quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::TMT2plex, MZTolerance(0.015, MZTolerance::MZ), false);
         Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
         //                                                         126  127N 127C 128N 128C 129N 129C 130N 130C 131
-        vector<double> expectedIntensities; expectedIntensities += 126, 0,   127, 0,   0,   0,   0,   0,   0,   0;
+        vector<double> expectedIntensities; expectedIntensities += 126, 0,   127, 0,   0,   0,   0,   0,   0,   0; expectedIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS, 0);
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "TMT_ReporterIonIntensities"));
     }
     
@@ -275,7 +294,7 @@ void test()
         quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::TMT10plex, MZTolerance(20, MZTolerance::PPM), false);
         Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
         //                                                         126  127N   127C   128N   128C   129N   129C   130N   130C   131
-        vector<double> expectedIntensities; expectedIntensities += 126, 0,     127.1, 0,     128.1, 0,     129.1, 0,     130.1, 131;
+        vector<double> expectedIntensities; expectedIntensities += 126, 0,     127.1, 0,     128.1, 0,     129.1, 0,     130.1, 131; expectedIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS, 0);
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "TMT_ReporterIonIntensities"));
     }
 
@@ -301,7 +320,23 @@ void test()
         quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::TMT10plex, MZTolerance(20, MZTolerance::PPM), false);
         Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
         //                                                         126  127N   127C   128N   128C   129N   129C   130N   130C   131
-        vector<double> expectedIntensities; expectedIntensities += 126, 127.1, 127.2, 128.1, 128.2, 129.1, 129.2, 130.1, 130.2, 131;
+        vector<double> expectedIntensities; expectedIntensities += 126, 127.1, 127.2, 128.1, 128.2, 129.1, 129.2, 130.1, 130.2, 131; expectedIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS, 0);
+        unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "TMT_ReporterIonIntensities"));
+    }
+
+    // test TMTpro16
+    // Label  Mass        2plex  6plex  10plex
+    {
+        MZTolerance ht = MZTolerance(10, MZTolerance::PPM);
+        vector<double> mzArray; mzArray += 100, 126.12773-ht, 127.12476+ht, 127.13108-ht, 128.12811, 128.13443-ht, 129.13147+ht, 129.13779-ht, 130.13482-ht, 130.14114+ht, 131.13818, 131.14500, 132.14154, 132.14786, 133.14489, 133.15121, 134.14825, 200, 300, 400, 500, 600, 700;
+        vector<double> inArray; inArray +=  10, 126,          127.1,        127.2,        128.1,     128.2,        129.1,        129.2,        130.1,        130.2,        131.1,       131.2,   132.1,     132.2,     133.1,     133.2,     134,       20,  30,  40,  30,  20,  10;
+        bfs::remove("testEmbedder.mzML");
+        createExampleWithArrays(mzArray, inArray);
+
+        quantitationMethodBySource[1] = Embedder::QuantitationConfiguration(QuantitationMethod::TMTpro16plex, MZTolerance(20, MZTolerance::PPM), false);
+        Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
+        //                                                         126  127N   127C   128N   128C   129N   129C   130N   130C   131N   131C   132N   132C   133N   133C   134
+        vector<double> expectedIntensities; expectedIntensities += 126, 127.1, 127.2, 128.1, 128.2, 129.1, 129.2, 130.1, 130.2, 131.1, 131.2, 132.1, 132.2, 133.1, 133.2, 134; expectedIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS, 0);
         unit_assert_operator_equal("", testReporterIons(expectedIntensities, "testEmbedder.idpDB", "TMT_ReporterIonIntensities"));
     }
     

@@ -33,28 +33,6 @@ namespace pwiz.Skyline.Controls.Startup
 {
     public class ActionTutorial
     {
-        public enum TutorialType
-        {
-            targeted_method_editing,
-            targeted_method_refinement,
-            existing_and_quantitative_experiments,
-            absolute_quantifiaction,
-            ms1_fullscan_filtering,
-            targeted_ms_ms,
-            custom_reports_results_grid,
-            advanced_peak_picking_models,
-            irt_retention_time_prediction,
-            collision_energy_optimization,
-            spectral_library_explorer,
-            grouped_study_data_processing,
-            data_independent_acquisition,
-            small_molecule_targets,
-            small_molecule_method_dev_and_ce_opt,
-            small_molecule_quant,
-            hi_res_metabolomics
-        }
-
-        public TutorialType ImportType { get; set; }
         public string TutorialZipFileLocation { get; set; }
         public string PdfFileLocation { get; set; }
         public string SkyFileLocationInZip { get; set; }
@@ -63,10 +41,9 @@ namespace pwiz.Skyline.Controls.Startup
         private long ExtractedSize { get; set; }
         private readonly string TempPath = Path.GetTempPath();
 
-        public ActionTutorial(TutorialType action, string extractPath, string skyFileLocation, string pdfFileLocation, string skyFileLocationInZip)
+        public ActionTutorial(string extractPath, string skyFileLocation, string pdfFileLocation, string skyFileLocationInZip)
         {
             ExtractPath = extractPath;
-            ImportType = action;
             TutorialZipFileLocation = skyFileLocation;
             PdfFileLocation = pdfFileLocation;
             SkyFileLocationInZip = skyFileLocationInZip;
@@ -203,9 +180,10 @@ namespace pwiz.Skyline.Controls.Startup
                             throw;
                     }
                 }
+                var hasSkylineFile = !string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath);
                 Program.MainWindow.BeginInvoke(new Action(() =>
                 {
-                    if (!string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath))
+                    if (hasSkylineFile)
                     {
                         Program.MainWindow.OpenFile(skyFileToOpen);
                     }
@@ -218,9 +196,33 @@ namespace pwiz.Skyline.Controls.Startup
                         MessageDlg.Show(Program.MainWindow,
                             string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
                     }
-                    Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+
+                    try
+                    {
+                        Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+                    }
+                    catch (Exception e)
+                    {
+                        string message = string.Format(Resources
+                                .ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____,
+                            PdfFileLocation);
+                        MessageDlg.ShowWithException(Program.MainWindow, message, e);
+                    }
                 }));
-               
+
+                // Make it convenient for user to locate tutorial files if we haven't already opened anything
+                if (!hasSkylineFile && !string.IsNullOrEmpty(ExtractPath))
+                {
+                    Directory.SetCurrentDirectory(ExtractPath);
+                    Settings.Default.LibraryDirectory =
+                        Settings.Default.ActiveDirectory =
+                            Settings.Default.ExportDirectory =
+                                Settings.Default.FastaDirectory =
+                                    Settings.Default.LibraryResultsDirectory =
+                                        Settings.Default.SrmResultsDirectory =
+                                            Settings.Default.ProteomeDbDirectory =
+                                                ExtractPath;
+                }
             }
         }
 

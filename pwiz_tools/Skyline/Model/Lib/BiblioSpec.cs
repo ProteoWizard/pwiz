@@ -84,12 +84,13 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_spectrum_info")]
     public sealed class BiblioSpecSpectrumHeaderInfo : SpectrumHeaderInfo
     {
-        public BiblioSpecSpectrumHeaderInfo(string libraryName, int spectrumCount, double? score, string scoreType)
+        public BiblioSpecSpectrumHeaderInfo(string libraryName, int spectrumCount, double? score, string scoreType, string protein)
             : base(libraryName)
         {
             SpectrumCount = spectrumCount;
             Score = score;
             ScoreType = scoreType;
+            Protein = protein;
         }
 
         public int SpectrumCount { get; private set; }
@@ -159,6 +160,8 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
 
         #region object overrides
+
+        // CONSIDER(bspratt) why is only SpectrumCount used in hash and Equals?
 
         public bool Equals(BiblioSpecSpectrumHeaderInfo obj)
         {
@@ -523,7 +526,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (var item in _dictLibrary.ItemsMatching(key.LibraryKey, true))
                 {
-                    libInfo = new BiblioSpecSpectrumHeaderInfo(Name, item.Copies, null, null);
+                    libInfo = new BiblioSpecSpectrumHeaderInfo(Name, item.Copies, null, null, null);
                     return true;
                 }
             }

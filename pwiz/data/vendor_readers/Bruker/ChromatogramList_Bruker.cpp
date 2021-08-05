@@ -127,26 +127,15 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
     result->setTimeIntensityArrays(cd->times, cd->intensities, UO_second, MS_number_of_detector_counts);
 
-    /*try
+    if (format_ != Reader_Bruker_Format_FID && format_ != Reader_Bruker_Format_U2)
     {
-        automation_vector<double> xArray(*trace->GetTimes(), automation_vector<double>::MOVE);
-
-        if (getBinaryData)
-        {
-            result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-            result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
-
-            automation_vector<double> yArray(*trace->GetValues(), automation_vector<double>::MOVE);
-            result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
-        }
-        else
-            result->defaultArrayLength = xArray.size();
+        auto msLevelArray = boost::make_shared<IntegerDataArray>();
+        result->integerDataArrayPtrs.emplace_back(msLevelArray);
+        msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+        msLevelArray->data.resize(cd->times.size());
+        for (size_t i = 1, end = cd->times.size(); i <= end; ++i)
+            msLevelArray->data[i-1] = compassDataPtr_->getMSSpectrum(i, vendor_api::Bruker::DetailLevel_InstantMetadata)->getMSMSStage();
     }
-    catch (_com_error& e) // not caught by either std::exception or '...'
-    {
-        throw runtime_error(string("[ChromatogramList_Bruker::chromatogram()] COM error: ") +
-                            (const char*)e.Description());
-    }*/
 
     return result;
 }
@@ -225,6 +214,7 @@ size_t ChromatogramList_Bruker::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Bruker::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Bruker::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

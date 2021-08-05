@@ -29,7 +29,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -56,7 +55,7 @@ namespace pwiz.Skyline.Controls
         private TreeNode _triggerLabelEdit;
         private string _editedLabel;
         private int _resultsIndex;
-        private int _ratioIndex;
+        private NormalizeOption _normalizeOption;
         private StatementCompletionTextBox _editTextBox;
         private bool _inhibitAfterSelect;
 
@@ -270,6 +269,7 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; private set; }
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
 
         private int _updateLockCountDoc;
         private SrmDocument _updateDocPrevious;
@@ -307,6 +307,7 @@ namespace pwiz.Skyline.Controls
                 return;
 
             Document = document;
+            NormalizedValueCalculator = new NormalizedValueCalculator(Document);
 
             bool integrateAllChanged = e.DocumentPrevious != null &&
                                        e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
@@ -336,7 +337,7 @@ namespace pwiz.Skyline.Controls
                     changeAll = true; // Help UpdateNodes remove nodes quickly during a full docment change
 
                     _resultsIndex = 0;
-                    _ratioIndex = 0;
+                    _normalizeOption = NormalizeOption.RatioToFirstStandard(document.Settings);
 
                     cover = new CoverControl(this);
                 }
@@ -346,10 +347,7 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = settings.HasResults
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
-                    var mods = settings.PeptideSettings.Modifications;
-                    _ratioIndex = Math.Min(_ratioIndex, mods.RatioInternalStandardTypes.Count-1);
-                    if (!settings.HasGlobalStandardArea && _ratioIndex == ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS)
-                        _ratioIndex = 0;
+                    _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
                 }
 
                 BeginUpdateMS();
@@ -455,14 +453,14 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public int RatioIndex
+        public NormalizeOption NormalizeOption
         {
-            get { return _ratioIndex; }
+            get { return _normalizeOption; }
             set
             {
-                if (_ratioIndex != value)
+                if (_normalizeOption != value)
                 {
-                    _ratioIndex = value;
+                    _normalizeOption = value;
                     UpdateNodeStates();
                 }
             }
@@ -1070,6 +1068,10 @@ namespace pwiz.Skyline.Controls
                 string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
                 if (IsKeyLocked(Keys.CapsLock))
                     keyChar = keyChar.ToLower();
+                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
+                {
+                    keyChar = @"{" + keyChar + @"}";
+                }
                 SendKeys.Send(keyChar);
                 e.Handled = true;
             }
@@ -1314,7 +1316,7 @@ namespace pwiz.Skyline.Controls
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); //, PeptidesDisplayMode); 
+            return new DisplaySettings(NormalizedValueCalculator, nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption);
         }
 
         public Rectangle RectToScreen(Rectangle r)

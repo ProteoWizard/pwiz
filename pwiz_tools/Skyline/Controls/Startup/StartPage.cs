@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Controls.Startup
                     Top = distanceFromTop,
                     EventAction = () => DoAction(skylineWindow=>skylineWindow.LoadFile(filePath, this))
                 };
+                modeUIHandler.SetUIMode(recentFileControl, Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
                 toolTip.SetToolTip(recentFileControl, filePath);
                 foreach (Control control in recentFileControl.Controls)
                 {
@@ -264,248 +265,274 @@ namespace pwiz.Skyline.Controls.Startup
         {
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
-            var labelWidth = flowLayoutPanelTutorials.Width;
+            var labelWidth = flowLayoutPanelTutorials.ClientRectangle.Width - SystemInformation.VerticalScrollBarWidth;
             var tutorialProteomicBoxPanels = new Control[]
             {
                 new Label // Section heading
                 {
-                    Text = Resources.StartPage_PopulateTutorialPanel_Introductory,
+                    Text = TutorialTextResources.Section_Introductory,
                     Font = labelFont,
                     Anchor = labelAnchor,
                     Width = labelWidth
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Editing,
-                    Icon = Resources.MethodEdit_thumb,
+                    Caption = TutorialTextResources.MethodEdit_Caption,
+                    Icon = TutorialImageResources.MethodEdit_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_editing,
                         TutorialLinkResources.MethodEdit_zip,
                         TutorialLinkResources.MethodEdit_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_getBoxPanels_methodedit
+                    Description = TutorialTextResources.MethodEdit_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_Method_Refinement,
-                    Icon = Resources.MethodRefine_thumb,
+                    Caption = TutorialTextResources.MethodRefine_Caption,
+                    Icon = TutorialImageResources.MethodRefine_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_refinement,
                         TutorialLinkResources.MethodRefine_zip,
                         TutorialLinkResources.MethodRefine_pdf,
                         TutorialLinkResources.MethodRefine_sky
                     ),
-                    Description = Resources.StartPage_getBoxPanels_
+                    Description = TutorialTextResources.MethodRefine_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing,
-                    Icon = Resources.GroupedStudies_thumb,
+                    Caption = TutorialTextResources.GroupedStudy_Caption,
+                    Icon = TutorialImageResources.GroupedStudies_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.grouped_study_data_processing,
                         TutorialLinkResources.GroupedStudy_zip,
                         TutorialLinkResources.GroupedStudy_pdf,
                         TutorialLinkResources.GroupedStudy_sky
                     ),
-                    Description = Resources.StartPage_GroupedStudy_Description
+                    Description = TutorialTextResources.GroupedStudy_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Existing___Quantitative_Experiments,
-                    Icon = Resources.ExistingQuant_thumb,
+                    Caption = TutorialTextResources.ExistingQuant_Caption,
+                    Icon = TutorialImageResources.ExistingQuant_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.existing_and_quantitative_experiments,
                         TutorialLinkResources.ExistingQuant_zip,
                         TutorialLinkResources.ExistingQuant_pdf,
                         string.Empty
                     ),
-                    Description = Resources
-                        .StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_,
+                    Description = TutorialTextResources.ExistingQuant_Description,
                 },
                 new Label // Section heading
                 {
-                    Text = Resources.StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data,
+                    Text = TutorialTextResources.Section_Full_Scan_Acquisition_Data,
                     Font = labelFont,
                     Anchor = labelAnchor,
                     Width = labelWidth
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_MS1_Full_Scan_Filtering,
-                    Icon = Resources.MS1Filtering_thumb,
+                    Caption = TutorialTextResources.MS1Filtering_Caption,
+                    Icon = TutorialImageResources.MS1Filtering_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.ms1_fullscan_filtering,
                         TutorialLinkResources.MS1Filtering_zip,
                         TutorialLinkResources.MS1Filtering_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_getBoxPanels_ms1filtering
+                    Description = TutorialTextResources.MS1Filtering_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Targeted_MS_MS__PRM_,
-                    Icon = Resources.TargetedMSMS_thumb,
+                    Caption = TutorialTextResources.TargetedMSMS_Caption,
+                    Icon = TutorialImageResources.TargetedMSMS_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_ms_ms,
                         TutorialLinkResources.TargetedMSMS_zip,
                         TutorialLinkResources.TargetedMSMS_pdf,
                         TutorialLinkResources.TargetedMSMS_sky
                     ),
-                    Description = Resources.StartPage_getBoxPanels_targetedmsms
+                    Description = TutorialTextResources.TargetedMSMS_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition,
-                    Icon = Resources.DIA_thumb,
+                    Caption = TutorialTextResources.DIA_Caption,
+                    Icon = TutorialImageResources.DIA_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.data_independent_acquisition,
                         TutorialLinkResources.DIA_zip,
                         TutorialLinkResources.DIA_pdf,
                         TutorialLinkResources.DIA_sky
                     ),
-                    Description = Resources.StartPage_DIA_Description
+                    Description = TutorialTextResources.DIA_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.DIA_SWATH_Caption,
+                    Icon = TutorialImageResources.DIA_SWATH_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.DIA_TTOF_zip,
+                        TutorialLinkResources.DIA_TTOF_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.DIA_SWATH_Description
                 }
             };
             var tutorialSmallMoleculeBoxPanels = new Control[]
             {
                 new Label // Section heading
                 {
-                    Text = Resources.StartPage_PopulateTutorialPanel_Small_Molecules,
+                    Text = TutorialTextResources.Section_Small_Molecules,
                     Font = labelFont,
                     Anchor = labelAnchor,
                     Width = labelWidth
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets,
-                    Icon = Resources.SmallMolecule_thumb,
+                    Caption = TutorialTextResources.SmallMolecule_Caption,
+                    Icon = TutorialImageResources.SmallMolecule_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_targets,
                         TutorialLinkResources.SmallMolecule_zip,
                         TutorialLinkResources.SmallMolecule_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_SmallMolecule_Description
+                    Description = TutorialTextResources.SmallMolecule_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources
-                        .StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization,
-                    Icon = Resources.SmallMoleculeMethodDevCEOpt_thumb,
+                    Caption = TutorialTextResources.SmallMoleculeMethodDevCEOpt_Caption,
+                    Icon = TutorialImageResources.SmallMoleculeMethodDevCEOpt_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_zip,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_SmallMoleculeMethodDevCEOpt_Description
+                    Description = TutorialTextResources.SmallMoleculeMethodDevCEOpt_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Quantification,
-                    Icon = Resources.SmallMoleculeQuantification_thumb,
+                    Caption = TutorialTextResources.SmallMoleculeQuantification_Caption,
+                    Icon = TutorialImageResources.SmallMoleculeQuantification_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_quant,
                         TutorialLinkResources.SmallMoleculeQuantification_zip,
                         TutorialLinkResources.SmallMoleculeQuantification_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_SmallMoleculeQuantification_Description
+                    Description = TutorialTextResources.SmallMoleculeQuantification_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics,
-                    Icon = Resources.SHiResMetabolomics_thumb,
+                    Caption = TutorialTextResources.HiResMetabolomics_Caption,
+                    Icon = TutorialImageResources.HiResMetabolomics_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.hi_res_metabolomics,
                         TutorialLinkResources.HiResMetabolomics_zip,
                         TutorialLinkResources.HiResMetabolomics_pdf,
                         string.Empty
                     ),
-                    Description = Resources.StartPage_HiResMetabolomics_Description
+                    Description = TutorialTextResources.HiResMetabolomics_Description
+                },
+                new TutorialActionBoxControl
+                {
+                Caption = TutorialTextResources.SmallMolLibraries_Caption,
+                Icon = TutorialImageResources.SmallMolLibraries_start,
+                EventAction = () => Tutorial(
+                    TutorialLinkResources.SmallMolLibraries_zip,
+                    TutorialLinkResources.SmallMolLibraries_pdf,
+                    string.Empty
+                ),
+                Description = TutorialTextResources.SmallMolLibraries_Description
                 }
             };
             var tutorialAdvancedBoxPanels = new Control[]
             {
                 new Label
                 {
-                    Text = Resources.StartPage_PopulateTutorialPanel_Advanced_Topics,
+                    Text = TutorialTextResources.Section_Advanced_Topics,
                     Font = labelFont,
                     Anchor = labelAnchor,
                     Width = labelWidth
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Absolute_Quantification, 
-                    Icon = Resources.AbsoluteQuant_thumb, 
+                    Caption = TutorialTextResources.AbsoluteQuant_Caption, 
+                    Icon = TutorialImageResources.AbsoluteQuant_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.absolute_quantifiaction, 
                         TutorialLinkResources.AbsoluteQuant_zip,
                         TutorialLinkResources.AbsoluteQuant_pdf,
                         string.Empty
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__,
+                    ),
+                    Description = TutorialTextResources.AbsoluteQuant_Description,
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Custom_Reports___Results_Grid, 
-                    Icon = Resources.CustomReports_thumb, 
+                    Caption = TutorialTextResources.CustomReports_Caption, 
+                    Icon = TutorialImageResources.CustomReports_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.custom_reports_results_grid, 
                         TutorialLinkResources.CustomReports_zip,
                         TutorialLinkResources.CustomReports_pdf,
                         TutorialLinkResources.CustomReports_sky
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_customreports
+                    ),
+                    Description = TutorialTextResources.CustomReports_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Advanced_Peak_Picking_Models, 
-                    Icon = Resources.PeakPicking_thumb, 
+                    Caption = TutorialTextResources.PeakPicking_Caption, 
+                    Icon = TutorialImageResources.PeakPicking_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.advanced_peak_picking_models, 
                         TutorialLinkResources.PeakPicking_zip,
                         TutorialLinkResources.PeakPicking_pdf,
                         TutorialLinkResources.PeakPicking_sky
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_peakpicking
+                    ),
+                    Description = TutorialTextResources.PeakPicking_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_iRT_Retention_Time_Prediction, 
-                    Icon = Resources.iRT_thumb, 
+                    Caption = TutorialTextResources.iRT_Caption, 
+                    Icon = TutorialImageResources.iRT_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.irt_retention_time_prediction, 
                         TutorialLinkResources.iRT_zip,
                         TutorialLinkResources.iRT_pdf,
                         TutorialLinkResources.iRT_sky
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_irt
+                    ),
+                    Description = TutorialTextResources.iRT_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Collision_Energy_Optimization, 
-                    Icon = Resources.OptimizeCE_thumb, 
-                    EventAction = ()=>Tutorial(ActionTutorial.TutorialType.collision_energy_optimization, 
+                    Caption = TutorialTextResources.OptimizeCE_Caption, 
+                    Icon = TutorialImageResources.OptimizeCE_start, 
+                    EventAction = ()=>Tutorial(
                         TutorialLinkResources.OptimizeCE_zip,
                         TutorialLinkResources.OptimizeCE_pdf,
                         TutorialLinkResources.OptimizeCE_sky
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_
+                    ),
+                    Description = TutorialTextResources.OptimizeCE_Description
                 },
-                new ActionBoxControl
+                new TutorialActionBoxControl
                 {
-                    Caption = Resources.StartPage_getBoxPanels_Spectral_Library_Explorer, 
-                    Icon = Resources.LibraryExplorer_thumb, 
+                    Caption = TutorialTextResources.IMSFiltering_Caption,
+                    Icon = TutorialImageResources.IMSFiltering_start,
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.spectral_library_explorer, 
+                        TutorialLinkResources.IMSFiltering_zip,
+                        TutorialLinkResources.IMSFiltering_pdf,
+                        TutorialLinkResources.IMSFiltering_sky
+                    ),
+                    Description = TutorialTextResources.IMSFiltering_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.LibraryExplorer_Caption, 
+                    Icon = TutorialImageResources.LibraryExplorer_start, 
+                    EventAction = ()=>Tutorial(
                         TutorialLinkResources.LibraryExplorer_zip,
                         TutorialLinkResources.LibraryExplorer_pdf,
                         string.Empty
-                        ),
-                    Description = Resources.StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_
-                }
+                    ),
+                    Description = TutorialTextResources.LibraryExplorer_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.AuditLog_Caption,
+                    Icon = TutorialImageResources.AuditLog_start,
+                    EventAction = ()=>Tutorial(
+                        TutorialLinkResources.AuditLog_zip,
+                        TutorialLinkResources.AuditLog_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.AuditLog_Description
+                },
             };
 
             Control previousBox = null;
@@ -584,7 +611,7 @@ namespace pwiz.Skyline.Controls.Startup
             DoAction(new ActionImport(type).DoStartupAction);
         }
         
-        private void Tutorial(ActionTutorial.TutorialType type, string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        private void Tutorial(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
         {
             Assume.IsNotNull(skyFileLocation);
 
@@ -595,7 +622,7 @@ namespace pwiz.Skyline.Controls.Startup
             DialogResult = DialogResult.OK;
 
             string paths = pathChooserDlg.ExtractionPath;
-            DoAction(new ActionTutorial(type, paths, skyFileLocation, pdfFileLocation, zipSkyFileLocation)
+            DoAction(new ActionTutorial( paths, skyFileLocation, pdfFileLocation, zipSkyFileLocation)
                 .DoStartupAction);
         }
 
@@ -635,6 +662,12 @@ namespace pwiz.Skyline.Controls.Startup
             tabControlMain.Height = Height;
             flowLayoutPanelWizard.Height = Height;
             flowLayoutPanelWizard.Width = tabControlMain.Width - 40;
+            // Resize section tutorial dividers
+            foreach (Control control in flowLayoutPanelTutorials.Controls)
+            {
+                if (control is Label)
+                    control.Width = flowLayoutPanelTutorials.ClientRectangle.Width - control.Left - SystemInformation.VerticalScrollBarWidth;
+            }
             // ModeUI controls
             PositionButtonsModeUI(); 
             // Start Page Window Settings to avoid saving minimized or maximized sizes
@@ -742,10 +775,9 @@ namespace pwiz.Skyline.Controls.Startup
             DoAction(action.DoStartupAction);
         }
 
-        public void TestTutorialAction(ActionTutorial.TutorialType type)
+        public void TestTutorialAction()
         {
             Tutorial(
-                ActionTutorial.TutorialType.spectral_library_explorer,
                 TutorialLinkResources.LibraryExplorer_zip,
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty

@@ -52,6 +52,7 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
     msd.run.spectrumListPtr = sl;
 
     DiffConfig config;
+    config.ignoreExtraBinaryDataArrays = true;
     config.ignoreMetadata = true;
 
     Diff<MSData, DiffConfig> diff(msd, targetResult, config);

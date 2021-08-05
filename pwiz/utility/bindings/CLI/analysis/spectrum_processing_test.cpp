@@ -95,7 +95,7 @@ void testPeakFilter()
     Spectrum^ sf = slpf->spectrum(0, true);
     unit_assert(sf->defaultArrayLength == 5);
 
-    BinaryData^ intensityListFiltered = sf->getIntensityArray()->data;
+    BinaryDataDouble^ intensityListFiltered = sf->getIntensityArray()->data;
     unit_assert(intensityListFiltered->Count == 5);
     unit_assert(intensityListFiltered[0] == 5);
     unit_assert(intensityListFiltered[4] == 4);
@@ -145,6 +145,11 @@ void testXICGenerator()
     */
 }
 
+void testDiaUmpire()
+{
+
+}
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG_EX(argc, argv, "_CLI")
@@ -154,7 +159,9 @@ int main(int argc, char* argv[])
         testFilter();
         testPeakFilter();
         //FIXME: testSorter();
-        testXICGenerator();
+        //testXICGenerator();
+
+        testDiaUmpire();
     }
     catch (exception& e)
     {

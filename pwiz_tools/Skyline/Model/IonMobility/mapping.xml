@@ -1,18 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2">
-  <class name="DbVersionInfo" table="VersionInfo">
-    <id name="SchemaVersion">
-      <column name="SchemaVersion" not-null="true"/>
-      <generator class="assigned"/>
-    </id>
-  </class>
-  <class name="DbIonMobilityPeptide" table="IonMobilityLibrary">
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.IonMobility">
+  <class name="DbLibInfo" table="LibInfo">
     <id name="Id">
+      <column name="id" not-null="true"/>
       <generator class="native" />
     </id>
-    <property name="PeptideModSeq" index="idxPeptide"/>
-    <property name="CollisionalCrossSection"/>
-    <property name="HighEnergyDriftTimeOffsetMsec"/>
-    <property name="PrecursorAdduct"/>
+    <property name="LibLSID" column="libLSID" not-null="true"/>
+    <property name="CreateTime" column="createTime" not-null="true"/>
+    <property name="MajorVersion" column="majorVersion" not-null="true"/>
+    <property name="MinorVersion" column="minorVersion" not-null="true"/>
   </class>
+
+  <class name="DbMolecule" table="molecules">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <property name="PeptideModifiedSequence" not-null="true"/>
+    <property name="MoleculeName" column="moleculeName" not-null="true"/>
+    <property name="ChemicalFormula" column="chemicalFormula" not-null="true"/>
+    <property name="InChiKey" column="inchiKey" not-null="true"/>
+    <property name="OtherKeys" column="otherKeys" not-null="true"/>
+  </class>
+
+  <class name="DbPrecursorIon" table="ions">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <many-to-one name="DbMolecule" column="moleculeId" not-null="true" fetch="join"/>
+    <property name="PrecursorAdduct" column="precursorAdduct"/>
+  </class>
+
+  <class name="DbPrecursorAndIonMobility" table="ionMobilityValues">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <many-to-one name="DbPrecursorIon" column="ionId" not-null="true" fetch="join"/>
+    <property name="CollisionalCrossSectionSqA"/>
+    <property name="IonMobility"/>
+    <property name="IonMobilityUnits"/>
+    <property name="HighEnergyIonMobilityOffset"/>
+  </class>
+
+
 </hibernate-mapping>

@@ -373,7 +373,8 @@ class PWIZ_API_DECL TextWriter
             child()(spectrum.scanList);
         if (!spectrum.precursors.empty())
             child()("precursorList: ", spectrum.precursors);
-        for_each(spectrum.binaryDataArrayPtrs.begin(), spectrum.binaryDataArrayPtrs.end(), child()); 
+        for_each(spectrum.binaryDataArrayPtrs.begin(), spectrum.binaryDataArrayPtrs.end(), child());
+        for_each(spectrum.integerDataArrayPtrs.begin(), spectrum.integerDataArrayPtrs.end(), child());
         return *this;
     }
 
@@ -390,7 +391,8 @@ class PWIZ_API_DECL TextWriter
             child()(chromatogram.precursor);
         if (!chromatogram.product.empty())
             child()(chromatogram.product);
-        for_each(chromatogram.binaryDataArrayPtrs.begin(), chromatogram.binaryDataArrayPtrs.end(), child()); 
+        for_each(chromatogram.binaryDataArrayPtrs.begin(), chromatogram.binaryDataArrayPtrs.end(), child());
+        for_each(chromatogram.integerDataArrayPtrs.begin(), chromatogram.integerDataArrayPtrs.end(), child());
         return *this;
     }
 
@@ -414,7 +416,8 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const BinaryDataArrayPtr& p)
+    template <typename BinaryDataArrayType>
+    TextWriter& writeBinaryDataArray(const BinaryDataArrayType& p)
     {
         if (!p.get() || p->empty()) return *this;
         
@@ -433,6 +436,16 @@ class PWIZ_API_DECL TextWriter
         if (!p->data.empty())
             child()("binary: " + oss.str());
         return *this;
+    }
+
+    TextWriter& operator()(const BinaryDataArrayPtr& p)
+    {
+        return writeBinaryDataArray(p);
+    }
+
+    TextWriter& operator()(const IntegerDataArrayPtr& p)
+    {
+        return writeBinaryDataArray(p);
     }
 
     TextWriter& operator()(const SelectedIon& selectedIon)

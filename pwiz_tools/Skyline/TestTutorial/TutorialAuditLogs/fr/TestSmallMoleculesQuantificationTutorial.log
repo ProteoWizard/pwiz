@@ -145,20 +145,20 @@ Changed peak bounds of DrugX > Drug > 283,0400+
 Changed start time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank1" from 2,85 to 2,94
 Changed end time of all peaks of DrugX > Drug > 283,0400+ in "DoubleBlank1" from 2,86 to 2,94
 
-Undo Redo : Peptide Settings -- Quantification changed
-Summary   : Settings > Peptide Settings -- Quantification changed
+Undo Redo : Molecule Settings -- Quantification changed
+Summary   : Settings > Molecule Settings -- Quantification changed
 All Info  :
-Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > RegressionWeighting changed from "None" to "1 / (x * x)"
-Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
-Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
+Molecule Settings -- Quantification changed
+Settings > Molecule Settings -- Quantification > RegressionWeighting changed from "None" to "1 / (x * x)"
+Settings > Molecule Settings -- Quantification > Regression fit changed from "None" to "Linear"
+Settings > Molecule Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Molecule Settings -- Quantification > Units changed from Missing to "uM"
 
 Undo Redo : Pasted 52 values into the document grid
 Summary   : Pasted 52 values into the document grid
 All Info  :
 Pasted 52 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set Sample Type of Blank_01 to "Blank"
 Set Sample Type of Blank_02 to "Blank"
 Set Sample Type of Blank_03 to "Blank"
@@ -245,137 +245,7 @@ SPQC_02	Unknown
 SPQC_03	Unknown	
 
 
-View name = "Replicates"
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
+Report name = "Replicates"
 
 Undo Redo : Set Exclude From Calibration of Drug to True
 Summary   : Set Exclude From Calibration of Drug to True
@@ -386,101 +256,6 @@ Undo Redo : Set Exclude From Calibration of Drug to True
 Summary   : Set Exclude From Calibration of Drug to True
 All Info  :
 Set Exclude From Calibration of Drug to True
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
-
-Undo Redo : Set Exclude From Calibration of Drug to False
-Summary   : Set Exclude From Calibration of Drug to False
-All Info  :
-Set Exclude From Calibration of Drug to False
 
 Undo Redo : Imported results from 66 files
 Summary   : Imported results from 66 files

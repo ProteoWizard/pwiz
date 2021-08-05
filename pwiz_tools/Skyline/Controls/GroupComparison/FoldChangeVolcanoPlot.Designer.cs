@@ -29,15 +29,14 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FoldChangeVolcanoPlot));
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.SuspendLayout();
             // 
             // zedGraphControl
             // 
-            this.zedGraphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.zedGraphControl, "zedGraphControl");
             this.zedGraphControl.IsShowCopyMessage = false;
-            this.zedGraphControl.Location = new System.Drawing.Point(0, 0);
-            this.zedGraphControl.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.zedGraphControl.Name = "zedGraphControl";
             this.zedGraphControl.ScrollGrace = 0D;
             this.zedGraphControl.ScrollMaxX = 0D;
@@ -46,8 +45,6 @@
             this.zedGraphControl.ScrollMinX = 0D;
             this.zedGraphControl.ScrollMinY = 0D;
             this.zedGraphControl.ScrollMinY2 = 0D;
-            this.zedGraphControl.Size = new System.Drawing.Size(1113, 580);
-            this.zedGraphControl.TabIndex = 1;
             this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
             this.zedGraphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseDownEvent);
             this.zedGraphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseMoveEvent);
@@ -55,12 +52,10 @@
             // 
             // FoldChangeVolcanoPlot
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1113, 580);
             this.Controls.Add(this.zedGraphControl);
             this.Name = "FoldChangeVolcanoPlot";
-            this.Text = "FoldChangeVolcanoPlot";
             this.ResumeLayout(false);
 
         }

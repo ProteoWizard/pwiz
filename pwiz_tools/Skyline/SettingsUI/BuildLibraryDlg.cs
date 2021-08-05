@@ -46,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_PEP_XML,
             BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT,
             BiblioSpecLiteBuilder.EXT_MZID,
+            BiblioSpecLiteBuilder.EXT_MZID_GZ,
             BiblioSpecLiteBuilder.EXT_XTAN_XML,
             BiblioSpecLiteBuilder.EXT_PROTEOME_DISC,
             BiblioSpecLiteBuilder.EXT_PROTEOME_DISC_FILTERED,
@@ -64,8 +65,9 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB,
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
-       };
-
+            BiblioSpecLiteBuilder.EXT_SPECLIB,
+        };
+    
         private string[] _inputFileNames = new string[0];
         private string _dirInputRoot = string.Empty;
 
@@ -119,6 +121,14 @@ namespace pwiz.Skyline.SettingsUI
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
+        private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
+            {
+                Settings.Default.IrtStandardList.Insert(0, IrtStandard.AUTO);
+            }
+        }
+
         public ILibraryBuilder Builder { get; private set; }
 
         public string[] InputFileNames
@@ -155,6 +165,8 @@ namespace pwiz.Skyline.SettingsUI
                 cbSelect.Enabled = (count > 0);
             }
         }
+
+        public string AddLibraryFile { get; private set; }
 
         private bool ValidateBuilder(bool validateInputFiles)
         {
@@ -541,25 +553,57 @@ namespace pwiz.Skyline.SettingsUI
             InputFileNames = AddInputFiles(this, InputFileNames, fileNames);
         }
 
-        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames)
+        public static void CheckInputFiles(IEnumerable<string> inputFileNames, IEnumerable<string> fileNames, bool performDDASearch, out List<string> filesNew, out List<string> filesError)
         {
-            var filesNew = new List<string>(inputFileNames);
-            var filesError = new List<string>();
+            filesNew = new List<string>(inputFileNames);
+            filesError = new List<string>();
             foreach (var fileName in fileNames)
             {
-                if (IsValidInputFile(fileName))
+                if (IsValidInputFile(fileName, performDDASearch))
                 {
                     if (!filesNew.Contains(fileName))
                         filesNew.Add(fileName);
                 }
                 else
-                    filesError.Add(fileName);
+                {
+                    if (!filesError.Contains(fileName))
+                        filesError.Add(fileName);
+                }
             }
+        }
+
+        private string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames)
+        {
+            CheckInputFiles(inputFileNames, fileNames, false, out var filesNew, out var filesError);
 
             if (filesError.Count > 0)
             {
-                if (filesError.Count == 1)
+                var filesLib = filesError.Where(IsLibraryFile).ToArray();
+                if (filesError.Count == filesLib.Length)
+                {
+                    // All files are library files (e.g. msp, sptxt, etc)
+                    if (filesLib.Length == 1)
+                    {
+                        using (var dlg = new MultiButtonMsgDlg(
+                            string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_,
+                                filesLib[0]), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                        {
+                            if (dlg.ShowDialog(parent) == DialogResult.Yes)
+                            {
+                                AddLibraryFile = filesLib[0];
+                                DialogResult = DialogResult.OK;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MessageDlg.Show(parent, Resources.BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_);
+                    }
+                }
+                else if (filesError.Count == 1)
+                {
                     MessageDlg.Show(parent, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
+                }
                 else
                 {
                     var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
@@ -574,14 +618,45 @@ namespace pwiz.Skyline.SettingsUI
             return filesNew.ToArray();
         }
 
-        private static bool IsValidInputFile(string fileName)
+        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames, bool performDDASearch = false)
         {
-            foreach (string extResult in RESULTS_EXTS)
+            CheckInputFiles(inputFileNames, fileNames, performDDASearch, out var filesNew, out var filesError);
+
+            if (filesError.Count == 1)
             {
-                if (PathEx.HasExtension(fileName, extResult))
-                    return true;
+                MessageDlg.Show(parent, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
+            }
+            else if (filesError.Count > 1)
+            {
+                var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
+                              string.Empty,
+                              // ReSharper disable LocalizableElement
+                              "\t" + string.Join("\n\t", filesError.ToArray()));
+                              // ReSharper restore LocalizableElement
+                MessageDlg.Show(parent, message);
+            }
+
+            return filesNew.ToArray();
+        }
+
+        private static bool IsValidInputFile(string fileName, bool performDDASearch = false)
+        {
+            if (performDDASearch)
+                return true; // these are validated in OpenFileDialog
+            else
+            {
+                foreach (string extResult in RESULTS_EXTS)
+                {
+                    if (PathEx.HasExtension(fileName, extResult))
+                        return true;
+                }
             }
             return fileName.EndsWith(BiblioSpecLiteSpec.EXT);
+        }
+
+        private static bool IsLibraryFile(string fileName)
+        {
+            return LibrarySpec.CreateFromPath(@"__internal__", fileName) != null;
         }
 
         private void cbSelect_CheckedChanged(object sender, EventArgs e)
@@ -766,14 +841,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 iRTPeptidesLabel.Location = _iRTLabelPos;
                 comboStandards.Location = _iRTComboPos;
+                if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
+                {
+                    Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
+                }
             }
             else
             {
                 iRTPeptidesLabel.Location = _actionLabelPos;
                 comboStandards.Location = _actionComboPos;
+                Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
                 PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
             }
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
         }

@@ -29,7 +29,10 @@ namespace pwiz.Common.SystemUtil
     {
         ProgressState State { get; }
         string Message { get; }
+        string WarningMessage { get; }
         int PercentComplete { get; }
+        int ZoomedPercentComplete { get; }
+        int Segment { get; }
         bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
         IProgressStatus ChangePercentComplete(int percent);

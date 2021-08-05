@@ -142,7 +142,7 @@
     <value>全イオン電流クロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
   </data>
   <data name="_decoys_add" xml:space="preserve">
-    <value>mProphetを用いたモデル生成を再統合するテンプレートドキュメントにデコイを追加します。（デコイ生成法はオプションで、デフォルトは「反転」です。）</value>
+    <value>mProphetを用いたモデル生成を再積分するテンプレートドキュメントにデコイを追加します。（デコイ生成法はオプションで、デフォルトは「反転」です。）</value>
   </data>
   <data name="_decoys_add_count" xml:space="preserve">
     <value>追加するデコイの数です。（オプション。デフォルトではターゲットと同じ数のデコイを生成します。）</value>
@@ -258,6 +258,15 @@
   <data name="_import_search_cutoff_score" xml:space="preserve">
     <value>ペプチド検索結果ファイルからスペクトルライブラリを構築する際に、使用されるカットオフスコア（0～1）を定義します。ここで、1は最も高い信頼性一致で、0はすべてを含みます。[デフォルトは0.95]</value>
   </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>スペクトルライブラリを構築するときに使用するiRT標準の名前。</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>CiRTペプチドをiRT標準としてスペクトルライブラリを構築する場合は、iRT標準として使用するCiRTペプチド数を指定します。</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>iRT標準を使ってスペクトルライブラリを構築する場合は、追加されるペプチドに対するiRT標準値を再キャリブレーションします。</value>
+  </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>開いているドキュメントにペプチド検索結果ファイルをインポートし、ドキュメント特有のスペクトルライブラリを構築します。これは複数ファイルに複数回、指定されている場合があります。ターゲットとして一致したペプチドを追加するには、–import-fasta引数を使用します。</value>
   </data>
@@ -313,19 +322,19 @@
     <value>モデルのトレーニングについての詳細が記録されるようになります。</value>
   </data>
   <data name="_reintegrate_model_both" xml:space="preserve">
-    <value>再統合中にデコイと2番目に良いピークのどちらも強制的に使用します。デフォルトはデコイのみの使用です。</value>
+    <value>再積分中にデコイと2番目に良いピークのどちらも強制的に使用します。デフォルトはデコイのみの使用です。</value>
   </data>
   <data name="_reintegrate_model_iteration_count" xml:space="preserve">
     <value>モデル作成中に実施された反復数をコントロールするのに使用できます。デフォルトで最大10まで許可されており、新しいモデルにより検出数が少なくなれば反復がストップします。</value>
   </data>
   <data name="_reintegrate_model_name" xml:space="preserve">
-    <value>再統合操作で使用するスコアモデルの名前です。モデルはあらかじめ定義する（[編集] &gt; [最適化] &gt; [再統合]フォーム）ことも、この操作中に--reintegrate-create-modelを使用して自動的に作成することもできます。</value>
+    <value>再積分操作で使用するスコアモデルの名前です。モデルはあらかじめ定義する（[編集] &gt; [最適化] &gt; [再積分]フォーム）ことも、この操作中に--reintegrate-create-modelを使用して自動的に作成することもできます。</value>
   </data>
   <data name="_reintegrate_model_second_best" xml:space="preserve">
-    <value>再統合中に2番目に良いピークを強制的に使用します。デフォルトはデコイのみの使用です。</value>
+    <value>再積分中に2番目に良いピークを強制的に使用します。デフォルトはデコイのみの使用です。</value>
   </data>
   <data name="_reintegrate_overwrite_peaks" xml:space="preserve">
-    <value>手動で統合された既存のピークは、再統合モデルで選択されたピークによって上書きされます。（必要なのは、--reintegrate-model-nameです。）</value>
+    <value>手動で積分された既存のピークは、再積分モデルで選択されたピークによって上書きされます。（必要なのは、--reintegrate-model-nameです。）</value>
   </data>
   <data name="_remove_all" xml:space="preserve">
     <value>開いているドキュメントからすべての結果を削除します。</value>
@@ -391,7 +400,7 @@
     <value>スペクトルライブラリを追加中</value>
   </data>
   <data name="CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models" xml:space="preserve">
-    <value>高度なピーク選択モデルと再統合</value>
+    <value>高度なピーク選択モデルと再積分</value>
   </data>
   <data name="CommandArgs_GROUP_REPORT_Exporting_reports" xml:space="preserve">
     <value>レポートをエクスポート中</value>
@@ -791,5 +800,26 @@ Waters</value>
   </data>
   <data name="_ims_library_res" xml:space="preserve">
     <value>スペクトルライブラリからイオン移動度付近の値をフィルタリングするために使用するイオン移動度次元の分解能です。</value>
+  </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>グループ比較倍率変化がこのカットオフよりも高いターゲットのみを維持します。（グループ比較最適化の場合はオプション）</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>グループ比較最適化のピーク面積の計算に使用するMSレベル（1または2）です。両レベルが存在する場合にはレベル2がデフォルトとなり、それ以外の場合には存在するレベルを使用します。</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>大きく変化するターゲットの最適化に使用するために以前に定義されたグループ比較名です。複数比較の和集合を維持するため、複数の名前を使って引数を複数回指定してください。</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>グループ比較調整されたp値が指定されたカットオフよりも低いターゲットのみを維持します。（グループ比較最適化の場合は必須）</value>
+  </data>
+  <data name="CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size" xml:space="preserve">
+    <value>結果ファイルサイズを最小にする</value>
+  </data>
+  <data name="_chromatograms_discard_unused" xml:space="preserve">
+    <value>使用しないクロマトグラムをドキュメントからすべて破棄します。</value>
+  </data>
+  <data name="_chromatograms_limit_noise" xml:space="preserve">
+    <value>クロマトグラムの長さを±分などクロマトグラムピーク周囲の長さに制限します。</value>
   </data>
 </root>

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("AutoQC Loader")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
-[assembly: AssemblyProduct("Panorama AutoQC")]
+[assembly: AssemblyProduct("AutoQC")]
 [assembly: AssemblyCopyright("Copyright © University of Washington 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -28,5 +28,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("21.1.0.158")]
+[assembly: AssemblyFileVersion("21.1.0.158")]

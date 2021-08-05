@@ -83,6 +83,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        protected override bool ShowWithoutActivation
+        {
+            get { return true; }    // Don't take activation away from SkylineWindow
+        }
+
         private static readonly object _pauseLock = new object();
 
         public static void Show(string description = null, string link = null, bool showMatchingPages = false, int? timeout = null)

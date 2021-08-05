@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.IonMobility
     {
         public static string IsNotLoadedDocumentExplained(SrmDocument document)
         {
-            // Not loaded if the predictor is not usable
+            // Not loaded if the library is not usable
             var calc = GetIonMobilityLibrary(document);
             if (calc == null || calc.IsNone || calc.IsUsable)
                 return null;
@@ -79,14 +79,14 @@ namespace pwiz.Skyline.Model.IonMobility
                 EndProcessing(document);
                 return false;
             }
-            var dtPredictor = docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
-            var dtPredictorNew = !ReferenceEquals(ionMobilityLibrary, dtPredictor.IonMobilityLibrary)
-                ? dtPredictor.ChangeLibrary(ionMobilityLibrary)
-                : dtPredictor;
+            var ionMobilityFiltering = docCurrent.Settings.TransitionSettings.IonMobilityFiltering;
+            var ionMobilityFilteringNew = !ReferenceEquals(ionMobilityLibrary, ionMobilityFiltering.IonMobilityLibrary)
+                ? ionMobilityFiltering.ChangeLibrary(ionMobilityLibrary)
+                : ionMobilityFiltering;
 
-            if (dtPredictorNew == null ||
+            if (ionMobilityFilteringNew == null ||
                 !ReferenceEquals(document.Id, container.Document.Id) ||
-                (Equals(dtPredictor, dtPredictorNew)))
+                (Equals(ionMobilityFiltering, ionMobilityFilteringNew)))
             {
                 // Loading was cancelled or document changed
                 EndProcessing(document);
@@ -95,12 +95,11 @@ namespace pwiz.Skyline.Model.IonMobility
             SrmDocument docNew;
             do
             {
-                // Change the document to use the new predictor.
+                // Change the document to use the new ion mobility filter.
                 docCurrent = container.Document;
-                if (!ReferenceEquals(dtPredictor, docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor))
-                    return false;
-                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptidePrediction(predictor =>
-                    predictor.ChangeDriftTimePredictor(dtPredictorNew)));
+                if (!ReferenceEquals(ionMobilityFiltering, docCurrent.Settings.TransitionSettings.IonMobilityFiltering))
+                    return false; // Loading was cancelled or document changed
+                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangeTransitionSettings(t => t.ChangeIonMobilityFiltering(ionMobilityFilteringNew)));
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
@@ -114,7 +113,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 IonMobilityLibrary libResult;
                 if (!_loadedIonMobilityeLibraries.TryGetValue(dtLib.Name, out libResult))
                 {
-                    libResult = (IonMobilityLibrary) dtLib.Initialize(new LoadMonitor(this, container, dtLib));
+                    libResult = dtLib.Initialize(new LoadMonitor(this, container, dtLib));
                     if (libResult != null)
                         _loadedIonMobilityeLibraries.Add(libResult.Name, libResult);
                 }
@@ -124,12 +123,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private static IonMobilityLibrary GetIonMobilityLibrary(SrmDocument document)
         {
-            if (document == null)
-                return null;
-            var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
-            if (driftTimePredictor == null)
-                return null;
-            return driftTimePredictor.IonMobilityLibrary as IonMobilityLibrary;
+            return document?.Settings?.TransitionSettings?.IonMobilityFiltering?.IonMobilityLibrary
+                   ?? IonMobilityLibrary.NONE;
         }
 
     }

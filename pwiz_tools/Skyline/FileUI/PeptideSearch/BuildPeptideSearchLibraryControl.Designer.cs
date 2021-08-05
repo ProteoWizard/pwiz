@@ -32,18 +32,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.peptideSearchSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.comboInputFileType = new System.Windows.Forms.ComboBox();
             this.lblStandardPeptides = new System.Windows.Forms.Label();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
+            this.cbFilterForDocumentPeptides = new System.Windows.Forms.CheckBox();
+            this.btnRemFile = new System.Windows.Forms.Button();
+            this.listSearchFiles = new System.Windows.Forms.ListBox();
+            this.lblFileCaption = new System.Windows.Forms.Label();
+            this.btnAddFile = new System.Windows.Forms.Button();
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
             this.radioPRM = new System.Windows.Forms.RadioButton();
             this.radioDDA = new System.Windows.Forms.RadioButton();
-            this.cbFilterForDocumentPeptides = new System.Windows.Forms.CheckBox();
-            this.btnRemFile = new System.Windows.Forms.Button();
-            this.listSearchFiles = new System.Windows.Forms.ListBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.btnAddFile = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.radioButtonNewLibrary = new System.Windows.Forms.RadioButton();
             this.radioExistingLibrary = new System.Windows.Forms.RadioButton();
@@ -73,13 +75,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // peptideSearchSplitContainer.Panel2
             // 
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.label2);
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.comboInputFileType);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.lblStandardPeptides);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.comboStandards);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.cbFilterForDocumentPeptides);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.btnRemFile);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.listSearchFiles);
-            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.label7);
+            this.peptideSearchSplitContainer.Panel2.Controls.Add(this.lblFileCaption);
             this.peptideSearchSplitContainer.Panel2.Controls.Add(this.btnAddFile);
             // 
             // label1
@@ -91,6 +95,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // comboInputFileType
+            // 
+            this.comboInputFileType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboInputFileType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboInputFileType, "comboInputFileType");
+            this.comboInputFileType.Name = "comboInputFileType";
+            this.comboInputFileType.SelectedIndexChanged += new System.EventHandler(this.comboInputFileType_SelectedIndexChanged);
             // 
             // lblStandardPeptides
             // 
@@ -110,6 +127,38 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.cbIncludeAmbiguousMatches, "cbIncludeAmbiguousMatches");
             this.cbIncludeAmbiguousMatches.Name = "cbIncludeAmbiguousMatches";
             this.cbIncludeAmbiguousMatches.UseVisualStyleBackColor = true;
+            // 
+            // cbFilterForDocumentPeptides
+            // 
+            resources.ApplyResources(this.cbFilterForDocumentPeptides, "cbFilterForDocumentPeptides");
+            this.cbFilterForDocumentPeptides.Name = "cbFilterForDocumentPeptides";
+            this.cbFilterForDocumentPeptides.UseVisualStyleBackColor = true;
+            // 
+            // btnRemFile
+            // 
+            resources.ApplyResources(this.btnRemFile, "btnRemFile");
+            this.btnRemFile.Name = "btnRemFile";
+            this.btnRemFile.UseVisualStyleBackColor = true;
+            this.btnRemFile.Click += new System.EventHandler(this.btnRemFile_Click);
+            // 
+            // listSearchFiles
+            // 
+            resources.ApplyResources(this.listSearchFiles, "listSearchFiles");
+            this.listSearchFiles.FormattingEnabled = true;
+            this.listSearchFiles.Name = "listSearchFiles";
+            this.listSearchFiles.SelectedIndexChanged += new System.EventHandler(this.listSearchFiles_SelectedIndexChanged);
+            // 
+            // lblFileCaption
+            // 
+            resources.ApplyResources(this.lblFileCaption, "lblFileCaption");
+            this.lblFileCaption.Name = "lblFileCaption";
+            // 
+            // btnAddFile
+            // 
+            resources.ApplyResources(this.btnAddFile, "btnAddFile");
+            this.btnAddFile.Name = "btnAddFile";
+            this.btnAddFile.UseVisualStyleBackColor = true;
+            this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
             // grpWorkflow
             // 
@@ -139,38 +188,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.radioDDA.Name = "radioDDA";
             this.radioDDA.TabStop = true;
             this.radioDDA.UseVisualStyleBackColor = true;
-            // 
-            // cbFilterForDocumentPeptides
-            // 
-            resources.ApplyResources(this.cbFilterForDocumentPeptides, "cbFilterForDocumentPeptides");
-            this.cbFilterForDocumentPeptides.Name = "cbFilterForDocumentPeptides";
-            this.cbFilterForDocumentPeptides.UseVisualStyleBackColor = true;
-            // 
-            // btnRemFile
-            // 
-            resources.ApplyResources(this.btnRemFile, "btnRemFile");
-            this.btnRemFile.Name = "btnRemFile";
-            this.btnRemFile.UseVisualStyleBackColor = true;
-            this.btnRemFile.Click += new System.EventHandler(this.btnRemFile_Click);
-            // 
-            // listSearchFiles
-            // 
-            resources.ApplyResources(this.listSearchFiles, "listSearchFiles");
-            this.listSearchFiles.FormattingEnabled = true;
-            this.listSearchFiles.Name = "listSearchFiles";
-            this.listSearchFiles.SelectedIndexChanged += new System.EventHandler(this.listSearchFiles_SelectedIndexChanged);
-            // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
-            // 
-            // btnAddFile
-            // 
-            resources.ApplyResources(this.btnAddFile, "btnAddFile");
-            this.btnAddFile.Name = "btnAddFile";
-            this.btnAddFile.UseVisualStyleBackColor = true;
-            this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
             // panel1
             // 
@@ -225,7 +242,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Transparent;
+            this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.peptideSearchSplitContainer);
             this.Controls.Add(this.panelChooseFile);
             this.Controls.Add(this.panel1);
@@ -253,7 +270,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Button btnRemFile;
         private System.Windows.Forms.ListBox listSearchFiles;
-        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label lblFileCaption;
         private System.Windows.Forms.Button btnAddFile;
         private System.Windows.Forms.CheckBox cbFilterForDocumentPeptides;
         private System.Windows.Forms.GroupBox grpWorkflow;
@@ -270,5 +287,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox tbxLibraryPath;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label lblLibraryPath;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox comboInputFileType;
     }
 }

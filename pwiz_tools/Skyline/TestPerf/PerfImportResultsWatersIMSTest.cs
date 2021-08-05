@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -46,7 +47,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WatersIMSImportTest()
         {
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsWatersIMS.zip";
+            TestFilesZip = GetPerfTestDataURL(DateTime.Now.DayOfYear % 2 == 0
+                ? @"PerfImportResultsWatersIMSv2.zip" // v2 has _func003.cdt file removed, to test our former assumption that lockmass would have IMS data if other functions did and vice verse
+                : @"PerfImportResultsWatersIMS.zip");
             TestFilesPersistent = new[] { "ID12692_01_UCA168_3727_040714.raw", "ID12692_01_UCA168_3727_040714_IA_final_fragment.csv" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -110,7 +113,19 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // just be able to move to the next page.
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
-                // Modifications are already set up, so that page should get skipped.
+
+                // Skip Match Modifications page.
+                RunUI(() =>
+                {
+                    AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
+
+                // Make sure we're set up for ion mobility filtering - these settings should come from skyline file
+                AssertEx.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities);
+                AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.WindowWidthType);
+                AssertEx.AreEqual(50, importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IonMobilityFilterResolvingPower);
+
                 // Accept the full scan settings, lockmass correction dialog should appear
                 var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); 
                 /* Lockmass correction for IMS data added to Waters DLL limitations Oct 2016, but this data does not need it

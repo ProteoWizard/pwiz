@@ -28,7 +28,7 @@
     <software id="Xcalibur" version="2.6.0">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -208,11 +208,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -269,11 +269,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=4">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="583.410095214844" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -287,11 +287,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -347,11 +347,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=2">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="433.192138671875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -529,11 +529,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -590,11 +590,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=11">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="488.852661132813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -608,11 +608,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -668,11 +668,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=9">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="497.831909179688" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -850,11 +850,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -911,11 +911,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=18">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="495.870849609375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -929,11 +929,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -989,11 +989,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=16">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="504.863189697266" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1171,11 +1171,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1232,11 +1232,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=25">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="784.38916015625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1250,11 +1250,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1310,11 +1310,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=23">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="648.997314453125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1492,11 +1492,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1553,11 +1553,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=32">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="597.516357421875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1571,11 +1571,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1631,11 +1631,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=30">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="442.351989746094" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1813,11 +1813,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=37">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1874,11 +1874,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=39">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="527.213195800781" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1892,11 +1892,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -1952,11 +1952,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=37">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="413.186279296875" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2134,11 +2134,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=44">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2195,11 +2195,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=46">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="399.552764892578" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2213,11 +2213,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2273,11 +2273,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=44">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="437.7958984375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2455,11 +2455,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=51">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2516,11 +2516,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=53">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="499.86572265625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2534,11 +2534,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2594,11 +2594,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=51">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="508.733642578125" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2776,11 +2776,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=58">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2837,11 +2837,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=60">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="514.7568359375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2855,11 +2855,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -2915,11 +2915,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=58">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="523.963134765625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3097,11 +3097,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=65">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3158,11 +3158,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=67">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="498.956604003906" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3176,11 +3176,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3236,11 +3236,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=65">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="409.06103515625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3418,11 +3418,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=72">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3479,11 +3479,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=74">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="494.790222167969" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3497,11 +3497,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3557,11 +3557,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=72">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="516.737426757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3739,11 +3739,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=79">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3800,11 +3800,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=79">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="425.224365234375" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -3982,11 +3982,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=85">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4043,11 +4043,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=87">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="517.801879882813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4061,11 +4061,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4121,11 +4121,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=85">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="526.893676757813" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4303,11 +4303,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=92">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4364,11 +4364,11 @@
         </scanList>
         <precursorList count="2">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=94">
-            <userParam name="ms level" value="2"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="573.965087890625" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="2"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4382,11 +4382,11 @@
             </activation>
           </precursor>
           <precursor>
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="0.5" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4442,11 +4442,11 @@
         </scanList>
         <precursorList count="1">
           <precursor spectrumRef="controllerType=0 controllerNumber=1 scan=92">
-            <userParam name="ms level" value="1"/>
             <isolationWindow>
               <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="459.213958740234" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000828" name="isolation window lower offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               <cvParam cvRef="MS" accession="MS:1000829" name="isolation window upper offset" value="1.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <userParam name="ms level" value="1"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
@@ -4559,7 +4559,7 @@
     <chromatogramList count="4" defaultDataProcessingRef="pwiz_Reader_Thermo_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="99">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="544">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -4571,6 +4571,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJwBjAFz/t9baEs/LCJLJ4C6SWe+CkmgJstH2EhFSZ2zFEpWdENLi3pMS4UPPUkU3npIc//gR12kUUicvOdJPsJwS2s4d0uWlGlIRUTpR2AJOEcinTBIWo4FSv0Fwkuh27BLEQZDSLxwiEfDdrZFguoSR0OGzEl4pzNLFgI4S+Ut0keqT6NGNap3RRFlmEa8jAxKh7MISwGJOksje2hHWltoRrcZOUV16h9GgPQcStavMEteTp1LjdQbR5zyg0cY2YlFe4xIRxM5AEoR7JJLxrpFSwJ4/kj6ahxHco9iRfq8jUaYM9tJrX90S7bEQku1RRhIzDjrRvH9GUZT5hRHx+s0SsZkfEvJa4dLc4/dR6iz+kVnjWRESsQARjok6klmUztLbqRfSzB5OUfpxSNHSQdARtNp5UZC6PxJBEGISw+jmEvjXH5I7nvWRQrIX0Wb8xlKUenLS0B8VEueMShIbnNVRjGJXERF9DdGKa76SXtTg0v7tftLRWFESJ6a1kaXBGlFeEj1RgER/0kzXMBL1TN8SybnqdA=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="99" encodedLength="40">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZGBgYIRiJiBmhtKMaHhUDrcctcwDAHnIAJo=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

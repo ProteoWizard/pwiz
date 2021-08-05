@@ -227,7 +227,13 @@
     <Setting Name="AreaGraphType" Type="System.String" Scope="User">
       <Value Profile="(Default)">replicate</Value>
     </Setting>
+    <Setting Name="DetectionGraphType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">detections</Value>
+    </Setting>
     <Setting Name="ShowPeakAreaGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowDetectionGraph" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ShowResultsGrid" Type="System.Boolean" Scope="User">
@@ -677,9 +683,6 @@
     <Setting Name="AreaCVMsLevel" Type="System.String" Scope="User">
       <Value Profile="(Default)">products</Value>
     </Setting>
-    <Setting Name="AreaCVRatioIndex" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">-1</Value>
-    </Setting>
     <Setting Name="UIMode" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -727,6 +730,51 @@
     </Setting>
     <Setting Name="GroupApplyToBy" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BrukerPrmSqliteFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DetectionsQValueCutoff" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.01</Value>
+    </Setting>
+    <Setting Name="DetectionsTargetType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Precursor</Value>
+    </Setting>
+    <Setting Name="ExportMs1RepetitionTime" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="DetectionsYScaleFactor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Thousands</Value>
+    </Setting>
+    <Setting Name="DetectionsRepCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="DetectionsShowAtLeastN" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DetectionsShowSelection" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DetectionsShowMean" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DetectionsShowLegend" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AreaCVRatioIndex" Type="System.String" Scope="User">
+      <Value Profile="(Default)">-1</Value>
+    </Setting>
+    <Setting Name="ShowIonMobility" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowCollisionCrossSection" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowFullScanAnnotations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="SyncMZScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

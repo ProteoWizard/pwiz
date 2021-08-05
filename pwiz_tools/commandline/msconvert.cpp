@@ -26,6 +26,7 @@
 #include "pwiz/data/msdata/MSDataMerger.hpp"
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
@@ -64,7 +65,7 @@ struct Config : public Reader::Config
     IntegerSet runIndexSet;
     bool stripLocationFromSourceFiles;
     bool stripVersionFromSoftware;
-    bool singleThreaded;
+    boost::tribool singleThreaded;
 
     Config()
         : outputPath("."), verbose(false), merge(false)
@@ -72,10 +73,10 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
-        singleThreaded = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -337,6 +338,9 @@ Config parseCommandLine(int argc, char** argv)
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
+        ("ignoreMissingZeroSamples",
+            po::value<bool>(&config.ignoreZeroIntensityPoints)->zero_tokens()->default_value(config.ignoreZeroIntensityPoints),
+            ": some vendor readers do not include zero samples in their profile data; the default behavior is to add the zero samples but this option disables that")
         ("ignoreUnknownInstrumentError",
             po::value<bool>(&config.unknownInstrumentIsError)->zero_tokens()->default_value(!config.unknownInstrumentIsError),
             ": if true, if an instrument cannot be determined from a vendor file, it will not be an error")
@@ -347,7 +351,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.stripVersionFromSoftware)->zero_tokens(),
             ": if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML")
         ("singleThreaded",
-            po::value<bool>(&config.singleThreaded)->zero_tokens(),
+            po::value<boost::tribool>(&config.singleThreaded)->zero_tokens()->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
@@ -517,7 +521,7 @@ Config parseCommandLine(int argc, char** argv)
         while (is)
         {
             string filename;
-            getline(is, filename);
+            getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
         }
     }
@@ -656,8 +660,6 @@ Config parseCommandLine(int argc, char** argv)
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
-    config.writeConfig.useWorkerThreads = !config.singleThreaded;
-
     if ((ms_numpress_slof>=0) && ms_numpress_pic)
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");
 
@@ -731,17 +733,41 @@ void stripSoftwareVersion(MSData& msd)
 class UserFeedbackIterationListener : public IterationListener
 {
     std::streamoff longestMessage;
+    std::hash<string> hasher;
+    size_t lastMessageHash;
+    size_t lastIterationIndex;
+    size_t lastIterationCount;
+
+    bool updateHashIfNewMessage(const string& newMessage)
+    {
+        size_t newMessageHash = hasher(newMessage);
+        if (newMessageHash == lastMessageHash)
+            return false;
+        lastMessageHash = newMessageHash;
+        return true;
+    }
 
     public:
 
     UserFeedbackIterationListener()
     {
         longestMessage = 0;
+        lastMessageHash = 0;
+        lastIterationIndex = 0;
+        lastIterationCount = 0;
     }
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        
+        bool messageIsChanged = updateHashIfNewMessage(updateMessage.message);
+
+        // skip update if nothing has changed (update was purely to allow for cancellation)
+        if (!messageIsChanged && updateMessage.iterationIndex == lastIterationIndex && updateMessage.iterationCount == lastIterationCount)
+            return Status_Ok;
+
+        lastIterationIndex = updateMessage.iterationIndex;
+        lastIterationCount = updateMessage.iterationCount;
+
         stringstream updateString;
         if (updateMessage.message.empty())
             updateString << updateMessage.iterationIndex + 1 << "/" << updateMessage.iterationCount;
@@ -753,7 +779,7 @@ class UserFeedbackIterationListener : public IterationListener
         *os_ << updateString.str() << "\r" << flush;
 
         // spectrum and chromatogram lists both iterate; put them on different lines
-        if (updateMessage.iterationIndex+1 == updateMessage.iterationCount)
+        if (messageIsChanged || (updateMessage.message.empty() && updateMessage.iterationIndex+1 >= updateMessage.iterationCount))
             *os_ << endl;
         return Status_Ok;
     }
@@ -824,6 +850,12 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         SpectrumListFactory::wrap(msd, config.filters, pILR);
         ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
 
+        // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
+        Config configCopy(config);
+        if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
+            configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
+        configCopy.writeConfig.useWorkerThreads = !bool(config.singleThreaded);
+
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
 
@@ -834,9 +866,9 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
             stripSoftwareVersion(msd);
 
         if (config.outputPath == "-")
-            MSDataFile::write(msd, cout, config.writeConfig);
+            MSDataFile::write(msd, cout, configCopy.writeConfig);
         else
-            MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+            MSDataFile::write(msd, outputFilename, configCopy.writeConfig, pILR);
     }
     catch (exception& e)
     {
@@ -899,8 +931,15 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             SpectrumListFactory::wrap(msd, config.filters, pILR);
             ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
 
+            // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
+            Config configCopy(config);
+            if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
+                configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
+            configCopy.writeConfig.useWorkerThreads = !bool(configCopy.singleThreaded);
+
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
+            //*os_ << "writing output file" << (configCopy.writeConfig.useWorkerThreads ? " (multithreaded)" : "") << ": " << outputFilename << endl;
             *os_ << "writing output file: " << outputFilename << endl;
 
             if (config.stripLocationFromSourceFiles)
@@ -910,7 +949,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 stripSoftwareVersion(msd);
 
             if (config.outputPath == "-")
-                MSDataFile::write(msd, cout, config.writeConfig, pILR);
+                MSDataFile::write(msd, cout, configCopy.writeConfig, pILR);
             else
             {
                 // String compare of filenames is case-sensitive, which is a problem on Windows. bfs::equivalent() fixes this.
@@ -918,8 +957,12 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 {
                     throw user_error("[msconvert] Output filepath is the same as input filepath");
                 }
-                MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+                MSDataFile::write(msd, outputFilename, configCopy.writeConfig, pILR);
             }
+        }
+        catch (user_error&)
+        {
+            throw;
         }
         catch (exception& e)
         {
@@ -957,6 +1000,10 @@ int go(const Config& config)
             try
             {
                 processFile(*it, config, readers);
+            }
+            catch (user_error&)
+            {
+                throw;
             }
             catch (exception& e)
             {

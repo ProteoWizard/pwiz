@@ -138,6 +138,9 @@
   <data name="eIonMobilityUnits_none" xml:space="preserve">
     <value>なし</value>
   </data>
+  <data name="eIonMobilityUnits_unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>
@@ -189,6 +192,9 @@
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>固定</value>
   </data>
+  <data name="IsolationWidthType_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
   <data name="IsolationWidthType_results" xml:space="preserve">
     <value>結果</value>
   </data>
@@ -233,6 +239,9 @@
   </data>
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>分位値</value>
+  </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>なし</value>
@@ -528,6 +537,9 @@
   <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
     <value>比率</value>
   </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
+  </data>
   <data name="AreaCVMsLevel_precursors" xml:space="preserve">
     <value>プリカーサー</value>
   </data>
@@ -542,5 +554,65 @@
   </data>
   <data name="AreaCVTransitions_count" xml:space="preserve">
     <value>数</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>ローカル加重回帰</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>対数</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>線形範囲</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>固定幅</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>チェビシェフ</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>シティブロック</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>ピアソン</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>ユークリッド</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA生データ (ライブラリの検索と構築)</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA生データ (ライブラリのデコンボリューション、検索、構築)</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>検索結果 (ライブラリを直接構築)</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>なし</value>
   </data>
 </root>

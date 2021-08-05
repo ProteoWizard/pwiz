@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 
 namespace pwiz.SkylineTestUtil
@@ -39,7 +40,20 @@ namespace pwiz.SkylineTestUtil
         {
             var consoleBuffer = new StringBuilder();
             var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
+            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
+
+            var fail = exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported ||
+                       exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported;
+            if (fail)
+            {
+                var message =
+                    TextUtil.LineSeparate(
+                        string.Format("{0} reported but exit status was {1}.",
+                            consoleOutput.IsErrorReported ? "Error" : "No error", exitStatus),
+                        "Output: ", consoleBuffer.ToString());
+                Assert.Fail(message);
+            }
+
             return consoleBuffer.ToString();
         }
 
@@ -50,7 +64,7 @@ namespace pwiz.SkylineTestUtil
             {
                 using (var cmd = new CommandLine())
                 {
-                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
+                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
                     var docLoad = cmd.Document;
                     using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
                     {
@@ -97,7 +111,7 @@ namespace pwiz.SkylineTestUtil
             // Save and restore to ensure library caches
             var cmdline = new CommandLine();
             cmdline.SaveDocument(docResults, docPath, TextWriter.Null);
-            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
+            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
             docResults = cmdline.Document;
             using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
             {

@@ -407,6 +407,26 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Like SpaceSeparate but allows arbitrary separator, and ignores empty strings
+        /// </summary>
+        public static string TextSeparate(string sep, params string[] values)
+        {
+            var sb = new StringBuilder();
+            foreach (var value in values)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(sep);
+                    }
+                    sb.Append(value);
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
         /// <param name="values">A set of strings to be separated by spaces</param>

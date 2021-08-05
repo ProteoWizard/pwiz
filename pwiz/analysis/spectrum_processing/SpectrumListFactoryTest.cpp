@@ -429,6 +429,47 @@ void testWrapPolarity()
     }
 }
 
+void testWrapCollisionEnergy()
+{
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert_operator_equal(5, sl->size());
+
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
+        unit_assert_operator_equal(2, sl->size());
+
+        SpectrumListFactory::wrap(msd, "collisionEnergy low=0 high=100");
+        unit_assert_operator_equal(2, sl->size());
+    }
+
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
+        SpectrumListFactory::wrap(msd, "collisionEnergy low=34 high=35");
+        unit_assert_operator_equal(1, msd.run.spectrumListPtr->size());
+    }
+
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
+        SpectrumListFactory::wrap(msd, "collisionEnergy low=0 high=25");
+        unit_assert_operator_equal(0, msd.run.spectrumListPtr->size());
+    }
+
+    // test invalid argument
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        unit_assert_throws(SpectrumListFactory::wrap(msd, "collisionEnergy UNEXPECTED_INPUT"), runtime_error)
+    }
+}
+
 void testWrapTitleMaker()
 {
     MSData msd;
@@ -710,6 +751,7 @@ void test()
     testWrapActivation();
     testWrapMassAnalyzer();
     testWrapPolarity();
+    testWrapCollisionEnergy();
     testWrapTitleMaker();
     testWrapThermoScanFilter();
     testWrapPrecursorMzSet();

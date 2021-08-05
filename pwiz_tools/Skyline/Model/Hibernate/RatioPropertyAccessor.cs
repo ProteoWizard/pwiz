@@ -24,11 +24,6 @@ namespace pwiz.Skyline.Model.Hibernate
 {
     public static class RatioPropertyAccessor
     {
-        public enum RatioTarget
-        {
-            peptide_result, precursor_result, transition_result
-        }
-
         private const string RATIO_PREFIX = "ratio_";
         private const string RATIO_GS_PREFIX = "ratio_gs_";
         private const string RDOTP_PREFIX = "rdotp_";

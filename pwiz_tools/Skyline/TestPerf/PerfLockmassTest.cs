@@ -46,7 +46,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WatersLockmassPerfTest()
         {
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfTestLockmass_v2.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfTestLockmass_v2.zip");
             TestFilesPersistent = new[] { "ID19638_01_UCA195_2533_082715.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement

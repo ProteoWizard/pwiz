@@ -170,6 +170,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
         }
 
+        public bool IsSonarData
+        {
+            get { return _listChromData.Count > 0 && BestChromatogram.Key.IonMobilityFilter.IonMobilityUnits == eIonMobilityUnits.waters_sonar; }
+        }
+
         public ChromExtractor Extractor
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Extractor : ChromExtractor.summed; }
@@ -700,7 +705,7 @@ namespace pwiz.Skyline.Model.Results
 
                     peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
 
-                    if (intersectedTimeIntervals != null)
+                    if (intersectedTimeIntervals != null && peakMax != null)
                     {
                         float startTime = Times[peakMax.StartIndex];
                         float endTime = Times[peakMax.EndIndex];

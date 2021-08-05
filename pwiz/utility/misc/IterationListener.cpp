@@ -71,13 +71,15 @@ class IterationListenerRegistry::Impl
             const CallbackInfo& callbackInfo = itr->second;
             CallbackInfo::PeriodType periodType = callbackInfo.periodType;
 
+            // only update if the iteration has incremented or the message has changed
+            bool iterationIncreased = updateMessage.iterationIndex > callbackInfo.lastIterationIndex || &updateMessage.message != callbackInfo.lastMessage;
+
             bool shouldUpdate =
                 updateMessage.iterationIndex == 0 || // always update on iteration 0
-                ((updateMessage.iterationIndex > callbackInfo.lastIterationIndex || // only update in PeriodType_Iteration mode if the iteration has incremented or the message has changed
-                  &updateMessage.message != callbackInfo.lastMessage) &&
-                    ((updateMessage.iterationCount > 0 && updateMessage.iterationIndex+1 >= updateMessage.iterationCount) ||
-                    (periodType == CallbackInfo::PeriodType_Iteration && (updateMessage.iterationIndex+1) % callbackInfo.iterationPeriod == 0))) ||
-                (periodType == CallbackInfo::PeriodType_Time && difftime(now, callbackInfo.timestamp) >= callbackInfo.timePeriod);
+                (iterationIncreased && updateMessage.iterationCount > 0 && updateMessage.iterationIndex + 1 >= updateMessage.iterationCount) || // always update on the last iteration (index+1 >= count)
+                (iterationIncreased &&
+                    ((periodType == CallbackInfo::PeriodType_Iteration && (updateMessage.iterationIndex+1) % callbackInfo.iterationPeriod == 0) ||
+                     (periodType == CallbackInfo::PeriodType_Time && difftime(now, callbackInfo.timestamp) >= callbackInfo.timePeriod)));
 
             if (shouldUpdate)
             {
@@ -86,8 +88,7 @@ class IterationListenerRegistry::Impl
 
                 if (periodType == CallbackInfo::PeriodType_Time)
                     callbackInfo.timestamp = now;
-                else
-                    callbackInfo.lastIterationIndex = updateMessage.iterationIndex;
+                callbackInfo.lastIterationIndex = updateMessage.iterationIndex;
                 callbackInfo.lastMessage = &updateMessage.message;
             }
         }

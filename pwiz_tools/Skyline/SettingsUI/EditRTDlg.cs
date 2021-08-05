@@ -47,8 +47,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<RetentionTimeRegression> _existing;
         private RetentionTimeStatistics _statistics;
 
-        public const double DEFAULT_RT_WINDOW = 10.0;
-
         public EditRTDlg(IEnumerable<RetentionTimeRegression> existing)
         {
             _existing = existing;
@@ -164,8 +162,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (comboCalculator.SelectedIndex == -1)
             {
-                MessageBox.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm,
-                                Program.Name);
+                MessageDlg.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm);
                 comboCalculator.Focus();
                 return;
             }
@@ -259,7 +256,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (string.IsNullOrEmpty(textSlope.Text) && string.IsNullOrEmpty(textIntercept.Text))
                         cbAutoCalc.Checked = true;
                     if (string.IsNullOrEmpty(textTimeWindow.Text))
-                        textTimeWindow.Text = DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
+                        textTimeWindow.Text = ImportPeptideSearch.DEFAULT_RT_WINDOW.ToString(LocalizationHelper.CurrentCulture);
                 }
 
                 try
@@ -381,7 +378,7 @@ namespace pwiz.Skyline.SettingsUI
                         });
                         if (status.IsError)
                         {
-                            MessageBox.Show(this, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(this, status.ErrorException.Message);
                             return;
                         }
                     }
@@ -727,48 +724,5 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
-    }
-
-    public class MeasuredPeptide : IPeptideData
-    {
-        public MeasuredPeptide()
-        {
-        }
-
-        public MeasuredPeptide(Target seq, double rt)
-        {
-            Target = seq;
-            RetentionTime = rt;
-        }
-
-        public MeasuredPeptide(MeasuredPeptide other) : this(other.Target, other.RetentionTime)
-        {
-        }
-
-        public Target Target { get; set; }
-        public double RetentionTime { get; set; }
-        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
-
-        public static string ValidateSequence(Target sequence)
-        {
-            if (sequence.IsEmpty)
-                return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
-            if (sequence.IsProteomic)
-            {
-                if (!FastaSequence.IsExSequence(sequence.Sequence))
-                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
-            }
-            return null;
-        }
-
-        public static string ValidateRetentionTime(string rtText, bool allowNegative)
-        {
-            double rtValue;
-            if (rtText == null || !double.TryParse(rtText, out rtValue))
-                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
-            if (!allowNegative && rtValue <= 0)
-                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
-            return null;
-        }
     }
 }

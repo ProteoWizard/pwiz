@@ -29,7 +29,7 @@
 
 #pragma unmanaged
 #include "WiffFile.hpp"
-#include "LicenseKey.h"
+//#include "LicenseKey.h"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
@@ -75,6 +75,8 @@ class WiffFileImpl : public WiffFile
     mutable msclr::auto_gcroot<Clearcore2::Data::DataAccess::SampleData::Sample^> sample;
     mutable msclr::auto_gcroot<MassSpectrometerSample^> msSample;
 
+    virtual std::string getWiffPath() const { return wiffpath; }
+
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
     virtual int getExperimentCount(int sample, int period) const;
@@ -105,6 +107,7 @@ class WiffFileImpl : public WiffFile
     private:
     // on first access, sample names are made unique (giving duplicates a count suffix) and cached
     mutable vector<string> sampleNames;
+    string wiffpath;
 };
 
 typedef boost::shared_ptr<WiffFileImpl> WiffFileImplPtr;
@@ -127,10 +130,6 @@ struct ExperimentImpl : public Experiment
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
-
-    virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const;
-    virtual void getPrecursorInfo(int cycle, double& centerMz, int& charge) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
@@ -186,7 +185,7 @@ struct SpectrumImpl : public Spectrum
     virtual int getMSLevel() const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const;
 
     virtual bool getHasPrecursorInfo() const;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
@@ -240,18 +239,20 @@ typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
 
 
 WiffFileImpl::WiffFileImpl(const string& wiffpath)
-: currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1)
+: currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1), wiffpath(wiffpath)
 {
     try
     {
-#if __CLR_VER > 40000000 // .NET 4
+/*#if __CLR_VER > 40000000 // .NET 4
         Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
 #else
         Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
-#endif
+#endif*/
 
         provider = DataProviderFactory::CreateDataProvider("", true);
+        //provider = gcnew AnalystWiffDataProvider();
         batch = AnalystDataProviderFactory::CreateBatch(ToSystemString(wiffpath), provider);
+
         // This caused WIFF files where the first sample had been interrupted to
         // throw before they could be successfully constructed, which made investigators
         // unhappy when they were seeking access to later, successfully acquired samples.
@@ -262,7 +263,9 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 
 WiffFileImpl::~WiffFileImpl()
 {
+    delete batch;
     provider->Close();
+    delete provider;
 }
 
 
@@ -414,8 +417,12 @@ blt::local_date_time WiffFileImpl::getSampleAcquisitionTime(int sample, bool adj
 ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment) const
 {
     setExperiment(sample, period, experiment);
-    ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
-    return msExperiment;
+    try
+    {
+        ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
+        return msExperiment;
+    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -485,10 +492,36 @@ void ExperimentImpl::initializeBPC() const
         basePeakMZs_.resize(cycleTimes_.size());
         for (size_t i = 0; i < cycleTimes_.size(); ++i)
             basePeakMZs_[i] = bpci->GetBasePeakMass(i);
-
+        
         initializedBPC_ = true;
     }
-    CATCH_AND_FORWARD
+    catch (...)
+    {
+        try
+        {
+            int numCycles = cycleTimes_.size() > 10 ? cycleTimes_.size() - 1 : cycleTimes_.size();
+                
+            BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, nullptr, nullptr, 0, cycleTimes_[numCycles - 1]);
+            BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
+            BasePeakChromatogramInfo^ bpci = bpc->Info;
+
+            basePeakMZs_.resize(cycleTimes_.size());        
+            basePeakIntensities_.resize(cycleTimes_.size());
+            if (numCycles != cycleTimes_.size())
+            {
+                basePeakMZs_[cycleTimes_.size() - 1] = 0;
+                basePeakIntensities_[cycleTimes_.size() - 1] = 0;
+            }
+            for (size_t i = 0; i < numCycles; ++i)
+            {
+                basePeakMZs_[i] = bpci->GetBasePeakMass(i);
+                basePeakIntensities_[i] = bpc->GetYValue(i);
+            }
+
+            initializedBPC_ = true;
+        }
+        CATCH_AND_FORWARD
+    }
 }
 
 size_t ExperimentImpl::getSIMSize() const
@@ -669,32 +702,6 @@ void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& int
     CATCH_AND_FORWARD
 }
 
-bool ExperimentImpl::getHasIsolationInfo() const
-{
-    return (ExperimentType)msExperiment->Details->ExperimentType == Product &&
-           msExperiment->Details->MassRangeInfo->Length > 0;
-}
-
-void ExperimentImpl::getIsolationInfo(int cycle, double& centerMz, double& lowerLimit, double& upperLimit) const
-{
-    if (!getHasIsolationInfo())
-        return;
-
-    try
-    {
-        double isolationWidth = ((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-
-        centerMz = (double)((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
-        lowerLimit = centerMz - isolationWidth / 2;
-        upperLimit = centerMz + isolationWidth / 2;
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getPrecursorInfo(int cycle, double& centerMz, int& charge) const
-{
-}
-
 
 SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
 : experiment(experiment), cycle(cycle), selectedMz(0), bpY(-1), bpX(-1)
@@ -725,9 +732,14 @@ int SpectrumImpl::getMSLevel() const
     try {return spectrumInfo->MSLevel == 0 ? 1 : spectrumInfo->MSLevel;} CATCH_AND_FORWARD
 }
 
-bool SpectrumImpl::getHasIsolationInfo() const { return experiment->getHasIsolationInfo(); }
+bool SpectrumImpl::getHasIsolationInfo() const
+{
+    return ((ExperimentType)experiment->msExperiment->Details->ExperimentType == Product ||
+            (ExperimentType)experiment->msExperiment->Details->ExperimentType == Precursor) &&
+           experiment->msExperiment->Details->MassRangeInfo->Length > 0;
+}
 
-void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
+void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
 {
     if (!getHasIsolationInfo())
         return;
@@ -738,6 +750,7 @@ void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double
         centerMz = getHasPrecursorInfo() ? selectedMz : (double)((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
         lowerLimit = centerMz - isolationWidth / 2;
         upperLimit = centerMz + isolationWidth / 2;
+        collisionEnergy = 0;
     }
     CATCH_AND_FORWARD
 }
@@ -976,14 +989,6 @@ WiffFilePtr WiffFile::create(const string& wiffpath)
     {
         if (bal::iends_with(wiffpath, ".wiff2"))
         {
-#ifndef _WIN64
-            throw std::runtime_error("[WiffFile] WIFF2 not supported in a 32-bit process");
-#endif
-            auto currentCulture = System::Globalization::CultureInfo::CurrentCulture;
-            if (currentCulture->NumberFormat->NumberDecimalSeparator == L"," &&
-                currentCulture->NumberFormat->NumberGroupSeparator == L"\xA0") // no break space
-                throw std::runtime_error("[WiffFile::create] WIFF2 files cannot be read with the current region/culture settings (group separator ' ' and decimal separator ','); try setting your region to \"English (United States)\"");
-
             wiffFile = boost::static_pointer_cast<WiffFile>(boost::make_shared<WiffFile2Impl>(wiffpath));
         }
         else
