@@ -230,7 +230,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboFilterCategory, "comboFilterCategory");
             this.comboFilterCategory.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboFilterCategory.FormattingEnabled = true;
-            this.comboFilterCategory.FormattingEnabled = true;
             this.comboFilterCategory.Name = "comboFilterCategory";
             this.comboFilterCategory.SelectedIndexChanged += new System.EventHandler(this.comboFilterCategory_SelectedIndexChanged);
             // 

@@ -221,7 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             var filteredIndices = PrefixSearchByProperty(filterText);
 
             // If the filter text can be read as a number, we want to include spectra with a matching precursor m/z value
-            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result))
+            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _selectedFilterCategory.Equals(PRECURSOR_MZ))
             {
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z
