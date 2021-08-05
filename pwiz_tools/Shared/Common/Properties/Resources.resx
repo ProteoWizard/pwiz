@@ -274,14 +274,6 @@
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
     <value>Are you sure you want to delete these {0} reports?</value>
   </data>
-  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
-    <value>(Filtered from {0})</value>
-  </data>
-  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0} of {1}</value>
-    <comment>Example : 1 of 10
-</comment>
-  </data>
   <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
     <value>Has Any Value</value>
   </data>

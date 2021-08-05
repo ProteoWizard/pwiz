@@ -79,7 +79,14 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestAmandaSearch();
+
+            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
+
+        /// <summary>
+        /// Change to true to write new Assert statements instead of testing them.
+        /// </summary>
+        private bool IsRecordMode { get { return false; } }
 
         private Image _searchLogImage;
 
@@ -230,7 +237,7 @@ namespace TestPerf
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
@@ -250,7 +257,7 @@ namespace TestPerf
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");

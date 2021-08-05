@@ -32,11 +32,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Database;
 using pwiz.Skyline.Model.Results;
+using BiblioSpecLiteLibrary = pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -465,7 +468,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
+                ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out var outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -480,7 +484,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
-            ImportPeptideSearch.IrtStandard = _driverStandards.SelectedItem;
+            ImportPeptideSearch.IrtStandard = outStandard;
             return true;
         }
 
@@ -519,7 +523,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 return false;
             }
-            DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.AddDocumentSpectralLibrary(doc, docLibSpec));
+
+            var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
+            if (docNew == null)
+                return false;
+
+            var blib = ImportPeptideSearch.DocLib as BiblioSpecLiteLibrary;
+            if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    Resources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
+                    {
+                        docNew = ImportPeptideSearch.AddRetentionTimePredictor(docNew, docLibSpec);
+                    }
+                }
+            }
+
+            DocumentContainer.ModifyDocumentNoUndo(doc => docNew);
             return true;
         }
 
@@ -531,14 +554,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public static UpdateProgressResponse ShowLibraryMissingExternalSpectraError(Control parentWindow, Exception errorException)
         {
             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
-            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out string spectrumFilename, out string resultsFilepath))
+            if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 throw new InvalidOperationException(@"IsLibraryMissingExternalSpectraError returned false");
+
+            string extraHelp = Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
+
+            string messageFormat = spectrumFilenames.Count > 1
+                ? Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError
+                : Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError;
 
             // TODO: parse supported file extensions from BiblioSpec or ProteoWizard
             var dialogResult = MultiButtonMsgDlg.Show(parentWindow,
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__,
-                    spectrumFilename, resultsFilepath) +
-                string.Format(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__, BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions),
+                string.Format(messageFormat,
+                    resultsFilepath, string.Join(Environment.NewLine, spectrumFilenames),
+                    string.Join(Environment.NewLine, directoriesSearched),
+                    BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions) + extraHelp,
                 Resources.BiblioSpecLiteBuilder_Embedded,
                 Resources.AlertDlg_GetDefaultButtonText__Retry, true);
 

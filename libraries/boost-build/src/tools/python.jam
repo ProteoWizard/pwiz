@@ -51,7 +51,10 @@ lib dl ;
 # pass this to linker explicitly.
 lib util ;
 # Python uses pthread symbols.
-lib pthread ;
+lib pthread :
+    : <target-os>linux:<link>shared
+    ;
+
 # Extra library needed by phtread on some platforms.
 lib rt ;
 
@@ -81,7 +84,7 @@ py3-version = ;
 #   On MacOS/Darwin, you can also pass the path of the Python framework.
 #
 # - condition: if specified, should be a set of properties that are matched
-#   against the build configuration when Boost.Build selects a Python
+#   against the build configuration when B2 selects a Python
 #   configuration to use.
 #
 # - extension-suffix: A string to append to the name of extension modules before
@@ -809,7 +812,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         debug-message Python headers and libraries not found. ;
         return ;
     }
-    
+
     .configured = true ;
 
     if ! $(interpreter-cmd)
@@ -859,7 +862,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     #
     # End autoconfiguration sequence.
     #
-    
+
     # Normalize and dissect any version number.
     local major-minor ;
     if $(version)
@@ -867,8 +870,8 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         major-minor = [ split-version $(version) ] ;
         version = $(major-minor:J=.) ;
     }
-    
-    
+
+
     local target-requirements = $(condition) ;
 
     # Add the version, if any, to the target requirements.
@@ -1042,7 +1045,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             : $(usage-requirements)
             ;
     }
-    
+
 }
 
 # Conditional rule specification that will prevent building of a target

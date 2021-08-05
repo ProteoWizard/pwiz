@@ -39,9 +39,7 @@ import errors ;
 
 extension.declare boost ;
 
-local boost_build_path = [ modules.peek : search-path ] ;
-boost_build_path = $(boost_build_path[1]) ;
-path-constant THIS_PATH : [ path.join $(boost_build_path) .. ] ;
+path-constant THIS_PATH : ../../libraries ;
 
 .boost-version = ;
 .boost-src-location = ;
@@ -71,7 +69,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>13.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.1 in $(properties) )
+       ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.2 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -153,6 +152,7 @@ rule init ( version : location : options * )
             <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
             <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
@@ -221,7 +221,7 @@ rule init ( version : location : options * )
             
         lib shell32 : : <name>shell32 ; # for CommandLineToArgW
         lib nowide
-            :   [ path.glob $(location)/../boost_aux/libs/nowide/src : *.cpp ]
+            :   [ path.glob $(location)/libs/nowide/src : *.cpp ]
             :   $(requirements)
                 <location-prefix>nowide-$(version-tokens:J=_)
                 <use>boost
@@ -237,7 +237,7 @@ rule init ( version : location : options * )
             ;
 
         lib iostreams
-            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp lzma.cpp ]
+            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp lzma.cpp zstd.cpp ]
             :   $(requirements)
                 <location-prefix>iostreams-$(version-tokens:J=_)
                 <use>boost
@@ -261,6 +261,7 @@ rule init ( version : location : options * )
         modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
         local serialization_sources =
+            archive_exception
             basic_archive
             basic_iarchive
             basic_iserializer
@@ -279,14 +280,21 @@ rule init ( version : location : options * )
             extended_type_info_no_rtti
             polymorphic_iarchive
             polymorphic_oarchive
+            stl_port
             text_iarchive
             text_oarchive
+            polymorphic_text_iarchive
+            polymorphic_text_oarchive
+            polymorphic_binary_iarchive
+            polymorphic_binary_oarchive
+            polymorphic_xml_iarchive
+            polymorphic_xml_oarchive
             void_cast
-            archive_exception
             xml_grammar
             xml_iarchive
-            xml_oarchive
             xml_archive_exception
+            codecvt_null
+            xml_oarchive
             utf8_codecvt_facet
         ;
 
@@ -295,18 +303,30 @@ rule init ( version : location : options * )
             basic_text_woprimitive
             text_wiarchive
             text_woarchive
+            polymorphic_text_wiarchive
+            polymorphic_text_woarchive
             xml_wgrammar
             xml_wiarchive
             xml_woarchive
-            codecvt_null
+            polymorphic_xml_wiarchive
+            polymorphic_xml_woarchive
         ;
 
         lib serialization
             :   $(location)/libs/serialization/src/$(serialization_sources).cpp
-            :   $(requirements) <toolset>msvc:<cxxflags>/Gy
+            :   $(requirements)
                 <location-prefix>serialization-$(version-tokens:J=_)
                 <use>boost
                 #<threading>multi
+                <toolset>msvc:<cxxflags>/Gy
+                <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+                <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
+                <toolset>clang:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>gcc:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>darwin:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>gcc:<cxxflags>"-ftemplate-depth-255"
+                <toolset>clang:<cxxflags>"-ftemplate-depth-255"
+                <toolset>darwin:<cxxflags>"-ftemplate-depth-255"
                 <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
             :
@@ -316,10 +336,19 @@ rule init ( version : location : options * )
 
         lib wserialization
             :   $(location)/libs/serialization/src/$(wserialization_sources).cpp serialization
-            :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
+            :   $(requirements)
                 <location-prefix>wserialization-$(version-tokens:J=_)
                 <use>boost
                 #<threading>multi
+                <toolset>msvc:<cxxflags>/Gy
+                <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+                <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
+                <toolset>clang:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>gcc:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>darwin:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
+                <toolset>gcc:<cxxflags>"-ftemplate-depth-255"
+                <toolset>clang:<cxxflags>"-ftemplate-depth-255"
+                <toolset>darwin:<cxxflags>"-ftemplate-depth-255"
                 <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
             :
@@ -422,27 +451,32 @@ rule init ( version : location : options * )
                 <library>date_time
                 <library>chrono
             ;
+            
+        if $(version-tokens[2]) < 73
+        {
+            local date_time_sources =
+                greg_month
+              ;
 
-        local date_time_sources =
-            greg_month
-            greg_weekday
-            date_generators
-          ;
-
-        lib date_time
-            :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
-            :   $(requirements)
-                <location-prefix>date_time-$(version-tokens:J=_)
-                <use>boost
-                <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
-                <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
-                #<define>NO_BOOST_DATE_TIME_INLINE
-                <define>BOOST_DATE_TIME_NO_LIB=1
-            :
-            :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
-                #<define>NO_BOOST_DATE_TIME_INLINE
-                <define>BOOST_DATE_TIME_NO_LIB=1
-            ;
+            lib date_time
+                :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
+                :   $(requirements)
+                    <location-prefix>date_time-$(version-tokens:J=_)
+                    <use>boost
+                    <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                    <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
+                    #<define>NO_BOOST_DATE_TIME_INLINE
+                    <define>BOOST_DATE_TIME_NO_LIB=1
+                :
+                :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                    #<define>NO_BOOST_DATE_TIME_INLINE
+                    <define>BOOST_DATE_TIME_NO_LIB=1
+                ;
+        }
+        else
+        {
+            alias date_time ;
+        }
 
         if $(version-tokens[2]) < 47
         {
@@ -564,10 +598,18 @@ rule init ( version : location : options * )
             ;
 
         lib atomic
-            :   $(location)/libs/atomic/src/lockpool.cpp
+            :   $(location)/libs/atomic/src/lock_pool.cpp
             :   $(requirements)
                 <location-prefix>atomic-$(version-tokens:J=_)
                 <use>boost
+                <define>BOOST_ATOMIC_SOURCE
+                <link>shared:<define>BOOST_ATOMIC_DYN_LINK=1
+                <link>static:<define>BOOST_ATOMIC_STATIC_LINK=1
+                <include>$(location)/libs/atomic/src
+            :
+            :
+                <link>shared:<define>BOOST_ATOMIC_DYN_LINK=1
+                <link>static:<define>BOOST_ATOMIC_STATIC_LINK=1
             ;
             
         lib psapi ;

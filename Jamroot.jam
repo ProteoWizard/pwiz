@@ -79,31 +79,34 @@ ECHO
 ; # end of our own help text
 }
 
+import errors ;
+
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
 # set up explicit 32-bit or 64-bit builds
-if "address-model=64" in [ modules.peek : ARGV ] || ( ! ( $(.os) = "NT" ) && $(.platform:L) = "x86_64" )
+if "address-model=64" in [ modules.peek : ARGV ]
 {
     constant PROCESSOR_ARCHITECTURE : "AMD64" ;
     constant PLATFORM : "x64" ;
+    if "address-model=32" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
-else if "address-model=32" in [ modules.peek : ARGV ] || $(.platform:L) = "x86" || $(.os) = "NT" 
+else if "address-model=32" in [ modules.peek : ARGV ]
 {
     constant PROCESSOR_ARCHITECTURE : "x86" ;
     constant PLATFORM : "x86" ;
+    if "address-model=64" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
 else
 {
-    echo "Unable to determine address-model for platform $(.platform:L). The only supported platforms are x86 and x86_64." ;
-    exit ;
+    errors.user-error "No address-model specified. Command-line must specify address-model=32 or address-model=64 (because B2 apparently changed the default MSVC address-model, breaking many pwiz assumptions)." ;
 }
 
 local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_67_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_76_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -176,8 +179,16 @@ rule without-binary-msdata ( properties * )
    }
 }
 
+if [ modules.peek : NT ]
+{
+    path-constant PWIZ_BUILD_PATH : build-nt-x86 ; # force x86 since .NET projects assume that location
+}
+else
+{
+    path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+}
+
 path-constant PWIZ_ROOT_PATH : . ;
-path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
 path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 
@@ -279,7 +290,9 @@ project pwiz
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
-        <define>_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING # TODO: remove this next time Boost is updated
+        <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
+
+        <define>BOOST_REGEX_MATCH_EXTRA                 # enable access to all captures
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -305,6 +318,10 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
+
+        # link-time optimization for release builds
+        #<variant>release:<lto>on
 
         # target Windows 7 or later
         <toolset>msvc:<define>_WIN32_WINNT=_WIN32_WINNT_WIN7
@@ -312,12 +329,19 @@ project pwiz
         
         <conditional>@secure-scl-throws
 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+        # TODO: figure out a way to only apply this to 3rd party headers
+        #<toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+
+        <toolset>gcc:<define>_DEFAULT_SOURCE
+        <toolset>clang:<define>_DEFAULT_SOURCE
 
         # set standard to C++14
         <toolset>gcc:<cxxflags>-std=c++14
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
+
+        # prevent warning about _BSD_SOURCE deprecation
+        <toolset>gcc:<define>_DEFAULT_SOURCE
 
         # disable "warning: suggest parentheses around '&&' within '||'"
         <toolset>gcc:<cxxflags>-Wno-parentheses
@@ -327,6 +351,9 @@ project pwiz
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
         <toolset>darwin:<cxxflags>-Wno-unused-local-typedef
+
+        # avoid unused parameter warnings (especially annoying for stub functions)
+        <toolset>clang:<cxxflags>-Wunused-parameter
 
         # avoid C++1x deprecation warnings
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
@@ -384,6 +411,7 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
+        <response-file>file               # auto-detection of max command-line length broken on Windows Server?
     ;
 
 
@@ -479,7 +507,7 @@ version-tag = $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 constant PWIZ_NUMERIC_VERSION_TAG : $(numeric-version-tag:J=.) ;
 constant PWIZ_VERSION_TAG : $(version-tag:J=.) ;
 
-echo ProteoWizard $(version-tag:J=.) $(PWIZ_GIT_BRANCH) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
+echo ProteoWizard $(version-tag:J=.) $(PWIZ_GIT_BRANCH) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) $(.os) ;
 
 import generate-version ;
 generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
@@ -712,7 +740,10 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset-msvc:version>12.0 in $(properties) || <toolset-msvc:version>14.0 in $(properties) || <toolset-msvc:version>14.1 in $(properties)
+    if <toolset-msvc:version>12.0 in $(properties) ||
+       <toolset-msvc:version>14.0 in $(properties) ||
+       <toolset-msvc:version>14.1 in $(properties) ||
+       <toolset-msvc:version>14.2 in $(properties)
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
@@ -898,7 +929,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.1 in $(properties) )
+       ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.2 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -940,7 +972,8 @@ rule no-express-requirement ( properties * )
     # only the latest, non-express version of MSVC
     if ! ( <toolset-msvc:version>12.0 in $(properties) || 
            <toolset-msvc:version>14.0 in $(properties) || 
-           <toolset-msvc:version>14.1 in $(properties) )
+           <toolset-msvc:version>14.1 in $(properties) || 
+           <toolset-msvc:version>14.2 in $(properties) )
     { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
@@ -959,24 +992,15 @@ if [ modules.peek : NT ]
 
     if ( [ MATCH (x64) : $(PLATFORM) ] )
     {
-        # HACK: we can't just look at the PROCESSOR_ARCHITECTURE environment variable, because it is
-        #       set to "x86" even on a 64-bit machine, probably because bjam is running in 32-bit mode
-        if ( ! $(ProgramFilesX86) && [ MATCH (x86) : $(ProgramFiles) ] ) # infer 64-bit machine from (x86) appended to ProgramFiles
-        {
-            EXIT "\n*** ERROR: It is not possible to build or run a 64-bit build on 32-bit Windows." ;
-        }
-        
-        # MSFileReader install directory
-        constant ProgramFilesLibs : "C:\\Program Files" ;
-        constant MSFILEREADER_SUFFIX : "_x64" ;
+        constant ProgramFilesLibs : "C:\\Program Files" ; # still needed for MascotParser
     }
     else
     {
         # MSFileReader install directory
         constant ProgramFilesLibs : "$(ProgramFilesX86)" ;
         constant MSFILEREADER_SUFFIX : "" ;
+        constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
     }
-    constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
 } # if NT
 
 # HACK: find location of WiffFileDataReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
@@ -1117,7 +1141,7 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1"
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2015" ;
         }

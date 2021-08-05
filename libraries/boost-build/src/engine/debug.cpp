@@ -73,7 +73,7 @@ void profile_enter( OBJECT * rulename, profile_frame * frame )
 }
 
 
-void profile_memory( long mem )
+void profile_memory( size_t mem )
 {
     if ( DEBUG_PROFILE )
         if ( profile_stack && profile_stack->info )

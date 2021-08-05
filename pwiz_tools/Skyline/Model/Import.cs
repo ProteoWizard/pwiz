@@ -369,31 +369,44 @@ namespace pwiz.Skyline.Model
             return inputLines;
         }
 
+        /// <summary>
+        /// Attempt to find the format of columnar data and throw an exception upon failure
+        /// </summary>
         private void InitFormat(IList<string> inputLines)
         {
             if (FormatProvider == null)
             {
-                char sep;
-                IFormatProvider provider;
-                Type[] columnTypes;
-                string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
-                if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+                // Throw an exception if we cannot work out the format of the input
+                if (!TryInitFormat(inputLines, out var provider, out var sep))
                 {
-                    throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                }
-                // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
-                if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                {
-                    inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
-                    if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
-                        columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                    {
-                        throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                    }
+                    throw new IOException(Resources
+                        .SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
                 FormatProvider = provider;
                 Separator = sep;
             }
+        }
+
+        /// <summary>
+        /// Attempt to find the column separator and format provider for the input lines. Also useful for testing if data is columnar
+        /// </summary>
+        public static bool TryInitFormat(IList<string> inputLines, out IFormatProvider provider, out char sep)
+        {
+            Type[] columnTypes;
+            string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
+            if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+            {
+                return false;
+            }
+
+            // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
+            if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
+            {
+                inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
+                return MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
+                       columnTypes.All(t => Type.GetTypeCode(t) == TypeCode.Double);
+            }
+            return true;
         }
 
         public IFormatProvider FormatProvider { get; set; }
@@ -412,19 +425,33 @@ namespace pwiz.Skyline.Model
 
         private int _linesSeen;
 
-        public MassListImporter(SrmDocument document, MassListInputs inputs)
+        // This constructor is only suitable for investigating the peptide-vs-small molecule nature of inputs
+        // CONSIDER(henryS) Arguably that code should be split out into its own class
+        public MassListImporter(SrmSettings settings, MassListInputs inputs)
+        {
+            Settings = settings;
+            Inputs = inputs;
+            InputType = SrmDocument.DOCUMENT_TYPE.none;
+        }
+
+        // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
+        public MassListImporter(SrmDocument document, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Document = document;
+            Settings = document.Settings;
             Inputs = inputs;
+            InputType = inputType;
         }
 
         public SrmDocument Document { get; private set; }
         public MassListRowReader RowReader { get; private set; }
-        public SrmSettings Settings { get { return Document.Settings; } }
+        public SrmSettings Settings { get; private set; }
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
-        public bool IsSmallMoleculeInput { get; private set; }
+        // What we believe the text we are importing describes: proteomics vs small_molecule vs none (meaning unknown).
+        // InputType is never set to 'mixed' as we handle small molecule and proteomics input separately 
+        public SrmDocument.DOCUMENT_TYPE InputType { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -447,10 +474,14 @@ namespace pwiz.Skyline.Model
             var lines = new List<string>(Inputs.ReadLines(progressMonitor, status));
             status = status.NextSegment();
             _linesSeen = 0;
-
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
+            // Decide if the input is peptide or small molecule if we haven't already
+            if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
-                IsSmallMoleculeInput = true;
+                InputType =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
                 if (progressMonitor != null)
                     progressMonitor.UpdateProgress(status.Complete());
                 return true;
@@ -469,27 +500,65 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                // Check first line for validity
-                var line = lines.FirstOrDefault();
-                if (string.IsNullOrEmpty(line))
-                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
-                indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
-                if (indices.Headers != null)
+                if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
                 {
-                    lines.RemoveAt(0);
-                    _linesSeen++;
+                    RowReader = rowReader;
                 }
-
-                // If no numeric columns in the first row
-                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
-                if (RowReader == null)
+                else
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
-                    if (RowReader == null)
-                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                    if (mzException != null)
+                    {
+                        throw mzException;
+                    }
+                    else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                    {
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                            -1);
+                    }
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// // Attempt to create either an ExPeptideRowReader or a GeneralRowReader
+        /// </summary>
+        public bool TryCreateRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+            IProgressStatus status, out MassListRowReader rowReader, out MzMatchException mzException)
+        {
+            mzException = null;
+
+            // Check first line for validity
+            var line = lines.FirstOrDefault();
+            if (string.IsNullOrEmpty(line))
+                throw new InvalidDataException(Resources
+                    .MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+            var indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+            if (indices.Headers != null)
+            {
+                lines.RemoveAt(0);
+                _linesSeen++;
+            }
+
+            // If no numeric columns in the first row
+            rowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
+            if (rowReader == null)
+            {
+                try
+                {
+                    rowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines,
+                        tolerateErrors,
+                        progressMonitor, status);
+                }
+                catch(MzMatchException exception)
+                {
+                    // If we find a valid amino acid sequence but no valid precursor or product m/z column, catch the exception
+                    // as it could be a small molecule transition list. If we decide later it is a peptide transition list,
+                    // we throw the exception then
+                    mzException = exception;
+                }
+            }
+            return rowReader != null;
         }
 
         public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,
@@ -1969,7 +2038,7 @@ namespace pwiz.Skyline.Model
 
         private static bool TrySplitColumns(string line, char sep, out string[] columns)
         {
-            columns = line.Split(sep);
+            columns = line.ParseDsvFields(sep);
             return columns.Length > 1;
         }
 
@@ -2051,7 +2120,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public int LibraryColumn { get; set; }
 
-        private ColumnIndices()
+        public ColumnIndices()
         {
             ProteinColumn = -1;
             PeptideColumn = -1;

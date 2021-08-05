@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
         ifstream testsTxt(rawpaths[0].c_str());
         string line;
         int totalTests = 0, failedTests = 0;
-        while (getline(testsTxt, line))
+        while (getlinePortable(testsTxt, line))
         {
             ++totalTests;
             bal::split(tokens, line, bal::is_any_of("\t"));

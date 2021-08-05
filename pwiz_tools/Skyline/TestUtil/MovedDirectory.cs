@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestUtil
                 // Only move, if there is an existing Tools directory
                 if (Directory.Exists(SrcDirPath))
                 {
-                    DestDirPath = Path.Combine(Directory.GetParent(dirPath).FullName,
+                    DestDirPath = Path.Combine(Directory.GetParent(dirPath)?.FullName ?? string.Empty,
                                                MOVED_PREFIX + Path.GetFileName(dirPath));
                     if (Directory.Exists(DestDirPath))
                     {

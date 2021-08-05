@@ -90,6 +90,7 @@ namespace pwiz.Skyline.Model.Results
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
+        private IIonMobilityFunctionsProvider IonMobilityFunctionsProvider { get; set; }
 
         public string ScanDescriptionFilter { get; set; }
 

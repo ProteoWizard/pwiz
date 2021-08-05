@@ -28,7 +28,7 @@ typedef struct hashdata HASHDATA;
  *   datalen - item size
  *   name    - used for debugging
  */
-struct hash * hashinit( int datalen, char const * name );
+struct hash * hashinit( int32_t datalen, char const * name );
 
 /*
  * hash_free() - free a hash table, given its handle
@@ -57,7 +57,7 @@ void hashenumerate( struct hash *, void (* f)( void *, void * ), void * data );
  *   - if the key is present then *found == 1 and the result is a pointer to the
  *     existing record.
  */
-HASHDATA * hash_insert( struct hash *, OBJECT * key, int * found );
+HASHDATA * hash_insert( struct hash *, OBJECT * key, int32_t * found );
 
 /*
  * hash_find() - find a record in the table or NULL if none exists

@@ -21,14 +21,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
+[assembly: InternalsVisibleTo("Test")]
 namespace pwiz.Skyline.Model.Results
 {
+
     public sealed class PeptideChromDataSets
     {
         private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;

@@ -818,7 +818,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void ForgetPreviousImportColumnsSelection()
         {
-            RunUI(() => Settings.Default.CustomImportTransitionListColumnsList = null);
+            RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = null);
         }
 
         private static SrmDocument AllowAllIonTypes()
