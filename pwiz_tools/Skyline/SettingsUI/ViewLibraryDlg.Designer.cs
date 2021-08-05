@@ -41,7 +41,7 @@ namespace pwiz.Skyline.SettingsUI
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
-            this.filterCategoryComboBox = new System.Windows.Forms.ComboBox();
+            this.comboFilterCategory = new System.Windows.Forms.ComboBox();
             this.filterLabel = new System.Windows.Forms.Label();
             this.MoleculeLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
             // PeptideEditPanel
             // 
             this.PeptideEditPanel.Controls.Add(this.label1);
-            this.PeptideEditPanel.Controls.Add(this.filterCategoryComboBox);
+            this.PeptideEditPanel.Controls.Add(this.comboFilterCategory);
             this.PeptideEditPanel.Controls.Add(this.filterLabel);
             this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
@@ -225,11 +225,11 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
-            // filterCategoryComboBox
+            // comboFilterCategory
             // 
-            resources.ApplyResources(this.filterCategoryComboBox, "filterCategoryComboBox");
-            this.filterCategoryComboBox.FormattingEnabled = true;
-            this.filterCategoryComboBox.Name = "filterCategoryComboBox";
+            resources.ApplyResources(this.comboFilterCategory, "comboFilterCategory");
+            this.comboFilterCategory.FormattingEnabled = true;
+            this.comboFilterCategory.Name = "comboFilterCategory";
             // 
             // filterLabel
             // 
@@ -833,6 +833,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
         private System.Windows.Forms.Label filterLabel;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox filterCategoryComboBox;
+        private System.Windows.Forms.ComboBox comboFilterCategory;
     }
 }

@@ -187,6 +187,18 @@ namespace pwiz.Skyline.SettingsUI
             BuildSpectrumMenu(sender, menuStrip);
         }
 
+        private void InitializeMatchCategoryComboBox()
+        {
+            foreach (var category in _peptides._stringSearchFields)
+            {
+                comboFilterCategory.Items.Add(category);
+            }
+
+            foreach (var accNumCategory in _peptides._accessionNumberTypes)
+            {
+                comboFilterCategory.Items.Add(accNumCategory);
+            }
+        }
         /// <summary>
         /// Gets names of libraries in the Peptide Settings --> Library tab,
         /// displays them in the Library combobox, and selects the first one
@@ -392,11 +404,12 @@ namespace pwiz.Skyline.SettingsUI
                         return new ViewLibraryPepInfo(key, libInfo);
                     });
             }
-            _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, out var allPeptides);
+            _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, comboFilterCategory.SelectedText, out var allPeptides);
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
             MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
-            _currentRange = _peptides.Filter(null);
+            _currentRange = _peptides.Filter(null, null);
+            InitializeMatchCategoryComboBox();
         }
 
         public bool MatchModifications()
@@ -1092,7 +1105,7 @@ namespace pwiz.Skyline.SettingsUI
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
             // Filter the list by the new text according to the current filter type
-            _currentRange = _peptides.Filter(textPeptide.Text);
+            _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);

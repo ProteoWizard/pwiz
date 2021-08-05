@@ -31,9 +31,9 @@ namespace pwiz.Skyline.SettingsUI
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
         private readonly LibKeyModificationMatcher _matcher;
         private readonly bool _allPeptides;
-        private readonly List<string> _stringSearchFields;
+        public readonly List<string> _stringSearchFields;
 
-        private readonly List<string> _accessionNumberTypes;
+        public readonly List<string> _accessionNumberTypes;
         // Tolerance for the numeric proximity of the precursor m/z to the filter text
         public const double MZ_FILTER_TOLERANCE = 0.1;
 
@@ -47,11 +47,12 @@ namespace pwiz.Skyline.SettingsUI
         private const string ADDUCT_MINUS_BRACKETS = @"AdductMinusBrackets";
 
         private OrderedListCache _listCache;
-        private const string _selectedFilterCategory = UNMODIFIED_TARGET_TEXT;
+        private string _selectedFilterCategory = UNMODIFIED_TARGET_TEXT;
 
-        public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, out bool allPeptides)
+        public ViewLibraryPepInfoList(IEnumerable<ViewLibraryPepInfo> items, LibKeyModificationMatcher matcher, string selectedFilterCategory, out bool allPeptides)
         {
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
+            _selectedFilterCategory = selectedFilterCategory;
             _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in the library?
             _allPeptides = allPeptides;
@@ -133,14 +134,15 @@ namespace pwiz.Skyline.SettingsUI
                 var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
                 if (propertyName.Equals(ADDUCT))
                 {
-                    // We need to sort the adduct list in a different way
-                    return ImmutableList.ValueOf(intList.OrderBy(index => index, Comparer<int>.Create(CompareAdductsFromIndices))); ;
+                    // The adduct has a special sort
+                    return ImmutableList.ValueOf(intList.OrderBy(index => index, Comparer<int>.Create(CompareAdductsFromIndices)));
                 }
                 
                 if (_accessionCategories.Contains(propertyName))
                 {
+                    intList = intList.Where(index => _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ToList();
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
-                        _pepInfos[index].OtherKeysDict[propertyName]));
+                        _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
                 }
                 var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
                 return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString()));
@@ -162,7 +164,7 @@ namespace pwiz.Skyline.SettingsUI
             if (_accessionNumberTypes.Contains(_selectedFilterCategory))
             {
                 matchRange = CollectionUtil.BinarySearch(orderedList,
-                    index => string.Compare(_allEntries[index].OtherKeysDict[_selectedFilterCategory], 0, filterText, 0,
+                    index => string.Compare( _allEntries[index].OtherKeysDict[_selectedFilterCategory], 0, filterText, 0,
                         filterText.Length, StringComparison.OrdinalIgnoreCase));
             }
             else
@@ -183,9 +185,9 @@ namespace pwiz.Skyline.SettingsUI
         /// Find the indices of entries matching the filter text according to the filter type
         /// </summary>
         /// <param name="filterText"> Search term </param>
-        public IList<int> Filter(string filterText)
+        public IList<int> Filter(string filterText, string filterCategory)
         {
-
+            _selectedFilterCategory = filterCategory;
             if (string.IsNullOrEmpty(filterText))
             {
                 return new RangeList(0, Count);
