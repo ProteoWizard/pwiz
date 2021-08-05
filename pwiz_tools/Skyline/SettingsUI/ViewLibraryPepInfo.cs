@@ -81,9 +81,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return UnmodifiedTargetText + (Key.Adduct.IsEmpty
-                           ? string.Empty
-                           : Transition.GetChargeIndicator(Key.Adduct));
+                return UnmodifiedTargetText + AdductDisplayText;
+            }
+        }
+
+        public string AdductDisplayText
+        {
+            get
+            {
+                return Key.Adduct.IsEmpty
+                    ? string.Empty
+                    : Transition.GetChargeIndicator(Key.Adduct);
             }
         }
         /// <summary>

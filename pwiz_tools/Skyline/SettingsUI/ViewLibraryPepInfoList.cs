@@ -24,7 +24,6 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Util;
 using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
@@ -45,7 +44,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string UNMODIFIED_TARGET_TEXT = @"UnmodifiedTargetText";
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
-        private const string ADDUCT = @"Adduct";
+        private const string ADDUCT = @"AdductDisplayText";
         public readonly Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
 
         private OrderedListCache _listCache;
@@ -148,12 +147,7 @@ namespace pwiz.Skyline.SettingsUI
             private ImmutableList<int> CreateItem(string propertyName)
             {
                 var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
-                if (propertyName.Equals(ADDUCT))
-                {
-                    // The adduct has a special sort
-                    return ImmutableList.ValueOf(intList.OrderBy(index => index, Comparer<int>.Create(CompareAdductsFromIndices)));
-                }
-                
+
                 if (_accessionCategories.Contains(propertyName))
                 {
                     // Narrow the list down to entries that actually contain the search field
@@ -163,10 +157,6 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
                 return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString()));
-            }
-            private int CompareAdductsFromIndices(int adduct1, int adduct2)
-            {
-                return Adduct.Compare(_pepInfos[adduct1].Adduct, _pepInfos[adduct2].Adduct);
             }
         }
 
@@ -244,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI
                     .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
             }
             // Return the indices of the matches sorted alphabetically by display text
-            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => _allEntries[info].DisplayText));
+            return ImmutableList.ValueOf(filteredIndices.OrderBy(info => info));
         }
 
         public int IndexOf(LibraryKey libraryKey)
