@@ -887,6 +887,16 @@ namespace pwiz.Skyline.SettingsUI
             return indexInFullList;
         }
 
+        private void FilterAndUpdate()
+        {
+            // Filter the list by the new text according to the current filter type
+            _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
+            UpdatePageInfo();
+            UpdateStatusArea();
+            UpdateListPeptide(0);
+            UpdateUI();
+        }
+
         #endregion
 
         #region IStateProvider Implementation
@@ -1107,17 +1117,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textPeptide_TextChanged(object sender, EventArgs e)
         {
-            // Filter the list by the new text according to the current filter type
-            _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
-            UpdatePageInfo();
-            UpdateStatusArea();
-            UpdateListPeptide(0);
-            UpdateUI();
+            FilterAndUpdate();
         }
 
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             _peptides.CreateCachedList(comboFilterCategory.SelectedItem.ToString());
+            FilterAndUpdate();
+            
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {

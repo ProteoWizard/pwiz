@@ -209,7 +209,6 @@ namespace pwiz.Skyline.SettingsUI
                 ? comboFilterCategoryDict.FirstOrDefault(x => x.Value == filterCategory).Key
                 : filterCategory;
 
-            var cat = _selectedFilterCategory;
             if (string.IsNullOrEmpty(filterText))
             {
                 return new RangeList(0, Count);
