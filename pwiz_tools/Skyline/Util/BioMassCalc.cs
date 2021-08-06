@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -335,6 +334,8 @@ namespace pwiz.Skyline.Util
                     .ToDictionary(kvp => kvp.Key,
                         kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
 
+        private static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T'}; // If a formula does not contain any of these, it's not heavy labeled
+
         /// <summary>
         /// A list of Skyline-style isotope symbols (e.g. H')
         /// DOES NOT include synonyms such as D for Deuterium
@@ -390,12 +391,6 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Regular expression for possible characters that end an atomic
-        /// symbol: capital letters, numbers or a space.
-        /// </summary>
-        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");
-
-        /// <summary>
         /// Find the first atomic symbol in a given expression.
         /// </summary>
         /// <param name="expression">The expression to search</param>
@@ -404,10 +399,16 @@ namespace pwiz.Skyline.Util
         {
             // Skip the first character, since it is always the start of
             // the symbol, and then look for the end of the symbol.
-            Match match = REGEX_END_SYM.Match(expression, 1);
-            if (!match.Success)
-                return expression;
-            return expression.Substring(0, match.Index);
+            var i = 1;
+            foreach (var c in expression.Skip(1))
+            {
+                if (!char.IsLower(c) && c != '\'' && c != '"')
+                {
+                    return expression.Substring(0, i);
+                }
+                i++;
+            }
+            return expression;
         }
 
         private readonly Dictionary<string, double> _atomicMasses =
@@ -591,12 +592,34 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            var parse = DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Aggregate(desc, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
+            if (desc.IndexOfAny(HEAVYSYMBOL_HINTS) == -1)
+            {
+                return desc; // Nothing there that looks like a heavy label
+            }
+            var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
             if (!string.IsNullOrEmpty(parse))
             {
                 return desc; // That wasn't understood as a formula
+            }
+
+            foreach (var kvp in dictAtomCounts.ToArray())
+            {
+                if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(kvp.Key, out var unlabeled))
+                {
+                    int count;
+                    if (dictAtomCounts.TryGetValue(unlabeled, out count))
+                    {
+                        count += kvp.Value;
+                    }
+                    else
+                    {
+                        count = kvp.Value;
+                    }
+                    dictAtomCounts[unlabeled] = count;
+                    dictAtomCounts.Remove(kvp.Key);
+                }
             }
             return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); 
         }
