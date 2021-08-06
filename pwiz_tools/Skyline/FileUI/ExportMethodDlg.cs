@@ -602,6 +602,7 @@ namespace pwiz.Skyline.FileUI
         {
             cbWriteCoV.Visible = cbWriteCoV.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_FUSION ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
