@@ -17,7 +17,7 @@ namespace SkylineBatch
         private readonly string _filter;
         private EventHandler _addedPathChangedHandler;
 
-        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer)
+        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip)
         {
             InitializeComponent();
 
@@ -34,6 +34,7 @@ namespace SkylineBatch
             textPath.TextChanged += textPath_TextChanged;
             textPath.TextChanged += updatePathVariable;
 
+            btnDownload.ToolTipText = toolTip;
         }
 
         public string Path { get; private set; }
