@@ -998,7 +998,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = _spectrum?.CompareTo(spectrum) != 0;
+                        var spectrumChanged = _spectrum?.FileOrder != spectrum?.FileOrder || !Equals(_spectrum?.Identity, spectrum?.Identity);
                         _spectrum = spectrum;
 
                         ClearGraphPane();
