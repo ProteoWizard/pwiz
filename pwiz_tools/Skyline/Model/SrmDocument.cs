@@ -54,6 +54,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -1962,6 +1963,20 @@ namespace pwiz.Skyline.Model
                 .ChangeMeasuredResults(Settings.MeasuredResults, progressMonitor);
             doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
             return doc;
+        }
+        public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
+        {
+            var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
+            if (targets == null || targets.Count == 0)
+                return new ChromatogramSet[0];
+
+            var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
+            if (string.IsNullOrEmpty(groupBy))
+                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+
+            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
+            var annotationCalculator = new AnnotationCalculator(this);
+            return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(replicateValue.GetValue(annotationCalculator, chromSet).ToString()));
         }
 
         private object _referenceId = new object();

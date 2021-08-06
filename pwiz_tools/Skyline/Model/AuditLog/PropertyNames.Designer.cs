@@ -4300,6 +4300,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration Group By.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationGroupBy {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationGroupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration Targets.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationTargets {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationTargets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ion mobility library.
         /// </summary>
         public static string TransitionIonMobilityFiltering_IonMobilityLibrary {

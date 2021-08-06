@@ -65,6 +65,11 @@ namespace pwiz.Skyline.Menus
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
                                    (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
             AddApplyRemovePeak(menuStrip, paneKey.IsotopeLabelType, 1, ref iInsert);
+
+            synchronizeIntegrationContextMenuItem.Checked = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
+            menuStrip.Items.Insert(iInsert++, synchronizeIntegrationContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
             menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
             var fullScan = Document.Settings.TransitionSettings.FullScan;
@@ -286,34 +291,31 @@ namespace pwiz.Skyline.Menus
             if (canApply || canRemove)
             {
                 if (separator < 0)
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator1);
                 if (canApply)
                 {
                     menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-                    var groupable = ReplicateValue.GetGroupableReplicateValues(document).ToArray();
-                    if (groupable.Any())
+                    if (!document.GetSynchronizeIntegrationChromatogramSets().Any())
                     {
-                        var groupBy = SkylineWindow.EditMenu.GetGroupApplyToDescription();
-                        if (groupBy != null)
+                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                        if (ReplicateValue.GetGroupableReplicateValues(document).Any())
                         {
-                            applyPeakGroupGraphMenuItem.Text =
-                                Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
-                            menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
-                        }
+                            var groupBy = SkylineWindow.EditMenu.GetGroupApplyToDescription();
+                            if (groupBy != null)
+                            {
+                                applyPeakGroupGraphMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
+                                menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
+                            }
 
-                        SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem, SkylineWindow.SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
-                        groupApplyToByGraphMenuItem.Visible = true;
-                    }
-                    else
-                    {
-                        groupApplyToByGraphMenuItem.Visible = false;
+                            SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem,
+                                SkylineWindow.SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
+                        }
                     }
                 }
                 if (canRemove)
                     menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
                 if (separator > 0)
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator1);
             }
         }
 
@@ -437,6 +439,11 @@ namespace pwiz.Skyline.Menus
         private void removePeakMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.EditMenu.RemovePeak(false);
+        }
+
+        private void synchronizeIntegrationContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog();
         }
 
         private class RemovePeakHandler

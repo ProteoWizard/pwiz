@@ -11496,4 +11496,10 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>
+  <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>Change synchronized integration to {0}</value>
+  </data>
 </root>

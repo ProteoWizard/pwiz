@@ -34,6 +34,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -732,6 +733,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditToolStripMenuItemDropDownOpening()
         {
+            var synchronizedIntegration = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
             CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
@@ -739,18 +741,20 @@ namespace pwiz.Skyline.Menus
             }
             else
             {
-                applyPeakAllToolStripMenuItem.Enabled = applyPeakSubsequentToolStripMenuItem.Enabled = canApply;
+
+                applyPeakAllToolStripMenuItem.Enabled = canApply;
+                applyPeakSubsequentToolStripMenuItem.Enabled = canApply && !synchronizedIntegration;
                 applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
                 groupApplyToByToolStripMenuItem.DropDownItems.Clear();
                 applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
                 if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
                 {
-                    groupApplyToByToolStripMenuItem.Enabled = true;
+                    groupApplyToByToolStripMenuItem.Enabled = !synchronizedIntegration;
                     var selectedAnnotation = GetGroupApplyToDescription();
                     if (selectedAnnotation != null)
                     {
                         applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
-                        applyPeakGroupToolStripMenuItem.Enabled = true;
+                        applyPeakGroupToolStripMenuItem.Enabled = !synchronizedIntegration;
                     }
                     var i = 0;
                     AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
@@ -758,6 +762,7 @@ namespace pwiz.Skyline.Menus
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
             }
+            synchronizedIntegrationToolStripMenuItem.Checked = synchronizedIntegration;
         }
 
         #region Peaks
@@ -782,27 +787,49 @@ namespace pwiz.Skyline.Menus
             if (!canApply)
                 return;
 
+            var resultsIndex = SelectedResultsIndex;
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeTranGroup = nodeTranGroupTree?.DocNode;
+            var nodeTranGroup = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode ?? PeakMatcher.PickTransitionGroup(DocumentUI, nodePepTree, resultsIndex);
+
+            if (DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any())
+            {
+                // Apply peak with synchronized integration
+                var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
+                var filePath = SkylineWindow.GetGraphChrom(chromSet.Name).FilePath;
+                var chromInfo = SkylineWindow.FindChromInfo(DocumentUI, nodeTranGroup, chromSet.Name, filePath);
+
+                nodePepTree.EnsureChildren(); // in case peptide node is not expanded
+                var nodeTranGroupPath = nodePepTree.Nodes.Cast<TransitionGroupTreeNode>().First(node => ReferenceEquals(node.DocNode, nodeTranGroup)).Path;
+
+                var change = new ChangedPeakBoundsEventArgs(
+                    nodeTranGroupPath, null, chromSet.Name, filePath,
+                    new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
+                    new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
+                    null, PeakBoundsChangeType.both);
+
+                var path = PropertyName.ROOT
+                    .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
+                    .SubProperty(nodePepTree.DocNode.AuditLogText)
+                    .SubProperty(nodeTranGroup.AuditLogText);
+
+                ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak,
+                    doc => SkylineWindow.ChangePeakBounds(doc, SkylineWindow.GetSynchronizedPeakBoundChanges(doc, change, false)),
+                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType,
+                        path.ToString()));
+                return;
+            }
 
             using (var longWait = new LongWaitDlg(SkylineWindow) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
             {
                 SrmDocument doc = null;
                 try
                 {
-                    var resultsIndex = SelectedResultsIndex;
                     var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
                     var resultsFile = SkylineWindow.GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
-                    var groupBy =
-                        ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy);
-                    object groupByValue = null;
-                    if (groupBy != null)
-                    {
-                        groupByValue = groupBy.GetValue(new AnnotationCalculator(Document), chromatogramSet);
-                    }
+                    var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
+                    var groupByValue = groupBy?.GetValue(new AnnotationCalculator(Document), chromatogramSet);
                     longWait.PerformWork(SkylineWindow, 800, monitor =>
-                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
+                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
                 }
                 catch (Exception x)
                 {
@@ -919,7 +946,7 @@ namespace pwiz.Skyline.Menus
         }
 
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, ChromFileInfoId chromFileInfoId, IdentityPath groupPath,
-            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, bool syncRecurse = true)
         {
             ChromInfo chromInfo;
             Transition transition;
@@ -937,11 +964,26 @@ namespace pwiz.Skyline.Menus
             if (chromInfo == null)
                 return document;
 
-            MsDataFileUri filePath;
-            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, chromInfo.FileId, out filePath);
-            return name == null
+            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, chromInfo.FileId, out var filePath);
+            document = name == null
                 ? document
                 : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
+
+            if (syncRecurse)
+            {
+                var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToHashSet();
+                for (var i = 0; i < document.MeasuredResults.Chromatograms.Count; i++)
+                {
+                    var chromSet = document.MeasuredResults.Chromatograms[i];
+                    if (syncTargets.Contains(chromSet))
+                    {
+                        foreach (var info in chromSet.MSDataFileInfos.Where(info => !(resultsIndex == i && Equals(chromInfo.FileId, info.FileId))))
+                            document = RemovePeakInternal(document, i, info.FileId, groupPath, nodeGroup, nodeTran, false);
+                    }
+                }
+            }
+
+            return document;
         }
         public void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
         {
@@ -995,6 +1037,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+
         // ReSharper disable SuggestBaseTypeForParameter
         private static bool HasPeak(int iResult, ChromFileInfoId chromFileInfoId, TransitionGroupDocNode nodeGroup)
             // ReSharper restore SuggestBaseTypeForParameter
@@ -1012,6 +1055,36 @@ namespace pwiz.Skyline.Menus
             var chromInfo = nodeTran.GetChromInfo(iResults, chromFileInfoId);
             return (chromInfo != null && !chromInfo.IsEmpty);
         }
+
+        private void synchronizedIntegrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSynchronizedIntegrationDialog();
+        }
+
+        public void ShowSynchronizedIntegrationDialog()
+        {
+            using (var dlg = new SynchronizedIntegrationGroupingDlg(DocumentUI))
+            {
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                {
+                    SetSynchronizedIntegration(dlg.GroupByPersistedString, dlg.Targets.ToArray());
+                }
+            }
+        }
+
+        public void SetSynchronizedIntegration(string groupBy, string[] targets)
+        {
+            var existing = DocumentUI.Settings.TransitionSettings.Integration;
+            if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+            {
+                ModifyDocument(
+                    string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
+                        (string.IsNullOrEmpty(groupBy) ? Resources.GroupByItem_ToString_Replicates : groupBy) + @":" + string.Join(@",", targets)),
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i =>
+                        i.ChangeSynchronizedIntegration(groupBy, targets))), AuditLogEntry.SettingsLogFunction);
+            }
+        }
+
         #endregion
 
         #region Insert

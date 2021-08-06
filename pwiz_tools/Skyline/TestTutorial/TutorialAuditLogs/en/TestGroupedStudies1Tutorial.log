@@ -655,6 +655,34 @@ Column settings =
     ]
 }
 
+Undo Redo : Transition Settings -- Integration changed
+Summary   : Settings > Transition Settings -- Integration changed
+All Info  :
+Transition Settings -- Integration changed
+Settings > Transition Settings -- Integration > Synchronized Integration Group By changed from Missing to ""
+Settings > Transition Settings -- Integration > Synchronized Integration Targets changed from Missing to [ "D_108_REP2", "D_196_REP2", "H_162_REP3" ]
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP1" from 30.62 to 32.01
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP1" from 31.73 to 33.00
+
+Undo Redo : Transition Settings -- Integration changed
+Summary   : Settings > Transition Settings -- Integration changed
+All Info  :
+Transition Settings -- Integration changed
+Settings > Transition Settings -- Integration > Synchronized Integration Group By changed from Missing to "annotation_Condition"
+Settings > Transition Settings -- Integration > Synchronized Integration Targets changed from Missing to [ "Diseased" ]
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "H_146_REP1" from 30.83 to 33.01
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "H_146_REP1" from 31.74 to 34.00
+
 Undo Redo : Set MissingData of TLNSINIAVFSK to False
 Summary   : Set MissingData of TLNSINIAVFSK to False
 All Info  :

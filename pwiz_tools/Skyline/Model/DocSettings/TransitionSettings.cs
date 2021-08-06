@@ -3055,12 +3055,27 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool IsIntegrateAll { get; private set; }
 
+        [Track]
+        public string SynchronizedIntegrationGroupBy { get; private set; }
+
+        [Track]
+        public string[] SynchronizedIntegrationTargets { get; private set; }
+
         #region Property change methods
 
         public TransitionIntegration ChangeIntegrateAll(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsIntegrateAll = prop);
-        }        
+        }
+
+        public TransitionIntegration ChangeSynchronizedIntegration(string groupBy, string[] targets)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SynchronizedIntegrationGroupBy = groupBy;
+                im.SynchronizedIntegrationTargets = targets;
+            });
+        }
 
         #endregion
 
@@ -3069,6 +3084,14 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             integrate_all,
+            group_by,
+            value
+        }
+
+        private enum EL
+        {
+            synchronize_integration,
+            target
         }
 
         void IValidating.Validate()
@@ -3092,12 +3115,63 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume tag
             reader.Read();
+
+            if (reader.IsStartElement(EL.synchronize_integration))
+            {
+                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by);
+                SynchronizedIntegrationTargets = null;
+
+                if (!reader.IsEmptyElement)
+                {
+                    // Consume synchronize_integration start tag
+                    reader.Read();
+
+                    // Read synchronization values
+                    var syncTargets = new List<string>();
+                    while (reader.IsStartElement(EL.target))
+                    {
+                        syncTargets.Add(reader.GetAttribute(ATTR.value));
+                        reader.Read();
+                    }
+                    SynchronizedIntegrationTargets = syncTargets.ToArray();
+                }
+
+                // Consume synchronize_integration end tag
+                reader.Read();
+                // Consume transition_integration end tag
+                reader.Read();
+            }
         }
 
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
             writer.WriteAttribute(ATTR.integrate_all, IsIntegrateAll);
+
+            // Write synchronize_integration
+            var hasGroupBy = !string.IsNullOrEmpty(SynchronizedIntegrationGroupBy);
+            var hasSyncTargets = SynchronizedIntegrationTargets != null && SynchronizedIntegrationTargets.Length > 0;
+            if (hasGroupBy || hasSyncTargets)
+            {
+                writer.WriteStartElement(EL.synchronize_integration);
+
+                if (hasGroupBy)
+                {
+                    writer.WriteAttribute(ATTR.group_by, SynchronizedIntegrationGroupBy);
+                }
+
+                if (hasSyncTargets)
+                {
+                    foreach (var target in SynchronizedIntegrationTargets)
+                    {
+                        writer.WriteStartElement(EL.target);
+                        writer.WriteAttribute(ATTR.value, target);
+                        writer.WriteEndElement();
+                    }
+                }
+
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
@@ -3108,7 +3182,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.IsIntegrateAll.Equals(IsIntegrateAll);
+            return other.IsIntegrateAll.Equals(IsIntegrateAll) &&
+                   Equals(other.SynchronizedIntegrationGroupBy, SynchronizedIntegrationGroupBy) &&
+                   ArrayUtil.EqualsDeep(other.SynchronizedIntegrationTargets, SynchronizedIntegrationTargets);
         }
 
         public override bool Equals(object obj)
@@ -3121,7 +3197,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            return IsIntegrateAll.GetHashCode();
+            unchecked
+            {
+                int result = IsIntegrateAll.GetHashCode();
+                result = (result * 397) ^ SynchronizedIntegrationGroupBy.GetHashCode();
+                result = (result * 397) ^ ArrayUtil.GetHashCodeDeep(SynchronizedIntegrationTargets);
+                return result;
+            }
         }
 
         #endregion

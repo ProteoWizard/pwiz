@@ -420,6 +420,12 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationGroupingDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationGroupingDlg.Designer.cs">
+      <DependentUpon>SynchronizedIntegrationGroupingDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2536,6 +2542,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationGroupingDlg.resx">
+      <DependentUpon>SynchronizedIntegrationGroupingDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>

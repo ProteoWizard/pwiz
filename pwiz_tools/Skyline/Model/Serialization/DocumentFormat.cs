@@ -87,7 +87,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
         public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
         public static readonly DocumentFormat VERSION_21_1 = new DocumentFormat(21.1); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_21_1;
+        public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Add synchronized integration
+        public static readonly DocumentFormat CURRENT = VERSION_21_11;
 
 
         private readonly double _versionNumber;

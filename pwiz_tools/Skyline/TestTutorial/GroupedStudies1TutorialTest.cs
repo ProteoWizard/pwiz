@@ -1122,6 +1122,9 @@ namespace pwiz.SkylineTestTutorial
                 // Hide the grid or opening the shared ZIP will cause the test to hang with an error message
                 RunUI(() => SkylineWindow.ShowDocumentGrid(false));
             }
+
+            if (!IsFullData)
+                TestSynchronizedIntegration();
         }
 
         private void EnsureTruncatedPrecursorsView(DocumentGridForm documentGrid)
@@ -1570,20 +1573,148 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.Undo());
         }
 
+        private static IEnumerable<string> AllReplicates => new[]
+        {
+            "D_103_REP1", "D_103_REP2", "D_103_REP3",
+            "D_108_REP1", "D_108_REP2", "D_108_REP3",
+            "D_138_REP1", "D_138_REP2", "D_138_REP3",
+            "D_196_REP1", "D_196_REP2", "D_196_REP3",
+            "H_146_REP1", "H_146_REP2", "H_146_REP3",
+            "H_148_REP1", "H_148_REP2", "H_148_REP3",
+            "H_159_REP1", "H_159_REP2", "H_159_REP3",
+            "H_162_REP1", "H_162_REP2", "H_162_REP3",
+        };
+
         private static Dictionary<string, double> MakeVerificationDictionary(params double[] expected)
         {
             Assert.AreEqual(24, expected.Length);
-            return new Dictionary<string, double>
+            return AllReplicates.Zip(expected, (name, expect) => new {name, expect})
+                .ToDictionary(x => x.name, x => x.expect);
+        }
+
+        private void TestSynchronizedIntegration()
+        {
+            var allReplicates = AllReplicates.ToArray();
+            var dlg = ShowDialog<SynchronizedIntegrationGroupingDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+
+            SrmDocument doc = null;
+            string[] toSync = null;
+
+            RunUI(() =>
             {
-                {"D_103_REP1", expected[0]}, {"D_103_REP2", expected[1]}, {"D_103_REP3", expected[2]},
-                {"D_108_REP1", expected[3]}, {"D_108_REP2", expected[4]}, {"D_108_REP3", expected[5]},
-                {"D_138_REP1", expected[6]}, {"D_138_REP2", expected[7]}, {"D_138_REP3", expected[8]},
-                {"D_196_REP1", expected[9]}, {"D_196_REP2", expected[10]}, {"D_196_REP3", expected[11]},
-                {"H_146_REP1", expected[12]}, {"H_146_REP2", expected[13]}, {"H_146_REP3", expected[14]},
-                {"H_148_REP1", expected[15]}, {"H_148_REP2", expected[16]}, {"H_148_REP3", expected[17]},
-                {"H_159_REP1", expected[18]}, {"H_159_REP2", expected[19]}, {"H_159_REP3", expected[20]},
-                {"H_162_REP1", expected[21]}, {"H_162_REP2", expected[22]}, {"H_162_REP3", expected[23]},
-            };
+                doc = SkylineWindow.DocumentUI;
+                Assert.AreEqual(allReplicates.Length, doc.MeasuredResults.Chromatograms.Count);
+
+                // Check grouping options
+                var groupByOptions = dlg.GroupByOptions.ToArray();
+                var expectedGroupByOptions = new[] {Resources.GroupByItem_ToString_Replicates, "SubjectId", "BioReplicate", "Condition"};
+                Assert.IsTrue(ArrayUtil.EqualsDeep(groupByOptions, expectedGroupByOptions));
+
+                // Pick a few replicates to synchronize
+                Assert.AreEqual(Resources.GroupByItem_ToString_Replicates, dlg.GroupBy);
+                Assert.IsTrue(ArrayUtil.EqualsDeep(allReplicates, dlg.TargetOptions.ToArray()));
+                toSync = new[] { "D_108_REP2", "D_196_REP2", "H_162_REP3" };
+                dlg.Targets = toSync;
+                Assert.AreEqual(dlg.Targets.Count(), toSync.Length);
+            });
+            OkDialog(dlg, dlg.OkDialog);
+
+            doc = WaitForDocumentChange(doc);
+            Assert.IsTrue(string.IsNullOrEmpty(doc.Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy));
+            Assert.IsTrue(ArrayUtil.EqualsDeep(toSync, doc.Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets));
+
+            // Select 1st precursor, 1st replicate
+            IdentityPath tranGroupPath = null;
+            RunUI(() => PeakMatcherTestUtil.Select("C[+57.0]SLPRPWALTFSYGR", 905.9565, "D_103_REP1", out tranGroupPath, out _));
+            var nodeTranGroup = (TransitionGroupDocNode) doc.FindNode(tranGroupPath);
+
+            // Collect current peak boundaries before we change anything
+            var peakBounds = new Dictionary<string, Tuple<float?, float?>>();
+            for (var i = 0; i < doc.MeasuredResults.Chromatograms.Count; i++)
+            {
+                var chromSet = doc.MeasuredResults.Chromatograms[i];
+                Assert.AreEqual(1, chromSet.FileCount);
+                var results = nodeTranGroup.Results[i];
+                Assert.AreEqual(1, results.Count);
+                var chromInfo = results[0];
+                peakBounds[chromSet.Name] = Tuple.Create(chromInfo.StartRetentionTime, chromInfo.EndRetentionTime);
+            }
+
+            void CheckPeakBounds(SrmDocument checkDoc, IEnumerable<string> changedChromSets, double startTime, double endTime)
+            {
+                var changedSet = changedChromSets.ToHashSet();
+                for (var i = 0; i < checkDoc.MeasuredResults.Chromatograms.Count; i++)
+                {
+                    var name = checkDoc.MeasuredResults.Chromatograms[i].Name;
+                    var chromInfo = checkDoc.PeptideTransitionGroups.First().Results[i][0];
+                    var (originalStart, originalEnd) = peakBounds[name];
+                    var newStart = chromInfo.StartRetentionTime.Value;
+                    var newEnd = chromInfo.EndRetentionTime.Value;
+                    if (!changedSet.Contains(name))
+                    {
+                        Assert.AreEqual(originalStart, newStart,
+                            string.Format("{0}: expected start RT to be unchanged ({1}), but was {2}", name, originalStart, newStart));
+                        Assert.AreEqual(originalEnd, newEnd,
+                            string.Format("{0}: expected end RT to be unchanged ({1}), but was {2}", name, originalEnd, newEnd));
+                    }
+                    else
+                    {
+                        Assert.IsTrue(Math.Abs(startTime - newStart) < Math.Abs(startTime - originalStart.Value),
+                            string.Format("{0}: old start RT = {1}, new start RT = {2}, target start RT = {3}", name, originalStart, newStart, startTime));
+                        Assert.IsTrue(Math.Abs(endTime - newEnd) < Math.Abs(endTime - originalEnd.Value),
+                            string.Format("{0}: old end RT = {1}, new end RT = {2}, target end RT = {3}", name, originalEnd, newEnd, endTime));
+                    }
+                }
+            }
+
+            ChangePeakBounds("D_103_REP1", 32.0, 33.0);
+            doc = WaitForDocumentChange(doc);
+            CheckPeakBounds(doc, toSync.Concat(new[] {"D_103_REP1"}), 32.0, 33.0);
+
+            RunUI(() =>
+            {
+                SkylineWindow.Undo(); // undo peak bound changes
+                SkylineWindow.Undo(); // undo synchronized integration setting change
+            });
+
+            // Try grouping by annotation
+            dlg = ShowDialog<SynchronizedIntegrationGroupingDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+            string groupByPersistedString = null;
+            RunUI(() =>
+            {
+                doc = SkylineWindow.DocumentUI;
+
+                // Synchronize by condition (Diseased)
+                dlg.GroupBy = "Condition";
+                dlg.Targets = new[] {"Diseased"};
+                groupByPersistedString = dlg.GroupByPersistedString;
+            });
+            OkDialog(dlg, dlg.OkDialog);
+
+            doc = WaitForDocumentChange(doc);
+            Assert.AreEqual(groupByPersistedString, doc.Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(new []{"Diseased"}, doc.Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets));
+
+            // Select 1st precursor, 1st replicate
+            RunUI(() => PeakMatcherTestUtil.Select("C[+57.0]SLPRPWALTFSYGR", 905.9565, "D_103_REP1", out tranGroupPath, out _));
+
+            var replicateValue = ReplicateValue.FromPersistedString(doc.Settings, groupByPersistedString);
+            var annotationCalculator = new AnnotationCalculator(doc);
+            toSync = (
+                from chromSet in doc.MeasuredResults.Chromatograms
+                where Equals(replicateValue.GetValue(annotationCalculator, chromSet).ToString(), "Diseased")
+                select chromSet.Name).ToArray();
+            Assert.IsTrue(0 < toSync.Length && toSync.Length < doc.MeasuredResults.Chromatograms.Count);
+
+            ChangePeakBounds("H_146_REP1", 33.0, 34.0);
+            doc = WaitForDocumentChange(doc);
+            CheckPeakBounds(doc, toSync.Concat(new[] { "H_146_REP1" }), 33.0, 34.0);
+
+            RunUI(() =>
+            {
+                SkylineWindow.Undo(); // undo peak bound changes
+                SkylineWindow.Undo(); // undo synchronized integration setting change
+            });
         }
     }
 }
