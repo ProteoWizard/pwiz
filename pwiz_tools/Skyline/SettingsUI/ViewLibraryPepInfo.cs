@@ -41,6 +41,7 @@ namespace pwiz.Skyline.SettingsUI
             Key = key;
             LibInfo = libInfo;
             UnmodifiedTargetText = GetUnmodifiedTargetText(key.LibraryKey);
+            KeyString = key.ToString();
         }
 
         public LibKey Key { get; private set; }
@@ -76,6 +77,8 @@ namespace pwiz.Skyline.SettingsUI
         /// in the list box.
         /// </summary>
         public string UnmodifiedTargetText { get; private set; }
+
+        public string KeyString { get; private set; } // Used in sorting, may be expensive to calculate so we cache it here
 
         public string DisplayText
         {

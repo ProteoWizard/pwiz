@@ -259,7 +259,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (result == 0)
             {
-                result = string.Compare(info1.Key.ToString(), info2.Key.ToString(), StringComparison.OrdinalIgnoreCase);
+                result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
             }
             return result;
         }
