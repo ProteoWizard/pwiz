@@ -1426,7 +1426,8 @@ namespace pwiz.Skyline.Model
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups,
-                                          List<string> columnPositions = null)
+                                          List<string> columnPositions = null,
+                                          SrmDocument.DOCUMENT_TYPE radioType = SrmDocument.DOCUMENT_TYPE.none)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1437,7 +1438,7 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            if (importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules)
+            if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == SrmDocument.DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
             {
                 try
                 {

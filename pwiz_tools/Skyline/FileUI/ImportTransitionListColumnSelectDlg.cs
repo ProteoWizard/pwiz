@@ -186,6 +186,18 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        SrmDocument.DOCUMENT_TYPE GetRadioType()
+        {
+            if (radioPeptide.Checked)
+            {
+                return SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            else
+            {
+                return SrmDocument.DOCUMENT_TYPE.small_molecules;
+            }
+        }
+
         private void PopulateComboBoxes()
         {
             foreach (var comboBox in ComboBoxes)
@@ -196,7 +208,8 @@ namespace pwiz.Skyline.FileUI
 
             var columns = Importer.RowReader.Indices;
 
-            // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
+            // It's not unusual to see lines like "744.8 858.39 10 APR.
+            // .y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
 
@@ -214,6 +227,23 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+            SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+            SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+            SetComboBoxText(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+            SetComboBoxText(columns.MolecularFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+            SetComboBoxText(columns.ExplicitDelusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
+            SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
+            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+            SetComboBoxText(columns.ProductNameColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+            SetComboBoxText(columns.ProductFormulaColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+            SetComboBoxText(columns.PrecursorAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+            SetComboBoxText(columns.ProductAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+            SetComboBoxText(columns.CASColumn, @"CAS");
+            SetComboBoxText(columns.SMILESColumn, @"SMILES");
+            SetComboBoxText(columns.HMDBColumn, @"HMDB");
+            SetComboBoxText(columns.KEGGColumn, @"KEGG");
+            SetComboBoxText(columns.InChiColumn, @"InChi");
+            SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
             // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
@@ -904,7 +934,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList);
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType());
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }

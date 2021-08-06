@@ -2289,40 +2289,107 @@ namespace pwiz.Skyline.Model
             // Remove spaces and make lowercase. This matches the format of the names they are tested against
             return col.ToLowerInvariant().Replace(@" ", string.Empty);
         }
+
+        private bool FindValueMatch(string key, string header)
+        {
+            foreach (var item in SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms)
+            {
+                if (item.Value.Equals(key))
+                {
+                    // Remove whitespace and make the strings lowercase for comparison
+                    var lowerValue = item.Key.ToLower();
+                    lowerValue = lowerValue.Replace(@" ", string.Empty);
+                    var lowerHeader = header.ToLower();
+                    lowerHeader = lowerHeader.Replace(@" ", string.Empty);
+                    var lowerKey = item.Value.ToLower();
+                    lowerKey = lowerKey.Replace(@" ", string.Empty);
+                    if (lowerValue.Equals(lowerHeader) || lowerKey.Equals(lowerHeader))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void FindColumns(string[] headers)
         {
             Headers = headers;
+            int index = 0;
+            foreach (string header in headers)
+            {
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, header))
+                    MoleculeListNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.namePrecursor, header))
+                    MoleculeNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header))
+                    ProductNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, header))
+                    MolecularFormulaColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header))
+                    ProductFormulaColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header))
+                    ProductNeutralLossColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, header))
+                    PrecursorColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header))
+                    ProductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, header))
+                    PrecursorChargeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header))
+                    ProductChargeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, header))
+                    ExplicitRetentionTimeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, header))
+                    ExplicitRetentionTimeWindowColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.cePrecursor, header))
+                    ExplicitCollisionEnergyColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imPrecursor, header))
+                    ExplicitIonMobilityColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, header))
+                    ExplicitIonMobilityHighEnergyOffsetColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imUnits, header))
+                    ExplicitIonMobilityUnitsColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, header))
+                    CollisionCrossSectionColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.slens, header))
+                    SLensColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.coneVoltage, header))
+                    ConeVoltageColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, header))
+                    ExplicitCompensationVoltageColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, header))
+                    ExplicitDelusteringPotentialColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.note, header))
+                    NoteColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header))
+                    LabelTypeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header))
+                    PrecursorAdductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header))
+                    ProductAdductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idCAS, header))
+                    CASColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChiKey, header))
+                    InChiKeyColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChi, header))
+                    InChiColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idHMDB, header))
+                    HMDBColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idKEGG, header))
+                    KEGGColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idSMILES, header))
+                    SMILESColumn = index;
+                index++;
+            }
+
             ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(FormatHeader(col)));
-            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
-            ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(FormatHeader(col)));
             DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(FormatHeader(col)));
             IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(FormatHeader(col)));
             LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(FormatHeader(col)));
-            LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(FormatHeader(col)));
             FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col)));
-            ExplicitRetentionTimeColumn = headers.IndexOf(col => ExplicitRetentionTimeNames.Contains(FormatHeader(col)));
-            ExplicitRetentionTimeWindowColumn = headers.IndexOf(col => ExplicitRetentionTimeWindowNames.Contains(FormatHeader(col)));
-            ExplicitCollisionEnergyColumn = headers.IndexOf(col => ExplicitCollisionEnergyNames.Contains(FormatHeader(col)));
-            NoteColumn = headers.IndexOf(col => NoteNames.Contains(FormatHeader(col)));
-            SLensColumn = headers.IndexOf(col => SLensNames.Contains(FormatHeader(col)));
-            ConeVoltageColumn = headers.IndexOf(col => ConeVoltageNames.Contains(FormatHeader(col)));
-            ExplicitIonMobilityColumn = headers.IndexOf(col => ExplicitIonMobilityNames.Contains(FormatHeader(col)));
-            ExplicitIonMobilityUnitsColumn = headers.IndexOf(col => ExplicitIonMobilityUnitsNames.Contains(FormatHeader(col)));
-            ExplicitIonMobilityHighEnergyOffsetColumn = headers.IndexOf(col => ExplicitIonMobilityHighEnergyOffsetNames.Contains(FormatHeader(col)));
-            CollisionCrossSectionColumn = headers.IndexOf(col => CollisionalCrossSectionNames.Contains(FormatHeader(col)));
-            ExplicitDelusteringPotentialColumn = headers.IndexOf(col => ExplicitDelusteringPotentialNames.Contains(FormatHeader(col)));
-            ExplicitCompensationVoltageColumn = headers.IndexOf(col => ExplicitCompensationVoltageNames.Contains(FormatHeader(col)));
-            MoleculeListNameColumn = headers.IndexOf(col => MoleculeListNameNames.Contains(FormatHeader(col)));
             ProteinDescriptionColumn = headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col)));
             PeptideColumn = headers.IndexOf(col => PeptideNames.Contains(FormatHeader(col)));
-            MolecularFormulaColumn = headers.IndexOf(col => MolecularFormulaNames.Contains(FormatHeader(col)));
-            PrecursorAdductColumn = headers.IndexOf(col => PrecursorAdductNames.Contains(FormatHeader(col)));
-            ProductColumn = headers.IndexOf(col => ProductNames.Contains(FormatHeader(col)));
-            PrecursorColumn = headers.IndexOf(col => PrecursorNames.Contains(FormatHeader(col)));
-            ProductFormulaColumn = headers.IndexOf(col => ProductFormulaNames.Contains(FormatHeader(col)));
-            ProductAdductColumn = headers.IndexOf(col => ProductAdductNames.Contains(FormatHeader(col)));
-            ProductNameColumn = headers.IndexOf(col => ProductNameNames.Contains(FormatHeader(col)));
-            ProductNeutralLossColumn = headers.IndexOf(col => ProductNeutralLossNames.Contains(FormatHeader(col)));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
@@ -2366,21 +2433,17 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
         public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
         public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
-        public static IEnumerable<string> ExplicitRetentionTimeNames { get { return new[] { @"explicitretentiontime" }; } }
-        public static IEnumerable<string> ExplicitRetentionTimeWindowNames { get { return new[] { @"explicitretentiontimewindow" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeNames { get { return new[] { @"explicitretentiontime", @"precursorrt" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeWindowNames { get { return new[] { @"explicitretentiontimewindow", @"precursorrtwindow" }; } }
         public static IEnumerable<string> ExplicitCollisionEnergyNames { get { return new[] { @"explicitcollisionenergy" }; } }
         public static IEnumerable<string> NoteNames { get { return new[] { @"note" }; } }
         public static IEnumerable<string> SLensNames { get { return new[] { @"slens", @"s-lens" }; } }
         public static IEnumerable<string> ConeVoltageNames { get { return new[] { @"conevoltage" }; } }
-        public static IEnumerable<string> ExplicitIonMobilityNames { get { return new[] { @"explicitionmobility" }; } }
-        public static IEnumerable<string> ExplicitIonMobilityUnitsNames { get { return new[] { @"explicitionmobilityunits" }; } }
-        public static IEnumerable<string> ExplicitIonMobilityHighEnergyOffsetNames { get { return new[] { @"explicitionmobilityhighenergyoffset" }; } }
-        public static IEnumerable<string> CollisionalCrossSectionNames { get { return new[] { @"collisionalcrosssection", @"collisionalcrosssection(sqa)", @"collisionalcrosssectionsqa" }; } }
         public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
         public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
         public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
         public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
-        public static IEnumerable<string> PeptideNames { get { return new[] { @"precursorname", @"peptidemodifiedsequence", @"peptide" }; } }
+        public static IEnumerable<string> PeptideNames { get { return new[] { @"peptidemodifiedsequence", @"peptide" }; } }
         public static IEnumerable<string> MolecularFormulaNames { get { return new[] { @"molecularformula", @"precursorformula" }; } }
         public static IEnumerable<string> PrecursorAdductNames { get { return new[] { @"precursoradduct" }; } }
         public static IEnumerable<string> ProductNames { get { return new[] { @"productmz", @"productm/z" }; } }
@@ -2389,6 +2452,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ProductAdductNames { get { return new[] { @"productadduct" }; } }
         public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname" }; } }
         public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
+        public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname" }; } }
         // ReSharper restore StringLiteralTypo
     }
 
