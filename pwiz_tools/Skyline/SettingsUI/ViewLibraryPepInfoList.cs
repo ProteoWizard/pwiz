@@ -155,8 +155,9 @@ namespace pwiz.Skyline.SettingsUI
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
                 }
+
                 var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
-                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString()));
+                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString(), StringComparer.OrdinalIgnoreCase));
             }
         }
 

@@ -103,14 +103,6 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public Adduct Adduct { get { return Key.Adduct; } }
 
-        /// <summary>
-        /// The adduct of the small molecule without the associated brackets,
-        /// for searching purposes
-        /// </summary>
-        public string AdductMinusBrackets
-        {
-            get { return Key.Adduct.ToString().Replace(@"[", "").Replace(@"]", ""); }
-        }
 
         /// <summary>
         /// The modified peptide sequence or small molecule associated with a spectrum
