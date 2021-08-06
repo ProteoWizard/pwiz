@@ -998,7 +998,14 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = _spectrum?.FileOrder != spectrum?.FileOrder || !Equals(_spectrum?.Identity, spectrum?.Identity);
+                        bool spectrumChanged;
+                        if(_spectrum == null || !(_spectrum?.SpectrumInfo is SpectrumInfoLibrary _libInfo) || !(spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo))
+                            spectrumChanged = true;
+                        else
+                        {
+                            spectrumChanged = !(_libInfo.Name.Equals(libInfo.Name) &&
+                                              _libInfo.SpectrumKey.Equals(libInfo.SpectrumKey));
+                        }
                         _spectrum = spectrum;
 
                         ClearGraphPane();
