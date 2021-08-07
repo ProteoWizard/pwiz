@@ -1919,19 +1919,19 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE docType = SrmDocument.DOCUMENT_TYPE.none)
         {
-            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings);
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings, docType);
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE docType = SrmDocument.DOCUMENT_TYPE.none)
         {
             // If it cannot be formatted as a mass list it cannot be a small molecule transition list
             if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
             {
                 return false;
             }
-
+            
             // Use the first 100 lines and the document to create an importer
             var inputs = new MassListInputs(csvText.Take(100).ToString(), provider, sep);
             var importer = new MassListImporter(settings, inputs);
@@ -1959,22 +1959,30 @@ namespace pwiz.Skyline.Model
                 {
                     return false;
                 }
-                return new[]
+
+                if (new[]
                 {
                     // These are pretty basic hints, without much overlap in peptide lists
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct, 
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.idCAS, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChi, 
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.idCAS,
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                    SmallMoleculeTransitionListColumnHeaders.idInChi,
                     SmallMoleculeTransitionListColumnHeaders.idHMDB,
                     SmallMoleculeTransitionListColumnHeaders.idSMILES,
                     SmallMoleculeTransitionListColumnHeaders.idKEGG,
                 }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
-                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
+                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp =>
+                    header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1)
+                {
+                    return true;
+                }
+
+                // If we still have not discerned the transition list type, guess based on the document mode
+                return docType == SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
         }
 
