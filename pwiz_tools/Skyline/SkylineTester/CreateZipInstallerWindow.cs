@@ -200,6 +200,10 @@ namespace SkylineTester
                         AddFile(testZipFile, zipFile, testZipDirectory);
                     }
 
+                    // Add tutorial audit logs
+                    zipFile.AddDirectory(Path.Combine(solutionDirectory, @"TestTutorial\TutorialAuditLogs"),
+                        @"SkylineTester Files\TestZipFiles\TestTutorial\TutorialAuditLogs");
+
                     // Add pwiz vendor reader test data
                     var vendorTestData = new List<string>();
                     foreach (TestFilesDir.VendorDir vendorDir in Enum.GetValues(typeof(TestFilesDir.VendorDir)))
