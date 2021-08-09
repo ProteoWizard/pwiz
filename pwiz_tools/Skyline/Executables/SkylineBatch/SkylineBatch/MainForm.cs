@@ -624,6 +624,12 @@ namespace SkylineBatch
             _outputLog.Tick += OutputLog;
         }
 
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            // force the log to be redrawn
+            textBoxLog.Invalidate();
+        }
+
         private void tabLog_Leave(object sender, EventArgs e)
         {
             _scrolling = _configManager.SelectedLog == 0;
@@ -782,6 +788,8 @@ namespace SkylineBatch
 
         public void ClickRun(int option = 0)
         {
+            if (_configManager.ConfigRunning() || !btnRunBatch.Enabled)
+                throw new Exception("Configurations are still running");
             CheckDropDownOption(option);
             RunBatch();
         }

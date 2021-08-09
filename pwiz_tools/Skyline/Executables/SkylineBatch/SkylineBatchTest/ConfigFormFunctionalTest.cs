@@ -36,6 +36,54 @@ namespace SkylineBatchTest
 
             TestEditInvalidDownloadingFolderPath(mainForm);
 
+            TestZipFiles(mainForm);
+        }
+        private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
+        {
+            bool worked = false;
+            RunUI(() =>
+            {
+                worked = expectedAnswer == mainForm.ConfigRunning("Bruderer");
+            });
+            return worked;
+        }
+
+        public void TestZipFiles(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var zipPathFile = Path.Combine(TEST_FOLDER, "zip_path_test_config.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(zipPathFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
+            });
+
+            //RunUI(() => { mainForm.ClickConfig(0); });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var tenSeconds = new TimeSpan(0, 0, 10);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+                "Config did not start");
+            RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
+            var oneMinute = new TimeSpan(0, 1, 0);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
+                "Config ran past timeout");
+            
+            RunUI(() => { mainForm.ClickRun(); });
+            var longWaitDialog2 = FindOpenForm<LongWaitDlg>();
+            WaitForClosedForm(longWaitDialog2);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+                "Config did not start");
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
+                "Config ran past timeout");
+            var alertDlg = FindOpenForm<AlertDlg>();
+            if (alertDlg != null)
+            {
+                alertDlg.ClickOk();
+                WaitForClosedForm(alertDlg);
+                Assert.Fail("An unexpected alert appeared with message: " + alertDlg.Message);
+            }
+
         }
 
         public void TestEditInvalidDownloadingFolderPath(MainForm mainForm)
