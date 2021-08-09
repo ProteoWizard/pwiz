@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -50,6 +51,67 @@ namespace SkylineBatchTest
 
             TestDriveRootReplacement(mainForm);
 
+            TestVersionNumbers(mainForm);
+        }
+
+        public void TestVersionNumbers(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile1 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion1.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile1);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile2 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion2.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile2);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile3 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion3.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile3);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile1 = Path.Combine(TEST_FOLDER, "InvalidConfigurationsVersion1.bcfg");
+            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile1),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1001.1.0.187", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
+                });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile2 = Path.Combine(TEST_FOLDER, "InvalidConfigurationsVersion2.bcfg");
+            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile2),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1000.1.9.255", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
+                });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile3 = Path.Combine(TEST_FOLDER, "InvalidConfigurationsVersion3.bcfg");
+            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile3),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(SharedBatch.Properties.Resources
+                        .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                        "1100.3.3.100", "1000.0.0.0"), dlg.Message);
+                    dlg.ClickOk();
+                });
         }
 
         public void TestImportValidConfigurations(MainForm mainForm)
