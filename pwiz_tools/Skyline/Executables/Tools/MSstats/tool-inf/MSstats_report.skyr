@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <views>
-  <view name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+  <view name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*" uimode="proteomic">
     <column name="Precursor.Peptide.Protein.Name" />
     <column name="Precursor.Peptide.ModifiedSequence" />
     <column name="Precursor.Charge" />
@@ -14,7 +14,7 @@
     <column name="Precursor.Peptide.StandardType" />
     <column name="Results!*.Value.Truncated" />
     <column name="Results!*.Value.PrecursorResult.DetectionQValue" />
-    <filter column="Results!*.Value" opname="isnotnullorblank" />
     <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
+    <filter column="Results!*.Value.TransitionResultIsQuantitative" opname="equals" operand="True" />
   </view>
 </views>

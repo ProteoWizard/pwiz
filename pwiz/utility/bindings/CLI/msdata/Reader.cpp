@@ -77,6 +77,7 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.acceptZeroLengthSpectra = readerConfig->acceptZeroLengthSpectra;
     config.ignoreZeroIntensityPoints = readerConfig->ignoreZeroIntensityPoints;
     config.combineIonMobilitySpectra = readerConfig->combineIonMobilitySpectra;
+    config.reportSonarBins = readerConfig->reportSonarBins;
     config.unknownInstrumentIsError = readerConfig->unknownInstrumentIsError;
     config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
     config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;

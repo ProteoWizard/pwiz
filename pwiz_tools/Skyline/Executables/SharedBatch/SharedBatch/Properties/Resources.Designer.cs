@@ -29,7 +29,7 @@ namespace SharedBatch.Properties {
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Resources() {
+        internal Resources() {
         }
         
         /// <summary>
@@ -249,6 +249,27 @@ namespace SharedBatch.Properties {
         public static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
             get {
                 return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_already_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The imported configurations are from an old file format and could not be copied to {0}.
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_" +
+                        "and_could_not_be_copied_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of the file to import from {0} is newer than the version of the program {1}. Please update the program to import configurations from this file..
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than" +
+                        "_the_version_of_the_program__1___Please_update_the_program_to_import_configurati" +
+                        "ons_from_this_file_", resourceCulture);
             }
         }
         
@@ -576,11 +597,224 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot; is not a Panorama folder..
+        /// </summary>
+        public static string PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown folder validation state {0}..
+        /// </summary>
+        public static string PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validati" +
+                        "on_state__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder &quot;{0}&quot; does not exist on the Panorama server {1}..
+        /// </summary>
+        public static string PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_" +
+                        "Panorama_server__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder validation passed without errors!.
+        /// </summary>
+        public static string PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_Folder_validation_passed_without_er" +
+                        "rors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User {0} does not have permissions to upload to the Panorama folder &quot;{1}&quot;..
+        /// </summary>
+        public static string PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_" +
+                        "to_upload_to_the_Panorama_folder___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown Panorama server validation state {0}..
+        /// </summary>
+        public static string PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_va" +
+                        "lidation_state__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Panorama server validation passed without errors!.
+        /// </summary>
+        public static string PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_with" +
+                        "out_errors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown server validation state {0}..
+        /// </summary>
+        public static string PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__" +
+                        "0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server validation passed without errors!.
+        /// </summary>
+        public static string PanoramaServerException_ServerError_Server_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_ServerError_Server_validation_passed_without_errors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encountered unknown user validation state {0}..
+        /// </summary>
+        public static string PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_s" +
+                        "tate__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The username and password could not be authenticated with the Panorama server..
+        /// </summary>
+        public static string PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_The_username_and_password_could_not_b" +
+                        "e_authenticated_with_the_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error validating user permissions on the Panorama server..
+        /// </summary>
+        public static string PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_Unknown_error_validating_user_permiss" +
+                        "ions_on_the_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User validation passed without errors!.
+        /// </summary>
+        public static string PanoramaServerException_UserValidationError_User_validation_passed_without_errors_ {
+            get {
+                return ResourceManager.GetString("PanoramaServerException_UserValidationError_User_validation_passed_without_errors" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} does not exist..
+        /// </summary>
+        public static string PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not a Panorama server..
+        /// </summary>
+        public static string PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error connecting to the server {0}..
+        /// </summary>
+        public static string PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error while checking if server {0} is a Panorama server..
+        /// </summary>
+        public static string PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__i" +
+                        "s_a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Username and password cannot be null. Please enter a username and password..
+        /// </summary>
+        public static string PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please" +
+                        "_enter_a_username_and_password_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to start {0}..
         /// </summary>
         public static string ProcessRunner_StartException_Unable_to_start__0__ {
             get {
                 return ResourceManager.GetString("ProcessRunner_StartException_Unable_to_start__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved configurations from an earlier version of {0}..
+        /// </summary>
+        public static string Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___ {
+            get {
+                return ResourceManager.GetString("Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_" +
+                        "version_of__0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To help improve {0} in future versions, please post the configuration file to the Skyline Support board:.
+        /// </summary>
+        public static string Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_ {
+            get {
+                return ResourceManager.GetString("Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuratio" +
+                        "n_file_to_the_Skyline_Support_board_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No parsable Skyline version found..
+        /// </summary>
+        public static string SkylineSettings_GetVersion_No_parsable_Skyline_version_found_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_GetVersion_No_parsable_Skyline_version_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing Skyline version..
+        /// </summary>
+        public static string SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_", resourceCulture);
             }
         }
         
@@ -701,6 +935,15 @@ namespace SharedBatch.Properties {
         public static string TextUtil_FILTER_SKY_Skyline_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FILTER_SKY_Skyline_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shared Files.
+        /// </summary>
+        public static string TextUtil_FILTER_SKY_ZIP_Shared_Files {
+            get {
+                return ResourceManager.GetString("TextUtil_FILTER_SKY_ZIP_Shared_Files", resourceCulture);
             }
         }
         

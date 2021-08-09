@@ -1522,8 +1522,8 @@ namespace pwiz.SkylineTestUtil
             if (!IsRecordAuditLogForTutorials)
             {
                 Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName);
+                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName, projectFile);
             }
 
             // Compare file contents

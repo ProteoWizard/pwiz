@@ -223,7 +223,7 @@
     <value>12</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>DIA-Umpire 将 DIA 谱图转换为伪 DDA 光谱。Skyline 通过搜索 DDA 谱图来构建库，但是对原始 DIA 谱图进行定量。</value>
+    <value>DIA-Umpire 将 DIA 谱图转换为伪 DDA 谱图。Skyline 通过搜索 DDA 谱图来构建库，但是对原始 DIA 谱图进行定量。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

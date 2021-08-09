@@ -42,6 +42,7 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
+#include "boost/locale/encoding_utf.hpp"
 
 
 using namespace pwiz::util;
@@ -787,7 +788,7 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             {
                 ifstream urls(filepath.string().c_str());
                 string url;
-                while (getline(urls, url))
+                while (getlinePortable(urls, url))
                 {
                     if (isPathTestable(url))
                     {

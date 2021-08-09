@@ -406,7 +406,7 @@ SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg, 
     if (!bRemover && ("addMissing"!=action))
         throw user_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
     string msLevelSets;
-    getline(parser, msLevelSets);
+    getlinePortable(parser, msLevelSets);
     if (""==msLevelSets) msLevelSets="1-"; // default is all msLevels
 
     IntegerSet msLevelsToFilter;
@@ -1369,7 +1369,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     if (parser)
     {
         string msLevelSets;
-        getline(parser, msLevelSets);
+        getlinePortable(parser, msLevelSets);
 
         if (!msLevelSets.empty())
         {
@@ -1480,7 +1480,7 @@ SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const st
     string includeArg;
     string matchStringArg;
     parser >> matchExactArg >> includeArg;
-    getline(parser, matchStringArg);
+    getlinePortable(parser, matchStringArg);
     bal::trim(matchStringArg);
 
     bool matchExact;

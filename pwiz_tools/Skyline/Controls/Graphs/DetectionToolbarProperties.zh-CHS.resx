@@ -559,7 +559,7 @@
     <value>2</value>
   </data>
   <data name="cbShowMeanStd.Text" xml:space="preserve">
-    <value>平均标准差(&amp;E)</value>
+    <value>平均 &amp;&amp; 标准差(&amp;E)</value>
   </data>
   <data name="&gt;&gt;cbShowMeanStd.Name" xml:space="preserve">
     <value>cbShowMeanStd</value>

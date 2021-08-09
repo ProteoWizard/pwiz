@@ -15,9 +15,15 @@
 #include "config.h"
 #include "object.h"
 
+#include <string>
+
 
 /* cwd() - returns the current working folder */
 OBJECT * cwd( void );
+namespace b2
+{
+    const std::string & cwd_str();
+}
 
 /* cwd_init() - initialize the cwd module functionality
  *
