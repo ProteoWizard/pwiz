@@ -340,18 +340,19 @@ namespace pwiz.Skyline.Controls.Graphs
             // Add labels.
             if (!_showIonSeriesAnnotations)
             {
+                var showMassError = Settings.Default.ShowFullScanMassError;
                 for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                     if (transition.Source != _msDataFileScanHelper.Source)
                         continue;
                     var labelBuilder = new StringBuilder(transition.Name);
-                    if (massErrors != null && Settings.Default.ShowFullScanMassError)
+                    if (massErrors != null && showMassError)
                     {
                         var massError = SequenceMassCalc.GetPpm(transition.ProductMz, massErrors[i]);
                         massError = Math.Round(massError, 1);
-                        labelBuilder.AppendLine().Append(string.Format("{0}{1} ppm",
-                            (massError > 0 ? "+" : string.Empty), massError));
+                        labelBuilder.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,
+                            (massError > 0 ? @"+" : string.Empty), massError));
                     }
 
                     var label = new TextObj(labelBuilder.ToString(), transition.ProductMz, 0.02, CoordType.XScaleYChartFraction,
@@ -690,8 +691,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Polarity should match, because these are the spectra used for extraction
                     Assume.IsTrue(transition.PrecursorMz.IsNegative == negativeScan);
                     if (transition.Source != _msDataFileScanHelper.Source ||
-                        mz <= transition.ProductMz.Value - transition.ExtractionWidth/2 ||
-                        mz > transition.ProductMz.Value + transition.ExtractionWidth/2)
+                        !transition.MatchMz(mz))
                         continue;
                     assignedPointList = pointLists[j];
                     break;
@@ -733,8 +733,6 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 // Create a graph item for each point list with its own color.
-                if (Settings.Default.ShowFullScanMassError)
-                    massErrors = new double[_msDataFileScanHelper.ScanProvider.Transitions.Length];
                 for (int i = 0; i < pointLists.Length; i++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
@@ -743,14 +741,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                     curveItem.Label.IsVisible = false;
-                    if (massErrors != null)
-                    {
-                        var errorAccumulator =
-                            new SpectrumFilterPair.MeanErrorAccumulator(true, ChromExtractor.summed,
-                                transition.ProductMz);
-                        pointLists[i].ForEach(pt => errorAccumulator.AddPoint(pt.X, pt.Y));
-                        massErrors[i] = errorAccumulator.MeanError;
-                    }
                 }
 
                 // Add points that aren't associated with a transition.
@@ -768,6 +758,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 curveItem.Label.IsVisible = false;
             }
             GraphPane.SetScale(CreateGraphics());
+
+            if (Settings.Default.ShowFullScanMassError)
+            {
+                massErrors = new double[_msDataFileScanHelper.ScanProvider.Transitions.Length];
+
+                //create and initialize a map of transition,accumulator pairs
+                var meanErrorsMap =
+                    new Dictionary<Identity, IntensityAccumulator>(_msDataFileScanHelper.ScanProvider.Transitions.Length);
+                _msDataFileScanHelper.ScanProvider.Transitions
+                    .ForEach(t => meanErrorsMap.Add(t.Id,
+                        new IntensityAccumulator(true, ChromExtractor.summed, t.ProductMz)));
+
+                for (int i = 0; i < mzs.Count; i++)     //accumulate errors for each spectrum point
+                {
+                    _msDataFileScanHelper.ScanProvider.Transitions.ToList()
+                        .FindAll(t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mzs[i]))
+                        .ForEach(t => meanErrorsMap[t.Id].AddPoint(mzs[i], intensities[i]));
+                }
+                //move results to the output array
+                for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
+                    massErrors[i] = meanErrorsMap[_msDataFileScanHelper.ScanProvider.Transitions[i].Id].MeanMassError;
+            }
         }
 
         private static double FindMinMz(MsDataSpectrum[] spectra, int[] indices)

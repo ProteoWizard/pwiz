@@ -333,9 +333,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
                 massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
                 massError = Math.Round(massError, 1);
-                // ReSharper disable LocalizableElement
-                sb.AppendLine().Append(string.Format("{0}{1} ppm", (massError > 0 ? "+" : string.Empty), massError));
-                // ReSharper enable LocalizableElement
+                sb.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
             }
             return sb.ToString();
         }

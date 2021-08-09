@@ -265,10 +265,10 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // Add the intensity values of all peaks that pass the filter
-                    var accumulator = new MeanErrorAccumulator(highAcc, Extractor, targetMz)
+                    var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz)
                     {
                         TotalIntensity = extractedIntensities[targetIndex], // Start with the value from the previous spectrum, if any
-                        MeanError = highAcc ? meanErrors[targetIndex] : 0
+                        MeanMassError = highAcc ? meanErrors[targetIndex] : 0
                     };
 
                     for (int iNext = iPeak; iNext < mzArray.Length && mzArray[iNext] < endFilter; iNext++)
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     extractedIntensities[targetIndex] = (float) accumulator.TotalIntensity;
                     if (meanErrors != null)
-                        meanErrors[targetIndex] = accumulator.MeanError;
+                        meanErrors[targetIndex] = accumulator.MeanMassError;
                 }
                 
             }
@@ -313,45 +313,6 @@ namespace pwiz.Skyline.Model.Results
                 productFilters,
                 extractedIntensities,
                 massErrors);
-        }
-
-        public class MeanErrorAccumulator
-        {
-            public double TotalIntensity { get; set; }
-            public double MeanError { get; set; }
-            bool _highAcc;
-            ChromExtractor _extractor;
-            private double _targetMz;
-
-
-            public MeanErrorAccumulator(bool highAcc, ChromExtractor extractor, double targetMz)
-            {
-                _highAcc = highAcc;
-                _extractor = extractor;
-                _targetMz = targetMz;
-            }
-
-            public void AddPoint(double mz, double intensity)
-            {
-                if (_extractor == ChromExtractor.summed)
-                    TotalIntensity += intensity;
-                else if (intensity > TotalIntensity)
-                {
-                    TotalIntensity = intensity;
-                    MeanError = 0;
-                }
-
-                // Accumulate weighted mean mass error for summed, or take a single
-                // mass error of the most intense peak for base peak.
-                if (_highAcc && (_extractor == ChromExtractor.summed || MeanError == 0))
-                {
-                    if (TotalIntensity > 0.0)
-                    {
-                        double deltaPeak = mz - _targetMz;
-                        MeanError += (deltaPeak - MeanError) * intensity / TotalIntensity;
-                    }
-                }
-            }
         }
 
         public int CompareTo(SpectrumFilterPair other)

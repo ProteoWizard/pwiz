@@ -11496,4 +11496,7 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>
+  <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
+    <value>{0}{1} ppm</value>
+  </data>
 </root>
