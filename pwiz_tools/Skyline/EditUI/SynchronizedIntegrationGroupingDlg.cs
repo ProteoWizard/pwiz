@@ -45,11 +45,22 @@ namespace pwiz.Skyline.EditUI
             _document = document;
             _annotationCalculator = new AnnotationCalculator(_document);
 
-            comboGroupBy.Items.Add(new GroupByItem(null));
+            var groupByReplicates = new GroupByItem(null);
+            comboGroupBy.Items.Add(groupByReplicates);
             comboGroupBy.Items.AddRange(ReplicateValue.GetGroupableReplicateValues(_document).Select(v => new GroupByItem(v)).ToArray());
-            comboGroupBy.SelectedIndex = GetItemIndex(_document.Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy, true) ?? 0;
 
-            SetCheckedItems(_document.Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet());
+            if (!_document.GetSynchronizeIntegrationChromatogramSets().Any())
+            {
+                // Synchronized integration is off, select everything
+                comboGroupBy.SelectedIndex = 0;
+                SetCheckedItems(groupByReplicates.GetItems(_document, _annotationCalculator).ToHashSet());
+            }
+            else
+            {
+                var settingsIntegration = _document.Settings.TransitionSettings.Integration;
+                comboGroupBy.SelectedIndex = GetItemIndex(settingsIntegration.SynchronizedIntegrationGroupBy, true) ?? 0;
+                SetCheckedItems(settingsIntegration.SynchronizedIntegrationTargets.ToHashSet());
+            }
         }
 
         private int? GetItemIndex(string s, bool persistedString)
