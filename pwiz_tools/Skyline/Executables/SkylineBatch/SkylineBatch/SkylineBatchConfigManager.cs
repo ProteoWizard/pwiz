@@ -94,7 +94,7 @@ namespace SkylineBatch
         public void LoadConfigList()
         {
             var configs = base.LoadConfigList(Settings.Default.XmlVersion);
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             configs = AssignDependencies(configs, true, state, out _); // ignore warning
             foreach (var config in configs)
                 state = ProgramaticallyAddConfig(config, state);
@@ -153,7 +153,7 @@ namespace SkylineBatch
 
         public void UserReplaceSelected(IConfig newConfig)
         {
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             var index = state.baseState.selected;
             var config = GetSelectedConfig();
             var replacingConfig = (SkylineBatchConfig)newConfig;
@@ -196,11 +196,8 @@ namespace SkylineBatch
 
         public void UserAddConfig(IConfig iconfig)
         {
-            lock (_lock)
-            {
-                var newState = UserInsertConfig(iconfig, _configList.Count, new SkylineBatchConfigManagerState(this));
-                SetState(newState);
-            }
+            var newState = UserInsertConfig(iconfig, _configList.Count, GetState());
+            SetState(newState);
         }
 
         private SkylineBatchConfigManagerState UserInsertConfig(IConfig iconfig, int index, SkylineBatchConfigManagerState state)
@@ -261,50 +258,47 @@ namespace SkylineBatch
 
         public void UserRemoveSelected()
         {
-            lock (_lock)
+            var state = GetState();
+            AssertConfigSelected(state.baseState);
+            var index = SelectedConfig;
+            var removingConfigName = _configList[index].GetName();
+            if (state.configRunners[removingConfigName].IsBusy())
             {
-                var state = new SkylineBatchConfigManagerState(this);
-                AssertConfigSelected(state.baseState);
-                var index = SelectedConfig;
-                var removingConfigName = _configList[index].GetName();
-                if (_configRunners[removingConfigName].IsBusy())
-                {
-                    DisplayWarning(string.Format(
-                        Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
-                        removingConfigName));
-                    return;
-}
-                var configDependencies = GetDependencies(state);
-                if (configDependencies.ContainsKey(removingConfigName))
-                {
-                    var runningConfigs = ConfigsBusy();
-                    var runningDependentConfigs = configDependencies[removingConfigName].Where(x => runningConfigs.Contains(x)).ToList();
-
-                    if (runningDependentConfigs.Any())
-                    {
-                        DisplayError(string.Format(
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_, removingConfigName) + Environment.NewLine +
-                            TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_);
-                        return;
-                    }
-                    var answer = DisplayQuestion(
-                        string.Format(
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_,
-                            removingConfigName) +
-                        Environment.NewLine +
-                        TextUtil.LineSeparate(configDependencies[removingConfigName]) + Environment.NewLine +
-                        string.Format(Resources.SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___, removingConfigName));
-
-                    if (answer != DialogResult.Yes) return;
-                    foreach (var dependentName in configDependencies[removingConfigName])
-                        state = DependencyRemove(dependentName, state);
-                }
-
-                state = RemoveConfig(_configList[index], state);
-                state.baseState = UserRemoveAt(index, state.baseState);
-                SetState(state);
+                DisplayWarning(string.Format(
+                    Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
+                    removingConfigName));
+                return;
             }
+            var configDependencies = GetDependencies(state);
+            if (configDependencies.ContainsKey(removingConfigName))
+            {
+                var runningConfigs = ConfigsBusy();
+                var runningDependentConfigs = configDependencies[removingConfigName].Where(x => runningConfigs.Contains(x)).ToList();
+
+                if (runningDependentConfigs.Any())
+                {
+                    DisplayError(string.Format(
+                        Resources.SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_, removingConfigName) + Environment.NewLine +
+                        TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
+                        Resources.SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_);
+                    return;
+                }
+                var answer = DisplayQuestion(
+                    string.Format(
+                        Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_,
+                        removingConfigName) +
+                    Environment.NewLine +
+                    TextUtil.LineSeparate(configDependencies[removingConfigName]) + Environment.NewLine +
+                    string.Format(Resources.SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___, removingConfigName));
+
+                if (answer != DialogResult.Yes) return;
+                foreach (var dependentName in configDependencies[removingConfigName])
+                    state = DependencyRemove(dependentName, state);
+            }
+
+            state = RemoveConfig(_configList[index], state);
+            state.baseState = UserRemoveAt(index, state.baseState);
+            SetState(state);
         }
 
         private SkylineBatchConfigManagerState ProgramaticallyRemoveAt(int index, SkylineBatchConfigManagerState state)
@@ -384,7 +378,7 @@ namespace SkylineBatch
 
         public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             return ConfigsListViewItems(state.configRunners, graphics, state.baseState);
 
         }
@@ -431,7 +425,7 @@ namespace SkylineBatch
         {
             lock (_lock)
             {
-                var state = new SkylineBatchConfigManagerState(this);
+                var state = GetState();
                 var runningConfigs = ConfigsBusy();
                 var replacingConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
                 foreach (var indexAndConfig in replacingConfigs)
@@ -451,7 +445,7 @@ namespace SkylineBatch
 
         public void RootReplaceConfigs(string oldRoot)
         {
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             var replacedConfigs = GetRootReplacedConfigs(oldRoot, state.baseState);
             replacedConfigs = AssignDependencies(replacedConfigs, false, state, out _);
             foreach (var config in replacedConfigs)
@@ -470,7 +464,7 @@ namespace SkylineBatch
 
         public bool WillRefine()
         {
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             foreach (var iconfig in state.baseState.configList)
             {
                 var config = (SkylineBatchConfig) iconfig;
@@ -534,7 +528,7 @@ namespace SkylineBatch
                     return false;
                 }
 
-                state = new SkylineBatchConfigManagerState(this);
+                state = GetState();
             }
 
             
@@ -985,7 +979,7 @@ namespace SkylineBatch
 
         public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
         {
-            var state = new SkylineBatchConfigManagerState(this);
+            var state = GetState();
             var importedConfigs = ImportFrom(filePath, Settings.Default.XmlVersion, showDownloadedFileForm);
             foreach (var config in importedConfigs)
             {
@@ -1015,6 +1009,14 @@ namespace SkylineBatch
 
         #endregion
 
+        private SkylineBatchConfigManagerState GetState()
+        {
+            lock (_lock)
+            {
+                return new SkylineBatchConfigManagerState(this);
+            }
+        }
+
         private void SetState(SkylineBatchConfigManagerState newState)
         {
             lock (_lock)
@@ -1023,8 +1025,8 @@ namespace SkylineBatch
                 base.SetState(newState.baseState);
                 _refinedTemplates = newState.templates;
                 _configRunners = newState.configRunners;
-                _uiControl?.UpdateUiConfigurations();
             }
+            _uiControl?.UpdateUiConfigurations();
         }
 
 
@@ -1053,18 +1055,21 @@ namespace SkylineBatch
                 var validated = configRunners.Count == baseState.configList.Count;
                 foreach (var config in baseState.configList)
                 {
-                    if (!validated) break;
                     if (!configRunners.ContainsKey(config.GetName()))
+                    {
                         validated = false;
+                        break;
+                    }
                 }
-
                 foreach (var configName in templates.Keys)
                 {
-                    if (!validated) break;
                     if (!configRunners.ContainsKey(configName) || !templates[configName]
                         .Equals(((SkylineBatchConfig) configRunners[configName].GetConfig()).RefineSettings
                             .OutputFilePath))
+                    {
                         validated = false;
+                        break;
+                    }
                 }
                 if (!validated)
                     throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
