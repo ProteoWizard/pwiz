@@ -57,4 +57,54 @@ namespace SkylineBatch
         use_refined_file
 
     }
+
+    public enum OLD_XML_TAGS
+    {
+        SavedConfigsFilePath, // deprecated since SkylineBatch release 20.2.0.475
+        SavedPathRoot,
+
+        Name,
+        Enabled,
+        Modified,
+
+        TemplateFilePath,
+        DependentConfigName,
+        AnalysisFolderPath,
+        DataFolderPath,
+        AnnotationsFilePath,
+        ReplicateNamingPattern,
+
+        FilePath,
+        ZipFilePath,
+
+        DownloadFolder,
+        FileName,
+
+        MsOneResolvingPower,
+        MsMsResolvingPower,
+        RetentionTime,
+        AddDecoys,
+        ShuffleDecoys,
+        TrainMProphet,
+
+        RemoveDecoys,
+        RemoveResults,
+        OutputFilePath,
+
+        //Name,
+        CultureSpecific,
+        Path,
+        UseRefineFile,
+
+        Type,
+        CmdPath,
+
+        ServerUrl,
+        ServerUri,
+        ServerUserName,
+        ServerPassword,
+        ServerFolder,
+        DataNamingPattern,
+        uri,
+    }
 }

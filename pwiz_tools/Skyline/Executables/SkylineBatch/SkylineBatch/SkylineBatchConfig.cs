@@ -236,10 +236,10 @@ namespace SkylineBatch
 
         private static void ReadConfigVariables_20_2(XmlReader reader, out string name, out bool enabled, out bool logTestFormat, out DateTime modified)
         {
-            name = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Name);
-            enabled = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.Enabled);
+            name = reader.GetAttribute(OLD_XML_TAGS.Name);
+            enabled = reader.GetBoolAttribute(OLD_XML_TAGS.Enabled);
             logTestFormat = false;
-            DateTime.TryParse(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
+            DateTime.TryParse(reader.GetAttribute(OLD_XML_TAGS.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
         }
 
         public void WriteXml(XmlWriter writer)

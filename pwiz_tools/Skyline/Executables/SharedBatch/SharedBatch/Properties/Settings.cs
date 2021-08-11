@@ -75,24 +75,23 @@ namespace SharedBatch.Properties
         }
 
         // Upgrades the settings from the previous version and rewrites the XML to the current version
-        public void Update(string xmlFile, decimal currentXmlVersion, string appName, XmlUpdater updater)
+        public void Update(string xmlFile, decimal currentXmlVersion, string appName)
         {
-            var updatedXmlFile = string.Empty;
             try
             {
                 if (!File.Exists(xmlFile))
                     return;
                 ProgramLog.Info(string.Format(Resources.Settings_Update_Saved_configurations_were_found_in___0_, xmlFile));
-
-                updatedXmlFile = updater(xmlFile, currentXmlVersion);
+                
                 var configList = new ConfigList();
-                using (var stream = new FileStream(updatedXmlFile, FileMode.Open))
+                using (var stream = new FileStream(xmlFile, FileMode.Open))
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
                         while (reader.Read())
                         {
                             if (!reader.IsStartElement("config_list") && !reader.IsStartElement("ConfigList")) continue;
+
                             configList.ReadXml(reader);
                             break;
                         }
@@ -106,10 +105,8 @@ namespace SharedBatch.Properties
                 ProgramLog.Error(e.Message, e);
                 var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                 var newFileName = Path.Combine(folderToCopy, "error-user.config");
-                var message = string.Format(
-                    Resources
-                        .Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
-                    appName);
+                var message = string.Format(Resources.Settings_Update_There_was_an_error_reading_the_saved__0__configurations_,
+                    appName) + Environment.NewLine + e.Message;
                 File.Copy(xmlFile, newFileName, true);
                 File.Delete(xmlFile);
                 message += Environment.NewLine + Environment.NewLine +
@@ -121,11 +118,6 @@ namespace SharedBatch.Properties
                            newFileName;
 
                 MessageBox.Show(message);
-            }
-            finally
-            {
-                if (File.Exists(updatedXmlFile) && Path.GetExtension(updatedXmlFile).Equals(TextUtil.EXT_TMP))
-                    File.Delete(updatedXmlFile);
             }
         }
     }
@@ -147,6 +139,8 @@ namespace SharedBatch.Properties
         {
             var isEmpty = reader.IsEmptyElement;
 
+            var importingXmlVersion = ReadXmlVersion(reader);
+
             // Read past the property element
             reader.Read();
             
@@ -165,7 +159,7 @@ namespace SharedBatch.Properties
                 {
                     try
                     {
-                        list.Add(Importer(reader));
+                        list.Add(Importer(reader, importingXmlVersion));
                     }
                     catch (ArgumentException e)
                     {
@@ -192,9 +186,27 @@ namespace SharedBatch.Properties
 
         }
 
+        public static decimal ReadXmlVersion(XmlReader reader)
+        {
+            if (!reader.Name.Equals("ConfigList") && !reader.Name.Equals("config_list"))
+                throw new ArgumentException(Resources.ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_);
+            var xmlVersion = reader.GetAttribute(Attr.xml_version) != null
+                ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version))
+                : -1;
+            var importingVersion = reader.GetAttribute(Attr.version);
+
+            // if the xml version is not set, AutoQC and SkylineBatch are on the same version numbers
+            if (xmlVersion < 0)
+                xmlVersion = importingVersion != null ? 21.1M : 20.2M;
+            return xmlVersion;
+        }
+
         enum Attr
         {
-            xml_version
+            xml_version,
+
+            // deprecated
+            version
         }
 
         public void WriteXml(XmlWriter writer)

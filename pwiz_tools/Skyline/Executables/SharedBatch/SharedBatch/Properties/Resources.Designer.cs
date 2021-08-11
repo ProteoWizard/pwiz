@@ -143,6 +143,16 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The XML reader is not at the correct position to read the XML version..
+        /// </summary>
+        public static string ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_ {
+            get {
+                return ResourceManager.GetString("ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_t" +
+                        "he_XML_version_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
         public static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
@@ -806,6 +816,15 @@ namespace SharedBatch.Properties {
         public static string Settings_Update_Saved_configurations_were_found_in___0_ {
             get {
                 return ResourceManager.GetString("Settings_Update_Saved_configurations_were_found_in___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved {0} configurations:.
+        /// </summary>
+        public static string Settings_Update_There_was_an_error_reading_the_saved__0__configurations_ {
+            get {
+                return ResourceManager.GetString("Settings_Update_There_was_an_error_reading_the_saved__0__configurations_", resourceCulture);
             }
         }
         

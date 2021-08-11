@@ -110,12 +110,12 @@ namespace SkylineBatch
             if (!XmlUtil.ReadNextElement(reader, "file_settings"))
                 return new FileSettings(null, null, null, false, false, false);
             
-            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.MsOneResolvingPower));
-            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.MsMsResolvingPower));
-            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.RetentionTime));
-            var addDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.AddDecoys);
-            var shuffleDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.ShuffleDecoys);
-            var trainMProphet = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.TrainMProphet);
+            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.MsOneResolvingPower));
+            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.MsMsResolvingPower));
+            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.RetentionTime));
+            var addDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.AddDecoys);
+            var shuffleDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.ShuffleDecoys);
+            var trainMProphet = reader.GetBoolAttribute(OLD_XML_TAGS.TrainMProphet);
 
             return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }

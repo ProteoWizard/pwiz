@@ -66,7 +66,7 @@ namespace SkylineBatch.Properties
             SharedBatch.Properties.ConfigList.XmlVersion = Default.XmlVersion;
             SharedBatch.Properties.ConfigList.Importer = SkylineBatchConfig.ReadXml;
             var xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            SharedBatch.Properties.Settings.Default.Update(xmlFile, Default.XmlVersion, Program.AppName(), XmlUpdater.GetUpdatedXml);
+            SharedBatch.Properties.Settings.Default.Update(xmlFile, Default.XmlVersion, Program.AppName());
             Save();
         }
 

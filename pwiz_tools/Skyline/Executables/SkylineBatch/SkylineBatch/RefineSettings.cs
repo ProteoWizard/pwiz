@@ -161,9 +161,9 @@ namespace SkylineBatch
                 return new RefineSettings(new RefineInputObject(), false, false,
                     string.Empty);
             }
-            var removeDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.RemoveDecoys);
-            var removeResults = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.RemoveResults);
-            var outputFilePath = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.OutputFilePath);
+            var removeDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.RemoveDecoys);
+            var removeResults = reader.GetBoolAttribute(OLD_XML_TAGS.RemoveResults);
+            var outputFilePath = reader.GetAttribute(OLD_XML_TAGS.OutputFilePath);
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {

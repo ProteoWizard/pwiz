@@ -214,7 +214,7 @@ namespace SkylineBatch
         {
             var username = reader.GetAttribute(XML_TAGS.username) ?? string.Empty;
             var password = reader.GetAttribute(XML_TAGS.password) ?? string.Empty;
-            var url = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.uri);
+            var url = reader.GetAttribute(OLD_XML_TAGS.uri);
             return CreateServerFromInputs(url, username, password, false);
         }
 

@@ -30,7 +30,7 @@ using SharedBatch.Properties;
 
 namespace SharedBatch
 {
-    public delegate IConfig Importer(XmlReader reader);
+    public delegate IConfig Importer(XmlReader reader, decimal importingXmlVersion);
 
     public delegate string XmlUpdater(string oldXmlFile, decimal currentXmlVersion);
 
@@ -40,8 +40,6 @@ namespace SharedBatch
         // The UI should reflect the configs, runners, and log files from this class
 
         protected Importer importer; // a ReadXml method to import the configurations
-
-        protected XmlUpdater getUpdatedXml; // a ReadXml method to import the configurations
 
         protected ImmutableList<IConfig> _configList { get; private set; } // the list of configurations. Every config must have a validation status in _configValidation
 
@@ -74,7 +72,7 @@ namespace SharedBatch
 
         protected void AssertAllInitialized()
         {
-            if (importer == null || getUpdatedXml == null || _configList == null || _configValidation == null || 
+            if (importer == null || _configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -455,38 +453,25 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string originalFilePath, decimal currentXmlVersion, ShowDownloadedFileForm showDownloadedFileForm)
+        protected List<IConfig> ImportFrom(string filePath, decimal currentXmlVersion, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
             
-            if (originalFilePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
+            if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
-                var dialogResult = showDownloadedFileForm(originalFilePath, out copiedDestination);
+                var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
                     return new List<IConfig>();
-                copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(originalFilePath));
-                var file = new FileInfo(originalFilePath);
+                copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
+                var file = new FileInfo(filePath);
                 file.CopyTo(copiedConfigFile, true);
-                originalFilePath = copiedConfigFile;
+                filePath = copiedConfigFile;
             }
 
             var readConfigs = new List<IConfig>();
-            var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
-
-            string filePath;
-            // update the XML to current version
-            try
-            {
-                filePath = getUpdatedXml(originalFilePath, currentXmlVersion);
-            }
-            catch (Exception e)
-            {
-                DisplayError(string.Format(e.Message));
-                return new List<IConfig>();
-            }
 
             // read configs from file
             try
@@ -499,8 +484,21 @@ namespace SharedBatch
                         {
                             if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
                             {
+                                var importingXmlVersion = ConfigList.ReadXmlVersion(reader);
+                                if (importingXmlVersion > currentXmlVersion)
+                                {
+                                    throw new ArgumentException(string.Format(
+                                        Resources
+                                            .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                                        importingXmlVersion, currentXmlVersion));
+                                }
 
                                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
+                                var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                                oldFolder = oldFolder?? reader.GetAttribute(Attr.SavedPathRoot);
+                                if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
+                                    oldFolder = Path.GetDirectoryName(oldConfigFile);
+
                                 if (!string.IsNullOrEmpty(oldFolder))
                                 {
                                     var newFolder = string.IsNullOrEmpty(copiedDestination)
@@ -529,7 +527,7 @@ namespace SharedBatch
                                         IConfig config = null;
                                         try
                                         {
-                                            config = importer(reader);
+                                            config = importer(reader, importingXmlVersion);
                                         }
                                         catch (Exception ex)
                                         {
@@ -555,9 +553,9 @@ namespace SharedBatch
                 DisplayError(
                     string.Format(
                         Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__,
-                        originalFilePath) + Environment.NewLine +
+                        filePath) + Environment.NewLine +
                     e.Message);
-                return addedConfigs;
+                return new List<IConfig>();
             }
 
             // delete temporary file used to rewrite XML
@@ -568,8 +566,8 @@ namespace SharedBatch
             {
                 // warn if no configs found
                 DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
-                    originalFilePath));
-                return addedConfigs;
+                    filePath));
+                return new List<IConfig>();
             }
 
             var duplicateConfigNames = new List<string>();
@@ -602,7 +600,7 @@ namespace SharedBatch
                 }
             }
             
-            var numAdded = 0;
+            var addedConfigs = new List<IConfig>();
 
             foreach (IConfig config in readConfigs)
             {
@@ -615,11 +613,10 @@ namespace SharedBatch
                 else
                     addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
                 addedConfigs.Add(addingConfig);
-                numAdded++;
             }
 
             message.Append(Resources.ConfigManager_Import_Number_of_configurations_imported_);
-            message.Append(numAdded).Append(Environment.NewLine);
+            message.Append(addedConfigs.Count).Append(Environment.NewLine);
 
             if (readXmlErrors.Count > 0)
             {
@@ -700,7 +697,12 @@ namespace SharedBatch
         public enum Attr
         {
             saved_path_root,
-            xml_version
+            xml_version,
+
+            // deprecated
+            version,
+            SavedConfigsFilePath,
+            SavedPathRoot
         }
 
         #endregion

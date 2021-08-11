@@ -448,10 +448,10 @@ namespace SkylineBatch
 
         public static ReportInfo ReadXmlVersion_20_2(XmlReader reader)
         {
-            var name = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Name);
-            var cultureSpecific = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.CultureSpecific);
-            var reportPath = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Path);
-            var resultsFile = reader.GetNullableBoolAttribute(XmlUpdater.OLD_XML_TAGS.UseRefineFile);
+            var name = reader.GetAttribute(OLD_XML_TAGS.Name);
+            var cultureSpecific = reader.GetBoolAttribute(OLD_XML_TAGS.CultureSpecific);
+            var reportPath = reader.GetAttribute(OLD_XML_TAGS.Path);
+            var resultsFile = reader.GetNullableBoolAttribute(OLD_XML_TAGS.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
