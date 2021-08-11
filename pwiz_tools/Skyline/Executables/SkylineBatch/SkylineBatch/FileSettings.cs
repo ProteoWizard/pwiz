@@ -95,12 +95,28 @@ namespace SkylineBatch
 
         public static FileSettings ReadXml(XmlReader reader)
         {
+            XmlUtil.ReadUntilElement(reader);
             var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.ms_one_resolving_power));
             var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.ms_ms_resolving_power));
             var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.retention_time));
             var addDecoys = reader.GetBoolAttribute(XML_TAGS.add_decoys);
             var shuffleDecoys = reader.GetBoolAttribute(XML_TAGS.shuffle_decoys);
             var trainMProphet = reader.GetBoolAttribute(XML_TAGS.train_m_prophet);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
+        }
+
+        public static FileSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!XmlUtil.ReadNextElement(reader, "file_settings"))
+                return new FileSettings(null, null, null, false, false, false);
+            
+            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.MsOneResolvingPower));
+            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.MsMsResolvingPower));
+            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.RetentionTime));
+            var addDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.AddDecoys);
+            var shuffleDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.ShuffleDecoys);
+            var trainMProphet = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.TrainMProphet);
+
             return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }
 

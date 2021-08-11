@@ -85,16 +85,33 @@ namespace SharedBatch
         {
             type,
             path,
+
+            // old xml tags
+            Type,
+            CmdPath,
         }
 
         public static SkylineSettings ReadXml(XmlReader reader)
         {
+            XmlUtil.ReadUntilElement(reader);
             // always use local Skyline if it exists
             if (SkylineInstallations.HasLocalSkylineCmd)
                 return new SkylineSettings(SkylineType.Local);
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.path));
             return new SkylineSettings((SkylineType)type, cmdPath);
+        }
+
+        public static SkylineSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!XmlUtil.ReadNextElement(reader, "config_skyline_settings"))
+                throw new Exception("The bcfg file is from an earlier version of Skyline Batch and could not be loaded.");
+            var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
+            var cmdPath = reader.GetAttribute(Attr.CmdPath);
+            reader.Read();
+            if (type == SkylineType.Custom)
+                return new SkylineSettings(type, cmdPath);
+            return new SkylineSettings(type, null);
         }
 
         public void WriteXml(XmlWriter writer)

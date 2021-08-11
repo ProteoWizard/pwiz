@@ -148,6 +148,7 @@ namespace SkylineBatch
 
         public static ReportSettings ReadXml(XmlReader reader)
         {
+            XmlUtil.ReadUntilElement(reader);
             var reports = new List<ReportInfo>();
             if (reader.ReadToDescendant(XMLElements.REPORT_INFO))
             {
@@ -156,6 +157,28 @@ namespace SkylineBatch
                     var report = ReportInfo.ReadXml(reader);
                     reports.Add(report);
                 } while (reader.ReadToNextSibling(XMLElements.REPORT_INFO));
+            }
+            return new ReportSettings(reports);
+        }
+
+        public static ReportSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var reports = new List<ReportInfo>();
+            if (XmlUtil.ReadNextElement(reader, "report_settings"))
+            {
+                while (reader.IsStartElement())
+                {
+                    if (XmlUtil.ReadNextElement(reader, "report_info"))
+                    {
+                        reports.Add(ReportInfo.ReadXmlVersion_20_2(reader));
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                    reader.Read();
+                }
             }
             return new ReportSettings(reports);
         }
@@ -421,6 +444,30 @@ namespace SkylineBatch
             }
             
             return new ReportInfo(name, cultureSpecific, reportPath, rScripts, rScriptServers, resultsFile?? false);
+        }
+
+        public static ReportInfo ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var name = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Name);
+            var cultureSpecific = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.CultureSpecific);
+            var reportPath = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.Path);
+            var resultsFile = reader.GetNullableBoolAttribute(XmlUpdater.OLD_XML_TAGS.UseRefineFile);
+            var rScripts = new List<Tuple<string, string>>();
+            while (reader.IsStartElement() && !reader.IsEmptyElement)
+            {
+                if (reader.Name == "script_path")
+                {
+                    var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' },
+                        StringSplitOptions.RemoveEmptyEntries);
+                    rScripts.Add(new Tuple<string, string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
+                }
+                else
+                {
+                    reader.Read();
+                }
+            }
+
+            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, new Dictionary<string, PanoramaFile>(), resultsFile ?? false);
         }
 
         public void WriteXml(XmlWriter writer)

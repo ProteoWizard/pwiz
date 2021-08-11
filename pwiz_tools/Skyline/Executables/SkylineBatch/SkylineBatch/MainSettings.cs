@@ -277,6 +277,40 @@ namespace SkylineBatch
                 annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
+        public static MainSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var mainSettingsReader = reader.ReadSubtree();
+            mainSettingsReader.Read();
+            var templateFilePath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.TemplateFilePath);
+            string zippedFilePath = null;
+            var dependentConfigName = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.DependentConfigName);
+            PanoramaFile templatePanoramaFile = null;
+            var analysisFolderPath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.AnalysisFolderPath);
+            var dataFolderPath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.DataFolderPath);
+            var annotationsFilePath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.AnnotationsFilePath);
+            var replicateNamingPattern = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ReplicateNamingPattern);
+
+            var server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+            //ReadDataServerXmlFields(mainSettingsReader, out Server dataServer, out string dataNamingPattern);
+
+            if (templateFilePath == null)
+            {
+                XmlUtil.ReadNextElement(mainSettingsReader, "template_file");
+                templateFilePath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.FilePath);
+                zippedFilePath = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ZipFilePath);
+                dependentConfigName = mainSettingsReader.GetAttribute(XmlUpdater.OLD_XML_TAGS.DependentConfigName);
+                templatePanoramaFile = PanoramaFile.ReadXmlVersion_20_2(mainSettingsReader); //ReadOldPanoramaFile(mainSettingsReader);
+            }
+            if (XmlUtil.ReadNextElement(mainSettingsReader, "data_server"))
+            {
+                server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+                //ReadDataServerXmlFields(mainSettingsReader, out dataServer, out dataNamingPattern);
+            }
+            var template = new SkylineTemplate(templateFilePath, zippedFilePath, dependentConfigName, templatePanoramaFile);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
+                annotationsFilePath, null, replicateNamingPattern);
+        }
+
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement(XMLElements.MAIN_SETTINGS);

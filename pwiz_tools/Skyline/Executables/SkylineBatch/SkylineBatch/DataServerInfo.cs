@@ -81,6 +81,20 @@ namespace SkylineBatch
             return new DataServerInfo(server.URI, server.Username, server.Password, server.Encrypt, dataNamingPattern, folder);
         }
 
+        public static DataServerInfo ReadXmlVersion_20_2(XmlReader reader, string folder)
+        {
+            var serverName = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ServerUrl);
+            var uriString = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ServerUri);
+            if (string.IsNullOrEmpty(serverName) && string.IsNullOrEmpty(uriString))
+                return null;
+            var serverFolder = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ServerFolder);
+            var uri = !string.IsNullOrEmpty(uriString) ? new Uri(uriString) : new Uri($@"ftp://{serverName}/{serverFolder}");
+            var username = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ServerUserName);
+            var password = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.ServerPassword);
+            var dataNamingPattern = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.DataNamingPattern);
+            return new DataServerInfo(uri, username, password, false, dataNamingPattern, folder);
+        }
+
         /*protected bool Equals(DataServerInfo other)
         {
             return string.Equals(Username, other.Username) &&

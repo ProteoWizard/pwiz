@@ -841,4 +841,7 @@
   <data name="AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_" xml:space="preserve">
     <value>The server cannot be empty. Please enter the server information.</value>
   </data>
+  <data name="XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_" xml:space="preserve">
+    <value>The version of the imported file {0} was not recognized. No configurations will be imported.</value>
+  </data>
 </root>

@@ -2312,5 +2312,15 @@ namespace SkylineBatch.Properties {
                 return ResourceManager.GetString("WebDownloadClient_DownloadAsync_Operation_timed_out_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of the imported file {0} was not recognized. No configurations will be imported..
+        /// </summary>
+        public static string XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_ {
+            get {
+                return ResourceManager.GetString("XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized_" +
+                        "_No_configurations_will_be_imported_", resourceCulture);
+            }
+        }
     }
 }

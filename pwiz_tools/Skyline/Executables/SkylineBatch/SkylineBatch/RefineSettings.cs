@@ -134,6 +134,7 @@ namespace SkylineBatch
 
         public static RefineSettings ReadXml(XmlReader reader)
         {
+            XmlUtil.ReadUntilElement(reader);
             var removeDecoys = reader.GetBoolAttribute(XML_TAGS.remove_decoys);
             var removeResults = reader.GetBoolAttribute(XML_TAGS.remove_results);
             var outputFilePath = reader.GetAttribute(XML_TAGS.output_file_path);
@@ -147,6 +148,36 @@ namespace SkylineBatch
                     var value = reader.GetAttribute(XML_TAGS.value);
                     commandList.Add(new Tuple<RefineVariable, string>(variable, value));
                 } while (reader.ReadToNextSibling(XMLElements.COMMAND_ARGUMENT));
+            }
+            var commandValues = RefineInputObject.FromInvariantCommandList(commandList);
+            return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
+        }
+
+        public static RefineSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!XmlUtil.ReadNextElement(reader, "refine_settings"))
+            {
+                // This is a very old configuration with no refine settings
+                return new RefineSettings(new RefineInputObject(), false, false,
+                    string.Empty);
+            }
+            var removeDecoys = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.RemoveDecoys);
+            var removeResults = reader.GetBoolAttribute(XmlUpdater.OLD_XML_TAGS.RemoveResults);
+            var outputFilePath = reader.GetAttribute(XmlUpdater.OLD_XML_TAGS.OutputFilePath);
+            var commandList = new List<Tuple<RefineVariable, string>>();
+            while (reader.IsStartElement() && !reader.IsEmptyElement)
+            {
+                if (reader.Name == "command_value")
+                {
+                    var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                    var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), tupleItems[0].Trim());
+                    var value = tupleItems[1].Trim();
+                    commandList.Add(new Tuple<RefineVariable, string>(variable, value));
+                }
+                else
+                {
+                    reader.Read();
+                }
             }
             var commandValues = RefineInputObject.FromInvariantCommandList(commandList);
             return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
