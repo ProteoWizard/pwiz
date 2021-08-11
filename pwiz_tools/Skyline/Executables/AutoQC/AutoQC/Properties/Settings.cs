@@ -79,7 +79,7 @@ namespace AutoQC.Properties
                 if (savedVersion == null || savedVersion.Major < 21)
                 {
                     SharedBatch.Properties.Settings.Default.Update(possibleOldConfigFile, Default.XmlVersion,
-                        Program.AppName, XmlUpdater.GetUpdatedXml);
+                        Program.AppName);
                 }
 
                 if (migrate)

@@ -25,9 +25,11 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    [XmlRoot("file_settings")]
+    [XmlRoot("import_settings")]
     public class FileSettings
     {
+        public const string XML_EL = "import_settings";
+        public const string OLD_XML_EL = "file_settings";
 
         // IMMUTABLE - all fields are readonly literals
         // Describes file modifications user would like to do on the .sky file in the analysis folder
@@ -107,7 +109,7 @@ namespace SkylineBatch
 
         public static FileSettings ReadXmlVersion_20_2(XmlReader reader)
         {
-            if (!XmlUtil.ReadNextElement(reader, "file_settings"))
+            if (!XmlUtil.ReadNextElement(reader, OLD_XML_EL))
                 return new FileSettings(null, null, null, false, false, false);
             
             var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.MsOneResolvingPower));
@@ -122,7 +124,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.FILE_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(XML_TAGS.ms_one_resolving_power,
                 TextUtil.ToInvariantCultureString(MsOneResolvingPower));
             writer.WriteAttributeIfString(XML_TAGS.ms_ms_resolving_power, 

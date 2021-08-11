@@ -31,6 +31,8 @@ namespace SkylineBatch
 {
     public class ReportSettings
     {
+        public const string XML_EL = "report_settings";
+
         // IMMUTABLE
         // ReportSettings contains a list of reportInfos, each of which represents an individual report with R scripts to run on it.
         // An empty reportSettings is a valid instance of this class, as configurations don't require reports to run the batch commands.
@@ -148,15 +150,17 @@ namespace SkylineBatch
 
         public static ReportSettings ReadXml(XmlReader reader)
         {
-            XmlUtil.ReadUntilElement(reader);
             var reports = new List<ReportInfo>();
-            if (reader.ReadToDescendant(XMLElements.REPORT_INFO))
+            while (reader.Read())
             {
-                do
+                if (reader.IsElement(ReportInfo.XML_EL))
                 {
-                    var report = ReportInfo.ReadXml(reader);
-                    reports.Add(report);
-                } while (reader.ReadToNextSibling(XMLElements.REPORT_INFO));
+                    reports.Add(ReportInfo.ReadXml(reader));
+                }
+                if (reader.IsElement(SkylineSettings.XML_EL))
+                {
+                    break;
+                }
             }
             return new ReportSettings(reports);
         }
@@ -164,28 +168,23 @@ namespace SkylineBatch
         public static ReportSettings ReadXmlVersion_20_2(XmlReader reader)
         {
             var reports = new List<ReportInfo>();
-            if (XmlUtil.ReadNextElement(reader, "report_settings"))
+            while (reader.Read())
             {
-                while (reader.IsStartElement())
+                if (reader.IsElement(ReportInfo.XML_EL))
                 {
-                    if (XmlUtil.ReadNextElement(reader, "report_info"))
-                    {
-                        reports.Add(ReportInfo.ReadXmlVersion_20_2(reader));
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                    reader.Read();
+                    reports.Add(ReportInfo.ReadXmlVersion_20_2(reader));
                 }
+                if (reader.IsElement(SkylineSettings.XML_EL))
+                {
+                    break;
+                } 
             }
             return new ReportSettings(reports);
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.REPORT_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             foreach (var report in Reports)
             {
                 report.WriteXml(writer);
@@ -252,6 +251,8 @@ namespace SkylineBatch
 
     public class ReportInfo
     {
+        public const string XML_EL = "report_info";
+
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
@@ -455,7 +456,7 @@ namespace SkylineBatch
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
-                if (reader.Name == "script_path")
+                if (Equals(reader.Name, OLD_XML_TAGS.script_path.ToString()))
                 {
                     var tupleItems = reader.ReadElementContentAsString().Split(new[] { '(', ',', ')' },
                         StringSplitOptions.RemoveEmptyEntries);
@@ -472,7 +473,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.REPORT_INFO);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(XML_TAGS.name, Name);
             writer.WriteAttributeIfString(XML_TAGS.path, ReportPath);
             writer.WriteAttribute(XML_TAGS.use_refined_file, UseRefineFile);

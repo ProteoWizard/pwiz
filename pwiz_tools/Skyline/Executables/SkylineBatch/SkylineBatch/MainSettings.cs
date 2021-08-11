@@ -28,9 +28,11 @@ using File = System.IO.File;
 
 namespace SkylineBatch
 {
-    [XmlRoot("main_settings")]
+    [XmlRoot("file_settings")]
     public class MainSettings
     {
+        public const string XML_EL = "file_settings";
+        public const string OLD_XML_EL = "main_settings";
 
         // IMMUTABLE - all fields are readonly strings/objects
 
@@ -313,7 +315,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.MAIN_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(XML_TAGS.analysis_folder_path, AnalysisFolderPath);
             writer.WriteAttributeIfString(XML_TAGS.replicate_naming_pattern, ReplicateNamingPattern);
             Template.WriteXml(writer);

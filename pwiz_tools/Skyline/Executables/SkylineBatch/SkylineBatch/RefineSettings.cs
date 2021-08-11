@@ -31,6 +31,7 @@ namespace SkylineBatch
     [XmlRoot("refine_settings")]
     public class RefineSettings
     {
+        public const string XML_EL = "refine_settings";
 
         // IMMUTABLE - all fields are readonly literals or in an immutable list
         // Holds information for refining the skyline file after data import
@@ -185,7 +186,7 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.REFINE_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttribute(XML_TAGS.remove_decoys, RemoveDecoys);
             writer.WriteAttribute(XML_TAGS.remove_results, RemoveResults);
             writer.WriteAttributeIfString(XML_TAGS.output_file_path, OutputFilePath);
