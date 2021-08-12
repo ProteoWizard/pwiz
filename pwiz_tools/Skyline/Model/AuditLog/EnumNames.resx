@@ -615,4 +615,10 @@
   <data name="Protocol_none" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
 </root>

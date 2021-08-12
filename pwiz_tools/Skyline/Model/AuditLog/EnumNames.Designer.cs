@@ -367,6 +367,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PRM.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_PRM {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_PRM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SureQuant.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_SureQuant {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_SureQuant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Targeted.
         /// </summary>
         public static string FullScanAcquisitionMethod_Targeted {
