@@ -57,6 +57,7 @@
             this.btnRunOptions = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.buttonUndo = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
@@ -69,6 +70,7 @@
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
+            this.buttonRedo = new System.Windows.Forms.Button();
             this.tabLog.SuspendLayout();
             this.tabConfigs.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -268,6 +270,8 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.buttonRedo);
+            this.panel1.Controls.Add(this.buttonUndo);
             this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
@@ -276,6 +280,13 @@
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Name = "panel1";
+            // 
+            // buttonUndo
+            // 
+            resources.ApplyResources(this.buttonUndo, "buttonUndo");
+            this.buttonUndo.Name = "buttonUndo";
+            this.buttonUndo.UseVisualStyleBackColor = true;
+            this.buttonUndo.Click += new System.EventHandler(this.buttonUndo_Click);
             // 
             // button1
             // 
@@ -375,6 +386,13 @@
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
+            // buttonRedo
+            // 
+            resources.ApplyResources(this.buttonRedo, "buttonRedo");
+            this.buttonRedo.Name = "buttonRedo";
+            this.buttonRedo.UseVisualStyleBackColor = true;
+            this.buttonRedo.Click += new System.EventHandler(this.buttonRedo_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -438,5 +456,7 @@
         private System.Windows.Forms.ColumnHeader columnStartTime;
         private System.Windows.Forms.ColumnHeader columnRunTime;
         private System.Windows.Forms.Button btnLogStop;
+        private System.Windows.Forms.Button buttonUndo;
+        private System.Windows.Forms.Button buttonRedo;
     }
 }

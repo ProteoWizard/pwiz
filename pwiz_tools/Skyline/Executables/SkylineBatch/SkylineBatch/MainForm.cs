@@ -801,6 +801,16 @@ namespace SkylineBatch
         
 
         #endregion
+
+        private void buttonUndo_Click(object sender, EventArgs e)
+        {
+            _configManager.Undo();
+        }
+
+        private void buttonRedo_Click(object sender, EventArgs e)
+        {
+            _configManager.Redo();
+        }
     }
 
     // ListView that prevents a double click from toggling checkbox
