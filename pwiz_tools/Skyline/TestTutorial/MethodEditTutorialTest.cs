@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestTutorial
             // Peptide Sequence Auto-Completion, p. 21
             TestAutoComplete("IQGP", 0); // Not L10N
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
-            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [769, 784]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
+            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
             PauseForScreenShot("(fig. 1) - For screenshot, click at the bottom of the document tree", 21); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
