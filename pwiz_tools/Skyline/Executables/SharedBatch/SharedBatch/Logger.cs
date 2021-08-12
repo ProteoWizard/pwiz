@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +31,7 @@ using SharedBatch.Properties;
     public class Logger
     {
         private const string DATE_PATTERN = "^\\[.*\\]\x20*";
+        private const string MEMSTAMP_PATTERN = "^[0-9]+\t[0-9]+\t";
 
 
         private readonly string _filePath;
@@ -58,17 +60,15 @@ using SharedBatch.Properties;
 
 
 
-        public Logger(string logFilePath, string logName)
+        public Logger(string logFilePath, string logName, bool initialize)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-            Directory.CreateDirectory(logFolder);
-
             InitializeErrorFormats();
 
             _filePath = logFilePath;
             _uiBuffer = new List<string>();
             Name = logName;
-            Init();
+            if (initialize)
+                Init();
         }
 
         public string Name;
@@ -79,9 +79,13 @@ using SharedBatch.Properties;
 
         public string LogFile => _filePath;
 
+        public string LogDirectory => Path.GetDirectoryName(_filePath);
+
         public string LogFileName => Path.GetFileName(_filePath);
 
         public bool WillTruncate => _lines > MaxLogLines;
+
+        public bool LogTestFormat = false;
 
         private static void InitializeErrorFormats()
         {
@@ -105,6 +109,7 @@ using SharedBatch.Properties;
 
         public void Init()
         {
+            Directory.CreateDirectory(FileUtil.GetDirectorySafe(_filePath));
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
 
@@ -137,11 +142,18 @@ using SharedBatch.Properties;
 
         public void Log(params string[] text)
         {
+            var memstampRegex = new Regex(MEMSTAMP_PATTERN);
             var messageNoTimestamp = TextUtil.LineSeparate(text);
             if (text.Length > 0 && !messageNoTimestamp.Equals(_lastLogMessage))
             {
                 _lastLogMessage = messageNoTimestamp;
-                text[0] = GetDate() + text[0];
+                if (!LogTestFormat || memstampRegex.IsMatch(text[0]))
+                    text[0] = GetDate() + text[0];
+                else
+                {
+                    // Add memstamp with zeros
+                    text[0] = GetDate() + "0\t0\t" + text[0];
+                }
                 LogVerbatim(text);
             }
         }
@@ -156,44 +168,58 @@ using SharedBatch.Properties;
         private int LastPercent;
         private DateTime LastLogTime;
         private const int MIN_SECONDS_BETWEEN_LOGS = 4;
+        private object _percentLock = new object();
 
 
         public void LogPercent(int percent)
         {
-            if (percent < 0)
+            lock (_percentLock)
             {
-                LastPercent = percent;
-            }
-            if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
-                percent != LastPercent)
-            {
-                if (percent == 0 && LastPercent < 0)
+                if (percent < 0 || percent < LastPercent || percent == 100)
+                    return;
+                if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                    percent != LastPercent)
                 {
-                    LastLogTime = DateTime.Now;
-                    LastPercent = 0;
-                }
-                else if (percent == 100)
-                {
-                    if (LastPercent != 0) Log(string.Format(Resources.Logger_LogPercent__0__, percent));
-                    LastPercent = -1;
-                }
-                else
-                {
-                    LastPercent = percent;
+                    // do not log 0%, gives fast operations a chance to skip percent logging
+                    if (percent == 0)
+                    {
+                        if (LastPercent == -2)
+                        {
+                            LastPercent = -1;
+                            LastLogTime = DateTime.Now;
+                        }
+
+                        return;
+                    }
+
                     LastLogTime = DateTime.Now;
                     Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = Math.Max(LastPercent, percent);
                 }
-
             }
         }
 
-        private static string GetDate()
+        public void StopLogPercent(bool completed)
         {
+            lock (_percentLock)
+            {
+                if (completed && LastPercent >= 0)
+                    Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+                LastPercent = -2;
+                LastLogTime = DateTime.MinValue;
+            }
+        }
+
+        private string GetDate()
+        {
+            if (LogTestFormat)
+                return "[" + DateTime.Now.ToString("G", CultureInfo.InvariantCulture) + "]\t";
             return "[" + DateTime.Now.ToString("G") + "]    ";
         }
 
         public void DisplayLogFromFile()
         {
+            if (!File.Exists(_filePath)) return;
             var startBlockRegex = new Regex(DATE_PATTERN);
             lock (_uiBufferLock)
             {
@@ -277,7 +303,7 @@ using SharedBatch.Properties;
                     File.Delete(_filePath);
                     Init();
                     var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
-                    return new Logger(newFilePath, timestampFileName);
+                    return new Logger(newFilePath, timestampFileName, true);
                 }
 
                 return null;
@@ -399,7 +425,12 @@ using SharedBatch.Properties;
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
+                Close();  // First close the open file handle
                 BackupLog(_filePath, 1);
+                using (File.Create(_filePath))
+                {
+                }
+                _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
             }
         }
 

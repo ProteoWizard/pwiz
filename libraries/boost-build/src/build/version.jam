@@ -6,8 +6,9 @@
 import numbers ;
 
 
+# Mirror engine JAM_VERSION
 .major = "4" ;
-.minor = "0" ;
+.minor = "4" ;
 
 
 rule boost-build ( )
@@ -20,7 +21,7 @@ rule print ( )
 {
     if [ verify-engine-version ]
     {
-        ECHO "Boost.Build" [ boost-build ] ;
+        ECHO "B2" [ boost-build ] ;
     }
 }
 
@@ -36,9 +37,9 @@ rule verify-engine-version ( )
         local l = [ modules.binding version ] ;
         l = $(l:D) ;
         l = $(l:D) ;
-        ECHO "warning: mismatched versions of Boost.Build engine and core" ;
-        ECHO "warning: Boost.Build engine ($(e)) is $(v:J=.)" ;
-        ECHO "warning: Boost.Build core (at $(l)) is" [ boost-build ] ;
+        ECHO "warning: mismatched versions of B2 engine and core" ;
+        ECHO "warning: B2 engine ($(e)) is $(v:J=.)" ;
+        ECHO "warning: B2 core (at $(l)) is" [ boost-build ] ;
     }
     else
     {

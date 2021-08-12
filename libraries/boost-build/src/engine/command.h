@@ -43,7 +43,7 @@
 #include "config.h"
 #include "lists.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 
 typedef struct _cmd CMD;

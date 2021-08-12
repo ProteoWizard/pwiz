@@ -363,11 +363,10 @@ namespace pwiz.Skyline.EditUI
                             var peptideGroup = (PeptideGroup) tuple.Item1.GetIdentity(0);
                             var peptideDocNode = tuple.Item2;
                             HashSet<Protein> proteins = new HashSet<Protein>();
-                            var peptideGroupDocNode = PeptideGroupDocNodes.First(g => ReferenceEquals(g.PeptideGroup, peptideGroup));
-                            List<Protein> proteinsForSequence;
-                            if (sequenceProteinsDict.TryGetValue(peptideDocNode.Peptide.Target.Sequence, out proteinsForSequence))
+                            var peptideGroupDocNode = PeptideGroupDocNodes.FirstOrDefault(g => ReferenceEquals(g.PeptideGroup, peptideGroup));
+                            if (peptideGroupDocNode != null)
                             {
-                                if (peptideGroupDocNode != null)
+                                if (sequenceProteinsDict.TryGetValue(peptideDocNode.Peptide.Target.Sequence, out var proteinsForSequence))
                                 {
                                     foreach (var protein in proteinsForSequence)
                                     {

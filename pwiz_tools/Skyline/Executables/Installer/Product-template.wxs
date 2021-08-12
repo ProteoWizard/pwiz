@@ -480,6 +480,9 @@
       <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_AbSciex_TOF_BuildAnalystMethod.dll">
         <File Source="$(var.Skyline.TargetDir)/Method/AbSciex/TOF/BuildAnalystMethod.dll" Id="Method_AbSciex_TOF_BuildAnalystMethod.dll_file" KeyPath="yes"/>
       </Component>
@@ -527,6 +530,9 @@
       <Component Id="Method_AbSciex_TQ_BuildQTRAPMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\BuildQTRAPMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_AbSciex_TQ_BuildQTRAPMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\BuildQTRAPMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_AbSciex_TQ_Interop.AcqMethodDir.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.AcqMethodDir.dll" KeyPath="yes"/>
       </Component>
@@ -571,6 +577,9 @@
       <Component Id="Method_Agilent_BuildAgilentMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_Agilent_BuildAgilentMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_Agilent_MethodCreator.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MethodCreator.dll" KeyPath="yes"/>
       </Component>
@@ -584,6 +593,9 @@
       </Component>
       <Component Id="Method_Bruker_BuildBrukerMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Bruker_BuildBrukerMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe.config" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Thermo_files" Directory="Method_Thermo_directory">
@@ -620,6 +632,9 @@
       </Component>
       <Component Id="percolator_xerces_c_3_1.dll">
         <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_msvcr90.dll">
+        <File Id="percolator_msvcr90.dll" Source="$(var.Skyline.TargetDir)/percolator/msvcr90.dll" KeyPath="yes" />
       </Component>
       <Component Id="percolator_vcomp140.dll">
         <File Id="percolator_vcomp140.dll" Source="$(var.Skyline.TargetDir)/vcomp140.dll" KeyPath="yes" />

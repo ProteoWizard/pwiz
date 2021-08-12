@@ -46,7 +46,7 @@ namespace SkylineBatch
             var localFolder = Path.Combine(Path.GetDirectoryName(roamingFolder) ?? throw new InvalidOperationException(), "local");
             var logPath= Path.Combine(localFolder, Program.AppName(), Program.AppName() + TextUtil.EXT_LOG);
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
-            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG);
+            _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
@@ -157,6 +157,8 @@ namespace SkylineBatch
 
         public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
         {
+            if (listViewConfigs.Items.Count < 2)
+                return null;
             try
             {
                 skylineSettings.Validate();
@@ -526,8 +528,13 @@ namespace SkylineBatch
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, TextUtil.FILTER_BCFG, Program.Icon());
-            shareForm.ShowDialog();
+            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            if (shareForm.ShowDialog(this) != DialogResult.OK)
+                return;
+            var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
         }
         
         #endregion
@@ -615,6 +622,12 @@ namespace SkylineBatch
 
             _scrolling = _configManager.SelectedLog == 0;
             _outputLog.Tick += OutputLog;
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            // force the log to be redrawn
+            textBoxLog.Invalidate();
         }
 
         private void tabLog_Leave(object sender, EventArgs e)
@@ -775,6 +788,8 @@ namespace SkylineBatch
 
         public void ClickRun(int option = 0)
         {
+            if (_configManager.ConfigRunning() || !btnRunBatch.Enabled)
+                throw new Exception("Configurations are still running");
             CheckDropDownOption(option);
             RunBatch();
         }

@@ -141,6 +141,9 @@
   <data name="eIonMobilityUnits_unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="eIonMobilityUnits_waters_sonar" xml:space="preserve">
+    <value>Waters SONAR</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>

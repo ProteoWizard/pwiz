@@ -340,6 +340,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waters SONAR.
+        /// </summary>
+        public static string eIonMobilityUnits_waters_sonar {
+            get {
+                return ResourceManager.GetString("eIonMobilityUnits_waters_sonar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DDA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DDA {

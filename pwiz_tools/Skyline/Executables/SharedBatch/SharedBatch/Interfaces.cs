@@ -28,6 +28,8 @@ namespace SharedBatch
         //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        IConfig ForcePathReplace(string oldRoot, string newRoot);
+
         // Returns a copy of the configuration with the new Skyline settings
         IConfig ReplaceSkylineVersion(SkylineSettings skylineSettings);
 
@@ -51,7 +53,8 @@ namespace SharedBatch
         Stopped,
         Completed,
         Disconnected,
-        Error
+        Error,
+        Loading
     }
 
     public interface IConfigRunner
