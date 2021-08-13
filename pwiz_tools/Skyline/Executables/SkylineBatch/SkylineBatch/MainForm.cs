@@ -241,6 +241,8 @@ namespace SkylineBatch
             btnOpenTemplate.Enabled = configSelected;
             btnOpenResults.Enabled = configSelected;
             btnExportConfigs.Enabled = _loaded ? _configManager.HasConfigs() : false;
+            btnUndo.Enabled = _configManager.CanUndo();
+            btnRedo.Enabled = _configManager.CanRedo();
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
@@ -813,6 +815,16 @@ namespace SkylineBatch
             {
                 _configManager.Redo();
             }
+        }
+
+        private void btnUndo_Click(object sender, EventArgs e)
+        {
+            _configManager.Undo();
+        }
+
+        private void btnRedo_Click(object sender, EventArgs e)
+        {
+            _configManager.Redo();
         }
     }
 
