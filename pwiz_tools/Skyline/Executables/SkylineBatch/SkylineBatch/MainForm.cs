@@ -48,6 +48,7 @@ namespace SkylineBatch
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            toolStrip1.Items.Insert(7, new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
