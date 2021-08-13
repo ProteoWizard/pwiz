@@ -41,7 +41,7 @@ using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScaleCopyable
+    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScalePlot
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
@@ -946,6 +946,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return SpectrumControlType.FullScanViewer; }
         }
 
+        public bool IsAnnotated => _showIonSeriesAnnotations;
 
         private void ZoomYAxis()
         {

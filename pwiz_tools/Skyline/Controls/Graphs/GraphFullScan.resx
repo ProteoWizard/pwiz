@@ -352,7 +352,7 @@
     <value>toolStripButton1</value>
   </data>
   <data name="toolStripButtonShowAnnotations.ToolTipText" xml:space="preserve">
-    <value>Show ion rank and type.</value>
+    <value>Show Peak Annotations.</value>
   </data>
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>251, 17</value>
@@ -367,7 +367,7 @@
     <value>191, 22</value>
   </data>
   <data name="showIonTypesRanksToolStripMenuItem.Text" xml:space="preserve">
-    <value>Show Ion Types/Ranks</value>
+    <value>Show Peak Annotations</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>192, 48</value>

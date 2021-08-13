@@ -908,7 +908,7 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
 
-        public void SynchMzScaleToolStripMenuItemClick(IMzScaleCopyable source = null)
+        public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
             if(ListMzScaleCopyables().Count() < 2)
                 return;
@@ -918,7 +918,7 @@ namespace pwiz.Skyline
 
             if (source == null)
             {
-                source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScaleCopyable;
+                source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
                 if (source == null)
                     return;
             }
@@ -935,7 +935,7 @@ namespace pwiz.Skyline
         }
 
         //Testing support
-        public void SynchMzScale(IMzScaleCopyable source)
+        public void SynchMzScale(IMzScalePlot source)
         {
             synchMzScaleToolStripMenuItem.Checked = true;
             SynchMzScaleToolStripMenuItemClick(source);
@@ -1018,58 +1018,64 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
+            var control = menuStrip.SourceControl.Parent.Parent as IMzScalePlot;
             int iInsert = 0;
-            if (isProteomic)
+            if (control?.IsAnnotated ?? false)
             {
-                aionsContextMenuItem.Checked = set.ShowAIons;
-                menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-                bionsContextMenuItem.Checked = set.ShowBIons;
-                menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-                cionsContextMenuItem.Checked = set.ShowCIons;
-                menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-                xionsContextMenuItem.Checked = set.ShowXIons;
-                menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-                yionsContextMenuItem.Checked = set.ShowYIons;
-                menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-                zionsContextMenuItem.Checked = set.ShowZIons;
-                menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
-            }
-            else
-            {
-                fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
-                menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
-            }
+                if (isProteomic)
+                {
+                    aionsContextMenuItem.Checked = set.ShowAIons;
+                    menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
+                    bionsContextMenuItem.Checked = set.ShowBIons;
+                    menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
+                    cionsContextMenuItem.Checked = set.ShowCIons;
+                    menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
+                    xionsContextMenuItem.Checked = set.ShowXIons;
+                    menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
+                    yionsContextMenuItem.Checked = set.ShowYIons;
+                    menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
+                    zionsContextMenuItem.Checked = set.ShowZIons;
+                    menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+                }
+                else
+                {
+                    fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+                    menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
+                }
 
-            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
-            menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-            menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-            if (chargesContextMenuItem.DropDownItems.Count == 0)
-            {
-                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+                menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
+                menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
+                if (chargesContextMenuItem.DropDownItems.Count == 0)
+                {
+                    chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         charge1ContextMenuItem,
                         charge2ContextMenuItem,
                         charge3ContextMenuItem,
                         charge4ContextMenuItem,
                     });
+                }
+
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+                ranksContextMenuItem.Checked = set.ShowRanks;
+                menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+                if (control?.ControlType == SpectrumControlType.LibraryMatch)
+                {
+                    scoreContextMenuItem.Checked = set.ShowLibraryScores;
+                    menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+                }
+
+                ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
+                menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
+                observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
+                menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+                duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
+                menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             }
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
-            ranksContextMenuItem.Checked = set.ShowRanks;
-            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            var control = menuStrip.SourceControl.Parent.Parent as IMzScaleCopyable;
-            if (control?.ControlType == SpectrumControlType.LibraryMatch)
-            {
-                scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
-            }
-            ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
-            menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
-            observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
-            menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
-            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
-            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
+
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
@@ -1389,7 +1395,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private IEnumerable<IMzScaleCopyable> ListMzScaleCopyables()
+        private IEnumerable<IMzScalePlot> ListMzScaleCopyables()
         {
             if (_graphFullScan != null && _graphFullScan.Visible)
             {
