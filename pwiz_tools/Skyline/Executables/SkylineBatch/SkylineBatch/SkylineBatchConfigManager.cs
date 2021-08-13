@@ -1058,7 +1058,6 @@ namespace SkylineBatch
 
         public void Undo()
         {
-            MessageBox.Show($"Undo: Curr index = {currentIndex}, list length = {stateList.Count}");
             if (!(currentIndex <= 0))
             {
                 currentIndex--;
@@ -1072,12 +1071,10 @@ namespace SkylineBatch
                     DeselectConfig();
                 }
             }
-            MessageBox.Show($"Undo: Curr index = {currentIndex}, list length = {stateList.Count}");
         }
 
         public void Redo()
         {
-            MessageBox.Show($"Redo: Curr index = {currentIndex}, list length = {stateList.Count}");
             if (!(currentIndex >= stateList.Count - 1))
             {
                 currentIndex++;
@@ -1091,7 +1088,6 @@ namespace SkylineBatch
                     DeselectConfig();
                 }
             }
-            MessageBox.Show($"Redo: Curr index = {currentIndex}, list length = {stateList.Count}");
         }
 
         class SkylineBatchConfigManagerState

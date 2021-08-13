@@ -802,14 +802,17 @@ namespace SkylineBatch
 
         #endregion
 
-        private void buttonUndo_Click(object sender, EventArgs e)
+        private void tabMain_KeyDown(object sender, KeyEventArgs e)
         {
-            _configManager.Undo();
-        }
-
-        private void buttonRedo_Click(object sender, EventArgs e)
-        {
-            _configManager.Redo();
+            if (e.KeyCode == Keys.ControlKey && ModifierKeys == Keys.Control) { }
+            else if (e.KeyCode == Keys.Z && ModifierKeys == Keys.Control)
+            {
+                _configManager.Undo();
+            }
+            else if (e.KeyCode == Keys.Y && ModifierKeys == Keys.Control)
+            {
+                _configManager.Redo();
+            }
         }
     }
 

@@ -1109,54 +1109,6 @@
   <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="buttonRedo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 215</value>
-  </data>
-  <data name="buttonRedo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="buttonRedo.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="buttonRedo.Text" xml:space="preserve">
-    <value>Redo</value>
-  </data>
-  <data name="&gt;&gt;buttonRedo.Name" xml:space="preserve">
-    <value>buttonRedo</value>
-  </data>
-  <data name="&gt;&gt;buttonRedo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;buttonRedo.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;buttonRedo.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="buttonUndo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 186</value>
-  </data>
-  <data name="buttonUndo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="buttonUndo.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="buttonUndo.Text" xml:space="preserve">
-    <value>Undo</value>
-  </data>
-  <data name="&gt;&gt;buttonUndo.Name" xml:space="preserve">
-    <value>buttonUndo</value>
-  </data>
-  <data name="&gt;&gt;buttonUndo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;buttonUndo.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;buttonUndo.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="button1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
