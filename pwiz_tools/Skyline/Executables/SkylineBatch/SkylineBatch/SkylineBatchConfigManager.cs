@@ -1028,7 +1028,6 @@ namespace SkylineBatch
                 SetState(newState.baseState); // sets the base state in ConfigManager
                 _refinedTemplates = newState.templates;
                 _configRunners = newState.configRunners;
-                _uiControl?.UpdateUiConfigurations();
                 if (currentIndex != stateList.Count - 1)
                 {
                     stateList.RemoveRange(currentIndex + 1, stateList.Count - currentIndex - 1);
@@ -1036,6 +1035,7 @@ namespace SkylineBatch
                 stateList.Add(newState);
                 currentIndex++;
             }
+            _uiControl?.UpdateUiConfigurations();
         }
 
         private void SetStateUndoRedo(SkylineBatchConfigManagerState newState)
