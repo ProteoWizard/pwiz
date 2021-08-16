@@ -733,8 +733,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankTypes,
                 null);
 
-            var isHighRes = !Equals(settings.TransitionSettings.FullScan.ProductMassAnalyzer,
-                FullScanMassAnalyzerType.qit);
             return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {

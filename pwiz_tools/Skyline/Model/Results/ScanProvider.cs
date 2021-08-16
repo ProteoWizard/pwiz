@@ -43,8 +43,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool MatchMz(double mz)
         {
-            return mz > ProductMz.Value - ExtractionWidth / 2 &&
-                   mz <= ProductMz.Value + ExtractionWidth / 2;
+            return mz >= ProductMz.Value - ExtractionWidth / 2 &&
+                   mz < ProductMz.Value + ExtractionWidth / 2;
         }
     }
 
