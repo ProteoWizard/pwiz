@@ -477,13 +477,10 @@ namespace pwiz.Skyline.Model
             // Decide if the input is peptide or small molecule if we haven't already
             if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
-                // The document type is not set until information is entered. If the document type has not
-                // been set yet then rely on the setting in the UI
-                
+
                 InputType =
                     SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings, 
-                        Document.DocumentType == SrmDocument.DOCUMENT_TYPE.none // If the document type has not been set, look at the UI
-                        ? Program.ModeUI : Document.DocumentType) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+                       Program.ModeUI) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
             }
             if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {

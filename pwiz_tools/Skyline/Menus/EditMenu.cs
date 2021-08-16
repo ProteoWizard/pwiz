@@ -392,8 +392,7 @@ namespace pwiz.Skyline.Menus
             else
             {
                 var inputType =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, Document.DocumentType == SrmDocument.DOCUMENT_TYPE.none
-                        ? Program.ModeUI : Document.DocumentType) // If the document type has not been set, look at the UI
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, Program.ModeUI )
                         ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
 
                 // Perhaps it's a small molecule list with headers
