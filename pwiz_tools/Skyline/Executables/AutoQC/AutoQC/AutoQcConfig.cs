@@ -179,7 +179,7 @@ namespace AutoQC
             }
             
             // Old configurations did not have Skyline settings. Create default SkylineSettings.
-            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline);
+            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline, null);
 
             // finish reading config before exception is thrown so following configs aren't messed up
             if (exceptionMessage != null)
@@ -194,7 +194,7 @@ namespace AutoQC
         {
             var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Old_Attr.Type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Old_Attr.CmdPath));
-            return new SkylineSettings(type, cmdPath);
+            return new SkylineSettings(type, null, cmdPath);
         }
         // Attributes that were used in version 21.1.0.158 of AutoQC Loader
         private enum Old_Attr

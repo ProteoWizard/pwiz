@@ -170,7 +170,7 @@ namespace AutoQC.Properties
             {
                 var config = (AutoQcConfig)iconfig;
 
-                var skySettings = new SkylineSettings(type, skylineInstallDir);
+                var skySettings = new SkylineSettings(type, null, skylineInstallDir);
 
                 AutoQcConfig updatedConfig = new AutoQcConfig(config.Name, false,
                     config.Created, config.Modified,

@@ -913,6 +913,15 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to latest.
+        /// </summary>
+        public static string SkylineSettings_WriteXml_latest {
+            get {
+                return ResourceManager.GetString("SkylineSettings_WriteXml_latest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No existing Skyline type selected. Please select a Skyline installation that exists on this computer..
         /// </summary>
         public static string SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_ {

@@ -435,4 +435,7 @@ with:
   <data name="Settings_Update_There_was_an_error_reading_the_saved__0__configurations_" xml:space="preserve">
     <value>There was an error reading the saved {0} configurations:</value>
   </data>
+  <data name="SkylineSettings_WriteXml_latest" xml:space="preserve">
+    <value>latest</value>
+  </data>
 </root>

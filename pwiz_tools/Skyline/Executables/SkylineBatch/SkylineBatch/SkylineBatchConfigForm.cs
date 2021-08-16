@@ -499,7 +499,7 @@ namespace SkylineBatch
         private SkylineSettings GetSkylineSettingsFromUi()
         {
             if (SkylineInstallations.HasLocalSkylineCmd)
-                return new SkylineSettings(SkylineType.Local);
+                return new SkylineSettings(SkylineType.Local, null);
 
             return (SkylineSettings)SkylineTypeControl.GetVariable();
         }

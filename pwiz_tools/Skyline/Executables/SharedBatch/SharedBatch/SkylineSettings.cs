@@ -22,9 +22,11 @@ namespace SharedBatch
 
         private int[] _version;
 
+        private int[] _savedVersion;
+
         private List<string> _versionOutput;
 
-        public SkylineSettings(SkylineType type, string folderPath = "")
+        public SkylineSettings(SkylineType type, int[] savedVersion, string folderPath = "")
         {
             Type = type;
             _versionOutput = new List<string>();
@@ -33,6 +35,8 @@ namespace SharedBatch
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
             bool skylineDailyAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath);
             bool skylineDailyWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
+
+            _savedVersion = savedVersion;
 
             switch (type)
             {
@@ -84,6 +88,7 @@ namespace SharedBatch
         private enum Attr
         {
             type,
+            version,
             path,
 
             // old xml tags
@@ -93,21 +98,25 @@ namespace SharedBatch
 
         public static SkylineSettings ReadXml(XmlReader reader)
         {
+            var versionString = reader.GetAttribute(Attr.version);
+            int[] savedVersion = null;
+            if (!string.IsNullOrEmpty(versionString) &&
+                !Equals(versionString, Resources.SkylineSettings_WriteXml_latest))
+                savedVersion = ParseVersionFromString(versionString);
             // always use local Skyline if it exists
             if (SkylineInstallations.HasLocalSkylineCmd)
-                return new SkylineSettings(SkylineType.Local);
+                return new SkylineSettings(SkylineType.Local, savedVersion);
             var type = Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Attr.path));
-            return new SkylineSettings((SkylineType)type, cmdPath);
+            return new SkylineSettings((SkylineType)type, savedVersion, cmdPath);
         }
 
         public static SkylineSettings ReadXmlVersion_20_2(XmlReader reader)
         {
             var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Attr.Type), false);
             var cmdPath = reader.GetAttribute(Attr.CmdPath);
-            reader.Read();
             if (type == SkylineType.Custom)
-                return new SkylineSettings(type, cmdPath);
+                return new SkylineSettings(type, null, cmdPath);
             return new SkylineSettings(type, null);
         }
 
@@ -115,6 +124,7 @@ namespace SharedBatch
         {
             writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(Attr.type, Type.ToString());
+            writer.WriteAttributeIfString(Attr.version, _version != null ? string.Join(".", _version) : Resources.SkylineSettings_WriteXml_latest);
             if (Type == SkylineType.Custom)
                 writer.WriteAttributeIfString(Attr.path, CmdPath);
             writer.WriteEndElement();
@@ -161,7 +171,7 @@ namespace SharedBatch
             return ParseVersionFromString(versionString[i]);
         }
 
-        private int[] ParseVersionFromString(string stringVersion)
+        private static int[] ParseVersionFromString(string stringVersion)
         {
             var versionArray = stringVersion.Split('.');
             if (versionArray.Length != 4) throw new Exception(Resources.SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_);

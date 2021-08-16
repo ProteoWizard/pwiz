@@ -169,7 +169,7 @@ namespace SkylineBatchTest
                 else if ("CmdPath".Equals(variable))
                     cmdPath = (string)changedVariables[variable];
             }
-            return new SkylineSettings(type, cmdPath);
+            return new SkylineSettings(type, null, cmdPath);
         }
 
         public static MainSettings GetTestMainSettings()
@@ -201,7 +201,7 @@ namespace SkylineBatchTest
 
         public static SkylineSettings GetTestSkylineSettings()
         {
-            return new SkylineSettings(SkylineType.Custom, GetSkylineDir());
+            return new SkylineSettings(SkylineType.Custom, null, GetSkylineDir());
         }
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
