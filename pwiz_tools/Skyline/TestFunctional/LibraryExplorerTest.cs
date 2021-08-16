@@ -272,6 +272,21 @@ namespace pwiz.SkylineTestFunctional
             // Now switch to a list with multiple molecular IDs
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
 
+            // Do we find all the filter categories?
+            var actualCategories = new List<string>();
+            foreach (var item in filterCategoryComboBox.Items)
+            {
+                actualCategories.Add(item.ToString());
+            }
+
+            var expectedCategories = new List<string>
+            {
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct,
+                Resources.PeptideTipProvider_RenderTip_Precursor_m_z, "cas", "InChi", "SMILES", "MadeUpFakeKey"
+            };
+            CollectionAssert.AreEqual(expectedCategories, actualCategories);
+
             // Test filtering when only some entries have our search field
             RunUI(() =>
             {

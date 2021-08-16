@@ -556,10 +556,17 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
-                                        LibKeyModificationMatcher matcher, 
-                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods)
+                                        LibKeyModificationMatcher matcher,
+                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods, SrmSettings savedSettings = null)
         {
-            settings = Program.ActiveDocumentUI.Settings;
+            if (savedSettings == null)
+            {
+                settings = SrmSettingsList.GetDefault();
+            }
+            else
+            {
+                settings = savedSettings;
+            }
 
             if (matcher.HasMatches)
                 settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
@@ -1122,9 +1129,20 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _peptides.CreateCachedList(comboFilterCategory.SelectedItem.ToString());
+            var propertyName = comboFilterCategory.SelectedItem.ToString();
+            var settings = SrmSettingsList.GetDefault();
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.PerformWork(ActiveForm, 800, progressMonitor =>
+                {
+                    _peptides.CreateCachedList(propertyName, progressMonitor, settings);
+                });
+                if (longWait.IsCanceled)
+                {
+                    return;
+                }
+            }
             FilterAndUpdate();
-            
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
