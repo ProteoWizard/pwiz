@@ -1540,10 +1540,13 @@ namespace pwiz.SkylineTestUtil
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
-                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
-                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    if (index >= actualParts[0].Length)
                     {
-                        return;
+                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
+                        if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            return;
+                        }
                     }
                 }
             }
