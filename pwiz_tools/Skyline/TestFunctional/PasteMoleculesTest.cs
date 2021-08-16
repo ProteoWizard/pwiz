@@ -1139,30 +1139,34 @@ namespace pwiz.SkylineTestFunctional
             // and classify it as a small molecule transition list
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV10, SkylineWindow.Document.Settings));
 
-            // Now test how we categorize lists without peptide sequence columns or small molecule headers as proteomic or small molecule
+            // Test how we categorize lists without peptide sequence columns or small molecule headers as proteomic or small molecule
             // If we cannot recognize the format of a transition list either way, we should rely on the mode set in the UI
             LoadNewDocument(true);
             var textCSV11 =
                 "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\n" +
                 "DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\n";
             SetClipboardText(textCSV11);
+            // Set the UI mode to small molecule
             RunUI(() =>
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
             });
-            // Since this we are in small molecule mode we should show an error message instead of a column select dlg
-            var errMessageDlg = ShowDialog<MessageDlg>(() => SkylineWindow.Paste());
-            OkDialog(errMessageDlg, errMessageDlg.AcceptButton.PerformClick);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Since this we are in small molecule mode the column select dlg should be set to small molecule when it opens
+            Assert.IsTrue(columnSelectDlg.radioMolecule.Checked);
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelButton.PerformClick);
 
-            // If we set the UI mode to proteomics and paste the same transition list it should be categorized as a small molecule 
+            // If we set the UI mode to proteomics and paste the same transition list it should be categorized as a proteomics transition list
             LoadNewDocument(true);
+            // Set the UI mode to proteomic
             RunUI(() =>
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
             });
-            // Because we recognize it as a peptide list, we should bring up the column selection form
-            var columnSelect = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            OkDialog(columnSelect, columnSelect.CancelButton.PerformClick);
+            // Because we recognize it as a peptide list, the column select mode should be set to proteomic
+            var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
+            OkDialog(columnSelectDlg1, columnSelectDlg1.CancelButton.PerformClick);
         }
 
         private void TestLabelsNoFormulas()
