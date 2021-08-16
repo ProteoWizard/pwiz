@@ -399,8 +399,8 @@ namespace pwiz.Skyline.Menus
                 if (inputType == SrmDocument.DOCUMENT_TYPE.small_molecules && 
                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
                 {
-                    SkylineWindow.InsertSmallMoleculeTransitionList(text,
-                        Resources.SkylineWindow_Paste_Paste_transition_list);
+                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false, inputType);
                 }
                 // If the text contains numbers, see if it can be imported as a mass list.
                 // It is definitely not a sequence, if it has numbers.  Whereas, sequences do

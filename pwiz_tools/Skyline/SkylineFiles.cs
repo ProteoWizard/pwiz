@@ -1716,7 +1716,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void InsertSmallMoleculeTransitionList(string csvText, string description)
+        public void InsertSmallMoleculeTransitionList(string csvText, string description, List<string> columnPositions = null)
         {
             IdentityPath selectPath = null;
             Exception modifyingDocumentException = null;
@@ -1729,7 +1729,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText), columnPositions);
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -1880,10 +1880,13 @@ namespace pwiz.Skyline
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
+            bool isSmallMoleculeList = true;
+            bool useColSelectDlg = true;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
             List<PeptideGroupDocNode> peptideGroups = new List<PeptideGroupDocNode>();
+            List<string> columnPositions = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
             MassListImporter importer = null;
@@ -1893,17 +1896,11 @@ namespace pwiz.Skyline
                 Text = analyzingMessage,
             })
             {
+                var current = docCurrent;
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true, inputType);
-
-                    if (importer != null && !longWaitBroker.IsCanceled && importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                    {
-                        docCurrent = docCurrent.ImportMassList(inputs, importer, longWaitBroker,
-                            insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                            out peptideGroups);
-                    }
+                    importer = current.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true);                  
                 });
                 if (importer == null || status.IsCanceled)
                 {
@@ -1913,17 +1910,19 @@ namespace pwiz.Skyline
 
             if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
-                if (errorList.Any())
+                List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
+                var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
+                // Try importing that list to check for errors
+                docCurrent = docCurrent.ImportMassList(input, importer, null,
+                    insertPath, out selectPath, out irtPeptides,
+                    out librarySpectra, out testErrorList, out peptideGroups);
+                if (!testErrorList.Any())
                 {
-                    // Currently small molecules show just one error with no ability to continue.
-                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
-                    {
-                        errorDlg.ShowDialog(this);
-                        return;
-                    }
+                    useColSelectDlg = false;
                 }
             }
-            else
+
+            if (useColSelectDlg)
             {
                 // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
@@ -1937,6 +1936,31 @@ namespace pwiz.Skyline
                     irtPeptides = insParams.IrtPeptides;
                     librarySpectra = insParams.LibrarySpectra;
                     peptideGroups = insParams.PeptideGroups;
+                    columnPositions = insParams.ColumnHeaderList;
+                    isSmallMoleculeList = insParams.IsSmallMoleculeList;
+                }
+            }
+
+            if (isSmallMoleculeList)
+            {
+                if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                {
+                    docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                        out peptideGroups, columnPositions);
+                }
+               
+            }
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                if (errorList.Any())
+                {
+                    // Currently small molecules show just one error with no ability to continue.
+                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    {
+                        errorDlg.ShowDialog(this);
+                        return;
+                    }
                 }
             }
 
@@ -2005,11 +2029,11 @@ namespace pwiz.Skyline
                     // If the document was changed during the operation, try all the changes again
                     // using the information given by the user.
                     docCurrent = DocumentUI;
-                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
+                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath, columnPositions);
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
-                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
+                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath, columnPositions);
                     }
                     var newSettings = doc.Settings;
                     if (retentionTimeRegressionStore != null)
