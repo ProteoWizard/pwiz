@@ -1161,6 +1161,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
             });
+            // Because we recognize it as a peptide list, we should bring up the column selection form
             var columnSelect = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             OkDialog(columnSelect, columnSelect.CancelButton.PerformClick);
         }

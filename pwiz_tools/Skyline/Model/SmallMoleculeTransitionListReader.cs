@@ -1919,12 +1919,12 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE docType = SrmDocument.DOCUMENT_TYPE.none)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)
         {
-            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings, docType);
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings, modeUI);
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE docType = SrmDocument.DOCUMENT_TYPE.none)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)
         {
             // If it cannot be formatted as a mass list it cannot be a small molecule transition list
             if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
@@ -1959,7 +1959,8 @@ namespace pwiz.Skyline.Model
                 {
                     return false;
                 }
-
+                
+                // Look for distinctive small molecule headers
                 if (new[]
                 {
                     // These are pretty basic hints, without much overlap in peptide lists
@@ -1981,8 +1982,8 @@ namespace pwiz.Skyline.Model
                     return true;
                 }
 
-                // If we still have not discerned the transition list type, guess based on the document mode
-                return docType == SrmDocument.DOCUMENT_TYPE.small_molecules;
+                // If we still have not discerned the transition list type decide based on the UI mode
+                return modeUI == SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
         }
 
