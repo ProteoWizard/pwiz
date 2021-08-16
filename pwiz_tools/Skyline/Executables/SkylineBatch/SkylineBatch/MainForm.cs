@@ -801,6 +801,19 @@ namespace SkylineBatch
         
 
         #endregion
+
+        private void tabMain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey && ModifierKeys == Keys.Control) { }
+            else if (e.KeyCode == Keys.Z && ModifierKeys == Keys.Control)
+            {
+                _configManager.Undo();
+            }
+            else if (e.KeyCode == Keys.Y && ModifierKeys == Keys.Control)
+            {
+                _configManager.Redo();
+            }
+        }
     }
 
     // ListView that prevents a double click from toggling checkbox

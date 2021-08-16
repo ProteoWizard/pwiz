@@ -41,9 +41,11 @@ namespace SkylineBatch
         private ImmutableDictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
         private ImmutableDictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
 
-        private SkylineBatchConfigManagerState _checkedRunState;
-        private RunBatchOptions? _checkedRunOption;
-        private ServerFilesManager _runServerFiles;
+        private SkylineBatchConfigManagerState _checkedRunState; // a state of the SkylineBatchConfigManager that was verified to be able to start a run, null when no state verified
+        private RunBatchOptions? _checkedRunOption; // the run option that was verified to run _checkedRunState (selected by the user in the dropdown run options menu)
+        private ServerFilesManager _runServerFiles; // the verified set of server files that will be used when _checkedRunSTate is run
+        private List<SkylineBatchConfigManagerState> stateList;
+        private int currentIndex;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -76,6 +78,8 @@ namespace SkylineBatch
             _runningUi = mainForm != null;
             Init();
             LoadOldLogs();
+            stateList = new List<SkylineBatchConfigManagerState>();
+            currentIndex = -1;
         }
 
         public new void Close()
@@ -1021,13 +1025,64 @@ namespace SkylineBatch
             lock (_lock)
             {
                 newState.ValidateState();
-                base.SetState(newState.baseState);
+                SetState(newState.baseState); // sets the base state in ConfigManager
+                _refinedTemplates = newState.templates;
+                _configRunners = newState.configRunners;
+                _uiControl?.UpdateUiConfigurations();
+                if (currentIndex != stateList.Count - 1)
+                {
+                    stateList.RemoveRange(currentIndex + 1, stateList.Count - currentIndex - 1);
+                }
+                stateList.Add(newState);
+                currentIndex++;
+            }
+        }
+
+        private void SetStateUndoRedo(SkylineBatchConfigManagerState newState)
+        {
+            lock (_lock)
+            {
+                newState.ValidateState();
+                SetState(newState.baseState); // sets the base state in ConfigManager
                 _refinedTemplates = newState.templates;
                 _configRunners = newState.configRunners;
             }
             _uiControl?.UpdateUiConfigurations();
         }
 
+        public void Undo()
+        {
+            if (!(currentIndex <= 0))
+            {
+                currentIndex--;
+                SetStateUndoRedo(stateList[currentIndex]);
+                if (stateList[currentIndex].baseState.editedConfigIndex > -1)
+                {
+                    SelectConfig(stateList[currentIndex].baseState.editedConfigIndex);
+                }
+                else
+                {
+                    DeselectConfig();
+                }
+            }
+        }
+
+        public void Redo()
+        {
+            if (!(currentIndex >= stateList.Count - 1))
+            {
+                currentIndex++;
+                SetStateUndoRedo(stateList[currentIndex]);
+                if (stateList[currentIndex].baseState.editedConfigIndex > -1)
+                {
+                    SelectConfig(stateList[currentIndex].baseState.editedConfigIndex);
+                }
+                else
+                {
+                    DeselectConfig();
+                }
+            }
+        }
 
         class SkylineBatchConfigManagerState
         {

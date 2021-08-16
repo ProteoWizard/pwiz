@@ -174,14 +174,10 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var state = new ConfigManagerState(this);
-                if (newIndex < 0 || newIndex >= _configList.Count)
-                    throw new IndexOutOfRangeException(string.Format(
-                        Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, newIndex));
-                if (state.selected != newIndex)
+                new ConfigManagerState(this).ValidateState(newIndex);
+                if (SelectedConfig != newIndex)
                 {
-                    state.selected = newIndex;
-                    SetState(state);
+                    SelectedConfig = newIndex;
                     _uiControl?.UpdateUiConfigurations();
                 }
             }
@@ -191,11 +187,9 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var state = new ConfigManagerState(this);
                 if (SelectedConfig >= 0)
                 {
-                    state.selected = -1;
-                    SetState(state);
+                    SelectedConfig = -1;
                     _uiControl?.UpdateUiConfigurations();
                 }
             }
@@ -203,7 +197,7 @@ namespace SharedBatch
 
         protected void AssertConfigSelected(ConfigManagerState state)
         {
-            if (state.selected < 0)
+            if (SelectedConfig < 0)
             {
                 throw new IndexOutOfRangeException(Resources
                     .ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_);
@@ -336,7 +330,8 @@ namespace SharedBatch
                 {
                     configList = configList,
                     configValidation = configValidation,
-                    selected = index
+                    selected = index,
+                    editedConfigIndex = index
                 };
             }
         }
@@ -886,11 +881,13 @@ namespace SharedBatch
 
         #endregion
 
+        // Updates the config manager to a new valid state when the configuration list has changed
+        // newState should contain a configuration list that is different from the current state in at least one way
         protected void SetState(ConfigManagerState newState)
         {
             lock (_lock)
             {
-                newState.ValidateState();
+                newState.ValidateState(newState.selected);
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
@@ -898,18 +895,19 @@ namespace SharedBatch
             }
         }
 
-
+        // Represents a state of the config manager
         protected class ConfigManagerState
         {
             public ImmutableList<IConfig> configList;
             public ImmutableDictionary<string, bool> configValidation;
             public int selected;
+            public int editedConfigIndex; // -1 or the index of a configuration if it was edited in the last operation
 
             public ConfigManagerState()
             {
             }
 
-            public ConfigManagerState(ConfigManager configManager)
+            public ConfigManagerState(ConfigManager configManager, int editedIndex = -1)
             {
                 configList = configManager._configList;
                 configValidation = configManager._configValidation;
@@ -921,17 +919,19 @@ namespace SharedBatch
                 configList = state.configList;
                 configValidation = state.configValidation;
                 selected = state.selected;
+                editedConfigIndex = state.editedConfigIndex;
             }
 
-            public void ValidateState()
+            public void ValidateState(int selectedConfig)
             {
                 foreach (var config in configList)
                 {
                     if (configList.Count != configValidation.Count || !configValidation.ContainsKey(config.GetName()))
                         throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
                 }
-                if (selected < -1 || selected > configList.Count)
-                    throw new ArgumentException("Could not validate the new selected configuration in the list. The operation did not succeed.");
+                if (selectedConfig < -1 || selectedConfig > configList.Count)
+                    throw new IndexOutOfRangeException(string.Format(
+                        Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, selectedConfig));
             }
 
         }

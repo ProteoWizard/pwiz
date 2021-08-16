@@ -475,7 +475,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Select the first precursor. 
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+                FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [66, 75]");
             else
                 FindNode(SkylineWindow.Document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             // Ensure Graphs look like p20. (checked)
@@ -547,7 +547,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Select precursor
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
+                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [35, 42]");  // May be localized " (missed 1)"
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1045");
             WaitForGraphs();
@@ -600,8 +600,8 @@ namespace pwiz.SkylineTestTutorial
             // Ensure graph looks like p27.
             if (!AsSmallMoleculeMasses)
             {
-                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [80, 90]");
-                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [80, 90]"); // Find again - takes you to Phosphorylated version
+                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]");
+                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]"); // Find again - takes you to Phosphorylated version
             }
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1330");
@@ -614,7 +614,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [401, 411]");
+                FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [402, 412]");
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1304");
             WaitForGraphs();
@@ -790,7 +790,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docHighRes, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+                FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [66, 75]");
             else
                 FindNode(document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             RunUI(() =>
