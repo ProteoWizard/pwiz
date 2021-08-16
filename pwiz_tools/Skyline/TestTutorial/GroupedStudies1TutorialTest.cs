@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.Molecules, 1);
             ActivateReplicate("D_196_REP3");
 
-            RunUI(() => Assert.AreEqual("R.LGGEEVSVACK.L [237, 247]", SkylineWindow.SelectedNode.Text));
+            RunUI(() => Assert.AreEqual("R.LGGEEVSVACK.L [238, 248]", SkylineWindow.SelectedNode.Text));
 
             PauseForScreenShot("Retention Times graph for LGGEEVSVACK peptide", 20);
 
@@ -398,7 +398,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                Assert.AreEqual("R.GSYNLQDLLAQAK.L [378, 390]", SkylineWindow.SelectedNode.Text);
+                Assert.AreEqual("R.GSYNLQDLLAQAK.L [379, 391]", SkylineWindow.SelectedNode.Text);
                 SkylineWindow.AutoZoomNone();
             });
 
