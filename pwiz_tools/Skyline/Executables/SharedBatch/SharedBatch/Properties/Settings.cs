@@ -139,7 +139,16 @@ namespace SharedBatch.Properties
         {
             var isEmpty = reader.IsEmptyElement;
 
-            var importingXmlVersion = ReadXmlVersion(reader);
+            decimal importingXmlVersion;
+            try
+            {
+                importingXmlVersion = ReadXmlVersion(reader);
+            }
+            catch (ArgumentException e)
+            {
+                MessageBox.Show(e.Message);
+                return;
+            }
 
             // Read past the property element
             reader.Read();
