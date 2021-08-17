@@ -1152,7 +1152,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
             });
             var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            // Since this we are in small molecule mode the column select dlg should be set to small molecule when it opens
+            // Since this we are in small molecule mode the column selection page should be set to small molecule when it opens
             Assert.IsTrue(columnSelectDlg.radioMolecule.Checked);
             OkDialog(columnSelectDlg, columnSelectDlg.CancelButton.PerformClick);
 

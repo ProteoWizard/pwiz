@@ -1982,7 +1982,7 @@ namespace pwiz.Skyline.Model
                     return true;
                 }
 
-                // If we still have not discerned the transition list type decide based on the UI mode
+                // If we still have not discerned the transition list type then decide based on the UI mode
                 return modeUI == SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
         }
