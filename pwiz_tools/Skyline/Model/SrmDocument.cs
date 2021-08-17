@@ -1395,13 +1395,14 @@ namespace pwiz.Skyline.Model
         public SrmDocument ImportMassList(MassListInputs inputs,
             MassListImporter importer, 
             IdentityPath to, 
-            out IdentityPath firstAdded)
+            out IdentityPath firstAdded,
+            List<string> columnPositions = null)
         {
             List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1409,10 +1410,11 @@ namespace pwiz.Skyline.Model
                                           out IdentityPath firstAdded,
                                           out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
-                                          out List<TransitionImportErrorInfo> errorList)
+                                          out List<TransitionImportErrorInfo> errorList,
+                                          List<string> columnPositions = null)
         {
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs, 
@@ -1423,7 +1425,9 @@ namespace pwiz.Skyline.Model
                                           out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
-                                          out List<PeptideGroupDocNode> peptideGroups)
+                                          out List<PeptideGroupDocNode> peptideGroups,
+                                          List<string> columnPositions = null,
+                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1434,12 +1438,12 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            if (importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules)
+            if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
             {
                 try
                 {
                     var lines = inputs.ReadLines(progressMonitor);
-                    var reader = new SmallMoleculeTransitionListCSVReader(lines);
+                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
                 }
                 catch (LineColNumberedIoException x)
@@ -1486,10 +1490,10 @@ namespace pwiz.Skyline.Model
         /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
         /// </summary>
         public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors, 
-            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none, bool rowReadRequired = false) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             var importer = new MassListImporter(this, inputs,  inputType);
-            if (importer.PreImport(progressMonitor, null, tolerateErrors))
+            if (importer.PreImport(progressMonitor, null, tolerateErrors, rowReadRequired))
             {
                 return importer;
             }

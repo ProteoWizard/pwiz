@@ -215,6 +215,7 @@
             this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
+            this.listViewConfigs.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tabMain_KeyDown);
             this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
             // columnConfigName
@@ -374,6 +375,7 @@
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
+            this.tabMain.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tabMain_KeyDown);
             // 
             // MainForm
             // 
