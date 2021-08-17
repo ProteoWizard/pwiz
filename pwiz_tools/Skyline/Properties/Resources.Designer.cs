@@ -5593,7 +5593,13 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_", resourceCulture);
             }
         }
-        
+
+        public static string CommandLine_ImportPeakBoundaries_Error__Failed_while_importing_boundaries_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Error__Failed_while_importing_boundaries_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document..
         /// </summary>
