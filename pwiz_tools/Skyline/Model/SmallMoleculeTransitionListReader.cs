@@ -1931,7 +1931,7 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
-            
+
             // Use the first 100 lines and the document to create an importer
             var inputs = new MassListInputs(csvText.Take(100).ToString(), provider, sep);
             var importer = new MassListImporter(settings, inputs);
