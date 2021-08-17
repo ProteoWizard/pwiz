@@ -427,6 +427,26 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Like SpaceSeparate but allows arbitrary separator, and ignores empty strings, accepts IEnumerable
+        /// </summary>
+        public static string TextSeparate(string sep, IEnumerable<string> values)
+        {
+            var sb = new StringBuilder();
+            foreach (string value in values)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(sep);
+                    }
+                    sb.Append(value);
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
         /// <param name="values">A set of strings to be separated by spaces</param>
@@ -681,6 +701,7 @@ namespace pwiz.Skyline.Util.Extensions
         private char _separator;
         private string[] _currentFields;
         private string _titleLine;
+        private string userHeaders;
         private bool _rereadTitleLine; // set true for first readline if the file didn't actually have a header line
         private TextReader _reader;
         
@@ -698,12 +719,12 @@ namespace pwiz.Skyline.Util.Extensions
             Initialize(reader, separator, hasHeaders);
         }
 
-        public DsvFileReader(TextReader reader, char separator, IReadOnlyDictionary<string, string> headerSynonyms)
+        public DsvFileReader(TextReader reader, char separator, IReadOnlyDictionary<string, string> headerSynonyms, List<string> columnPositions = null)
         {
-            Initialize(reader, separator, true, headerSynonyms);
+            Initialize(reader, separator, true, headerSynonyms, columnPositions);
         }
 
-        public void Initialize(TextReader reader, char separator, bool hasHeaders = true, IReadOnlyDictionary<string, string> headerSynonyms = null)
+        public void Initialize(TextReader reader, char separator, bool hasHeaders = true, IReadOnlyDictionary<string, string> headerSynonyms = null, List<string> columnPositions = null)
         {
             _separator = separator;
             _reader = reader;
@@ -711,6 +732,12 @@ namespace pwiz.Skyline.Util.Extensions
             FieldDict = new Dictionary<string, int>();
             _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
+            if (columnPositions != null && !_rereadTitleLine)
+            {
+                userHeaders = TextUtil.TextSeparate(separator.ToString(), columnPositions);
+                // userHeaders = userHeaders.Replace(@" ", string.Empty);
+                _titleLine = userHeaders;
+            }
             var fields = _titleLine.ParseDsvFields(separator);
             NumberOfFields = fields.Length;
             if (!hasHeaders)
