@@ -209,8 +209,8 @@ namespace pwiz.Skyline.Model.Databinding
             PropertyPath resultFiles = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value")
                 .Property(nameof(PeptideResult.ResultFile));
             PropertyPath replicates = resultFiles.Property("Replicate");
-            PropertyPath proteinResults = PropertyPath.Root.Property(nameof(Entities.Peptide.Results)).Property("Value")
-                .Property(nameof(PeptideResult.ProteinResult));
+            PropertyPath proteinResults = PropertyPath.Root.Property(nameof(Entities.Peptide.Results))
+                .DictionaryValues().Property(nameof(PeptideResult.ProteinResult));
 
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
