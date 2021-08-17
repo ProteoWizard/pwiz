@@ -34,6 +34,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
         private readonly LibKeyModificationMatcher _matcher;
+        public bool _mzCalculated;
         private readonly bool _allPeptides;
         public readonly List<string> _stringSearchFields;
 
@@ -65,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI
                 new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ }
                 : new List<string> { UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ };
 
-            _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes, _matcher);
+            _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
 
             comboFilterCategoryDict.Add(UNMODIFIED_TARGET_TEXT, _allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
             comboFilterCategoryDict.Add(PRECURSOR_MZ, Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
@@ -84,12 +85,31 @@ namespace pwiz.Skyline.SettingsUI
             get { return _allEntries[index]; }
         }
 
-        public void CreateCachedList(string propertyName, IProgressMonitor monitor, SrmSettings settings, IProgressMonitor progressMonitor)
+        public void CalculateEveryMz(IProgressMonitor progressMonitor)
+        {
+            // Calculate the mz of each entry to search if we can
+            foreach (var entry in _allEntries)
+            {
+                _mzCalculated = true;
+                if (entry.Target != null)
+                {
+                    entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
+
+                    if (progressMonitor.IsCanceled)
+                    {
+                        _mzCalculated = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void CreateCachedList(string propertyName)
         {
             _selectedFilterCategory = comboFilterCategoryDict.ContainsValue(propertyName)
                 ? comboFilterCategoryDict.FirstOrDefault(x => x.Value == propertyName).Key
                 : propertyName;
-            _listCache.GetOrCreate(_selectedFilterCategory, settings, progressMonitor);
+            _listCache.GetOrCreate(_selectedFilterCategory);
         }
 
         /// <summary>
@@ -119,54 +139,34 @@ namespace pwiz.Skyline.SettingsUI
             Dictionary<string, ImmutableList<int>> _cache = new Dictionary<string, ImmutableList<int>>();
             private ImmutableList<ViewLibraryPepInfo> _pepInfos;
             private List<string> _accessionCategories;
-            private LibKeyModificationMatcher _modMatcher;
 
-            public OrderedListCache(ImmutableList<ViewLibraryPepInfo> allEntries, List<string> matchCategories, LibKeyModificationMatcher matcher)
+            public OrderedListCache(ImmutableList<ViewLibraryPepInfo> allEntries, List<string> matchCategories)
             {
                 _pepInfos = allEntries;
                 _accessionCategories = matchCategories;
-                _modMatcher = matcher;
             }
 
-            public ImmutableList<int> GetOrCreate(string propertyName, SrmSettings settings = null, IProgressMonitor progressMonitor = null)
+            public ImmutableList<int> GetOrCreate(string propertyName)
             {
                 if (!_cache.ContainsKey(propertyName))
                 {
-                    _cache[propertyName] = CreateItem(propertyName, settings, progressMonitor);
+                    _cache[propertyName] = CreateItem(propertyName);
                 }
                 return _cache[propertyName];
             }
 
-            private ImmutableList<int> CreateItem(string propertyName, SrmSettings settings = null, IProgressMonitor progressMonitor = null)
+            private ImmutableList<int> CreateItem(string propertyName)
             {
                 var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
                 if (propertyName.Equals(UNMODIFIED_TARGET_TEXT))
                 {
-                    // The list of entries is already sorted by this field, so don't sort twice
+                    // The list of entries is already sorted by this field, so don't bother sorting it again
                     return ImmutableList.ValueOf(intList);
                 }
-                if (propertyName.Equals(PRECURSOR_MZ))
-                {
-                    // Calculate the mz of each entry to search if we can
-                    foreach (var entry in _pepInfos)
-                    {
-                        if (entry.Target != null && entry.PrecursorMz == 0)
-                        {
-                            if (settings != null)
-                            {
-                                entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _modMatcher);
-                            }
 
-                            if (progressMonitor.IsCanceled)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
                 if (_accessionCategories.Contains(propertyName))
                 {
-                    // Narrow the list down to entries that actually contain the search field
+                    // Narrow the list down to entries that actually contain the property
                     intList = intList.Where(index => _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ToList();
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));

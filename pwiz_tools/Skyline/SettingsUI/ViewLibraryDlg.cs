@@ -88,7 +88,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<LibrarySpec> _driverLibraries;
 
-        public ViewLibraryPepInfoList _peptides; // Public for testing purposes
+        private ViewLibraryPepInfoList _peptides;
         private IList<int> _currentRange;
 
         private LibKeyModificationMatcher _matcher;
@@ -555,18 +555,11 @@ namespace pwiz.Skyline.SettingsUI
             IsUpdateComplete = true;
         }
 
-        public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
+        private static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
                                         LibKeyModificationMatcher matcher,
-                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods, SrmSettings savedSettings = null)
+                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods)
         {
-            if (savedSettings == null)
-            {
-                settings = SrmSettingsList.GetDefault();
-            }
-            else
-            {
-                settings = savedSettings;
-            }
+            settings = Program.ActiveDocument.Settings;
 
             if (matcher.HasMatches)
                 settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
@@ -1129,15 +1122,36 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
+            var cancelled = false;
             var propertyName = comboFilterCategory.SelectedItem.ToString();
-            var settings = Program.ActiveDocument.Settings;
-            using (var longWait = new LongWaitDlg())
+
+            // If the user wants to filter by precursor m/z we need to calculate the precursor m/z 
+            // of every peptide or molecule. This takes a couple seconds on large libraries, so we
+            // use a LongWaitDlg
+            if (propertyName.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z) && !_peptides._mzCalculated)
             {
-                longWait.PerformWork(ActiveForm, 800, progressMonitor =>
+                using (var longWait = new LongWaitDlg())
                 {
-                    _peptides.CreateCachedList(propertyName, progressMonitor, settings, progressMonitor);
-                });
+                    longWait.PerformWork(ActiveForm, 800, progressMonitor =>
+                    {
+                        _peptides.CalculateEveryMz(progressMonitor);
+                        if (progressMonitor.IsCanceled)
+                        {
+                            cancelled = true;
+                        }
+                    });
+                }
+
+                if (cancelled)
+                {
+                    comboFilterCategory.SelectedIndex = 0;
+                }
             }
+
+            // Sort a list with respect to the selected property so that it is ready to be binary searched
+            // when the user begins typing
+            _peptides.CreateCachedList(propertyName);
+
             FilterAndUpdate();
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
