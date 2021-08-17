@@ -326,28 +326,26 @@ namespace SharedBatch
                     config.GetName()));
                 var configList = state.configList.Insert(index, config);
                 var configValidation = state.configValidation.Add(config.GetName(), true);
-                return new ConfigManagerState()
+                return new ConfigManagerState(state)
                 {
                     configList = configList,
                     configValidation = configValidation,
                     selected = index,
-                    editedConfigIndex = index
+                    editedConfigFromRedo = index
                 };
             }
         }
 
-        public void MoveSelectedConfig(bool moveUp)
+        protected ConfigManagerState MoveSelectedConfig(ConfigManagerState state, bool moveUp)
         {
-            lock (_lock)
-            {
-                var state = new ConfigManagerState(this);
-                var movingConfig = _configList[SelectedConfig];
-                var delta = moveUp ? -1 : 1;
-                state.configList = state.configList.Remove(movingConfig);
-                state.configList = state.configList.Insert(SelectedConfig + delta, movingConfig);
-                state.selected += delta;
-                SetState(state);
-            }
+            var movingConfig = _configList[SelectedConfig];
+            var delta = moveUp ? -1 : 1;
+            state.configList = state.configList.Remove(movingConfig);
+            state.configList = state.configList.Insert(SelectedConfig + delta, movingConfig);
+            state.editedConfigFromUndo = state.selected;
+            state.selected += delta;
+            state.editedConfigFromRedo = state.selected;
+            return state;
         }
 
         protected ConfigManagerState UserRemoveAt(int index, ConfigManagerState state)
@@ -383,7 +381,8 @@ namespace SharedBatch
             return new ConfigManagerState(state)
             {
                 configList = configList,
-                configValidation = configValidation
+                configValidation = configValidation,
+                editedConfigFromUndo = index
             };
         }
 
@@ -703,7 +702,7 @@ namespace SharedBatch
         #endregion
         
         #region Tests
-        
+
         public bool ConfigListEquals(List<IConfig> otherConfigs)
         {
             lock (_lock)
@@ -901,17 +900,22 @@ namespace SharedBatch
             public ImmutableList<IConfig> configList;
             public ImmutableDictionary<string, bool> configValidation;
             public int selected;
-            public int editedConfigIndex; // -1 or the index of a configuration if it was edited in the last operation
+            public int editedConfigFromUndo; // -1 or the index of a configuration to be selected if an operation is undone
+            public int editedConfigFromRedo; // -1 or the index of a configuration to be selected if an operation is redone
 
             public ConfigManagerState()
             {
+                editedConfigFromUndo = -1;
+                editedConfigFromRedo = -1;
             }
 
-            public ConfigManagerState(ConfigManager configManager, int editedIndex = -1)
+            public ConfigManagerState(ConfigManager configManager)
             {
                 configList = configManager._configList;
                 configValidation = configManager._configValidation;
                 selected = configManager.SelectedConfig;
+                editedConfigFromUndo = -1;
+                editedConfigFromRedo = -1;
             }
 
             public ConfigManagerState(ConfigManagerState state)
@@ -919,7 +923,8 @@ namespace SharedBatch
                 configList = state.configList;
                 configValidation = state.configValidation;
                 selected = state.selected;
-                editedConfigIndex = state.editedConfigIndex;
+                editedConfigFromUndo = state.editedConfigFromUndo;
+                editedConfigFromRedo = state.editedConfigFromRedo;
             }
 
             public void ValidateState(int selectedConfig)
@@ -929,7 +934,7 @@ namespace SharedBatch
                     if (configList.Count != configValidation.Count || !configValidation.ContainsKey(config.GetName()))
                         throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
                 }
-                if (selectedConfig < -1 || selectedConfig > configList.Count)
+                if (selectedConfig < -1 || selectedConfig >= configList.Count)
                     throw new IndexOutOfRangeException(string.Format(
                         Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, selectedConfig));
             }

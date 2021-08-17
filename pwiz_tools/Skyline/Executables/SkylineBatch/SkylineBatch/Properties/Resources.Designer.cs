@@ -667,6 +667,26 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Redo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ms/Ms filtering res/accuracy.
         /// </summary>
         public static string FileSettings_Validate_Ms_Ms_filtering_res_accuracy {
@@ -1920,6 +1940,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_" +
                         "file_paths_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot change the configuration list while configurations are running..
+        /// </summary>
+        public static string SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configurations_are_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configu" +
+                        "rations_are_running_", resourceCulture);
             }
         }
         

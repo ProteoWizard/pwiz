@@ -44,8 +44,8 @@ namespace SkylineBatch
         private SkylineBatchConfigManagerState _checkedRunState; // a state of the SkylineBatchConfigManager that was verified to be able to start a run, null when no state verified
         private RunBatchOptions? _checkedRunOption; // the run option that was verified to run _checkedRunState (selected by the user in the dropdown run options menu)
         private ServerFilesManager _runServerFiles; // the verified set of server files that will be used when _checkedRunSTate is run
-        private List<SkylineBatchConfigManagerState> stateList;
-        private int currentIndex;
+        private List<SkylineBatchConfigManagerState> _stateList;
+        private int _currentIndex;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -78,8 +78,8 @@ namespace SkylineBatch
             _runningUi = mainForm != null;
             Init();
             LoadOldLogs();
-            stateList = new List<SkylineBatchConfigManagerState>();
-            currentIndex = -1;
+            _stateList = new List<SkylineBatchConfigManagerState>();
+            _currentIndex = -1;
         }
 
         public new void Close()
@@ -193,7 +193,8 @@ namespace SkylineBatch
                 foreach (var dependent in oldDependencies[config.Name])
                     state = DependencyReplace(dependent, replacingConfig.Name, replacingConfig.RefineSettings.OutputFilePath, state);
             }
-
+            state.baseState.editedConfigFromUndo = index;
+            state.baseState.editedConfigFromRedo = index;
             SetState(state);
         }
 
@@ -1012,6 +1013,16 @@ namespace SkylineBatch
 
         #endregion
 
+        public void MoveSelectedConfig(bool moveUp)
+        {
+            lock (_lock)
+            {
+                var state = new SkylineBatchConfigManagerState(this);
+                state.baseState = MoveSelectedConfig(state.baseState, moveUp);
+                SetState(state);
+            }
+        }
+
         private SkylineBatchConfigManagerState GetState()
         {
             lock (_lock)
@@ -1028,12 +1039,12 @@ namespace SkylineBatch
                 SetState(newState.baseState); // sets the base state in ConfigManager
                 _refinedTemplates = newState.templates;
                 _configRunners = newState.configRunners;
-                if (currentIndex != stateList.Count - 1)
+                if (_currentIndex != _stateList.Count - 1)
                 {
-                    stateList.RemoveRange(currentIndex + 1, stateList.Count - currentIndex - 1);
+                    _stateList.RemoveRange(_currentIndex + 1, _stateList.Count - _currentIndex - 1);
                 }
-                stateList.Add(newState);
-                currentIndex++;
+                _stateList.Add(newState);
+                _currentIndex++;
             }
             _uiControl?.UpdateUiConfigurations();
         }
@@ -1050,15 +1061,25 @@ namespace SkylineBatch
             _uiControl?.UpdateUiConfigurations();
         }
 
+        public bool CanUndo()
+        {
+            return _currentIndex > 0;
+        }
+
         public void Undo()
         {
-            if (!(currentIndex <= 0))
+            if (CanUndo())
             {
-                currentIndex--;
-                SetStateUndoRedo(stateList[currentIndex]);
-                if (stateList[currentIndex].baseState.editedConfigIndex > -1)
+                if (ConfigRunning())
                 {
-                    SelectConfig(stateList[currentIndex].baseState.editedConfigIndex);
+                    DisplayError(Resources.SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configurations_are_running_);
+                    return;
+                }
+                _currentIndex--;
+                SetStateUndoRedo(_stateList[_currentIndex]);
+                if (_stateList[_currentIndex + 1].baseState.editedConfigFromUndo > -1)
+                {
+                    SelectConfig(_stateList[_currentIndex + 1].baseState.editedConfigFromUndo);
                 }
                 else
                 {
@@ -1067,15 +1088,25 @@ namespace SkylineBatch
             }
         }
 
+        public bool CanRedo()
+        {
+            return _currentIndex < _stateList.Count - 1;
+        }
+
         public void Redo()
         {
-            if (!(currentIndex >= stateList.Count - 1))
+            if (CanRedo())
             {
-                currentIndex++;
-                SetStateUndoRedo(stateList[currentIndex]);
-                if (stateList[currentIndex].baseState.editedConfigIndex > -1)
+                if (ConfigRunning())
                 {
-                    SelectConfig(stateList[currentIndex].baseState.editedConfigIndex);
+                    DisplayError(Resources.SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configurations_are_running_);
+                    return;
+                }
+                _currentIndex++;
+                SetStateUndoRedo(_stateList[_currentIndex]);
+                if (_stateList[_currentIndex].baseState.editedConfigFromRedo > -1)
+                {
+                    SelectConfig(_stateList[_currentIndex].baseState.editedConfigFromRedo);
                 }
                 else
                 {
@@ -1110,20 +1141,15 @@ namespace SkylineBatch
                 foreach (var config in baseState.configList)
                 {
                     if (!configRunners.ContainsKey(config.GetName()))
-                    {
                         validated = false;
-                        break;
-                    }
                 }
                 foreach (var configName in templates.Keys)
                 {
                     if (!configRunners.ContainsKey(configName) || !templates[configName]
                         .Equals(((SkylineBatchConfig) configRunners[configName].GetConfig()).RefineSettings
                             .OutputFilePath))
-                    {
                         validated = false;
                         break;
-                    }
                 }
                 if (!validated)
                     throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
