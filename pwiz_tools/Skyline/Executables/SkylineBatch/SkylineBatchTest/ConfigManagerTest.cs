@@ -56,17 +56,7 @@ namespace SkylineBatchTest
             }
 
             var selectedNegativeIndex = false;
-            try
-            {
-                testConfigManager.SelectConfig(-1);
-                selectedNegativeIndex = true;
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                Assert.AreEqual("There is no configuration at index: -1", e.Message);
-            }
-            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
-
+           
             var selectedIndexAboveRange = false;
             try
             {
