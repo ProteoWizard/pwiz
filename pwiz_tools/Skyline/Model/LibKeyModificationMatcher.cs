@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
             // First try and create the match from the settings created to match the library explorer.
-            Settings = HasMatches
+            Settings = HasMatches && !key.IsSmallMoleculeKey // Modifications don't matter to non-peptide nodes
                 ? settings.ChangePeptideModifications(mods => MatcherPepMods)
                 : settings;
             TransitionGroupDocNode nodeGroup;
