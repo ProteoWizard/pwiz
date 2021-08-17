@@ -1130,19 +1130,12 @@ namespace pwiz.Skyline.SettingsUI
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             var propertyName = comboFilterCategory.SelectedItem.ToString();
-            var settings = SrmSettingsList.GetDefault();
+            var settings = Program.ActiveDocument.Settings;
             using (var longWait = new LongWaitDlg())
             {
                 longWait.PerformWork(ActiveForm, 800, progressMonitor =>
                 {
                     _peptides.CreateCachedList(propertyName, progressMonitor, settings, progressMonitor);
-                    if (longWait.IsCanceled)
-                    {
-                        // Switch back to the default category
-                        // Stop creating the list
-                        return;
-
-                    }
                 });
             }
             FilterAndUpdate();
