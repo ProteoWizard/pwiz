@@ -63,8 +63,8 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor=>
             {
                 viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
-                var ppPeptides = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
-                    .Property(nameof(Protein.Peptides)).LookupAllItems();
+                var ppProteins = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems();
+                var ppPeptides = ppProteins.Property(nameof(Protein.Peptides)).LookupAllItems();
                 var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
                 var ppPeptideResult = ppPeptides.Property(nameof(Peptide.Results)).DictionaryValues();
                 var ppFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
@@ -74,6 +74,7 @@ namespace pwiz.SkylineTestFunctional
                 viewEditor.ChooseColumnsTab.AddColumn(ppFiles.Property(nameof(ResultFile.TicArea)));
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptideResult.Property(nameof(PeptideResult.Quantification))
                     .Property(nameof(QuantificationResult.NormalizedArea)));
+                viewEditor.ChooseColumnsTab.AddColumn(ppProteins.Property(nameof(Protein.Results)).DictionaryValues().Property(nameof(ProteinResult.Abundance)));
                 viewEditor.ViewName = viewName;
                 viewEditor.OkDialog();
             });
@@ -209,6 +210,9 @@ namespace pwiz.SkylineTestFunctional
                 var colNormalizedArea = documentGrid.FindColumn(ppPeptideResults
                     .Property(nameof(PeptideResult.Quantification))
                     .Property(nameof(QuantificationResult.NormalizedArea)));
+                var colProteinAbundance = documentGrid.FindColumn(ppPeptideResults
+                    .Property(nameof(PeptideResult.ProteinResult)).Property(nameof(ProteinResult.Abundance)));
+                Assert.IsNotNull(colProteinAbundance);
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
