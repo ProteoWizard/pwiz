@@ -20,15 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Util;
 using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
@@ -87,12 +84,12 @@ namespace pwiz.Skyline.SettingsUI
             get { return _allEntries[index]; }
         }
 
-        public void CreateCachedList(string propertyName, IProgressMonitor monitor, SrmSettings settings)
+        public void CreateCachedList(string propertyName, IProgressMonitor monitor, SrmSettings settings, IProgressMonitor progressMonitor)
         {
             _selectedFilterCategory = comboFilterCategoryDict.ContainsValue(propertyName)
                 ? comboFilterCategoryDict.FirstOrDefault(x => x.Value == propertyName).Key
                 : propertyName;
-            _listCache.GetOrCreate(_selectedFilterCategory, settings);
+            _listCache.GetOrCreate(_selectedFilterCategory, settings, progressMonitor);
         }
 
         /// <summary>
@@ -130,16 +127,17 @@ namespace pwiz.Skyline.SettingsUI
                 _accessionCategories = matchCategories;
                 _modMatcher = matcher;
             }
-            public ImmutableList<int> GetOrCreate(string propertyName, SrmSettings settings = null)
+
+            public ImmutableList<int> GetOrCreate(string propertyName, SrmSettings settings = null, IProgressMonitor progressMonitor = null)
             {
                 if (!_cache.ContainsKey(propertyName))
                 {
-                    _cache[propertyName] = CreateItem(propertyName, settings);
+                    _cache[propertyName] = CreateItem(propertyName, settings, progressMonitor);
                 }
                 return _cache[propertyName];
             }
 
-            private ImmutableList<int> CreateItem(string propertyName, SrmSettings settings = null)
+            private ImmutableList<int> CreateItem(string propertyName, SrmSettings settings = null, IProgressMonitor progressMonitor = null)
             {
                 var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
                 if (propertyName.Equals(UNMODIFIED_TARGET_TEXT))
@@ -157,6 +155,11 @@ namespace pwiz.Skyline.SettingsUI
                             if (settings != null)
                             {
                                 entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _modMatcher);
+                            }
+
+                            if (progressMonitor.IsCanceled)
+                            {
+                                break;
                             }
                         }
                     }

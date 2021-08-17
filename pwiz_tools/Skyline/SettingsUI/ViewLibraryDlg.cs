@@ -1135,12 +1135,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 longWait.PerformWork(ActiveForm, 800, progressMonitor =>
                 {
-                    _peptides.CreateCachedList(propertyName, progressMonitor, settings);
+                    _peptides.CreateCachedList(propertyName, progressMonitor, settings, progressMonitor);
+                    if (longWait.IsCanceled)
+                    {
+                        // Switch back to the default category
+                        // Stop creating the list
+                        return;
+
+                    }
                 });
-                if (longWait.IsCanceled)
-                {
-                    return;
-                }
             }
             FilterAndUpdate();
         }
