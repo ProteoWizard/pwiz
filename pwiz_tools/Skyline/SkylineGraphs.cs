@@ -1190,6 +1190,13 @@ namespace pwiz.Skyline
             get { return _graphSpectrum != null && _graphSpectrum.Visible; }
         }
 
+        public void SetShowMassError(bool show)
+        {
+            Settings.Default.ShowFullScanMassError = show;
+            UpdateSpectrumGraph(false);
+
+        }
+
         private GraphSpectrum CreateGraphSpectrum()
         {
             // Create a new spectrum graph
