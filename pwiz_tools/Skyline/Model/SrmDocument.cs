@@ -1489,9 +1489,9 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
         /// </summary>
-        /// <param name="inputs"></param>
+        /// <param name="inputs">Input to be imported</param>
         /// <param name="progressMonitor">Cancellable progress monitor</param>
-        /// <param name="tolerateErrors"></param>
+        /// <param name="tolerateErrors">Should we tolerate errors when creating a row reader</param>
         /// <param name="inputType">"None" means "don't know if it's peptides or small molecules, go figure it out".</param>
         /// <param name="rowReadRequired">Is it necessary to create a row reader to import this mass list</param>
         /// <param name="defaultDocumentType">The type we should default to if we cannot tell if the transition list is proteomics or small molecule</param>
