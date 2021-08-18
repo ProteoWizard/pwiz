@@ -75,7 +75,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         /// most with and without raw data centroiding with vendor algorithms.
         /// </summary>
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_WatersChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -86,7 +85,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_AbIdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -97,7 +95,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_AbDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -108,7 +105,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_ThermoDdaVChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -119,7 +115,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_ThermoDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -130,7 +125,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_AgilentDiaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -141,7 +135,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_AgilentDdaChromatogramPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -152,7 +145,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -163,7 +155,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_BrukerFullScanMSeDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -174,7 +165,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // These can take a long time
         public void zzzNativeVsMz5_BrukerFullScanSWATHDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
