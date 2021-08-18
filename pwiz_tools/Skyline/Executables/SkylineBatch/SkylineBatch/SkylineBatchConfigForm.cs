@@ -251,33 +251,12 @@ namespace SkylineBatch
 
         private void btnAnalysisFilePath_Click(object sender, EventArgs e)
         {
-            OpenFolder(textAnalysisPath);
-        }
-
-        private void OpenFile(Control textBox, string filter, bool save = false)
-        {
-            FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
-            var initialDirectory = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
-            dialog.InitialDirectory = initialDirectory;
-            dialog.Filter = filter;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
+            var initialPath = FileUtil.GetInitialDirectory(textAnalysisPath.Text, _lastEnteredPath);
+            var path = UiFileUtil.OpenFolder(initialPath);
+            if (path != null)
             {
-                textBox.Text = dialog.FileName;
-                _lastEnteredPath = dialog.FileName;
-            }
-        }
-
-        private void OpenFolder(Control textBox)
-        {
-            var dialog = new FolderBrowserDialog();
-            var initialPath = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
-            dialog.SelectedPath = initialPath;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                textBox.Text = dialog.SelectedPath;
-                _lastEnteredPath = dialog.SelectedPath;
+                textAnalysisPath.Text = path;
+                _lastEnteredPath = path;
             }
         }
 
@@ -379,7 +358,13 @@ namespace SkylineBatch
 
         private void btnRefinedFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile(textRefinedFilePath, TextUtil.FILTER_SKY, true);
+            var initialDirectory = FileUtil.GetInitialDirectory(textRefinedFilePath.Text, _lastEnteredPath);
+            var file = UiFileUtil.OpenFile(initialDirectory, TextUtil.FILTER_SKY, true);
+            if (file != null)
+            {
+                textRefinedFilePath.Text = file;
+                _lastEnteredPath = file;
+            }
         }
 
         #endregion
@@ -514,7 +499,7 @@ namespace SkylineBatch
         private SkylineSettings GetSkylineSettingsFromUi()
         {
             if (SkylineInstallations.HasLocalSkylineCmd)
-                return new SkylineSettings(SkylineType.Local);
+                return new SkylineSettings(SkylineType.Local, null);
 
             return (SkylineSettings)SkylineTypeControl.GetVariable();
         }
