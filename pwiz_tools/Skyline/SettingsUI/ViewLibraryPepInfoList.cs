@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.SettingsUI
             _accessionNumberTypes = FindMatchCategories();
             // If there are any small molecules in the library, search by multiple fields at once
             _stringSearchFields = !_allPeptides ? 
-                new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ }
+                FindValidCategories(new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ })
                 : new List<string> { UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ };
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
@@ -84,13 +85,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return _allEntries[index]; }
         }
-
+        
         public void CalculateEveryMz(IProgressMonitor progressMonitor)
         {
+            _mzCalculated = true;
             // Calculate the mz of each entry to search if we can
-            foreach (var entry in _allEntries)
+            foreach(var entry in _allEntries)
             {
-                _mzCalculated = true;
                 if (entry.Target != null)
                 {
                     entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
@@ -103,6 +104,28 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
+
+        private List<string> FindValidCategories(List<string> categories)
+        {
+            var validCategories = new List<string>();
+            foreach (var category in categories)
+            {
+                var property = typeof(ViewLibraryPepInfo).GetProperty(category);
+
+                foreach (var entry in _allEntries)
+                {
+                    var value = property.GetValue(entry);
+                    if (!value.Equals(""))
+                    {
+                        validCategories.Add(category);
+                        break;
+                    }
+                }
+            }
+
+            return validCategories;
+        }
+
 
         public void CreateCachedList(string propertyName)
         {
@@ -173,6 +196,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
+                intList = (from index in intList let entry = _pepInfos[index] where !property.GetValue(entry).Equals("") select index).ToList();
                 return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString(), StringComparer.OrdinalIgnoreCase));
             }
         }
@@ -216,13 +240,9 @@ namespace pwiz.Skyline.SettingsUI
 
             if (string.IsNullOrEmpty(filterText))
             {
-                // If the filter category is set to an accession number, only return entries that have that property
-                if (_accessionNumberTypes.Contains(filterCategory))
-                {
-                    var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => info);
+                // Only return entries that have the selected property
+                var ret = _listCache.GetOrCreate(_selectedFilterCategory).OrderBy(info => info);
                     return ImmutableList.ValueOf(ret);
-                }
-                return new RangeList(0, Count);
             }
 
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the

@@ -38,6 +38,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -887,9 +888,11 @@ namespace pwiz.Skyline.SettingsUI
             return indexInFullList;
         }
 
+        /// <summary>
+        /// Filter the list and then update the UI to reflect the new list
+        /// </summary>
         private void FilterAndUpdate()
         {
-            // Filter the list by the new text according to the current filter type
             _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
             UpdatePageInfo();
             UpdateStatusArea();
@@ -1107,6 +1110,35 @@ namespace pwiz.Skyline.SettingsUI
                     TextRenderer.DrawText(e.Graphics, textSequence.Text,
                                           textSequence.Font, rectDraw, textColor, backColor,
                                           FORMAT_CUSTOM);
+                }
+                // Now draw the field associated with the filter category
+                var selectedCategory = comboFilterCategory.SelectedItem.ToString();
+                if (!selectedCategory.IsNullOrEmpty() && !selectedCategory.Equals(ColumnCaptions.Peptide) && !selectedCategory.Equals(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name))
+                {
+                    TextSequence categoryText;
+                    if (!_peptides._accessionNumberTypes.Contains(selectedCategory))
+                    {
+                        var propertyName = _peptides.comboFilterCategoryDict
+                            .FirstOrDefault(x => x.Value == selectedCategory).Key;
+
+                        var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
+                        var propertyValue = property.GetValue(pepInfo);
+                        categoryText = CreateTextSequence(propertyValue.ToString(), false);
+                    }
+                    else
+                    {
+                        categoryText = CreateTextSequence(pepInfo.OtherKeysDict[selectedCategory], false);
+                    }
+
+                    // Draw it aligned to the right side
+                    var sizeMax = new Size(int.MaxValue, int.MaxValue);
+                    categoryText.Width = TextRenderer.MeasureText(e.Graphics, categoryText.Text,
+                        categoryText.Font, sizeMax, FORMAT_CUSTOM).Width;
+                    rectDraw.X = bounds.Width - categoryText.Width - PADDING;
+                    rectDraw.Width = categoryText.Width;
+                    TextRenderer.DrawText(e.Graphics, categoryText.Text,
+                        categoryText.Font, rectDraw, Equals(e.ForeColor, SystemColors.HighlightText) ? e.ForeColor : categoryText.Color, backColor,
+                        FORMAT_CUSTOM);
                 }
             }
         }
