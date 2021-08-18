@@ -537,7 +537,7 @@ namespace SkylineBatch
             var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.XmlVersion, shareForm.IndiciesToSave);
         }
         
         #endregion

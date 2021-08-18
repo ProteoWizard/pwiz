@@ -183,7 +183,7 @@ namespace SkylineBatchTest
             TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportConfigs(configsXmlPath, "1000.0.0.0", new [] {0,1,2});
+            configManager.ExportConfigs(configsXmlPath, SkylineBatch.Properties.Settings.Default.XmlVersion, new [] {0,1,2});
             int i = 0;
             while (configManager.HasConfigs() && i < 4)
             {

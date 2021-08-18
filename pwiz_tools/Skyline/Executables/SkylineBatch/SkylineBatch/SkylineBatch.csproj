@@ -280,7 +280,6 @@
     <Compile Include="SkylineTemplate.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="XMLTags.cs" />
-    <Compile Include="XmlUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">
