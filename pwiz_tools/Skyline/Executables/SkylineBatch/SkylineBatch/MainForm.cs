@@ -111,13 +111,6 @@ namespace SkylineBatch
             _configManager.SetState(initialState, configForm.State);
         }
 
-        public void AddConfiguration(IConfig config)
-        {
-            _configManager.UserAddConfig(config);
-            UpdateUiConfigurations();
-            ListViewSizeChanged();
-        }
-
         private void HandleEditEvent(object sender, EventArgs e)
         {
             var initialState = _configManager.State;

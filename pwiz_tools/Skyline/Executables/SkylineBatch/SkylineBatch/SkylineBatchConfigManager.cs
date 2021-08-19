@@ -577,7 +577,7 @@ namespace SkylineBatch
                     }
 
                     if (Equals(expectedState, newState) && _currentIndex > 0)
-                        return true;
+                        newState = newState.Copy(); // sets model unchanged
                     if (_startingRunOption != null && !overrideRunStart)
                     {
                         throw new ArgumentException(Resources.SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_changed_while_a_run_is_being_started__Please_try_again_);
@@ -1262,7 +1262,12 @@ namespace SkylineBatch
                 return false;
             foreach (var config in ConfigRunners.Keys)
             {
-                if (!other.ConfigRunners.ContainsKey(config) || !Equals(ConfigRunners[config], other.ConfigRunners[config]))
+                if (!other.ConfigRunners.ContainsKey(config))
+                    return false;
+                if (ConfigRunners[config].IsBusy() || other.ConfigRunners[config].IsBusy() &&
+                    !Equals(ConfigRunners[config], other.ConfigRunners[config]))
+                    return false;
+                if (!Equals(ConfigRunners[config].GetConfig(), other.ConfigRunners[config].GetConfig()))
                     return false;
             }
             return Equals(BaseState, other.BaseState);
