@@ -366,7 +366,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (!ImportPeakBoundaries(commandArgs))
+            if (string.IsNullOrEmpty(commandArgs.ImportPeakBoundariesPath) && !ImportPeakBoundaries(commandArgs))
             {
                 return false;
             }
@@ -522,14 +522,16 @@ namespace pwiz.Skyline
         {
             try
             {
-                long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundaries);
+                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
+                long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
                 PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
-                ModifyDocument(d => importer.Import(commandArgs.ImportPeakBoundaries, null, lineCount));
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                ModifyDocument(d => importer.Import(commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount));
                 return true;
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_while_importing_boundaries_);
+                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
                 _out.WriteLine(x.Message);
                 return false;
             }

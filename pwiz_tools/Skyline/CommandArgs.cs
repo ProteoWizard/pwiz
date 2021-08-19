@@ -260,7 +260,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_IMPORT_LOCKMASS_TOLERANCE = new DocArgument(@"import-lockmass-tolerance", NUM_VALUE,
             (c, p) => c.LockmassTolerance = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_PEAK_BOUNDARIES = new DocArgument(@"import-peak-boundaries", PATH_TO_FILE,
-            (c, p) => c.ImportPeakBoundaries = p.ValueFullPath);
+            (c, p) => c.ImportPeakBoundariesPath = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
@@ -348,7 +348,7 @@ namespace pwiz.Skyline
         public Regex ImportFileNamePattern { get; private set; }
         public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
-        public string ImportPeakBoundaries { get; private set; }
+        public string ImportPeakBoundariesPath { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
         public bool ChromatogramsDiscard{ get; private set; }
