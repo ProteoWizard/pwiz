@@ -1,3 +1,5 @@
+using System;
+
 namespace pwiz.Skyline.SettingsUI
 {
     partial class ViewLibraryDlg
@@ -145,6 +147,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.PeptideListPanel.Controls.Add(this.listPeptide);
             this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
+            this.PeptideListPanel.Resize += new EventHandler(this.PeptideListPanel_Resize);
             resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
             this.PeptideListPanel.Name = "PeptideListPanel";
             // 
