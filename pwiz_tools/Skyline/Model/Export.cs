@@ -723,7 +723,7 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
         {
-            var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
+            var exporter = InitExporter(new ThermoFusionMassListExporter(document));
             exporter.UseSlens = UseSlens;
             exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
@@ -1883,11 +1883,9 @@ namespace pwiz.Skyline.Model
         public ThermoFusionMethodExporter(SrmDocument document)
             : base(document)
         {
-            IsolationList = true;
-            IsPrecursorLimited = true;
         }
 
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (fileName != null)
                 EnsureLibraries();
@@ -3544,6 +3542,8 @@ namespace pwiz.Skyline.Model
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
+            IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         // Write values separated by the field separator, and a line separator at the end.
@@ -3555,8 +3555,8 @@ namespace pwiz.Skyline.Model
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
-                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
-                : @"Compound,Formula,Adduct,m/z,z,t start (min),t stop (min),CID Collision Energy (%)";
+                ? @"m/z,z,Polarity,t start (min),t end (min),CID Collision Energy (%)"
+                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
             if (WriteFaimsCv)
@@ -3596,7 +3596,8 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
+            string z = Math.Abs(nodeTranGroup.TransitionGroup.PrecursorCharge).ToString(CultureInfo);  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
+            var polarity = nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative";
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
             bool wideWindowDia = false;
@@ -3611,7 +3612,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
-            var writeColumns = new List<string> {precursorMz, z, start, end, collisionEnergy};
+            var writeColumns = new List<string> {precursorMz, z, polarity, start, end, collisionEnergy};
             if (Tune3Columns)
             {
                 writeColumns.InsertRange(0, new []
@@ -3635,18 +3636,7 @@ namespace pwiz.Skyline.Model
             }
             Write(writer, writeColumns.ToArray());
         }
-    }
-
-    public class ThermoFusionIsolationListExporter : ThermoFusionMassListExporter
-    {
-        public ThermoFusionIsolationListExporter(SrmDocument document)
-            : base(document)
-        {
-            IsolationList = true;
-            IsPrecursorLimited = true;
-        }
-
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public virtual void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
