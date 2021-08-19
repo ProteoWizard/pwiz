@@ -20,12 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using Resources = pwiz.Skyline.Properties.Resources;
 
@@ -36,7 +34,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly ImmutableList<ViewLibraryPepInfo> _allEntries;
         private readonly LibKeyModificationMatcher _matcher;
         public bool _mzCalculated;
-        private readonly bool _allPeptides;
         public readonly List<string> _stringSearchFields;
 
         public readonly List<string> _accessionNumberTypes;
@@ -59,17 +56,17 @@ namespace pwiz.Skyline.SettingsUI
             _allEntries = ImmutableList.ValueOf(items.OrderBy(item => item, Comparer<ViewLibraryPepInfo>.Create(ComparePepInfos)));
             _selectedFilterCategory = selectedFilterCategory;
             _matcher = matcher; // Used to calculate precursor m/z
-            allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in the library?
-            _allPeptides = allPeptides;
+            allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in this library?
             _accessionNumberTypes = FindMatchCategories();
-            // If there are any small molecules in the library, search by multiple fields at once
-            _stringSearchFields = !_allPeptides ? 
+
+            // If there are any small molecules in the library see if we can offer more search fields
+            _stringSearchFields = !allPeptides ? 
                 FindValidCategories(new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ })
                 : new List<string> { UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ };
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
 
-            comboFilterCategoryDict.Add(UNMODIFIED_TARGET_TEXT, _allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
+            comboFilterCategoryDict.Add(UNMODIFIED_TARGET_TEXT, allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
             comboFilterCategoryDict.Add(PRECURSOR_MZ, Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
             comboFilterCategoryDict.Add(INCHI_KEY, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
             comboFilterCategoryDict.Add(FORMULA, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
@@ -85,11 +82,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return _allEntries[index]; }
         }
-        
+
+        /// <summary>
+        /// Calculate the precursor m/z of every entry with the option to cancel
+        /// </summary>
         public void CalculateEveryMz(IProgressMonitor progressMonitor)
         {
             _mzCalculated = true;
-            // Calculate the mz of each entry to search if we can
             foreach(var entry in _allEntries)
             {
                 if (entry.Target != null)
@@ -105,28 +104,26 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        /// <summary>
+        /// Find categories for which at least one entry has a value
+        /// </summary>
         private List<string> FindValidCategories(List<string> categories)
         {
-            var validCategories = new List<string>();
-            foreach (var category in categories)
-            {
-                var property = typeof(ViewLibraryPepInfo).GetProperty(category);
-
-                foreach (var entry in _allEntries)
-                {
-                    var value = property.GetValue(entry);
-                    if (!value.Equals(""))
-                    {
-                        validCategories.Add(category);
-                        break;
-                    }
-                }
-            }
-
-            return validCategories;
+            return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(""))).ToList();
         }
 
+        /// <summary>
+        /// Find the string value of a property for a ViewLibraryPepInfo
+        /// </summary>
+        public static string GetStringValue(string propertyName, ViewLibraryPepInfo pepInfo)
+        {
+            var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
+            return !(property is null) ? property.GetValue(pepInfo).ToString() : "";
+        }
 
+        /// <summary>
+        /// Create a list of entry indices sorted by the given property
+        /// </summary>
         public void CreateCachedList(string propertyName)
         {
             _selectedFilterCategory = comboFilterCategoryDict.ContainsValue(propertyName)
@@ -157,6 +154,9 @@ namespace pwiz.Skyline.SettingsUI
             return matchCategories;
         }
 
+        /// <summary>
+        /// For storing sorted lists of entry indices
+        /// </summary>
         private class OrderedListCache
         {
             Dictionary<string, ImmutableList<int>> _cache = new Dictionary<string, ImmutableList<int>>();
@@ -195,9 +195,8 @@ namespace pwiz.Skyline.SettingsUI
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
                 }
 
-                var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
-                intList = (from index in intList let entry = _pepInfos[index] where !property.GetValue(entry).Equals("") select index).ToList();
-                return ImmutableList.ValueOf(intList.OrderBy(index => property.GetValue(_pepInfos[index]).ToString(), StringComparer.OrdinalIgnoreCase));
+                intList = (from index in intList let entry = _pepInfos[index] where !GetStringValue(propertyName, entry).Equals("") select index).ToList();
+                return ImmutableList.ValueOf(intList.OrderBy(index => GetStringValue(propertyName, _pepInfos[index]), StringComparer.OrdinalIgnoreCase));
             }
         }
 
@@ -217,9 +216,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                var property = typeof(ViewLibraryPepInfo).GetProperty(_selectedFilterCategory);
                 matchRange = CollectionUtil.BinarySearch(orderedList,
-                    info => string.Compare(property.GetValue(_allEntries[info]).ToString(), 0, filterText, 0,
+                    index => string.Compare(GetStringValue(_selectedFilterCategory, _allEntries[index]), 0, filterText, 0,
                         filterText.Length,
                         StringComparison.OrdinalIgnoreCase));
             }

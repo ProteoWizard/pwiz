@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1128,8 +1127,7 @@ namespace pwiz.Skyline.SettingsUI
                         var propertyName = _peptides.comboFilterCategoryDict
                             .FirstOrDefault(x => x.Value == selectedCategory).Key;
 
-                        var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
-                        var propertyValue = property.GetValue(pepInfo);
+                        var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
                         categoryText = CreateTextSequence(propertyValue.ToString(), false);
                     }
                     else
