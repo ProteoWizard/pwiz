@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1074,6 +1075,12 @@ namespace pwiz.Skyline.SettingsUI
             return new TextSequence { Text = text, Font = font, Color = Color.Black };
         }
 
+        private void PeptideListPanel_Resize(object sender, EventArgs e)
+        {
+            // We must draw all the items again if the list is resized
+            listPeptide.Invalidate();
+        }
+
         private void listPeptide_DrawItem(object sender, DrawItemEventArgs e)
         {
             if (e.Index == -1)
@@ -1129,15 +1136,22 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         categoryText = CreateTextSequence(pepInfo.OtherKeysDict[selectedCategory], false);
                     }
-
-                    // Draw it aligned to the right side
+                    
+                    // Draw the value aligned to the right side
                     var sizeMax = new Size(int.MaxValue, int.MaxValue);
                     categoryText.Width = TextRenderer.MeasureText(e.Graphics, categoryText.Text,
                         categoryText.Font, sizeMax, FORMAT_CUSTOM).Width;
-                    rectDraw.X = bounds.Width - categoryText.Width - PADDING;
-                    rectDraw.Width = categoryText.Width;
+                    var rectValue = new Rectangle(0, bounds.Y, categoryText.Width, bounds.Height);
+                    rectValue.X = bounds.Width - categoryText.Width - PADDING;
+
+                    // If the x coordinate is within the rectangle of the name or sequence truncate the category text
+                    if (rectValue.X < rectDraw.X + rectDraw.Width)
+                    {
+                        rectValue.X = rectDraw.X + rectDraw.Width + PADDING + categoryText.Position + bounds.X;
+                    }
+                    e.Graphics.FillRectangle(new SolidBrush(backColor), rectValue);
                     TextRenderer.DrawText(e.Graphics, categoryText.Text,
-                        categoryText.Font, rectDraw, Equals(e.ForeColor, SystemColors.HighlightText) ? e.ForeColor : categoryText.Color, backColor,
+                        categoryText.Font, rectValue, Equals(e.ForeColor, SystemColors.HighlightText) ? e.ForeColor : categoryText.Color, backColor,
                         FORMAT_CUSTOM);
                 }
             }
