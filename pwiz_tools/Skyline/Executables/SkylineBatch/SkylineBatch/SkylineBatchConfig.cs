@@ -73,7 +73,7 @@ namespace SkylineBatch
 
         public readonly SkylineSettings SkylineSettings;
 
-        public bool Enabled;
+        public readonly bool Enabled;
 
         public bool LogTestFormat;
 

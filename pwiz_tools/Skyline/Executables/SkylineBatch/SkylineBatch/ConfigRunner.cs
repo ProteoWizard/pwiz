@@ -525,5 +525,13 @@ namespace SkylineBatch
         {
             return _runnerStatus == RunnerStatus.Waiting;
         }
+
+        // config runners are only equal if they are the same reference
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
+        }
     }
 }

@@ -83,7 +83,8 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
-            RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
+            RunDlg<AlertDlg>(() => 
+                    mainForm.ClickDelete(),
                 dlg => { dlg.ClickYes(); });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
         }
@@ -191,6 +192,9 @@ namespace SkylineBatchTest
             {
                 mainForm.DoImport(validDependentConfigFile);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+            });
+            RunUI(() =>
+            {
                 mainForm.SetConfigEnabled(1, true);
             });
             RunDlg<AlertDlg>(() => mainForm.ClickRun(),

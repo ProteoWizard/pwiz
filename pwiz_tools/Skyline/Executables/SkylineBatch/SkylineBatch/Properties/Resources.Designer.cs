@@ -1944,16 +1944,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot change the configuration list while configurations are running..
-        /// </summary>
-        public static string SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configurations_are_running_ {
-            get {
-                return ResourceManager.GetString("SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configu" +
-                        "rations_are_running_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
         public static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
@@ -1970,6 +1960,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The state of the configuration list cannot be changed while a run is being started. Please try again..
+        /// </summary>
+        public static string SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_changed_while_a_run_is_being_started__Please_try_again_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_" +
+                        "changed_while_a_run_is_being_started__Please_try_again_", resourceCulture);
             }
         }
         

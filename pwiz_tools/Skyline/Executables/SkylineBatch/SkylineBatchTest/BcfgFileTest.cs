@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
@@ -131,15 +132,19 @@ namespace SkylineBatchTest
         {
             ClearConfigs(configManager);
             configManager.Import(importPath, null);
-            configManager.ReplaceSkylineSettings(TestUtils.GetTestSkylineSettings());
-            Assert.AreEqual(expectedConfigs.Count, configManager.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.ConfigNamesAsObjectArray().Length}.");
-            Assert.AreEqual(true, configManager.IsConfigValid(0), "Expected imported configuration to be valid");
+            var initialState = configManager.State;
+            var baseState = initialState.Copy().BaseState
+                .ReplaceAllSkylineVersions(TestUtils.GetTestSkylineSettings(), new List<string>(), null, out _);
+            var state = new SkylineBatchConfigManagerState(baseState, ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, TestUtils.GetTestLogger()).UpdateFromBaseState(null);
+            configManager.SetState(initialState, state);
+            Assert.AreEqual(expectedConfigs.Count, configManager.State.BaseState.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.State.BaseState.ConfigNamesAsObjectArray().Length}.");
+            Assert.AreEqual(true, configManager.State.BaseState.IsConfigValid(0), "Expected imported configuration to be valid");
             Assert.AreEqual(true, configManager.ConfigListEquals(expectedConfigs), $"Configurations did not have same values as expected configurations: {Path.GetFileName(importPath)}");
         }
 
         private void ClearConfigs(SkylineBatchConfigManager configManager)
         {
-            while (configManager.ConfigNamesAsObjectArray().Length > 0)
+            while (configManager.State.BaseState.HasConfigs())
             {
                 configManager.SelectConfig(0);
                 configManager.UserRemoveSelected();
