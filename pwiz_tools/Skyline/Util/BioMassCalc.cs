@@ -604,21 +604,15 @@ namespace pwiz.Skyline.Util
                 return desc; // That wasn't understood as a formula
             }
 
+            // Look for any heavy isotopes in the formula and replace them with unlabeled versions
             foreach (var kvp in dictAtomCounts.ToArray())
             {
+                // For each heavy isotope in the formula
                 if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(kvp.Key, out var unlabeled))
                 {
-                    int count;
-                    if (dictAtomCounts.TryGetValue(unlabeled, out count))
-                    {
-                        count += kvp.Value;
-                    }
-                    else
-                    {
-                        count = kvp.Value;
-                    }
-                    dictAtomCounts[unlabeled] = count;
-                    dictAtomCounts.Remove(kvp.Key);
+                    dictAtomCounts.TryGetValue(unlabeled, out var count); // Get current count of unlabeled version, if any
+                    dictAtomCounts[unlabeled] = count + kvp.Value; // Add the heavy version's count to the unlabeled version's count
+                    dictAtomCounts.Remove(kvp.Key); // And remove heavy isotope from the formula
                 }
             }
             return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); 

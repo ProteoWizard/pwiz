@@ -2381,6 +2381,10 @@ namespace pwiz.Skyline.Model.Lib
     public class SpectrumInfoLibrary : SpectrumInfo
     {
         private Library _library;
+        // Cache peaks and chromatograms to avoid loading every time
+        // CONSIDER: Synchronization required?
+        private SpectrumPeaksInfo _peaksInfo;
+        private LibraryChromGroup _chromGroup;
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, object spectrumKey):
             this(library, labelType, null, null, null, null, true, spectrumKey)
@@ -2410,12 +2414,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public override SpectrumPeaksInfo SpectrumPeaksInfo
         {
-            get { return _library.LoadSpectrum(SpectrumKey); }
+            get { return _peaksInfo = _peaksInfo ?? _library.LoadSpectrum(SpectrumKey); }
         }
 
         public override LibraryChromGroup ChromatogramData
         {
-            get { return _library.LoadChromatogramData(SpectrumKey); }
+            get { return _chromGroup = _chromGroup ?? _library.LoadChromatogramData(SpectrumKey); }
         }
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
