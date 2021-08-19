@@ -1128,7 +1128,13 @@ namespace pwiz.Skyline.SettingsUI
                             .FirstOrDefault(x => x.Value == selectedCategory).Key;
 
                         var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
-                        categoryText = CreateTextSequence(propertyValue.ToString(), false);
+
+                        // Shorten precursor m/z values to be uniform and match the tool tip
+                        if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
+                        {
+                            propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
+                        }
+                        categoryText = CreateTextSequence(propertyValue, false);
                     }
                     else
                     {
@@ -1564,6 +1570,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return new ViewLibrarySettings(false);
             }*/
+        }
+
+        /// <summary>
+        /// Shorten precursor m/z values to a standard length
+        /// </summary>
+        private static string FormatPrecursorMz(double precursorMz)
+        {
+            return string.Format(@"{0:F04}", precursorMz);
         }
 
         private static AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
@@ -2433,7 +2447,7 @@ namespace pwiz.Skyline.SettingsUI
                     var heightSmallMol = tableMz.CalcDimensions(g).Height;
                     
                     // Draw mz
-                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format(@"{0:F04}", _mz), rt);
+                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, FormatPrecursorMz(_mz), rt);
 
                     // Draw ion mobility
                     if (!IonMobilityAndCCS.IsNullOrEmpty(_ionMobility))
