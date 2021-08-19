@@ -96,8 +96,8 @@
       <Link>LaunchBatch.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Resources\Panorama.png" />
-    <None Include="Resources\PanoramaSelected.png" />
+    <None Include="Resources\Edit_Redo.bmp" />
+    <None Include="Resources\Edit_Undo.bmp" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -280,7 +280,6 @@
     <Compile Include="SkylineTemplate.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="XMLTags.cs" />
-    <Compile Include="XmlUpdater.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FluentFTP">

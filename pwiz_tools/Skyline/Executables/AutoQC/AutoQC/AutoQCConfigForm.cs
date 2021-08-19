@@ -283,7 +283,7 @@ namespace AutoQC
 
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
+            return new SkylineSettings(_skylineTypeControl.Type, null, _skylineTypeControl.CommandPath);
         }
 
         #endregion
