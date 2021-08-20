@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -57,7 +58,6 @@ namespace SkylineBatch
             _uiControl = mainForm;
             LoadLogs(logger);
             _state = SkylineBatchConfigManagerState.Empty(logger);
-            base.SetState(ConfigManagerState.Empty(), _state.BaseState);
             _stateList = new List<SkylineBatchConfigManagerState>();
             _currentIndex = -1;
             _startingRunOption = null;
@@ -669,18 +669,23 @@ namespace SkylineBatch
         public ImmutableDictionary<string, string> Templates { get; private set; } // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
         public ImmutableDictionary<string, IConfigRunner> ConfigRunners { get; private set; } // dictionary mapping from config name to that config's runner
 
+        public ImmutableDictionary<string, RemoteFileSource> FileSources { get; private set; } // dictionary mapping from config name to that config's runner
+
         private readonly Logger _mainLogger; // the ConfigManagerState that holds the list of configurations etc
 
         public static SkylineBatchConfigManagerState Empty(Logger mainLogger)
         {
-            return new SkylineBatchConfigManagerState(ConfigManagerState.Empty(), ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, mainLogger);
+            return new SkylineBatchConfigManagerState(ConfigManagerState.Empty(), ImmutableDictionary<string, string>.Empty, 
+                ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableDictionary<string, RemoteFileSource>.Empty, mainLogger);
         }
 
-        public SkylineBatchConfigManagerState(ConfigManagerState baseState, ImmutableDictionary<string, string> templates, ImmutableDictionary<string, IConfigRunner> configRunners, Logger mainLogger)
+        public SkylineBatchConfigManagerState(ConfigManagerState baseState, ImmutableDictionary<string, string> templates, ImmutableDictionary<string, IConfigRunner> configRunners, 
+            ImmutableDictionary<string, RemoteFileSource> fileSources, Logger mainLogger)
         {
             BaseState = baseState;
             Templates = templates;
             ConfigRunners = configRunners;
+            FileSources = fileSources;
             _mainLogger = mainLogger;
         }
 
@@ -712,7 +717,7 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManagerState Copy()
         {
-            return new SkylineBatchConfigManagerState(BaseState.Copy(), Templates, ConfigRunners, _mainLogger);
+            return new SkylineBatchConfigManagerState(BaseState.Copy(), Templates, ConfigRunners, FileSources, _mainLogger);
         }
 
         // State methods
@@ -738,20 +743,22 @@ namespace SkylineBatch
 
         private SkylineBatchConfigManagerState UserInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
         {
-            BaseState.UserInsertConfig(index, iconfig);
-            AddConfig(iconfig, uiControl);
+            var newConfig = ((SkylineBatchConfig)iconfig).UpdateRemoteFileSet(FileSources,
+                out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+            BaseState.UserInsertConfig(index, newConfig);
+            AddConfig(newConfig, uiControl);
+            FileSources = newRemoteFileSources;
             return this;
-        }
-
-        private SkylineBatchConfigManagerState ProgramaticallyAddConfig(IConfig iconfig, IMainUiControl uiControl)
-        {
-            return ProgramaticallyInsertConfig(BaseState.ConfigList.Count, iconfig, uiControl);
         }
 
         public SkylineBatchConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
         {
-            BaseState.ProgramaticallyInsertConfig(index, iconfig);
-            return AddConfig(iconfig, uiControl);
+            var newConfig = ((SkylineBatchConfig)iconfig).UpdateRemoteFileSet(FileSources,
+                out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+            BaseState.ProgramaticallyInsertConfig(index, newConfig);
+            AddConfig(iconfig, uiControl);
+            FileSources = newRemoteFileSources;
+            return this;
         }
 
         private SkylineBatchConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)
@@ -909,6 +916,7 @@ namespace SkylineBatch
                     ConfigRunners = ConfigRunners.Remove(config);
             }
             UpdateDependencies(uiControl);
+            UpdateRemoteFileSources(uiControl);
             return this;
         }
 
@@ -1271,6 +1279,113 @@ namespace SkylineBatch
                    Templates.GetHashCode() +
                    ConfigRunners.GetHashCode();
         }
+
+        #endregion
+
+        #region Remote File Sources
+
+        public SkylineBatchConfigManagerState UserAddRemoteFileSource(RemoteFileSource remoteFileSource, IMainUiControl uiControl)
+        {
+            if (FileSources.ContainsKey(remoteFileSource.Name))
+                ConfigManager.DisplayError(uiControl, string.Format(Resources.SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_, remoteFileSource.Name));
+            else
+                FileSources = FileSources.Add(remoteFileSource.Name, remoteFileSource);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ProgramaticallyAddRemoteFileSource(RemoteFileSource remoteFileSource)
+        {
+            if (FileSources.ContainsKey(remoteFileSource.Name))
+            {
+                var name = remoteFileSource.Name;
+                if (Equals(FileSources[name]))
+                    return this;
+                var duplicateIndexRegex = new Regex("\\(([1-9][0-9]*)\\)$");
+                var regexMatches = duplicateIndexRegex.Match(name).Groups;
+                string newName;
+                if (regexMatches.Count > 0)
+                {
+                    var lastIndex = int.Parse(regexMatches[0].Value);
+                    newName = duplicateIndexRegex.Replace(name, $"({lastIndex + 1})");
+                }
+                else
+                {
+                    newName = name + "(2)";
+                }
+                remoteFileSource = new RemoteFileSource(newName, remoteFileSource.URI, remoteFileSource.Username, remoteFileSource.Password, remoteFileSource.Encrypt);
+            }
+            FileSources = FileSources.Add(remoteFileSource.Name, remoteFileSource);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState RemoveRemoteFileSource(string name)
+        {
+            if (!FileSources.ContainsKey(name))
+                return this;
+            FileSources = FileSources.Remove(name);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ReplaceRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, IMainUiControl uiControl, string editingConfigName = null)
+        {
+            if (!FileSources.ContainsKey(existingSource.Name))
+                return this;
+            var replacedConfigs = new List<IConfig>();
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                var newConfig = config.ReplacedRemoteFileSource(existingSource, newSource, out bool replaced);
+                if (replaced)
+                    replacedConfigs.Add(newConfig);
+            }
+
+            var replacedConfigsString = string.Empty;
+            foreach (var config in replacedConfigs)
+            {
+                if (!config.GetName().Equals(editingConfigName))
+                    replacedConfigsString += config.GetName() + Environment.NewLine;
+            }
+            
+            if (replacedConfigsString.Length > 0 && !existingSource.Equivalent(newSource))
+            {
+                var message = Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
+                              Environment.NewLine + Environment.NewLine +
+                              replacedConfigsString + Environment.NewLine +
+                    Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
+                if (DialogResult.OK != ConfigManager.DisplayLargeOkCancel(uiControl, message))
+                    return this;
+            }
+
+            FileSources = FileSources.Remove(existingSource.Name);
+            foreach (var config in replacedConfigs)
+            {
+                var index = BaseState.GetConfigIndex(config.GetName());
+                ProgramaticallyRemoveAt(index);
+                ProgramaticallyInsertConfig(index, config, uiControl);
+            }
+            //FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState UpdateRemoteFileSources(IMainUiControl uiControl)
+        {
+            FileSources = ImmutableDictionary<string, RemoteFileSource>.Empty;
+            int i = 0;
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                var newConfig = config.UpdateRemoteFileSet(FileSources,
+                    out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+                if (!Equals(config, newConfig))
+                {
+                    ProgramaticallyRemoveAt(i);
+                    ProgramaticallyInsertConfig(i, newConfig, uiControl);
+                }
+                FileSources = newRemoteFileSources;
+            }
+            return this;
+        }
+
 
         #endregion
 

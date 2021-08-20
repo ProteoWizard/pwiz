@@ -20,6 +20,7 @@ namespace SkylineBatch
         {
             InitializeComponent();
             Icon = Program.Icon();
+            State = state;
             _serverFiles = serverFiles;
             _disconnectedConfigs = new Dictionary<string, Exception>();
             _configDict = new Dictionary<string, SkylineBatchConfig>();
@@ -51,7 +52,7 @@ namespace SkylineBatch
         private void btnEdit_Click(object sender, EventArgs e)
         {
             var config = _configDict[(string) listConfigs.SelectedItem];
-            var addServerForm = new AddServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, true);
+            var addServerForm = new DataServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, State, true);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
                 var mainSettings = config.MainSettings;

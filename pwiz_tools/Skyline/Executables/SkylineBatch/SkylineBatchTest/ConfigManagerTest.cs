@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharedBatch;
 using SkylineBatch;
 
 
@@ -56,7 +55,18 @@ namespace SkylineBatchTest
                 Assert.Fail("Expected to successfully select configurations within range. Threw exception: " + e.Message);
             }
 
-            
+            var selectedNegativeIndex = false;
+            try
+            {
+                testConfigManager.State.BaseState.SelectIndex(-2).ValidateState();
+                selectedNegativeIndex = true;
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Assert.AreEqual("There is no configuration at index: -2", e.Message);
+            }
+            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
+
             var selectedIndexAboveRange = false;
             try
             {

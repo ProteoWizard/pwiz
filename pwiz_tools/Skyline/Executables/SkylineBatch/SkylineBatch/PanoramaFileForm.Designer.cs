@@ -30,69 +30,23 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaFileForm));
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.label2 = new System.Windows.Forms.Label();
-            this.textUserName = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.textPassword = new System.Windows.Forms.TextBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.textUrl = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.label1 = new System.Windows.Forms.Label();
             this.btnClear = new System.Windows.Forms.Button();
-            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.comboRemoteFileSource = new System.Windows.Forms.ComboBox();
+            this.textRelativePath = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.btnBrowse = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // splitContainer1
-            // 
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.label2);
-            this.splitContainer1.Panel1.Controls.Add(this.textUserName);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.checkBoxNoEncryption);
-            this.splitContainer1.Panel2.Controls.Add(this.label3);
-            this.splitContainer1.Panel2.Controls.Add(this.textPassword);
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
-            // 
-            // textUserName
-            // 
-            resources.ApplyResources(this.textUserName, "textUserName");
-            this.textUserName.Name = "textUserName";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            this.toolTip1.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
-            // 
-            // textPassword
-            // 
-            resources.ApplyResources(this.textPassword, "textPassword");
-            this.textPassword.Name = "textPassword";
-            this.textPassword.TextChanged += new System.EventHandler(this.textPassword_TextChanged);
             // 
             // btnSave
             // 
             resources.ApplyResources(this.btnSave, "btnSave");
             this.btnSave.Name = "btnSave";
             this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnCancel
             // 
@@ -101,16 +55,10 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // textUrl
-            // 
-            resources.ApplyResources(this.textUrl, "textUrl");
-            this.textUrl.Name = "textUrl";
-            // 
             // label1
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
             // 
             // btnClear
             // 
@@ -119,52 +67,61 @@
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
-            // checkBoxNoEncryption
+            // comboRemoteFileSource
             // 
-            resources.ApplyResources(this.checkBoxNoEncryption, "checkBoxNoEncryption");
-            this.checkBoxNoEncryption.Name = "checkBoxNoEncryption";
-            this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
-            this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
+            resources.ApplyResources(this.comboRemoteFileSource, "comboRemoteFileSource");
+            this.comboRemoteFileSource.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRemoteFileSource.FormattingEnabled = true;
+            this.comboRemoteFileSource.Name = "comboRemoteFileSource";
+            this.comboRemoteFileSource.SelectedIndexChanged += new System.EventHandler(this.comboRemoteFileSource_SelectedIndexChanged);
+            // 
+            // textRelativePath
+            // 
+            resources.ApplyResources(this.textRelativePath, "textRelativePath");
+            this.textRelativePath.Name = "textRelativePath";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // btnBrowse
+            // 
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.UseVisualStyleBackColor = true;
             // 
             // PanoramaFileForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.textRelativePath);
+            this.Controls.Add(this.comboRemoteFileSource);
             this.Controls.Add(this.btnClear);
-            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.textUrl);
             this.Controls.Add(this.label1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFileForm";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddPanoramaTemplate_FormClosing);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.TextBox textUserName;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textPassword;
         public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.TextBox textUrl;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnClear;
-        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox comboRemoteFileSource;
+        private System.Windows.Forms.TextBox textRelativePath;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnBrowse;
     }
 }

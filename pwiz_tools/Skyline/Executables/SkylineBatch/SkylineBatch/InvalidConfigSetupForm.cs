@@ -97,7 +97,7 @@ namespace SkylineBatch
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into,
                         invalidPanoramaFile.DownloadFolder, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
                     validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
-                        new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
+                       invalidPanoramaFile.ReplaceFolder(validDownloadFolder));
                 }
             }
 
@@ -111,8 +111,7 @@ namespace SkylineBatch
                 annotationsValidator, TextUtil.FILTER_CSV, PathDialogOptions.File);
             var validAnnotationsDownload =
                 !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
-                    ? new PanoramaFile(mainSettings.AnnotationsDownload,
-                        Path.GetDirectoryName(validAnnotationsFilePath), mainSettings.AnnotationsDownload.FileName)
+                    ? mainSettings.AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(validAnnotationsFilePath))
                     : null;
 
             return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,

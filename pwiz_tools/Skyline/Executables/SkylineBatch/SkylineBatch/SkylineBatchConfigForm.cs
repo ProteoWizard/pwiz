@@ -142,21 +142,21 @@ namespace SkylineBatch
         {
             templateControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Template_File, config?.MainSettings.Template.FilePath, 
-                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama");
+                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl, State);
             templateControl.Dock = DockStyle.Fill;
             templateControl.Show();
             panelTemplate.Controls.Add(templateControl);
 
             dataControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory,
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory, 
-                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data");
+                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data", _mainControl, State);
             dataControl.Dock = DockStyle.Fill;
             dataControl.Show();
             panelData.Controls.Add(dataControl);
 
             annotationsControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File, config?.MainSettings.AnnotationsFilePath, 
-                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama");
+                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama", _mainControl, State);
             annotationsControl.Dock = DockStyle.Fill;
             annotationsControl.Show();
             panelAnnotations.Controls.Add(annotationsControl);

@@ -47,17 +47,18 @@ namespace SkylineBatchTest
                 new FileSettings(null, null, null, false, false, false), RefineSettings.Empty(), new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
             CheckValues(configManager, minimalConfigPath, new List<IConfig> { expectedMinimalConfig});
 
+            // TODO - update the servers to have relative paths
             var templateOnlyPath = Path.Combine(folderPath, "DownloadTemplateOnly.bcfg");
             var expectedTemplateOnly = new SkylineBatchConfig("TemplateOnly", false, false, DateTime.MinValue,
                 new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("Selevsek.sky.zip"), null, 
-                    new PanoramaFile(new Server("https://panoramaweb.org/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/targetedms-showPrecursorList.view?fileName=Selevsek.sky.zip",  string.Empty, string.Empty, true), Path.GetDirectoryName(folderPath), "Selevsek.sky.zip")), Path.Combine(folderPath, "TemplateOnly"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
+                    new PanoramaFile(new RemoteFileSource("panoramaweb.org Selevsek.sky.zip", "https://panoramaweb.org/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/targetedms-showPrecursorList.view?fileName=Selevsek.sky.zip",  string.Empty, string.Empty, true), string.Empty, Path.GetDirectoryName(folderPath), "Selevsek.sky.zip")), Path.Combine(folderPath, "TemplateOnly"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
                 expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, templateOnlyPath, new List<IConfig> { expectedTemplateOnly});
 
             var dataOnlyPath = Path.Combine(folderPath, "DownloadDataOnly.bcfg");
             var expectedDataOnly = new SkylineBatchConfig("DataOnly", false, false, DateTime.MinValue,
                 new MainSettings(expectedMinimalConfig.MainSettings.Template, Path.Combine(folderPath, "DataOnly"), TestUtils.GetTestFilePath("emptyData"), 
-                    DataServerInfo.ServerFromUi("https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/", string.Empty, string.Empty, true, string.Empty, TestUtils.GetTestFilePath("emptyData")), string.Empty, null, string.Empty),
+                    new DataServerInfo(new RemoteFileSource("panoramaweb.org wiff-rep", "https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/", string.Empty, string.Empty, true), string.Empty, string.Empty, TestUtils.GetTestFilePath("emptyData")), string.Empty, null, string.Empty),
                 expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, dataOnlyPath, new List<IConfig> { expectedDataOnly});
 
@@ -65,7 +66,7 @@ namespace SkylineBatchTest
             var expectedAnnotationsOnly = new SkylineBatchConfig("AnnotationsOnly", false, false, DateTime.MinValue,
                 new MainSettings(expectedMinimalConfig.MainSettings.Template, Path.Combine(folderPath, "AnnotationsOnly"), TestUtils.GetTestFilePath("emptyData"),
                     null, Path.Combine(folderPath, "Selevsek-os-annotations.csv"), 
-                    new PanoramaFile(new Server("https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/reports/Selevsek-os-annotations.csv", string.Empty, string.Empty, true), folderPath, "Selevsek-os-annotations.csv"), string.Empty),
+                    new PanoramaFile(new RemoteFileSource("panoramaweb.org Selevsek-os-annotations.csv", "https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/reports/Selevsek-os-annotations.csv", string.Empty, string.Empty, true), string.Empty, folderPath, "Selevsek-os-annotations.csv"), string.Empty),
                 expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, annotationsOnlyPath, new List<IConfig> { expectedAnnotationsOnly});
 
@@ -135,7 +136,7 @@ namespace SkylineBatchTest
             var initialState = configManager.State;
             var baseState = initialState.Copy().BaseState
                 .ReplaceAllSkylineVersions(TestUtils.GetTestSkylineSettings(), new List<string>(), null, out _);
-            var state = new SkylineBatchConfigManagerState(baseState, ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, TestUtils.GetTestLogger()).UpdateFromBaseState(null);
+            var state = new SkylineBatchConfigManagerState(baseState, ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableDictionary<string, RemoteFileSource>.Empty, TestUtils.GetTestLogger()).UpdateFromBaseState(null);
             configManager.SetState(initialState, state);
             Assert.AreEqual(expectedConfigs.Count, configManager.State.BaseState.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.State.BaseState.ConfigNamesAsObjectArray().Length}.");
             Assert.AreEqual(true, configManager.State.BaseState.IsConfigValid(0), "Expected imported configuration to be valid");
@@ -168,14 +169,14 @@ namespace SkylineBatchTest
             var templateOnlyPath = Path.Combine(folderPath, "OldDownloadTemplateOnly.bcfg");
             var expectedTemplateOnly = new SkylineBatchConfig("OldTemplateOnly", false, false, DateTime.MinValue,
                 new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("Selevsek.sky.zip"), null,
-                    new PanoramaFile(new Server("https://panoramaweb.org/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/targetedms-showPrecursorList.view?fileName=Selevsek.sky.zip", string.Empty, string.Empty, true), Path.GetDirectoryName(folderPath), "Selevsek.sky.zip")), Path.Combine(folderPath, "OldTemplateOnly"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
+                    new PanoramaFile(new RemoteFileSource("panoramaweb.org Selevsek.sky.zip", "https://panoramaweb.org/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/targetedms-showPrecursorList.view?fileName=Selevsek.sky.zip", string.Empty, string.Empty, false), string.Empty, Path.GetDirectoryName(folderPath), "Selevsek.sky.zip")), Path.Combine(folderPath, "OldTemplateOnly"), TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty),
                 expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, templateOnlyPath, new List<IConfig> { expectedTemplateOnly });
 
            var dataOnlyPath = Path.Combine(folderPath, "OldDownloadDataOnly.bcfg");
             var expectedDataOnly = new SkylineBatchConfig("OldDataOnly", false, false, DateTime.MinValue,
                 new MainSettings(expectedMinimalConfig.MainSettings.Template, Path.Combine(folderPath, "OldDataOnly"), TestUtils.GetTestFilePath("emptyData"),
-                    DataServerInfo.ServerFromUi("https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/", string.Empty, string.Empty, true, string.Empty, TestUtils.GetTestFilePath("emptyData")), string.Empty, null, string.Empty),
+                    new DataServerInfo(new RemoteFileSource("panoramaweb.org wiff-rep", "https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/RawFiles/wiff-rep/", string.Empty, string.Empty, true), string.Empty, string.Empty, TestUtils.GetTestFilePath("emptyData")), string.Empty, null, string.Empty),
                 expectedMinimalConfig.FileSettings, expectedMinimalConfig.RefineSettings, expectedMinimalConfig.ReportSettings, expectedMinimalConfig.SkylineSettings);
             CheckValues(configManager, dataOnlyPath, new List<IConfig> { expectedDataOnly });
 

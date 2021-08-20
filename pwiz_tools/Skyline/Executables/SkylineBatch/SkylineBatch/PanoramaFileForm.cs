@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
@@ -8,27 +11,28 @@ namespace SkylineBatch
 {
     public partial class PanoramaFileForm : Form
     {
-        //private FilePathControl _folderControl;
         private string _folderPath;
         private CancellationTokenSource _cancelSource;
+        private IMainUiControl _mainControl;
 
-        public PanoramaFileForm(Server editingServer, string path, string title)
+        public PanoramaFileForm(Server editingServer, string path, string title, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
             Icon = Program.Icon();
+            State = state;
 
             path = path ?? string.Empty;
             _folderPath = FileUtil.GetPathDirectory(path);
+            _mainControl = mainControl;
 
+            UpdateRemoteSourceList();
 
             if (editingServer != null)
             {
-                textUrl.Text = editingServer.URI.AbsoluteUri;
-                textUserName.Text = editingServer.Username;
-                textPassword.Text = editingServer.Password;
-                checkBoxNoEncryption.Enabled = !string.IsNullOrEmpty(editingServer.Password);
-                checkBoxNoEncryption.Checked = !editingServer.Encrypt;
+                textRelativePath.Text = editingServer.RelativePath;
+                comboRemoteFileSource.SelectedItem = editingServer.FileSource.Name;
             }
+
 
             Shown += (sender, args) => Text = title;
 
@@ -36,9 +40,29 @@ namespace SkylineBatch
 
         public PanoramaFile PanoramaServer;
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        public SkylineBatchConfigManagerState State;
+
+        private void UpdateRemoteSourceList()
         {
-           _cancelSource = new CancellationTokenSource();
+            comboRemoteFileSource.Items.Clear();
+            foreach (var name in State.FileSources.Keys)
+                comboRemoteFileSource.Items.Add(name);
+            comboRemoteFileSource.Items.Add("<Edit>");
+            comboRemoteFileSource.Items.Add("<Add>");
+        }
+
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            if (comboRemoteFileSource.SelectedIndex == -1 && textRelativePath.Text == string.Empty)
+            {
+
+            }
+                var remoteFileSource = comboRemoteFileSource.SelectedIndex > -1
+                ? State.FileSources[comboRemoteFileSource.SelectedItem.ToString()]
+                : null;
+
+            _cancelSource = new CancellationTokenSource();
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;
 
@@ -46,7 +70,7 @@ namespace SkylineBatch
             {
                 try
                 {
-                    var panoramaServer = PanoramaFileFromUI(_cancelSource.Token);
+                    var panoramaServer = PanoramaFileFromUI(remoteFileSource, _cancelSource.Token);
                     DoneValidatingServer(panoramaServer, null);
                 }
                 catch (Exception ex)
@@ -85,24 +109,20 @@ namespace SkylineBatch
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            textPassword.Text = string.Empty;
-            textUrl.Text = string.Empty;
-            textUserName.Text = string.Empty;
+            comboRemoteFileSource.SelectedIndex = -1;
         }
 
-        private PanoramaFile PanoramaFileFromUI(CancellationToken cancelToken)
+        private PanoramaFile PanoramaFileFromUI(RemoteFileSource remoteFileSource, CancellationToken cancelToken)
         {
-            if (textUrl.Text == string.Empty &&
-                textUserName.Text == string.Empty &&
-                textPassword.Text == string.Empty)
-                return null;
-            return PanoramaFile.PanoramaFileFromUI(new Server(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked), _folderPath, cancelToken);
+            return PanoramaFile.PanoramaFileFromUI(remoteFileSource, textRelativePath.Text, _folderPath, cancelToken);
         }
 
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
         {
             CancelValidate();
         }
+
+
 
 
         private void RunUi(Action action)
@@ -119,16 +139,32 @@ namespace SkylineBatch
             }
         }
 
-        private void textPassword_TextChanged(object sender, EventArgs e)
+        private void comboRemoteFileSource_SelectedIndexChanged(object sender, EventArgs e)
         {
-            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
-            if (textPassword.Text.Length == 0)
-                checkBoxNoEncryption.Checked = false;
-        }
-
-        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
-        {
-            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
+            //Edit
+            if (comboRemoteFileSource.SelectedIndex == comboRemoteFileSource.Items.Count - 2)
+            {
+                var editSourceForm = new EditRemoteFileSourcesForm(_mainControl, State);
+                var dialogResult = editSourceForm.ShowDialog(this);
+                State = editSourceForm.State;
+                UpdateRemoteSourceList();
+                if (DialogResult.OK == dialogResult && editSourceForm.LastEditedName != null)
+                    comboRemoteFileSource.SelectedItem = editSourceForm.LastEditedName;
+                else
+                    comboRemoteFileSource.SelectedIndex = -1;
+            }
+            // Add
+            else if (comboRemoteFileSource.SelectedIndex == comboRemoteFileSource.Items.Count - 1)
+            {
+                var remoteSourceForm = new RemoteSourceForm(null, _mainControl, State);
+                var dialogResult = remoteSourceForm.ShowDialog(this);
+                State = remoteSourceForm.State;
+                UpdateRemoteSourceList();
+                if (DialogResult.OK == dialogResult)
+                    comboRemoteFileSource.SelectedItem = remoteSourceForm.RemoteFileSource.Name;
+                else
+                    comboRemoteFileSource.SelectedIndex = -1;
+            }
         }
     }
 }

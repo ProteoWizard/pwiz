@@ -12,9 +12,10 @@ namespace SkylineBatch
 
         private readonly RDirectorySelector _rDirectorySelector;
         private DownloadingFileControl _fileControl;
+        private IMainUiControl _mainControl;
 
 
-        public RScriptForm(string currentPath, string currentVersion, PanoramaFile remoteFile, RDirectorySelector rDirectorySelector, SkylineBatchConfigManagerState state)
+        public RScriptForm(string currentPath, string currentVersion, PanoramaFile remoteFile, RDirectorySelector rDirectorySelector, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -32,12 +33,14 @@ namespace SkylineBatch
                     _lastChosenVersion = null;
             }
 
+            _mainControl = mainControl;
+
             Version = currentVersion ?? _lastChosenVersion;
             _rDirectorySelector = rDirectorySelector;
 
             _fileControl = new DownloadingFileControl(Resources.RScriptForm_RScriptForm_R_script_file_path,
                 Resources.RScriptForm_RScriptForm_R_Script, currentPath,
-                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama");
+                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama", _mainControl, state);
             _fileControl.Dock = DockStyle.Fill;
             _fileControl.Show();
             panelPath.Controls.Add(_fileControl);

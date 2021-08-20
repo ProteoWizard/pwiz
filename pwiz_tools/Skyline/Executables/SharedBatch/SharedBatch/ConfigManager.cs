@@ -119,9 +119,9 @@ namespace SharedBatch
                         .ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_);
                 }
                 newState.ValidateState();
+                if (newState.ModelChanged)
+                    SaveConfigList(newState);
                 _baseState = newState.Copy();
-                if (_baseState.ModelChanged)
-                    SaveConfigList(_baseState);
             }
         }
 

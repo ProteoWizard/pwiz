@@ -300,7 +300,7 @@ namespace SkylineBatch
                 if (tries > 0) _logger.Log(Resources.ConfigRunner_DownloadPanoramaFile_Trying_again___);
                 try
                 {
-                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.FileSource.Username, serverFile.ServerInfo.FileSource.Password, serverFile.Size);
                     _logger.StopLogPercent(true);
                     break;
                 }
@@ -388,7 +388,7 @@ namespace SkylineBatch
                         }, token);
                         try
                         {
-                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.Username, file.ServerInfo.Password, file.Size);
+                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.FileSource.Username, file.ServerInfo.FileSource.Password, file.Size);
                             _logger.StopLogPercent(true);
                             break;
                         }

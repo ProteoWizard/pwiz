@@ -521,6 +521,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A remote file source is required. Please select a remote file source..
+        /// </summary>
+        public static string DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_ {
+            get {
+                return ResourceManager.GetString("DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_" +
+                        "remote_file_source_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing the URL. Please correct the URL and try again..
         /// </summary>
         public static string DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_ {
@@ -1473,6 +1483,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Another remote file location with the name {0} already exists. Please choose a unique name..
+        /// </summary>
+        public static string RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_ {
+            get {
+                return ResourceManager.GetString("RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__alr" +
+                        "eady_exists__Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refined.
         /// </summary>
         public static string ReportInfo_AsObjectArray_Refined {
@@ -1782,6 +1802,16 @@ namespace SkylineBatch.Properties {
         public static string Server_ReadXml_Server_URL_is_corrupt_ {
             get {
                 return ResourceManager.GetString("Server_ReadXml_Server_URL_is_corrupt_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No remote file source was specified. Please choose a remote file source..
+        /// </summary>
+        public static string Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_ {
+            get {
+                return ResourceManager.GetString("Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote" +
+                        "_file_source_", resourceCulture);
             }
         }
         
@@ -2213,6 +2243,35 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_con" +
                         "figurations_have_stopped_to_change_these_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing this file source will impact the following configurations:.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_" +
+                        "will_impact_the_following_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A remote file source named &quot;{0}&quot; already exists. Please choose a different name..
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named" +
+                        "___0___already_exists__Please_choose_a_different_name_", resourceCulture);
             }
         }
         

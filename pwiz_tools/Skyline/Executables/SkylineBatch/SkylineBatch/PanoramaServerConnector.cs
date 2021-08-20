@@ -94,7 +94,7 @@ namespace SkylineBatch
 
 
                 var webClient = new WebPanoramaClient(panoramaServerUri);
-                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.Username, server.Password, cancelToken);
+                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.FileSource.Username, server.FileSource.Password, cancelToken);
                 if (cancelToken.IsCancellationRequested) return null;
 
                 var id = -1;
@@ -113,9 +113,9 @@ namespace SkylineBatch
 
                 using (var wc = new UTF8WebClient())
                 {
-                    if (!string.IsNullOrEmpty(server.Username) && !string.IsNullOrEmpty(server.Password))
+                    if (!string.IsNullOrEmpty(server.FileSource.Username) && !string.IsNullOrEmpty(server.FileSource.Password))
                     {
-                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.Username, server.Password));
+                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.FileSource.Username, server.FileSource.Password));
                     }
 
                     wc.DownloadFile(downloadSkypUri, tmpFile);
@@ -139,9 +139,9 @@ namespace SkylineBatch
                     throw new Exception("Could not parse skyp file.");
             }
 
-            var downloadServer = new Server(webdavUri, server.Username, server.Password, server.Encrypt);
+            var downloadServer = new Server(new RemoteFileSource(server.FileSource.Name + " TEST", webdavUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty);
             var fileName = downloadingFileName;
-            var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password, cancelToken);
+            var size = WebDownloadClient.GetSize(downloadServer.URI, server.FileSource.Username, server.FileSource.Password, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }
 

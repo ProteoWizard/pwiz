@@ -83,8 +83,7 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
-            RunDlg<AlertDlg>(() => 
-                    mainForm.ClickDelete(),
+            RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
                 dlg => { dlg.ClickYes(); });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
         }

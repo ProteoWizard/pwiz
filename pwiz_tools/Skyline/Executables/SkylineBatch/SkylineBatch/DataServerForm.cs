@@ -9,7 +9,7 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class AddServerForm : Form
+    public partial class DataServerForm : Form
     {
 
         private CancellationTokenSource _cancelValidate;
@@ -17,14 +17,31 @@ namespace SkylineBatch
         private readonly string _dataFolder;
         private bool _updated;
 
-        public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
+        public DataServerForm(DataServerInfo editingServerInfo, string folder, SkylineBatchConfigManagerState state, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
+            State = state;
             Server = editingServerInfo;
             _dataFolder = folder;
             _serverRequired = serverRequired;
+
+            foreach (var name in State.FileSources.Keys)
+            {
+                if (!State.FileSources[name].FtpSource)
+                    comboRemoteFileSource.Items.Add(name);
+            }
+            comboRemoteFileSource.Items.Add("<Edit>");
+            comboRemoteFileSource.Items.Add("<Add>");
+
+            if (editingServerInfo != null)
+            {
+                textRelativePath.Text = editingServerInfo.RelativePath;
+                comboRemoteFileSource.SelectedItem = editingServerInfo.FileSource.Name;
+            }
+
+
             UpdateUiServer();
 
             if (_serverRequired)
@@ -33,6 +50,7 @@ namespace SkylineBatch
 
         public DataServerInfo Server;
         public ServerConnector serverConnector { get; private set; }
+        public SkylineBatchConfigManagerState State;
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -40,7 +58,7 @@ namespace SkylineBatch
                 CheckServer(true);
             else
             {
-                Server = GetServerFromUi();
+                //Server = GetServerFromUi();
                 if (Server == null)
                 {
                     DialogResult = DialogResult.OK;
@@ -136,16 +154,14 @@ namespace SkylineBatch
 
         private DataServerInfo GetServerFromUi()
         {
-            if (string.IsNullOrWhiteSpace(textUrl.Text) &&
-                string.IsNullOrWhiteSpace(textUserName.Text) &&
-                string.IsNullOrWhiteSpace(textPassword.Text) &&
-                string.IsNullOrWhiteSpace(textNamingPattern.Text))
+            if (comboRemoteFileSource.SelectedIndex < 0)
             {
-                if (_serverRequired)
-                    throw new ArgumentException(Resources.AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_);
+                throw new ArgumentException(Resources.DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_);
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, textNamingPattern.Text, _dataFolder);
+
+            var remoteFileSource = State.FileSources[(string) comboRemoteFileSource.SelectedItem];
+            return new DataServerInfo(remoteFileSource, textRelativePath.Text, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
@@ -160,11 +176,14 @@ namespace SkylineBatch
 
         private void UpdateUiServer()
         {
-            textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
-            textUserName.Text = Server != null ? Server.Username : string.Empty;
-            textPassword.Text = Server != null ? Server.Password : string.Empty;
-            checkBoxNoEncryption.Enabled = Server != null && !string.IsNullOrEmpty(Server.Password);
-            checkBoxNoEncryption.Checked = checkBoxNoEncryption.Enabled && Server != null && !Server.Encrypt;
+            if (Server == null)
+                return;
+            comboRemoteFileSource.SelectedIndex = -1;
+            for (int i = 0; i < comboRemoteFileSource.Items.Count; i++)
+            {
+                if (Server.FileSource.Name.Equals(comboRemoteFileSource.Items[i]))
+                    comboRemoteFileSource.SelectedIndex = i;
+            }
             textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
                 ? string.Empty
                 : Server.DataNamingPattern;
@@ -186,17 +205,6 @@ namespace SkylineBatch
             listBoxFileNames.BackColor = _updated ? Color.White : Color.WhiteSmoke;
             btnUpdate.Enabled = !_updated;
             labelFileInfo.Visible = _updated;
-        }
-
-        private void text_TextChanged(object sender, EventArgs e)
-        {
-            _updated = false;
-            serverConnector = null;
-            UpdateLabel();
-
-            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
-            if (textPassword.Text.Length == 0)
-                checkBoxNoEncryption.Checked = false;
         }
 
         private void textNamingPattern_TextChanged(object sender, EventArgs e)
@@ -224,11 +232,6 @@ namespace SkylineBatch
                 labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, GetSizeString(totalSize));
         }
 
-        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
-        {
-            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
-        }
-
         private string GetSizeString(long bytes)
         {
             var sizeInGB = Math.Round(bytes / 1000000000.0, 2);
@@ -242,6 +245,18 @@ namespace SkylineBatch
             if (sizeInGB > 0)
                 return string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB);
             return string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
+        }
+
+        private void comboRemoteFileSource_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _updated = false;
+            UpdateLabel();
+        }
+
+        private void textRelativePath_TextChanged(object sender, EventArgs e)
+        {
+            _updated = false;
+            UpdateLabel();
         }
     }
 }
