@@ -118,11 +118,17 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool IsModified { get { return Key.IsModified; } }
 
+        /// <summary>
+        /// International Chemical Identifier Key
+        /// </summary>
         public string InchiKey
         {
             get { return Key.SmallMoleculeLibraryAttributes.InChiKey; }
         }
 
+        /// <summary>
+        /// The formula for the molecule
+        /// </summary>
         public string Formula
         {
             get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }

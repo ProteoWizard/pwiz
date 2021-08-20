@@ -118,7 +118,16 @@ namespace pwiz.Skyline.SettingsUI
         public static string GetStringValue(string propertyName, ViewLibraryPepInfo pepInfo)
         {
             var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
-            return !(property is null) ? property.GetValue(pepInfo).ToString() : "";
+            if (!(property is null))
+            {
+                var value = property.GetValue(pepInfo);
+                if (!(value is null))
+                {
+                    return value.ToString();
+                }
+            }
+
+            return string.Empty;
         }
 
         /// <summary>
@@ -190,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (_accessionCategories.Contains(propertyName))
                 {
                     // Narrow the list down to entries that actually contain the property
-                    intList = intList.Where(index => _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ToList();
+                    intList = intList.Where(index => _pepInfos[index].OtherKeysDict != null).Where(index => _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ToList();
                     return ImmutableList.ValueOf(intList.OrderBy(index =>
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
                 }

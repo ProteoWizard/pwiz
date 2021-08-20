@@ -1378,7 +1378,6 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
     }
 
-
     internal class RowDesc : List<CellDesc>
     {
         public int ColumnSpacing { get; set; }
