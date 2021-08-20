@@ -140,6 +140,7 @@
             this.Controls.Add(this.textName);
             this.Controls.Add(this.splitContainer1);
             this.Name = "RemoteSourceForm";
+            this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RemoteSourceForm_FormClosing);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
