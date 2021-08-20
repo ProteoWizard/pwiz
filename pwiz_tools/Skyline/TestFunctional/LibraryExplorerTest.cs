@@ -111,12 +111,12 @@ namespace pwiz.SkylineTestFunctional
             SetUpTestLibraries();
             if (asSmallMolecules)
             {
-                TestSmallMoleculeFunctionality(6, 2, null, 3); // .blib with wonky fragment annotations
-                TestSmallMoleculeFunctionality(5, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
-                TestSmallMoleculeFunctionality(4, 5); // .blib with fragment annotations
-                TestSmallMoleculeFunctionality(2, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
-                TestSmallMoleculeFunctionality(1, 57); // NIST
-                TestSmallMoleculeFunctionality(3, 3); // .blib
+                TestSmallMoleculeFunctionality(5, 2, null, 3); // .blib with wonky fragment annotations
+                TestSmallMoleculeFunctionality(6, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
+                TestSmallMoleculeFunctionality(7, 5); // .blib with fragment annotations
+                TestSmallMoleculeFunctionality(9, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
+                TestSmallMoleculeFunctionality(10, 57); // NIST
+                TestSmallMoleculeFunctionality(8, 3); // .blib
             }
             else
             {
@@ -653,7 +653,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
         }
 
-        private void TestSmallMoleculeFunctionality(int index, int expectedIonLabelCount1, string expectError = null, int? expectedIonLabelCount2 = null)
+        private void TestSmallMoleculeFunctionality(int libIndex, int expectedIonLabelCount1, string expectError = null, int? expectedIonLabelCount2 = null)
         {
 
             // Launch the Library Explorer dialog
@@ -664,10 +664,9 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             string libSelected = null;
-            var libIndex = _testLibs.Length - index;
-            bool isNIST = (index < 3);
-            bool isLipidCreator = (index == 4);
-            bool isSketchyFragmentAnnotations = (index == 6);
+            bool isNIST = libIndex == 9 || libIndex == 10;
+            bool isLipidCreator = libIndex == 7;
+            bool isSketchyFragmentAnnotations = libIndex == 5;
             if (expectError != null)
             {
                 var errWin = ShowDialog<MessageDlg>(() =>
@@ -741,7 +740,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // Add all to document, expect to be asked if we want to add library to doc as well
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
-            if (isLipidCreator || isSketchyFragmentAnnotations || index == 1)
+            if (isLipidCreator || isSketchyFragmentAnnotations || libIndex == 10)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
                 var confirmMismatch = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Confirm adding peptides that don't match settings
