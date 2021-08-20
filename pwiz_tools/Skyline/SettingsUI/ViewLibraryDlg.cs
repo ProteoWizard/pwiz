@@ -1069,7 +1069,43 @@ namespace pwiz.Skyline.SettingsUI
 
             return textSequences;
         }
-        
+
+        /// <summary>
+        /// Get a text sequence corresponding to the current filter category
+        /// </summary>
+        private TextSequence GetCategoryValueTextSequence(DrawItemEventArgs e)
+        {
+            var pepInfo = (ViewLibraryPepInfo)listPeptide.Items[e.Index];
+            var selectedCategory = comboFilterCategory.SelectedItem.ToString();
+            TextSequence categoryText;
+            if (!_peptides._accessionNumberTypes.Contains(selectedCategory))
+            {
+                var propertyName = _peptides.comboFilterCategoryDict
+                    .FirstOrDefault(x => x.Value == selectedCategory).Key;
+
+                var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
+
+                // Shorten precursor m/z values to be uniform and match the tool tip
+                if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
+                {
+                    propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
+                }
+
+                categoryText = CreateTextSequence(propertyValue, false);
+            }
+            else
+            {
+                categoryText = CreateTextSequence(pepInfo.OtherKeysDict[selectedCategory], false);
+            }
+
+            // Calculate the dimensions of this text sequence
+            var sizeMax = new Size(int.MaxValue, int.MaxValue);
+            categoryText.Width = TextRenderer.MeasureText(e.Graphics, categoryText.Text,
+                categoryText.Font, sizeMax, FORMAT_CUSTOM).Width;
+            
+            return categoryText;
+        }
+
         private TextSequence CreateTextSequence(string text, bool modified)
         {
             var font = (modified ? ModFonts.Light : ModFonts.Plain);
@@ -1119,34 +1155,14 @@ namespace pwiz.Skyline.SettingsUI
                                           textSequence.Font, rectDraw, textColor, backColor,
                                           FORMAT_CUSTOM);
                 }
-                // Now draw the field associated with the filter category
+
                 var selectedCategory = comboFilterCategory.SelectedItem.ToString();
-                if (!selectedCategory.IsNullOrEmpty() && !selectedCategory.Equals(ColumnCaptions.Peptide) && !selectedCategory.Equals(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name))
+
+                // Now draw the field associated with the filter category
+                if (!selectedCategory.IsNullOrEmpty() && !selectedCategory.Equals(ColumnCaptions.Peptide) &&
+                    !selectedCategory.Equals(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name))
                 {
-                    TextSequence categoryText;
-                    if (!_peptides._accessionNumberTypes.Contains(selectedCategory))
-                    {
-                        var propertyName = _peptides.comboFilterCategoryDict
-                            .FirstOrDefault(x => x.Value == selectedCategory).Key;
-
-                        var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
-
-                        // Shorten precursor m/z values to be uniform and match the tool tip
-                        if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
-                        {
-                            propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
-                        }
-                        categoryText = CreateTextSequence(propertyValue, false);
-                    }
-                    else
-                    {
-                        categoryText = CreateTextSequence(pepInfo.OtherKeysDict[selectedCategory], false);
-                    }
-                    
-                    // Draw the value aligned to the right side
-                    var sizeMax = new Size(int.MaxValue, int.MaxValue);
-                    categoryText.Width = TextRenderer.MeasureText(e.Graphics, categoryText.Text,
-                        categoryText.Font, sizeMax, FORMAT_CUSTOM).Width;
+                    var categoryText = GetCategoryValueTextSequence(e);
                     var rectValue = new Rectangle(0, bounds.Y, categoryText.Width, bounds.Height);
                     rectValue.X = bounds.Width - categoryText.Width - PADDING;
 
