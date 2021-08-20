@@ -108,23 +108,7 @@ namespace SkylineBatch
         #endregion
 
         #region Information About Configs
-
-        /*public bool WillRefine() => State.WillRefine();
-
-        public HashSet<string> RVersionsUsed() => RVersionsUsed(GetState());
-
-        public bool HasSelectedConfig() => HasSelectedConfig(GetState().BaseState);
-
-        public SkylineBatchConfig GetSelectedConfig() => GetSelectedConfig(GetState());
-
-        public bool HasConfigs() => HasConfigs(GetState().BaseState);
-
-        public bool IsSelectedConfigValid() => IsSelectedConfigValid(GetState().BaseState);
-
-        public Logger GetSelectedLogger() => GetSelectedLogger(GetState().BaseState);
-
-        public IConfig GetLastModified() => GetLastModified(GetState().BaseState);*/
-
+        
         public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
             var state = State;
