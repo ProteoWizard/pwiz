@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
 
@@ -47,17 +40,37 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-
+            var remoteSourceForm = new RemoteSourceForm(null, _mainControl, State);
+            var dialogResult = remoteSourceForm.ShowDialog(this);
+            State = remoteSourceForm.State;
+            if (DialogResult.OK == dialogResult)
+            {
+                LastEditedName = remoteSourceForm.RemoteFileSource.Name;
+                var index = listSources.Items.Count - 2;
+                listSources.Items.Insert(index, LastEditedName);
+                listSources.SelectedIndex = index;
+            }
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-
+            var initialName = listSources.SelectedItem;
+            var remoteSourceForm = new RemoteSourceForm(State.FileSources[(string)initialName], _mainControl, State);
+            var dialogResult = remoteSourceForm.ShowDialog(this);
+            State = remoteSourceForm.State;
+            if (DialogResult.OK == dialogResult)
+            {
+                LastEditedName = remoteSourceForm.RemoteFileSource.Name;
+                var index = listSources.Items.IndexOf(initialName);
+                listSources.Items.RemoveAt(index);
+                listSources.Items.Insert(index, LastEditedName);
+                listSources.SelectedIndex = index;
+            }
         }
 
         private void listSources_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            btnEdit.Enabled = listSources.SelectedIndex >= 0;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
