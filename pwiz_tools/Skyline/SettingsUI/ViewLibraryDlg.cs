@@ -203,16 +203,17 @@ namespace pwiz.Skyline.SettingsUI
             set { cbAssociateProteins.Checked = value; }
         }
 
-        public void ChangeSelectedPeptide(string text)
+        public bool ChangeSelectedPeptide(string text)
         {
             foreach(ViewLibraryPepInfo pepInfo in listPeptide.Items)
             {
                 if (pepInfo.AnnotatedDisplayText.Contains(text))
                 {
                     listPeptide.SelectedItem = pepInfo;
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
         #region Dialog Events
@@ -573,8 +574,9 @@ namespace pwiz.Skyline.SettingsUI
                 IEnumerable<ModificationInfo> modList = GetModifications(pepInfo);
                 foreach (var modInfo in modList)
                 {
+                    var aa = modInfo.ModifiedAminoAcid;
                     var smod = new StaticMod(@"temp",
-                                             modInfo.ModifiedAminoAcid.ToString(CultureInfo.InvariantCulture),
+                                             aa != 'X' ? aa.ToString(CultureInfo.InvariantCulture) : string.Join(@",", AminoAcid.All),
                                              null,
                                              null,
                                              LabelAtoms.None,

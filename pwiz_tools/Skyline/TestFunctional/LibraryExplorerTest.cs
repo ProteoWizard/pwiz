@@ -77,7 +77,8 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"), // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo("mini_x", "mini_x.blib", "YLXEEDEDAYKK++")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -624,6 +625,10 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectAll();
                 SkylineWindow.EditDelete();
             });
+
+            // Test library with a modified 'X'.
+            SelectLibWithAllMods(libComboBox, 11);
+            RunUI(() => Assert.IsTrue(_viewLibUI.ChangeSelectedPeptide("YLX[+16.0]EEDEDAYKK++")));
 
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);

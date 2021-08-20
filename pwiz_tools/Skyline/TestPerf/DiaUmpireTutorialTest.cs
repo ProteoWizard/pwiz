@@ -118,7 +118,6 @@ namespace TestPerf
         private string RootName { get; set; }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofDiaUmpireTutorial()
         {
             //IsPauseForScreenShots = true;
@@ -145,7 +144,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests
@@ -210,7 +208,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeDiaUmpireTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -238,7 +235,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests

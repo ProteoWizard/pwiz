@@ -72,8 +72,15 @@ namespace SkylineBatch
             var rScriptForm = new RScriptForm(null, null, null, _rDirectorySelector);
             if (DialogResult.OK != rScriptForm.ShowDialog(this))
                 return;
-            dataGridScripts.Rows.Add(rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
-            _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
+            if (rScriptForm.RemoteFile != null)
+            {
+                dataGridScripts.Rows.Add(rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
+                _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
+            }
+            else
+            {
+                dataGridScripts.Rows.Add(rScriptForm.Path, string.Empty, rScriptForm.Version);
+            }
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
@@ -100,9 +107,17 @@ namespace SkylineBatch
             if (DialogResult.OK != rScriptForm.ShowDialog(this))
                 return;
             dataGridScripts.Rows.RemoveAt(rowSelected);
-            dataGridScripts.Rows.Insert(rowSelected, rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
-            _remoteFiles.Remove(oldPath);
-            _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
+            if (_remoteFiles.ContainsKey(oldPath))
+                _remoteFiles.Remove(oldPath);
+            if (rScriptForm.RemoteFile != null)
+            {
+                dataGridScripts.Rows.Insert(rowSelected, rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
+                _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
+            }
+            else
+            {
+                dataGridScripts.Rows.Insert(rowSelected, rScriptForm.Path, string.Empty, rScriptForm.Version);
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
