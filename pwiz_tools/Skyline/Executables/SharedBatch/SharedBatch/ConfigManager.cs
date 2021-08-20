@@ -59,7 +59,7 @@ namespace SharedBatch
 
        
 
-        private static void SaveConfigList(ConfigManagerState state)
+        public static void SaveConfigList(ConfigManagerState state)
         {
             Settings.Default.SetConfigList(state.ConfigList.ToList());
             Settings.Default.Save();
@@ -109,7 +109,7 @@ namespace SharedBatch
 
         // Updates the config manager to a new valid state when the configuration list has changed
         // newState should contain a configuration list that is different from the current state in at least one way
-        protected void SetState(ConfigManagerState oldState, ConfigManagerState newState)
+        public void SetState(ConfigManagerState oldState, ConfigManagerState newState)
         {
             lock (_lock)
             {
@@ -395,6 +395,18 @@ namespace SharedBatch
             return this;
         }
 
+        public ConfigManagerState ReorderConfigs(List<int> newIndexOrder)
+        {
+            var selectedName = Selected >= 0 ? ConfigList[Selected].GetName() : null;
+            var oldConfigList = ConfigList;
+            ConfigList = ImmutableList<IConfig>.Empty;
+            foreach (var index in newIndexOrder)
+                ConfigList = ConfigList.Add(oldConfigList[index]);
+            if (selectedName != null)
+                Selected = GetConfigIndex(selectedName);
+            return this;
+        }
+
         public List<ListViewItem> ConfigsAsListViewItems(ImmutableDictionary<string, IConfigRunner> configRunners,
             Graphics graphics)
         {
@@ -585,11 +597,12 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         public ConfigManagerState ImportFrom(Importer importer, string filePath, decimal currentXmlVersion,
-             IMainUiControl uiControl, ShowDownloadedFileForm showDownloadedFileForm)
+             IMainUiControl uiControl, ShowDownloadedFileForm showDownloadedFileForm, out List<int> addedIndicies)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
+            addedIndicies = new List<int>();
 
             if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
@@ -689,13 +702,14 @@ namespace SharedBatch
                     e.Message);
                 return this;
             }
-            return HandleImportedConfigErrors(readConfigs, readXmlErrors, filePath, forceReplaceRoot, uiControl);
+            return HandleImportedConfigErrors(readConfigs, readXmlErrors, filePath, forceReplaceRoot, uiControl, out addedIndicies);
         }
 
         // handles imported config errors like duplicate configs
         protected ConfigManagerState HandleImportedConfigErrors(List<IConfig> readConfigs, List<string> readXmlErrors, string filePath, string forceReplaceRoot,
-            IMainUiControl uiControl)
+            IMainUiControl uiControl, out List<int> addedIndicies)
         {
+            addedIndicies = new List<int>();
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
                 // warn if no configs found
@@ -747,6 +761,7 @@ namespace SharedBatch
                 ModelChanged = true;
                 if (existingConfigIndex >= 0)
                     ProgramaticallyRemoveAt(existingConfigIndex);
+                addedIndicies.Add(existingConfigIndex >= 0 ? existingConfigIndex : ConfigList.Count);
                 ProgramaticallyInsertConfig(existingConfigIndex >= 0 ? existingConfigIndex : ConfigList.Count, addingConfig);
             }
 

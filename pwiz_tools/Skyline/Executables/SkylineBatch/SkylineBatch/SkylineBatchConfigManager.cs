@@ -899,7 +899,7 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManagerState Import(string filePath, IMainUiControl uiControl, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm)
         {
-            BaseState.ImportFrom(SkylineBatchConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, showDownloadedFileForm);
+            BaseState.ImportFrom(SkylineBatchConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, showDownloadedFileForm, out _);
             UpdateFromBaseState(uiControl);
             return DisableInvalidConfigs();
         }

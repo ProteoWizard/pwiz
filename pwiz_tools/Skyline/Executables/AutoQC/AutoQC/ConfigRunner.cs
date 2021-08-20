@@ -1058,6 +1058,13 @@ namespace AutoQC
             return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
         }
 
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
+        }
+
         #region [Implementation of IProcessControl interface]
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {

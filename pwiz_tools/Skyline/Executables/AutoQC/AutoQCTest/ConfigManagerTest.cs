@@ -44,13 +44,13 @@ namespace AutoQCTest
             try
             {
                 testConfigManager.SelectConfig(0);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 0);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 0);
                 testConfigManager.SelectConfig(1);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 1);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 1);
                 testConfigManager.SelectConfig(2);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 2);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 2);
                 testConfigManager.DeselectConfig();
-                Assert.IsTrue(testConfigManager.SelectedConfig == -1);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == -1);
             }
             catch (Exception e)
             {
@@ -60,19 +60,19 @@ namespace AutoQCTest
             var selectedNegativeIndex = false;
             try
             {
-                testConfigManager.SelectConfig(-1);
+                testConfigManager.State.BaseState.SelectIndex(-2).ValidateState();
                 selectedNegativeIndex = true;
             }
             catch (IndexOutOfRangeException e)
             {
-                Assert.AreEqual("There is no configuration at index: -1", e.Message);
+                Assert.AreEqual("There is no configuration at index: -2", e.Message);
             }
             Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
 
             var selectedIndexAboveRange = false;
             try
             {
-                testConfigManager.SelectConfig(3);
+                testConfigManager.State.BaseState.SelectIndex(3).ValidateState();
                 selectedIndexAboveRange = true;
             }
             catch (IndexOutOfRangeException e)
@@ -86,21 +86,26 @@ namespace AutoQCTest
         public void TestAddInsertConfig()
         {
             var testConfigManager = new AutoQcConfigManager();
-            Assert.IsTrue(!testConfigManager.HasConfigs());
+            Assert.IsTrue(!testConfigManager.State.BaseState.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
-            testConfigManager.UserAddConfig(addedConfig);
+            testConfigManager.SetState(testConfigManager.State,
+                testConfigManager.State.UserAddConfig(addedConfig, null));
             var oneConfig = TestUtils.ConfigListFromNames(new [] { "one" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(oneConfig));
 
-            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("two"));
-            testConfigManager.UserAddConfig(TestUtils.GetTestConfig("three"));
+
+            testConfigManager.SetState(testConfigManager.State,
+                testConfigManager.State.UserAddConfig(TestUtils.GetTestConfig("two"), null));
+            testConfigManager.SetState(testConfigManager.State,
+                testConfigManager.State.UserAddConfig(TestUtils.GetTestConfig("three"), null));
             var threeConfigs = TestUtils.ConfigListFromNames(new[] { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
             var addedDuplicateConfig = false;
             try
             {
-                testConfigManager.UserAddConfig(addedConfig);
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(addedConfig, null));
                 addedDuplicateConfig = true;
             }
             catch (ArgumentException e)
@@ -116,8 +121,8 @@ namespace AutoQCTest
         {
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
-            configManager.UserRemoveSelected();
-            Assert.AreEqual(0, configManager.SelectedConfig);
+            configManager.SetState(configManager.State, configManager.State.UserRemoveSelected(null, out _));
+            Assert.AreEqual(0, configManager.State.BaseState.Selected);
             var oneRemoved = TestUtils.ConfigListFromNames(new [] { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
 
@@ -125,7 +130,7 @@ namespace AutoQCTest
             var removedNonexistantConfig = false;
             try
             {
-                configManager.UserRemoveSelected();
+                configManager.SetState(configManager.State, configManager.State.UserRemoveSelected(null, out _));
                 removedNonexistantConfig = true;
             }
             catch (IndexOutOfRangeException e)
@@ -173,7 +178,7 @@ namespace AutoQCTest
         {
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
-            configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
+            configManager.SetState(configManager.State, configManager.State.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"), null));
             //Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
             var expectedOneReplaced = TestUtils.ConfigListFromNames(new [] { "oneReplaced", "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(expectedOneReplaced));
@@ -182,7 +187,7 @@ namespace AutoQCTest
             try
             {
                 configManager.SelectConfig(1);
-                configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
+                configManager.SetState(configManager.State, configManager.State.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"), null));
                 replacedWithDuplicate = true;
             }
             catch (ArgumentException e)
@@ -206,7 +211,7 @@ namespace AutoQCTest
             {
                 TestUtils.WaitForCondition(() =>
                     {
-                        return !configManager.GetSelectedConfig().IsEnabled;
+                        return !configManager.State.GetSelectedConfig().IsEnabled;
                     }, new TimeSpan(0, 0, 1), 100,
                     "Configuration started when it should have had an error because it was invalid");
             });
@@ -224,12 +229,12 @@ namespace AutoQCTest
             TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportConfigs(configsXmlPath, 21.1M, new [] {0,1,2});
+            configManager.State.BaseState.ExportConfigs(configsXmlPath, 21.1M, new [] {0,1,2});
             int i = 0;
-            while (configManager.HasConfigs() && i < 4)
+            while (configManager.State.BaseState.HasConfigs() && i < 4)
             {
                 configManager.SelectConfig(0);
-                configManager.UserRemoveSelected();
+                configManager.SetState(configManager.State, configManager.State.UserRemoveSelected(null, out _));
                 i++;
             }
             Assert.IsFalse(i == 4, "Failed to remove all configs.");
@@ -239,7 +244,7 @@ namespace AutoQCTest
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
             configManager.SelectConfig(2);
-            configManager.UserRemoveSelected();
+            configManager.SetState(configManager.State, configManager.State.UserRemoveSelected(null, out _));
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
@@ -251,7 +256,7 @@ namespace AutoQCTest
         {
             TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
+            configManager.SetState(configManager.State, configManager.State.UserAddConfig(TestUtils.GetTestConfig("four"), null));
             var testingConfigs = TestUtils.ConfigListFromNames(new [] { "one", "two", "three", "four" });
             configManager.Close();
             var testConfigManager = new AutoQcConfigManager();
