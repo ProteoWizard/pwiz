@@ -33,9 +33,6 @@ namespace pwiz.Skyline.Model.Results
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
-        private readonly bool _filterByTime;
-        private readonly double _maxTime;
-        private readonly double _minTime;
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             bool highAccQ1, bool highAccQ3)
         {
@@ -45,17 +42,9 @@ namespace pwiz.Skyline.Model.Results
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
 
-            if (minTime.HasValue && maxTime.HasValue)
-            {
-                _filterByTime = true;
-                _minTime = minTime.Value;
-                _maxTime = maxTime.Value;
-            }
-            else
-            {
-                // If not min and max, then it should be neither. Asymmetric limits not supported.
-                Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
-            }
+            MinTime = minTime;
+            MaxTime = maxTime;
+
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -78,8 +67,8 @@ namespace pwiz.Skyline.Model.Results
         public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
-        public double? MinTime { get { return _filterByTime ? _minTime : (double?) null; } }
-        public double? MaxTime { get { return _filterByTime ? _maxTime : (double?) null; } }
+        public double? MinTime { get; }
+        public double? MaxTime { get; }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
         public int? BestWindowGroup { get; private set; }
@@ -339,7 +328,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsRetentionTime(double retentionTime)
         {
-            return !_filterByTime || (_minTime <= retentionTime && retentionTime <= _maxTime);
+            return !(MinTime > retentionTime) && !(MaxTime < retentionTime);
         }
 
         public IEnumerable<int> ProductFilterIds
@@ -382,9 +371,9 @@ namespace pwiz.Skyline.Model.Results
                         Extractor,
                         true,
                         true);
-                    if (_filterByTime)
+                    if (MinTime.HasValue && MaxTime.HasValue)
                     {
-                        key = key.ChangeOptionalTimes(_minTime, _maxTime);
+                        key = key.ChangeOptionalTimes(MinTime.Value, MaxTime.Value);
                     }
                     listChromKeys.Add(key);
                 }
