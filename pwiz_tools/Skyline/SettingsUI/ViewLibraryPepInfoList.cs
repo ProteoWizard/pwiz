@@ -46,6 +46,11 @@ namespace pwiz.Skyline.SettingsUI
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
         private const string ADDUCT = @"AdductDisplayText";
+        private const string ION_MOBILITY = @"IonMobility";
+        private const string CCS = @"CCS";
+
+        private List<string> NUMERIC_FIELDS = new List<string> {PRECURSOR_MZ, CCS, ION_MOBILITY};
+
         public readonly Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
 
         private OrderedListCache _listCache;
@@ -60,9 +65,11 @@ namespace pwiz.Skyline.SettingsUI
             _accessionNumberTypes = FindMatchCategories();
 
             // If there are any small molecules in the library see if we can offer more search fields
-            _stringSearchFields = !allPeptides ? 
-                FindValidCategories(new List<string> { UNMODIFIED_TARGET_TEXT, FORMULA, INCHI_KEY, ADDUCT, PRECURSOR_MZ })
-                : new List<string> { UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ };
+            _stringSearchFields = new List<string> {UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ};
+            _stringSearchFields.AddRange(
+                FindValidCategories(!allPeptides ? 
+                (new List<string> { FORMULA, INCHI_KEY, ADDUCT, ION_MOBILITY, CCS })
+                : new List<string> { ION_MOBILITY, CCS }));
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
 
@@ -71,6 +78,9 @@ namespace pwiz.Skyline.SettingsUI
             comboFilterCategoryDict.Add(INCHI_KEY, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
             comboFilterCategoryDict.Add(FORMULA, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
             comboFilterCategoryDict.Add(ADDUCT, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
+            comboFilterCategoryDict.Add(ION_MOBILITY, Resources.PeptideTipProvider_RenderTip_Ion_Mobility);
+            comboFilterCategoryDict.Add(CCS, Resources.PeptideTipProvider_RenderTip_CCS);
+
         }
 
         public override int Count
@@ -109,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private List<string> FindValidCategories(List<string> categories)
         {
-            return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(""))).ToList();
+            return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(string.Empty) && !GetStringValue(category, entry).Equals(@"0"))).ToList();
         }
 
         /// <summary>
@@ -258,16 +268,16 @@ namespace pwiz.Skyline.SettingsUI
             // Find the indices of entries that have a field that could match the search term if something was appended to it 
             var filteredIndices = PrefixSearchByProperty(filterText);
 
-            // If the filter text can be read as a number, we want to include spectra with a matching precursor m/z value
-            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _selectedFilterCategory.Equals(PRECURSOR_MZ))
+            // Special filtering for numeric properties
+            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && NUMERIC_FIELDS.Contains(_selectedFilterCategory))
             {
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z
-                var sortedMzList = _allEntries.OrderBy(entry => Math.Abs(entry.PrecursorMz - result));
+                var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
 
                 // Then return everything before the first entry with a m/z difference exceeding our match tolerance
-                var results = sortedMzList.TakeWhile(entry => !(Math.Abs(
-                    entry.PrecursorMz - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
+                    double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results).ToList();
             }
 

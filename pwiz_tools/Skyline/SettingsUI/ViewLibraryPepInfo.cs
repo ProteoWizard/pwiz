@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -101,6 +100,13 @@ namespace pwiz.Skyline.SettingsUI
         /// The precursor m/z of the peptide or small molecule
         /// </summary>
         public double PrecursorMz { get; set; }
+
+        public double IonMobility { get; set; }
+
+        public double CCS { get; set; }
+
+        public string IonMobilityUnits { get; set; }
+
         /// <summary>
         /// The charge state of the peptide or molecule matched to a spectrum
         /// </summary>

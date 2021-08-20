@@ -406,9 +406,12 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             libInfo = null;
                         }
-                        return new ViewLibraryPepInfo(key, libInfo);
+
+                        var info = new ViewLibraryPepInfo(key, libInfo);
+                        return SetIonMobilityCCSValues(info);
                     });
             }
+
             _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, comboFilterCategory.SelectedText, out var allPeptides);
             MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
@@ -1090,7 +1093,14 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
                 }
-
+                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_CCS))
+                {
+                    propertyValue = FormatCCS(double.Parse(propertyValue));
+                }
+                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Ion_Mobility))
+                {
+                    propertyValue = FormatIonMobility(double.Parse(propertyValue), pepInfo.IonMobilityUnits);
+                }
                 categoryText = CreateTextSequence(propertyValue, false);
             }
             else
@@ -1596,6 +1606,16 @@ namespace pwiz.Skyline.SettingsUI
         private static string FormatPrecursorMz(double precursorMz)
         {
             return string.Format(@"{0:F04}", precursorMz);
+        }
+
+        private static string FormatIonMobility(double mobility, string units)
+        {
+            return string.Format(@"{0:F04} {1}", mobility, units);
+        }
+
+        private static string FormatCCS(double CCS)
+        {
+            return string.Format(@"{0:F04}", CCS);
         }
 
         private static AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
@@ -2472,13 +2492,12 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         if (_ionMobility.HasIonMobilityValue)
                         {
-                            var details = string.Format(@"{0:F04} {1}", _ionMobility.IonMobility.Mobility.Value,
-                                _ionMobility.IonMobility.UnitsString);
+                            var details = FormatIonMobility(_ionMobility.IonMobility.Mobility.Value, _ionMobility.IonMobility.UnitsString);
                             tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Ion_Mobility, details, rt);
                         }
                         if (_ionMobility.HasCollisionalCrossSection)
-                        { 
-                            var details = string.Format(@"{0:F04}", _ionMobility.CollisionalCrossSectionSqA.Value);
+                        {
+                            var details = FormatCCS(_ionMobility.CollisionalCrossSectionSqA.Value);
                             tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_CCS, details, rt);
                         }
                     }
@@ -2715,7 +2734,33 @@ namespace pwiz.Skyline.SettingsUI
                 .GetPrecursorMass(info.Target);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
-        
+
+        private ViewLibraryPepInfo SetIonMobilityCCSValues(ViewLibraryPepInfo entry)
+        {
+            var info = GetIonMobility(entry);
+            if (info.HasCollisionalCrossSection)
+            {
+                entry.CCS = (double)info.CollisionalCrossSectionSqA;
+            }
+
+            if (info.HasIonMobilityValue)
+            {
+                entry.IonMobility = (double) info.IonMobility.Mobility;
+                entry.IonMobilityUnits = info.IonMobility.UnitsString;
+            }
+
+                return entry;
+        }
+        public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
+        {
+            var bestSpectrum = _selectedLibrary.GetSpectra(pepInfo.Key,
+                IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+            if (bestSpectrum != null)
+            {
+                return bestSpectrum.IonMobilityInfo;
+            }
+            return IonMobilityAndCCS.EMPTY;
+        }
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;

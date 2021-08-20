@@ -846,7 +846,7 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             string libSelected = null;
-            var libIndex = _testLibs.Length - index -2;
+            var libIndex = _testLibs.Length - index;
             bool isNIST = (index < 3);
             bool isLipidCreator = (index == 4);
             bool isSketchyFragmentAnnotations = (index == 6);
