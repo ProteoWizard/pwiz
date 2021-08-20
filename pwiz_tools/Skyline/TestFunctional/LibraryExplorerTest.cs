@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
                                                        new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"), // Note .ext is all caps to test case insensitivity
-                                                       new TestLibInfo("mini_x", "mini_x.blib", "YLXEEDEDAYKK++")
+                                                       new TestLibInfo("mini_x", "mini_x.blib", "YLXEEDEDAYKK++"),
                                                        new TestLibInfo(MULTIPLE_MOL_IDS, "MultipleMolecularIDs.blib", "")
                                                    };
 
@@ -228,13 +228,13 @@ namespace pwiz.SkylineTestFunctional
             // Check case insensitivity
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
 
-            // Clearing search box should bring up every entry and hide match type tip
+            // Clearing search box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Entering 'SD' should filter out all entries as nothing starts with SD
             FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
 
-            // Clearing search box should bring up every entry and hide match type tip
+            // Clearing search box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Now test filtering by precursor m/z
@@ -250,7 +250,7 @@ namespace pwiz.SkylineTestFunctional
             midazolamMz = inFrench ? midazolamMz.Replace(".", ",") : midazolamMz;
 
 
-            // Entering '32' should narrow the match types down to Precursor Mz and filter the list down to three entries
+            // Entering '32' should filter the list down to three entries
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0, 2), 2);
 
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
@@ -846,7 +846,7 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             string libSelected = null;
-            var libIndex = _testLibs.Length - index -1;
+            var libIndex = _testLibs.Length - index -2;
             bool isNIST = (index < 3);
             bool isLipidCreator = (index == 4);
             bool isSketchyFragmentAnnotations = (index == 6);
