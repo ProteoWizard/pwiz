@@ -107,6 +107,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public string IonMobilityUnits { get; set; }
 
+        public int Charge
+        {
+            get { return Key.Adduct.AdductCharge; }
+        }
+
         /// <summary>
         /// The charge state of the peptide or molecule matched to a spectrum
         /// </summary>

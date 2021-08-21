@@ -48,6 +48,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string ADDUCT = @"AdductDisplayText";
         private const string ION_MOBILITY = @"IonMobility";
         private const string CCS = @"CCS";
+        private const string CHARGE = @"Charge";
 
         private List<string> NUMERIC_FIELDS = new List<string> {PRECURSOR_MZ, CCS, ION_MOBILITY};
 
@@ -68,8 +69,8 @@ namespace pwiz.Skyline.SettingsUI
             _stringSearchFields = new List<string> {UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ};
             _stringSearchFields.AddRange(
                 FindValidCategories(!allPeptides ? 
-                (new List<string> { FORMULA, INCHI_KEY, ADDUCT, ION_MOBILITY, CCS })
-                : new List<string> { ION_MOBILITY, CCS }));
+                (new List<string> { FORMULA, INCHI_KEY, CHARGE, ADDUCT, ION_MOBILITY, CCS })
+                : new List<string> { CHARGE, ION_MOBILITY, CCS }));
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
 
@@ -80,6 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             comboFilterCategoryDict.Add(ADDUCT, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
             comboFilterCategoryDict.Add(ION_MOBILITY, Resources.PeptideTipProvider_RenderTip_Ion_Mobility);
             comboFilterCategoryDict.Add(CCS, Resources.PeptideTipProvider_RenderTip_CCS);
+            comboFilterCategoryDict.Add(CHARGE, Resources.TransitionTreeNode_RenderTip_Charge);
 
         }
 
