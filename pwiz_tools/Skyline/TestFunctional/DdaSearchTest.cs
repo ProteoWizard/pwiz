@@ -48,6 +48,11 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        public bool IsRecordMode
+        {
+            get { return false; }
+        }
+
         private string GetTestPath(string path)
         {
             return TestFilesDir.GetTestPath(path);
@@ -217,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
                 if (Environment.Is64BitProcess)
                 {
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
@@ -236,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
                         Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");

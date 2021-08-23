@@ -513,8 +513,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         if (ImportResultsControl.ResultsFilesMissing)
                         {
-                            if (MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
-                                Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                            if (MultiButtonMsgDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
+                                MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                             {
                                 return;
                             }

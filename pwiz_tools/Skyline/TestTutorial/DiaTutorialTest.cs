@@ -18,14 +18,13 @@
  */
 
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -74,7 +73,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
             CoverShotName = "DIA";
-            PauseStartPage = 29;
+            // PauseStartPage = 36;
 
             LinkPdf = "https://skyline.ms/tutorials/DIA-20_2.pdf";
 
@@ -156,7 +155,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(GetTestPath("DIA_tutorial_isolation_list.csv")));
 
             // Change library filtering
-            // TODO: Necessary? Adjust library transition ranking
+            // TODO: Make unnecessary. Adjust library transition ranking
             var newTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
@@ -368,9 +367,23 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
             PauseForScreenShot<GraphChromatogram>("Skyline window - with manual integration and ID times", 29);
 
-            SelectNode(SrmDocument.Level.TransitionGroups, 1);  // 2nd peptide
+            RunUI(() =>
+            {
+                SkylineWindow.ShowChromatogramLegends(true);
+                SkylineWindow.Height = 735;
+            });
+            RestoreViewOnScreen(31);
+            SelectNode(SrmDocument.Level.Molecules, 1);  // 2nd peptide
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 31);
 
-            PauseForScreenShot<GraphChromatogram>("Skyline window", 30);
+            RestoreViewOnScreen(27);
+            RunUI(() =>
+            {
+                SkylineWindow.ShowChromatogramLegends(false);
+                SkylineWindow.Height = 700;
+            });
+            SelectNode(SrmDocument.Level.TransitionGroups, 1);  // 2nd peptide - first precursor
+            PauseForScreenShot<GraphChromatogram>("Skyline window", 32);
 
             SelectNode(SrmDocument.Level.Transitions, 22);
 
@@ -380,184 +393,68 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Height = 463;
             });
 
-            PauseForScreenShot<GraphChromatogram>("Product ion chromatogram graph metafiles", 31);
-
-            PauseTest("End of Automation");
-
-
+            PauseForScreenShot<GraphChromatogram>("Product ion chromatogram graph metafiles", 33);
 
             RunUI(() =>
             {
-                SkylineWindow.CollapsePeptides();
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 4); // 5th peptide
-                var nodePepTree = SkylineWindow.SelectedNode as PeptideTreeNode;
-                Assert.IsNotNull(nodePepTree);
-                Assert.AreEqual("VLQAVLPPLPQVVCTYR", nodePepTree.DocNode.Peptide.Sequence);
-                SkylineWindow.ShowSplitChromatogramGraph(true);
-                SkylineWindow.AutoZoomBestPeak();
-                var graphChrom = SkylineWindow.GetGraphChrom(prefixKeep + "1");
-                var labelStrings = graphChrom.GetAnnotationLabelStrings().ToArray();
-                Assert.IsTrue(labelStrings.Contains(string.Format("{0}\n+{1} ppm", 75.4, 2.7)),
-                    string.Format("Missing expected label in {0}", string.Join("|", labelStrings)));
-                SkylineWindow.Width = 1250;
+                SkylineWindow.ShowAllTransitions();
+                SkylineWindow.Height = 700;
             });
+            RestoreViewOnScreen(34);
+            FindNode("NYGLLYCFR");
+            ChangePeakBounds("Pit01", 65.36, 66.7);
+            ChangePeakBounds("Pit02", 64.89, 66.2);
 
-            RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
-            {
-                dlg.FontSize = GraphFontSize.NORMAL;
-                dlg.OkDialog();
-            });
+            PauseForScreenShot<GraphChromatogram>("Chromatograms and peak areas", 34);
 
-            RunUI(SkylineWindow.SelectedNode.Expand);
+            SelectNode(SrmDocument.Level.TransitionGroups, 13);
 
-            RunUI(() =>
-            {
-                var nodeTree = SkylineWindow.SelectedNode.Nodes[0].Nodes[0] as SrmTreeNode;
-                Assert.IsNotNull(nodeTree);
-                var expectedImageId = IsFullImportMode ? SequenceTree.StateImageId.peak : SequenceTree.StateImageId.no_peak;
-                Assert.AreEqual((int) expectedImageId, nodeTree.StateImageIndex);
-            });
-
-            PauseForScreenShot<SequenceTreeForm>("Targets view - ", 27);
-
-            RunUI(() =>
-            {
-                SkylineWindow.SetIntegrateAll(true);
-                var nodeTree = SkylineWindow.SelectedNode.Nodes[0].Nodes[0] as SrmTreeNode;
-                Assert.IsNotNull(nodeTree);
-                Assert.AreEqual((int) SequenceTree.StateImageId.peak, nodeTree.StateImageIndex);
-                var nodeGroupTree = SkylineWindow.SelectedNode.Nodes[0] as TransitionGroupTreeNode;
-                Assert.IsNotNull(nodeGroupTree);
-                Assert.AreEqual(0.99, nodeGroupTree.DocNode.GetIsotopeDotProduct(0) ?? 0, 0.005);
-                Assert.AreEqual(0.83, nodeGroupTree.DocNode.GetLibraryDotProduct(0) ?? 0, 0.005);
-                SkylineWindow.ShowOtherRunPeptideIDTimes(true);
-            });
-
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - with ID lines", 28);
-
-            RunUI(() =>
-            {
-                SkylineWindow.AutoZoomNone();
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 1);
-            });
-
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed out and small peak", 30);
-
-            RunUI(SkylineWindow.AutoZoomBestPeak);
-
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - zoomed to peak", 31);
-            if (IsFullImportMode)
-            {
-                ClickChromatogram(74.9, 1.775E+7, PaneKey.PRECURSORS);
-                RestoreViewOnScreen(33);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph with precursors - zoom manually", 32);
-
-                ClickChromatogram(74.8, 1.753E+6, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y7", 33);
-
-                ClickChromatogram(74.9, 9.64E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing b3 - zoom manually", 34);
-
-                ClickChromatogram(74.9, 1.25E+5, PaneKey.PRODUCTS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing y3 - zoom manually", 34);
-            }
-
-            RunUI(() =>
-            {
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 2);
-                Assert.AreEqual("CNTDYSDCIHEAIK", ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode.Peptide.Sequence);
-            });
-
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - split between two precursors", 35);
-
-            if (IsPauseForCoverShot)
-            {
-                RunUI(() =>
-                {
-                    Settings.Default.ChromatogramFontSize = 14;
-                    Settings.Default.AreaFontSize = 14;
-                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                });
-
-                RestoreCoverViewOnScreen();
-//                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
-                WaitForGraphs();
-                ClickChromatogram("DIA_Pit01", 75.3468, 104968093, PaneKey.PRODUCTS);
-                TreeNode selectedNode = null;
-                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
-                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
-                WaitForGraphs();
-                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
-                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-                RunUI(() =>
-                {
-                    transitionSettingsUI.Top = SkylineWindow.Top;
-                    transitionSettingsUI.Left = SkylineWindow.Left - transitionSettingsUI.Width - 20;
-                });
-                var isolationSchemeForm = ShowDialog<EditIsolationSchemeDlg>(transitionSettingsUI.EditCurrentIsolationScheme);
-                RunUI(() =>
-                {
-                    isolationSchemeForm.Top = SkylineWindow.Bottom - isolationSchemeForm.Height - 34;
-                    isolationSchemeForm.Left = SkylineWindow.Left + 40;
-                    isolationSchemeForm.Width = 400;
-                });
-                var isolationSchemeGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeForm.OpenGraph);
-                RunUI(() =>
-                {
-                    isolationSchemeGraph.Height -= 58;
-                    isolationSchemeGraph.Top = SkylineWindow.Bottom - isolationSchemeGraph.Height;
-                    isolationSchemeGraph.Left = SkylineWindow.Left;
-                    isolationSchemeGraph.Width = 480;
-                });
-                PauseForCoverShot();
-                OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
-                OkDialog(isolationSchemeForm, isolationSchemeForm.OkDialog);
-                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-                return;
-            }
-
-            RunUI(() =>
-            {
-                SkylineWindow.SelectedNode.Expand();
-                SkylineWindow.SelectedPath = ((SrmTreeNode) SkylineWindow.SelectedNode.Nodes[0]).Path;
-            });
-
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile - double charged precursor", 36);
-
-            RunUI(() =>
-            {
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 3);
-                Assert.AreEqual("ELVYETVR", ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode.Peptide.Sequence);
-            });
-
-            RunUI(() =>
-            {
-                SkylineWindow.SelectedNode.Expand();
-                var nodeGroupTree = SkylineWindow.SelectedNode.Nodes[0] as TransitionGroupTreeNode;
-                Assert.IsNotNull(nodeGroupTree);
-                Assert.AreEqual(0.99, nodeGroupTree.DocNode.GetIsotopeDotProduct(0) ?? 0, 0.005);
-                Assert.AreEqual(0.99, nodeGroupTree.DocNode.GetIsotopeDotProduct(0) ?? 0, 0.005);
-            });
-
-            RestoreViewOnScreen(38);
-            PauseForScreenShot<GraphSpectrum>("Library Match view - zoom manually", 37);
-
-            RestoreViewOnScreen(39);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 38);
+            PauseForScreenShot<GraphChromatogram>("Chromatograms and peak areas", 35);
 
             if (IsFullImportMode)
             {
-                RestoreViewOnScreen(40);
-                ClickChromatogram(41.9, 1.166E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing precursor interference - zoom manually", 39);
+                RestoreViewOnScreen(36);
+                ClickChromatogram("Pit01", 70.19, 169.5E+06, PaneKey.PRECURSORS);
 
-                RunUI(() => SkylineWindow.GraphFullScan.ChangeScan(-12));
-                CheckFullScanSelection(41.7, 1.532E+8, PaneKey.PRECURSORS);
-                PauseForScreenShot<GraphFullScan>("Full Scan graph showing transition between interference and real peak - zoom manually", 39);
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile", 36);
+
+                ClickChromatogram("Pit01", 70.79, 4.9E+05, PaneKey.PRODUCTS);
+
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS/MS spectrum y10 metafile", 37);
+
+                ClickChromatogram("Pit01", 70.79, 3.25E+05, PaneKey.PRODUCTS);
+
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS/MS spectrum y10++ metafile", 38);
+
+                FindNode("K.ELVYETVR.V [72, 79]");
+                WaitForGraphs();
+                ClickChromatogram("Pit02", 41.67, 4.076E+07, PaneKey.PRECURSORS);
+                WaitForGraphs();
+                RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02", (41.67).ToString(CultureInfo.CurrentCulture)));
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (1/3)", 39);
+
+                MoveNextScan(41.68);
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (2/3)", 39);
+
+                MoveNextScan(41.7);
+                PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (3/3)", 39);
             }
 
             // Clear all the settings lists that were defined in this tutorial
             ClearSettingsLists();
+        }
+
+        private static void MoveNextScan(double rt)
+        {
+            string titleText = null;
+            RunUI(() =>
+            {
+                titleText = SkylineWindow.GraphFullScan.TitleText;
+                SkylineWindow.GraphFullScan.ChangeScan(1);
+            });
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan.TitleText != titleText);
+            RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02",
+                rt.ToString(CultureInfo.CurrentCulture)));
         }
 
         private static void ValidateMassErrorStatistics(double mean, double stdev)

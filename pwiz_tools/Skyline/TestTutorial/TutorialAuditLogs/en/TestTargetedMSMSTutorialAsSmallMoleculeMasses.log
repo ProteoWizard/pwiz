@@ -183,6 +183,7 @@ Import Molecule Search > Extract Chromatograms > Found results files : contains 
 Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Molecule Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
 Import Molecule Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
+Import Molecule Search > Configure Transition Settings > Pick min product ions is "6"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -193,6 +194,10 @@ Extra Info: Extract Chromatograms =
     Files to import simultaneously = "Many",
     Removed prefix = "klc_20100329v_Protea_Peptide_Curve_",
     Removed suffix = "_uL_tech1"
+},
+Configure Transition Settings = 
+{
+    Pick min product ions = "6"
 }
 
 Undo Redo : Imported results from "6-BSA-500fmol.mzML"
