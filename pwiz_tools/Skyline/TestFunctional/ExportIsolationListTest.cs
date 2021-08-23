@@ -242,8 +242,8 @@ namespace pwiz.SkylineTestFunctional
                 "FusionUnscheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 thermoFusionMassListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, zFirst, string.Empty, string.Empty, nce),
-                FieldSeparate(mzLast, zLast, string.Empty, string.Empty, nce));
+                FieldSeparate(mzFirst, zFirst, "Positive", string.Empty, string.Empty, nce),
+                FieldSeparate(mzLast, zLast, "Positive", string.Empty, string.Empty, nce));
 
             // Export Thermo Fusion scheduled Targeted list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
@@ -251,8 +251,8 @@ namespace pwiz.SkylineTestFunctional
                 "FusionScheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 thermoFusionMassListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, nce),
-                FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, nce));
+                FieldSeparate(mzFirst, zFirst, "Positive", t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(mzLast, zLast, "Positive", t39 - halfWin, t39 + halfWin, nce));
 
             string fragmentsFirst;
             if (!AsSmallMoleculesNegative)
