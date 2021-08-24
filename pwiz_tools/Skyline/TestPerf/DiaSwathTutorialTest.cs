@@ -432,9 +432,21 @@ namespace TestPerf
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
+                                     ImportPeptideSearchDlg.Pages.match_modifications_page);
 
+            // "Add Modifications" page
+            RunUI(() =>
+            {
+                const string modOxidation = "Oxidation (M)";
+                // Define expected matched/unmatched modifications
+                var expectedMatched = new[] { modOxidation };
+                // Verify matched/unmatched modifications
+                AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
+                Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Modifications page", 8);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {

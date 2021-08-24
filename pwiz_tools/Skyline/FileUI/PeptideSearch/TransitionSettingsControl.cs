@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -209,7 +210,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var settingsCurrent = _documentContainer.Document.Settings.TransitionSettings;
                     var settings = settingsCurrent;
                     var defSettings = SrmSettingsList.GetDefault().TransitionSettings;
-                    if (Equals(settings.Filter, defSettings.Filter))
+                    var defFilter = defSettings.Filter;
+                    if (Equals(settings.Filter, defFilter) ||
+                        // This UI itself can add precursor ions, so avoid detecting that as an important difference
+                        // TODO(kaipot): Better to enable a way to get to the user document rather than the wizard document
+                        Equals(settings.Filter, defFilter
+                            .ChangePeptideIonTypes(defFilter.PeptideIonTypes.Union(new [] { IonType.precursor}).ToArray())
+                            .ChangeSmallMoleculeIonTypes(defFilter.SmallMoleculeIonTypes.Union(new [] { IonType.precursor}).ToArray())
+                            .ChangeExclusionUseDIAWindow(defFilter.ExclusionUseDIAWindow || workflow == ImportPeptideSearchDlg.Workflow.dia)))
                     {
                         settings = settings.ChangeFilter(settings.Filter
                             .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
@@ -218,18 +226,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_3.GetKey())
                             .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey()));
                     }
-                    if (Equals(settings.Libraries, defSettings.Libraries))
-                    {
-                        settings = settings.ChangeLibraries(settings.Libraries.ChangeIonMatchTolerance(0.05)
-                            .ChangeIonCount(6)
-                            .ChangeMinIonCount(6));
-                    }
-                    if (Equals(settings.Instrument, defSettings.Instrument))
-                    {
-                        settings = settings.ChangeInstrument(settings.Instrument
-                            .ChangeMinMz(50)
-                            .ChangeMaxMz(2000));
-                    }
+
+                    var libraries = settings.Libraries;
+                    var defLibraries = defSettings.Libraries;
+                    if (libraries.IonMatchTolerance == defLibraries.IonMatchTolerance)
+                        libraries = libraries.ChangeIonMatchTolerance(0.05);
+                    if (libraries.IonCount == defLibraries.IonCount)
+                        libraries = libraries.ChangeIonCount(6);
+                    if (libraries.MinIonCount == defLibraries.MinIonCount)
+                        libraries = libraries.ChangeMinIonCount(Math.Min(6, libraries.IonCount));
+                    if (!Equals(libraries, settings.Libraries))
+                        settings = settings.ChangeLibraries(libraries);
+
+                    var instrument = settings.Instrument;
+                    var defInstrument = defSettings.Instrument;
+                    if (instrument.MinMz == defInstrument.MinMz)
+                        instrument = instrument.ChangeMinMz(50);
+                    if (instrument.MaxMz == defInstrument.MaxMz)
+                        instrument = instrument.ChangeMaxMz(2000);
+                    if (!Equals(instrument, settings.Instrument))
+                        settings = settings.ChangeInstrument(instrument);
+
                     if (!ReferenceEquals(settings, settingsCurrent))
                         SetFields(settings);
                     break;
