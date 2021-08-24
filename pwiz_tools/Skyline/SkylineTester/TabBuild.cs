@@ -208,10 +208,16 @@ namespace SkylineTester
 
             commandShell.Add("# Building Skyline...");
             commandShell.Add("cd {0}", buildRoot.Quote());
+            toolset = "toolset=" + toolset;
+
+// Experiment with just letting boost pick the newest available
+// Currently VS2017 and VS2019 work equally well
+toolset = string.Empty;
+
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses toolset={3} nolog",
+                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses {3} nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture,
                     runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",
