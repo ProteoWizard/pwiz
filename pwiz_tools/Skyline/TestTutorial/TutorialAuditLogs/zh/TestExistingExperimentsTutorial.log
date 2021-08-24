@@ -335,20 +335,20 @@ Extra Info: 文件名称 =
 要同步导入的文件 = "许多个"
 
 Undo Redo : 已更改4 个离子对 定量
-Summary   : 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] 已更改
+Summary   : 目标 > YDL055C > K.ETFPILVEEK.Q [197, 206] 已更改
 All Info  :
 已更改4 个离子对 定量
-目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) > 定量 从 真 更改到 假
-目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > E [y3] - 405.1980+ (排名 2) > 定量 从 真 更改到 假
-目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606.8337++ (heavy) > V [y4] - 512.2806+ (排名 3) > 定量 从 真 更改到 假
-目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606.8337++ (heavy) > E [y3] - 413.2122+ (排名 2) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ > V [y4] - 504.2664+ (排名 3) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ > E [y3] - 405.1980+ (排名 2) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [197, 206] > 606.8337++ (heavy) > V [y4] - 512.2806+ (排名 3) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [197, 206] > 606.8337++ (heavy) > E [y3] - 413.2122+ (排名 2) > 定量 从 真 更改到 假
 
-Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
-Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
+Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ 的峰界限
+Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ 的峰界限
 All Info  :
-已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
-已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的开始时间从 29.63 更改到 29.80
-已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 所有峰的结束时间从 30.47 更改到 30.40
+已更改 YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ 的峰界限
+已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ 所有峰的开始时间从 29.63 更改到 29.80
+已将“silac_1_to_4”中的 YDL055C > K.ETFPILVEEK.Q [197, 206] > 602.8266++ 所有峰的结束时间从 30.47 更改到 30.40
 
 Undo Redo : 肽段设置 已更改
 Summary   : 设置 > 肽段设置 已更改

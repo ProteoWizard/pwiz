@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
+using SharedBatch.Properties;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -50,6 +52,48 @@ namespace SkylineBatchTest
 
             TestDriveRootReplacement(mainForm);
 
+            TestVersionNumbers(mainForm);
+        }
+
+        public void TestVersionNumbers(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile1 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion1.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile1);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile2 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion2.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile2);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile3 = Path.Combine(TEST_FOLDER, "ValidConfigurationsVersion3.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile3);
+                FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
+            });
+
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var invalidConfigFile1 = Path.Combine(TEST_FOLDER, "InvalidConfigurationsVersion1.bcfg");
+            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile1),
+                dlg =>
+                {
+                    Assert.AreEqual(string.Format(
+                                        Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__,
+                                        invalidConfigFile1) + Environment.NewLine +
+                                    string.Format(SharedBatch.Properties.Resources
+                                            .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                                        "100.1", SkylineBatch.Properties.Settings.Default.XmlVersion), dlg.Message);
+                    dlg.ClickOk();
+                });
         }
 
         public void TestImportValidConfigurations(MainForm mainForm)

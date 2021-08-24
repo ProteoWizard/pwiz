@@ -89,11 +89,30 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting to server....
+        /// </summary>
+        public static string AddServerForm_CheckServer_Connecting_to_server___ {
+            get {
+                return ResourceManager.GetString("AddServerForm_CheckServer_Connecting_to_server___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
         public static string AddServerForm_FinishConnectToServer_Save {
             get {
                 return ResourceManager.GetString("AddServerForm_FinishConnectToServer_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server cannot be empty. Please enter the server information..
+        /// </summary>
+        public static string AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_ {
+            get {
+                return ResourceManager.GetString("AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server" +
+                        "_information_", resourceCulture);
             }
         }
         
@@ -643,6 +662,26 @@ namespace SkylineBatch.Properties {
         public static System.Drawing.Bitmap downtriangle1 {
             get {
                 object obj = ResourceManager.GetObject("downtriangle1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Redo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1905,6 +1944,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot change the configuration list while configurations are running..
+        /// </summary>
+        public static string SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configurations_are_running_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_Redo_Cannot_change_the_configuration_list_while_configu" +
+                        "rations_are_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
         /// </summary>
         public static string SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_ {
@@ -2291,6 +2340,16 @@ namespace SkylineBatch.Properties {
         public static string WebDownloadClient_DownloadAsync_Operation_timed_out_ {
             get {
                 return ResourceManager.GetString("WebDownloadClient_DownloadAsync_Operation_timed_out_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of the imported file {0} was not recognized. No configurations will be imported..
+        /// </summary>
+        public static string XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_ {
+            get {
+                return ResourceManager.GetString("XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized_" +
+                        "_No_configurations_will_be_imported_", resourceCulture);
             }
         }
     }

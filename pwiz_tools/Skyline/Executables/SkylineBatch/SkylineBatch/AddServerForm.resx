@@ -531,6 +531,39 @@
   <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="labelFileInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelFileInfo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFileInfo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFileInfo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 319</value>
+  </data>
+  <data name="labelFileInfo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="labelFileInfo.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="labelFileInfo.ToolTip" xml:space="preserve">
+    <value>The path to an FTP server containing the data.</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Name" xml:space="preserve">
+    <value>labelFileInfo</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelFileInfo.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnUpdate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -563,6 +596,9 @@
   </data>
   <data name="listBoxFileNames.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listBoxFileNames.HorizontalScrollbar" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
   <data name="listBoxFileNames.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 182</value>
@@ -611,36 +647,6 @@
   </data>
   <data name="&gt;&gt;checkBoxNoEncryption.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="labelFileInfo.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelFileInfo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelFileInfo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 319</value>
-  </data>
-  <data name="labelFileInfo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>0, 13</value>
-  </data>
-  <data name="labelFileInfo.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="labelFileInfo.ToolTip" xml:space="preserve">
-    <value>The path to an FTP server containing the data.</value>
-  </data>
-  <data name="&gt;&gt;labelFileInfo.Name" xml:space="preserve">
-    <value>labelFileInfo</value>
-  </data>
-  <data name="&gt;&gt;labelFileInfo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelFileInfo.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelFileInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1062,7 +1068,7 @@
 </value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>428, 259</value>
+    <value>428, 318</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

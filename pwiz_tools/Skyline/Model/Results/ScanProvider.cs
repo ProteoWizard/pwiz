@@ -40,6 +40,11 @@ namespace pwiz.Skyline.Model.Results
         public double? ExtractionWidth;
         public IonMobilityFilter _ionMobilityInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
+
+        public override string ToString() // Not user facing, for debug convenience only
+        {
+            return $@"name={Name} src={Source} Q1={PrecursorMz} Q2={ProductMz} w={ExtractionWidth} im={_ionMobilityInfo} Id={Id}";
+        }
     }
 
     public interface IScanProvider : IDisposable

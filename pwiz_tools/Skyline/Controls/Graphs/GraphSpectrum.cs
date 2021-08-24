@@ -998,7 +998,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = _spectrum?.CompareTo(spectrum) != 0;
+                        var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                         _spectrum = spectrum;
 
                         ClearGraphPane();
@@ -1030,7 +1030,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 mirrorSpectrum = null;
                             }
 
-                            spectrumChanged |= !Equals(_mirrorSpectrum, mirrorSpectrum);
+                            spectrumChanged |= !Equals(_mirrorSpectrum?.SpectrumInfo, mirrorSpectrum?.SpectrumInfo);
                             _mirrorSpectrum = mirrorSpectrum;
 
                             double? dotp = null;
@@ -1283,6 +1283,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public MzRange Range
         {
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
+        }
+
+        public Scale IntensityScale
+        {
+            get { return GraphPane.YAxis.Scale; }
         }
 
         public void ApplyMZZoomState(ZoomState newState)

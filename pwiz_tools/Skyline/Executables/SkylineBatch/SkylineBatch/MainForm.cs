@@ -48,6 +48,7 @@ namespace SkylineBatch
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            toolStrip1.Items.Insert(7, new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
@@ -241,6 +242,8 @@ namespace SkylineBatch
             btnOpenTemplate.Enabled = configSelected;
             btnOpenResults.Enabled = configSelected;
             btnExportConfigs.Enabled = _loaded ? _configManager.HasConfigs() : false;
+            btnUndo.Enabled = _configManager.CanUndo();
+            btnRedo.Enabled = _configManager.CanRedo();
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
@@ -534,7 +537,7 @@ namespace SkylineBatch
             var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.XmlVersion, shareForm.IndiciesToSave);
         }
         
         #endregion
@@ -622,6 +625,12 @@ namespace SkylineBatch
 
             _scrolling = _configManager.SelectedLog == 0;
             _outputLog.Tick += OutputLog;
+        }
+
+        private void tabLog_Enter(object sender, EventArgs e)
+        {
+            // force the log to be redrawn
+            textBoxLog.Invalidate();
         }
 
         private void tabLog_Leave(object sender, EventArgs e)
@@ -782,6 +791,8 @@ namespace SkylineBatch
 
         public void ClickRun(int option = 0)
         {
+            if (_configManager.ConfigRunning() || !btnRunBatch.Enabled)
+                throw new Exception("Configurations are still running");
             CheckDropDownOption(option);
             RunBatch();
         }
@@ -793,6 +804,29 @@ namespace SkylineBatch
         
 
         #endregion
+
+        private void tabMain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey && ModifierKeys == Keys.Control) { }
+            else if (e.KeyCode == Keys.Z && ModifierKeys == Keys.Control)
+            {
+                _configManager.Undo();
+            }
+            else if (e.KeyCode == Keys.Y && ModifierKeys == Keys.Control)
+            {
+                _configManager.Redo();
+            }
+        }
+
+        private void btnUndo_Click(object sender, EventArgs e)
+        {
+            _configManager.Undo();
+        }
+
+        private void btnRedo_Click(object sender, EventArgs e)
+        {
+            _configManager.Redo();
+        }
     }
 
     // ListView that prevents a double click from toggling checkbox

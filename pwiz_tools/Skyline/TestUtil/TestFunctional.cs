@@ -1522,8 +1522,8 @@ namespace pwiz.SkylineTestUtil
             if (!IsRecordAuditLogForTutorials)
             {
                 Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName);
+                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName, projectFile);
             }
 
             // Compare file contents
@@ -1540,11 +1540,15 @@ namespace pwiz.SkylineTestUtil
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
-                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
-                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    if (index - actualParts[0].Length > 0)
                     {
-                        return;
+                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
+                        if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            return;
+                        }
                     }
+                    
                 }
             }
 

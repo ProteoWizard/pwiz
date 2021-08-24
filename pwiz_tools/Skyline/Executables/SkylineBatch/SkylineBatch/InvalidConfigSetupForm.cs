@@ -166,7 +166,7 @@ namespace SkylineBatch
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
             if (!string.IsNullOrEmpty(SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath))
-                return new SkylineSettings(SkylineType.Local, SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath);
+                return new SkylineSettings(SkylineType.Local, null, SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath);
             var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }

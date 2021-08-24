@@ -27,6 +27,7 @@ using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1884,12 +1885,12 @@ namespace pwiz.Skyline.Model
     {
         private readonly DsvFileReader _csvReader;
 
-        public SmallMoleculeTransitionListCSVReader(IList<string> csvText)
+        public SmallMoleculeTransitionListCSVReader(IList<string> csvText, List<string> columnPositions = null)
         {
             // Ask MassListInputs to figure out the column and decimal separators
             var inputs = new MassListInputs(csvText);
             _cultureInfo = inputs.FormatProvider;
-            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms, columnPositions);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(
@@ -1918,13 +1919,29 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings)
         {
-            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText));
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings);
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings)
         {
+            // If it cannot be formatted as a mass list it cannot be a small molecule transition list
+            if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
+            {
+                return false;
+            }
+
+            // Use the first 100 lines and the document to create an importer
+            var inputs = new MassListInputs(csvText.Take(100).ToString(), provider, sep);
+            var importer = new MassListImporter(settings, inputs);
+            // See if creating a peptide row reader with the first 100 lines is possible
+            if (importer.TryCreateRowReader(null, false, csvText.Take(100).ToList(), null, out _, out _))
+            {
+                // If the row reader is able to find a peptide column then it must be a protein transition list
+                return false;
+            }
+            // If we cannot find the peptide column, then try reading it as a small molecule list
             try
             {
                 // This will throw if the headers don't look right
@@ -1935,7 +1952,9 @@ namespace pwiz.Skyline.Model
             catch
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
+                // Check the first line for peptide header
                 var header = csvText.First();
+                // CONSIDER (henrys): Look for "peptide" in other languages as well
                 if (header.ToLowerInvariant().Contains(@"peptide"))
                 {
                     return false;
@@ -2026,6 +2045,7 @@ namespace pwiz.Skyline.Model
         public const string idHMDB = "HMDB";
         public const string idSMILES = "SMILES";
         public const string idKEGG = "KEGG";
+        public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
 
         public static readonly List<string> KnownHeaders;
 
@@ -2069,6 +2089,7 @@ namespace pwiz.Skyline.Model
                 idSMILES,
                 idKEGG,
                 neutralLossProduct,
+                ignoreColumn, // Does not contain useful data, can be more than one in a list
             });
 
             // A dictionary of terms that can be understood as column headers - this includes
@@ -2081,33 +2102,54 @@ namespace pwiz.Skyline.Model
                 Thread.CurrentThread.CurrentUICulture =
                     Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
                 foreach (var pair in new[] {
+                    // ReSharper disable StringLiteralTypo
                     Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
+                    Tuple.Create(moleculeGroup, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name),
                     Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
+                    Tuple.Create(namePrecursor, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
                     Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
                     Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
+                    Tuple.Create(formulaPrecursor, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
                     Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
+                    Tuple.Create(mzPrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z),
                     Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),
+                    Tuple.Create(mzProduct, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
                     Tuple.Create(chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge),
+                    Tuple.Create(chargePrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge),
                     Tuple.Create(chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge),
                     Tuple.Create(adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct),
                     Tuple.Create(adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct),
                     Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time),
                     Tuple.Create(rtPrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_), // ""RT (min)"
+                    Tuple.Create(rtPrecursor, @"explicitretentiontime"),
+                    Tuple.Create(rtPrecursor, @"precursorrt"),
                     Tuple.Create(rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window),
+                    Tuple.Create(rtWindowPrecursor, @"explicitretentiontimewindow"),
+                    Tuple.Create(rtWindowPrecursor, @"precursorrtwindow"),
                     Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy),
                     Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_),
                     Tuple.Create(dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_),
                     Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility),
+                    Tuple.Create(imPrecursor, @"explicitionmobility"),
                     Tuple.Create(imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset),
+                    Tuple.Create(imHighEnergyOffset, @"explicitionmobilityhighenergyoffset"),
                     Tuple.Create(imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units),
+                    Tuple.Create(imUnits, @"explicitionmobilityunits"),
+                    Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_),
+                    Tuple.Create(ccsPrecursor, @"collisionalcrosssection"),
+                    Tuple.Create(ccsPrecursor, @"collisionalcrosssection(sqa)"),
+                    Tuple.Create(ccsPrecursor, @"collisionalcrosssectionsqa"),
                     Tuple.Create(slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens),
+                    Tuple.Create(slens, @"slens"),
+                    Tuple.Create(slens, @"s-lens"),
                     Tuple.Create(coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage),
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage),
                     Tuple.Create(declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
+                    Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
                     Tuple.Create(idInChiKey, idInChiKey),
@@ -2117,6 +2159,8 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idSMILES, idSMILES),
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
+                    Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
+                    // ReSharper restore StringLiteralTypo
                 })
                 {
                     if (!knownColumnHeadersAllCultures.ContainsKey(pair.Item2))

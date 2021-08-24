@@ -29,7 +29,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -1003,10 +1002,10 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(new[] { "grommet", "labbel", string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant())); // Be case insensitive
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2, SkylineWindow.Document.Settings));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.ToLowerInvariant(), SkylineWindow.Document.Settings)); // Be case insensitive
             // But the word "peptide" should prevent us from trying to read this as small molecule data
-            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide")));
+            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide"), SkylineWindow.Document.Settings));
            
 
             // And check for handling of localization
@@ -1034,7 +1033,7 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(new[] { nearly, string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
-            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4, SkylineWindow.Document.Settings));
 
             // Check our ability to help users with localized headers that match the human readable names we use in the UI
             NewDocument();
@@ -1112,6 +1111,33 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
+            // Paste in a peptide transition list with some distinctive small molecule headers
+            var textCSV9 =
+                "Protein Name,Modified Sequence, Precursor Mz,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,478.737814,2,precursor,precursor\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,478.737814,2,16.6,532.272552,1,y4,y\n";
+            // Check that we ignored the headers and looked for matching amino acid sequence and precursor m/z columns
+            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV9, SkylineWindow.Document.Settings));
+            // Paste in the document to make sure it imports properly
+            LoadNewDocument(true);
+            SetClipboardText(textCSV9);
+            
+            var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 4);
+
+            // Examine a transition list with an amino acid sequence, but no precursor m/z column and some distinctive small molecule headers
+            var textCSV10 =
+                "Protein Name,Modified Sequence,Precursor Charge, Collision Energy,Product Mz, MoleculeGroup, SMILES, KEGG\n" +
+                "peptides1,PEPTIDER,2,16.6,478.737814,2,precursor,precursor\n" +
+                "peptides1,PEPTIDER,2,16.6,730.372994,1,y6,y\n" +
+                "peptides1,PEPTIDER,2,16.6,633.32023,1,y5,y\n" +
+                "peptides1,PEPTIDER,2,16.6,532.272552,1,y4,y\n";
+            // We should realize the lack of a matching precursor m/z column, rely on the headers to make the decision,
+            // and classify it as a small molecule transition list
+            Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV10, SkylineWindow.Document.Settings));
         }
 
         private void TestLabelsNoFormulas()
@@ -1610,10 +1636,30 @@ namespace pwiz.SkylineTestFunctional
             var docOrig = NewDocument();
             SetClipboardText(input);
 
-            // Paste directly into targets area
-            var errDlg = ShowDialog<MessageDlg>(() => SkylineWindow.Paste());
-            AssertEx.IsTrue(errDlg.Message.Contains(Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description));
-            OkDialog(errDlg, errDlg.OkDialog);
+            // Paste directly into targets area, which should create an error and then send us to ColumnSelectDlg
+            var errDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+            // Correct the header assignments
+            RunUI(() => {
+                errDlg.radioMolecule.PerformClick();
+                var comboBoxes = errDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(@"InChiKey");
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
+            });
+
+            // This should produce an inconsistent molecule description error
+            RunDlg<ImportTransitionListErrorDlg>(errDlg.OkDialog, msgDlg => msgDlg.Close()); // Dismiss it
+            // Cancel the window
+            OkDialog(errDlg, errDlg.CancelDialog);
         }
 
         /// <summary>
@@ -1641,8 +1687,48 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument(true);
             });
-            var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
-            OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+
+            // One of the headers cannot be understood so we should see a ColumnSelectDlg come up
+            var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
+            RunUI(() => {
+                badDlg.radioMolecule.PerformClick();
+                var comboBoxes = badDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                comboBoxes[11].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+                comboBoxes[12].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                comboBoxes[13].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
+                comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                comboBoxes[15].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+                comboBoxes[18].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+                comboBoxes[19].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_S_Lens);
+                comboBoxes[20].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
+                comboBoxes[21].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+                comboBoxes[22].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
+                comboBoxes[23].SelectedIndex = comboBoxes[1].FindStringExact(@"InChiKey");
+                comboBoxes[24].SelectedIndex = comboBoxes[1].FindStringExact(@"HMDB");
+                comboBoxes[25].SelectedIndex = comboBoxes[1].FindStringExact(@"InChi");
+                comboBoxes[26].SelectedIndex = comboBoxes[1].FindStringExact(@"CAS");
+                comboBoxes[27].SelectedIndex = comboBoxes[1].FindStringExact(@"SMILES");
+                comboBoxes[28].SelectedIndex = comboBoxes[1].FindStringExact(@"KEGG");
+                comboBoxes[29].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
+                comboBoxes[30].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
+                comboBoxes[31].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
+            });
+
+            // This should work because we manually set the headers
+            OkDialog(badDlg, badDlg.OkDialog);
+            //var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
+            //OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
         }
 
     }
