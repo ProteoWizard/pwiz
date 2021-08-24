@@ -303,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             if (IsRecordImported)
-                PauseTest("COPY IMPORTED DOCUMENT");
+                PauseForManualTutorialStep("COPY IMPORTED DOCUMENT");
 
             // Generate decoys
             //            var decoysDlg = ShowDialog<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg);
