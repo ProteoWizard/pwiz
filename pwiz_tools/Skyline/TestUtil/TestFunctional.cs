@@ -1943,12 +1943,15 @@ namespace pwiz.SkylineTestUtil
 
         public void FindNode(string searchText)
         {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true);
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
+            var findDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+            RunUI(() => findDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true));
+            SkylineWindow.BeginInvoke((Action) findDlg.FindNext);
+            WaitForConditionUI(5*1000, () => SkylineWindow.SelectedNode.Text.Contains(searchText) || FindOpenForm<MessageDlg>() != null);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail(TextUtil.LineSeparate("Unexpected message form with the text:", messageDlg.Message));
+            RunUI(() => AssertEx.Contains(SkylineWindow.SelectedNode.Text, searchText));
+            OkDialog(findDlg, findDlg.Close);
         }
 
         protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
