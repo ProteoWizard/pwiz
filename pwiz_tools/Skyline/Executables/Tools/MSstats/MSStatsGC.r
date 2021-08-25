@@ -138,51 +138,12 @@ runComparison <- function() {
 	## then, what comparisons?
 	alllevel <- levels(quantData$ProcessedData$GROUP_ORIGINAL)
 
-	comparison <- NULL
-
-	for (k in 1:numcomparison) {
-
-		temp <- NULL
-
-		for (i in 1:length(alllevel)) {
-			inputtemp <- arguments[i + lastFixedArgument]
-			temp <- c(temp, as.numeric(inputtemp))
-		}
-		
-		comparison <- rbind(comparison, matrix(temp, nrow=1))
-
-		#inputrowname <- arguments[2]
-		
-		namepos <- alllevel[temp > 0]
-		
-		if(length(namepos) != 1){
-			
-			namepos <- paste(temp[temp >0][1], "(", paste(namepos, collapse = "+"), ")", sep="")
-		
-		}
-		
-		
-		nameneg <- alllevel[temp < 0]
-		
-		if(length(namepos) != 1){
-			
-			nameneg <- paste(temp[temp >0][1], "(", paste(nameneg, collapse = "+"), ")", sep="")
-		
-		}
-
-		
-		inputrowname <- paste(namepos, nameneg, sep='-')
-
-		row.names(comparison)[k] <- inputrowname 
-	}
-
-
 	## then testing with inputs from users
 	cat("\n\n ============================")
 	cat("\n ** Starting comparison... \n \n")
 
 	## here is the issues : labeled, and interference need to be binary, not character
-	resultComparison <- try(groupComparison(contrast.matrix=comparison, data=quantData))
+	resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData))
 
 	if (class(resultComparison) != "try-error") {
 

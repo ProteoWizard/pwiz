@@ -33,7 +33,6 @@ namespace MSStatArgsCollector
     {
         // Groups for comparison
         private string[] ControlGroupList { get; set; }
-        private string[] ComparisonGroupList { get; set; }
 
         // Argument array
         public string[] Arguments { get; private set; }
@@ -47,7 +46,6 @@ namespace MSStatArgsCollector
             ControlGroup.DataSource = ControlGroupList = groups;
             Arguments = oldArgs;
 
-            FormatComparisonGroupDisplay();
             try
             {
                 RestoreSettings();
@@ -62,18 +60,6 @@ namespace MSStatArgsCollector
         {
             Show();
             textBoxName.Focus();
-        }
-
-        private void FormatComparisonGroupDisplay()
-        {
-            // Display comparison group checklistbox if there are 3+ groups
-            if (ControlGroupList.Length > 2)
-            {
-                // Listbox appropriately sizes itself to fit the number of groups to compare against without scrolling,
-                // for 2-5 groups (3-6 total groups in the data set). In the case of 6+ groups, there will be scrolling
-                ComparisonGroups.Height = ComparisonGroups.ItemHeight * Math.Min(5, ControlGroupList.Length - 1) + 5;
-                ComparisonGroups.Visible = labelComparisonGroups.Visible = true;
-            }
         }
 
         // Constants
@@ -99,25 +85,6 @@ namespace MSStatArgsCollector
                 // Restore the selected control group 
                 ControlGroup.SelectedIndex = Array.IndexOf(variableArguments, "-1"); // Not L10N
 
-                // Restore the selection of comparison groups (if necessary)
-                if (ControlGroupList.Length > 2)
-                {
-                    for (int i = 0; i < variableArguments.Length; i++)
-                    {
-                        double groupConstant;
-                        if (!double.TryParse(variableArguments[i], NumberStyles.Float, CultureInfo.InvariantCulture, out groupConstant))
-                            continue;
-// ReSharper disable CompareOfFloatsByEqualityOperator
-                        if (groupConstant != 1.0 && groupConstant != 0.0)
-// ReSharper restore CompareOfFloatsByEqualityOperator
-                        {
-                            // if the group being selected comes after the control group lexicographically, we must
-                            // decrement the index by 1 
-                            ComparisonGroups.SelectedIndices.Add(i - (i < ControlGroup.SelectedIndex ? 0 : 1));
-                        }
-                    }
-                }
-
                 // Restore name
                 textBoxName.Text = fixedArguments[(int) Args.name];
                 comboBoxNormalizeTo.SelectedIndex = int.Parse(fixedArguments[(int)Args.normalize_to], CultureInfo.InvariantCulture);
@@ -141,26 +108,6 @@ namespace MSStatArgsCollector
             }            
         }
 
-        private void ControlGroup_SelectedIndexChanged(object sender, EventArgs e)
-        {        
-            if (ControlGroupList.Length > 2) 
-                PopulateComparisonGroups();
-        }
-
-        // Simply populates the checklistbox with all but the selected group
-        private void PopulateComparisonGroups()
-        {
-            var comparisonGroups = new Collection<string>();
-            foreach (string group in ControlGroupList)
-            {
-                if (!group.Equals(ControlGroup.SelectedItem.ToString()))
-                    comparisonGroups.Add(group);
-            }
-            
-            ComparisonGroups.DataSource = ComparisonGroupList = comparisonGroups.ToArray();
-            ComparisonGroups.ClearSelected();
-        }
-
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -168,11 +115,7 @@ namespace MSStatArgsCollector
 
         public void OkDialog()
         {
-            if (ComparisonGroups.Visible && ComparisonGroups.SelectedIndices.Count == 0)
-            {
-                MessageBox.Show(this, MSstatsResources.GroupComparisonUi_OkDialog_Please_select_at_least_one_comparison_group_);
-            }
-            else if (string.IsNullOrWhiteSpace(textBoxName.Text))
+        if (string.IsNullOrWhiteSpace(textBoxName.Text))
             {
                 MessageBox.Show(this, MSstatsResources.GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_);
             }
@@ -208,29 +151,8 @@ namespace MSStatArgsCollector
             commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxRemoveInterferedProteins.Checked ? TRUESTRING : FALSESTRING);
-            
-            // Generate constants for comparisons
-            var constants = new double[ControlGroupList.Length];
-            constants[ControlGroup.SelectedIndex] = -1.0;
-            if (ControlGroupList.Length == 2)
-            {
-                constants[1 - ControlGroup.SelectedIndex] = 1.0;
-            }
-            else
-            {
-                double comparisonConstant = 1.0 / ComparisonGroups.SelectedItems.Count;
-                foreach (string group in ComparisonGroups.SelectedItems)
-                {
-                    constants[Array.IndexOf(ControlGroupList, group)] = comparisonConstant;
-                }
-            }
-            
-            // Add to the string
-            foreach (double value in constants)
-            {
-                commandLineArguments.Add(value.ToString(CultureInfo.InvariantCulture));
-            }
-
+            commandLineArguments.Add(ControlGroup.SelectedIndex.ToString());
+           
             Arguments = commandLineArguments.ToArray();
         }
 

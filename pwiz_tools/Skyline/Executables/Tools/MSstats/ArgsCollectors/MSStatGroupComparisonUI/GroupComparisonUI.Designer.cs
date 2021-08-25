@@ -35,8 +35,6 @@
             this.comboBoxNormalizeTo = new System.Windows.Forms.ComboBox();
             this.labelNormalizeTo = new System.Windows.Forms.Label();
             this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
-            this.ComparisonGroups = new System.Windows.Forms.ListBox();
-            this.labelComparisonGroups = new System.Windows.Forms.Label();
             this.ControlGroup = new System.Windows.Forms.ComboBox();
             this.labelControlGroup = new System.Windows.Forms.Label();
             this.argsLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -52,7 +50,7 @@
             this.btnOK.Margin = new System.Windows.Forms.Padding(3, 3, 15, 3);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 3;
+            this.btnOK.TabIndex = 9;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -65,7 +63,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 3, 15, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 4;
+            this.btnCancel.TabIndex = 0;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -99,7 +97,7 @@
             this.comboBoxNormalizeTo.Location = new System.Drawing.Point(13, 67);
             this.comboBoxNormalizeTo.Name = "comboBoxNormalizeTo";
             this.comboBoxNormalizeTo.Size = new System.Drawing.Size(172, 21);
-            this.comboBoxNormalizeTo.TabIndex = 1;
+            this.comboBoxNormalizeTo.TabIndex = 3;
             // 
             // labelNormalizeTo
             // 
@@ -107,7 +105,7 @@
             this.labelNormalizeTo.Location = new System.Drawing.Point(13, 50);
             this.labelNormalizeTo.Name = "labelNormalizeTo";
             this.labelNormalizeTo.Size = new System.Drawing.Size(111, 13);
-            this.labelNormalizeTo.TabIndex = 0;
+            this.labelNormalizeTo.TabIndex = 2;
             this.labelNormalizeTo.Text = "Normalization method:";
             // 
             // cboxAllowMissingPeaks
@@ -116,31 +114,9 @@
             this.cboxAllowMissingPeaks.Location = new System.Drawing.Point(14, 92);
             this.cboxAllowMissingPeaks.Name = "cboxAllowMissingPeaks";
             this.cboxAllowMissingPeaks.Size = new System.Drawing.Size(120, 17);
-            this.cboxAllowMissingPeaks.TabIndex = 2;
+            this.cboxAllowMissingPeaks.TabIndex = 4;
             this.cboxAllowMissingPeaks.Text = "&Allow missing peaks";
             this.cboxAllowMissingPeaks.UseVisualStyleBackColor = true;
-            // 
-            // ComparisonGroups
-            // 
-            this.ComparisonGroups.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.ComparisonGroups.FormattingEnabled = true;
-            this.ComparisonGroups.Location = new System.Drawing.Point(3, 76);
-            this.ComparisonGroups.Name = "ComparisonGroups";
-            this.ComparisonGroups.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.ComparisonGroups.Size = new System.Drawing.Size(169, 43);
-            this.ComparisonGroups.TabIndex = 5;
-            this.ComparisonGroups.Visible = false;
-            // 
-            // labelComparisonGroups
-            // 
-            this.labelComparisonGroups.AutoSize = true;
-            this.labelComparisonGroups.Location = new System.Drawing.Point(3, 60);
-            this.labelComparisonGroups.Margin = new System.Windows.Forms.Padding(3, 10, 3, 0);
-            this.labelComparisonGroups.Name = "labelComparisonGroups";
-            this.labelComparisonGroups.Size = new System.Drawing.Size(174, 13);
-            this.labelComparisonGroups.TabIndex = 4;
-            this.labelComparisonGroups.Text = "&Select group(s) to compare against:";
-            this.labelComparisonGroups.Visible = false;
             // 
             // ControlGroup
             // 
@@ -150,7 +126,6 @@
             this.ControlGroup.Name = "ControlGroup";
             this.ControlGroup.Size = new System.Drawing.Size(169, 21);
             this.ControlGroup.TabIndex = 3;
-            this.ControlGroup.SelectedIndexChanged += new System.EventHandler(this.ControlGroup_SelectedIndexChanged);
             // 
             // labelControlGroup
             // 
@@ -168,14 +143,12 @@
             this.argsLayoutPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.argsLayoutPanel.Controls.Add(this.labelControlGroup);
             this.argsLayoutPanel.Controls.Add(this.ControlGroup);
-            this.argsLayoutPanel.Controls.Add(this.labelComparisonGroups);
-            this.argsLayoutPanel.Controls.Add(this.ComparisonGroups);
             this.argsLayoutPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.argsLayoutPanel.Location = new System.Drawing.Point(12, 187);
             this.argsLayoutPanel.Name = "argsLayoutPanel";
             this.argsLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
-            this.argsLayoutPanel.Size = new System.Drawing.Size(180, 132);
-            this.argsLayoutPanel.TabIndex = 2;
+            this.argsLayoutPanel.Size = new System.Drawing.Size(175, 60);
+            this.argsLayoutPanel.TabIndex = 8;
             // 
             // cboxSelectHighQualityFeatures
             // 
@@ -245,8 +218,6 @@
         private System.Windows.Forms.ComboBox comboBoxNormalizeTo;
         private System.Windows.Forms.Label labelNormalizeTo;
         private System.Windows.Forms.CheckBox cboxAllowMissingPeaks;
-        private System.Windows.Forms.ListBox ComparisonGroups;
-        private System.Windows.Forms.Label labelComparisonGroups;
         private System.Windows.Forms.ComboBox ControlGroup;
         private System.Windows.Forms.Label labelControlGroup;
         private System.Windows.Forms.FlowLayoutPanel argsLayoutPanel;
