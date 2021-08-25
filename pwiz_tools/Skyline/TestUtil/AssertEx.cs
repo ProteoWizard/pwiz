@@ -793,7 +793,7 @@ namespace pwiz.SkylineTestUtil
                 helpMsg = String.Empty;
             else
                 helpMsg += " ";
-            var failMessage = Helpers.DiffIgnoringTimeStampsAndGUIDs(target, actual, columnTolerances);
+            var failMessage = DifferenceFinder.DiffIgnoringTimeStampsAndGUIDs(target, actual, columnTolerances);
             if (!string.IsNullOrEmpty(failMessage))
             {
                 Fail(helpMsg + failMessage);
