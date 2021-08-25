@@ -1529,8 +1529,11 @@ namespace pwiz.SkylineTestUtil
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            if (Equals(expected, actual))
+            var diff = Helpers.DiffIgnoringTimeStampsAndGUIDs(expected, actual); // Don't mind any differences in generated GUIDs or timestamps
+            if (string.IsNullOrEmpty(diff))
+            {
                 return;
+            }
 
             if (ForceMzml)
             {
@@ -1542,8 +1545,11 @@ namespace pwiz.SkylineTestUtil
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
                     if (index - actualParts[0].Length > 0)
                     {
-                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
-                        if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
+                        var mzmlExpected = expected.Replace(extExpected, extMzml);  // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
+                        var mzmlActual = string.Join(extMzml, actualParts);  // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
+                        diff = Helpers.DiffIgnoringTimeStampsAndGUIDs(mzmlExpected, mzmlActual);
+                        if (string.IsNullOrEmpty(diff))
                         {
                             return;
                         }
