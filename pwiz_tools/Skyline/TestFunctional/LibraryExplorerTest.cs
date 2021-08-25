@@ -307,17 +307,6 @@ namespace pwiz.SkylineTestFunctional
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
 
-            // Check that the search result is highlighted in the peptide tool tip
-            RunUI(() => {
-                var pep = _viewLibUI.GetTipProvider(1);
-                var seqParts = pep.GetSeqParts();
-                Assert.AreEqual(seqParts[0].Bold, true);
-                Assert.AreEqual(seqParts[1].Bold, true);
-
-                // Text not matching the filter text should not be in bold
-                Assert.AreEqual(seqParts[2].Bold, false);
-            });
-
             // Now test filtering by precursor m/z
             RunUI(() =>
             {

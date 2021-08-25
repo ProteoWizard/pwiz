@@ -2513,7 +2513,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         table.Draw(g);
                         g.TranslateTransform(0, sizeSeq.Height);
-                        tableMz.SearchSensitiveDraw(g, _filterText, rt);
+                        tableMz.Draw(g);
                         g.TranslateTransform(0, -sizeSeq.Height);
                     }
                 }
@@ -2546,33 +2546,30 @@ namespace pwiz.Skyline.SettingsUI
             private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
             {
                 var toDrawParts = new List<TextColor>();
-                var splitMods = SplitModifications(_pepInfo.Key.Sequence);
-
-                var strSeq = splitMods.Aggregate("", (current, t) => current += t.Item1);
-                var matchIndices = FindMatchesInTipText(strSeq, _filterText);
-
-                var charLocations = new List<int>();
-                foreach (var index in matchIndices)
+                if (!_pepInfo.Key.HasModifications)
                 {
-                    charLocations.AddRange(Enumerable.Range(index, _filterText.Length));
+                    toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
                 }
-
-                for (var i = 0; i < splitMods.Count; i++)
+                else
                 {
-                    var piece = splitMods[i];
-                    string drawStr = piece.Item1.ToString();
-                    var drawColor = Brushes.Black;
-                    if (piece.Item2 != null) // if is modified AA
+                    var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+                    for (var i = 0; i < splitMods.Count; i++)
                     {
-                        drawStr += piece.Item2;
-                        var currentMod = GetCurrentMod(mods, i, piece);
-                        if (!IsMatched(currentMod, piece)) // not match if color is red
+                        var piece = splitMods[i];
+                        string drawStr = piece.Item1.ToString();
+                        var drawColor = Brushes.Black;
+                        if (piece.Item2 != null) // if is modified AA
                         {
-                            drawStr = drawStr.Replace(@"]", @"?]");
-                            drawColor = Brushes.Red;
+                            drawStr += piece.Item2;
+                            var currentMod = GetCurrentMod(mods, i, piece);
+                            if (!IsMatched(currentMod, piece)) // not match if color is red
+                            {
+                                drawStr = drawStr.Replace(@"]", @"?]");
+                                drawColor = Brushes.Red;
+                            }
                         }
+                        toDrawParts.Add(new TextColor(drawStr, drawColor));
                     }
-                    toDrawParts.Add(new TextColor(drawStr, drawColor, charLocations.Contains(i)));
                 }
                 return toDrawParts;
             }
@@ -2649,30 +2646,26 @@ namespace pwiz.Skyline.SettingsUI
             private List<Tuple<char, string>> SplitModifications(string modifiedSequence)
             {
                 var result = new List<Tuple<char, string>>();
-                if (!modifiedSequence.IsNullOrEmpty())
+                for (int ich = 0; ich < modifiedSequence.Length; ich++)
                 {
-                    for (int ich = 0; ich < modifiedSequence.Length; ich++)
+                    char ch = modifiedSequence[ich];
+                    if (ich == modifiedSequence.Length - 1 || modifiedSequence[ich + 1] != '[')
                     {
-                        char ch = modifiedSequence[ich];
-                        if (ich == modifiedSequence.Length - 1 || modifiedSequence[ich + 1] != '[')
-                        {
-                            result.Add(Tuple.Create(ch, (string) null));
-                        }
-                        else
-                        {
-                            int ichEndBracket = modifiedSequence.IndexOf(']', ich + 1);
-                            if (ichEndBracket == -1)
-                                ichEndBracket = modifiedSequence.Length;
-                            int ichStart = ich + 1;
-                            string modText = ichStart < ichEndBracket
-                                ? modifiedSequence.Substring(ich + 1, ichEndBracket - ich)
-                                : null;
-                            result.Add(Tuple.Create(ch, modText));
-                            ich = ichEndBracket;
-                        }
+                        result.Add(Tuple.Create(ch, (string)null));
+                    }
+                    else
+                    {
+                        int ichEndBracket = modifiedSequence.IndexOf(']', ich + 1);
+                        if (ichEndBracket == -1)
+                            ichEndBracket = modifiedSequence.Length;
+                        int ichStart = ich + 1;
+                        string modText = ichStart < ichEndBracket
+                            ? modifiedSequence.Substring(ich + 1, ichEndBracket - ich)
+                            : null;
+                        result.Add(Tuple.Create(ch, modText));
+                        ich = ichEndBracket;
                     }
                 }
-
                 return result;
             }
 
@@ -2680,14 +2673,13 @@ namespace pwiz.Skyline.SettingsUI
             // takes a list of <string, color> so that we can draw segments of different colors
             private SizeF DrawTextParts(Graphics g, float startX, float startY, List<TextColor> parts, RenderTools rt)
             {
-                var size = new SizeF(startX, startY);               
+                var size = new SizeF(startX, startY);
                 float height = 0;
                 foreach (var part in parts)
                 {
-                    var font = part.Bold ? rt.FontBold : rt.FontNormal;
-                    g.DrawString(part.Text, font, part.Color, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part.Text, font).Width - 3;
-                    height = g.MeasureString(part.Text, font).Height;
+                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(size.Width, size.Height));
+                    size.Width += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
+                    height = g.MeasureString(part.Text, rt.FontNormal).Height;
                 }
                 size.Height = height;
                 return size;
@@ -2702,16 +2694,14 @@ namespace pwiz.Skyline.SettingsUI
 
             public struct TextColor
             {
-                public TextColor(string text, Brush color = null, bool bold = false) : this()
+                public TextColor(string text, Brush color = null) : this()
                 {
                     Text = text;
                     Color = color ?? Brushes.Black;
-                    Bold = bold;
                 }
 
                 public string Text { get; private set; }
                 public Brush Color { get; private set; }
-                public bool Bold { get; private set; }
             }
         }
 

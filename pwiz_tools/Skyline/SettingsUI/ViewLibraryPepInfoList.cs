@@ -216,7 +216,7 @@ namespace pwiz.Skyline.SettingsUI
                         _pepInfos[index].OtherKeysDict.ContainsKey(propertyName)).ThenBy(index => _pepInfos[index].OtherKeysDict[propertyName]));
                 }
 
-                intList = (from index in intList let entry = _pepInfos[index] where !GetStringValue(propertyName, entry).Equals("") select index).ToList();
+                intList = (from index in intList let entry = _pepInfos[index] where !GetStringValue(propertyName, entry).Equals("") && !GetStringValue(propertyName, entry).Equals(@"0") select index).ToList();
                 return ImmutableList.ValueOf(intList.OrderBy(index => GetStringValue(propertyName, _pepInfos[index]), StringComparer.OrdinalIgnoreCase));
             }
         }
