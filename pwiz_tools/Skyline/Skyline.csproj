@@ -222,9 +222,6 @@
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
-    <Compile Include="Alerts\MessageInvariantDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Alerts\NoModeUIDlg.cs">
       <SubType>Form</SubType>
     </Compile>

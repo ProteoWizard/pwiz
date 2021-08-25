@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message) { Exception = exception }.ShowAndDispose(parent);
         }
 
-        public MessageDlg(string message) : base(message, MessageBoxButtons.OK)
+        private MessageDlg(string message) : base(message, MessageBoxButtons.OK)
         {
         }
     }
