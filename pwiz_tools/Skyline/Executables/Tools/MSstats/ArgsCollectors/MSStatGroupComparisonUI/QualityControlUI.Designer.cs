@@ -32,14 +32,12 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.comboBoxNormalizeTo = new System.Windows.Forms.ComboBox();
             this.labelNormalizeTo = new System.Windows.Forms.Label();
-            this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
             this.groupBoxPlotSize = new System.Windows.Forms.GroupBox();
             this.tbxHeight = new System.Windows.Forms.TextBox();
             this.lblHeight = new System.Windows.Forms.Label();
             this.tbxWidth = new System.Windows.Forms.TextBox();
             this.lblWidth = new System.Windows.Forms.Label();
             this.cbxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
-            this.cbxRemoveInterferedProteins = new System.Windows.Forms.CheckBox();
             this.groupBoxPlotSize.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -54,7 +52,6 @@
             this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOK
             // 
@@ -73,11 +70,6 @@
             this.comboBoxNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxNormalizeTo.ForeColor = System.Drawing.SystemColors.WindowText;
             this.comboBoxNormalizeTo.FormattingEnabled = true;
-            this.comboBoxNormalizeTo.Items.AddRange(new object[] {
-            "None",
-            "Equalize medians",
-            "Quantile",
-            "Relative to global standards"});
             this.comboBoxNormalizeTo.Location = new System.Drawing.Point(12, 30);
             this.comboBoxNormalizeTo.Name = "comboBoxNormalizeTo";
             this.comboBoxNormalizeTo.Size = new System.Drawing.Size(144, 21);
@@ -91,16 +83,6 @@
             this.labelNormalizeTo.Size = new System.Drawing.Size(111, 13);
             this.labelNormalizeTo.TabIndex = 0;
             this.labelNormalizeTo.Text = "Normalization method:";
-            // 
-            // cboxAllowMissingPeaks
-            // 
-            this.cboxAllowMissingPeaks.AutoSize = true;
-            this.cboxAllowMissingPeaks.Location = new System.Drawing.Point(13, 54);
-            this.cboxAllowMissingPeaks.Name = "cboxAllowMissingPeaks";
-            this.cboxAllowMissingPeaks.Size = new System.Drawing.Size(120, 17);
-            this.cboxAllowMissingPeaks.TabIndex = 2;
-            this.cboxAllowMissingPeaks.Text = "&Allow missing peaks";
-            this.cboxAllowMissingPeaks.UseVisualStyleBackColor = true;
             // 
             // groupBoxPlotSize
             // 
@@ -158,19 +140,6 @@
             this.cbxSelectHighQualityFeatures.TabIndex = 6;
             this.cbxSelectHighQualityFeatures.Text = "Select high quality features";
             this.cbxSelectHighQualityFeatures.UseVisualStyleBackColor = true;
-            this.cbxSelectHighQualityFeatures.CheckedChanged += new System.EventHandler(this.cbxSelectHighQualityFeatures_CheckedChanged);
-            // 
-            // cbxRemoveInterferedProteins
-            // 
-            this.cbxRemoveInterferedProteins.AutoSize = true;
-            this.cbxRemoveInterferedProteins.Enabled = false;
-            this.cbxRemoveInterferedProteins.Location = new System.Drawing.Point(31, 100);
-            this.cbxRemoveInterferedProteins.Name = "cbxRemoveInterferedProteins";
-            this.cbxRemoveInterferedProteins.Size = new System.Drawing.Size(179, 43);
-            this.cbxRemoveInterferedProteins.TabIndex = 7;
-            this.cbxRemoveInterferedProteins.Text = "Allow the algorithm to delete the \r\nwhole protein if all of its features \r\nhave i" +
-    "nterference";
-            this.cbxRemoveInterferedProteins.UseVisualStyleBackColor = true;
             // 
             // QualityControlUI
             // 
@@ -179,10 +148,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(268, 273);
-            this.Controls.Add(this.cbxRemoveInterferedProteins);
             this.Controls.Add(this.cbxSelectHighQualityFeatures);
             this.Controls.Add(this.groupBoxPlotSize);
-            this.Controls.Add(this.cboxAllowMissingPeaks);
             this.Controls.Add(this.comboBoxNormalizeTo);
             this.Controls.Add(this.labelNormalizeTo);
             this.Controls.Add(this.btnCancel);
@@ -206,13 +173,11 @@
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.ComboBox comboBoxNormalizeTo;
         private System.Windows.Forms.Label labelNormalizeTo;
-        private System.Windows.Forms.CheckBox cboxAllowMissingPeaks;
         private System.Windows.Forms.GroupBox groupBoxPlotSize;
         private System.Windows.Forms.TextBox tbxHeight;
         private System.Windows.Forms.Label lblHeight;
         private System.Windows.Forms.TextBox tbxWidth;
         private System.Windows.Forms.Label lblWidth;
         private System.Windows.Forms.CheckBox cbxSelectHighQualityFeatures;
-        private System.Windows.Forms.CheckBox cbxRemoveInterferedProteins;
     }
 }

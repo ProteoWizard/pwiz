@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -28,21 +27,15 @@ using Microsoft.VisualBasic.FileIO;
 
 namespace MSStatArgsCollector
 {    
-    public partial class GroupComparisonUi : Form
+    public partial class GroupComparisonUi : ArgsCollectorForm
     {
-        private static IList<string> _normalizationOptionValues = new ReadOnlyCollection<string>(new[]
-        {
-            "FALSE",
-            "equalizeMedians",
-            "quantile",
-            "globalStandards"
-        });
         // Argument array
         public string[] Arguments { get; private set; }
         
         public GroupComparisonUi(string[] groups, string[] oldArgs)
         {
             InitializeComponent();
+            comboBoxNormalizeTo.Items.AddRange(GetNormalizationOptionLabels().Cast<object>().ToArray());
             comboControlGroup.Items.Add(string.Empty);
             foreach (var group in groups)
             {
@@ -59,9 +52,6 @@ namespace MSStatArgsCollector
             RestoreSettings(oldArgs);
         }
 
-        // Constants
-        private const string TRUESTRING = "TRUE"; // Not L10N
-        private const string FALSESTRING = "FALSE"; // Not L10N
 
         // ReSharper disable InconsistentNaming
         private enum Args {
@@ -82,9 +72,9 @@ namespace MSStatArgsCollector
                 return false;
             }
 
-            Util.SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
+            SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
             cboxSelectHighQualityFeatures.Checked = TRUESTRING == arguments[(int) Args.FeatureSelection];
-            Util.SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
+            SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
             return true;
 #if false
             // If any of the groups begin with "control" or "healthy" make the first the default
@@ -146,7 +136,7 @@ namespace MSStatArgsCollector
         /// This entry point might be used future versions of Skyline in case the report text is too
         /// large to fit in a string.
         /// </summary>
-        public static string[] CollectArgsReader(IWin32Window parent, TextReader report, string[] oldArgs)
+        public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] oldArgs)
         {
             const string conditionColumnName = "Condition"; // Not L10N
             var parser = new TextFieldParser(report);

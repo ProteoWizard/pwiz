@@ -34,7 +34,7 @@ namespace TestHarness
         {
             using (var reader = new StreamReader(tbxCsvFile.Text))
             {
-                var newArgs = MSstatsGroupComparisonCollector.CollectArgsReader(this, reader, Arguments.ToArray());
+                var newArgs = MSstatsGroupComparisonCollector.CollectArgs(this, reader, Arguments.ToArray());
                 if (newArgs != null)
                 {
                     Arguments = newArgs;
@@ -54,6 +54,18 @@ namespace TestHarness
             set
             {
                 tbxOutput.Text = string.Join(Environment.NewLine, value) + Environment.NewLine;
+            }
+        }
+
+        private void btnQualityControl_Click(object sender, EventArgs e)
+        {
+            using (var reader = new StreamReader(tbxCsvFile.Text))
+            {
+                var newArgs = MSstatsQualityControlCollector.CollectArgs(this, reader, Arguments.ToArray());
+                if (newArgs != null)
+                {
+                    Arguments = newArgs;
+                }
             }
         }
     }

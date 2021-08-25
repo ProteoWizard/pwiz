@@ -46,20 +46,24 @@ prepareSkylineDataSet <- function(data) {
   return(data);
 }
 
-GroupComparison <- function(dataFileName, inputNormalize, fillIncompleteRows, address="") {
-  logFile <- ensureUniqueFileName("MSstats_GroupComparison", address, ".log")
+CallDataProcess <- function(dataFileName, inputNormalize, inputFeatureSelection, logFilePath) {
   data <- read.csv(dataFileName)
   data <- prepareSkylineDataSet(data)
-  # TODO
+  # TODO: standardPepName
   standardPepName <- c()
-  input_feature_selection <- "all"
-  quantData <- dataProcess(
+  
+  return(dataProcess(
     data, 
     normalization=inputNormalize,
     nameStandards=standardPepName, 
-    featureSubset=input_feature_selection, 
+    featureSubset=inputFeatureSelection, 
     summaryMethod = "TMP", 
-    censoredInt="0", log_file_path=logFile, append=TRUE)
+    censoredInt="0", log_file_path=logFilePath, append=TRUE))
+}
+
+GroupComparison <- function(dataFileName, inputNormalize, inputFeatureSelection, address="") {
+  logFile <- ensureUniqueFileName("MSstats_GroupComparison", address, ".log")
+  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
   resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData, log_file_path=logFile, append=TRUE))
   
   if (class(resultComparison) != "try-error") {
@@ -100,16 +104,63 @@ GroupComparison <- function(dataFileName, inputNormalize, fillIncompleteRows, ad
 GroupComparisonCmd <- function(arguments) {
   dataFileName <- arguments[1]
   optionNormalize <- arguments[2]
-  fillIncompleteRows <- arguments[3]
-  featureSelection <- arguments[4]
+  featureSelection <- arguments[3]
 
-  GroupComparison(dataFileName, optionNormalize, fillIncompleteRows)
+  GroupComparison(dataFileName, optionNormalize, featureSelection)
+}
+
+QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, width, height, address="") {
+  logFile <- ensureUniqueFileName("MSstats_QualityControl", address, ".log")
+  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
+  
+  
+  if (class(quantData) != "try-error") {
+    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", address, ".csv"))
+    cat("\n Saved dataProcessedData.csv \n")
+  } else {
+    stop(message("\n Error : Can't process the data. \n"))
+  }
+  
+  ## --------------------------
+  ## Function: dataProcessPlots
+  ## visualization 
+  ## --------------------------
+  
+  if (class(quantData) != "try-error") {
+    cat("\n\n =======================================")
+    cat("\n ** Generating dataProcess Plots..... \n \n")
+    
+    dataProcessPlots(data=quantData, type="ProfilePlot", 
+                     address=address, width=width, height=height)
+    cat("\n Saved ProfilePlot.pdf \n \n")
+    
+    dataProcessPlots(data=quantData, type="QCPlot",
+                     which.Protein = 'allonly',
+                     address=address, width=width, height=height)
+    cat("\n Saved QCPlot.pdf \n \n")
+    
+    dataProcessPlots(data=quantData, type="ConditionPlot", 
+                     address=address)
+    cat("\n Saved ConditionPlot.pdf \n ")
+  }
+}
+
+QualityControlCmd <- function(arguments) {
+  dataFileName <- arguments[1]
+  optionNormalize <- arguments[2]
+  featureSelection <- arguments[3]
+  width = as.numeric(arguments[4])
+  height = as.numeric(arguments[5])
+  
+  QualityControl(dataFileName, optionNormalize, featureSelection, width, height)
 }
 
 MsStatsExternalTool <- function(arguments) {
   command <- arguments[1]
   if (command == "GC") {
     GroupComparisonCmd(arguments[-1])
+  } else if (command == "QC") {
+    QualityControlCmd(arguments(-1))
   }
 }
 

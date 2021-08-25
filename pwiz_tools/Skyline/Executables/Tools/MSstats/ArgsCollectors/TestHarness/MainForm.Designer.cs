@@ -34,6 +34,7 @@
             this.btnGroupComparison = new System.Windows.Forms.Button();
             this.tbxOutput = new System.Windows.Forms.TextBox();
             this.lblOutput = new System.Windows.Forms.Label();
+            this.btnQualityControl = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblCsvFile
@@ -95,11 +96,22 @@
             this.lblOutput.TabIndex = 5;
             this.lblOutput.Text = "Output:";
             // 
+            // btnQualityControl
+            // 
+            this.btnQualityControl.Location = new System.Drawing.Point(148, 68);
+            this.btnQualityControl.Name = "btnQualityControl";
+            this.btnQualityControl.Size = new System.Drawing.Size(104, 23);
+            this.btnQualityControl.TabIndex = 6;
+            this.btnQualityControl.Text = "Quality Control";
+            this.btnQualityControl.UseVisualStyleBackColor = true;
+            this.btnQualityControl.Click += new System.EventHandler(this.btnQualityControl_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(566, 450);
+            this.Controls.Add(this.btnQualityControl);
             this.Controls.Add(this.lblOutput);
             this.Controls.Add(this.tbxOutput);
             this.Controls.Add(this.btnGroupComparison);
@@ -121,5 +133,6 @@
         private System.Windows.Forms.Button btnGroupComparison;
         private System.Windows.Forms.TextBox tbxOutput;
         private System.Windows.Forms.Label lblOutput;
+        private System.Windows.Forms.Button btnQualityControl;
     }
 }

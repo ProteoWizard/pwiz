@@ -61,6 +61,42 @@ namespace MSStatArgsCollector {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Equalize medians.
+        /// </summary>
+        internal static string ArgsCollectorForm_GetNormalizationOptionLabels_Equalize_Medians {
+            get {
+                return ResourceManager.GetString("ArgsCollectorForm_GetNormalizationOptionLabels_Equalize_Medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative to global standards.
+        /// </summary>
+        internal static string ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards {
+            get {
+                return ResourceManager.GetString("ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string ArgsCollectorForm_GetNormalizationOptionLabels_None {
+            get {
+                return ResourceManager.GetString("ArgsCollectorForm_GetNormalizationOptionLabels_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantile.
+        /// </summary>
+        internal static string ArgsCollectorForm_GetNormalizationOptionLabels_Quantile {
+            get {
+                return ResourceManager.GetString("ArgsCollectorForm_GetNormalizationOptionLabels_Quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a name for this comparison..
         /// </summary>
         internal static string GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_ {

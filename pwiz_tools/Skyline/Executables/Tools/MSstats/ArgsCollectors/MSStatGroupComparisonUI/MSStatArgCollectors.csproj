@@ -52,6 +52,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArgsCollectorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ArgsCollectorForm.Designer.cs">
+      <DependentUpon>ArgsCollectorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="GroupComparisonUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -76,7 +82,6 @@
     <Compile Include="SampleSizeUI.Designer.cs">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </Compile>
-    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GroupComparisonUI.ja.resx">
