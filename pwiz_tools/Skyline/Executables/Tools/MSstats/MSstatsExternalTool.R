@@ -46,7 +46,7 @@ prepareSkylineDataSet <- function(data) {
   return(data);
 }
 
-GroupComparison <- function(dataFileName, inputNormalize, address="") {
+GroupComparison <- function(dataFileName, inputNormalize, fillIncompleteRows, address="") {
   logFile <- ensureUniqueFileName("MSstats_GroupComparison", address, ".log")
   data <- read.csv(dataFileName)
   data <- prepareSkylineDataSet(data)
@@ -55,7 +55,8 @@ GroupComparison <- function(dataFileName, inputNormalize, address="") {
   input_feature_selection <- "all"
   quantData <- dataProcess(
     data, 
-    normalization=inputNormalize, 
+    normalization=inputNormalize,
+    fillIncompleteRows=fillIncompleteRows,
     nameStandards=standardPepName, 
     featureSubset=input_feature_selection, 
     summaryMethod = "TMP", 
@@ -99,19 +100,12 @@ GroupComparison <- function(dataFileName, inputNormalize, address="") {
 
 GroupComparisonCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  optionnormalize <- arguments[2]
-  
-  ## input is character??
-  inputnormalize <- FALSE 
-  if (optionnormalize == 1) { 
-    inputnormalize <- "equalizeMedians" 
-  } else if (optionnormalize == 2) { 
-    inputnormalize <- "quantile" 
-  } else if (optionnormalize == 3) { 
-    inputnormalize <- "globalStandards" 
-  }
-  
-  GroupComparison(dataFileName, inputNormalize)
+  comparisonName <- arguments[2]
+  optionNormalize <- arguments[3]
+  fillIncompleteRows <- arguments[4]
+  featureSelection <- arguments[5]
+
+  GroupComparison(dataFileName, optionNormalize, fillIncompleteRows)
 }
 
 MsStatsExternalTool <- function(arguments) {

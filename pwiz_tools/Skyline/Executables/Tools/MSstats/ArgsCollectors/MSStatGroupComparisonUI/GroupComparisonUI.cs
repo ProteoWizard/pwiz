@@ -20,46 +20,43 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using Microsoft.VisualBasic.FileIO;
 
 namespace MSStatArgsCollector
 {    
     public partial class GroupComparisonUi : Form
     {
-        // Groups for comparison
-        private string[] ControlGroupList { get; set; }
-
+        private static IList<string> _normalizationOptionValues = new ReadOnlyCollection<string>(new[]
+        {
+            "FALSE",
+            "equalizeMedians",
+            "quantile",
+            "globalStandards"
+        });
         // Argument array
         public string[] Arguments { get; private set; }
         
         public GroupComparisonUi(string[] groups, string[] oldArgs)
         {
             InitializeComponent();
+            comboControlGroup.Items.Add(string.Empty);
+            foreach (var group in groups)
+            {
+                if (string.IsNullOrEmpty(group))
+                {
+                    continue;
+                }
 
-            comboBoxNormalizeTo.SelectedIndex = 1;
-            Array.Sort(groups);
-            ControlGroup.DataSource = ControlGroupList = groups;
+                comboControlGroup.Items.Add(group);
+            }
             Arguments = oldArgs;
-
-            try
-            {
-                RestoreSettings();
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning("Exception restoring settings {0}", ex);
-            }
-        }
-
-        private void MSstatsUI_Load(object sender, EventArgs e)
-        {
-            Show();
-            textBoxName.Focus();
+            comboBoxNormalizeTo.SelectedIndex = 0;
+            comboControlGroup.SelectedIndex = 0;
+            RestoreSettings(oldArgs);
         }
 
         // Constants
@@ -67,45 +64,43 @@ namespace MSStatArgsCollector
         private const string FALSESTRING = "FALSE"; // Not L10N
 
         // ReSharper disable InconsistentNaming
-        private enum Args { name, normalize_to, allow_missing_peaks, feature_selection, remove_interfered_proteins, fixed_argument_count }
+        private enum Args {
+            Normalization, // "FALSE", "equalizeMedians", "quantile", or "globalStandards"
+            FillIncompleteRows, 
+            FeatureSelection,
+            ControlGroupName,
+            Max
+        }
         // ReSharper restore InconsistentNaming
 
 
         // If there is no stored argument string, or if the number of groups has changed, the UI loads the
         // default settings for group comparisons
-        private void RestoreSettings()
+        private bool RestoreSettings(IList<string> arguments)
         {
-            const int fixedArgumentCount = (int) Args.fixed_argument_count;
-
-            // Restore view only if there are the same number of groups as before 
-            if (Arguments != null && (Arguments.Length == ControlGroupList.Length + fixedArgumentCount))
+            if (arguments == null || arguments.Count != (int) Args.Max)
             {
-                var variableArguments = Arguments.Skip(fixedArgumentCount).ToArray();
-                var fixedArguments = Arguments.Take(fixedArgumentCount).ToArray();
-                // Restore the selected control group 
-                ControlGroup.SelectedIndex = Array.IndexOf(variableArguments, "-1"); // Not L10N
-
-                // Restore name
-                textBoxName.Text = fixedArguments[(int) Args.name];
-                comboBoxNormalizeTo.SelectedIndex = int.Parse(fixedArguments[(int)Args.normalize_to], CultureInfo.InvariantCulture);
-                cboxAllowMissingPeaks.Checked = TRUESTRING == fixedArguments[(int) Args.allow_missing_peaks];
-                cboxSelectHighQualityFeatures.Checked = TRUESTRING == fixedArguments[(int) Args.feature_selection];
-                cboxRemoveInterferedProteins.Checked = TRUESTRING == fixedArguments[(int) Args.remove_interfered_proteins];
+                return false;
             }
-            else
-            {
-                // If any of the groups begin with "control" or "healthy" make the first the default
-                // control group.
-                for (int i = 0; i < ControlGroupList.Length; i++)
+
+            Util.SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
+            cboxAllowMissingPeaks.Checked = TRUESTRING == arguments[(int) Args.FillIncompleteRows];
+            cboxSelectHighQualityFeatures.Checked = TRUESTRING == arguments[(int) Args.FeatureSelection];
+            Util.SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
+            return true;
+#if false
+            // If any of the groups begin with "control" or "healthy" make the first the default
+            // control group.
+            for (int i = 0; i < ControlGroupList.Length; i++)
                 {
                     string group = ControlGroupList[i].ToLower();
                     if (group.StartsWith("control") || group.StartsWith("healthy")) // Not L10N
                     {
-                        ControlGroup.SelectedIndex = i;
+                        comboControlGroup.SelectedIndex = i;
                         break;
                     }
                 }
-            }            
+#endif
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -115,15 +110,8 @@ namespace MSStatArgsCollector
 
         public void OkDialog()
         {
-        if (string.IsNullOrWhiteSpace(textBoxName.Text))
-            {
-                MessageBox.Show(this, MSstatsResources.GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_);
-            }
-            else
-            {
-                GenerateArguments();
-                DialogResult = DialogResult.OK;
-            }
+            GenerateArguments();
+            DialogResult = DialogResult.OK;
         }
 
 
@@ -143,16 +131,13 @@ namespace MSStatArgsCollector
         /// </summary>
         private void GenerateArguments()
         {
-            ICollection<string> commandLineArguments = new Collection<string>();
+            var commandLineArguments = new List<string>();
 
             // Add fixed arguments
-            commandLineArguments.Add(textBoxName.Text);
-            commandLineArguments.Add(comboBoxNormalizeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));
+            commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
             commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
-            commandLineArguments.Add(cboxRemoveInterferedProteins.Checked ? TRUESTRING : FALSESTRING);
-            commandLineArguments.Add(ControlGroup.SelectedIndex.ToString());
-           
+            commandLineArguments.Add(comboControlGroup.SelectedItem.ToString());
             Arguments = commandLineArguments.ToArray();
         }
 
@@ -162,17 +147,9 @@ namespace MSStatArgsCollector
         }
     }
 
+    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     public class MSstatsGroupComparisonCollector
     {
-        /// <summary>
-        /// This is the entry point that gets called by Skyline before Skyline calls the MSstats
-        /// R Script.
-        /// </summary>
-        public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
-        {
-            return CollectArgsReader(parent, new StringReader(report), oldArgs);
-        }
-
         /// <summary>
         /// This entry point might be used future versions of Skyline in case the report text is too
         /// large to fit in a string.
@@ -193,7 +170,6 @@ namespace MSStatArgsCollector
             }
 
             ICollection<string> groups = new HashSet<string>();
-            // The last line in the CSV file is empty, thus we compare length - 1 
             string[] line;
             while ((line = parser.ReadFields()) != null)
             {

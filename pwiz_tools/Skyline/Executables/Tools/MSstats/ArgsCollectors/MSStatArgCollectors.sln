@@ -1,7 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1525
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSStatArgCollectors", "MSStatGroupComparisonUI\MSStatArgCollectors.csproj", "{528D001D-95B5-482F-96C3-0EEA0EB81D26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHarness", "TestHarness\TestHarness.csproj", "{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,8 +17,15 @@ Global
 		{528D001D-95B5-482F-96C3-0EEA0EB81D26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{528D001D-95B5-482F-96C3-0EEA0EB81D26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{528D001D-95B5-482F-96C3-0EEA0EB81D26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3574062-97FD-49CE-B89E-E3CA1F0AE44B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1411D8CD-80C6-4260-81F7-79319B1E7E5A}
 	EndGlobalSection
 EndGlobal

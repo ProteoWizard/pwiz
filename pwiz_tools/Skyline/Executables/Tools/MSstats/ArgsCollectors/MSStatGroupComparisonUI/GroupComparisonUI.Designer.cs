@@ -30,12 +30,10 @@
         {
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.labelName = new System.Windows.Forms.Label();
-            this.textBoxName = new System.Windows.Forms.TextBox();
             this.comboBoxNormalizeTo = new System.Windows.Forms.ComboBox();
             this.labelNormalizeTo = new System.Windows.Forms.Label();
             this.cboxAllowMissingPeaks = new System.Windows.Forms.CheckBox();
-            this.ControlGroup = new System.Windows.Forms.ComboBox();
+            this.comboControlGroup = new System.Windows.Forms.ComboBox();
             this.labelControlGroup = new System.Windows.Forms.Label();
             this.argsLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.cboxSelectHighQualityFeatures = new System.Windows.Forms.CheckBox();
@@ -67,23 +65,6 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // labelName
-            // 
-            this.labelName.AutoSize = true;
-            this.labelName.Location = new System.Drawing.Point(14, 6);
-            this.labelName.Name = "labelName";
-            this.labelName.Size = new System.Drawing.Size(107, 13);
-            this.labelName.TabIndex = 0;
-            this.labelName.Text = "&Name of comparison:";
-            // 
-            // textBoxName
-            // 
-            this.textBoxName.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.textBoxName.Location = new System.Drawing.Point(14, 23);
-            this.textBoxName.Name = "textBoxName";
-            this.textBoxName.Size = new System.Drawing.Size(169, 20);
-            this.textBoxName.TabIndex = 1;
-            // 
             // comboBoxNormalizeTo
             // 
             this.comboBoxNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -91,9 +72,9 @@
             this.comboBoxNormalizeTo.FormattingEnabled = true;
             this.comboBoxNormalizeTo.Items.AddRange(new object[] {
             "None",
-            "Equalize medians",
+            "Equalize Medians",
             "Quantile",
-            "Relative to global standards"});
+            "Global Standards"});
             this.comboBoxNormalizeTo.Location = new System.Drawing.Point(13, 67);
             this.comboBoxNormalizeTo.Name = "comboBoxNormalizeTo";
             this.comboBoxNormalizeTo.Size = new System.Drawing.Size(172, 21);
@@ -118,14 +99,14 @@
             this.cboxAllowMissingPeaks.Text = "&Allow missing peaks";
             this.cboxAllowMissingPeaks.UseVisualStyleBackColor = true;
             // 
-            // ControlGroup
+            // comboControlGroup
             // 
-            this.ControlGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ControlGroup.FormattingEnabled = true;
-            this.ControlGroup.Location = new System.Drawing.Point(3, 26);
-            this.ControlGroup.Name = "ControlGroup";
-            this.ControlGroup.Size = new System.Drawing.Size(169, 21);
-            this.ControlGroup.TabIndex = 3;
+            this.comboControlGroup.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboControlGroup.FormattingEnabled = true;
+            this.comboControlGroup.Location = new System.Drawing.Point(3, 26);
+            this.comboControlGroup.Name = "comboControlGroup";
+            this.comboControlGroup.Size = new System.Drawing.Size(169, 21);
+            this.comboControlGroup.TabIndex = 3;
             // 
             // labelControlGroup
             // 
@@ -142,7 +123,7 @@
             this.argsLayoutPanel.AutoSize = true;
             this.argsLayoutPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.argsLayoutPanel.Controls.Add(this.labelControlGroup);
-            this.argsLayoutPanel.Controls.Add(this.ControlGroup);
+            this.argsLayoutPanel.Controls.Add(this.comboControlGroup);
             this.argsLayoutPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.argsLayoutPanel.Location = new System.Drawing.Point(12, 187);
             this.argsLayoutPanel.Name = "argsLayoutPanel";
@@ -184,9 +165,7 @@
             this.ClientSize = new System.Drawing.Size(292, 459);
             this.Controls.Add(this.cboxRemoveInterferedProteins);
             this.Controls.Add(this.cboxSelectHighQualityFeatures);
-            this.Controls.Add(this.labelName);
             this.Controls.Add(this.cboxAllowMissingPeaks);
-            this.Controls.Add(this.textBoxName);
             this.Controls.Add(this.comboBoxNormalizeTo);
             this.Controls.Add(this.labelNormalizeTo);
             this.Controls.Add(this.argsLayoutPanel);
@@ -201,7 +180,6 @@
             this.ShowInTaskbar = false;
             this.Text = "MSstats Group Comparison";
             this.TransparencyKey = System.Drawing.Color.DarkRed;
-            this.Load += new System.EventHandler(this.MSstatsUI_Load);
             this.argsLayoutPanel.ResumeLayout(false);
             this.argsLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -213,12 +191,10 @@
 
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Label labelName;
-        private System.Windows.Forms.TextBox textBoxName;
         private System.Windows.Forms.ComboBox comboBoxNormalizeTo;
         private System.Windows.Forms.Label labelNormalizeTo;
         private System.Windows.Forms.CheckBox cboxAllowMissingPeaks;
-        private System.Windows.Forms.ComboBox ControlGroup;
+        private System.Windows.Forms.ComboBox comboControlGroup;
         private System.Windows.Forms.Label labelControlGroup;
         private System.Windows.Forms.FlowLayoutPanel argsLayoutPanel;
         private System.Windows.Forms.CheckBox cboxSelectHighQualityFeatures;
