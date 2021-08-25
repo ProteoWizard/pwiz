@@ -1,5 +1,16 @@
 require(dplyr)
 require(MSstats)
+ensureUniqueFileName <- function(baseName, folder, extension) {
+  allfiles <- list.files(folder)
+  num <- 0
+  finalfile <- paste(baseName, extension, sep="")
+  
+  while (is.element(finalfile,allfiles)) {
+    num <- num + 1
+    finalfile <- paste(paste(baseName, num, sep="-"), extension, sep="")
+  }
+  return(file.path(folder, finalfile))
+}
 # Returns a new dataFrame where targetColumn is a value which either contains the 
 # value from one of the "possibleUniqueColumns", or from "definiteUniqueColumn".
 # If, for a given set of values of the groupColumns, one of the possibleUniqueColumns
@@ -35,21 +46,55 @@ prepareSkylineDataSet <- function(data) {
   return(data);
 }
 
-GroupComparison <- function(dataFileName, inputNormalize) {
-  browser()
+GroupComparison <- function(dataFileName, inputNormalize, address="") {
+  logFile <- ensureUniqueFileName("MSstats_GroupComparison", address, ".log")
   data <- read.csv(dataFileName)
   data <- prepareSkylineDataSet(data)
   # TODO
   standardPepName <- c()
-  input_feature_selection <- FALSE
+  input_feature_selection <- "all"
   quantData <- dataProcess(
     data, 
     normalization=inputNormalize, 
     nameStandards=standardPepName, 
     featureSubset=input_feature_selection, 
     summaryMethod = "TMP", 
-    censoredInt="0")
-  print(quantData)
+    censoredInt="0", log_file_path=logFile, append=TRUE)
+  resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData, log_file_path=logFile, append=TRUE))
+  
+  if (class(resultComparison) != "try-error") {
+    write.csv(resultComparison$ComparisonResult, file=ensureUniqueFileName("TestingResult", address, ".csv"))
+    cat("\n Saved the testing result. \n")
+  } else {
+    cat("\n Error : Can't compare the groups. \n")
+  }
+  
+  ## ---------------------------------
+  ## Function: groupComparisonPlots
+  ## visualization for testing results
+  ## ---------------------------------
+  
+  if (class(resultComparison) != "try-error") {
+    
+    cat("\n\n =======================================")
+    cat("\n ** Visualizing testing results..... \n")
+    ## Visualization 1: Volcano plot
+    ## default setup: FDR cutoff = 0.05; fold change cutoff = NA
+    groupComparisonPlots(data=resultComparison$ComparisonResult, type="VolcanoPlot", address=address)
+    cat("\n Saved VolcanoPlot.pdf \n")
+    
+    ## Visualization 2: Heatmap (required more than one comparisons)
+    if (length(unique(resultComparison$ComparisonResult$Label)) > 1) {
+      groupComparisonPlots(data=resultComparison$ComparisonResult, type="Heatmap", address=address)
+      cat("\n Saved Heatmap.pdf \n")
+    } else {
+      cat("\n No Heatmap. Need more than 1 comparison for Heatmap. \n")
+    }
+    
+    ## Visualization 3: Comparison plot
+    groupComparisonPlots(data=resultComparison$ComparisonResult, type="ComparisonPlot", address=address)
+    cat("\n Saved ComparisonPlot.pdf \n \n")
+  } ## draw only for comparison working
 }
 
 GroupComparisonCmd <- function(arguments) {
