@@ -425,6 +425,11 @@ namespace pwiz.SkylineTestTutorial
                 ClickChromatogram("Pit02", 41.67, 4.076E+07, PaneKey.PRECURSORS);
                 WaitForGraphs();
                 RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02", (41.67).ToString(CultureInfo.CurrentCulture)));
+                RunUI(() =>
+                {
+                    SkylineWindow.GraphFullScan.SetMzRange(504, 506);
+                    SkylineWindow.GraphFullScan.Parent.Parent.Height -= 15;    // Not quite as tall to fit 3 into one page
+                });
                 PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (1/3)", 39);
 
                 MoveNextScan(41.68);
@@ -439,7 +444,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         private static void MoveNextScan(double rt)
-            {
+        {
             string titleText = null;
             RunUI(() =>
             {
@@ -449,7 +454,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => SkylineWindow.GraphFullScan.TitleText != titleText);
             RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02",
                 rt.ToString(CultureInfo.CurrentCulture)));
-            }
+        }
 
         private static void ValidateMassErrorStatistics(double mean, double stdev)
         {
