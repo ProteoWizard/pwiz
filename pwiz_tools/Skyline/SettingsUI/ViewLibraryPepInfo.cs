@@ -129,6 +129,10 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool IsModified { get { return Key.IsModified; } }
 
+        public string AdductAsFormula
+        {
+            get { return Key.Adduct.AsFormula(); }
+        }
         /// <summary>
         /// International Chemical Identifier Key
         /// </summary>

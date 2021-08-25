@@ -45,7 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string UNMODIFIED_TARGET_TEXT = @"UnmodifiedTargetText";
         private const string INCHI_KEY = @"InchiKey";
         private const string FORMULA = @"Formula";
-        private const string ADDUCT = @"AdductDisplayText";
+        private const string ADDUCT = @"AdductAsFormula";
         private const string ION_MOBILITY = @"IonMobility";
         private const string CCS = @"CCS";
         private const string CHARGE = @"Charge";
