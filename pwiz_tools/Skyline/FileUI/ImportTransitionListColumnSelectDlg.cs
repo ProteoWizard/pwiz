@@ -961,7 +961,7 @@ namespace pwiz.Skyline.FileUI
                     // If the transition list is missing essential columns, tell the user in a 
                     // readable way
                     MessageDlg.Show(this, TextUtil.SpaceSeparate(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_,
-                        TextUtil.LineSeparate(MissingEssentialColumns)));
+                        TextUtil.LineSeparate(MissingEssentialColumns)), true);
                     return true; // There are errors
                 }
                 else
