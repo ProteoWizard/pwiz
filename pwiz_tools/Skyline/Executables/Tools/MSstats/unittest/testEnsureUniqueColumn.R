@@ -8,7 +8,7 @@ ensureUniqueColumn <- function(data, targetColumn, possibleUniqueColumns, defini
 
   for (possibleUniqueColumn in possibleUniqueColumns) {
     distinctRows <- distinct(select(data, c(possibleUniqueColumn, groupColumns, definiteUniqueColumn)))
-    counts<-count(distinctRows, c(possibleUniqueColumn, groupColumns))
+    counts<-count(distinctRows, distinctRows[c(possibleUniqueColumn, groupColumns)],name="counts")
     dataJoinedWithCounts <- left_join(data, counts, by=c(possibleUniqueColumn, groupColumns))
     uniqueData <- dataJoinedWithCounts[dataJoinedWithCounts$counts == 1,]
     uniqueData[targetColumn] <- uniqueData[possibleUniqueColumn]
@@ -26,4 +26,4 @@ replicate<-c('A','A','A')
 resultFile<-c('B','C','D')
 initialData<-data.frame(replicate, peptide, resultFile)
 uniqueData<-ensureUniqueColumn(initialData, "replicate2", "replicate", "resultFile", "peptide")
-format(uniqueData)
+print(format(uniqueData))
