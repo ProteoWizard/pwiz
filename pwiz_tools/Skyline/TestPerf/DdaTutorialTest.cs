@@ -38,7 +38,6 @@ namespace TestPerf
     public class DdaTutorialTest : AbstractFunctionalTest
     {
         [TestMethod]
-        [Timeout(2 * 60 * 60 * 1000)]  // These can take a long time in code coverage mode (2 hours)
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.

@@ -49,7 +49,6 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
         private const string F_A_018 = "F_A_018";
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestSmallMoleculeLibrariesTutorial()
         {
 //            IsPauseForScreenShots = true;
