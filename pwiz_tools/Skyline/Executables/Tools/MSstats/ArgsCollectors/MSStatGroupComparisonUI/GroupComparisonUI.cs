@@ -66,7 +66,6 @@ namespace MSStatArgsCollector
         // ReSharper disable InconsistentNaming
         private enum Args {
             Normalization, // "FALSE", "equalizeMedians", "quantile", or "globalStandards"
-            FillIncompleteRows, 
             FeatureSelection,
             ControlGroupName,
             Max
@@ -84,7 +83,6 @@ namespace MSStatArgsCollector
             }
 
             Util.SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
-            cboxAllowMissingPeaks.Checked = TRUESTRING == arguments[(int) Args.FillIncompleteRows];
             cboxSelectHighQualityFeatures.Checked = TRUESTRING == arguments[(int) Args.FeatureSelection];
             Util.SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
             return true;
@@ -135,15 +133,9 @@ namespace MSStatArgsCollector
 
             // Add fixed arguments
             commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
-            commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(comboControlGroup.SelectedItem.ToString());
             Arguments = commandLineArguments.ToArray();
-        }
-
-        private void cboxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
-        {
-            cboxRemoveInterferedProteins.Enabled = cboxSelectHighQualityFeatures.Checked;
         }
     }
 

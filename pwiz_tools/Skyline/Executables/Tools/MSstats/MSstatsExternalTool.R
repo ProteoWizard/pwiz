@@ -56,7 +56,6 @@ GroupComparison <- function(dataFileName, inputNormalize, fillIncompleteRows, ad
   quantData <- dataProcess(
     data, 
     normalization=inputNormalize,
-    fillIncompleteRows=fillIncompleteRows,
     nameStandards=standardPepName, 
     featureSubset=input_feature_selection, 
     summaryMethod = "TMP", 
@@ -100,10 +99,9 @@ GroupComparison <- function(dataFileName, inputNormalize, fillIncompleteRows, ad
 
 GroupComparisonCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  comparisonName <- arguments[2]
-  optionNormalize <- arguments[3]
-  fillIncompleteRows <- arguments[4]
-  featureSelection <- arguments[5]
+  optionNormalize <- arguments[2]
+  fillIncompleteRows <- arguments[3]
+  featureSelection <- arguments[4]
 
   GroupComparison(dataFileName, optionNormalize, fillIncompleteRows)
 }
