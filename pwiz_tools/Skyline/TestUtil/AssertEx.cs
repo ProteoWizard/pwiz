@@ -793,10 +793,9 @@ namespace pwiz.SkylineTestUtil
                 helpMsg = String.Empty;
             else
                 helpMsg += " ";
-            var failMessage = DifferenceFinder.DiffIgnoringTimeStampsAndGUIDs(target, actual, columnTolerances);
-            if (!string.IsNullOrEmpty(failMessage))
+            if (DifferenceFinder.DiffIgnoringTimeStampsAndGUIDs(target, actual, out var failureMessage, columnTolerances))
             {
-                Fail(helpMsg + failMessage);
+                Fail(helpMsg + failureMessage);
             }
         }
 

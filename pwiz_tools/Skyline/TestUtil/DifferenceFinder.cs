@@ -106,9 +106,10 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="expected">expected value</param>
         /// <param name="actual">actual value</param>
+        /// <param name="failureMessage">contains message describing the mismatch when this function return false</param>
         /// <param name="columnTolerances">optional dictionary of zero-based column indexes and allowable difference tolerances</param>
-        /// <returns>Empty string if no meaningful differences found, or a string describing the difference</returns>
-        public static string DiffIgnoringTimeStampsAndGUIDs(string expected, string actual, Dictionary<int, double> columnTolerances = null)
+        /// <returns>false if no meaningful differences found, otherwise returns true and sets failureMessage to a string describing the difference</returns>
+        public static bool DiffIgnoringTimeStampsAndGUIDs(string expected, string actual, out string failureMessage, Dictionary<int, double> columnTolerances = null)
         {
             string GetEarlyEndingMessage(string name, int count, string lineEqualLast, string lineNext, TextReader reader)
             {
@@ -130,20 +131,23 @@ namespace pwiz.SkylineTestUtil
                     string lineActual = readerActual.ReadLine();
                     if (lineExpected == null && lineActual == null)
                     {
-                        return string.Empty;  // We're done
+                        failureMessage = string.Empty;
+                        return false;  // We're done
                     }
                     if (lineExpected == null)
                     {
-                        return GetEarlyEndingMessage(@"Expected", count - 1, lineEqualLast, lineActual, readerActual);
+                        failureMessage = GetEarlyEndingMessage(@"Expected", count - 1, lineEqualLast, lineActual, readerActual);
+                        return true; // Found a difference
                     }
                     if (lineActual == null)
                     {
-                        return GetEarlyEndingMessage(@"Actual", count - 1, lineEqualLast, lineExpected, readerExpected);
+                        failureMessage = GetEarlyEndingMessage(@"Actual", count - 1, lineEqualLast, lineExpected, readerExpected);
+                        return true; // Found a difference
                     }
-
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineExpected, lineActual, columnTolerances))
                     {
-                        return string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineExpected, lineActual);
+                        failureMessage = string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineExpected, lineActual);
+                        return true; // Found a difference
                     }
 
                     lineEqualLast = lineExpected;
