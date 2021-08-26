@@ -1183,16 +1183,16 @@ namespace pwiz.Skyline.Controls.SeqNode
         public void AddDetailRow(string name, string value, RenderTools rt)
         {
             var row = new RowDesc
-            {
-                new CellDesc(name, rt) {Font = rt.FontBold},
-                new CellDesc(value, rt)
-            };
+                {
+                    new CellDesc(name, rt) { Font = rt.FontBold },
+                    new CellDesc(value, rt)
+                };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
         }
 
         private const string X80 =
-            @"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        @"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
         /// <summary>
         /// Adds a text column a with potential line wrap.
@@ -1216,7 +1216,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             // a valid indicator on its own of whether the text is multi-line.
             foreach (string word in words)
             {
-                if (g.MeasureString(TextUtil.SpaceSeparate(line + word, string.Empty), rt.FontNormal).Width > widthLine)
+                if (g.MeasureString(TextUtil.SpaceSeparate(line + word,string.Empty), rt.FontNormal).Width > widthLine)
                 {
                     AddDetailRow(firstRow ? name : string.Empty, line, rt);
                     line = string.Empty;
