@@ -18502,19 +18502,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("MatchModificationsControl_ModificationLabelText_DDA_Search", resourceCulture);
             }
         }
-
-        /// <summary>
-        /// ///   Looks up a localized string similar to Fields containing matches
-        /// </summary>
-        public static string MatchTypeTipProvider_RenderTip_Fields_containing_matches_
-        {
-            get
-            {
-                return ResourceManager.GetString("MatchTypeTipProvider_RenderTip_Fields_containing_matches_" +
-                                                  resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Charge state values must be greater than 0..
         /// </summary>

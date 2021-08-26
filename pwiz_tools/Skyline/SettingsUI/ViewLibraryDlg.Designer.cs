@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PreviousLink = new System.Windows.Forms.LinkLabel();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
+            this.byLabel = new System.Windows.Forms.Label();
             this.comboFilterCategory = new System.Windows.Forms.ComboBox();
             this.filterLabel = new System.Windows.Forms.Label();
             this.MoleculeLabel = new System.Windows.Forms.Label();
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.label1);
+            this.PeptideEditPanel.Controls.Add(this.byLabel);
             this.PeptideEditPanel.Controls.Add(this.comboFilterCategory);
             this.PeptideEditPanel.Controls.Add(this.filterLabel);
             this.PeptideEditPanel.Controls.Add(this.MoleculeLabel);
@@ -223,10 +223,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
             // 
-            // label1
+            // byLabel
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.byLabel, "byLabel");
+            this.byLabel.Name = "byLabel";
             // 
             // comboFilterCategory
             // 
@@ -837,7 +837,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripButton btnFragmentIons;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
         private System.Windows.Forms.Label filterLabel;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label byLabel;
         private System.Windows.Forms.ComboBox comboFilterCategory;
     }
 }
