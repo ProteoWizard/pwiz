@@ -1074,6 +1074,12 @@ local rule set-manifest-dependencies ( target : properties * )
         for local dependency in $(manifest-dependencies)
         {
             local dependency-path = [ path.native [ $(dependency).name ] ] ;
+            if ! [ path.exists $(dependency-path) ]
+            {
+                import errors : user-error : errors.user-error ;
+                errors.user-error "cannot find manifest-dependency: " $(dependency-path) ;
+            }
+
             local dependency-version = [ MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe $(dependency-path)" ] ] ;
             
             # unknown version will cause a runtime-error; is there a better solution?
