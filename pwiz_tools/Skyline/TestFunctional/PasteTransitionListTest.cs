@@ -267,6 +267,25 @@ namespace pwiz.SkylineTestFunctional
 
             TestPeptideOnlyDoc();
 
+            LoadNewDocument(true);
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
+            dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            
+            RunUI(() => {
+                dlg.radioPeptide.PerformClick();
+                var comboBoxes = dlg.ComboBoxes;
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+            });
+            var msg = ShowDialog<MessageDlg>(dlg.buttonCheckForErrors.PerformClick);
+            Assert.IsTrue(msg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+            msg.OkDialog();
+            OkDialog(dlg, dlg.CancelDialog);
+
             LoadNewDocument(true); // Tidy up
         }
 
