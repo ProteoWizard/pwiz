@@ -1529,37 +1529,52 @@ namespace pwiz.SkylineTestUtil
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            if (!DifferenceFinder.DiffIgnoringTimeStampsAndGUIDs(expected, actual, out var _)) // Don't mind any differences in generated GUIDs or timestamps
+            try
             {
+                // Asserts that the files are the same other than generated GUIDs and timestamps
+                AssertEx.NoDiff(expected, actual);
                 return;
+            }
+            catch
+            {
+                // ignored
             }
 
             if (ForceMzml)
             {
                 // If the only difference is in the mention of a raw file extension, ignore that
                 var extMzml = @".mzml";
-                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                var actualParts = actual.Split(new[] {extMzml, @".mzML", @".MZML" }, StringSplitOptions.None);
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
                     if (index - actualParts[0].Length > 0)
                     {
-                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
-                        var mzmlExpected = expected.Replace(extExpected, extMzml);  // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
-                        var mzmlActual = string.Join(extMzml, actualParts);  // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
-                        if (!DifferenceFinder.DiffIgnoringTimeStampsAndGUIDs(mzmlExpected, mzmlActual, out var _))
+                        var extExpected =
+                            expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
+                        var mzmlExpected =
+                            expected.Replace(extExpected, extMzml); // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
+                        var mzmlActual =
+                            string.Join(extMzml, actualParts); // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
+                        try
                         {
+                            AssertEx.NoDiff(mzmlExpected, mzmlActual);
                             return;
                         }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
-                    
                 }
             }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)
+            {
                 AssertEx.NoDiff(expected, actual);
+            }
             else
             {
                 // Copy the just recorded file to the project for comparison or commit
