@@ -118,6 +118,7 @@
             this.argsLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
             this.argsLayoutPanel.Size = new System.Drawing.Size(175, 60);
             this.argsLayoutPanel.TabIndex = 8;
+            this.argsLayoutPanel.Visible = false;
             // 
             // cboxSelectHighQualityFeatures
             // 

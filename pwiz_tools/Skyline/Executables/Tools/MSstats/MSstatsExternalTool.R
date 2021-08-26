@@ -123,7 +123,7 @@ GroupComparison <- function(dataFileName, inputNormalize, inputFeatureSelection,
 
 GroupComparisonCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  optionNormalize <- argumentOrFalse(arguments[2])
+  optionNormalize <- booleanOrString(arguments[2])
   featureSelection <- arguments[3]
 
   GroupComparison(dataFileName, optionNormalize, featureSelection)
@@ -167,7 +167,7 @@ QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, 
 
 QualityControlCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  optionNormalize <- argumentOrFalse(arguments[2])
+  optionNormalize <- booleanOrString(arguments[2])
   featureSelection <- arguments[3]
   width = as.numeric(arguments[4])
   height = as.numeric(arguments[5])
@@ -193,7 +193,7 @@ DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection
   ## --------------------------------------------------------------------
   
   ## here is the issues : labeled, and interference need to be binary, not character
-  resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData))
+  resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData, log_file_path=logFile, append=TRUE))
   
   if (class(resultComparison) == "try-error") {
     cat("\n Error : Can't get variance components. \n")
@@ -221,7 +221,7 @@ DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection
     stop(message("\n Can't calculate sample size with log sum method. \n"))
   }
   
-  result.sample <- try(designSampleSize(data=resultComparison$FittedModel, numSample=samples, desiredFC=c(ldfc, udfc), FDR=fdr, power=power))
+  result.sample <- try(designSampleSize(data=resultComparison$FittedModel, numSample=samples, desiredFC=c(ldfc, udfc), FDR=fdr, power=power, log_file_path=logFile, append=TRUE))
 
   if (class(result.sample) != "try-error") {
     
