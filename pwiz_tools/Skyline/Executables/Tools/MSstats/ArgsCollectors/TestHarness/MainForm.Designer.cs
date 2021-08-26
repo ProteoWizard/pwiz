@@ -35,6 +35,7 @@
             this.tbxOutput = new System.Windows.Forms.TextBox();
             this.lblOutput = new System.Windows.Forms.Label();
             this.btnQualityControl = new System.Windows.Forms.Button();
+            this.btnDesignSampleSize = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblCsvFile
@@ -106,11 +107,22 @@
             this.btnQualityControl.UseVisualStyleBackColor = true;
             this.btnQualityControl.Click += new System.EventHandler(this.btnQualityControl_Click);
             // 
+            // btnDesignSampleSize
+            // 
+            this.btnDesignSampleSize.Location = new System.Drawing.Point(278, 68);
+            this.btnDesignSampleSize.Name = "btnDesignSampleSize";
+            this.btnDesignSampleSize.Size = new System.Drawing.Size(115, 23);
+            this.btnDesignSampleSize.TabIndex = 7;
+            this.btnDesignSampleSize.Text = "Design Sample Size";
+            this.btnDesignSampleSize.UseVisualStyleBackColor = true;
+            this.btnDesignSampleSize.Click += new System.EventHandler(this.btnDesignSampleSize_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(566, 450);
+            this.Controls.Add(this.btnDesignSampleSize);
             this.Controls.Add(this.btnQualityControl);
             this.Controls.Add(this.lblOutput);
             this.Controls.Add(this.tbxOutput);
@@ -134,5 +146,6 @@
         private System.Windows.Forms.TextBox tbxOutput;
         private System.Windows.Forms.Label lblOutput;
         private System.Windows.Forms.Button btnQualityControl;
+        private System.Windows.Forms.Button btnDesignSampleSize;
     }
 }

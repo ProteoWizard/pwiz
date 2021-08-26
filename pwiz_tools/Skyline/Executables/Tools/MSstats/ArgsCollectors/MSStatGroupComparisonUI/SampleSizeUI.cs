@@ -18,16 +18,18 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace MSStatArgsCollector
 {
-    public partial class SampleSizeUi : Form
+    public partial class SampleSizeUi : ArgsCollectorForm
     {
-        private enum Args { normalize_to, samples, 
-            power, fdr, lower_fold, upper_fold, allow_missing_peaks,
-            feature_selection,remove_interfered_proteins,max_arg
+        private enum Args { normalize_to, samples, feature_selection,
+            power, fdr, lower_fold, upper_fold, max_arg
         }
 
         public string[] Arguments { get; private set; }
@@ -35,52 +37,41 @@ namespace MSStatArgsCollector
         public SampleSizeUi(string[] oldArgs)
         {
             InitializeComponent();
-            comboNormalizeTo.SelectedIndex = 1;
-
-            if (oldArgs != null && oldArgs.Length == (int) Args.max_arg)
-                Arguments = oldArgs;
-
-            RestoreValues();
+            comboNormalizeTo.Items.AddRange(GetNormalizationOptionLabels().Cast<object>().ToArray());
+            RestoreDefaults();
+            RestoreArguments(oldArgs);
         }
 
         private const string Truestring = "TRUE"; // Not L10N
-        private const string Falsestring = "FALSE"; // Not L10N
-
-        private void RestoreValues()
+        
+        private void RestoreArguments(IList<string> arguments)
         {
-            if (Arguments == null)
-                RestoreDefaults();
+            if (arguments == null || arguments.Count != (int) Args.max_arg)
+            {
+                return;
+            }
+            SelectComboBoxValue(comboNormalizeTo, arguments[(int) Args.normalize_to], _normalizationOptionValues);
+            RestoreCountValue(arguments[(int) Args.samples], rBtnSamples, numberSamples);
+
+            string valueText = arguments[(int) Args.power];
+            if (valueText.Equals(Truestring))
+            {
+                rBtnPower.Checked = true;
+            }
             else
             {
-                RestoreCountValue(Args.samples, rBtnSamples, numberSamples, Samples);
-
-                string valueText = Arguments[(int) Args.power];
-                if (valueText.Equals(Truestring))
-                {
-                    rBtnPower.Checked = true;
-                }
-                else
-                {
-                    RestoreDecimalText(valueText, numberPower, Power);
-                }
-
-                RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
-                RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
-                RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
-                cbxSelectHighQualityFeatures.Checked = Truestring == Arguments[(int) Args.feature_selection];
-                cbxRemoveInterferedProteins.Checked = Truestring == Arguments[(int) Args.remove_interfered_proteins];
+                RestoreDecimalText(valueText, numberPower);
             }
 
-            if (!rBtnSamples.Checked && !rBtnPower.Checked)
-            {
-                rBtnSamples.Checked = true;
-            }
+            RestoreDecimalText(arguments[(int)Args.fdr], numberFDR);
+            RestoreDecimalText(arguments[(int)Args.lower_fold], numberLDFC);
+            RestoreDecimalText(arguments[(int)Args.upper_fold], numberUDFC);
+            cbxSelectHighQualityFeatures.Checked = FeatureSubsetHighQuality== arguments[(int) Args.feature_selection];
         }
 
-        private void RestoreCountValue(Args argument, RadioButton radio, NumericUpDown numeric, decimal defaultValue)
+        private void RestoreCountValue(string argText, RadioButton radio, NumericUpDown numeric)
         {
             int count;
-            string argText = Arguments[(int) argument];
             if (argText.Equals(Truestring))
             {
                 radio.Checked = true;
@@ -89,18 +80,14 @@ namespace MSStatArgsCollector
             {
                 numeric.Value = count;
             }
-            else
-            {
-                numeric.Value = defaultValue;
-            }
         }
 
-        private void RestoreDecimalText(string valueText, TextBox textBox, decimal defaultValue)
+        private void RestoreDecimalText(string valueText, TextBox textBox)
         {
-            decimal decimalValue;
-            if (!decimal.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out decimalValue))
-                decimalValue = defaultValue;
-            textBox.Text = decimalValue.ToString(CultureInfo.CurrentCulture);
+            if (decimal.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out decimal decimalValue))
+            {
+                textBox.Text = decimalValue.ToString(CultureInfo.CurrentCulture);
+            }
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -179,25 +166,15 @@ namespace MSStatArgsCollector
         //
         private void GenerateArguments(decimal power, decimal fdr, decimal ldfc, decimal udfc)
         {
-            Arguments = new string[(int) Args.max_arg];
-
-            Arguments[(int) Args.normalize_to] = (comboNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.power] = (rBtnPower.Checked) ? Truestring : power.ToString(CultureInfo.InvariantCulture);
-
-            Arguments[(int) Args.fdr] = fdr.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.lower_fold] = ldfc.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.upper_fold] = udfc.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring;
-            Arguments[(int) Args.feature_selection] =
-                cbxSelectHighQualityFeatures.Checked ? Truestring : Falsestring;
-            Arguments[(int) Args.remove_interfered_proteins] =
-                cbxRemoveInterferedProteins.Checked ? Truestring : Falsestring;
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
+            var arguments = new List<string>();
+            arguments.Add(_normalizationOptionValues[comboNormalizeTo.SelectedIndex]);
+            arguments.Add(cbxSelectHighQualityFeatures.Checked ? FeatureSubsetHighQuality : FeatureSubsetAll);
+            arguments.Add(rBtnSamples.Checked ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture));
+            arguments.Add(rBtnPower.Checked ? Truestring : power.ToString(CultureInfo.InvariantCulture));
+            arguments.Add(fdr.ToString(CultureInfo.InvariantCulture));
+            arguments.Add(ldfc.ToString(CultureInfo.InvariantCulture));
+            arguments.Add(udfc.ToString(CultureInfo.InvariantCulture));
+            Arguments = arguments.ToArray();
         }
 
         private void numericTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -216,14 +193,6 @@ namespace MSStatArgsCollector
             }
         }
 
-        // defaults
-        private const int Normalize = 1;
-        private const decimal Samples = 2m;
-        private const decimal Power = 0.80m;
-        private const decimal Fdr = 0.05m;
-        private const decimal Ldfc = 1.25m;
-        private const decimal Udfc = 1.75m;
-
         private void btnDefault_Click(object sender, EventArgs e)
         {
             RestoreDefaults();
@@ -231,13 +200,13 @@ namespace MSStatArgsCollector
 
         private void RestoreDefaults()
         {
-            comboNormalizeTo.SelectedIndex = Normalize;
+            comboNormalizeTo.SelectedIndex = 1;
             rBtnSamples.Checked = true;
-            numberSamples.Value = Samples;
-            numberPower.Text = Power.ToString(CultureInfo.CurrentCulture);
-            numberFDR.Text = Fdr.ToString(CultureInfo.CurrentCulture);
-            numberLDFC.Text = Ldfc.ToString(CultureInfo.CurrentCulture);
-            numberUDFC.Text = Udfc.ToString(CultureInfo.CurrentCulture);
+            numberSamples.Value = 2m;
+            numberPower.Text = 0.80m.ToString(CultureInfo.CurrentCulture);
+            numberFDR.Text = 0.05m.ToString(CultureInfo.CurrentCulture);
+            numberLDFC.Text = 1.25m.ToString(CultureInfo.CurrentCulture);
+            numberUDFC.Text = 1.75m.ToString(CultureInfo.CurrentCulture);
         }
 
         private void rBtnSamples_CheckedChanged(object sender, EventArgs e)
@@ -256,24 +225,20 @@ namespace MSStatArgsCollector
         {
             numberPower.Enabled = numberPower.Visible = !rBtnPower.Checked;
         }
-
-        private void cbxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
-        {
-            cbxRemoveInterferedProteins.Enabled = cbxSelectHighQualityFeatures.Checked;
-        }
     }
 
     public class MSstatsSampleSizeCollector
     {
-        public static string[] CollectArgs(IWin32Window parent, string report, string[] args)
+        public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] args)
         {
             using (var dlg = new SampleSizeUi(args))
             {
-                if (parent != null)
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
-                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
+                    return dlg.Arguments;
                 }
-                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
+
+                return null;
             }
         }
     }

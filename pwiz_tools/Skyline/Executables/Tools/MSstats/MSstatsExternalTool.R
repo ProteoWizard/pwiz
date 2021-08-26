@@ -1,5 +1,25 @@
 require(dplyr)
 require(MSstats)
+
+booleanOrString <- function(argument) {
+  if (argument == "FALSE") {
+    return(FALSE)
+  }
+  if (argument == "TRUE") {
+    return(TRUE)
+  }
+  return(argument)
+}
+booleanOrNumber <- function(argument) {
+  if (argument == "FALSE") {
+    return(FALSE)
+  }
+  if (argument == "TRUE") {
+    return(TRUE)
+  }
+  return(as.numeric(argument))
+}
+
 ensureUniqueFileName <- function(baseName, folder, extension) {
   allfiles <- list.files(folder)
   num <- 0
@@ -103,14 +123,14 @@ GroupComparison <- function(dataFileName, inputNormalize, inputFeatureSelection,
 
 GroupComparisonCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  optionNormalize <- arguments[2]
+  optionNormalize <- argumentOrFalse(arguments[2])
   featureSelection <- arguments[3]
 
   GroupComparison(dataFileName, optionNormalize, featureSelection)
 }
 
 QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, width, height, address="") {
-  logFile <- ensureUniqueFileName("MSstats_QualityControl", address, ".log")
+  logFile <- ensureUniqueFileName("MSstats_DataProcess", address, ".log")
   quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
   
   
@@ -147,7 +167,7 @@ QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, 
 
 QualityControlCmd <- function(arguments) {
   dataFileName <- arguments[1]
-  optionNormalize <- arguments[2]
+  optionNormalize <- argumentOrFalse(arguments[2])
   featureSelection <- arguments[3]
   width = as.numeric(arguments[4])
   height = as.numeric(arguments[5])
@@ -155,12 +175,91 @@ QualityControlCmd <- function(arguments) {
   QualityControl(dataFileName, optionNormalize, featureSelection, width, height)
 }
 
+DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection, samples, power, fdr, ldfc, udfc, address="") {
+  logFile <- ensureUniqueFileName("MSstats_DesignSampleSize", address, ".log")
+  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
+  if (class(quantData) != "try-error") {
+    
+    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", address, ".csv"))
+    cat("\n Saved dataProcessedData.csv \n")
+  } else {
+    stop(message("\n Error : Can't process the data. \n"))
+  }
+
+  
+  ## --------------------------------------------------------------------
+  ## Function: groupComparison
+  ## generate testing results of protein inferences across concentrations
+  ## --------------------------------------------------------------------
+  
+  ## here is the issues : labeled, and interference need to be binary, not character
+  resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData))
+  
+  if (class(resultComparison) == "try-error") {
+    cat("\n Error : Can't get variance components. \n")
+  }
+  
+  
+  ## ---------------------------------------------------------------------------
+  ## Function: designSampleSize
+  ## calulate number of biological replicates per group for your next experiment
+  ## ---------------------------------------------------------------------------
+  
+  cat("\n\n =======================================")
+  cat("\n ** Calculating sample size..... \n")
+  
+  ## if t-test, can't sample size calculation
+  countnull <- 0
+  
+  for (k in 1:length(resultComparison$fittedmodel)) {
+    if (is.null(resultComparison$fittedmodel[[k]])) {
+      countnull <- countnull + 1
+    }
+  }
+  
+  if(countnull == length(resultComparison$fittedmodel)){
+    stop(message("\n Can't calculate sample size with log sum method. \n"))
+  }
+  
+  result.sample <- try(designSampleSize(data=resultComparison$FittedModel, numSample=samples, desiredFC=c(ldfc, udfc), FDR=fdr, power=power))
+
+  if (class(result.sample) != "try-error") {
+    
+    write.csv(result.sample, file=ensureUniqueFileName("SampleSizeCalculation", address, ".csv"))
+    cat("\n Saved the Sample Size Calculation. \n")
+  } else {
+    stop(message("\n Error : Can't analyze. \n"))
+  }
+  
+  if (class(result.sample) != "try-error") {
+    
+    pdf(ensureUniqueFileName("SampleSizePlot", address, ".pdf"))
+    designSampleSizePlots(data=result.sample)
+    dev.off()
+    cat("\n Saved SampleSizePlot.pdf \n \n")
+  }
+  
+}
+
+DesignSampleSizeCmd <- function(arguments) {
+  dataFileName <- arguments[1]
+  optionNormalize <- booleanOrString(arguments[2])
+  samples <- booleanOrNumber(arguments[3])
+  power <- booleanOrNumber(arguments[4])
+  fdr <- as.numeric(arguments[5])
+  ldfc <- as.numeric(arguments[6])
+  udfc <- as.numeric(arguments[7])
+  featureSelection <- arguments[8]
+}
+
 MsStatsExternalTool <- function(arguments) {
   command <- arguments[1]
   if (command == "GC") {
     GroupComparisonCmd(arguments[-1])
   } else if (command == "QC") {
-    QualityControlCmd(arguments(-1))
+    QualityControlCmd(arguments[-1])
+  } else if (command == "DSS") {
+    DesignSampleSizeCmd(arguments[-1])
   }
 }
 

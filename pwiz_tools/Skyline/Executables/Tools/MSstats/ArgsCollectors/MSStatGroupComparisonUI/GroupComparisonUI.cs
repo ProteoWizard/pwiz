@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using Microsoft.VisualBasic.FileIO;
 
 namespace MSStatArgsCollector
@@ -73,7 +72,7 @@ namespace MSStatArgsCollector
             }
 
             SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
-            cboxSelectHighQualityFeatures.Checked = TRUESTRING == arguments[(int) Args.FeatureSelection];
+            cboxSelectHighQualityFeatures.Checked = FeatureSubsetHighQuality == arguments[(int) Args.FeatureSelection];
             SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
             return true;
 #if false
@@ -123,13 +122,12 @@ namespace MSStatArgsCollector
 
             // Add fixed arguments
             commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
-            commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? FeatureSubsetHighQuality : FeatureSubsetAll);
             commandLineArguments.Add(comboControlGroup.SelectedItem.ToString());
             Arguments = commandLineArguments.ToArray();
         }
     }
 
-    [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     public class MSstatsGroupComparisonCollector
     {
         /// <summary>
@@ -159,10 +157,11 @@ namespace MSStatArgsCollector
             }
             using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))
             {
-                var result = parent != null ? dlg.ShowDialog(parent) : dlg.ShowDialog();
-                if (result != DialogResult.OK)
-                    return null;
-                return dlg.Arguments;
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
+                {
+                    return dlg.Arguments;
+                }
+                return null;
             }
         }
     }

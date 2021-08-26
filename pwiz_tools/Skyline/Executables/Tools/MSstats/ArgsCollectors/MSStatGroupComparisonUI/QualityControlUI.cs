@@ -45,7 +45,7 @@ namespace MSStatArgsCollector
             }
 
             SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
-            cbxSelectHighQualityFeatures.Checked = arguments[(int) Args.FeatureSelection] == TRUESTRING;
+            cbxSelectHighQualityFeatures.Checked = arguments[(int) Args.FeatureSelection] == FeatureSubsetHighQuality;
             tbxWidth.Text = arguments[(int)Args.Width];
             tbxHeight.Text = arguments[(int)Args.Height];
             return true;
@@ -55,7 +55,7 @@ namespace MSStatArgsCollector
         {
             var commandLineArguments = new List<string>();
             commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
-            commandLineArguments.Add(cbxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cbxSelectHighQualityFeatures.Checked ? "highQuality" : "all");
             commandLineArguments.Add(tbxWidth.Text);
             commandLineArguments.Add(tbxHeight.Text);
             Arguments = commandLineArguments.ToArray();
@@ -74,11 +74,12 @@ namespace MSStatArgsCollector
         {
             using (var dlg = new QualityControlUI(args))
             {
-                if (parent != null)
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
-                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
+                    return dlg.Arguments;
                 }
-                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
+
+                return null;
             }
         }
     }   

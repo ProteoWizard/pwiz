@@ -37,9 +37,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JetBrains.Annotations">
-      <HintPath>..\..\..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -129,10 +126,11 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetDir)\$(TargetFileName) "$(SolutionDir)"\..
-copy $(TargetDir)\$(TargetName).pdb "$(SolutionDir)"\..
+    <PostBuildEvent>pushd $(TargetDir)
+"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a $(SolutionDir)\..\MSstats.zip $(TargetFileName) $(TargetName).pdb ja zh-CHS
+popd
 pushd "$(SolutionDir)"\..
-call CreateZipFile.bat
+"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a MSstats.zip *.r tool-inf
 popd
 </PostBuildEvent>
   </PropertyGroup>

@@ -68,5 +68,18 @@ namespace TestHarness
                 }
             }
         }
+
+        private void btnDesignSampleSize_Click(object sender, EventArgs e)
+        {
+            using (var reader = new StreamReader(tbxCsvFile.Text))
+            {
+                var newArgs = MSstatsSampleSizeCollector.CollectArgs(this, reader, Arguments.ToArray());
+                if (newArgs != null)
+                {
+                    Arguments = newArgs;
+                }
+            }
+
+        }
     }
 }

@@ -44,8 +44,7 @@ namespace MSStatArgsCollector
         }
 
         // Constants
-        protected const string TRUESTRING = "TRUE"; // Not L10N
-        protected const string FALSESTRING = "FALSE"; // Not L10N
-
+        protected const string FeatureSubsetHighQuality = "highQuality";
+        protected const string FeatureSubsetAll = "all";
     }
 }
