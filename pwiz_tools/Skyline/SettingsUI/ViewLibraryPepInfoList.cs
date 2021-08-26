@@ -74,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI
             _selectedFilterCategory = selectedFilterCategory;
             _matcher = matcher; // Used to calculate precursor m/z
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in this library?
-            _accessionNumberTypes = FindMatchCategories();
+            _accessionNumberTypes = FindAccessionNumberTypes();
 
             // First add the fields we will display in all libraries
             _stringSearchFields = new List<string> {UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ};
@@ -162,9 +162,9 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Go through our list and find categories in which we could find matches
+        /// Find accession number types like cas and HMDB that can be used to filter
         /// </summary>
-        private List<string> FindMatchCategories()
+        private List<string> FindAccessionNumberTypes()
         {
             var matchCategories = new List<string>();
             foreach (var entry in _allEntries)

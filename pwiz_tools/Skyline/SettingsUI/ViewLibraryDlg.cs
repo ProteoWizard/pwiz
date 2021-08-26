@@ -2371,7 +2371,7 @@ namespace pwiz.Skyline.SettingsUI
                 _library = lib;
                 _key = key;
             }
-            
+
             protected override bool IsMatch(double predictedMz)
             {
                 return false;
@@ -2456,7 +2456,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 get { return true; }
             }
-            
+
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
                 var table = new TableDesc();

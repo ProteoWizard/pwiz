@@ -118,7 +118,6 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public Adduct Adduct { get { return Key.Adduct; } }
 
-
         /// <summary>
         /// The modified peptide sequence or small molecule associated with a spectrum
         /// </summary>

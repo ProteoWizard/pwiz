@@ -34465,7 +34465,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to A background proteome is required to associate proteins..
         /// </summary>
