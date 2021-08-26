@@ -68,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
         private const string SHIMADZU_MLB = "Shimadzu MLB";
         private const string NIST_SMALL_MOL = "NIST Small Molecules";
         private const string MULTIPLE_MOL_IDS = "MultipleMolecularIDs";
+        private const string MIXED_LIB = "MixedLib_rev9.clib";
 
         private readonly TestLibInfo[] _testLibs = {
                                                        new TestLibInfo(HUMANB2MG_LIB, "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
@@ -82,7 +83,8 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
                                                        new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"), // Note .ext is all caps to test case insensitivity
                                                        new TestLibInfo("mini_x", "mini_x.blib", "YLXEEDEDAYKK++"),
-                                                       new TestLibInfo(MULTIPLE_MOL_IDS, "MultipleMolecularIDs.blib", "")
+                                                       new TestLibInfo(MULTIPLE_MOL_IDS, "MultipleMolecularIDs.blib", ""),
+                                                       new TestLibInfo(MIXED_LIB, "MixedLib_rev9.clib", "")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -171,6 +173,12 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        private static void VerifyFilterCategories(ComboBox comboBox, List<string> expectedCategories)
+        {
+            var actualCategories = (from object item in comboBox.Items select item.ToString()).ToList();
+            CollectionAssert.AreEqual(expectedCategories, actualCategories);
+        }
+
         private void TestSearchFunctionality()
         {
             // Launch the Library Explorer dialog
@@ -234,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
             // Entering 'SD' should filter out all entries as nothing starts with SD
             FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
 
-            // Clearing search box should bring up every entry
+            // Clearing the filter text box should bring up every entry
             FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
 
             // Now test filtering by precursor m/z
@@ -255,7 +263,6 @@ namespace pwiz.SkylineTestFunctional
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr, 1);
 
-
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
             FilterListAndVerifyCount(filterTextBox, pepList,
                 inexactMidazolamMzStr, 1);
@@ -272,18 +279,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
 
             // Do we find all the filter categories?
-            var actualCategories = new List<string>();
-            foreach (var item in filterCategoryComboBox.Items)
-            {
-                actualCategories.Add(item.ToString());
-            }
 
-            var expectedCategories = new List<string>
+            var smiles = "SMILES";
+            var categories = new List<string>
             {
                 Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, Resources.PeptideTipProvider_RenderTip_Precursor_m_z, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,  Resources.TransitionTreeNode_RenderTip_Charge, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct, "cas", "InChi", "SMILES", "MadeUpFakeKey"
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,  Resources.TransitionTreeNode_RenderTip_Charge, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct
             };
-            CollectionAssert.AreEqual(expectedCategories, actualCategories);
+            var expectedCategories = new List<string>(categories);
+            expectedCategories.AddRange(new List<string> {"cas", "InChi", smiles, "MadeUpFakeKey"});
+
+            VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
 
             // Test filtering when only some entries have our search field
             RunUI(() =>
@@ -313,6 +319,16 @@ namespace pwiz.SkylineTestFunctional
 
             // Precursor searching should work here as well
             FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
+
+            // Switch to library with both molecules and peptides
+            ShowDialog<AddModificationsDlg>(
+                () => libComboBox.SelectedIndex = libComboBox.FindStringExact(MIXED_LIB));
+            OkayAllModificationsDlg();
+
+            // Verify that we found all of the filter categories
+            expectedCategories = new List<string>(categories);
+            expectedCategories.AddRange(new List<string>{ Resources.PeptideTipProvider_RenderTip_Ion_Mobility , Resources.PeptideTipProvider_RenderTip_CCS , "InChI", smiles});
+            VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
 
             // Close the spectral library explorer
             RunUI(() => _viewLibUI.CancelDialog());

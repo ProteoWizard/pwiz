@@ -77,8 +77,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static Dictionary<string, string> FormatAccessionNumbers(string keysTSV, string inChiKey = null)
         {
-            var keys = new Dictionary<string, string>(StringComparer
-                .OrdinalIgnoreCase); // Treat "cas" and "CAS" as identical lookups
+            var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); // Treat "cas" and "CAS" as identical lookups
             if (!string.IsNullOrEmpty(keysTSV) || !string.IsNullOrEmpty(inChiKey))
             {
                 if (!string.IsNullOrEmpty(keysTSV))
