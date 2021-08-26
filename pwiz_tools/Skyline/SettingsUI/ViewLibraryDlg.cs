@@ -95,6 +95,7 @@ namespace pwiz.Skyline.SettingsUI
         private LibKeyModificationMatcher _matcher;
 
         private bool _activated;
+
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo _lastTipNode;
@@ -157,6 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
+
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;
             if (!size.IsEmpty)
@@ -190,19 +192,27 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeMatchCategoryComboBox()
         {
+        	// Clear the combo box of any items left over from a previous library
             comboFilterCategory.Items.Clear();
+            
+            // Add localized names for fields like Formula, Precursor m/z
             foreach (var category in _peptides._stringSearchFields)
             {
                 comboFilterCategory.Items.Add(_peptides.comboFilterCategoryDict[category]);
             }
-
+            
+            // Add names for other keys, which are read from the library and are not 
+            // localized
             foreach (var accNumCategory in _peptides._accessionNumberTypes)
             {
                 comboFilterCategory.Items.Add(accNumCategory);
             }
-
+            
+            // Set the combo box to "Name" for small molecule and mixed libraries, or 
+            // "Peptide" for proteomic libraries
             comboFilterCategory.SelectedIndex = 0;
         }
+        
         /// <summary>
         /// Gets names of libraries in the Peptide Settings --> Library tab,
         /// displays them in the Library combobox, and selects the first one
@@ -212,7 +222,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverLibraries.LoadList(_selectedLibName);
         }
-
 
         public bool AssociateMatchingProteins
         {
@@ -408,6 +417,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
+                        // Set the ion mobility values of entry if there are any
                         return SetIonMobilityCCSValues(info);
                     });
             }
@@ -560,7 +570,7 @@ namespace pwiz.Skyline.SettingsUI
             IsUpdateComplete = true;
         }
 
-        private static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
+        public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
                                         LibKeyModificationMatcher matcher,
                                         out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods)
         {
@@ -1076,9 +1086,9 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Get a text sequence corresponding to the current filter category
         /// </summary>
-        private TextSequence GetCategoryValueTextSequence(DrawItemEventArgs e)
+        private TextSequence GetCategoryValueTextSequence(int index, Graphics graphics)
         {
-            var pepInfo = (ViewLibraryPepInfo)listPeptide.Items[e.Index];
+            var pepInfo = (ViewLibraryPepInfo)listPeptide.Items[index];
             var selectedCategory = comboFilterCategory.SelectedItem.ToString();
             TextSequence categoryText;
             if (!_peptides._accessionNumberTypes.Contains(selectedCategory))
@@ -1110,7 +1120,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Calculate the dimensions of this text sequence
             var sizeMax = new Size(int.MaxValue, int.MaxValue);
-            categoryText.Width = TextRenderer.MeasureText(e.Graphics, categoryText.Text,
+            categoryText.Width = TextRenderer.MeasureText(graphics, categoryText.Text,
                 categoryText.Font, sizeMax, FORMAT_CUSTOM).Width;
             
             return categoryText;
@@ -1172,7 +1182,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!selectedCategory.IsNullOrEmpty() && !selectedCategory.Equals(ColumnCaptions.Peptide) &&
                     !selectedCategory.Equals(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name))
                 {
-                    var categoryText = GetCategoryValueTextSequence(e);
+                    var categoryText = GetCategoryValueTextSequence(e.Index, e.Graphics);
                     var rectValue = new Rectangle(0, bounds.Y, categoryText.Width, bounds.Height);
                     rectValue.X = bounds.Width - categoryText.Width - PADDING;
 
@@ -1220,6 +1230,7 @@ namespace pwiz.Skyline.SettingsUI
                     });
                 }
 
+                // If the user cancels then reset the selected field to Name/Peptide
                 if (cancelled)
                 {
                     comboFilterCategory.SelectedIndex = 0;
@@ -1568,17 +1579,6 @@ namespace pwiz.Skyline.SettingsUI
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        public static List<int> FindMatchesInTipText(string tipText, string filterText)
-        {
-            var matchIndices = new List<int>();
-            // If the text starts with the filter text, indicate a match at index 0
-            if (tipText.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
-            {
-                matchIndices = new List<int> { 0 };
-            }
-            return matchIndices;
-        }
-
         public ViewLibrarySettings FormSettings
         {
             get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
@@ -1600,9 +1600,6 @@ namespace pwiz.Skyline.SettingsUI
             }*/
         }
 
-        /// <summary>
-        /// Shorten precursor m/z values to a standard length
-        /// </summary>
         private static string FormatPrecursorMz(double precursorMz)
         {
             return string.Format(@"{0:F04}", precursorMz);
@@ -2050,7 +2047,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
-                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary, textPeptide.Text);
+                    _lastTipProvider = new PeptideTipProvider(pepInfo, _matcher, _selectedLibrary);
                 }
                 tipProvider = _lastTipProvider;
             }
@@ -2212,7 +2209,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public PeptideTipProvider GetTipProvider(int i)
         {
-            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary, textPeptide.Text);
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _selectedLibrary);
         }
 
         private ViewLibraryPepInfo GetPepInfo(int i)
@@ -2410,16 +2407,14 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SrmSettings _settings;
             private readonly double _mz;
             private readonly IonMobilityAndCCS _ionMobility;
-            private readonly string _filterText;
 
             public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
-                Library selectedLibrary, string filterText)
+                Library selectedLibrary)
             {
                 ExplicitMods mods;
                 TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
                 _matcher = matcher;
-                _filterText = filterText;
                 GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
                 _seqPartsToDraw = GetSequencePartsToDraw(mods);
@@ -2732,11 +2727,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 entry.CCS = (double)info.CollisionalCrossSectionSqA;
             }
+            else
+            {
+                entry.CCS = null;
+            }
 
             if (info.HasIonMobilityValue)
             {
                 entry.IonMobility = (double) info.IonMobility.Mobility;
                 entry.IonMobilityUnits = info.IonMobility.UnitsString;
+            }
+            else
+            {
+                entry.IonMobility = null;
             }
 
                 return entry;

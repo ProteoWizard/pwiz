@@ -49,10 +49,21 @@ namespace pwiz.Skyline.SettingsUI
         private const string ION_MOBILITY = @"IonMobility";
         private const string CCS = @"CCS";
         private const string CHARGE = @"Charge";
+        
+        // Fields for which we should include a match tolerance
+        private readonly List<string> _continuousFields = new List<string> {PRECURSOR_MZ, CCS, ION_MOBILITY};
 
-        private List<string> NUMERIC_FIELDS = new List<string> {PRECURSOR_MZ, CCS, ION_MOBILITY};
-
-        public readonly Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>();
+        // Property names and the resources we use to display them
+        public readonly Dictionary<string, string> comboFilterCategoryDict = new Dictionary<string, string>()
+        {
+            {PRECURSOR_MZ, Resources.PeptideTipProvider_RenderTip_Precursor_m_z},
+            {INCHI_KEY, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey},
+            {FORMULA, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula},
+            {ADDUCT, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct},
+            {ION_MOBILITY, Resources.PeptideTipProvider_RenderTip_Ion_Mobility},
+            {CCS, Resources.PeptideTipProvider_RenderTip_CCS},
+            {CHARGE, Resources.TransitionTreeNode_RenderTip_Charge}
+        };
 
         private OrderedListCache _listCache;
         private string _selectedFilterCategory;
@@ -65,8 +76,11 @@ namespace pwiz.Skyline.SettingsUI
             allPeptides = _allEntries.All(key => key.Key.IsProteomicKey); // Are there any non-proteomic entries in this library?
             _accessionNumberTypes = FindMatchCategories();
 
-            // If there are any small molecules in the library see if we can offer more search fields
+            // First add the fields we will display in all libraries
             _stringSearchFields = new List<string> {UNMODIFIED_TARGET_TEXT, PRECURSOR_MZ};
+
+            // Then see which other fields we can offer
+            // If there are any small molecules in the library we will check more fields
             _stringSearchFields.AddRange(
                 FindValidCategories(!allPeptides ? 
                 (new List<string> { FORMULA, INCHI_KEY, CHARGE, ADDUCT, ION_MOBILITY, CCS })
@@ -74,14 +88,8 @@ namespace pwiz.Skyline.SettingsUI
 
             _listCache = new OrderedListCache(_allEntries, _accessionNumberTypes);
 
+            // Display "Peptide" if the library is all peptides, or "Name" if it is not
             comboFilterCategoryDict.Add(UNMODIFIED_TARGET_TEXT, allPeptides ? ColumnCaptions.Peptide : Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
-            comboFilterCategoryDict.Add(PRECURSOR_MZ, Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
-            comboFilterCategoryDict.Add(INCHI_KEY, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey);
-            comboFilterCategoryDict.Add(FORMULA, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
-            comboFilterCategoryDict.Add(ADDUCT, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct);
-            comboFilterCategoryDict.Add(ION_MOBILITY, Resources.PeptideTipProvider_RenderTip_Ion_Mobility);
-            comboFilterCategoryDict.Add(CCS, Resources.PeptideTipProvider_RenderTip_CCS);
-            comboFilterCategoryDict.Add(CHARGE, Resources.TransitionTreeNode_RenderTip_Charge);
 
         }
 
@@ -121,7 +129,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private List<string> FindValidCategories(List<string> categories)
         {
-            return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(string.Empty) && !GetStringValue(category, entry).Equals(@"0"))).ToList();
+            return categories.Where(category => _allEntries.Any(entry => !GetStringValue(category, entry).Equals(string.Empty))).ToList();
         }
 
         /// <summary>
@@ -271,7 +279,7 @@ namespace pwiz.Skyline.SettingsUI
             var filteredIndices = PrefixSearchByProperty(filterText);
 
             // Special filtering for numeric properties
-            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && NUMERIC_FIELDS.Contains(_selectedFilterCategory))
+            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
             {
                 // Add entries that are close to the filter text numerically
                 // Create a list of object references sorted by their absolute difference from target m/z

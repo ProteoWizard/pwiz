@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
                 TestSmallMoleculeFunctionality(9, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
                 TestSmallMoleculeFunctionality(10, 57); // NIST
                 TestSmallMoleculeFunctionality(8, 3); // .blib
-                TestSearchFunctionality();
+                TestFilterFunctionality();
             }
             else
             {
@@ -173,13 +173,16 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Compare the strings in a combo box to a list of expected strings
+        /// </summary>
         private static void VerifyFilterCategories(ComboBox comboBox, List<string> expectedCategories)
         {
             var actualCategories = (from object item in comboBox.Items select item.ToString()).ToList();
             CollectionAssert.AreEqual(expectedCategories, actualCategories);
         }
 
-        private void TestSearchFunctionality()
+        private void TestFilterFunctionality()
         {
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
@@ -1149,7 +1152,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0]");
                 Assert.AreEqual(pep1.GetSeqParts()[10].Color, Brushes.Black);
                 var pep3 = _viewLibUI.GetTipProvider(2);
-                Assert.AreEqual(pep3.GetSeqParts().Count, 1);
+                Assert.AreEqual(pep3.GetSeqParts().Count, 1); // No mods so seq parts will only have one which is the whole sequence
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });

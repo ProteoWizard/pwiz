@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -101,9 +102,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public double PrecursorMz { get; set; }
 
-        public double IonMobility { get; set; }
+        public double? IonMobility { get; set; }
 
-        public double CCS { get; set; }
+        public double? CCS { get; set; }
 
         public string IonMobilityUnits { get; set; }
 
