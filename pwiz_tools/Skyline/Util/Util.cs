@@ -1950,7 +1950,6 @@ namespace pwiz.Skyline.Util
         {
             return d.HasValue ? d.Value.ToString(LocalizationHelper.CurrentCulture) : String.Empty;
         }
-
     }
 
     /// <summary>
