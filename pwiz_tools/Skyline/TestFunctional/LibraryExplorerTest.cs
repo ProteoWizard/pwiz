@@ -121,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
                 TestSmallMoleculeFunctionality(9, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
                 TestSmallMoleculeFunctionality(10, 57); // NIST
                 TestSmallMoleculeFunctionality(8, 3); // .blib
+                TestSearchFunctionality();
             }
             else
             {
@@ -243,23 +244,21 @@ namespace pwiz.SkylineTestFunctional
                     filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
             });
 
-            // If the test is running in french, use a comma as a decimal separator
-            var midazolamMz = "326.0855";
-            var inFrench = CultureInfo.CurrentCulture.Equals(CultureInfo.GetCultureInfo("fr-FR"));
-            midazolamMz = inFrench ? midazolamMz.Replace(".", ",") : midazolamMz;
-
+            // Use the decimal separator of the culture the test is running in
+            var midazolamMz = 326.0855;
+            var midazolamMzStr = midazolamMz.ToString("G", CultureInfo.CurrentCulture);
+            var inexactMidazolamMzStr = (midazolamMz + 0.05).ToString("G", CultureInfo.CurrentCulture);
 
             // Entering '32' should filter the list down to three entries
-            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz.Substring(0, 2), 2);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Substring(0, 2), 2);
 
             // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
-            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMz, 1);
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr, 1);
 
 
             // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
-            var inexactMidazolamMz = "326.1";
             FilterListAndVerifyCount(filterTextBox, pepList,
-                inFrench ? inexactMidazolamMz.Replace(".", ",") : inexactMidazolamMz, 1);
+                inexactMidazolamMzStr, 1);
 
             // Test filtering by CAS registry number
             RunUI(() =>
@@ -281,9 +280,8 @@ namespace pwiz.SkylineTestFunctional
 
             var expectedCategories = new List<string>
             {
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
-                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct,
-                Resources.PeptideTipProvider_RenderTip_Precursor_m_z, "cas", "InChi", "SMILES", "MadeUpFakeKey"
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, Resources.PeptideTipProvider_RenderTip_Precursor_m_z, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,  Resources.TransitionTreeNode_RenderTip_Charge, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct, "cas", "InChi", "SMILES", "MadeUpFakeKey"
             };
             CollectionAssert.AreEqual(expectedCategories, actualCategories);
 
@@ -1135,7 +1133,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0]");
                 Assert.AreEqual(pep1.GetSeqParts()[10].Color, Brushes.Black);
                 var pep3 = _viewLibUI.GetTipProvider(2);
-                Assert.AreEqual(pep3.GetSeqParts().Count, 13); // Sequences without mods are also split into parts
+                Assert.AreEqual(pep3.GetSeqParts().Count, 1);
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });
