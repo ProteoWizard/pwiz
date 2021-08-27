@@ -1463,7 +1463,7 @@ namespace pwiz.Skyline
                 // Specify that we want a MessageDlg that ignores UI mode
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
                     string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                        peakBoundariesFile), x.Message), x, true);
+                        peakBoundariesFile), x.Message), x, true); // "true" here means that we want to ignore the UI mode in the context of the MessageDlg
             }
         }
 
