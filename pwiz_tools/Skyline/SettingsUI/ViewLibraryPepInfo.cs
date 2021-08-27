@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// A dictionary of key names (like HMDB, SMILES) and key values
+        /// A dictionary of key names (like HMDB, SMILES) and key values associated with a spectrum
         /// </summary>
         public Dictionary<string, string> OtherKeysDict { get; set; }
 
@@ -94,14 +94,23 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// The precursor m/z of the peptide or small molecule
+        /// The precursor m/z of the peptide or small molecule associated with a spectrum
         /// </summary>
         public double PrecursorMz { get; set; }
 
+        /// <summary>
+        /// Ion mobility value for a spectrum
+        /// </summary>
         public double? IonMobility { get; set; }
 
+        /// <summary>
+        /// The collision cross section value for a spectrum
+        /// </summary>
         public double? CCS { get; set; }
 
+        /// <summary>
+        /// The units of the ion mobility value for a spectrum
+        /// </summary>
         public string IonMobilityUnits { get; set; }
 
         public int Charge
@@ -142,7 +151,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// The formula for the molecule
+        /// The molecular formula associated with a spectrum
         /// </summary>
         public string Formula
         {
