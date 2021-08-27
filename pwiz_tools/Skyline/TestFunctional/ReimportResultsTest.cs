@@ -145,10 +145,8 @@ namespace pwiz.SkylineTestFunctional
             transitionChromInfo = SkylineWindow.Document.MoleculeTransitions.Skip(1).First().Results[0].First();
             Assert.AreEqual(peak2.Item1, transitionChromInfo.StartRetentionTime, deltaRetentionTime);
             Assert.AreEqual(peak2.Item2, transitionChromInfo.EndRetentionTime, deltaRetentionTime);
-            // TODO(nicksh): this next assert should succeed, but it seems that PeakIntegrator.IntegratePeakWithoutBackground
-            // calculates the completely wrong number
-            // Assert.AreEqual(expectedReimportedArea2 + expectedReimportedBackground2, transitionChromInfo.Area, 10);
-            Assert.AreEqual(0, transitionChromInfo.BackgroundArea, 10);
+            Assert.AreEqual(expectedReimportedArea2 + expectedReimportedBackground2, transitionChromInfo.Area, 10);
+            Assert.AreEqual(0, transitionChromInfo.BackgroundArea, 100);
         }
 
         private static Tuple<double, double> ChangePeakBounds(GraphChromatogram graphChromatogram, double startTime, double endTime)
