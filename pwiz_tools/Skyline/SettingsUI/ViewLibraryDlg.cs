@@ -2754,7 +2754,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Retrueve teh ion movility information for an entry
+        /// Retrieve the ion mobility information for an entry
         /// </summary>
         public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
         {

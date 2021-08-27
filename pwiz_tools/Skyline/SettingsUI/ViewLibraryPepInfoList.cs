@@ -166,21 +166,21 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private List<string> FindAccessionNumberTypes()
         {
-            var matchCategories = new List<string>();
+            var matchCategories = new HashSet<string>();
             foreach (var entry in _allEntries)
             {
                 if (entry.OtherKeys != null)
                 {
                     var accDict = MoleculeAccessionNumbers.FormatAccessionNumbers(entry.OtherKeys);
                     entry.OtherKeysDict = accDict;
-                    foreach (var pair in accDict.Where(pair => !matchCategories.Contains(pair.Key)))
+                    foreach (var pair in accDict)
                     {
                         matchCategories.Add(pair.Key);
                     }
                 }
             }
 
-            return matchCategories;
+            return matchCategories.ToList();
         }
 
         /// <summary>

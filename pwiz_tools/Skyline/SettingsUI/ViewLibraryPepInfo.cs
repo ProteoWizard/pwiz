@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// A dictionary of key names (like HMDB, SMILES) and key values associated with a spectrum
+        /// A dictionary of key names (like HMDB, SMILES) and key values associated with a molecule
         /// </summary>
         public Dictionary<string, string> OtherKeysDict { get; set; }
 

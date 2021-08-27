@@ -2169,7 +2169,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     // Add a separate line for each molecule accession number
                     var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(OtherKeys);
-                    smallMolLines.AddRange(accessionNumDict.Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value)));
+                    smallMolLines.AddRange(accessionNumDict);
                 }
                 return smallMolLines;
             }
