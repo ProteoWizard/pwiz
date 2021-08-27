@@ -482,6 +482,14 @@ namespace pwiz.Skyline.Model.Results
         private void SetClonedCacheState(ChromatogramCache cacheFinal, IList<ChromatogramCache> partialCaches = null)
         {
             _cacheFinal = cacheFinal;
+            if (_cacheRecalc != null)
+            {
+                if (partialCaches != null &&
+                    partialCaches.Any(partialCache => partialCache.CachePath == _cacheRecalc.CachePath))
+                {
+                    _cacheRecalc = null;
+                }
+            }
             if (_cacheFinal != null)
             {
                 _cacheRecalc = null;

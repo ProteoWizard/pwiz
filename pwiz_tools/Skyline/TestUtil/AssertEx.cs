@@ -1177,9 +1177,12 @@ namespace pwiz.SkylineTestUtil
                     // that degree of loadedness. So, try saving to disk then doing a full reload
                     if ((forceFullLoad || retry > 0) && !string.IsNullOrEmpty(testDir))
                     {
-                        target = ClearFileImportTimes(ForceDocumentLoad(target, testDir));
-                        actual = ClearFileImportTimes(ForceDocumentLoad(actual, testDir));
+                        target = ForceDocumentLoad(target, testDir);
+                        actual = ForceDocumentLoad(actual, testDir);
                     }
+
+                    target = ClearFileImportTimes(target);
+                    actual = ClearFileImportTimes(actual);
 
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
