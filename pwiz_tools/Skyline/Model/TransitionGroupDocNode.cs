@@ -1293,7 +1293,7 @@ namespace pwiz.Skyline.Model
                                  // changed and the node has not otherwise changed yet.
                                  // (happens while loading results)
                                  // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                                 (!diff.DiffResultsAll && settingsOld != null &&
+                                 (!diff.DiffResultsAll && !chromatogramDataChanged && settingsOld != null &&
                                   ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
                                   Equals(this, nodePrevious))))
                         {

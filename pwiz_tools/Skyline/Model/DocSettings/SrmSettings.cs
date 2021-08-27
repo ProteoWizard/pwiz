@@ -2378,7 +2378,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public class SrmSettingsDiff
     {
-        // ReSharper disable InconsistentNaming
+// ReSharper disable InconsistentNaming
         public static SrmSettingsDiff ALL
         {
             get { return new SrmSettingsDiff(); }
@@ -2735,7 +2735,6 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return false;
             }
-
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
                 var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
