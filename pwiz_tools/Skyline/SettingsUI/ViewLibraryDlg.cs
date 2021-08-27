@@ -190,6 +190,9 @@ namespace pwiz.Skyline.SettingsUI
             BuildSpectrumMenu(sender, menuStrip);
         }
 
+        /// <summary>
+        /// Populate the combo box with the names for fields a user can filter by
+        /// </summary>
         private void InitializeMatchCategoryComboBox()
         {
         	// Clear the combo box of any items left over from a previous library
@@ -417,7 +420,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
-                        // Set the ion mobility values of entry if there are any
+                        // If there are any, set the ion mobility values of entry
                         return SetIonMobilityCCSValues(info);
                     });
             }
@@ -1184,6 +1187,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var categoryText = GetCategoryValueTextSequence(e.Index, e.Graphics);
                     var rectValue = new Rectangle(0, bounds.Y, categoryText.Width, bounds.Height);
+
+                    // Align this text to the right side of the list box
                     rectValue.X = bounds.Width - categoryText.Width - PADDING;
 
                     // If the x coordinate is within the rectangle of the name or sequence truncate the category text
@@ -1191,7 +1196,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         rectValue.X = rectDraw.X + rectDraw.Width + PADDING + categoryText.Position + bounds.X;
                     }
-                    e.Graphics.FillRectangle(new SolidBrush(backColor), rectValue);
+
                     TextRenderer.DrawText(e.Graphics, categoryText.Text,
                         categoryText.Font, rectValue, Equals(e.ForeColor, SystemColors.HighlightText) ? e.ForeColor : categoryText.Color, backColor,
                         FORMAT_CUSTOM);
@@ -2720,6 +2725,9 @@ namespace pwiz.Skyline.SettingsUI
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
 
+        /// <summary>
+        /// Retrieve and then set the ion mobility and CCS values for an entry if there are any
+        /// </summary>
         private ViewLibraryPepInfo SetIonMobilityCCSValues(ViewLibraryPepInfo entry)
         {
             var info = GetIonMobility(entry);
@@ -2742,8 +2750,12 @@ namespace pwiz.Skyline.SettingsUI
                 entry.IonMobility = null;
             }
 
-                return entry;
+            return entry;
         }
+
+        /// <summary>
+        /// Retrueve teh ion movility information for an entry
+        /// </summary>
         public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
         {
             var bestSpectrum = _selectedLibrary.GetSpectra(pepInfo.Key,
@@ -2754,6 +2766,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             return IonMobilityAndCCS.EMPTY;
         }
+
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;

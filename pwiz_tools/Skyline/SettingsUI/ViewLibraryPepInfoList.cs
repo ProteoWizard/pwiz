@@ -37,8 +37,8 @@ namespace pwiz.Skyline.SettingsUI
         public readonly List<string> _stringSearchFields;
 
         public readonly List<string> _accessionNumberTypes;
-        // Tolerance for the numeric proximity of the precursor m/z to the filter text
-        public const double MZ_FILTER_TOLERANCE = 0.1;
+        // Tolerance for matching fields with continuous values to the filter text
+        private const double FILTER_TOLERANCE = 0.1;
 
         // String names for properties
         private const string PRECURSOR_MZ = @"PrecursorMz";
@@ -282,12 +282,12 @@ namespace pwiz.Skyline.SettingsUI
             if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
             {
                 // Add entries that are close to the filter text numerically
-                // Create a list of object references sorted by their absolute difference from target m/z
+                // Create a list of object references sorted by their absolute difference from target
                 var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
 
-                // Then return everything before the first entry with a m/z difference exceeding our match tolerance
+                // Then return everything before the first entry with a difference exceeding our match tolerance
                 var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
-                    double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) > MZ_FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                    double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) >  FILTER_TOLERANCE)).Select(IndexOf).ToList();
                 filteredIndices = filteredIndices.Union(results).ToList();
             }
 

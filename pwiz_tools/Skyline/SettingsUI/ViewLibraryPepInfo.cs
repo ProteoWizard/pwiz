@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -71,7 +70,11 @@ namespace pwiz.Skyline.SettingsUI
             } 
         }
 
+        /// <summary>
+        /// A dictionary of key names (like HMDB, SMILES) and key values
+        /// </summary>
         public Dictionary<string, string> OtherKeysDict { get; set; }
+
         /// <summary>
         /// Returns the unmodified peptide sequence. This, plus the Adduct is what gets displayed
         /// in the list box.
@@ -84,19 +87,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return UnmodifiedTargetText + AdductDisplayText;
+                return UnmodifiedTargetText + (Key.Adduct.IsEmpty
+                    ? string.Empty
+                    : Transition.GetChargeIndicator(Key.Adduct));
             }
         }
 
-        public string AdductDisplayText
-        {
-            get
-            {
-                return Key.Adduct.IsEmpty
-                    ? string.Empty
-                    : Transition.GetChargeIndicator(Key.Adduct);
-            }
-        }
         /// <summary>
         /// The precursor m/z of the peptide or small molecule
         /// </summary>
@@ -129,10 +125,14 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool IsModified { get { return Key.IsModified; } }
 
+        /// <summary>
+        /// Formula representation of an adduct which is used when filtering by adduct
+        /// </summary>
         public string AdductAsFormula
         {
             get { return Key.Adduct.AsFormula(); }
         }
+
         /// <summary>
         /// International Chemical Identifier Key
         /// </summary>
