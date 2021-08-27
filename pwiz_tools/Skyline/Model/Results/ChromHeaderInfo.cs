@@ -1583,7 +1583,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, null, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
         {
         }
 
@@ -1591,6 +1591,7 @@ namespace pwiz.Skyline.Model.Results
                                FlagValues flags,
                                DateTime fileWriteTime,
                                DateTime? runStartTime,
+                               DateTime? importTime,
                                float maxRT,
                                float maxIntensity,
                                int sizeScanIds,
@@ -1614,6 +1615,7 @@ namespace pwiz.Skyline.Model.Results
             Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | ((FlagValues)((int)ionMobilityUnits << 4) & FlagValues.ion_mobility_type_bitmask);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
+            ImportTime = importTime;
             MaxRetentionTime = maxRT;
             MaxIntensity = maxIntensity;
             SizeScanIds = sizeScanIds;
@@ -1628,6 +1630,7 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public DateTime? ImportTime { get; private set; }
         public float MaxRetentionTime { get; private set; }
         public float MaxIntensity { get; private set; }
         public int SizeScanIds { get; private set; }

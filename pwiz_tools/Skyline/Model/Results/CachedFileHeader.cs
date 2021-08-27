@@ -43,10 +43,16 @@ namespace pwiz.Skyline.Model.Results
         // Version 14 file header addition
         public int lenSampleId;
         public int lenSerialNumber;
+        // Version 15 file header addition
+        public Int64 importTime;
 
         // ReSharper disable LocalizableElement
         public static int GetStructSize(CacheFormatVersion formatVersion)
         {
+            if (formatVersion >= CacheFormatVersion.Fifteen)
+            {
+                return 68;
+            }
             if (formatVersion >= CacheFormatVersion.Fourteen)
             {
                 return 60;

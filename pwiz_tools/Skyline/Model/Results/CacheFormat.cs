@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Model.Results
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
-        CURRENT = Fourteen,
+        Fifteen = 15, // Add import time to CachedFileHeaderStruct
+        CURRENT = Fifteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
