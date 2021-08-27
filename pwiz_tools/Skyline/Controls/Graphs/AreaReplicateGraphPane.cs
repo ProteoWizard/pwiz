@@ -520,9 +520,34 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+
+            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToHeavy && !IsMultiSelect && ParentGroupNode != null)
+            {
+                var precursorNodePath = DocNodePath.GetNodePath(ParentGroupNode.Id, document);
+                if (precursorNodePath.Peptide != null && ParentGroupNode.LabelType.Equals(IsotopeLabelType.light))
+                {
+                    var ratio = new NormalizedValueCalculator(document).GetTransitionGroupRatioValue(ratioToHeavy,
+                        precursorNodePath.Peptide, ParentGroupNode,
+                        ParentGroupNode.GetChromInfoEntry(GraphSummary.ResultsIndex));
+                    using (var g = GraphSummary.GraphControl.CreateGraphics())
+                    {
+                        var labelText = string.Format(@"rdotp: {0:F02}", ratio.DotProduct);
+                        var rdotpLabel = new TextObj()
+                        {
+                            Text = labelText,
+                            Location = new Location(1, Legend.Rect.Top / Rect.Height, CoordType.XChartFractionYPaneFraction){ AlignH = AlignH.Right },
+                            IsClippedToChartRect = false,
+                            FontSpec = Legend.FontSpec
+                        };
+                        rdotpLabel.FontSpec.Border.IsVisible = false;
+                        GraphObjList.Add(rdotpLabel);
+                    }
+
+                }
+            }
         }
 
-        private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
+            private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
         {
             double yValue;
             switch (BarSettings.Type)
@@ -657,8 +682,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         normalizationMethod = normalizationMethod ?? normalizeOption.NormalizationMethod;
                         if (normalizationMethod != null)
                         {
-                            yTitle = normalizationMethod.GetAxisTitle(Resources
-                                .AreaReplicateGraphPane_UpdateGraph_Peak_Area);
+                            if (normalizationMethod is NormalizationMethod.RatioToLabel && IsotopeLabelType.heavy.Equals(ParentGroupNode?.LabelType))
+                                yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
+                            else 
+                                yTitle = normalizationMethod.GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
                         }
                         else
                         {
