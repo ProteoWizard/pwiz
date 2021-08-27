@@ -1529,16 +1529,8 @@ namespace pwiz.SkylineTestUtil
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            try
-            {
-                // Asserts that the files are the same other than generated GUIDs and timestamps
-                AssertEx.NoDiff(expected, actual);
+            if (AreEquivalentAuditLogs(expected, actual))
                 return;
-            }
-            catch
-            {
-                // ignored
-            }
 
             if (ForceMzml)
             {
@@ -1556,15 +1548,13 @@ namespace pwiz.SkylineTestUtil
                             expected.Replace(extExpected, extMzml); // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
                         var mzmlActual =
                             string.Join(extMzml, actualParts); // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
-                        try
-                        {
-                            AssertEx.NoDiff(mzmlExpected, mzmlActual);
+
+                        if (AreEquivalentAuditLogs(mzmlExpected, mzmlActual))
                             return;
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
+
+                        // Make sure to report the difference that causes the failure below
+                        expected = mzmlExpected;
+                        actual = mzmlActual;
                     }
                 }
             }
@@ -1583,6 +1573,20 @@ namespace pwiz.SkylineTestUtil
                     Console.WriteLine(@"Successfully recorded tutorial audit log");
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
+            }
+        }
+
+        private static bool AreEquivalentAuditLogs(string expected, string actual)
+        {
+            try
+            {
+                // Asserts that the files are the same other than generated GUIDs and timestamps
+                AssertEx.NoDiff(expected, actual);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
