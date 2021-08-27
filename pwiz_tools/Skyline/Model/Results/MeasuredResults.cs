@@ -696,7 +696,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromatograms = Chromatograms[resultsIndex];
                 if (!HasNewChromatogramData(resultsIndex))
                 {
-                    newChromatograms[resultsIndex] = chromatograms;
+                    newChromatograms.Add(chromatograms);
                     continue;
                 }
 

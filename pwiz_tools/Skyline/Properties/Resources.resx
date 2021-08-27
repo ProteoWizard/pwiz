@@ -11531,4 +11531,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>Precursor Adduct and/or Precursor Charge</value>
   </data>
+  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
+    <value>Skyline 21.1</value>
+  </data>
 </root>

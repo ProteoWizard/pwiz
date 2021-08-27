@@ -1142,6 +1142,26 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        /// <summary>
+        /// Set all of ImportTime values in all of the ChromFileInfos to null.
+        /// </summary>
+        private static SrmDocument ClearFileImportTimes(SrmDocument document)
+        {
+            var measuredResults = document.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return document;
+            }
+            measuredResults = measuredResults.ChangeChromatograms(
+                measuredResults.Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
+                    chrom.MSDataFileInfos.Select(info => info.ChangeImportTime(null)).ToList())).ToList());
+            if (Equals(measuredResults, document.MeasuredResults))
+            {
+                return document;
+            }
+            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(measuredResults));
+        }
+
         public static void DocumentCloned(SrmDocument target, SrmDocument actual)
         {
             DocumentClonedLoadable(ref target, ref actual, null, false);
@@ -1157,9 +1177,10 @@ namespace pwiz.SkylineTestUtil
                     // that degree of loadedness. So, try saving to disk then doing a full reload
                     if ((forceFullLoad || retry > 0) && !string.IsNullOrEmpty(testDir))
                     {
-                        target = ForceDocumentLoad(target, testDir);
-                        actual = ForceDocumentLoad(actual, testDir);
+                        target = ClearFileImportTimes(ForceDocumentLoad(target, testDir));
+                        actual = ClearFileImportTimes(ForceDocumentLoad(actual, testDir));
                     }
+
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
                     return;
