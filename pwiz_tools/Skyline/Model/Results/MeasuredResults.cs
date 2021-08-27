@@ -681,6 +681,10 @@ namespace pwiz.Skyline.Model.Results
             get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }
         }
 
+        /// <summary>
+        /// Returns true if the data in the chromatogram cache is newer than what the SrmDocument
+        /// knows about.
+        /// </summary>
         public bool HasNewChromatogramData(int resultsIndex)
         {
             if (_newChromatogramData == null || resultsIndex < 0 || resultsIndex >= _newChromatogramData.Count)
@@ -690,6 +694,11 @@ namespace pwiz.Skyline.Model.Results
             return _newChromatogramData[resultsIndex];
         }
 
+        /// <summary>
+        /// Set the <see cref="ChromFileInfo.ImportTime"/> values to the times from
+        /// the ChromatogramCache so that the <see cref="HasNewChromatogramData"/> will
+        /// return false.
+        /// </summary>
         public MeasuredResults UpdateImportTimes()
         {
             if (_newChromatogramData == null)
@@ -724,6 +733,16 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return ChangeChromatograms(newChromatograms);
+        }
+
+        /// <summary>
+        /// Sets the ImportTimes on all of the ChromFileInfo's to null so that they will not
+        /// be written out when saving a .sky in an earlier format.
+        /// </summary>
+        public MeasuredResults ClearImportTimes()
+        {
+            return ChangeChromatograms(Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
+                chrom.MSDataFileInfos.Select(info => info.ChangeImportTime(null)).ToList())).ToList());
         }
 
         public IEnumerable<string> QcTraceNames

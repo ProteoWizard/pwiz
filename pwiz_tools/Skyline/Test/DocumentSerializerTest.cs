@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,9 +26,11 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using static pwiz.Skyline.Properties.SrmSettingsList;
 
 namespace pwiz.SkylineTest
 {
@@ -36,7 +40,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestSerializePeptides()
         {
-            var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
+            var srmDocument = new SrmDocument(GetDefault());
             string strProteinSequence = string.Join(string.Empty, 
                 "MSLSSKLSVQDLDLKDKRVFIRVDFNVPLDGKKITSNQRIVAALPTIKYVLEHHPRYVVL",
                 "ASHLGRPNGERNEKYSLAPVAKELQSLLGKDVTFLNDCVGPEVEAAVKASAPGSVILLEN",
@@ -80,6 +84,47 @@ namespace pwiz.SkylineTest
                 document = (SrmDocument) serializer.Deserialize(stream);
             }
             VerifyRoundTrips(document);
+        }
+
+        [TestMethod]
+        public void TestSerializeImportTime()
+        {
+            const string ATTR_IMPORT_TIME = "import_time";
+            var msDataFileUri = MsDataFileUri.Parse("Test");
+            var importTime = DateTime.UtcNow;
+            var chromatogramSet = new ChromatogramSet("Test", new[] {msDataFileUri});
+            chromatogramSet = chromatogramSet.ChangeMSDataFileInfos(new[]
+                {chromatogramSet.MSDataFileInfos[0].ChangeImportTime(importTime)});
+            AssertEx.AreEqual(importTime, chromatogramSet.MSDataFileInfos[0].ImportTime);
+            var measuredResults = new MeasuredResults(new[]
+            {
+                chromatogramSet
+            });
+            Assert.AreEqual(importTime, measuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
+            var roundTripMeasuredResults = AssertEx.RoundTrip(measuredResults);
+            Assert.AreEqual(measuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime,
+                roundTripMeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
+
+            // Save out in the current document format, and make sure that the Import Time round trips
+            var document = new SrmDocument(GetDefault());
+            document = document.ChangeSettingsNoDiff(
+                document.Settings.ChangeMeasuredResults(measuredResults));
+            VerifyRoundTrips(document);
+            AssertEx.Serializable(document);
+            string xml = null;
+            var docRoundTrip = AssertEx.RoundTrip(document, SkylineVersion.CURRENT, ref xml);
+            AssertEx.IsGreaterThanOrEqual(xml.IndexOf(ATTR_IMPORT_TIME, StringComparison.Ordinal), 0);
+            AssertEx.AreEqual(measuredResults, docRoundTrip.MeasuredResults);
+            AssertEx.AreEqual(measuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime,
+                docRoundTrip.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
+
+            // Save as an older format and make sure Import Time is not written out
+            string xmlOldFormat = null;
+            var docOldFormat = AssertEx.RoundTrip(document, SkylineVersion.V21_1, ref xmlOldFormat);
+            AssertEx.IsLessThan(xmlOldFormat.IndexOf(ATTR_IMPORT_TIME, StringComparison.Ordinal), 0);
+            AssertEx.IsNull(docOldFormat.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
+            Assert.AreNotEqual(docRoundTrip.MeasuredResults, docOldFormat.MeasuredResults);
+            Assert.AreEqual(docRoundTrip.MeasuredResults.ClearImportTimes(), docOldFormat.MeasuredResults);
         }
 
         private void VerifyRoundTrips(SrmDocument document)

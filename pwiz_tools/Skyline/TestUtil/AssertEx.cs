@@ -1147,19 +1147,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private static SrmDocument ClearFileImportTimes(SrmDocument document)
         {
-            var measuredResults = document.MeasuredResults;
-            if (measuredResults == null)
+            var newMeasuredResults = document.MeasuredResults?.ClearImportTimes();
+            if (Equals(newMeasuredResults, document.MeasuredResults))
             {
                 return document;
             }
-            measuredResults = measuredResults.ChangeChromatograms(
-                measuredResults.Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
-                    chrom.MSDataFileInfos.Select(info => info.ChangeImportTime(null)).ToList())).ToList());
-            if (Equals(measuredResults, document.MeasuredResults))
-            {
-                return document;
-            }
-            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(measuredResults));
+            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
         }
 
         public static void DocumentCloned(SrmDocument target, SrmDocument actual)

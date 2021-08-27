@@ -1981,6 +1981,10 @@ namespace pwiz.Skyline.Model.DocSettings
                         MeasuredResults.Chromatograms.Select(c => c.RestoreLegacyUriParameters()).ToArray()));
                 }
             }
+            if (documentFormat < DocumentFormat.VERSION_21_11)
+            {
+                result = result.ChangeMeasuredResults(result.MeasuredResults?.ClearImportTimes());
+            }
             if (documentFormat < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY &&
                 !TransitionIonMobilityFiltering.IsNullOrEmpty(result.TransitionSettings.IonMobilityFiltering))
             {
