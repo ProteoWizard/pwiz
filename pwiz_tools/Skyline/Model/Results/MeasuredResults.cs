@@ -288,33 +288,6 @@ namespace pwiz.Skyline.Model.Results
             return Chromatograms.Select(chromatogramSet => chromatogramSet.GetFileInfo(filePath))
                                 .FirstOrDefault(fileInfo => fileInfo != null);
         }
-
-        public IDictionary<MsDataFileUri, DateTime?> GetFileImportTimes()
-        {
-            var dict = new Dictionary<MsDataFileUri, DateTime?>();
-            foreach (var chromatogramSet in Chromatograms)
-            {
-                foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    var dataFileUri = msDataFileInfo.FilePath;
-                    if (dict.TryGetValue(dataFileUri, out DateTime? dateTime))
-                    {
-                        if (dateTime.HasValue && !dateTime.Equals(msDataFileInfo.ImportTime))
-                        {
-                            // If two ChromDataFileInfos disagree about what the import time was, set it to null
-                            dict[dataFileUri] = null;
-                        }
-                    }
-                    else
-                    {
-                        dict.Add(dataFileUri, msDataFileInfo.ImportTime);
-                    }
-                }
-            }
-
-            return dict;
-        }
-
         private class RefCompareChromFileInfo : IEqualityComparer<ChromFileInfo>
         {
             public bool Equals(ChromFileInfo x, ChromFileInfo y)
@@ -487,6 +460,9 @@ namespace pwiz.Skyline.Model.Results
                 if (partialCaches != null &&
                     partialCaches.Any(partialCache => partialCache.CachePath == _cacheRecalc.CachePath))
                 {
+                    // If any of the partial caches has the same cache file path as _cacheRecalc,
+                    // it means that the file has been replaced on disk and _cacheRecalc can only throw
+                    // FileModifiedException
                     _cacheRecalc = null;
                 }
             }
@@ -499,17 +475,21 @@ namespace pwiz.Skyline.Model.Results
             CheckForNewChromatogramData();
         }
 
-        private IDictionary<MsDataFileUri, DateTime> ImportTimesFromCacheFiles()
+        private IDictionary<MsDataFileUri, DateTime> GetImportTimesFromCacheFiles()
         {
             return CollectionUtil.SafeToDictionary(Caches.SelectMany(cache => cache.CachedFiles)
                 .Where(file => file.ImportTime.HasValue).Select(file =>
                     new KeyValuePair<MsDataFileUri, DateTime>(file.FilePath, file.ImportTime.Value)));
         }
 
+        /// <summary>
+        /// Sets _newChromatogramData to indicate which replicates have files whose ImportTime
+        ///is different from what is in the cache file.
+        /// </summary>
         private void CheckForNewChromatogramData()
         {
             var changedReplicateIndexes = new HashSet<int>();
-            var importTimes = ImportTimesFromCacheFiles();
+            var importTimes = GetImportTimesFromCacheFiles();
             for (int replicateIndex = 0; replicateIndex < Chromatograms.Count; replicateIndex++)
             {
                 var chromatogramSet = Chromatograms[replicateIndex];
@@ -706,7 +686,7 @@ namespace pwiz.Skyline.Model.Results
                 return this;
             }
 
-            var cacheFileImportTimes = ImportTimesFromCacheFiles();
+            var cacheFileImportTimes = GetImportTimesFromCacheFiles();
             var newChromatograms = new List<ChromatogramSet>();
             for (int resultsIndex = 0; resultsIndex < Chromatograms.Count; resultsIndex++)
             {
