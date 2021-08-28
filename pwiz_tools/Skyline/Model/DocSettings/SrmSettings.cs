@@ -2732,10 +2732,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return false;
             }
-
-            if (!measuredResultsNew.CachedFileInfos.Select(info => Tuple.Create(info.FilePath, info.ImportTime))
-                .SequenceEqual(
-                    measuredResultsOld.CachedFileInfos.Select(info => Tuple.Create(info.FilePath, info.ImportTime))))
+            if (!ArrayUtil.EqualsDeep(measuredResultsNew.CachedFilePaths.ToArray(),
+                                      measuredResultsOld.CachedFilePaths.ToArray()))
+            {
+                return false;
+            }
+            if (!measuredResultsNew.CachedFileInfos.Select(info => info.ImportTime)
+                .SequenceEqual(measuredResultsOld.CachedFileInfos.Select(info => info.ImportTime)))
             {
                 return false;
             }
