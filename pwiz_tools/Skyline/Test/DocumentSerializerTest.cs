@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using static pwiz.Skyline.Properties.SrmSettingsList;
 
 namespace pwiz.SkylineTest
 {
@@ -40,7 +39,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestSerializePeptides()
         {
-            var srmDocument = new SrmDocument(GetDefault());
+            var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
             string strProteinSequence = string.Join(string.Empty, 
                 "MSLSSKLSVQDLDLKDKRVFIRVDFNVPLDGKKITSNQRIVAALPTIKYVLEHHPRYVVL",
                 "ASHLGRPNGERNEKYSLAPVAKELQSLLGKDVTFLNDCVGPEVEAAVKASAPGSVILLEN",
@@ -113,7 +112,7 @@ namespace pwiz.SkylineTest
             AssertEx.Serializable(document);
             string xml = null;
             var docRoundTrip = AssertEx.RoundTrip(document, SkylineVersion.CURRENT, ref xml);
-            AssertEx.IsGreaterThanOrEqual(xml.IndexOf(ATTR_IMPORT_TIME, StringComparison.Ordinal), 0);
+            AssertEx.IsTrue(xml.Contains(ATTR_IMPORT_TIME));
             AssertEx.AreEqual(measuredResults, docRoundTrip.MeasuredResults);
             AssertEx.AreEqual(measuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime,
                 docRoundTrip.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
@@ -121,7 +120,7 @@ namespace pwiz.SkylineTest
             // Save as an older format and make sure Import Time is not written out
             string xmlOldFormat = null;
             var docOldFormat = AssertEx.RoundTrip(document, SkylineVersion.V21_1, ref xmlOldFormat);
-            AssertEx.IsLessThan(xmlOldFormat.IndexOf(ATTR_IMPORT_TIME, StringComparison.Ordinal), 0);
+            AssertEx.IsFalse(xmlOldFormat.Contains(ATTR_IMPORT_TIME));
             AssertEx.IsNull(docOldFormat.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
             Assert.AreNotEqual(docRoundTrip.MeasuredResults, docOldFormat.MeasuredResults);
             Assert.AreEqual(docRoundTrip.MeasuredResults.ClearImportTimes(), docOldFormat.MeasuredResults);

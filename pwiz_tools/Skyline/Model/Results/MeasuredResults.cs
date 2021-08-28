@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsResultsUpdateRequired { get; private set; }
         public bool IsDeserialized { get; private set; }
         public bool HasGlobalStandardArea { get; private set; }
+
         public bool IsChromatogramSetLoaded(int index)
         {
             return Chromatograms[index].IsLoaded;
@@ -288,6 +289,7 @@ namespace pwiz.Skyline.Model.Results
             return Chromatograms.Select(chromatogramSet => chromatogramSet.GetFileInfo(filePath))
                                 .FirstOrDefault(fileInfo => fileInfo != null);
         }
+
         private class RefCompareChromFileInfo : IEqualityComparer<ChromFileInfo>
         {
             public bool Equals(ChromFileInfo x, ChromFileInfo y)
