@@ -22,6 +22,9 @@ booleanOrNumber <- function(argument) {
 }
 
 ensureUniqueFileName <- function(baseName, folder, extension) {
+  if (folder == "") {
+    folder = getwd();
+  }
   allfiles <- list.files(folder)
   num <- 0
   finalfile <- paste(baseName, extension, sep="")
