@@ -1,4 +1,5 @@
 require(dplyr)
+require(optparse)
 require(MSstats)
 
 booleanOrString <- function(argument) {
@@ -66,7 +67,7 @@ prepareSkylineDataSet <- function(data) {
   return(data);
 }
 
-CallDataProcess <- function(dataFileName, inputNormalize, inputFeatureSelection, logFilePath) {
+CallDataProcess <- function(dataFileName, logFilePath, normalization = FALSE, featureSubset="all", ...) {
   data <- read.csv(dataFileName)
   data <- prepareSkylineDataSet(data)
   # TODO: standardPepName
@@ -74,20 +75,20 @@ CallDataProcess <- function(dataFileName, inputNormalize, inputFeatureSelection,
   
   return(dataProcess(
     data, 
-    normalization=inputNormalize,
+    normalization=normalization,
     nameStandards=standardPepName, 
-    featureSubset=inputFeatureSelection, 
+    featureSubset=featureSubset, 
     summaryMethod = "TMP", 
     censoredInt="0", log_file_path=logFilePath, append=TRUE))
 }
 
-GroupComparison <- function(dataFileName, inputNormalize, inputFeatureSelection, address="") {
-  logFile <- ensureUniqueFileName("MSstats_GroupComparison", address, ".log")
-  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
+GroupComparison <- function(dataFileName, ..., outputFolder="") {
+  logFile <- ensureUniqueFileName("MSstats_GroupComparison", outputFolder, ".log")
+  quantData <- CallDataProcess(dataFileName, logFile, ...)
   resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData, log_file_path=logFile, append=TRUE))
   
   if (class(resultComparison) != "try-error") {
-    write.csv(resultComparison$ComparisonResult, file=ensureUniqueFileName("TestingResult", address, ".csv"))
+    write.csv(resultComparison$ComparisonResult, file=ensureUniqueFileName("TestingResult", outputFolder, ".csv"))
     cat("\n Saved the testing result. \n")
   } else {
     cat("\n Error : Can't compare the groups. \n")
@@ -104,38 +105,30 @@ GroupComparison <- function(dataFileName, inputNormalize, inputFeatureSelection,
     cat("\n ** Visualizing testing results..... \n")
     ## Visualization 1: Volcano plot
     ## default setup: FDR cutoff = 0.05; fold change cutoff = NA
-    groupComparisonPlots(data=resultComparison$ComparisonResult, type="VolcanoPlot", address=address)
+    groupComparisonPlots(data=resultComparison$ComparisonResult, type="VolcanoPlot", address=outputFolder)
     cat("\n Saved VolcanoPlot.pdf \n")
     
     ## Visualization 2: Heatmap (required more than one comparisons)
     if (length(unique(resultComparison$ComparisonResult$Label)) > 1) {
-      groupComparisonPlots(data=resultComparison$ComparisonResult, type="Heatmap", address=address)
+      groupComparisonPlots(data=resultComparison$ComparisonResult, type="Heatmap", address=outputFolder)
       cat("\n Saved Heatmap.pdf \n")
     } else {
       cat("\n No Heatmap. Need more than 1 comparison for Heatmap. \n")
     }
     
     ## Visualization 3: Comparison plot
-    groupComparisonPlots(data=resultComparison$ComparisonResult, type="ComparisonPlot", address=address)
+    groupComparisonPlots(data=resultComparison$ComparisonResult, type="ComparisonPlot", address=outputFolder)
     cat("\n Saved ComparisonPlot.pdf \n \n")
   } ## draw only for comparison working
 }
 
-GroupComparisonCmd <- function(arguments) {
-  dataFileName <- arguments[1]
-  optionNormalize <- booleanOrString(arguments[2])
-  featureSelection <- arguments[3]
-
-  GroupComparison(dataFileName, optionNormalize, featureSelection)
-}
-
-QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, width, height, address="") {
-  logFile <- ensureUniqueFileName("MSstats_DataProcess", address, ".log")
-  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
+QualityControl <- function(dataFileName, width, height, ..., outputFolder="") {
+  logFile <- ensureUniqueFileName("MSstats_DataProcess", outputFolder, ".log")
+  quantData <- CallDataProcess(dataFileName, logFile, ...)
   
   
   if (class(quantData) != "try-error") {
-    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", address, ".csv"))
+    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", outputFolder, ".csv"))
     cat("\n Saved dataProcessedData.csv \n")
   } else {
     stop(message("\n Error : Can't process the data. \n"))
@@ -151,36 +144,31 @@ QualityControl <- function(dataFileName, inputNormalize, inputFeatureSelection, 
     cat("\n ** Generating dataProcess Plots..... \n \n")
     
     dataProcessPlots(data=quantData, type="ProfilePlot", 
-                     address=address, width=width, height=height)
+                     address=outputFolder, width=width, height=height)
     cat("\n Saved ProfilePlot.pdf \n \n")
     
     dataProcessPlots(data=quantData, type="QCPlot",
                      which.Protein = 'allonly',
-                     address=address, width=width, height=height)
+                     address=outputFolder, width=width, height=height)
     cat("\n Saved QCPlot.pdf \n \n")
     
     dataProcessPlots(data=quantData, type="ConditionPlot", 
-                     address=address)
+                     address=outputFolder)
     cat("\n Saved ConditionPlot.pdf \n ")
   }
 }
 
-QualityControlCmd <- function(arguments) {
-  dataFileName <- arguments[1]
-  optionNormalize <- booleanOrString(arguments[2])
-  featureSelection <- arguments[3]
-  width = as.numeric(arguments[4])
-  height = as.numeric(arguments[5])
-  
-  QualityControl(dataFileName, optionNormalize, featureSelection, width, height)
-}
-
-DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection, samples, power, fdr, ldfc, udfc, address="") {
-  logFile <- ensureUniqueFileName("MSstats_DesignSampleSize", address, ".log")
-  quantData <- CallDataProcess(dataFileName, inputNormalize, inputFeatureSelection, logFile)
+DesignSampleSize <- function(dataFileName,
+                             numSample = TRUE,
+                             power,
+                             FDR,
+                             ldfc,
+                             udfc, ... , outputFolder="") {
+  logFile <- ensureUniqueFileName("MSstats_DesignSampleSize", outputFolder, ".log")
+  quantData <- CallDataProcess(dataFileName, logFile, ...)
   if (class(quantData) != "try-error") {
     
-    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", address, ".csv"))
+    write.csv(quantData$ProcessedData, file=ensureUniqueFileName("dataProcessedData", outputFolder, ".csv"))
     cat("\n Saved dataProcessedData.csv \n")
   } else {
     stop(message("\n Error : Can't process the data. \n"))
@@ -221,11 +209,11 @@ DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection
     stop(message("\n Can't calculate sample size with log sum method. \n"))
   }
   
-  result.sample <- try(designSampleSize(data=resultComparison$FittedModel, numSample=samples, desiredFC=c(ldfc, udfc), FDR=fdr, power=power, log_file_path=logFile, append=TRUE))
+  result.sample <- try(designSampleSize(data=resultComparison$FittedModel, numSample=numSample, desiredFC=c(ldfc, udfc), FDR=FDR, power=power, log_file_path=logFile, append=TRUE))
 
   if (class(result.sample) != "try-error") {
     
-    write.csv(result.sample, file=ensureUniqueFileName("SampleSizeCalculation", address, ".csv"))
+    write.csv(result.sample, file=ensureUniqueFileName("SampleSizeCalculation", outputFolder, ".csv"))
     cat("\n Saved the Sample Size Calculation. \n")
   } else {
     stop(message("\n Error : Can't analyze. \n"))
@@ -233,7 +221,7 @@ DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection
   
   if (class(result.sample) != "try-error") {
     
-    pdf(ensureUniqueFileName("SampleSizePlot", address, ".pdf"))
+    pdf(ensureUniqueFileName("SampleSizePlot", outputFolder, ".pdf"))
     designSampleSizePlots(data=result.sample)
     dev.off()
     cat("\n Saved SampleSizePlot.pdf \n \n")
@@ -241,25 +229,38 @@ DesignSampleSize <- function(dataFileName, inputNormalize, inputFeatureSelection
   
 }
 
-DesignSampleSizeCmd <- function(arguments) {
-  dataFileName <- arguments[1]
-  optionNormalize <- booleanOrString(arguments[2])
-  samples <- booleanOrNumber(arguments[3])
-  power <- booleanOrNumber(arguments[4])
-  fdr <- as.numeric(arguments[5])
-  ldfc <- as.numeric(arguments[6])
-  udfc <- as.numeric(arguments[7])
-  featureSelection <- arguments[8]
-}
-
 MsStatsExternalTool <- function(arguments) {
+  options <- list(
+    make_option("--dataFileName"),
+    make_option("--normalization"),
+    make_option("--msLevel", type="integer"),
+    make_option("--featureSelection"),
+    make_option("--outputFolder")
+  )
+
   command <- arguments[1]
+
   if (command == "GC") {
-    GroupComparisonCmd(arguments[-1])
+    parser<-OptionParser(option_list = options)
+    parsedArgs<-parse_args(parser, args=arguments[-1])
+    do.call(GroupComparison, parsedArgs)
   } else if (command == "QC") {
-    QualityControlCmd(arguments[-1])
+    options <- c(options, 
+                 make_option("--width", type="integer"),
+                 make_option("--height", type="integer"))
+    parser<-OptionParser(option_list = options)
+    parsedArgs<-parse_args(parser, args=arguments[-1])
+    do.call(QualityControl, parsedArgs)
   } else if (command == "DSS") {
-    DesignSampleSizeCmd(arguments[-1])
+    options <- c(options,
+                 make_option("--numSample", type="integer"),
+                 make_option("--power", type="double"),
+                 make_option("--FDR", type="double"),
+                 make_option("--ldfc", type="double"),
+                 make_option("--udfc", type="double"))
+    parser<-OptionParser(option_list = options)
+    parsedArgs<-parse_args(parser, args=arguments[-1])
+    do.call(DesignSampleSize, parsedArgs)
   }
 }
 

@@ -55,6 +55,13 @@
     <Compile Include="ArgsCollectorForm.Designer.cs">
       <DependentUpon>ArgsCollectorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CommonOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CommonOptionsControl.Designer.cs">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataSetInfo.cs" />
     <Compile Include="GroupComparisonUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -81,6 +88,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CommonOptionsControl.resx">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GroupComparisonUI.ja.resx">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
     </EmbeddedResource>

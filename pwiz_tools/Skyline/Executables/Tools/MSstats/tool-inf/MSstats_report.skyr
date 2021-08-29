@@ -19,6 +19,8 @@
     <column name="Results!*.Value.PrecursorResult.DetectionQValue" />
     <column name="Results!*.Value.Area" />
     <column name="Results!*.Value.Truncated" />
+    <column name="Results!*.Value.TransitionResultIsMs1" />
+    <column name="Results!*.Value.Locator" />
     <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
     <filter column="Results!*.Value.TransitionResultIsQuantitative" opname="equals" operand="True" />
   </view>
