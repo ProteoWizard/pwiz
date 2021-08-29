@@ -18,76 +18,21 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Microsoft.VisualBasic.FileIO;
 
 namespace MSStatArgsCollector
 {    
-    public partial class GroupComparisonUi : ArgsCollectorForm
+    public partial class GroupComparisonUi : Form
     {
         // Argument array
         public string[] Arguments { get; private set; }
         
-        public GroupComparisonUi(string[] groups, string[] oldArgs)
+        public GroupComparisonUi(DataSetInfo dataSetInfo, Arguments arguments)
         {
             InitializeComponent();
-            comboBoxNormalizeTo.Items.AddRange(GetNormalizationOptionLabels().Cast<object>().ToArray());
-            comboControlGroup.Items.Add(string.Empty);
-            foreach (var group in groups)
-            {
-                if (string.IsNullOrEmpty(group))
-                {
-                    continue;
-                }
-
-                comboControlGroup.Items.Add(group);
-            }
-            Arguments = oldArgs;
-            comboBoxNormalizeTo.SelectedIndex = 0;
-            comboControlGroup.SelectedIndex = 0;
-            RestoreSettings(oldArgs);
-        }
-
-
-        // ReSharper disable InconsistentNaming
-        private enum Args {
-            Normalization, // "FALSE", "equalizeMedians", "quantile", or "globalStandards"
-            FeatureSelection,
-            ControlGroupName,
-            Max
-        }
-        // ReSharper restore InconsistentNaming
-
-
-        // If there is no stored argument string, or if the number of groups has changed, the UI loads the
-        // default settings for group comparisons
-        private bool RestoreSettings(IList<string> arguments)
-        {
-            if (arguments == null || arguments.Count != (int) Args.Max)
-            {
-                return false;
-            }
-
-            SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
-            cboxSelectHighQualityFeatures.Checked = FeatureSubsetHighQuality == arguments[(int) Args.FeatureSelection];
-            SelectComboBoxValue(comboControlGroup, arguments[(int) Args.ControlGroupName]);
-            return true;
-#if false
-            // If any of the groups begin with "control" or "healthy" make the first the default
-            // control group.
-            for (int i = 0; i < ControlGroupList.Length; i++)
-                {
-                    string group = ControlGroupList[i].ToLower();
-                    if (group.StartsWith("control") || group.StartsWith("healthy")) // Not L10N
-                    {
-                        comboControlGroup.SelectedIndex = i;
-                        break;
-                    }
-                }
-#endif
+            commonOptionsControl1.InitializeOptions(dataSetInfo, arguments);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -97,65 +42,34 @@ namespace MSStatArgsCollector
 
         public void OkDialog()
         {
-            GenerateArguments();
+            var arguments = GenerateArguments();
+            if (arguments == null)
+            {
+                return;
+            }
+
+            Arguments = arguments.ToArgumentList().ToArray();
             DialogResult = DialogResult.OK;
         }
 
-
-        /// <summary>
-        /// The first arguments that get passed to the R script are the ones specified in the enum <see cref="Args"/>.
-        /// The next n elements is a series of n doubles that represent the constants that will be applied 
-        /// to each group, where n is the (2+) total number of groups in the data source. There will
-        /// be a single "-1" in this series, which represents the constant applied to the
-        /// control group. If there is only one other group for the control to be compared against, it will
-        /// have a value of 1, while all other groups will have constants of 0. An example
-        /// subarray that might be generated would be: [1 , 0 , -1 , 0]
-        ///
-        /// In the case that there are k>1 groups to be compared against, each group that the control will
-        /// be compared against adopts a value of 1.0/k, while any groups not being compared against the control
-        /// again adopt a constant of 0. An example subarray that might be generated would be: [0 , 0 , 0.5 , -1 , 0 , 0.5] 
-        /// where k = 2
-        /// </summary>
-        private void GenerateArguments()
+        private Arguments GenerateArguments()
         {
-            var commandLineArguments = new List<string>();
+            var arguments = new Arguments();
+            if (!commonOptionsControl1.GetArguments(arguments))
+            {
+                return null;
+            }
 
-            // Add fixed arguments
-            commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
-            commandLineArguments.Add(cboxSelectHighQualityFeatures.Checked ? FeatureSubsetHighQuality : FeatureSubsetAll);
-            commandLineArguments.Add(comboControlGroup.SelectedItem.ToString());
-            Arguments = commandLineArguments.ToArray();
+            return arguments;
         }
     }
 
     public class MSstatsGroupComparisonCollector
     {
-        /// <summary>
-        /// This entry point might be used future versions of Skyline in case the report text is too
-        /// large to fit in a string.
-        /// </summary>
         public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] oldArgs)
         {
-            const string conditionColumnName = "Condition"; // Not L10N
-            var parser = new TextFieldParser(report);
-            parser.SetDelimiters(",");
-            string[] fields = parser.ReadFields() ?? new string[0];
-            int groupIndex = Array.IndexOf(fields, conditionColumnName);
-            if (groupIndex < 0)
-            {
-                MessageBox.Show(parent, 
-                    string.Format(MSstatsResources.MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__,
-                    conditionColumnName));
-                return null;
-            }
-
-            ICollection<string> groups = new HashSet<string>();
-            string[] line;
-            while ((line = parser.ReadFields()) != null)
-            {
-                groups.Add(line[groupIndex]);
-            }
-            using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))
+            var dataSetInfo = DataSetInfo.ReadDataSet(report);
+            using (var dlg = new GroupComparisonUi(dataSetInfo, Arguments.FromArgumentList(oldArgs)))
             {
                 if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {

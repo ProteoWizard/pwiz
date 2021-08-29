@@ -17,62 +17,71 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace MSStatArgsCollector
 {
-    public partial class QualityControlUI : ArgsCollectorForm
+    public partial class QualityControlUI : Form
     {
-        private enum Args {Normalization, FeatureSelection, Width, Height, Max}
-
         public string[] Arguments { get; private set; }
 
-        public QualityControlUI(string[] oldArgs)
+        public QualityControlUI(DataSetInfo dataSetInfo, Arguments arguments)
         {
             InitializeComponent();
-            comboBoxNormalizeTo.Items.AddRange(GetNormalizationOptionLabels().Cast<object>().ToArray());
-            comboBoxNormalizeTo.SelectedIndex = 0;
-            RestoreSettings(oldArgs);
+            commonOptionsControl1.InitializeOptions(dataSetInfo, arguments);
+            tbxWidth.Text = (arguments.GetInt(Arg.width) ?? 10).ToString();
+            tbxHeight.Text = (arguments.GetInt(Arg.height) ?? 10).ToString();
         }
-        private bool RestoreSettings(IList<string> arguments)
+        private Arguments GenerateArguments()
         {
-            if (arguments == null || arguments.Count != (int)Args.Max)
+            var arguments = new Arguments();
+            if (!commonOptionsControl1.GetArguments(arguments))
             {
-                return false;
+                return null;
             }
 
-            SelectComboBoxValue(comboBoxNormalizeTo, arguments[(int)Args.Normalization], _normalizationOptionValues);
-            cbxSelectHighQualityFeatures.Checked = arguments[(int) Args.FeatureSelection] == FeatureSubsetHighQuality;
-            tbxWidth.Text = arguments[(int)Args.Width];
-            tbxHeight.Text = arguments[(int)Args.Height];
-            return true;
-        }
+            if (!string.IsNullOrEmpty(tbxWidth.Text))
+            {
+                if (!Util.ValidateInteger(tbxWidth, out int width))
+                {
+                    return null;
+                }
 
-        private void GenerateArguments()
-        {
-            var commandLineArguments = new List<string>();
-            commandLineArguments.Add(_normalizationOptionValues[comboBoxNormalizeTo.SelectedIndex]);
-            commandLineArguments.Add(cbxSelectHighQualityFeatures.Checked ? "highQuality" : "all");
-            commandLineArguments.Add(tbxWidth.Text);
-            commandLineArguments.Add(tbxHeight.Text);
-            Arguments = commandLineArguments.ToArray();
+                arguments.Set(Arg.width, width);
+            }
+
+            if (!string.IsNullOrEmpty(tbxHeight.Text))
+            {
+                if (!Util.ValidateInteger(tbxHeight, out int height))
+                {
+                    return null;
+                }
+                arguments.Set(Arg.height, height);
+            }
+
+            return arguments;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            GenerateArguments();
+            var arguments = GenerateArguments();
+            if (arguments == null)
+            {
+                return;
+            }
+
+            Arguments = arguments.ToArgumentList().ToArray();
             DialogResult = DialogResult.OK;
         }
     }
     public class MSstatsQualityControlCollector
     {
-
         public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] args)
         {
-            using (var dlg = new QualityControlUI(args))
+            var dataSetInfo = DataSetInfo.ReadDataSet(report);
+            using (var dlg = new QualityControlUI(dataSetInfo, Arguments.FromArgumentList(args)))
             {
                 if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {

@@ -42,9 +42,8 @@ ensureUniqueColumn <- function(data, targetColumn, possibleUniqueColumns, defini
     result[targetColumn] <- data[definiteUniqueColumn]
   }
   result <- result[0,]
-  
   for (possibleUniqueColumn in possibleUniqueColumns) {
-    distinctRows <- distinct(select(data, c(possibleUniqueColumn, groupColumns, definiteUniqueColumn)))
+    distinctRows <- distinct(select(data, c(all_of(possibleUniqueColumn), all_of(groupColumns), all_of(definiteUniqueColumn))))
     counts<-count(distinctRows, distinctRows[c(possibleUniqueColumn, groupColumns)],name="counts")
     dataJoinedWithCounts <- left_join(data, counts, by=c(possibleUniqueColumn, groupColumns))
     uniqueData <- dataJoinedWithCounts[dataJoinedWithCounts$counts == 1,]
@@ -160,7 +159,7 @@ QualityControl <- function(dataFileName, width, height, ..., outputFolder="") {
 
 DesignSampleSize <- function(dataFileName,
                              numSample = TRUE,
-                             power,
+                             power = TRUE,
                              FDR,
                              ldfc,
                              udfc, ... , outputFolder="") {
