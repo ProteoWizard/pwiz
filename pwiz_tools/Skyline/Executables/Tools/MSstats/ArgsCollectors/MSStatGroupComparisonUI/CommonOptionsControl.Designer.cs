@@ -102,6 +102,7 @@
             this.comboQuantMsLevel.Name = "comboQuantMsLevel";
             this.comboQuantMsLevel.Size = new System.Drawing.Size(169, 21);
             this.comboQuantMsLevel.TabIndex = 10;
+            this.comboQuantMsLevel.Visible = false;
             // 
             // lblMsLevel
             // 
@@ -112,6 +113,7 @@
             this.lblMsLevel.Size = new System.Drawing.Size(51, 13);
             this.lblMsLevel.TabIndex = 9;
             this.lblMsLevel.Text = "&MS level:";
+            this.lblMsLevel.Visible = false;
             // 
             // flowLayoutPanel1
             // 

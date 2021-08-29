@@ -16,7 +16,7 @@ namespace MSStatArgsCollector
         public static readonly NormalizationMethod QUANTILE = new NormalizationMethod(() => MSstatsResources.ArgsCollectorForm_GetNormalizationOptionLabels_Quantile, "quantile");
 
         public static readonly NormalizationMethod GLOBAL_STANDARDS =
-            new NormalizationMethod(() => MSstatsResources.ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards, "Global Standards");
+            new NormalizationMethod(() => MSstatsResources.ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards, "globalStandards");
 
         private Func<string> _getLabelFunc;
         public NormalizationMethod(Func<string> getLabelFunc, string parameterValue)

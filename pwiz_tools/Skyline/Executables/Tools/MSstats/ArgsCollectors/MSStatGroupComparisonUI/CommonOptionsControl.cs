@@ -26,7 +26,7 @@ namespace MSStatArgsCollector
                 comboBoxNormalizeTo.Items.Add(NormalizationMethod.GLOBAL_STANDARDS);
             }
 
-            lblMsLevel.Visible = comboQuantMsLevel.Visible = dataSetInfo.HasMs1 && dataSetInfo.HasMs2;
+            lblQValueCutoff.Visible = tbxQValue.Visible = dataSetInfo.HasQValues;
         }
 
         public void RestoreArguments(Arguments arguments)
@@ -42,6 +42,8 @@ namespace MSStatArgsCollector
             {
                 comboBoxNormalizeTo.SelectedIndex = 0;
             }
+
+            tbxQValue.Text = arguments.GetInt(Arg.qValueCutoff).ToString();
         }
 
         // Constants

@@ -66,11 +66,16 @@ prepareSkylineDataSet <- function(data) {
   return(data);
 }
 
-CallDataProcess <- function(dataFileName, logFilePath, normalization = FALSE, featureSubset="all", ...) {
+CallDataProcess <- function(dataFileName, logFilePath, qValueCutoff = NULL, normalization = FALSE, featureSubset="all", ...) {
   data <- read.csv(dataFileName)
   data <- prepareSkylineDataSet(data)
-  # TODO: standardPepName
   standardPepName <- c()
+  if (normalization == "globalStandards") {
+    standardPepName = unique(data[data$StandardType == 'Normalization',]$PeptideSequence)
+  }
+  if (is.numeric(qValueCutoff)) {
+    data <- data[data$DetectionQValue <= qValueCutoff | data$StandardType != "",]
+  }
   
   return(dataProcess(
     data, 
@@ -234,7 +239,8 @@ MsStatsExternalTool <- function(arguments) {
     make_option("--normalization"),
     make_option("--msLevel", type="integer"),
     make_option("--featureSelection"),
-    make_option("--outputFolder")
+    make_option("--outputFolder"),
+    make_option("--qValueCutoff", type="double")
   )
 
   command <- arguments[1]
