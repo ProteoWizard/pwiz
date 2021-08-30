@@ -55,6 +55,8 @@ else if "x86" in $(PLATFORM)
     if ! $(.hasDLLs) && [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
     {
         .hasDLLs = true ;
+        SHELL "copy /Y \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\"" ;
+        RESCAN ;
     }
 
     obj ScanFilter : ScanFilter.cpp ;
@@ -93,15 +95,27 @@ rule copy-MSFileReader ( targets + : sources * : properties * )
 # and the side-by-side loader is apparently incapable of redirecting to the newer VC9 DLLs we bundle (37029.6161)
 actions copy-MSFileReader
 {
-    copy "$(MSFILEREADER_INSTALL_DIR)\XRawfile2$(MSFILEREADER_SUFFIX).dll" "$(<)"
+    copy /Y "$(MSFILEREADER_INSTALL_DIR)\XRawfile2$(MSFILEREADER_SUFFIX).dll" "$(<)" > nul
     $(MSVC_CURRENT_SETUP_SCRIPT)
     mt.exe -nologo -manifest $(>) -outputresource:$(<);#2"
 }
 
+rule copy-and-update-manifest ( targets + : sources * : properties * )
+{
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+}
+
+actions copy-and-update-manifest
+{
+    copy /Y "$(>)" "$(<)" > nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    mt.exe -nologo -manifest "$(API_PATH)\$(PLATFORM)\fileio.manifest" -outputresource:$(<);#2"
+}
+
 make MSFileReader.XRawfile2.SxS.manifest : : @make-MSFileReader-manifest ;
 make MSFileReader.XRawfile2.dll : MSFileReader.XRawfile2.SxS.manifest : @copy-MSFileReader : <dependency>MSFileReader.XRawfile2.SxS.manifest ;
-make fregistry$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fregistry$(MSFILEREADER_SUFFIX).dll : @common.copy ;
-make fileio$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fileio$(MSFILEREADER_SUFFIX).dll : @common.copy ;
+make fregistry$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fregistry$(MSFILEREADER_SUFFIX).dll : @copy-and-update-manifest ;
+make fileio$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fileio$(MSFILEREADER_SUFFIX).dll : @copy-and-update-manifest ;
 explicit MSFileReader.XRawfile2.dll MSFileReader.XRawfile2.SxS.manifest fregistry$(MSFILEREADER_SUFFIX).dll fileio$(MSFILEREADER_SUFFIX).dll ;
 
 rule vendor-api-requirements ( properties * )
@@ -134,7 +148,7 @@ rule vendor-api-usage-requirements ( properties * )
                 result += <dependency>MSFileReader.XRawfile2.dll ;
                 result += <dependency>fregistry$(MSFILEREADER_SUFFIX).dll ;
                 result += <dependency>fileio$(MSFILEREADER_SUFFIX).dll ;
-                #result += <manifest-dependency>MSFileReader.XRawfile2.dll ; # this doesn't seem necessary anymore?
+                result += <manifest-dependency>$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ;
                 result += <assembly-dependency>MSFileReader.XRawfile2.dll ;
                 result += <assembly-dependency>MSFileReader.XRawfile2.SxS.manifest ;
                 result += <assembly-dependency>fregistry$(MSFILEREADER_SUFFIX).dll ;

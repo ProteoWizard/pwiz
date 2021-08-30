@@ -1064,6 +1064,11 @@ rule copy-assemblies ( target : properties * )
     }
 }
 
+local rule read-version ( file ) 
+{
+    MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe \"$(file)\"" ] ;
+}
+
 local rule set-manifest-dependencies ( target : properties * )
 {
     local manifest-dependencies-string ;
@@ -1080,8 +1085,8 @@ local rule set-manifest-dependencies ( target : properties * )
                 errors.user-error "cannot find manifest-dependency: " $(dependency-path) ;
             }
 
-            local dependency-version = [ MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe $(dependency-path)" ] ] ;
-            
+            local dependency-version = [ read-version "$(dependency-path)" ] ;
+
             # unknown version will cause a runtime-error; is there a better solution?
             dependency-version ?= "unknown" ;
             
