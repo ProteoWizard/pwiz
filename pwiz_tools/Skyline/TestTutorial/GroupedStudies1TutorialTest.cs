@@ -1595,7 +1595,7 @@ namespace pwiz.SkylineTestTutorial
         private void TestSynchronizedIntegration()
         {
             var allReplicates = AllReplicates.ToArray();
-            var dlg = ShowDialog<SynchronizedIntegrationGroupingDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+            var dlg = ShowDialog<SynchronizedIntegrationDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
 
             SrmDocument doc = null;
             string[] toSync = null;
@@ -1678,7 +1678,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Try grouping by annotation
-            dlg = ShowDialog<SynchronizedIntegrationGroupingDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+            dlg = ShowDialog<SynchronizedIntegrationDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
             string groupByPersistedString = null;
             RunUI(() =>
             {

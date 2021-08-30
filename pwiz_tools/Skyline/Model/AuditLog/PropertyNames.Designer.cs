@@ -4300,6 +4300,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration All.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationAll {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Synchronized Integration Group By.
         /// </summary>
         public static string TransitionIntegration_SynchronizedIntegrationGroupBy {

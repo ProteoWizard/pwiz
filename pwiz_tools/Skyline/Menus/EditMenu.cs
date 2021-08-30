@@ -1063,16 +1063,16 @@ namespace pwiz.Skyline.Menus
 
         public void ShowSynchronizedIntegrationDialog()
         {
-            using (var dlg = new SynchronizedIntegrationGroupingDlg(DocumentUI))
+            using (var dlg = new SynchronizedIntegrationDlg(DocumentUI))
             {
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
-                    SetSynchronizedIntegration(dlg.GroupByPersistedString, dlg.Targets.ToArray());
+                    SetSynchronizedIntegration(dlg.GroupByPersistedString, dlg.IsAll, dlg.Targets.ToArray());
                 }
             }
         }
 
-        public void SetSynchronizedIntegration(string groupBy, string[] targets)
+        public void SetSynchronizedIntegration(string groupBy, bool all, string[] targets)
         {
             var existing = DocumentUI.Settings.TransitionSettings.Integration;
             if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
@@ -1081,7 +1081,7 @@ namespace pwiz.Skyline.Menus
                     string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
                         (string.IsNullOrEmpty(groupBy) ? Resources.GroupByItem_ToString_Replicates : groupBy) + @":" + string.Join(@",", targets)),
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i =>
-                        i.ChangeSynchronizedIntegration(groupBy, targets))), AuditLogEntry.SettingsLogFunction);
+                        i.ChangeSynchronizedIntegration(groupBy, all, targets))), AuditLogEntry.SettingsLogFunction);
             }
         }
 

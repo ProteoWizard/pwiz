@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.EditUI
 {
-    partial class SynchronizedIntegrationGroupingDlg
+    partial class SynchronizedIntegrationDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SynchronizedIntegrationGroupingDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SynchronizedIntegrationDlg));
             this.comboGroupBy = new System.Windows.Forms.ComboBox();
             this.listSync = new System.Windows.Forms.CheckedListBox();
             this.btnOk = new System.Windows.Forms.Button();
@@ -79,7 +79,7 @@
             this.cbSelectAll.UseVisualStyleBackColor = true;
             this.cbSelectAll.CheckedChanged += new System.EventHandler(this.cbSelectAll_CheckedChanged);
             // 
-            // SynchronizedIntegrationGroupingDlg
+            // SynchronizedIntegrationDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
@@ -93,7 +93,7 @@
             this.Controls.Add(this.comboGroupBy);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "SynchronizedIntegrationGroupingDlg";
+            this.Name = "SynchronizedIntegrationDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);

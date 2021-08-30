@@ -1966,9 +1966,12 @@ namespace pwiz.Skyline.Model
         }
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
+            if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
+                return MeasuredResults.Chromatograms;
+
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
-                return new ChromatogramSet[0];
+                return Array.Empty<ChromatogramSet>();
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))

@@ -10,7 +10,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class SynchronizedIntegrationGroupingDlg : Form
+    public partial class SynchronizedIntegrationDlg : Form
     {
         private readonly SrmDocument _document;
         private readonly AnnotationCalculator _annotationCalculator;
@@ -29,6 +29,8 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public bool IsAll => listSync.Items.Count > 0 && listSync.CheckedItems.Count == listSync.Items.Count;
+
         public IEnumerable<string> Targets
         {
             get => listSync.CheckedItems.Cast<string>();
@@ -38,7 +40,7 @@ namespace pwiz.Skyline.EditUI
         public IEnumerable<string> GroupByOptions => comboGroupBy.Items.Cast<GroupByItem>().Select(item => item.ToString());
         public IEnumerable<string> TargetOptions => listSync.Items.Cast<string>();
 
-        public SynchronizedIntegrationGroupingDlg(SrmDocument document)
+        public SynchronizedIntegrationDlg(SrmDocument document)
         {
             InitializeComponent();
 
@@ -53,13 +55,13 @@ namespace pwiz.Skyline.EditUI
             {
                 // Synchronized integration is off, select everything
                 comboGroupBy.SelectedIndex = 0;
-                SetCheckedItems(groupByReplicates.GetItems(_document, _annotationCalculator).ToHashSet());
+                SetCheckedItems(TargetOptions.ToHashSet());
             }
             else
             {
                 var settingsIntegration = _document.Settings.TransitionSettings.Integration;
                 comboGroupBy.SelectedIndex = GetItemIndex(settingsIntegration.SynchronizedIntegrationGroupBy, true) ?? 0;
-                SetCheckedItems(settingsIntegration.SynchronizedIntegrationTargets.ToHashSet());
+                SetCheckedItems((settingsIntegration.SynchronizedIntegrationAll ? TargetOptions : settingsIntegration.SynchronizedIntegrationTargets).ToHashSet());
             }
         }
 
@@ -90,9 +92,12 @@ namespace pwiz.Skyline.EditUI
             var newItems = SelectedGroupBy.GetItems(_document, _annotationCalculator);
             if (!ArrayUtil.EqualsDeep(listSync.Items.Cast<string>().ToArray(), newItems))
             {
+                var allChecked = IsAll;
                 listSync.Items.Clear();
-                cbSelectAll.Checked = false;
                 listSync.Items.AddRange(newItems);
+                cbSelectAll.Checked = false;
+                for (var i = 0; i < listSync.Items.Count; i++)
+                    listSync.SetItemChecked(i, allChecked);
             }
         }
 

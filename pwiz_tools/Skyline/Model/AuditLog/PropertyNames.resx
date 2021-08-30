@@ -1502,6 +1502,9 @@
   <data name="TransitionIntegration_SynchronizedIntegrationGroupBy" xml:space="preserve">
     <value>Synchronized Integration Group By</value>
   </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
+    <value>Synchronized Integration All</value>
+  </data>
   <data name="TransitionIntegration_SynchronizedIntegrationTargets" xml:space="preserve">
     <value>Synchronized Integration Targets</value>
   </data>

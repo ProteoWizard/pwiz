@@ -418,6 +418,7 @@
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
+                <xs:attribute name="all" type="xs:boolean"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
