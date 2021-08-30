@@ -24,7 +24,6 @@ import re
 import urllib.request
 import urllib.parse
 import base64
-import json
 
 args = sys.argv[1:len(sys.argv)]
 current_branch = args[0]
@@ -44,13 +43,13 @@ def post(url, params, headers):
     with urllib.request.urlopen(req) as conn:
         return conn.read().decode('utf-8')
 
-def get(url, always = False):
-    if not always and os.environ['USERNAME'] != 'teamcity':
+def get(url):
+    if os.environ['USERNAME'] != 'teamcity':
         return
-    
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as conn:
-        return conn.read().decode('utf-8')
+
+    conn = httplib.HTTPConnection(url)
+    conn.request("GET", "")
+    return conn.getresponse()
 
 def merge(a, *b):
     r = a.copy()
@@ -132,15 +131,10 @@ print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/
 if current_branch == "master":
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
-    base_branch = "master"
 elif current_branch.startswith("pull/"):
-    pullMetadata = json.loads(get("https://api.github.com/repos/ProteoWizard/pwiz/" + current_branch.replace("pull", "pulls"), True))
-    base_branch = pullMetadata["base"]["ref"]
-    print("Base branch: %s" % base_branch)
-    print(subprocess.check_output('git fetch origin %s && git checkout %s && git pull origin %s && git fetch origin %s' % (base_branch, base_branch, base_branch, current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
-    changed_files = subprocess.check_output("git diff --name-only %s...FETCH_HEAD" % base_branch, shell=True).decode(sys.stdout.encoding)
+    print(subprocess.check_output('git fetch origin master && git checkout master && git pull origin master && git fetch origin %s' % (current_branch + "/head"), shell=True).decode(sys.stdout.encoding))
+    changed_files = subprocess.check_output("git diff --name-only master...FETCH_HEAD", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H" FETCH_HEAD', shell=True).decode(sys.stdout.encoding).strip()
-    exit(1)
 else:
     print("Cannot handle branch with name: %s" % current_branch)
     exit(1)
