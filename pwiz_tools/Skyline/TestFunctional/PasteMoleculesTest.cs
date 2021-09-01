@@ -110,6 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestImportAllData();
             TestInconsistentMoleculeDescriptions();
             TestProductNeutralLoss();
             TestUnsortedMzPrecursors();
@@ -1729,6 +1730,51 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(badDlg, badDlg.OkDialog);
             //var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
             //OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+        }
+
+        void TestImportAllData()
+        {
+            // Check that we are importing all the data in the case where there is not a header line provided
+            var input =
+                "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
+                "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
+                "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
+                "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" +
+                "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
+                "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
+                "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
+                "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" +
+                "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" +
+                "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
+                "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            var docOrig = NewDocument();
+            SetClipboardText(input);
+
+            // Paste directly into targets area, which should send us to ColumnSelectDlg
+            var testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            WaitForDocumentLoaded();
+            // Correct the header assignments
+            RunUI(() => {
+                testImportDlg.radioMolecule.PerformClick();
+                var comboBoxes = testImportDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+            });
+            
+            // Import the list
+            OkDialog(testImportDlg, testImportDlg.OkDialog);
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);
         }
 
     }
