@@ -1125,7 +1125,7 @@ namespace pwiz.Skyline.Model.Results
                 if (nextTime > prevTime)
                 {
                     double width = nextTime - prevTime;
-                    double area = intensity * width;
+                    double area = intensity * width * 60;
                     totalArea += area;
                     if (timeIntensities.MassErrors != null)
                     {

@@ -66,9 +66,7 @@ del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\ja-JP > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x64 > nul 2>&1
-del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
+git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul
 del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
 del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86 > nul 2>&1

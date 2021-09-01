@@ -42,7 +42,6 @@ namespace pwiz.SkylineTestTutorial
     public class SrmTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestSrmTutorialLegacy()
         {
             //Set true to look at tutorial screenshots
