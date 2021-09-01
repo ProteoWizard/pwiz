@@ -298,6 +298,7 @@ namespace pwiz.SkylineTestUtil
             ActivateReplicate(chromName);
 
             WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GetGraphChrom(chromName).ChromGroupInfos != null);
 
             RunUIWithDocumentWait(() => // adjust integration
             {
