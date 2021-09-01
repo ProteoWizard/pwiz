@@ -1304,6 +1304,12 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x86/ucrtbase.dll 
     Microsoft.VC140.CRT/x86/vcomp140.dll 
     Microsoft.VC140.CRT/x86/vcruntime140.dll 
+    Microsoft.VC140.CRT/x86/msvcp140_1.dll
+    Microsoft.VC140.CRT/x86/msvcp140_2.dll
+    Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
+    Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
+    Microsoft.VC140.CRT/x86/vcruntime140_1.dll
+    Microsoft.VC140.CRT/x86/vccorlib140.dll
     Microsoft.VC90.CRT/x86/msvcm90.dll 
     Microsoft.VC90.CRT/x86/msvcp90.dll 
     Microsoft.VC90.CRT/x86/msvcr90.dll 
@@ -1367,6 +1373,12 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x64/ucrtbase.dll
     Microsoft.VC140.CRT/x64/vcomp140.dll
     Microsoft.VC140.CRT/x64/vcruntime140.dll
+    Microsoft.VC140.CRT/x64/msvcp140_1.dll
+    Microsoft.VC140.CRT/x64/msvcp140_2.dll
+    Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
+    Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
+    Microsoft.VC140.CRT/x64/vcruntime140_1.dll
+    Microsoft.VC140.CRT/x64/vccorlib140.dll
     Microsoft.VC90.CRT/x64/msvcm90.dll
     Microsoft.VC90.CRT/x64/msvcp90.dll
     Microsoft.VC90.CRT/x64/msvcr90.dll
