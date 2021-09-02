@@ -111,7 +111,7 @@
             this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.textMzMatchTolerance = new System.Windows.Forms.TextBox();
-            this.label16 = new System.Windows.Forms.Label();
+            this.lblMethodMatchTolerance = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
@@ -122,6 +122,7 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.label16 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -630,7 +631,7 @@
             this.tabInstrument.Controls.Add(this.textMaxTrans);
             this.tabInstrument.Controls.Add(this.label17);
             this.tabInstrument.Controls.Add(this.textMzMatchTolerance);
-            this.tabInstrument.Controls.Add(this.label16);
+            this.tabInstrument.Controls.Add(this.lblMethodMatchTolerance);
             this.tabInstrument.Controls.Add(this.label10);
             this.tabInstrument.Controls.Add(this.label11);
             this.tabInstrument.Controls.Add(this.textMaxMz);
@@ -728,10 +729,10 @@
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
             this.helpTip.SetToolTip(this.textMzMatchTolerance, resources.GetString("textMzMatchTolerance.ToolTip"));
             // 
-            // label16
+            // lblMethodMatchTolerance
             // 
-            resources.ApplyResources(this.label16, "label16");
-            this.label16.Name = "label16";
+            resources.ApplyResources(this.lblMethodMatchTolerance, "lblMethodMatchTolerance");
+            this.lblMethodMatchTolerance.Name = "lblMethodMatchTolerance";
             // 
             // label10
             // 
@@ -774,6 +775,7 @@
             this.ionMobilityFilteringControl.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.ionMobilityFilteringControl, "ionMobilityFilteringControl");
             this.ionMobilityFilteringControl.Name = "ionMobilityFilteringControl";
+            this.ionMobilityFilteringControl.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // helpTip
             // 
@@ -790,6 +792,11 @@
             // 
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
+            // 
+            // label16
+            // 
+            resources.ApplyResources(this.label16, "label16");
+            this.label16.Name = "label16";
             // 
             // TransitionSettingsUI
             // 
@@ -873,7 +880,7 @@
         private System.Windows.Forms.TextBox textIonCount;
         private System.Windows.Forms.CheckBox cbLibraryPick;
         private System.Windows.Forms.Panel panelPick;
-        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label lblMethodMatchTolerance;
         private System.Windows.Forms.TextBox textMzMatchTolerance;
         private System.Windows.Forms.ComboBox comboOptimizeType;
         private System.Windows.Forms.CheckBox cbUseOptimized;
@@ -922,5 +929,6 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
+        private System.Windows.Forms.Label label16;
     }
 }

@@ -230,6 +230,12 @@ namespace pwiz.Skyline.Controls
             Control label = control;
             while(label != null && !(label is Label && label.Visible))
                 label = _parent.GetNextControl(label, false);
+
+            return GetControlMessageFromLabel(label as Label);
+        }
+
+        public static string GetControlMessageFromLabel(Label label)
+        {
             string message = (label == null ? Resources.MessageBoxHelper_GetControlMessage_Field : label.Text);
             int ampIndex = message.IndexOf('&');
             // Chinese and Japanese use the mnemonic format <label>(&A):

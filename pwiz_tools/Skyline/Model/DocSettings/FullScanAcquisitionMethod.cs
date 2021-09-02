@@ -29,22 +29,21 @@ namespace pwiz.Skyline.Model.DocSettings
     public struct FullScanAcquisitionMethod : IAuditLogObject
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
-        public static readonly FullScanAcquisitionMethod PRM = new FullScanAcquisitionMethod(@"PRM", 
-            ()=>EnumNames.FullScanAcquisitionMethod_PRM)
+
+        public static readonly FullScanAcquisitionMethod PRM = new FullScanAcquisitionMethod(@"PRM",
+            () => EnumNames.FullScanAcquisitionMethod_PRM);
         public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod(@"DIA",
             () => EnumNames.FullScanAcquisitionMethod_DIA);
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod(@"DDA",
             ()=> EnumNames.FullScanAcquisitionMethod_DDA);
         public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod(@"Targeted",
             () => EnumNames.FullScanAcquisitionMethod_Targeted);
-
-
         public static readonly FullScanAcquisitionMethod SureQuant = new FullScanAcquisitionMethod(@"SureQuant",
             () => EnumNames.FullScanAcquisitionMethod_SureQuant);
 
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
-            ImmutableList.ValueOf(new[] {None, PRM, DIA, DDA, Targeted, SureQuant });
+            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, Targeted, SureQuant });
 
         private readonly Func<string> _getLabelFunc;
         private readonly string _name;

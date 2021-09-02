@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -332,6 +333,11 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
+
+            if (!EnsureCompatibleSureQuantSettings())
+            {
+                return;
+            }
 
             // Validate and store prediction settings
             string massType = comboPrecursorMass.SelectedItem.ToString();
@@ -1079,6 +1085,58 @@ namespace pwiz.Skyline.SettingsUI
         public bool ValidateIonCheckBoxes(IList<CheckState> predictedValues)
         {
             return !predictedValues.Where((t, i) => _driverIons.CheckedListBox.GetItemCheckState(i) != t).Any();
+        }
+
+        public bool EnsureCompatibleSureQuantSettings()
+        {
+            if (AcquisitionMethod != FullScanAcquisitionMethod.SureQuant)
+            {
+                return true;
+            }
+
+            const double SureQuantMzMatchTolerance = 0.07;
+            var corrections = new List<string>();
+            if (!TriggeredAcquisition)
+            {
+                corrections.Add("turn on \"triggered acquisition\"");
+            }
+
+            if (SureQuantMzMatchTolerance != MZMatchTolerance)
+            {
+                corrections.Add(string.Format("set \"method match tolerance m/z\" to {0}", SureQuantMzMatchTolerance));
+            }
+
+            if (!corrections.Any())
+            {
+                return true;
+            }
+
+            var lines = new List<string>();
+            lines.Add("You have chosen the acquisition method \"SureQuant\" but some of the other settings are not compatible with that.");
+            lines.Add(string.Empty);
+            lines.Add("Skyline can fix the following settings:");
+            for (int i = 0; i < corrections.Count; i++)
+            {
+                lines.Add((i+1) + ") " + corrections[i]);
+            }
+            lines.Add(string.Empty);
+            lines.Add("Would you like Skyline to fix your SureQuant settings, or would you like to use the acquisition method \"PRM\" instead?");
+            var answer = MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(lines), "Fix SureQuant Settings", "Use PRM Instead",
+                true);
+            switch (answer)
+            {
+                case DialogResult.Cancel:
+                    return false;
+                case DialogResult.Yes:
+                    TriggeredAcquisition = true;
+                    MZMatchTolerance = SureQuantMzMatchTolerance;
+                    break;
+                case DialogResult.No:
+                    AcquisitionMethod = FullScanAcquisitionMethod.PRM;
+                    break;
+            }
+
+            return true;
         }
 
         #endregion
