@@ -71,14 +71,14 @@ namespace SharedBatch
         public string CommandPath => textSkylineInstallationPath.Text;
 
 
-        public object GetVariable() => new SkylineSettings(Type, CommandPath);
+        public object GetVariable() => new SkylineSettings(Type, null, CommandPath);
 
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
             try
             {
-                var newSettings = new SkylineSettings(Type, CommandPath);
+                var newSettings = new SkylineSettings(Type, null, CommandPath);
                 newSettings.Validate();
                 if (!newSettings.CmdPath.Equals(_initialSkylineCmdPath))
                     _mainUiControl.ReplaceAllSkylineVersions(newSettings);

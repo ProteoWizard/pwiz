@@ -28,9 +28,11 @@ using File = System.IO.File;
 
 namespace SkylineBatch
 {
-    [XmlRoot("main_settings")]
+    [XmlRoot("file_settings")]
     public class MainSettings
     {
+        public const string XML_EL = "file_settings";
+        public const string OLD_XML_EL = "main_settings";
 
         // IMMUTABLE - all fields are readonly strings/objects
 
@@ -277,9 +279,43 @@ namespace SkylineBatch
                 annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
+        public static MainSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var mainSettingsReader = reader.ReadSubtree();
+            mainSettingsReader.Read();
+            var templateFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.TemplateFilePath);
+            string zippedFilePath = null;
+            var dependentConfigName = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DependentConfigName);
+            PanoramaFile templatePanoramaFile = null;
+            var analysisFolderPath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.AnalysisFolderPath);
+            var dataFolderPath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DataFolderPath);
+            var annotationsFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.AnnotationsFilePath);
+            var replicateNamingPattern = mainSettingsReader.GetAttribute(OLD_XML_TAGS.ReplicateNamingPattern);
+
+            var server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+            //ReadDataServerXmlFields(mainSettingsReader, out Server dataServer, out string dataNamingPattern);
+
+            if (templateFilePath == null)
+            {
+                XmlUtil.ReadNextElement(mainSettingsReader, "template_file");
+                templateFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.FilePath);
+                zippedFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.ZipFilePath);
+                dependentConfigName = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DependentConfigName);
+                templatePanoramaFile = PanoramaFile.ReadXmlVersion_20_2(mainSettingsReader); //ReadOldPanoramaFile(mainSettingsReader);
+            }
+            if (XmlUtil.ReadNextElement(mainSettingsReader, "data_server"))
+            {
+                server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+                //ReadDataServerXmlFields(mainSettingsReader, out dataServer, out dataNamingPattern);
+            }
+            var template = new SkylineTemplate(templateFilePath, zippedFilePath, dependentConfigName, templatePanoramaFile);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
+                annotationsFilePath, null, replicateNamingPattern);
+        }
+
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.MAIN_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(XML_TAGS.analysis_folder_path, AnalysisFolderPath);
             writer.WriteAttributeIfString(XML_TAGS.replicate_naming_pattern, ReplicateNamingPattern);
             Template.WriteXml(writer);
