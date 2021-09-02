@@ -74,6 +74,8 @@ namespace SetupDeployProject
                         testSettingDlls.AppendLine($"<DeploymentItem filename=\"{filename}\" />");
                     }
                     // if file doesn't exist, assume it's not needed or is already taken care of by non-dynamic elements
+                    else
+                        Console.Error.WriteLine($"File '{filepath}' specified by INSTALLER_VENDOR_FILES does not exist. Does it need to be added to Skyline.csproj?");
                 }
 
                 var wxsTemplate = new StringBuilder(File.ReadAllText(templatePath));
