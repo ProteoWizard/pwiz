@@ -124,6 +124,7 @@ rule test-properties ( targets + : sources * : properties * )
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/Test/$(PLATFORM)/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 rule do_IDPicker_test ( targets + : sources * : properties * )

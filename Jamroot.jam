@@ -97,7 +97,7 @@ else if "address-model=32" in [ modules.peek : ARGV ]
     constant PLATFORM : "x86" ;
     if "address-model=64" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
-else
+else if [ modules.peek : NT ] # require address-model to be specified on Windows
 {
     errors.user-error "No address-model specified. Command-line must specify address-model=32 or address-model=64 (because B2 apparently changed the default MSVC address-model, breaking many pwiz assumptions)." ;
 }
@@ -979,7 +979,11 @@ rule no-express-requirement ( properties * )
 }
 
 # CONSIDER: would be nice to access msvc.jam's setup logic, but that would seem to require significant refactoring
-constant MSVC_CURRENT_SETUP_SCRIPT : "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) >nul" ;
+rule get-current-msvc-setup-script ( properties * )
+{
+    local platformToolsetVersion = [ regex.replace [ feature.get-values <toolset-msvc:version> : $(properties) ] "\\." "" ] ;
+    return "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) $(platformToolsetVersion) >nul" ;
+}
 
 # special support for MSFileReader on Windows
 if [ modules.peek : NT ]
