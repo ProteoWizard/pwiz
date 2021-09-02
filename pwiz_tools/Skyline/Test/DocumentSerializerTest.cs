@@ -105,7 +105,7 @@ namespace pwiz.SkylineTest
                 roundTripMeasuredResults.Chromatograms[0].MSDataFileInfos[0].ImportTime);
 
             // Save out in the current document format, and make sure that the Import Time round trips
-            var document = new SrmDocument(GetDefault());
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
             document = document.ChangeSettingsNoDiff(
                 document.Settings.ChangeMeasuredResults(measuredResults));
             VerifyRoundTrips(document);
