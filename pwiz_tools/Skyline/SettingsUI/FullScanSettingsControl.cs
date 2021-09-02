@@ -110,6 +110,8 @@ namespace pwiz.Skyline.SettingsUI
             set { comboAcquisitionMethod.SelectedItem = value; }
         }
 
+        public ComboBox ComboAcquisitionMethod => comboAcquisitionMethod;
+
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get
@@ -534,6 +536,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public EventHandler IsolationSchemeChangedEvent { get; set; }
 
+        public event Action AcquisitionMethodChanged;
+
         private void comboAcquisitionMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
             var acquisitionMethod = AcquisitionMethod;
@@ -571,6 +575,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
+            AcquisitionMethodChanged?.Invoke();
         }
 
         private void EnableIsolationScheme(bool enable)

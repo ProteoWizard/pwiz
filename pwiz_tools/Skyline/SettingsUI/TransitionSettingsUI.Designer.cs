@@ -646,6 +646,7 @@
             this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
             this.helpTip.SetToolTip(this.cbxTriggeredAcquisition, resources.GetString("cbxTriggeredAcquisition.ToolTip"));
             this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
+            this.cbxTriggeredAcquisition.CheckedChanged += new System.EventHandler(this.cbxTriggeredAcquisition_CheckedChanged);
             // 
             // textMaxInclusions
             // 

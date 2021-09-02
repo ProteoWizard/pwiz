@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
-            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, Targeted, SureQuant });
+            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, SureQuant, Targeted });
 
         private readonly Func<string> _getLabelFunc;
         private readonly string _name;

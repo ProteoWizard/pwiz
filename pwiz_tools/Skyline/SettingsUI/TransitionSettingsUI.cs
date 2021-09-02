@@ -33,7 +33,6 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -174,6 +173,7 @@ namespace pwiz.Skyline.SettingsUI
                                           };
             FullScanSettingsControl.IsolationSchemeChangedEvent += IsolationSchemeChanged;
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts small molecule ion settings when full scan settings change
+            FullScanSettingsControl.AcquisitionMethodChanged += FullScanSettingsControl_OnAcquisitionMethodChanged;
             tabFullScan.Controls.Add(FullScanSettingsControl);
 
             // VISUAL:
@@ -194,6 +194,16 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
             cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
+        }
+
+        public const double SureQuantMzMatchTolerance = 0.007;
+        private void FullScanSettingsControl_OnAcquisitionMethodChanged()
+        {
+            if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.SureQuant)
+            {
+                MZMatchTolerance = SureQuantMzMatchTolerance;
+                TriggeredAcquisition = true;
+            }
         }
 
         /// <summary>
@@ -267,6 +277,11 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.AcquisitionMethod = value; }
         }
 
+        public ComboBox ComboAcquisitionMethod
+        {
+            get { return FullScanSettingsControl.ComboAcquisitionMethod; }
+        }
+
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get { return FullScanSettingsControl.ProductMassAnalyzer; }
@@ -333,11 +348,6 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-
-            if (!EnsureCompatibleSureQuantSettings())
-            {
-                return;
-            }
 
             // Validate and store prediction settings
             string massType = comboPrecursorMass.SelectedItem.ToString();
@@ -1086,59 +1096,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             return !predictedValues.Where((t, i) => _driverIons.CheckedListBox.GetItemCheckState(i) != t).Any();
         }
-
-        public bool EnsureCompatibleSureQuantSettings()
-        {
-            if (AcquisitionMethod != FullScanAcquisitionMethod.SureQuant)
-            {
-                return true;
-            }
-
-            const double SureQuantMzMatchTolerance = 0.07;
-            var corrections = new List<string>();
-            if (!TriggeredAcquisition)
-            {
-                corrections.Add("turn on \"triggered acquisition\"");
-            }
-
-            if (SureQuantMzMatchTolerance != MZMatchTolerance)
-            {
-                corrections.Add(string.Format("set \"method match tolerance m/z\" to {0}", SureQuantMzMatchTolerance));
-            }
-
-            if (!corrections.Any())
-            {
-                return true;
-            }
-
-            var lines = new List<string>();
-            lines.Add("You have chosen the acquisition method \"SureQuant\" but some of the other settings are not compatible with that.");
-            lines.Add(string.Empty);
-            lines.Add("Skyline can fix the following settings:");
-            for (int i = 0; i < corrections.Count; i++)
-            {
-                lines.Add((i+1) + ") " + corrections[i]);
-            }
-            lines.Add(string.Empty);
-            lines.Add("Would you like Skyline to fix your SureQuant settings, or would you like to use the acquisition method \"PRM\" instead?");
-            var answer = MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(lines), "Fix SureQuant Settings", "Use PRM Instead",
-                true);
-            switch (answer)
-            {
-                case DialogResult.Cancel:
-                    return false;
-                case DialogResult.Yes:
-                    TriggeredAcquisition = true;
-                    MZMatchTolerance = SureQuantMzMatchTolerance;
-                    break;
-                case DialogResult.No:
-                    AcquisitionMethod = FullScanAcquisitionMethod.PRM;
-                    break;
-            }
-
-            return true;
-        }
-
         #endregion
 
         private void listAlwaysAdd_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -1334,6 +1291,24 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbxTriggeredAcquisition.Checked; }
             set { cbxTriggeredAcquisition.Checked = value; }
+        }
+
+        private void cbxTriggeredAcquisition_CheckedChanged(object sender, EventArgs e)
+        {
+            if (AcquisitionMethod == FullScanAcquisitionMethod.SureQuant && !cbxTriggeredAcquisition.Checked)
+            {
+                var message =
+                    Resources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
+                switch (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK))
+                {
+                    case DialogResult.Cancel:
+                        cbxTriggeredAcquisition.Checked = true;
+                        break;
+                    default:
+                        AcquisitionMethod = FullScanAcquisitionMethod.PRM;
+                        break;
+                }
+            }
         }
     }
 }

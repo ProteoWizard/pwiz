@@ -347,6 +347,7 @@
             // 
             // comboAcquisitionMethod
             // 
+            this.comboAcquisitionMethod.DisplayMember = "Label";
             this.comboAcquisitionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAcquisitionMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
@@ -375,10 +376,13 @@
             this.toolTip.SetToolTip(this.cbHighSelectivity, resources.GetString("cbHighSelectivity.ToolTip"));
             this.cbHighSelectivity.UseVisualStyleBackColor = true;
             // 
-            // useSpectralLibraryIonMobilityValuesControl1
+            // usercontrolIonMobilityFiltering
             // 
+            this.usercontrolIonMobilityFiltering.IonMobilityFilterResolvingPower = null;
+            this.usercontrolIonMobilityFiltering.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");
             this.usercontrolIonMobilityFiltering.Name = "usercontrolIonMobilityFiltering";
+            this.usercontrolIonMobilityFiltering.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // FullScanSettingsControl
             // 

@@ -33127,6 +33127,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The SureQuant acquisition method requires &quot;Triggered Chromatogram Extraction&quot;. Unchecking this option will switch to the PRM acquisition method. Do you want to continue?.
+        /// </summary>
+        public static string TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisi" +
+                        "tion_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option" +
+                        "_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min % of base pea&amp;k:.
         /// </summary>
         public static string TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak {
