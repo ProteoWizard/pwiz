@@ -1460,17 +1460,10 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Manually construct an AlertDlg so we can prevent the Peptide -> Molecule translation that MessageDlg does
-                using (var alertDlg = new AlertDlg(TextUtil.LineSeparate(
+                // Specify that we want a MessageDlg that ignores UI mode
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
                     string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                        peakBoundariesFile), x.Message), MessageBoxButtons.OK)
-                {
-                    Exception = x
-                })
-                {
-                    alertDlg.GetModeUIHelper().ModeUI = SrmDocument.DOCUMENT_TYPE.none;
-                    alertDlg.ShowDialog(this);
-                }
+                        peakBoundariesFile), x.Message), x, true); // "true" here means that we want to ignore the UI mode in the context of the MessageDlg
             }
         }
 
