@@ -434,6 +434,12 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\FilterLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\FilterLibraryDlg.Designer.cs">
+      <DependentUpon>FilterLibraryDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
@@ -594,6 +600,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
+    <Compile Include="Model\Lib\FilterLibraryImports.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
@@ -2558,6 +2565,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.zh-CHS.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\FilterLibraryDlg.resx">
+      <DependentUpon>FilterLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.ja.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
