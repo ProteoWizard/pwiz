@@ -803,73 +803,91 @@ namespace pwiz.SkylineTestUtil
                     string lineTarget = readerTarget.ReadLine();
                     string lineActual = readerActual.ReadLine();
                     if (lineTarget == null && lineActual == null)
-                        return;
-                    if (lineTarget == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
-                    if (lineActual == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
-                    if (lineTarget != lineActual)
                     {
-                        // If only difference appears to be a generated GUID, let it pass
-                        var regexLSID = new Regex(@"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
-                        var matchTarget = regexLSID.Match(lineTarget ?? string.Empty);
-                        var matchActual = regexLSID.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-
-                        // If only difference appears to be a generated ISO timestamp, let it pass
-                        // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
-                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
-                        matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
-                        matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-                        
-                        bool failed = true;
-                        if (columnTolerances != null)
-                        {
-                            // ReSharper disable PossibleNullReferenceException
-                            var colsActual = lineActual.Split('\t');
-                            var colsTarget = lineTarget.Split('\t');
-                            // ReSharper restore PossibleNullReferenceException
-                            if (colsTarget.Length == colsActual.Length)
-                            {
-                                failed = false; // May yet be saved by tolerance check
-                                for (var c = 0; c < colsActual.Length; c++)
-                                {
-                                    if (colsActual[c] != colsTarget[c])
-                                    {
-                                        double valActual, valTarget;
-                                        if (!columnTolerances.ContainsKey(c) ||
-                                            !(double.TryParse(colsActual[c], out valActual) && 
-                                              double.TryParse(colsTarget[c], out valTarget)) ||
-                                            (Math.Abs(valActual - valTarget) > columnTolerances[c] + columnTolerances[c]/1000)) // Allow for rounding cruft
-                                        {
-                                            failed = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (failed)
-                            Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                        return; // We're done
                     }
-
+                    if (lineTarget == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
+                    }
+                    if (lineActual == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
+                    }
+                    // If only difference appears to be generated GUIDs or timestamps, let it pass
+                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    {
+                        Fail(string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                    }
                     lineEqualLast = lineTarget;
                     count++;
                 }
 
             }
+        }
+
+        private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
+            Dictionary<int, double> columnTolerances = null)
+        {
+            if (string.Equals(lineExpected, lineActual))
+            {
+                return true; // Identical
+            }
+
+            // If only difference appears to be a generated GUID, let it pass
+            var regexGUID =
+                new Regex(
+                    @"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
+            var matchExpected = regexGUID.Match(lineExpected);
+            var matchActual = regexGUID.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            // If only difference appears to be a generated ISO timestamp, let it pass
+            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+            var regexTimestamp =
+                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
+            matchExpected = regexTimestamp.Match(lineExpected);
+            matchActual = regexTimestamp.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            if (columnTolerances != null)
+            {
+                // ReSharper disable PossibleNullReferenceException
+                var colsActual = lineActual.Split('\t');
+                var colsExpected = lineExpected.Split('\t');
+                // ReSharper restore PossibleNullReferenceException
+                if (colsExpected.Length == colsActual.Length)
+                {
+                    for (var c = 0; c < colsActual.Length; c++)
+                    {
+                        if (colsActual[c] != colsExpected[c])
+                        {
+                            double valActual, valExpected;
+                            if (!columnTolerances.ContainsKey(c) || // No tolerance given
+                                !(double.TryParse(colsActual[c], out valActual) &&
+                                  double.TryParse(colsExpected[c], out valExpected)) || // One or both don't parse as doubles
+                                (Math.Abs(valActual - valExpected) >
+                                 columnTolerances[c] + columnTolerances[c] / 1000)) // Allow for rounding cruft
+                            {
+                                return false; // Can't account for difference
+                            }
+                        }
+                    }
+                    return true; // Differences accounted for
+                }
+            }
+
+            return false; // Could not account for difference
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
