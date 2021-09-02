@@ -322,12 +322,11 @@ namespace SkylineNightly
                         LogAndThrow("Unable to download SkylineTester");
                     }
 
-                    // After 30 minutes, start alternating between lastFinished and lastSuccessful builds
-                    var initialRetryExceeded = i > 30;
-                    useLastSuccessfulInsteadOfLastFinished = initialRetryExceeded && i % 2 == 0; 
-                    if (initialRetryExceeded)
+                    // After 30 minutes, start trying for lastSuccessful build instead
+                    useLastSuccessfulInsteadOfLastFinished = i > 30; 
+                    if (useLastSuccessfulInsteadOfLastFinished)
                     {
-                        Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, alternating between trying for lastFinished vs lastSuccessful builds.)");
+                        Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, attempting download of lastSuccessful build instead of lastFinished.)");
                     }
                     else
                     {
