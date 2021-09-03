@@ -192,6 +192,7 @@
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
+    <Compile Include="PrmAcquisitionMethodTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
     <Compile Include="QuantitativePeakAreaTest.cs" />

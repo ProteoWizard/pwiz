@@ -47,11 +47,15 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestPrmAcquisitionMethod()
         {
-            var doc = GetTestDocument(FullScanAcquisitionMethod.PRM, null);
-            var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
-            VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
-            VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS", "KLVIS");
-            VerifyFilterPairs(spectrumFilter, 280.19, "QLVIS", "KLVIS");
+            foreach (var acquisitionMethod in new[]
+                {FullScanAcquisitionMethod.PRM, FullScanAcquisitionMethod.SureQuant})
+            {
+                var doc = GetTestDocument(acquisitionMethod, null);
+                var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
+                VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
+                VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS", "KLVIS");
+                VerifyFilterPairs(spectrumFilter, 280.19, "QLVIS", "KLVIS");
+            }
         }
 
         private void VerifyFilterPairs(SpectrumFilter spectrumFilter, double precursorMz, params string[] expectedTargets)
