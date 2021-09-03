@@ -352,6 +352,7 @@
             this.comboAcquisitionMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
             this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
+            this.toolTip.SetToolTip(this.comboAcquisitionMethod, resources.GetString("comboAcquisitionMethod.ToolTip"));
             this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
             // 
             // label20
@@ -368,6 +369,12 @@
             // 
             resources.ApplyResources(this.textPrecursorCharges, "textPrecursorCharges");
             this.textPrecursorCharges.Name = "textPrecursorCharges";
+            // 
+            // toolTip
+            // 
+            this.toolTip.AutoPopDelay = 32767;
+            this.toolTip.InitialDelay = 500;
+            this.toolTip.ReshowDelay = 100;
             // 
             // cbHighSelectivity
             // 

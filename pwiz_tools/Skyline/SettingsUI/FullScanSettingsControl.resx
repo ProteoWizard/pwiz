@@ -1638,6 +1638,14 @@
   <data name="comboAcquisitionMethod.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboAcquisitionMethod.ToolTip" xml:space="preserve">
+    <value>DIA: Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window
+PRM: Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion
+DDA: Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification
+SureQuant: similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods
+Targeted: (obsolete): MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion
+</value>
+  </data>
   <data name="&gt;&gt;comboAcquisitionMethod.Name" xml:space="preserve">
     <value>comboAcquisitionMethod</value>
   </data>
@@ -1682,6 +1690,9 @@
   </data>
   <data name="lblPrecursorCharges.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="lblPrecursorCharges.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="lblPrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 480</value>
@@ -1739,6 +1750,9 @@
   </metadata>
   <data name="cbHighSelectivity.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="cbHighSelectivity.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="cbHighSelectivity.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 351</value>

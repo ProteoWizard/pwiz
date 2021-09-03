@@ -1023,7 +1023,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 groupBoxRetentionTimeToKeep.Enabled = true;
             }
-            if (radioKeepAllTime.Checked && !disabled && AcquisitionMethod != FullScanAcquisitionMethod.Targeted)
+            if (radioKeepAllTime.Checked && !disabled && ShouldAdviseAgainstFullGradientChromatograms(AcquisitionMethod))
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
@@ -1075,6 +1075,23 @@ namespace pwiz.Skyline.SettingsUI
             {
                 tbxTimeAroundPrediction.Enabled = false;
             }
+        }
+
+        /// <summary>
+        /// Returns true if the user should be encouraged to use one of the retention time filtering
+        /// options to prevent full gradient chromatograms from being extracted.
+        /// </summary>
+        private bool ShouldAdviseAgainstFullGradientChromatograms(
+            FullScanAcquisitionMethod fullScanAcquisitionMethod)
+        {
+            if (fullScanAcquisitionMethod == FullScanAcquisitionMethod.PRM ||
+                fullScanAcquisitionMethod == FullScanAcquisitionMethod.SureQuant ||
+                fullScanAcquisitionMethod == FullScanAcquisitionMethod.Targeted)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }
