@@ -154,7 +154,7 @@
     <value>None</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
-    <value>Targeted (obsolete)</value>
+    <value>Targeted</value>
   </data>
   <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>Centroided</value>
