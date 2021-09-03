@@ -319,7 +319,7 @@ namespace SkylineNightly
                 {
                     if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to download SkylineTester");
+                        QuitWithError("Unable to download SkylineTester");
                     }
 
                     // After 30 minutes, start trying for lastSuccessful build instead
@@ -338,7 +338,7 @@ namespace SkylineNightly
 
                 // Install SkylineTester.
                 if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
-                    LogAndThrow("SkylineTester installation failed.");
+                    QuitWithError("SkylineTester installation failed.");
                 try
                 {
                     // Delete zip file.
@@ -368,7 +368,7 @@ namespace SkylineNightly
                     Log("Exception while unzipping SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
                     if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to identify branch from Version.cpp in SkylineTester");
+                        QuitWithError("Unable to identify branch from Version.cpp in SkylineTester");
                     }
                     Thread.Sleep(60 * 1000);  // one minute
                 }
@@ -381,7 +381,7 @@ namespace SkylineNightly
             {
                 if (stream == null)
                 {
-                    LogAndThrow(result = "Embedded resource is broken");
+                    QuitWithError(result = "Embedded resource is broken");
                     return result; 
                 }
                 using (var reader = new StreamReader(stream))
@@ -431,7 +431,7 @@ namespace SkylineNightly
                 var skylineTesterProcess = Process.Start(processInfo);
                 if (skylineTesterProcess == null)
                 {
-                    LogAndThrow(result = "SkylineTester did not start");
+                    QuitWithError(result = "SkylineTester did not start");
                     return result;
                 }
                 Log("SkylineTester started");
@@ -1156,11 +1156,10 @@ namespace SkylineNightly
             return timestampedMessage;
         }
 
-        private void LogAndThrow(string message)
+        private void QuitWithError(string message)
         {
-            var timestampedMessage = Log(message);
             SaveErrorScreenshot();
-            throw new Exception(timestampedMessage);
+            Finish("Quit with error",message);
         }
 
         private void SaveErrorScreenshot()
