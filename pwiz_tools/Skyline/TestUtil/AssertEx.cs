@@ -1160,19 +1160,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        /// <summary>
-        /// Set all of ImportTime values in all of the ChromFileInfos to null.
-        /// </summary>
-        private static SrmDocument ClearFileImportTimes(SrmDocument document)
-        {
-            var newMeasuredResults = document.MeasuredResults?.ClearImportTimes();
-            if (Equals(newMeasuredResults, document.MeasuredResults))
-            {
-                return document;
-            }
-            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
-        }
-
         public static void DocumentCloned(SrmDocument target, SrmDocument actual)
         {
             DocumentClonedLoadable(ref target, ref actual, null, false);
@@ -1192,8 +1179,8 @@ namespace pwiz.SkylineTestUtil
                         actual = ForceDocumentLoad(actual, testDir);
                     }
 
-                    target = ClearFileImportTimes(target);
-                    actual = ClearFileImportTimes(actual);
+                    target = ResultsUtil.ClearFileImportTimes(target);
+                    actual = ResultsUtil.ClearFileImportTimes(actual);
 
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
