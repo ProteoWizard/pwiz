@@ -530,6 +530,9 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
+        /// <summary>
+        /// Attempt to create a row reader and throw an exception upon failure
+        /// </summary>
         private void SetRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
             IProgressStatus status)
         {
