@@ -499,7 +499,7 @@ namespace pwiz.Skyline.Model
                 // If no numeric columns in the first row
                 if (rowReadRequired)
                 {
-                    SetRowReader(progressMonitor, tolerateErrors, lines, status);
+                    SetRowReader(progressMonitor, tolerateErrors, lines.ToList(), status);
                 }
 
                 indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));

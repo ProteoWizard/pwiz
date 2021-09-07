@@ -993,6 +993,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
+            var exception = new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                -1);
+
+            // Inserting the header row by itself should produce an error message
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+                {
+                    SkylineWindow.Paste(header);
+                })),
+                exception.Message);
+
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
