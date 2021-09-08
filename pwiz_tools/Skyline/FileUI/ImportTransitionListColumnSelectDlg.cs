@@ -909,6 +909,7 @@ namespace pwiz.Skyline.FileUI
         private bool CheckForErrors(bool silentSuccess)
         {
             var insertionParams = new DocumentChecked();
+            bool hasHeaders = Importer.RowReader.Indices.Headers != null;
             List<TransitionImportErrorInfo> testErrorList = null;
             var errorCheckCanceled = true;
             insertionParams.ColumnHeaderList = CurrentColumnPositions();
@@ -934,7 +935,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType());
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }

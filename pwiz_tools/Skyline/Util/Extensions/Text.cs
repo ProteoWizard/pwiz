@@ -719,9 +719,9 @@ namespace pwiz.Skyline.Util.Extensions
             Initialize(reader, separator, hasHeaders);
         }
 
-        public DsvFileReader(TextReader reader, char separator, IReadOnlyDictionary<string, string> headerSynonyms, List<string> columnPositions = null)
+        public DsvFileReader(TextReader reader, char separator, IReadOnlyDictionary<string, string> headerSynonyms, List<string> columnPositions = null, bool hasHeaders = true)
         {
-            Initialize(reader, separator, true, headerSynonyms, columnPositions);
+            Initialize(reader, separator, hasHeaders, headerSynonyms, columnPositions);
         }
 
         public void Initialize(TextReader reader, char separator, bool hasHeaders = true, IReadOnlyDictionary<string, string> headerSynonyms = null, List<string> columnPositions = null)
@@ -731,8 +731,9 @@ namespace pwiz.Skyline.Util.Extensions
             FieldNames = new List<string>();
             FieldDict = new Dictionary<string, int>();
             _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
+            string saveTitleLine = _titleLine; // because we can overwrite the first line and might want to use it later, save it
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
-            if (columnPositions != null && !_rereadTitleLine)
+            if (columnPositions != null)
             {
                 userHeaders = TextUtil.TextSeparate(separator.ToString(), columnPositions);
                 // userHeaders = userHeaders.Replace(@" ", string.Empty);
@@ -740,7 +741,7 @@ namespace pwiz.Skyline.Util.Extensions
             }
             var fields = _titleLine.ParseDsvFields(separator);
             NumberOfFields = fields.Length;
-            if (!hasHeaders)
+            if (!hasHeaders && columnPositions == null)
             {
                 // that wasn't really the header line, we just used it to get column count
                 // replace with made up column names
@@ -769,6 +770,7 @@ namespace pwiz.Skyline.Util.Extensions
                     }
                 }
             }
+            _titleLine = saveTitleLine;
         }
 
         /// <summary>

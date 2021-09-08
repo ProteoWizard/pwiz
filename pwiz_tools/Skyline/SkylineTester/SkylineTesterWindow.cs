@@ -413,7 +413,7 @@ namespace SkylineTester
         public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
-            var assembly = Assembly.LoadFrom(dllPath);
+            var assembly = LoadFromAssembly.Try(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
