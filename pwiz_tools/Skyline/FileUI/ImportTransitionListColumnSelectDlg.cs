@@ -909,6 +909,7 @@ namespace pwiz.Skyline.FileUI
         private bool CheckForErrors(bool silentSuccess)
         {
             var insertionParams = new DocumentChecked();
+            bool hasHeaders = Importer.RowReader.Indices.Headers != null;
             List<TransitionImportErrorInfo> testErrorList = null;
             var errorCheckCanceled = true;
             insertionParams.ColumnHeaderList = CurrentColumnPositions();
@@ -934,7 +935,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType());
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
@@ -961,7 +962,8 @@ namespace pwiz.Skyline.FileUI
                     // If the transition list is missing essential columns, tell the user in a 
                     // readable way
                     MessageDlg.Show(this, TextUtil.SpaceSeparate(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_,
-                        TextUtil.LineSeparate(MissingEssentialColumns)));
+                        TextUtil.LineSeparate(MissingEssentialColumns)),
+                        true); // Explicitly prohibit any "peptide"=>"molecule" translation in non-proteomic UI modes
                     return true; // There are errors
                 }
                 else
