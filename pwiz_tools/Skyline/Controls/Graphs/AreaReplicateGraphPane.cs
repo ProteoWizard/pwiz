@@ -34,7 +34,7 @@ using Array = System.Array;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, isotope_dist }  
+    public enum AreaExpectedValue { none, library, isotope_dist, ratio_heavy }  
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
@@ -109,6 +109,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public TransitionGroupDocNode ParentGroupNode { get; private set; }
 
+        private NormalizedValueCalculator NormalizedValueCalculator { get; set; }
+
         public override void Draw(Graphics g)
         {
             // Make sure changes are not only drawn when the graph is updated.
@@ -146,6 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
+            NormalizedValueCalculator = new NormalizedValueCalculator(document);
             bool resultsAvailable = results != null;
             Clear();
 
@@ -301,13 +304,13 @@ namespace pwiz.Skyline.Controls.Graphs
             ExpectedVisible = AreaExpectedValue.none;
             if (parentGroupNode != null &&
                     displayType != DisplayTypeChrom.total &&
-                    !normalizeOption.IsRatioToLabel &&
                     !(optimizationPresent && displayType == DisplayTypeChrom.single))
             {
                 var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType).ToArray();
                 bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
                 bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
+                var ratioToLabel = normalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel;
                 if (!IsMultiSelect)
                 {
                     if (isFullScanMs)
@@ -320,8 +323,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (parentGroupNode.HasLibInfo)
                             ExpectedVisible = AreaExpectedValue.library;
                     }
+                    if (ratioToLabel != null && !ratioToLabel.IsotopeLabelType.IsLight && isShowingMsMs)
+                        ExpectedVisible = AreaExpectedValue.ratio_heavy;
                 }
             }
+
             var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
@@ -489,7 +495,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
 
                     // Add area for this transition to each area entry
-                    AddAreasToSums(pointPairList, sumAreas);
+                    Func<double,double, double> aggregateFunc = (sums, y) => sums + y;
+                    if (BarSettings.Type == BarType.Cluster)
+                        aggregateFunc = Math.Max;
+                    AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
+
                     var lineItem = curveItem as LineItem;
                     if (lineItem != null)
                     {
@@ -520,31 +530,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
-
-            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToHeavy && !IsMultiSelect && ParentGroupNode != null)
-            {
-                var precursorNodePath = DocNodePath.GetNodePath(ParentGroupNode.Id, document);
-                if (precursorNodePath.Peptide != null && ParentGroupNode.LabelType.Equals(IsotopeLabelType.light))
-                {
-                    var ratio = new NormalizedValueCalculator(document).GetTransitionGroupRatioValue(ratioToHeavy,
-                        precursorNodePath.Peptide, ParentGroupNode,
-                        ParentGroupNode.GetChromInfoEntry(GraphSummary.ResultsIndex));
-                    using (var g = GraphSummary.GraphControl.CreateGraphics())
-                    {
-                        var labelText = string.Format(@"rdotp: {0:F02}", ratio.DotProduct);
-                        var rdotpLabel = new TextObj()
-                        {
-                            Text = labelText,
-                            Location = new Location(1, Legend.Rect.Top / Rect.Height, CoordType.XChartFractionYPaneFraction){ AlignH = AlignH.Right },
-                            IsClippedToChartRect = false,
-                            FontSpec = Legend.FontSpec
-                        };
-                        rdotpLabel.FontSpec.Border.IsVisible = false;
-                        GraphObjList.Add(rdotpLabel);
-                    }
-
-                }
-            }
         }
 
             private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -621,6 +606,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (IsDotProductVisible)
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
+
                     YAxis.Scale.MaxAuto = false;
                     YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized);
                     YAxis.Type = AxisType.Linear;
@@ -715,7 +701,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
         }
 
-        private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas)
+        private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas, Func<double, double, double> aggregateFunc)
         {
             for (int i = 0; i < pointPairList.Count; i++)
             {
@@ -733,7 +719,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // offset index by 1, since (n + 1)th bar corresponds to the nth replicate
                     index--;
                 }
-                sumAreas[index] += pointPair.Y;
+                sumAreas[index] = aggregateFunc(sumAreas[index], pointPair.Y);
             }
         }
 
@@ -849,6 +835,26 @@ namespace pwiz.Skyline.Controls.Graphs
                         values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct);
                     }
                     break;
+                case AreaExpectedValue.ratio_heavy:
+                    var document = GraphSummary.DocumentUIContainer.DocumentUI;
+                    var normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
+                    values = new float?[] { };
+                    if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToHeavy)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
+                        if (precursorNodePath.Peptide != null && nodeGroup.LabelType.Equals(IsotopeLabelType.light))
+                        {
+                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
+                                ratioToHeavy,
+                                precursorNodePath.Peptide, nodeGroup,
+                                nodeGroup.GetChromInfoEntry(indexResult));
+                            if(ratio?.HasDotProduct ?? false)
+                                return GetDotProductText(ratio.DotProduct);
+                        }
+                        else
+                            return null;
+                    }
+                    break;
                 default:
                     return null;
             }
@@ -873,6 +879,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         return @"dotp";
                     case AreaExpectedValue.isotope_dist:
                         return @"idotp";
+                    case AreaExpectedValue.ratio_heavy:
+                        return @"rdotp";
                     default:
                         return string.Empty; 
                 }
