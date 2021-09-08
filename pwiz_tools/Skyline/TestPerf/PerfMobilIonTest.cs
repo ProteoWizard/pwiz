@@ -61,7 +61,9 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+/* Waiting for CCS<->DT support in .mbi reader
             Test(@"PerfMobilIonTest.sky", 2, 163, 163, 1006, ".mbi", null, 95.07976, 6028.9375, true); // Mobilion HD5 format
+*/            
             Test(@"slim.sky", 12, 12, 30, 30, ".d", 258.3, 308.71, 4450.05859, false); // Agilent SLIM format
         }
 

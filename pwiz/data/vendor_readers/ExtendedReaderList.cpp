@@ -53,7 +53,9 @@ PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
     push_back(ReaderPtr(new Reader_Bruker_YEP));
     push_back(ReaderPtr(new Reader_Bruker_U2));
 #endif
-    push_back(ReaderPtr(new Reader_Mobilion));
+#if defined(PWIZ_READER_MOBILION)
+	push_back(ReaderPtr(new Reader_Mobilion));
+#endif	
     push_back(ReaderPtr(new Reader_Shimadzu));
     push_back(ReaderPtr(new Reader_Thermo));
     push_back(ReaderPtr(new Reader_UIMF));

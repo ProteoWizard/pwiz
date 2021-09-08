@@ -53,9 +53,11 @@ namespace pwiz.SkylineTestData
             VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
                 "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
 
+/* Waiting for CCS<->DT support in .mbi reader
             // Mobilion .mbi file
             VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Mobilion, "ExampleTuneMix_binned5" + ExtensionTestContext.ExtMobilionRaw),
                 "Agilent 6545", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
+*/
 
             // Sciex .wiff2 file
             string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
