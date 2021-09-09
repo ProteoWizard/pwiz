@@ -422,7 +422,7 @@ namespace pwiz.Skyline.Model
                 string format = @"{0}.{1}.{2} [{3}, {4}]";
                 if (MissedCleavages > 0)
                     format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
-                return string.Format(format, PrevAA, Target, NextAA, Begin.Value, End.Value - 1, MissedCleavages);
+                return string.Format(format, PrevAA, Target, NextAA, (Begin + 1).Value, End.Value, MissedCleavages);
             }
         }
 

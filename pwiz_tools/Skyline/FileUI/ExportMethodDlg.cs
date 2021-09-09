@@ -636,6 +636,7 @@ namespace pwiz.Skyline.FileUI
         {
             cbWriteCoV.Visible = cbWriteCoV.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                InstrumentType == ExportInstrumentType.THERMO_FUSION ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
@@ -884,6 +885,19 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+            {
+                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(documentExport, _exportProperties);
+                if (missingIonMobility.Length > 0)
+                {
+                    MessageDlg.Show(this,
+                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
+                        Environment.NewLine + Environment.NewLine +
+                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    return;
+                }
+            }
+
             // Full-scan method building ignores CE and DP regression values
             if (!IsFullScanInstrument)
             {
@@ -893,6 +907,11 @@ namespace pwiz.Skyline.FileUI
                 var ce = predict.CollisionEnergy;
                 string ceName = (ce != null ? ce.Name : null);
                 string ceNameDefault = _instrumentType.Split(' ')[0];
+
+                // CE prediction should be None for Bruker timsTOF, since the CE is populated by the instrument control software in the method.
+                if (Equals(_instrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+                    ceNameDefault = CollisionEnergyList.ELEMENT_NONE;
+
                 bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
                 var dp = predict.DeclusteringPotential;
@@ -1003,19 +1022,6 @@ namespace pwiz.Skyline.FileUI
                     {
                         return;
                     }
-                }
-            }
-
-            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
-            {
-                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties);
-                if (missingIonMobility.Length > 0)
-                {
-                    MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
-                        Environment.NewLine + Environment.NewLine +
-                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
-                    return;
                 }
             }
 
@@ -1201,6 +1207,8 @@ namespace pwiz.Skyline.FileUI
                 TransitionFullScan.MassAnalyzerToString(
                     _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
+            _exportProperties.PrimaryTransitionCount = 0;
+
             _exportProperties.OptimizeType = null;
             if (comboOptimizing.SelectedItem != null)
             {
@@ -1260,7 +1268,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 _exportProperties.OptimizeType = null;
-                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = _exportProperties.PrimaryTransitionCount = 0;
+                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = 0;
             }
 
             string maxTran = textMaxTransitions.Text;

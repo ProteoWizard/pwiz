@@ -17,7 +17,7 @@ namespace SkylineBatch
         private readonly string _filter;
         private EventHandler _addedPathChangedHandler;
 
-        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer)
+        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip)
         {
             InitializeComponent();
 
@@ -34,6 +34,7 @@ namespace SkylineBatch
             textPath.TextChanged += textPath_TextChanged;
             textPath.TextChanged += updatePathVariable;
 
+            btnDownload.ToolTipText = toolTip;
         }
 
         public string Path { get; private set; }
@@ -62,19 +63,32 @@ namespace SkylineBatch
 
         private void btnSelectFile_Click(object sender, EventArgs e)
         {
+            var initialDirectory = FileUtil.GetInitialDirectory(textPath.Text, _lastEnteredPath);
+
+            // Show open folder dialog if this is a data folder or if a file will be downloaded
             if (Server != null || _isDataServer)
             {
                 textPath.TextChanged -= textPath_TextChanged;
-                if (OpenFolder(textPath, out string newPath))
+
+                var newPath = UiFileUtil.OpenFolder(initialDirectory);
+                if (newPath != null)
                 {
                     textPath.Text = Server != null && !_isDataServer
                         ? System.IO.Path.Combine(newPath, ((PanoramaFile) Server).FileName)
                         : newPath;
+                    _lastEnteredPath = newPath;
                 }
                 textPath.TextChanged += textPath_TextChanged;
                 return;
             }
-            OpenFile(textPath, _filter);
+
+            // otherwise show the open file dialog
+            var file = UiFileUtil.OpenFile(initialDirectory, _filter, false);
+            if (file != null)
+            {
+                textPath.Text = file;
+                _lastEnteredPath = file;
+            }
         }
 
         private void ToggleDownload(bool downloading)
@@ -150,35 +164,6 @@ namespace SkylineBatch
                 }
             }
             _addedPathChangedHandler?.Invoke(sender, e);
-        }
-
-        private void OpenFile(Control textBox, string filter, bool save = false)
-        {
-            FileDialog dialog = save ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
-            var initialDirectory = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
-            dialog.InitialDirectory = initialDirectory;
-            dialog.Filter = filter;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                textBox.Text = dialog.FileName;
-                _lastEnteredPath = dialog.FileName;
-            }
-        }
-
-        private bool OpenFolder(Control textBox, out string path)
-        {
-            path = null;
-            var dialog = new FolderBrowserDialog();
-            var initialPath = FileUtil.GetInitialDirectory(textBox.Text, _lastEnteredPath);
-            dialog.SelectedPath = initialPath;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                textBox.Text = dialog.SelectedPath;
-                path = dialog.SelectedPath;
-            }
-            return result == DialogResult.OK;
         }
 
         private void btnDownload_Click(object sender, EventArgs e)

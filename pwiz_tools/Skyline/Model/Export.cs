@@ -726,6 +726,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoFusionMethodExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
 
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
@@ -739,6 +740,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -2401,20 +2403,6 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
-        protected override bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
-                nodeGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
-            {
-                // If we know the top ranked transition for every precursor and this is not it, skip writing it
-                int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
-                return !rank.HasValue || rank.Value > PrimaryTransitionCount;
-            }
-            return false;
-        }
-
         protected virtual string GetOptionalColumns(string dp,
                                           string ce,
                                           string precursorWindow,
@@ -3802,6 +3790,8 @@ namespace pwiz.Skyline.Model
         public bool Tune3 { get; set; }
         public bool Tune3Columns { get { return IsolationList && Tune3; } }
 
+        public bool WriteFaimsCv { get; set; }
+
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -3820,6 +3810,8 @@ namespace pwiz.Skyline.Model
                 : @"Compound,Formula,Adduct,m/z,z,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
+            if (WriteFaimsCv)
+                hdr += @",FAIMS CV (V)";
             return hdr.Replace(',', fieldSeparator);
         }
 
@@ -3886,6 +3878,11 @@ namespace pwiz.Skyline.Model
             {
                 var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
                 writeColumns.Add(slens);
+            }
+            if (WriteFaimsCv)
+            {
+                var cv = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step);
+                writeColumns.Add(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
             }
             Write(writer, writeColumns.ToArray());
         }
