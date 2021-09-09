@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -86,6 +87,14 @@ namespace pwiz.Skyline.Util
         private TypedMass IsotopesIncrementalMonoMass { get; set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
+
+        // We tend to see the same strings again and again, save some parsing time by maintaining a threadsafe lookup for each ADDUCT_TYPE
+        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new ConcurrentDictionary<string, Adduct>[]
+        {
+            new ConcurrentDictionary<string, Adduct>(),
+            new ConcurrentDictionary<string, Adduct>(),
+            new ConcurrentDictionary<string, Adduct>()
+        };
 
         //
         // Note constructors are private - use FromCharge and FromString instead, which allow reuse
@@ -580,10 +589,19 @@ namespace pwiz.Skyline.Util
         {
             if (value == null)
                 return EMPTY;
+
+            // Quick check to see if we've encountered this description before
+            var dict = _knownAdducts[(int)parserMode];
+            if (dict.TryGetValue(value, out var knownAdduct))
+            {
+                return knownAdduct;
+            }
+
             int z;
             if (int.TryParse(value, out z))
             {
-                return FromCharge(z, parserMode);
+                var result = FromCharge(z, parserMode);
+                dict[value] = result; // Cache this on the likely chance that we'll see this representation again
             }
 
             // Reuse the more common non-proteomic adducts
@@ -609,9 +627,11 @@ namespace pwiz.Skyline.Util
             {
                 if (testAdduct.SameEffect(adduct))
                 {
+                    dict[value] = adduct;  // Cache this on the likely chance that we'll see this representation again
                     return adduct;
                 }
             }
+            dict[value] = testAdduct;  // Cache this on the likely chance that we'll see this representation again
             return testAdduct;
         }
 
