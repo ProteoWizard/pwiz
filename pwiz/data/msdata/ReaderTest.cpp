@@ -262,14 +262,10 @@ void testIdentifyFileFormat()
         auto readerTypes = readerList.getTypes();
         set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
         set<string> expectedTypeSet{ "mzML", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
-                                     "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter",
-#if !defined(PWIZ_READER_BRUKER) || defined(PWIZ_READER_BRUKER_WITH_COMPASSXTRACT)        	
-                                     "Bruker FID", "Bruker YEP", "Bruker U2",
-#endif        	
-                                     "Bruker BAF", "Bruker TDF",
+                                     "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
 #if defined(PWIZ_READER_MOBILION)
                                      "Mobilion MBI",
-#endif        	
+#endif
                                      "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI" };
         auto expectedButNotFound = expectedTypeSet - readerTypeSet;
         auto foundButNotExpected = readerTypeSet - expectedTypeSet;
