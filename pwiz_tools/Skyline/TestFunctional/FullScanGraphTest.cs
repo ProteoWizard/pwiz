@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => SkylineWindow.ShowCollisionCrossSection = wantCCS);
                 WaitForGraphs();
                 var graphChrom = SkylineWindow.GetGraphChrom("ID12692_01_UCA168_3727_040714");
-                var pane = graphChrom.GraphItem as MSGraphPane;
+                var pane = graphChrom.GraphPane as MSGraphPane;
                 var annotation = pane?.GetAnnotationLabelStrings().First() ?? string.Empty;
                 AssertEx.AreEqual(wantIM, annotation.Contains(ChromGraphItem.FormatIonMobilityValue(expectedIonMobility)),
                     "did not find expected IMS information display");
