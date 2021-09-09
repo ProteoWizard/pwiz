@@ -100,12 +100,20 @@ namespace pwiz.Skyline.Model.Results
             return (ChromSource) SourceNames.IndexOf(e => e == name);
         }
 
-        public PeakType PeakTypeFromName(string name)
+        public PeakType PeakTypeFromLocalizedName(string name)
         {
             return (PeakType) PeakTypeNames.IndexOf(e => e == name);
         }
 
-        public string GetPeakTypeName(PeakType peakType)
+        public PeakType ParsePeakTypeEnumName(string enumName)
+        {
+            if (Enum.TryParse<PeakType>(enumName, out var peakType))
+                return peakType;
+            else
+                return PeakType.chromDefault;
+        }
+
+        public string GetPeakTypeLocalizedName(PeakType peakType)
         {
             return PeakTypeNames[(int) peakType];
         }

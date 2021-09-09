@@ -97,10 +97,11 @@ namespace pwiz.Skyline.Controls.Graphs
             filterBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
             comboBoxPeakType.Items.Clear();
-            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeName(PeakType.chromDefault));
-            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeName(PeakType.centroided));
-            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeName(PeakType.profile));
-            comboBoxPeakType.SelectedItem = Settings.Default.FullScanPeakType;
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault));
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.centroided));
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.profile));
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
+            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
             this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
         }
 
@@ -119,7 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _msDataFileScanHelper.MsDataSpectra = spectra;
             _rmis = null;
 
-            var peakType = _msDataFileScanHelper.PeakTypeFromName(Settings.Default.FullScanPeakType);
+
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
             if (peakType != PeakType.chromDefault)
             {
                 var requestedCentroids = (peakType == PeakType.centroided);
@@ -127,16 +129,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     MessageDlg.Show(this, string.Format(
                         Resources.GraphFullScan_SetSpectraUI__peak_type_not_available,
-                        _msDataFileScanHelper.GetPeakTypeName(requestedCentroids
+                        _msDataFileScanHelper.GetPeakTypeLocalizedName(requestedCentroids
                             ? PeakType.centroided
                             : PeakType.profile),
-                        _msDataFileScanHelper.GetPeakTypeName(spectra[0].Centroided
+                        _msDataFileScanHelper.GetPeakTypeLocalizedName(spectra[0].Centroided
                             ? PeakType.centroided
                             : PeakType.profile)));
 
                     this.comboBoxPeakType.SelectedIndexChanged -= this.comboBoxPeakType_SelectedIndexChanged;
-                    Settings.Default.FullScanPeakType = _msDataFileScanHelper.GetPeakTypeName(PeakType.chromDefault);
-                    comboBoxPeakType.SelectedItem = Settings.Default.FullScanPeakType;
+                    Settings.Default.FullScanPeakType = PeakType.chromDefault.ToString();
+                    comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault);
                     this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
                 }
             }
@@ -259,17 +261,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             RunBackground(LoadingTextIfNoChange);
 
-            var peakType = _msDataFileScanHelper.PeakTypeFromName(Settings.Default.FullScanPeakType);
-            var scanType = _msDataFileScanHelper.Source;
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
             if (peakType == PeakType.chromDefault)
                 _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
             else
             {
-                if(_msDataFileScanHelper.Source == ChromSource.fragment)
+                if (_msDataFileScanHelper.Source == ChromSource.fragment)
                     _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, null, peakType == PeakType.centroided);
                 else
                     _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == PeakType.centroided);
-
             }
         }
 
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetPeakTypeSelection(PeakType peakType)
         {
-            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeName(peakType);
+            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
         }
 
         public MsDataFileScanHelper MsDataFileScanHelper
@@ -1346,7 +1346,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void comboBoxPeakType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Settings.Default.FullScanPeakType = (string) comboBoxPeakType.SelectedItem;
+            Settings.Default.FullScanPeakType = _msDataFileScanHelper.PeakTypeFromLocalizedName((string) comboBoxPeakType.SelectedItem).ToString();
             LoadScan(false, true);
         }
     }
