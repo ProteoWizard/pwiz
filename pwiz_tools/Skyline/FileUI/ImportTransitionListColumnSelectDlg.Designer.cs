@@ -162,7 +162,7 @@
         private System.Windows.Forms.Panel comboPanelInner;
         public System.Windows.Forms.Button buttonCheckForErrors; // Public for testing only
         private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
-        private System.Windows.Forms.RadioButton radioPeptide;
+        public System.Windows.Forms.RadioButton radioPeptide; // Public for testing only
         public System.Windows.Forms.RadioButton radioMolecule; // Public for testing only
     }
 }

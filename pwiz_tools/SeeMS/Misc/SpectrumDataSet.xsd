@@ -12,7 +12,7 @@
   <xs:element name="SpectrumDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="SpectrumDataSet" msprop:Generator_UserDSName="SpectrumDataSet">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="SpectrumTable" msdata:CaseSensitive="True" msprop:Generator_TableClassName="SpectrumTableDataTable" msprop:Generator_RowEvArgName="SpectrumTableRowChangeEvent" msprop:Generator_TableVarName="tableSpectrumTable" msprop:Generator_TablePropName="SpectrumTable" msprop:Generator_RowDeletingName="SpectrumTableRowDeleting" msprop:Generator_RowChangingName="SpectrumTableRowChanging" msprop:Generator_RowEvHandlerName="SpectrumTableRowChangeEventHandler" msprop:Generator_RowDeletedName="SpectrumTableRowDeleted" msprop:Generator_UserTableName="SpectrumTable" msprop:Generator_RowChangedName="SpectrumTableRowChanged" msprop:Generator_RowClassName="SpectrumTableRow">
+        <xs:element name="SpectrumTable" msdata:CaseSensitive="True" msprop:Generator_TableClassName="SpectrumTableDataTable" msprop:Generator_RowEvArgName="SpectrumTableRowChangeEvent" msprop:Generator_TableVarName="tableSpectrumTable" msprop:Generator_TablePropName="SpectrumTable" msprop:Generator_RowDeletingName="SpectrumTableRowDeleting" msprop:Generator_RowChangingName="SpectrumTableRowChanging" msprop:Generator_RowEvHandlerName="SpectrumTableRowChangeEventHandler" msprop:Generator_RowDeletedName="SpectrumTableRowDeleted" msprop:Generator_RowChangedName="SpectrumTableRowChanged" msprop:Generator_UserTableName="SpectrumTable" msprop:Generator_RowClassName="SpectrumTableRow">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="Id" msprop:Generator_ColumnVarNameInTable="columnId" msprop:Generator_ColumnPropNameInRow="Id" msprop:Generator_ColumnPropNameInTable="IdColumn" msprop:Generator_UserColumnName="Id" type="xs:string" />
@@ -31,6 +31,7 @@
               <xs:element name="ScanInfo" msdata:Caption="Scan Info" msprop:Generator_ColumnVarNameInTable="columnScanInfo" msprop:Generator_ColumnPropNameInRow="ScanInfo" msprop:Generator_ColumnPropNameInTable="ScanInfoColumn" msprop:Generator_UserColumnName="ScanInfo" type="xs:string" minOccurs="0" />
               <xs:element name="IsolationWindows" msdata:Caption="Isolation Windows" msprop:Generator_ColumnVarNameInTable="columnIsolationWindows" msprop:Generator_ColumnPropNameInRow="IsolationWindows" msprop:Generator_ColumnPropNameInTable="IsolationWindowsColumn" msprop:Generator_UserColumnName="IsolationWindows" type="xs:string" minOccurs="0" />
               <xs:element name="IonMobility" msdata:Caption="Ion Mobility" msprop:Generator_ColumnVarNameInTable="columnIonMobility" msprop:Generator_ColumnPropNameInRow="IonMobility" msprop:Generator_ColumnPropNameInTable="IonMobilityColumn" msprop:Generator_UserColumnName="IonMobility" type="xs:double" minOccurs="0" />
+              <xs:element name="IonMobilityType" msprop:Generator_ColumnVarNameInTable="columnIonMobilityType" msprop:Generator_ColumnPropNameInRow="IonMobilityType" msprop:Generator_ColumnPropNameInTable="IonMobilityTypeColumn" msprop:Generator_UserColumnName="IonMobilityType" type="xs:unsignedByte" minOccurs="0" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>
