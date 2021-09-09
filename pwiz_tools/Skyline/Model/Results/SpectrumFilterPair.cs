@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -33,9 +34,10 @@ namespace pwiz.Skyline.Model.Results
     public sealed class SpectrumFilterPair : IComparable<SpectrumFilterPair>
     {
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
-        private readonly bool _filterByTime;
-        private readonly double _maxTime;
-        private readonly double _minTime;
+        private bool _hasMinTime;
+        private bool _hasMaxTime;
+        private double _minTime;
+        private double _maxTime;
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             bool highAccQ1, bool highAccQ3)
         {
@@ -45,17 +47,18 @@ namespace pwiz.Skyline.Model.Results
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
 
-            if (minTime.HasValue && maxTime.HasValue)
+            if (minTime.HasValue)
             {
-                _filterByTime = true;
+                _hasMinTime = true;
                 _minTime = minTime.Value;
+            }
+
+            if (maxTime.HasValue)
+            {
+                _hasMaxTime = true;
                 _maxTime = maxTime.Value;
             }
-            else
-            {
-                // If not min and max, then it should be neither. Asymmetric limits not supported.
-                Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
-            }
+
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -78,8 +81,14 @@ namespace pwiz.Skyline.Model.Results
         public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
-        public double? MinTime { get { return _filterByTime ? _minTime : (double?) null; } }
-        public double? MaxTime { get { return _filterByTime ? _maxTime : (double?) null; } }
+        public double? MinTime
+        {
+            get { return _hasMinTime ? _minTime : (double?) null; }
+        }
+        public double? MaxTime
+        {
+            get { return _hasMaxTime ? _maxTime : (double?) null; }
+        }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
         public int? BestWindowGroup { get; private set; }
@@ -320,9 +329,10 @@ namespace pwiz.Skyline.Model.Results
             return Comparer.Default.Compare(Q1, other.Q1);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsRetentionTime(double retentionTime)
         {
-            return !_filterByTime || (_minTime <= retentionTime && retentionTime <= _maxTime);
+            return (!_hasMinTime || _minTime <= retentionTime) && (!_hasMaxTime || _maxTime >= retentionTime);
         }
 
         public IEnumerable<int> ProductFilterIds
@@ -365,7 +375,7 @@ namespace pwiz.Skyline.Model.Results
                         Extractor,
                         true,
                         true);
-                    if (_filterByTime)
+                    if (_hasMinTime && _hasMaxTime)
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);
                     }

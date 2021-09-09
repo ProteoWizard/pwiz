@@ -48,6 +48,7 @@ namespace SkylineBatch
             Logger.AddErrorMatch(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, ".*", RunnerStatus.Error));
             _skylineBatchLogger = new Logger(logPath, Program.AppName() + TextUtil.EXT_LOG, true);
             toolStrip1.Items.Insert(3,new ToolStripSeparator());
+            toolStrip1.Items.Insert(7, new ToolStripSeparator());
             _listViewColumnWidths = new ColumnWidthCalculator(listViewConfigs);
             listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
             ProgramLog.Info(Resources.MainForm_MainForm_Loading_configurations_from_saved_settings_);
@@ -241,6 +242,8 @@ namespace SkylineBatch
             btnOpenTemplate.Enabled = configSelected;
             btnOpenResults.Enabled = configSelected;
             btnExportConfigs.Enabled = _loaded ? _configManager.HasConfigs() : false;
+            btnUndo.Enabled = _configManager.CanUndo();
+            btnRedo.Enabled = _configManager.CanRedo();
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
@@ -534,7 +537,7 @@ namespace SkylineBatch
             var dialog = new SaveFileDialog { Filter = TextUtil.FILTER_BCFG };
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.XmlVersion, shareForm.IndiciesToSave);
         }
         
         #endregion
@@ -813,6 +816,16 @@ namespace SkylineBatch
             {
                 _configManager.Redo();
             }
+        }
+
+        private void btnUndo_Click(object sender, EventArgs e)
+        {
+            _configManager.Undo();
+        }
+
+        private void btnRedo_Click(object sender, EventArgs e)
+        {
+            _configManager.Redo();
         }
     }
 
