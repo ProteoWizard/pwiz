@@ -245,10 +245,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS)) {
-           SPEC_ID_TYPE idType = bal::iends_with(getSpecFileName(), ".mgf") ? NAME_ID : INDEX_ID;
-           lookUpBy_ = idType;
-           specReader_->setIdType(idType);
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+           lookUpBy_ = NAME_ID;
+           specReader_->setIdType(NAME_ID);
        }
 
        massType = (boost::iequals("average", getAttrValue("fragment_mass_type", attr))) ? 0 : 1;       
