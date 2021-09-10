@@ -1137,9 +1137,9 @@ namespace SkylineNightly
             }
         }
 
-        private string Log(string message)
+        private void Log(string message)
         {
-            return Log(LogFileName, message);
+            Log(LogFileName, message);
         }
 
         public static string Log(string logFileName, string message)
