@@ -38,7 +38,6 @@ namespace pwiz.Skyline.Util
 // ReSharper restore RedundantDefaultFieldInitializer
 // ReSharper restore ConvertToConstant.Local
 
-
         public static void UseInternalClipboard(bool useInternal = true)
         {
             _useSystemClipboard = !useInternal;

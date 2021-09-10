@@ -28,7 +28,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -123,6 +122,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => menuItem.PerformClick());
         }
 
+        /// <summary>
+        /// Displays the context menu and then finds the menu item with the specified menu item text.
+        /// Note that even if "SkylineOffscreen" is true, the menu ends up flashing on the screen since
+        /// context menus always want to reposition themselves to be on the visible part of the screen.
+        /// </summary>
         private ToolStripMenuItem ShowContextMenuItem(Control control, string menuItemText)
         {
             ToolStripMenuItem menuItem = null;
