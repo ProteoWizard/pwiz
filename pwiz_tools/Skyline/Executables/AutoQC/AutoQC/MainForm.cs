@@ -249,7 +249,7 @@ namespace AutoQC
             var dialog = new SaveFileDialog {Filter = TextUtil.FILTER_QCFG};
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
+            _configManager.ExportConfigs(dialog.FileName, Settings.Default.XmlVersion, shareForm.IndiciesToSave);
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)

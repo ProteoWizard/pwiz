@@ -29,7 +29,6 @@ namespace TestPerf
     {
         const int REPLICATE_COUNT_TO_TEST = 1500;
         [TestMethod]
-        [Timeout(TestTimeout.Infinite)]
         public void TestImportHundredsOfReplicates()
         {
             TestFilesZip = @"TestPerf\PerfImportHundredsOfReplicatesTest.zip";

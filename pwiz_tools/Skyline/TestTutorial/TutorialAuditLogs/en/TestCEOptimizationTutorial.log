@@ -40,20 +40,20 @@ Replicate name = "Optimize CE",
 Optimizing = "Collision Energy",
 Files to import simultaneously = "Many"
 
-Undo Redo : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
-Summary   : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+Undo Redo : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [140, 147]
+Summary   : Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [140, 147]
 All Info  :
-Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [139, 146]
+Deleted target IPI00706094_IPI00698843|Alpha_Casein > K.EGIHAQQK.E [140, 147]
 
-Undo Redo : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
-Summary   : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+Undo Redo : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [84, 91]
+Summary   : Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [84, 91]
 All Info  :
-Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [83, 90]
+Deleted target gi|2194089|Beta_Lactoglobulin > K.IDALNENK.V [84, 91]
 
-Undo Redo : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
-Summary   : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+Undo Redo : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [669, 678]
+Summary   : Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [669, 678]
 All Info  :
-Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [668, 677]
+Deleted target gi|129823|Lactoperoxidase > R.LICDNTHITK.V [669, 678]
 
 Undo Redo : Transition Settings -- Prediction changed
 Summary   : Settings > Transition Settings -- Prediction changed

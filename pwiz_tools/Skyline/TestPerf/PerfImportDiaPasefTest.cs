@@ -44,7 +44,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private bool IsRecordMode { get { return false; } }
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerDiaPasefImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE

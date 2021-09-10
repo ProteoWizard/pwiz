@@ -827,7 +827,7 @@ namespace TestRunnerLib
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
-            var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
+            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
             var types = assembly.GetTypes();
 
             foreach (var type in types)
