@@ -236,18 +236,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
        if (search_engine_version.find("msfragger") == 0)
        {
-           extensions.push_back("_uncalibrated.mgf");
-           extensions.push_back("_calibrated.mgf");
-
+           // Prefer MGF over raw data for performance reasons
+           extensions.insert(extensions.begin(), "_calibrated.mgf");
+           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated, so place first in list
            if (analysisType_ != MSFRAGGER_ANALYSIS)
                parentAnalysisType_ = MSFRAGGER_ANALYSIS;
        }
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
-           lookUpBy_ = NAME_ID;
-           specReader_->setIdType(NAME_ID);
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS)) {
+           SPEC_ID_TYPE idType = bal::iends_with(getSpecFileName(), ".mgf") ? NAME_ID : INDEX_ID;
+           lookUpBy_ = idType;
+           specReader_->setIdType(idType);
        }
 
        massType = (boost::iequals("average", getAttrValue("fragment_mass_type", attr))) ? 0 : 1;       
