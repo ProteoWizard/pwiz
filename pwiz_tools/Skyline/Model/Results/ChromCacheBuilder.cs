@@ -655,9 +655,9 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            // Otherwise, add it to the dictionary by its peptide GlobalIndex to make
+            // Otherwise, add it to the dictionary by its PeptideSequenceModKey to make
             // sure precursors are grouped by peptide
-            Assume.IsTrue(peptidePrecursorMz.PrecursorMz.IsNegative == chromDataSet.PrecursorMz.IsNegative);
+            Assume.AreEqual(peptidePrecursorMz.PrecursorMz.IsNegative, chromDataSet.PrecursorMz.IsNegative);
             var nodePep = peptidePrecursorMz.NodePeptide;
             var key = nodePep.SequenceKey;
             if (!dictPeptideChromData.TryGetValue(key, out pepDataSets))

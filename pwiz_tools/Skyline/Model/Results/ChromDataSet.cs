@@ -136,7 +136,11 @@ namespace pwiz.Skyline.Model.Results
                 _listPeakSets.RemoveRange(count, _listPeakSets.Count - count);
         }
 
-        public TransitionGroupDocNode NodeGroup { get; set; }
+        public ImmutableList<TransitionGroupDocNode> NodeGroups { get; set; }
+        public IEnumerable<IsotopeLabelType> LabelTypes
+        {
+            get { return NodeGroups.Select(g => g.LabelType); }
+        }
 
         /// <summary>
         /// True if the transition group is an isotope labeled internal standard
@@ -1236,16 +1240,47 @@ namespace pwiz.Skyline.Model.Results
 
         private bool IsSameRT(ChromDataSet chromDataSet)
         {
-            return (NodeGroup.RelativeRT == RelativeRT.Matching && chromDataSet.NodeGroup.RelativeRT == RelativeRT.Matching) ||
-                ReferenceEquals(NodeGroup.TransitionGroup.LabelType, chromDataSet.NodeGroup.TransitionGroup.LabelType);
+            return (RelativeRT == RelativeRT.Matching && chromDataSet.RelativeRT == RelativeRT.Matching) ||
+                   LabelTypes.Intersect(chromDataSet.LabelTypes).Any();
         }
 
         private bool IsShiftedRT(ChromDataSet chromDataSet)
         {
-            return NodeGroup.RelativeRT == RelativeRT.Preceding ||
-                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Preceding ||
-                NodeGroup.RelativeRT == RelativeRT.Overlapping ||
-                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Overlapping;
+            return RelativeRT == RelativeRT.Preceding ||
+                chromDataSet.RelativeRT == RelativeRT.Preceding ||
+                RelativeRT == RelativeRT.Overlapping ||
+                chromDataSet.RelativeRT == RelativeRT.Overlapping;
+        }
+
+        public RelativeRT RelativeRT
+        {
+            get
+            {
+                return MergeRelativeRTs(NodeGroups.Select(group => group.RelativeRT));
+            }
+        }
+
+        public static RelativeRT MergeRelativeRTs(IEnumerable<RelativeRT> relativeRts)
+        {
+            var result = RelativeRT.Unknown;
+            foreach (var relativeRT in relativeRts)
+            {
+                if (relativeRT == RelativeRT.Matching)
+                {
+                    return RelativeRT.Matching;
+                }
+
+                if (result == RelativeRT.Unknown)
+                {
+                    result = relativeRT;
+                }
+                else if (result != relativeRT)
+                {
+                    return RelativeRT.Matching;
+                }
+            }
+
+            return result;
         }
 
         public override string ToString()
