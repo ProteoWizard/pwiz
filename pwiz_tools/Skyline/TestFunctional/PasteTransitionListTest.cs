@@ -22,8 +22,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -41,6 +44,7 @@ namespace pwiz.SkylineTestFunctional
         private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
         private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
         private string ignoreColumn => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+        private string labelType => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
         private string decoy => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy;
 
         [TestMethod]
@@ -56,20 +60,31 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentLoaded();
 
-            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv")));
             var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             
             RunUI(() => {
                 var thermBoxes = therm.ComboBoxes;
                 // Checks that automatically assigning column headers works properly
-                Assert.AreEqual(precursor, thermBoxes[0].Text);
-                Assert.AreEqual(product, thermBoxes[1].Text);
-                Assert.AreEqual(peptide, thermBoxes[3].Text);
-                Assert.AreEqual(protName, thermBoxes[4].Text);
-                Assert.AreEqual(fragName, thermBoxes[5].Text);
-                Assert.AreEqual(label, thermBoxes[7].Text);
+                Assert.AreEqual(protName, thermBoxes[0].Text);
+                Assert.AreEqual(peptide, thermBoxes[1].Text);
+                Assert.AreEqual(precursor, thermBoxes[2].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4].Text);
+                Assert.AreEqual(product, thermBoxes[5].Text);
+                Assert.AreEqual(fragName, thermBoxes[7].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[15].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[16].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[17].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_, thermBoxes[18].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[19].Text);
+                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential, thermBoxes[20].Text);
             });
-            RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
+            // RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
             OkDialog(therm, therm.CancelDialog);
 
 
@@ -86,13 +101,13 @@ namespace pwiz.SkylineTestFunctional
                 // Column positions are only saved if at least one combobox is changed, so
                 // change a couple in order to trigger column saving
                 peptideBoxes[14].SelectedIndex = 0;
-                peptideBoxes[4].SelectedIndex = 1;
+                peptideBoxes[4].SelectedIndex = 6;
             });
             // Clicking the OK button should save the column locations
             OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
 
             // Verify that the correct columns were saved in the settings
-            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, decoy, product, ignoreColumn, fragName};
+            var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
             CollectionAssert.AreEqual(expectedColumns, Settings.Default.CustomImportTransitionListColumnTypesList);
             
@@ -102,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => 
             {
                 var peptideTransitionListBoxes1 = peptideTransitionList1.ComboBoxes;
-                Assert.AreEqual(1, peptideTransitionListBoxes1[4].SelectedIndex);
+                Assert.AreEqual(6, peptideTransitionListBoxes1[4].SelectedIndex);
                 peptideTransitionList1.CancelDialog();
             });
 
@@ -157,12 +172,15 @@ namespace pwiz.SkylineTestFunctional
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
             var transitions = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-
+            RunUI(() =>
+            {
+                var transitionBoxes = transitions.ComboBoxes;
+                transitionBoxes[0].SelectedIndex = 0; // Set precursor m/z column to 'ignore column'
+                transitionBoxes[1].SelectedIndex = 0; // Set product m/z column to 'ignore column'
+                transitionBoxes[3].SelectedIndex = 0; // Set peptide modified sequence column to 'ignore column'
+            });
             // Change headers of the key columns so that our document will not import
-            var transitionBoxes = transitions.ComboBoxes;
-            transitionBoxes[0].SelectedIndex = 0; // Set precursor m/z column to 'ignore column'
-            transitionBoxes[1].SelectedIndex = 0; // Set product m/z column to 'ignore column'
-            transitionBoxes[3].SelectedIndex = 0; // Set peptide modified sequence column to 'ignore column'
+            
 
             // Click Ok and when it doesn't import due to missing columns close the document
             RunDlg<MessageDlg>(transitions.buttonOk.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
@@ -170,16 +188,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Paste in the same list and verify that the invalid column positions were not saved
             LoadNewDocument(true);
-
             var transitions1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            var transitions1Boxes = transitions1.ComboBoxes;
-            Assert.AreNotEqual(transitions1Boxes[0].SelectedIndex, 0);
-            Assert.AreNotEqual(transitions1Boxes[1].SelectedIndex, 0);
-            Assert.AreNotEqual(transitions1Boxes[3].SelectedIndex, 0);
-
+            WaitForConditionUI(() => transitions1.WindowShown);
+            
+            RunUI(() =>
+            {
+                var transitions1Boxes = transitions1.ComboBoxes;
+                Assert.AreNotEqual(transitions1Boxes[0].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                Assert.AreNotEqual(transitions1Boxes[1].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                Assert.AreNotEqual(transitions1Boxes[3].Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+            });
             // Close the document
             OkDialog(transitions1, transitions1.CancelDialog);
-
             // Now verify that we do not use saved column positions on newly pasted
             // transition lists when they do not work
             LoadNewDocument(true);
@@ -209,11 +229,15 @@ namespace pwiz.SkylineTestFunctional
             var pep1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             // We should realize our saved column positions are invalid and discard them
             // Verify that we did not use the saved position of "precursor m/z"
-            var pep1Boxes = pep1.ComboBoxes;
-            Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
-            // Verify that we did use the detected values instead
-            Assert.AreEqual(pep1Boxes[4].SelectedIndex, 6);
-            Assert.AreEqual(pep1Boxes[11].SelectedIndex, 7);
+            RunUI(() =>
+            {
+                var pep1Boxes = pep1.ComboBoxes;
+                Assert.AreNotEqual(pep1Boxes[2].SelectedIndex, 6);
+                // Verify that we did use the detected values instead
+                Assert.AreEqual(pep1Boxes[4].SelectedIndex, 8);
+                Assert.AreEqual(pep1Boxes[11].SelectedIndex, 9);
+            });
+            
             // Close the document
             OkDialog(pep1, pep1.CancelDialog);
 
@@ -241,7 +265,59 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(dlg, dlg.OkDialog);
             }
 
+            TestPeptideOnlyDoc();
+            // We want to ensure that error messages will not be translated even if we are giving peptide error messages in molecule mode
+            LoadNewDocument(true);
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules)); // Switch the document to molecule mode
+
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
+            dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            RunUI(() => {
+                dlg.radioPeptide.PerformClick();
+                var comboBoxes = dlg.ComboBoxes;
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+            });
+            // As long as the message tells us that we are missing "Peptide Modified Sequence" and not "Molecule Molecule", then everything is working how we want it to
+            var msg = ShowDialog<MessageDlg>(dlg.buttonCheckForErrors.PerformClick);
+            Assert.IsTrue(msg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+            msg.OkDialog();
+            OkDialog(dlg, dlg.CancelDialog);
+
             LoadNewDocument(true); // Tidy up
         }
+
+        private void TestPeptideOnlyDoc()
+        {
+            // Try a peptide-only document, set up to work with the dimensions of PeptideTransitionList.csv
+            CheckDocumentGridAndColumns(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List,
+                9, 21, SrmDocument.DOCUMENT_TYPE.proteomic);
+            
+        }
+
+        // Tests the current document, important to note that you must have data already in a skyline document for this to work
+        private void CheckDocumentGridAndColumns(string viewName,
+            int rowCount, int colCount,  // Expected row and column count for document grid
+            SrmDocument.DOCUMENT_TYPE expectedDocumentType)
+        {
+            Assume.AreEqual(expectedDocumentType, SkylineWindow.Document.DocumentType);
+            WaitForClosedForm<DocumentGridForm>();
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+            RunUI(() => documentGrid.ChooseView(viewName));
+            WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
+            int iteration = 0;
+            WaitForCondition(() =>
+            {
+                bool result = documentGrid.ColumnCount == colCount;
+                if (!result && iteration++ > 9)
+                    Assert.AreNotEqual(colCount, documentGrid.ColumnCount);   // Put breakpoint on this line, if you have changed columns and need to update the numbers
+                return result;
+            }); // Let it initialize
+
+            RunUI(() => documentGrid.Close());
+        }
+
     }
 }

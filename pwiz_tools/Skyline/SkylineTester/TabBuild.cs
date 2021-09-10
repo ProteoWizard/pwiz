@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Windows.Forms;
 
 namespace SkylineTester
@@ -126,6 +125,9 @@ namespace SkylineTester
                 ? "Skyline (master)"
                 : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
+            
+            var toolsetArg = string.Empty; // Let bjam pick the newest available - currently VS2017 and VS2019 work equally well for Skyline builds
+            /* But retain this code in case we someday get back to a state where we need to choose
 
             // Determine toolset requirement based on .Net usage
             // Pull a file like
@@ -170,6 +172,8 @@ namespace SkylineTester
                     commandShell.IsWaiting = false;
                 }
             }
+            var toolsetArg = "toolset=" + toolset;
+            */
 
             var architectureList = string.Join("- and ", architectures);
             commandShell.Add("# Build {0} {1}-bit...", branchName, architectureList);
@@ -195,27 +199,29 @@ namespace SkylineTester
             {
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
+                // Add the --progress flag for richer logging - git leaves out most progress info when it isn't writing to an actual terminal
                 if (branchName.Contains("master"))
                 {
-                    commandShell.AddWithRetry("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.AddWithRetry("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 
             commandShell.Add("# Building Skyline...");
             commandShell.Add("cd {0}", buildRoot.Quote());
+
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses toolset={3} nolog",
+                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses {3} nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture,
                     runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",
-                    toolset);
+                    toolsetArg);
             }
 
             commandShell.Add("# Build done.");

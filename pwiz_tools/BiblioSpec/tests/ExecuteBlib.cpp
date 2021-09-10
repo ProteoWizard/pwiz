@@ -190,8 +190,8 @@ int executeBlib(const vector<string>& argv)
         fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;
 
-    string testOutputFile = bfs::path(argv[0]).filename().string() + "_output.txt";
-    int returnValue = bnw::system((fullCommand + " > " + testOutputFile + " 2>&1").c_str());
+    string testOutputFile = bfs::path(argv[0]).string() + "_output.txt";
+    int returnValue = bnw::system((fullCommand + " > \"" + testOutputFile + "\" 2>&1").c_str());
 
     ostringstream testOutput;
     testOutput << ifstream(testOutputFile).rdbuf();
