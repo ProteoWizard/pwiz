@@ -480,8 +480,8 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
                         columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("BeginPos"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("EndPos"));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.FirstPosition)));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.LastPosition)));
                         columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
                     }
                     if (!docHasCustomIons)

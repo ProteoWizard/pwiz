@@ -150,7 +150,7 @@ namespace seems
                 for (int i = 0; i < dgv.RowCount; ++i)
                 {
                     int msLevel = (int) dgv[msLevelColumn.Index, i].Value;
-                    if (targetMsLevel != msLevel || (double) dgv[ionMobilityColumn.Index, i].Value == 0 || Convert.ToInt32(dgv[dataPointsColumn.Index, i].Value) == 0)
+                    if (targetMsLevel != msLevel || Convert.ToInt32(dgv[dataPointsColumn.Index, i].Value) == 0)
                         continue;
 
                     double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
@@ -345,15 +345,17 @@ namespace seems
         private IEnumerable<DataGridViewRow> GetIonMobilityRows()
         {
             var dgv = Source.SpectrumListForm.GridView;
-            var ionMobilityColumn = dgv.Columns["IonMobility"];
-            var scanTimeColumn = dgv.Columns["ScanTime"];
-            var dataPointsColumn = dgv.Columns["DataPoints"];
 
             foreach (DataGridViewRow row in dgv.Rows)
             {
-                if ((ulong) row.Cells[dataPointsColumn.Index].Value == 0 ||
-                    (double) row.Cells[ionMobilityColumn.Index].Value == 0)
+                var spectrumRow = (Misc.SpectrumDataSet.SpectrumTableRow) ((DataRowView) row.DataBoundItem).Row;
+                if (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_None)
                     continue;
+
+                if (spectrumRow.DataPoints == 0 ||
+                    (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_SingleValue && spectrumRow.IonMobility == 0))
+                    continue;
+
                 yield return row;
             }
         }
@@ -421,6 +423,9 @@ namespace seems
 
                 //double intensity = (double) dgv[ticColumn.Index, i].Value;
             }
+
+            if (ionMobilityBinsByMsLevelAndScanTime.Count == 0)
+                throw new InvalidOperationException("no spectrum rows have ion mobility info");
 
             var g = msGraphControl.CreateGraphics();
             msGraphControl.MasterPane.PaneList.Clear();
