@@ -90,6 +90,10 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         protected override IEnumerable<PeakKey> ListKeys()
         {
+            if (_precursors == null)
+            {
+                yield break;
+            }
             foreach (var precursor in _precursors)
             {
                 foreach (var entry in precursor.Results)
