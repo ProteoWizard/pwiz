@@ -45,7 +45,7 @@ namespace SkylineBatch
         private SkylineBatchConfigManagerState _state;
 
         private RunBatchOptions? _startingRunOption; // the run option of the currently starting run. null if no run is being started.
-        private ServerFilesManager _runServerFiles = null; // the verified set of server files that will be used when the run starts
+        private ServerFilesManager _runServerFiles; // the verified set of server files that will be used when the run starts
 
         // Shared variables with ConfigManager:
         //
@@ -63,7 +63,7 @@ namespace SkylineBatch
             _startingRunOption = null;
         }
 
-        public SkylineBatchConfigManagerState State => GetState();
+        public new SkylineBatchConfigManagerState State => GetState();
 
         // Instance Methods
 
@@ -424,7 +424,7 @@ namespace SkylineBatch
                 ((ConfigRunner)State.ConfigRunners[config]).ChangeStatus(RunnerStatus.Waiting);
             
             ArchiveFirstLog();
-            var runOption = (RunBatchOptions)_startingRunOption;
+            var runOption = _startingRunOption ?? RunBatchOptions.ALL;
             _startingRunOption = null;
             new Thread(() => _ = RunAsync(runOption, serverFiles)).Start();
         }
@@ -652,7 +652,7 @@ namespace SkylineBatch
 
         #region Tests
 
-        public new SkylineBatchConfig GetConfig(int index)
+        public SkylineBatchConfig GetConfig(int index)
         {
             return (SkylineBatchConfig) State.BaseState.GetConfig(index);
         }
@@ -924,7 +924,7 @@ namespace SkylineBatch
 
         #region Config Template Dependencies
 
-        private SkylineBatchConfigManagerState UpdateTemplates(IMainUiControl uiControl)
+        private SkylineBatchConfigManagerState UpdateTemplates()
         {
             Templates = ImmutableDictionary<string, string>.Empty;
             foreach (var iconfig in BaseState.ConfigList)
@@ -938,7 +938,7 @@ namespace SkylineBatch
 
         private SkylineBatchConfigManagerState UpdateDependencies(IMainUiControl uiControl)
         {
-            UpdateTemplates(uiControl);
+            UpdateTemplates();
             var errorConfigs = new List<string>();
 
             foreach (var iconfig in BaseState.ConfigList)

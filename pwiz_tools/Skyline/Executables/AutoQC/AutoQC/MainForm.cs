@@ -223,6 +223,14 @@ namespace AutoQC
                 UpdateUiConfigurations();
         }
 
+        public void DisableConfig(IConfig iconfig)
+        {
+            var initialState = _configManager.State;
+            var state = initialState.Copy()
+                .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
+            _configManager.SetState(initialState, state);
+        }
+
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             // Disable automatic item selection - selected configuration set through _configManager
@@ -335,6 +343,7 @@ namespace AutoQC
                 btnOpenResults.Enabled = configSelected;
                 btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
                 btnOpenFolder.Enabled = configSelected;
+                
 
                 btnEdit.Enabled = configSelected;
                 btnCopy.Enabled = configSelected;
@@ -344,6 +353,8 @@ namespace AutoQC
 
         public void UpdateUiLogFiles()
         {
+            if (!_loaded)
+                return;
             RunUi(() =>
             {
                 comboConfigs.Items.Clear();

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
@@ -110,10 +107,13 @@ namespace SkylineBatch
         private void btnClear_Click(object sender, EventArgs e)
         {
             comboRemoteFileSource.SelectedIndex = -1;
+            textRelativePath.Text = string.Empty;
         }
 
         private PanoramaFile PanoramaFileFromUI(RemoteFileSource remoteFileSource, CancellationToken cancelToken)
         {
+            if (remoteFileSource == null && string.IsNullOrEmpty(textRelativePath.Text))
+                return null;
             return PanoramaFile.PanoramaFileFromUI(remoteFileSource, textRelativePath.Text, _folderPath, cancelToken);
         }
 

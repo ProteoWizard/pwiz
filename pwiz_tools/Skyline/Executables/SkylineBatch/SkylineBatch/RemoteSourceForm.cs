@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -17,10 +10,9 @@ namespace SkylineBatch
     public partial class RemoteSourceForm : Form
     {
         private readonly ImmutableDictionary<string, RemoteFileSource> _remoteFileSources;
-        private string _folderPath;
         private CancellationTokenSource _cancelSource;
         private readonly string _editingSourceName;
-        private IMainUiControl _mainControl;
+        private readonly IMainUiControl _mainControl;
         private readonly bool _adding;
         private readonly RemoteFileSource _initialRemoteSource;
         private readonly SkylineBatchConfigManagerState _initialState;
@@ -108,7 +100,7 @@ namespace SkylineBatch
             }).Start();*/
         }
 
-        private void DoneValidatingServer(RemoteFileSource remoteFileSource, Exception error)
+        /*private void DoneValidatingServer(RemoteFileSource remoteFileSource, Exception error)
         {
             var cancelled = _cancelSource.IsCancellationRequested;
             _cancelSource = null;
@@ -127,7 +119,7 @@ namespace SkylineBatch
             RemoteFileSource = remoteFileSource;
             State.UserAddRemoteFileSource(RemoteFileSource, _mainControl);
             DialogResult = DialogResult.OK;
-        }
+        }*/
 
         private void CancelValidate()
         {
@@ -135,10 +127,10 @@ namespace SkylineBatch
                 _cancelSource.Cancel();
         }
 
-        private RemoteFileSource RemoteSourceFromUI(CancellationToken cancelToken)
+        /*private RemoteFileSource RemoteSourceFromUI(CancellationToken cancelToken)
         {
             return RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked);
-        }
+        }*/
 
         private void RemoteSourceForm_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -146,7 +138,7 @@ namespace SkylineBatch
         }
 
 
-        private void RunUi(Action action)
+        /*private void RunUi(Action action)
         {
             try
             {
@@ -158,7 +150,7 @@ namespace SkylineBatch
             catch (InvalidOperationException)
             {
             }
-        }
+        }*/
 
         private void btnCancel_Click(object sender, EventArgs e)
         {

@@ -387,7 +387,6 @@ namespace SkylineBatch
         // Reload logs in comboLogList
         public void UpdateUiLogFiles()
         {
-            var state = _configManager.State;
             var logFiles = _configManager.GetAllLogFiles();
             var selectedLog = _configManager.SelectedLog;
             var hasOldLogs = _configManager.HasOldLogs();

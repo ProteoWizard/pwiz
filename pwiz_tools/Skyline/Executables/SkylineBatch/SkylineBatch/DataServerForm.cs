@@ -44,7 +44,7 @@ namespace SkylineBatch
 
             UpdateUiServer();
 
-            if (_serverRequired)
+            if (serverRequired)
                 btnRemoveServer.Hide();
         }
 
@@ -58,8 +58,8 @@ namespace SkylineBatch
                 CheckServer(true);
             else
             {
-                //Server = GetServerFromUi();
-                if (Server == null)
+                Server = GetServerFromUi();
+                if (Server == null && !_serverRequired)
                 {
                     DialogResult = DialogResult.OK;
                     return;
@@ -156,7 +156,8 @@ namespace SkylineBatch
         {
             if (comboRemoteFileSource.SelectedIndex < 0)
             {
-                throw new ArgumentException(Resources.DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_);
+                if (_serverRequired || (!string.IsNullOrEmpty(textRelativePath.Text) || !string.IsNullOrEmpty(textNamingPattern.Text)))
+                    throw new ArgumentException(Resources.DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_);
                 return null;
             }
 
@@ -167,6 +168,9 @@ namespace SkylineBatch
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
+            comboRemoteFileSource.SelectedIndex = -1;
+            textRelativePath.Text = string.Empty;
+            textNamingPattern.Text = string.Empty;
             listBoxFileNames.Items.Clear();
             Server = null;
             UpdateUiServer();

@@ -344,6 +344,12 @@ namespace SharedBatch
             return new ConfigManagerState(ConfigList, ConfigValidation, RootReplacement, Selected, false);
         }
 
+        public ConfigManagerState ModelHasChanged()
+        {
+            ModelChanged = true;
+            return this;
+        }
+
         public ConfigManagerState ModelUnchanged()
         {
             ModelChanged = false;

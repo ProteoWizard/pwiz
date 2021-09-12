@@ -26,7 +26,6 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
-using Server = SkylineBatch.Server;
 
 namespace SkylineBatchTest
 {

@@ -262,36 +262,35 @@ namespace AutoQC
 
         public bool StopConfiguration()
         {
-            lock (_lock)
+            var initialState = State;
+            var selectedConfig = initialState.GetSelectedConfig();
+            if (!selectedConfig.IsEnabled) // TODO: Do we need this?
+                return false;
+
+            var configRunner = initialState.GetSelectedConfigRunner();
+            if (configRunner.IsPending())
             {
-                var selectedConfig = State.GetSelectedConfig();
-                if (!selectedConfig.IsEnabled) // TODO: Do we need this?
-                    return false;
-                
-                var configRunner = State.GetSelectedConfigRunner();
-                if (configRunner.IsPending())
-                {
-                    var action = configRunner.GetStatus().ToString();
-                    var message =
-                        string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
+                var action = configRunner.GetStatus().ToString();
+                var message =
+                    string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
-                    ConfigManager.DisplayWarning(_uiControl, message);
-                    return false;
-                }
-
-                var doChange = ConfigManager.DisplayQuestion(_uiControl, string.Format(
-                    Resources.AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___,
-                    configRunner.GetConfigName()));
-
-                if (doChange == DialogResult.Yes)
-                {
-                    selectedConfig.IsEnabled = false;
-                    configRunner.Stop();
-                    return true;
-                }
-
+                ConfigManager.DisplayWarning(_uiControl, message);
                 return false;
             }
+
+            var doChange = ConfigManager.DisplayQuestion(_uiControl, string.Format(
+                Resources.AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___,
+                configRunner.GetConfigName()));
+
+            if (doChange == DialogResult.Yes)
+            {
+                configRunner.Stop();
+                var state = initialState.Copy().SelectedConfigEnabled(false, _uiControl);
+                SetState(initialState, state);
+                return true;
+            }
+
+            return false;
         }
 
         public bool UpdateSelectedEnabled(bool newIsEnabled)
@@ -328,7 +327,6 @@ namespace AutoQC
                         TextUtil.LineSeparate(string.Format(Resources.AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___, selectedConfig.Name), e.Message), e);
                     return false;
                 }
-                
                 return true;
             }
         }
@@ -351,23 +349,32 @@ namespace AutoQC
 
         private void StartConfig(AutoQcConfig config)
         {
-            State.ConfigRunners.TryGetValue(config.Name, out var configRunner);
+            //State.ConfigRunners.TryGetValue(config.Name, out var configRunner);
+            
+            var initialState = State;
+            var state = initialState.Copy();
+            var configIndex = state.BaseState.GetConfigIndex(config.Name);
 
+            state.ConfigRunners.TryGetValue(config.Name, out var configRunner);
             if (configRunner == null)
             {
-                config.IsEnabled = false;
-                _uiControl?.UpdateUiConfigurations();
+                state.SetConfigEnabled(configIndex, false, _uiControl);
+                SetState(initialState, state);
                 throw new ConfigRunnerException(string.Format(Resources.AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___, config.Name));
             }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
-            config.IsEnabled = true;
+            state.SetConfigEnabled(configIndex, true, _uiControl);
+            SetState(initialState, state);
+            state.ConfigRunners.TryGetValue(config.Name, out configRunner);
             try
             {
                 ((ConfigRunner)configRunner).Start();
             }
             catch (Exception)
             {
-                config.IsEnabled = false;
+                state.SetConfigEnabled(configIndex, false, _uiControl);
+                SetState(initialState, state);
+                state.ConfigRunners.TryGetValue(config.Name, out configRunner);
                 ((ConfigRunner)configRunner).ChangeStatus(RunnerStatus.Error);
                 throw;
             }
@@ -476,6 +483,27 @@ namespace AutoQC
             return (AutoQcConfig)BaseState.GetSelectedConfig();
         }
 
+        public AutoQcConfigManagerState SelectedConfigEnabled(bool enabled, IMainUiControl uiControl)
+        {
+            return SetConfigEnabled(BaseState.Selected, enabled, uiControl);
+        }
+
+        public AutoQcConfigManagerState SetConfigEnabled(int index, bool enabled, IMainUiControl uiControl)
+        {
+            var config = (AutoQcConfig) BaseState.GetConfig(index);
+            if (GetConfigRunner(config).IsBusy())
+            {
+                ConfigManager.DisplayError(uiControl, "Cannot change config enabled while it is busy.");
+                return this;
+            }
+            ProgramaticallyRemoveAt(index);
+            ProgramaticallyInsertConfig(index,
+                new AutoQcConfig(config.Name, enabled, config.Created, config.Modified, config.MainSettings,
+                    config.PanoramaSettings, config.SkylineSettings), uiControl);
+            BaseState.ModelHasChanged();
+            return this;
+        }
+
 
         #region Add Configs
 
@@ -483,14 +511,14 @@ namespace AutoQC
         {
             BaseState.LoadConfigList();
             UpdateFromBaseState(uiControl);
-            foreach (var iconfig in BaseState.ConfigList)
+            for (int i = 0; i < BaseState.ConfigList.Count; i++)
             {
-                var config = (AutoQcConfig)iconfig;
+                var config = (AutoQcConfig)BaseState.ConfigList[i];
                 if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
                 {
                     // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
                     // automatically starting configs on startup, change its IsEnabled state
-                    config.IsEnabled = false;
+                    SetConfigEnabled(i, false, uiControl);
                 }
             }
             return this;

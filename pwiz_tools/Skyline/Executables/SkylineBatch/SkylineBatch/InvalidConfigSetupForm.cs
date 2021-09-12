@@ -16,8 +16,7 @@ namespace SkylineBatch
 
         private SkylineBatchConfig _invalidConfig;
         private SkylineBatchConfig _validConfig;
-
-        private SkylineBatchConfigManagerState _initialState;
+        
         private readonly IMainUiControl _mainControl;
         private readonly RDirectorySelector _rDirectorySelector;
 
@@ -33,7 +32,6 @@ namespace SkylineBatch
             Icon = Program.Icon();
             _invalidConfig = invalidConfig;
             State = state;
-            _initialState = state;
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             CreateValidConfig();

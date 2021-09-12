@@ -11,13 +11,11 @@ namespace SkylineBatch
     {
         private static string _lastEnteredPath;
         private string _initialFile;
-
-        private SkylineBatchConfigManager _configManager;
+        
         private readonly bool _isDataServer;
         private readonly string _variableDescription;
         private readonly string _filter;
         private EventHandler _addedPathChangedHandler;
-        private SkylineBatchConfigManagerState _state;
         private IMainUiControl _mainControl;
 
         public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
@@ -30,7 +28,6 @@ namespace SkylineBatch
             _isDataServer = isDataServer;
             _variableDescription = variableDescription;
             _filter = filter;
-            _state = state;
             _mainControl = mainControl;
             State = state;
 

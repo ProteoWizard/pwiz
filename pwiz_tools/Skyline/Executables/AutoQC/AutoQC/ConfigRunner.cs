@@ -176,7 +176,7 @@ namespace AutoQC
                 _runnerStatus = runnerStatus;
                 if (IsStopped())
                 {
-                    Config.IsEnabled = false;
+                    ((MainForm)_uiControl)?.DisableConfig(Config);
                 }
             }
             _uiControl?.UpdateUiConfigurations();

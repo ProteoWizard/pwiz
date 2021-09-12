@@ -533,5 +533,10 @@ namespace SkylineBatch
             if (ReferenceEquals(this, obj)) return true;
             return false;
         }
+
+        public override int GetHashCode()
+        {
+            return Config.GetHashCode() + _runnerStatus.GetHashCode();
+        }
     }
 }

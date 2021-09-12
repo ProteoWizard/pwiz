@@ -169,6 +169,7 @@ namespace SkylineBatch
 
         public static Server ReadXml(XmlReader reader)
         {
+            //reader.ReadToDescendant("remote_file");
             var relativePath = reader.GetAttribute(XML_TAGS.relative_path) ?? string.Empty;
             var remoteDataSource = RemoteFileSource.ReadXml(reader);
             return new Server(remoteDataSource, relativePath);
