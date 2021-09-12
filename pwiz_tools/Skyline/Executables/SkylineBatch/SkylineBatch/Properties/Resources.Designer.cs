@@ -1483,6 +1483,33 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Add...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Add____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Add____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;Edit current...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Edit_current____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Edit_current____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;Edit list...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Edit_list____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Edit_list____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another remote file location with the name {0} already exists. Please choose a unique name..
         /// </summary>
         public static string RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_ {

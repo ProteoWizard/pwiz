@@ -40,11 +40,7 @@
             this.labelFileInfo = new System.Windows.Forms.Label();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.listBoxFileNames = new System.Windows.Forms.ListBox();
-            this.btnBrowse = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.textRelativePath = new System.Windows.Forms.TextBox();
-            this.comboRemoteFileSource = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.panelRemoteFile = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -110,34 +106,10 @@
             this.listBoxFileNames.BackColor = System.Drawing.Color.White;
             this.listBoxFileNames.Name = "listBoxFileNames";
             // 
-            // btnBrowse
+            // panelRemoteFile
             // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
-            // textRelativePath
-            // 
-            resources.ApplyResources(this.textRelativePath, "textRelativePath");
-            this.textRelativePath.Name = "textRelativePath";
-            this.textRelativePath.TextChanged += new System.EventHandler(this.textRelativePath_TextChanged);
-            // 
-            // comboRemoteFileSource
-            // 
-            resources.ApplyResources(this.comboRemoteFileSource, "comboRemoteFileSource");
-            this.comboRemoteFileSource.FormattingEnabled = true;
-            this.comboRemoteFileSource.Name = "comboRemoteFileSource";
-            this.comboRemoteFileSource.SelectedIndexChanged += new System.EventHandler(this.comboRemoteFileSource_SelectedIndexChanged);
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.panelRemoteFile, "panelRemoteFile");
+            this.panelRemoteFile.Name = "panelRemoteFile";
             // 
             // DataServerForm
             // 
@@ -145,11 +117,6 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnBrowse);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.textRelativePath);
-            this.Controls.Add(this.comboRemoteFileSource);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.labelFileInfo);
             this.Controls.Add(this.listBoxFileNames);
             this.Controls.Add(this.btnUpdate);
@@ -159,6 +126,7 @@
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.linkLabelRegex);
+            this.Controls.Add(this.panelRemoteFile);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DataServerForm";
@@ -180,10 +148,6 @@
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.ListBox listBoxFileNames;
         private System.Windows.Forms.Label labelFileInfo;
-        private System.Windows.Forms.Button btnBrowse;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textRelativePath;
-        private System.Windows.Forms.ComboBox comboRemoteFileSource;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Panel panelRemoteFile;
     }
 }

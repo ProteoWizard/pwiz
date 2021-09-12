@@ -100,7 +100,7 @@ namespace SkylineBatchTest
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
             var configDlg = ShowDialog<SkylineBatchConfigForm>(() => invalidConfigForm.btnSkip.PerformClick());
             var initialFilePath = configDlg.comboTemplateFile.Text;
-            var downloadDlg = ShowDialog<PanoramaFileForm>(() => configDlg.templateControl.btnDownload.PerformClick());
+            var downloadDlg = ShowDialog<RemoteFileForm>(() => configDlg.templateControl.btnDownload.PerformClick());
             RunUI(() => { downloadDlg.btnSave.PerformClick(); });
             var currFilePath = configDlg.comboTemplateFile.Text;
             RunUI(() => { configDlg.CancelButton.PerformClick(); });

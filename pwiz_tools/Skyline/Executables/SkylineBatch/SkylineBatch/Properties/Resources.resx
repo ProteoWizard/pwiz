@@ -871,4 +871,13 @@
   <data name="SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_" xml:space="preserve">
     <value>Do you want to continue?</value>
   </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Add____" xml:space="preserve">
+    <value>&lt;Add...&gt;</value>
+  </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Edit_current____" xml:space="preserve">
+    <value>&lt;Edit current...&gt;</value>
+  </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Edit_list____" xml:space="preserve">
+    <value>&lt;Edit list...&gt;</value>
+  </data>
 </root>

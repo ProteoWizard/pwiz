@@ -10,7 +10,7 @@ namespace SkylineBatch
         private SkylineBatchConfigManagerState _initialState;
         private IMainUiControl _mainControl;
 
-        public EditRemoteFileSourcesForm(IMainUiControl mainControl, SkylineBatchConfigManagerState state)
+        public EditRemoteFileSourcesForm(IMainUiControl mainControl, SkylineBatchConfigManagerState state, int selectedIndex)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -20,6 +20,8 @@ namespace SkylineBatch
             _mainControl = mainControl;
             LastEditedName = null;
             UpdateRemoteFilesList();
+            if (selectedIndex >= 0)
+                listSources.SelectedIndex = selectedIndex;
         }
 
         public SkylineBatchConfigManagerState State { get; private set; }

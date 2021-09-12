@@ -16,8 +16,9 @@ namespace SkylineBatch
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
         private bool _updated;
+        private RemoteFileControl _remoteFileControl;
 
-        public DataServerForm(DataServerInfo editingServerInfo, string folder, SkylineBatchConfigManagerState state, bool serverRequired = false)
+        public DataServerForm(DataServerInfo editingServerInfo, string folder, SkylineBatchConfigManagerState state, IMainUiControl mainControl, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -27,22 +28,16 @@ namespace SkylineBatch
             _dataFolder = folder;
             _serverRequired = serverRequired;
 
-            foreach (var name in State.FileSources.Keys)
-            {
-                if (!State.FileSources[name].FtpSource)
-                    comboRemoteFileSource.Items.Add(name);
-            }
-            comboRemoteFileSource.Items.Add("<Edit>");
-            comboRemoteFileSource.Items.Add("<Add>");
+            _remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired);
+            _remoteFileControl.Dock = DockStyle.Fill;
+            _remoteFileControl.Show();
+            panelRemoteFile.Controls.Add(_remoteFileControl);
 
-            if (editingServerInfo != null)
-            {
-                textRelativePath.Text = editingServerInfo.RelativePath;
-                comboRemoteFileSource.SelectedItem = editingServerInfo.FileSource.Name;
-            }
+            _remoteFileControl.AddRemoteFileChangedEventHandler(RemoteFileChangedByUser);
+            _remoteFileControl.AddRelativePathChangedEventHandler(RemoteFileChangedByUser);
 
 
-            UpdateUiServer();
+            textNamingPattern.Text = editingServerInfo != null ? editingServerInfo.DataNamingPattern : string.Empty;
 
             if (serverRequired)
                 btnRemoveServer.Hide();
@@ -154,45 +149,32 @@ namespace SkylineBatch
 
         private DataServerInfo GetServerFromUi()
         {
-            if (comboRemoteFileSource.SelectedIndex < 0)
+            Server server;
+            try
             {
-                if (_serverRequired || (!string.IsNullOrEmpty(textRelativePath.Text) || !string.IsNullOrEmpty(textNamingPattern.Text)))
-                    throw new ArgumentException(Resources.DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_);
+                server = _remoteFileControl.ServerFromUI();
+            }
+            catch (ArgumentException e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return null;
             }
 
-            var remoteFileSource = State.FileSources[(string) comboRemoteFileSource.SelectedItem];
-            return new DataServerInfo(remoteFileSource, textRelativePath.Text, textNamingPattern.Text, _dataFolder);
+            return new DataServerInfo(server.FileSource, server.RelativePath, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
-            comboRemoteFileSource.SelectedIndex = -1;
-            textRelativePath.Text = string.Empty;
+            _remoteFileControl.Clear();
             textNamingPattern.Text = string.Empty;
             listBoxFileNames.Items.Clear();
             Server = null;
-            UpdateUiServer();
-            _updated = true;
+            textNamingPattern.Text = string.Empty;
+           _updated = true;
             UpdateLabel();
         }
-
-        private void UpdateUiServer()
-        {
-            if (Server == null)
-                return;
-            comboRemoteFileSource.SelectedIndex = -1;
-            for (int i = 0; i < comboRemoteFileSource.Items.Count; i++)
-            {
-                if (Server.FileSource.Name.Equals(comboRemoteFileSource.Items[i]))
-                    comboRemoteFileSource.SelectedIndex = i;
-            }
-            textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
-                ? string.Empty
-                : Server.DataNamingPattern;
-        }
-
+        
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://www.regular-expressions.info/reference.html");
@@ -251,13 +233,7 @@ namespace SkylineBatch
             return string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
         }
 
-        private void comboRemoteFileSource_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _updated = false;
-            UpdateLabel();
-        }
-
-        private void textRelativePath_TextChanged(object sender, EventArgs e)
+        private void RemoteFileChangedByUser(object sender, EventArgs e)
         {
             _updated = false;
             UpdateLabel();

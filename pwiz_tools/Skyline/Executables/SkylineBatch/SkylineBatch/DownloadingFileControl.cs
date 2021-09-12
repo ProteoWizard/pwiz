@@ -174,7 +174,7 @@ namespace SkylineBatch
         {
             if (_isDataServer)
             {
-                var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State);
+                var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State, _mainControl);
                 if (DialogResult.OK == addServerForm.ShowDialog(this))
                 {
                     Server = addServerForm.Server;
@@ -183,7 +183,7 @@ namespace SkylineBatch
             }
             else
             {
-                var addPanoramaTemplate = new PanoramaFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
+                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
                     Server = addPanoramaTemplate.PanoramaServer;
