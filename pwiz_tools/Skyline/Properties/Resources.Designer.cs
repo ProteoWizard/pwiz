@@ -14713,6 +14713,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}{1} ppm.
+        /// </summary>
+        public static string GraphSpectrum_MassErrorFormat_ppm {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_MassErrorFormat_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {
