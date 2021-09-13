@@ -300,15 +300,10 @@ namespace pwiz.Skyline.Model.Results
         {
             lock (this)
             {
-                foreach (var key in _dataFileCentroidedMap.Keys.ToList())
-                {
-                    if (_dataFileCentroidedMap.ContainsKey(key) && _dataFileCentroidedMap[key] != null)
-                    {
-                        if (_dataFileCentroidedMap[key].Equals(_dataFile)) _dataFile = null;
-                        _dataFileCentroidedMap[key].Dispose();
-                        _dataFileCentroidedMap.Remove(key);
-                    }
-                }
+                foreach (var key in _dataFileCentroidedMap.Keys)
+                    _dataFileCentroidedMap[key]?.Dispose();
+                _dataFile = null;
+                _dataFileCentroidedMap.Clear();
             }
         }
     }
