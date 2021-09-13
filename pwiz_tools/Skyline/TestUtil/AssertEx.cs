@@ -65,6 +65,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (!Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -77,6 +81,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreNotEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -89,11 +97,12 @@ namespace pwiz.SkylineTestUtil
         {
             if (!ReferenceEquals(expected, actual))
             {
+                var message = string.Format(@"AssertEx.AreNotSame failed, expected: {0} actual: {1}", expected, actual);
                 if (Assume.InvokeDebuggerOnFail)
                 {
-                    Assume.Fail(); // Handles the debugger launch
+                    Assume.Fail(message); // Handles the debugger launch
                 }
-                Assert.AreNotSame(expected, actual);
+                Assert.AreNotSame(expected, actual, message);
             }
         }
 
