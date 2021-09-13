@@ -598,6 +598,7 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -4819,6 +4820,10 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140.dll">
       <Link>vcruntime140.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140_1.dll">
+      <Link>vcruntime140_1.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll">
