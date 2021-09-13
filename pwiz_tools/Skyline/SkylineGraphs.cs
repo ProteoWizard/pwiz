@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -989,6 +989,12 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph(false);
         }
 
+        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
+            UpdateSpectrumGraph(false);
+        }
+
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
             ToggleObservedMzValues();
@@ -1067,6 +1073,10 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
             menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+
+            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
+
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
@@ -1178,6 +1188,13 @@ namespace pwiz.Skyline
         public bool IsGraphSpectrumVisible
         {
             get { return _graphSpectrum != null && _graphSpectrum.Visible; }
+        }
+
+        public void SetShowMassError(bool show)
+        {
+            Settings.Default.ShowFullScanMassError = show;
+            UpdateSpectrumGraph(false);
+
         }
 
         private GraphSpectrum CreateGraphSpectrum()

@@ -11489,8 +11489,12 @@ In any of the following directories:
 If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
 
 </value>
-  </data>  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+  </data>  
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
+  </data>
+  <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
+    <value>{0}{1} ppm</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
     <value>iRT</value>
