@@ -2169,22 +2169,38 @@ namespace pwiz.Skyline
             var thisChromSet = document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom => Equals(change.NameSet, chrom.Name));
             var thisFile = thisChromSet?.FindFile(change.FilePath);
 
-            var start = change.StartTime;
-            var end = change.EndTime;
-
-            RegressionLine regression = null;
-            GetRetentionTimeTransformOperation()?.TryGetRegressionFunction(thisFile, out regression);
-            if (regression != null)
+            var transformOp = GetRetentionTimeTransformOperation();
+            var thisStart = change.StartTime.MeasuredTime;
+            var thisEnd = change.EndTime.MeasuredTime;
+            if (transformOp != null)
             {
-                start = new ScaledRetentionTime(regression.GetY(start.MeasuredTime));
-                end = new ScaledRetentionTime(regression.GetY(end.MeasuredTime));
+                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                if (regressionThis != null)
+                {
+                    thisStart = regressionThis.GetY(thisStart);
+                    thisEnd = regressionThis.GetY(thisEnd);
+                }
             }
 
             foreach (var chromSet in syncTargets)
             {
-                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && Equals(thisFile, info.FileId))))
+                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
                 {
-                    yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath, start, end, change.Identified, change.ChangeType);
+                    var start = thisStart;
+                    var end = thisEnd;
+
+                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    {
+                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        if (regression != null)
+                        {
+                            start = regression.GetX(thisStart);
+                            end = regression.GetX(thisEnd);
+                        }
+                    }
+
+                    yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), change.Identified, change.ChangeType);
                 }
             }
         }

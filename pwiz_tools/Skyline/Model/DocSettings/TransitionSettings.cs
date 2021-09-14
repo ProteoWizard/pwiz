@@ -3077,7 +3077,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 im.SynchronizedIntegrationGroupBy = groupBy;
                 im.SynchronizedIntegrationAll = all;
-                im.SynchronizedIntegrationTargets = !all ? targets : null;
+                im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : null;
             });
         }
 
@@ -3155,7 +3155,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.integrate_all, IsIntegrateAll);
 
             // Write synchronize_integration
-            var hasGroupBy = !string.IsNullOrEmpty(SynchronizedIntegrationGroupBy);
+            var hasGroupBy = SynchronizedIntegrationGroupBy != null;
             var hasSyncTargets = SynchronizedIntegrationTargets != null && SynchronizedIntegrationTargets.Length > 0;
             if (hasGroupBy || SynchronizedIntegrationAll || hasSyncTargets)
             {
@@ -3212,7 +3212,9 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = IsIntegrateAll.GetHashCode();
-                result = (result * 397) ^ SynchronizedIntegrationGroupBy.GetHashCode();
+                if (SynchronizedIntegrationGroupBy != null)
+                    result = (result * 397) ^ SynchronizedIntegrationGroupBy.GetHashCode();
+                result = (result * 397) ^ SynchronizedIntegrationAll.GetHashCode();
                 result = (result * 397) ^ ArrayUtil.GetHashCodeDeep(SynchronizedIntegrationTargets);
                 return result;
             }

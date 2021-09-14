@@ -1067,21 +1067,20 @@ namespace pwiz.Skyline.Menus
             {
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
-                    SetSynchronizedIntegration(dlg.GroupByPersistedString, dlg.IsAll, dlg.Targets.ToArray());
-                }
-            }
-        }
+                    var groupBy = dlg.GroupByPersistedString;
+                    var all = dlg.IsAll;
+                    var targets = dlg.Targets.ToArray();
 
-        public void SetSynchronizedIntegration(string groupBy, bool all, string[] targets)
-        {
-            var existing = DocumentUI.Settings.TransitionSettings.Integration;
-            if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
-            {
-                ModifyDocument(
-                    string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
-                        (string.IsNullOrEmpty(groupBy) ? Resources.GroupByItem_ToString_Replicates : groupBy) + @":" + string.Join(@",", targets)),
-                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i =>
-                        i.ChangeSynchronizedIntegration(groupBy, all, targets))), AuditLogEntry.SettingsLogFunction);
+                    var existing = DocumentUI.Settings.TransitionSettings.Integration;
+                    if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+                    {
+                        ModifyDocument(
+                            string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
+                                (string.IsNullOrEmpty(groupBy) ? Resources.GroupByItem_ToString_Replicates : groupBy) + @":" + string.Join(@",", targets)),
+                            doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i =>
+                                i.ChangeSynchronizedIntegration(groupBy, all, targets))), AuditLogEntry.SettingsLogFunction);
+                    }
+                }
             }
         }
 

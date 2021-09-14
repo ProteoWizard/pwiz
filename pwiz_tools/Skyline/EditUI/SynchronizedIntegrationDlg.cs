@@ -72,8 +72,9 @@ namespace pwiz.Skyline.EditUI
 
             for (var i = 0; i < comboGroupBy.Items.Count; i++)
             {
-                var item = comboGroupBy.Items[i] as GroupByItem;
-                if (item?.ReplicateValue != null && Equals(s, persistedString ? item.ReplicateValue.ToPersistedString() : item.ToString()))
+                var item = (GroupByItem)comboGroupBy.Items[i];
+                if (persistedString && Equals(s, item.ReplicateValue?.ToPersistedString()) ||
+                    !persistedString && Equals(s, item.ToString()))
                 {
                     return i;
                 }
@@ -150,7 +151,7 @@ namespace pwiz.Skyline.EditUI
                 return values.ToArray();
             }
 
-            public string PersistedString => ReplicateValue != null ? ReplicateValue.ToPersistedString() : string.Empty;
+            public string PersistedString => ReplicateValue != null ? ReplicateValue.ToPersistedString() : null;
 
             public override string ToString()
             {
