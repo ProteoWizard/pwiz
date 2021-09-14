@@ -56,17 +56,7 @@ namespace SkylineBatchTest
             }
 
             var selectedNegativeIndex = false;
-            try
-            {
-                testConfigManager.SelectConfig(-1);
-                selectedNegativeIndex = true;
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                Assert.AreEqual("There is no configuration at index: -1", e.Message);
-            }
-            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
-
+           
             var selectedIndexAboveRange = false;
             try
             {
@@ -190,9 +180,10 @@ namespace SkylineBatchTest
         public void TestImportExport()
         {
             TestUtils.InitializeRInstallation();
+            TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
+            configManager.ExportConfigs(configsXmlPath, SkylineBatch.Properties.Settings.Default.XmlVersion, new [] {0,1,2});
             int i = 0;
             while (configManager.HasConfigs() && i < 4)
             {
@@ -208,6 +199,7 @@ namespace SkylineBatchTest
 
             configManager.SelectConfig(2);
             configManager.UserRemoveSelected();
+
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
@@ -219,6 +211,7 @@ namespace SkylineBatchTest
         public void TestCloseReopenConfigs()
         {
             TestUtils.InitializeRInstallation();
+            TestUtils.InitializeSettingsImportExport();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
@@ -226,8 +219,8 @@ namespace SkylineBatchTest
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
-            Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
+            configManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
+            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }
 

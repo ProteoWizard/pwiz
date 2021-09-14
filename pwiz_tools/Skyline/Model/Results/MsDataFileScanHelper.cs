@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model.Results
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction, ignoreZeroIntensityPoints);
             SourceNames = new string[Helpers.CountEnumValues<ChromSource>()];
-            SourceNames[(int)ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
-            SourceNames[(int)ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
-            SourceNames[(int)ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+            SourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
+            SourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
+            SourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
         }
 
         public BackgroundScanProvider ScanProvider { get; private set; }
@@ -94,10 +94,18 @@ namespace pwiz.Skyline.Model.Results
         {
             var fullScans = MsDataSpectra;
             double minIonMobility, maxIonMobility;
-            if (Settings.Default.FilterIonMobilityFullScan && GetIonMobilityRange(out minIonMobility, out maxIonMobility, Source))
+            if (Settings.Default.FilterIonMobilityFullScan &&
+                GetIonMobilityFilterRange(out minIonMobility, out maxIonMobility, Source))
             {
-                fullScans = fullScans.Where(s => minIonMobility <= s.IonMobility.Mobility && s.IonMobility.Mobility <= maxIonMobility // im-per-scan case
-                                                 || minIonMobility <= s.MaxIonMobility && maxIonMobility >= s.MinIonMobility // 3-array case
+                if (IsWatersSonarData)
+                {
+                    // "ion mobility" range is actually SONAR mz filtering range, caller will want that expressed as bin numbers
+                    minIonMobility = ScanProvider.SonarMzToBinRange(minIonMobility, 0).Item1;
+                    maxIonMobility = ScanProvider.SonarMzToBinRange(maxIonMobility, 0).Item2;
+                }
+                fullScans = fullScans.Where(s =>
+                        minIonMobility <= s.IonMobility.Mobility && s.IonMobility.Mobility <= maxIonMobility // im-per-scan case
+                        || minIonMobility <= s.MaxIonMobility && maxIonMobility >= s.MinIonMobility // 3-array case
                 ).ToArray();
             }
             else
@@ -111,7 +119,9 @@ namespace pwiz.Skyline.Model.Results
             return fullScans;
         }
 
-        public bool GetIonMobilityRange(out double minIonMobility, out double maxIonMobility, ChromSource sourceType)
+        // Determine the lower and upper bound of any ion mobility filtering
+        // In the case of Waters SONAR data, it's actually precursor m/z filtering so we return bin values (which need to be converted to SONAR bins for filtering)
+        public bool GetIonMobilityFilterRange(out double minIonMobility, out double maxIonMobility, ChromSource sourceType)
         {
             minIonMobility = double.MaxValue;
             maxIonMobility = double.MinValue;
@@ -119,7 +129,19 @@ namespace pwiz.Skyline.Model.Results
             int i = 0;
             foreach (var transition in ScanProvider.Transitions)
             {
-                if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
+                if (IsWatersSonarData)
+                {
+                    // Waters SONAR uses IM hardware to filter on precursor m/z and presents those data bins as if they were drift bins
+                    // So actual filter range is the same m/z window used in the m/z dimension.
+                    var mz = transition.PrecursorMz.Value;
+                    var halfWin = (transition.ExtractionWidth ?? 0) / 2;
+                    var mzLow = mz - halfWin;
+                    var mzHigh = mz + halfWin;
+                    minIonMobility = Math.Min(minIonMobility, mzLow); // Yes, this is a misnomer
+                    maxIonMobility = Math.Max(maxIonMobility, mzHigh); 
+                    hasIonMobilityInfo = true; // Well, not really ion mobility info - the drift time dimension is really precursor m/z space
+                }
+                else if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
                 {
                     // Accept all values
                     minIonMobility = double.MinValue;
@@ -140,6 +162,27 @@ namespace pwiz.Skyline.Model.Results
             return hasIonMobilityInfo;
         }
 
+        // Determine the lower and upper bound of any ion mobility filtering, and for Waters SONAR display purposes include the effect
+        // of m/z values potentially covering more than one bin
+        public bool GetIonMobilityFilterDisplayRange(out double minIonMobility, out double maxIonMobility, ChromSource sourceType)
+        {
+            var hasIonMobilityInfo = GetIonMobilityFilterRange(out minIonMobility, out maxIonMobility, sourceType);
+
+            if (hasIonMobilityInfo && IsWatersSonarData)
+            {
+                // "Ion mobility" range is actually SONAR mz filtering range, i.e. the m/z extraction window from Settings.Transitions.FullScan
+                // But a single m/z value can cover multiple bins, so the actual quadrupole m/z selection range is probably wider than that and
+                // a wider m/z band was actually admitted into the collision cell to ensure sampling the precursor actually wanted.
+                // So take that into account when determining the edges of the purple "ion mobility" band for display
+                var mzAvg = 0.5 * (maxIonMobility + minIonMobility);
+                var mzTol = 0.5 * (maxIonMobility - minIonMobility);
+                var binRange = ScanProvider.SonarMzToBinRange(mzAvg, mzTol);
+                minIonMobility = Math.Min(minIonMobility, ScanProvider.SonarBinToPrecursorMz(binRange.Item1) ?? 0);
+                maxIonMobility = Math.Max(maxIonMobility, ScanProvider.SonarBinToPrecursorMz(binRange.Item2) ?? 0);
+            }
+            return hasIonMobilityInfo;
+        }
+
         /// <summary>
         /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
         /// </summary>
@@ -151,6 +194,8 @@ namespace pwiz.Skyline.Model.Results
             }
             return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
         }
+
+        public bool IsWatersSonarData { get {  return ScanProvider?. IsWatersSonarData ?? false; } } // For SONAR the drift dimension is actually precursor m/z filter dimension
 
         public bool ProvidesCollisionalCrossSectionConverter
         {
@@ -221,7 +266,8 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider != null)
             {
                 Source = scanProvider.Transitions[transitionIndex].Source;
-                Assume.IsTrue(Source == ScanProvider.Source);
+                if (Source != ScanProvider.Source)
+                    Assume.Fail($@"unexpected ChromSource '{ScanProvider.Source}' in transition {transitionIndex} ({scanProvider.Transitions[transitionIndex]})");
                 TransitionIndex = transitionIndex;
                 ScanIndex = scanIndex;
                 FileName = scanProvider.DataFilePath.GetFileName();
@@ -317,6 +363,16 @@ namespace pwiz.Skyline.Model.Results
                 } }
 
             public bool ProvidesCollisionalCrossSectionConverter { get { return _scanProvider != null && _scanProvider.ProvidesCollisionalCrossSectionConverter; } }
+
+            public bool IsWatersSonarData { get { return _scanProvider != null && _scanProvider.IsWatersSonarData; } }
+            public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance)
+            {
+                return _scanProvider?.SonarMzToBinRange(mz, tolerance);
+            }
+            public double? SonarBinToPrecursorMz(int bin)
+            {
+                return _scanProvider?.SonarBinToPrecursorMz(bin);
+            }
 
             /// <summary>
             /// Always run on a specific background thread to avoid changing threads when dealing

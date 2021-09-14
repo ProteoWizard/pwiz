@@ -25,9 +25,11 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    [XmlRoot("file_settings")]
+    [XmlRoot("import_settings")]
     public class FileSettings
     {
+        public const string XML_EL = "import_settings";
+        public const string OLD_XML_EL = "file_settings";
 
         // IMMUTABLE - all fields are readonly literals
         // Describes file modifications user would like to do on the .sky file in the analysis folder
@@ -43,6 +45,10 @@ namespace SkylineBatch
             return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }
 
+        public static FileSettings Empty()
+        {
+            return new FileSettings(null, null, null, false, false, false);
+        }
 
         public FileSettings(int? msOneResolvingPower, int? msMsResolvingPower, int? retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
         {
@@ -89,39 +95,45 @@ namespace SkylineBatch
         
         #region Read/Write XML
 
-        private enum Attr
-        {
-            MsOneResolvingPower,
-            MsMsResolvingPower,
-            RetentionTime,
-            AddDecoys,
-            ShuffleDecoys,
-            TrainMProphet
-        };
-
         public static FileSettings ReadXml(XmlReader reader)
         {
-            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.MsOneResolvingPower));
-            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.MsMsResolvingPower));
-            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.RetentionTime));
-            var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
-            var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
-            var trainMProphet = reader.GetBoolAttribute(Attr.TrainMProphet);
+            XmlUtil.ReadUntilElement(reader);
+            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.ms_one_resolving_power));
+            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.ms_ms_resolving_power));
+            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(XML_TAGS.retention_time));
+            var addDecoys = reader.GetBoolAttribute(XML_TAGS.add_decoys);
+            var shuffleDecoys = reader.GetBoolAttribute(XML_TAGS.shuffle_decoys);
+            var trainMProphet = reader.GetBoolAttribute(XML_TAGS.train_m_prophet);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
+        }
+
+        public static FileSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!XmlUtil.ReadNextElement(reader, OLD_XML_EL))
+                return new FileSettings(null, null, null, false, false, false);
+            
+            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.MsOneResolvingPower));
+            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.MsMsResolvingPower));
+            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(OLD_XML_TAGS.RetentionTime));
+            var addDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.AddDecoys);
+            var shuffleDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.ShuffleDecoys);
+            var trainMProphet = reader.GetBoolAttribute(OLD_XML_TAGS.TrainMProphet);
+
             return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("file_settings");
-            writer.WriteAttributeIfString(Attr.MsOneResolvingPower,
+            writer.WriteStartElement(XML_EL);
+            writer.WriteAttributeIfString(XML_TAGS.ms_one_resolving_power,
                 TextUtil.ToInvariantCultureString(MsOneResolvingPower));
-            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, 
+            writer.WriteAttributeIfString(XML_TAGS.ms_ms_resolving_power, 
                 TextUtil.ToInvariantCultureString(MsMsResolvingPower));
-            writer.WriteAttributeIfString(Attr.RetentionTime, 
+            writer.WriteAttributeIfString(XML_TAGS.retention_time, 
                 TextUtil.ToInvariantCultureString(RetentionTime));
-            writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
-            writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
-            writer.WriteAttribute(Attr.TrainMProphet, TrainMProphet);
+            writer.WriteAttribute(XML_TAGS.add_decoys, AddDecoys);
+            writer.WriteAttribute(XML_TAGS.shuffle_decoys, ShuffleDecoys);
+            writer.WriteAttribute(XML_TAGS.train_m_prophet, TrainMProphet);
             writer.WriteEndElement();
         }
         #endregion

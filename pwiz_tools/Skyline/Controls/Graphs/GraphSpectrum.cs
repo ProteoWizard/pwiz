@@ -57,12 +57,27 @@ namespace pwiz.Skyline.Controls.Graphs
         void LockYAxis(bool lockY);
     }
 
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer
+    public enum SpectrumControlType { LibraryMatch, FullScanViewer }
+    public interface IMzScaleCopyable
+    {
+        void SetMzScale(MzRange range);
+        MzRange Range { get; }
+        void ApplyMZZoomState(ZoomState scaleState);
+        event EventHandler<ZoomEventArgs> ZoomEvent;
+        SpectrumControlType ControlType { get; }
+    }
+
+    public interface ISpectrumScaleProvider
+    {
+        MzRange GetMzRange(SpectrumControlType controlType);
+    }
+    
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
     {
 
         private static readonly double YMAX_SCALE = 1.25;
 
-        public interface IStateProvider
+        public interface IStateProvider : ISpectrumScaleProvider
         {
             TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes(bool isProteomic);
@@ -94,6 +109,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
             {
+            }
+
+            public MzRange GetMzRange(SpectrumControlType controlType)
+            {
+                return new MzRange();
             }
         }
 
@@ -272,7 +292,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 xMin = instrument.MinMz;
             else
                 xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
-            ZoomXAxis(axis, xMin, instrument.MaxMz);
+
+            var requestedRange = new MzRange(xMin, instrument.MaxMz);
+            if (Settings.Default.SyncMZScale)
+            {
+                if(_documentContainer is ISpectrumScaleProvider scaleProvider)
+                    requestedRange = scaleProvider.GetMzRange(SpectrumControlType.FullScanViewer) ?? requestedRange;
+            } 
+
+            ZoomXAxis(axis, requestedRange.Min, requestedRange.Max);
         }
 
         private void ZoomXAxis(Axis axis, double xMin, double xMax)
@@ -704,6 +732,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
+
             return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
@@ -713,6 +742,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
+                ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
                 LineWidth = Settings.Default.SpectrumLineWidth
@@ -970,7 +1000,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             return;
                         }
 
-                        var spectrumChanged = !Equals(_spectrum, spectrum);
+                        var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                         _spectrum = spectrum;
 
                         ClearGraphPane();
@@ -1002,7 +1032,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 mirrorSpectrum = null;
                             }
 
-                            spectrumChanged |= !Equals(_mirrorSpectrum, mirrorSpectrum);
+                            spectrumChanged |= !Equals(_mirrorSpectrum?.SpectrumInfo, mirrorSpectrum?.SpectrumInfo);
                             _mirrorSpectrum = mirrorSpectrum;
 
                             double? dotp = null;
@@ -1123,7 +1153,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static bool IonMatches(Transition transition, LibraryChromGroup.ChromData chromData)
         {
-            if(transition.IonType.Equals(chromData.IonType) && transition.Charge == chromData.Charge)
+            if(transition.IonType.Equals(chromData.IonType) && Equals(transition.Adduct, chromData.Charge))
             {
                 if(transition.IsPrecursor())
                 {
@@ -1131,7 +1161,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    return transition.Ordinal == chromData.Ordinal;
+                    return transition.IonType == IonType.custom ?
+                        Equals(transition.FragmentIonName, chromData.FragmentName) :
+                        transition.Ordinal == chromData.Ordinal;
                 }
             }
             return false;
@@ -1245,6 +1277,49 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
+        public void SetMzScale(MzRange range)
+        {
+            ZoomXAxis(GraphPane.XAxis, range.Min, range.Max);
+            graphControl.Invalidate();
+        }
+        public MzRange Range
+        {
+            get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
+        }
+
+        public Scale IntensityScale
+        {
+            get { return GraphPane.YAxis.Scale; }
+        }
+
+        public void ApplyMZZoomState(ZoomState newState)
+        {
+            newState.XAxis.ApplyScale(GraphPane.XAxis);
+            graphControl.Refresh();
+        }
+
+        public event EventHandler<ZoomEventArgs> ZoomEvent;
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            FireZoomEvent(newState);
+        }
+
+        private void FireZoomEvent(ZoomState zoomState = null)
+        {
+            if (ZoomEvent != null && Settings.Default.SyncMZScale)
+            {
+                if (zoomState == null)
+                    zoomState = new ZoomState(GraphPane, ZoomState.StateType.Zoom);
+                ZoomEvent.Invoke(this, new ZoomEventArgs(zoomState));
+            }
+        }
+
+        public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+
+        public double MzMax
+        {
+            get { return GraphPane.XAxis.Scale.Max; }
+        }
 
 // ReSharper disable SuggestBaseTypeForParameter
         private static TransitionGroupDocNode[] GetChargeGroups(PeptideTreeNode nodeTree, bool requireLibInfo)
@@ -1317,8 +1392,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
+            var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(chromData.IonMobility,null, chromGroup.CCS);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
-                IonMobilityFilter.EMPTY, // CONSIDER(bspratt) IMS in chromatogram libraries?
+                ionMobilityFilter,
                 new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};
@@ -1334,13 +1410,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, null, eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
-            var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits); 
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),
                     new byte[0],
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(ionMobilityFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,
                     null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 
@@ -1548,6 +1623,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public int CompareTo(SpectrumDisplayInfo other)
         {
+            if (other == null) return 1;
             int i = Comparer.Default.Compare(FileOrder, other.FileOrder);
             if (i == 0)
             {
@@ -1602,5 +1678,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SpectrumDisplayInfo Spectrum { get; private set; }
         public bool IsUserAction { get; private set; }
+    }
+    public sealed class MzRange
+    {
+        public MzRange(double min, double max)
+        {
+            Min = min;
+            Max = max;
+        }
+
+        public MzRange() : this(0, 1){}
+
+        public double Min { get; private set; }
+        public double Max { get; private set; }
+        public override bool Equals(object obj)
+        {
+            if (obj is MzRange other)
+                return Min == other.Min && Max == other.Max;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Min.GetHashCode() * 397 ^ Max.GetHashCode();
+        }
     }
 }

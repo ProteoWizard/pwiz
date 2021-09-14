@@ -32,11 +32,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     [XmlRoot("unify_account")]
     public class UnifiAccount : RemoteAccount
     {
-        public static readonly UnifiAccount DEFAULT 
-            = new UnifiAccount(@"https://unifiapi.waters.com:50034", string.Empty, string.Empty)
-        {
-            IdentityServer = @"https://unifiapi.waters.com:50333"
-        };
+        public static readonly UnifiAccount DEFAULT
+            = new UnifiAccount(@"https://demo.unifiapi.com:50034", string.Empty, string.Empty)
+            {
+                IdentityServer = @"https://demo.unifiapi.com:50333"
+            };
         public UnifiAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;

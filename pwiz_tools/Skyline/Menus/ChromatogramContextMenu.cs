@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Menus
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Menus
             var chromFileInfo = DocumentUI.Settings.MeasuredResults?.Chromatograms
                 .Select(chromatogramSet => chromatogramSet.GetFileInfo(chromFileInfoId))
                 .FirstOrDefault(fileInfo => null != fileInfo);
-            if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none)
+            if (null != chromFileInfo && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.none && chromFileInfo.IonMobilityUnits != eIonMobilityUnits.waters_sonar)
             {
                 var asSubMenu = true;
 

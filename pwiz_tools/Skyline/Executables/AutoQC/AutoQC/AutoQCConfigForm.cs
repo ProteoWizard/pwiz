@@ -18,6 +18,7 @@
 
 using System;
 using System.Windows.Forms;
+using AutoQC.Properties;
 using SharedBatch;
 
 namespace AutoQC
@@ -38,7 +39,7 @@ namespace AutoQC
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
-        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, bool isBusy)
+        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, RunnerStatus status = RunnerStatus.Stopped)
         {
             InitializeComponent();
             
@@ -61,8 +62,9 @@ namespace AutoQC
 
             lblConfigRunning.Hide();
 
-            if (isBusy)
+            if (ConfigRunner.IsBusy(status))
             {
+                lblConfigRunning.Text = string.Format(Resources.AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_, status);
                 lblConfigRunning.Show();
                 btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
                 btnCancelConfig.Hide();
@@ -79,14 +81,18 @@ namespace AutoQC
         {
             if (config != null) _lastEnteredPath = config.MainSettings.SkylineFilePath;
             InitSkylineTab(config);
-            SetInitialPanoramaSettings(config);
+            
             if (_action == ConfigAction.Add || config == null)
             {
                 SetDefaultMainSettings();
+                // If we are given a config (e.g. the most recently modified config) take the Panorama server URL from the config
+                // so that the user does not have to enter the URL again. But don't copy anything else.
+                SetDefaultPanoramaSettings(config?.PanoramaSettings.PanoramaServerUrl);
                 return;
             }
             textConfigName.Text = config.Name;
             SetInitialMainSettings(config.MainSettings);
+            SetInitialPanoramaSettings(config.PanoramaSettings);
         }
 
         public void DisableUserInputs(Control parentControl = null)
@@ -200,26 +206,32 @@ namespace AutoQC
 
         #region Panorama settings
 
-        private void SetInitialPanoramaSettings(AutoQcConfig config)
+        private void SetInitialPanoramaSettings(PanoramaSettings panoramaSettings)
         {
-            if (config == null)
-            {
-                SetDefaultPanoramaSettings();
-                return;
-            }
-            var panoramaSettings = config.PanoramaSettings;
             textPanoramaUrl.Text = panoramaSettings.PanoramaServerUrl;
-            textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
-            textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+            
+            if (_action != ConfigAction.Copy)
+            {
+                // Do not set the email and password when copying from a configuration.  AutoQC Loader is run on computers accessible to more than
+                // one user. We don't want the Panorama email and password for one user to be used by another user.
+                textPanoramaEmail.Text = panoramaSettings.PanoramaUserEmail;
+                textPanoramaPasswd.Text = panoramaSettings.PanoramaPassword;
+            }
+
             textPanoramaFolder.Text = panoramaSettings.PanoramaFolder;
             cbPublishToPanorama.Checked = panoramaSettings.PublishToPanorama;
             groupBoxPanorama.Enabled = panoramaSettings.PublishToPanorama;
         }
 
-        private void SetDefaultPanoramaSettings()
+
+        private void SetDefaultPanoramaSettings(string serverUrl = null)
         {
             cbPublishToPanorama.Checked = PanoramaSettings.GetDefaultPublishToPanorama();
             groupBoxPanorama.Enabled = PanoramaSettings.GetDefaultPublishToPanorama();
+            if (serverUrl != null)
+            {
+                textPanoramaUrl.Text = serverUrl;
+            }
         }
 
         private PanoramaSettings GetPanoramaSettingsFromUi()
@@ -271,7 +283,7 @@ namespace AutoQC
 
         private SkylineSettings GetSkylineSettingsFromUi()
         {
-            return new SkylineSettings(_skylineTypeControl.Type, _skylineTypeControl.CommandPath);
+            return new SkylineSettings(_skylineTypeControl.Type, null, _skylineTypeControl.CommandPath);
         }
 
         #endregion
@@ -297,11 +309,11 @@ namespace AutoQC
 
         private void Save()
         {
-            var newConfig = GetConfigFromUi();
+            AutoQcConfig newConfig = GetConfigFromUi();
             try
             {
                 _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
-                newConfig.Validate();
+                newConfig.Validate(true);
             }
             catch (ArgumentException e)
             {

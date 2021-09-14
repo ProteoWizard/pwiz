@@ -31,6 +31,7 @@ namespace SkylineBatch
     [XmlRoot("refine_settings")]
     public class RefineSettings
     {
+        public const string XML_EL = "refine_settings";
 
         // IMMUTABLE - all fields are readonly literals or in an immutable list
         // Holds information for refining the skyline file after data import
@@ -41,6 +42,11 @@ namespace SkylineBatch
         {
             return new RefineSettings(baseRefineSettings._commandValues, baseRefineSettings.RemoveDecoys, 
                 baseRefineSettings.RemoveResults, outputFilePath);
+        }
+
+        public static RefineSettings Empty()
+        {
+            return new RefineSettings(new RefineInputObject(), false, false, null);
         }
 
         public RefineSettings(RefineInputObject commandValues, bool removeDecoys, bool removeResults,
@@ -95,11 +101,11 @@ namespace SkylineBatch
             }
         }
 
-        public bool RunWillOverwrite(int startStep, string configHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
         {
             var tab = "      ";
             message = new StringBuilder(configHeader);
-            if (startStep != 3)
+            if (runOption != RunBatchOptions.FROM_REFINE)
                 return false;
             if (File.Exists(OutputFilePath))
             {
@@ -113,32 +119,52 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out RefineSettings pathReplacedRefineSettings)
         {
-            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, out string replacedOutputPath);
+            var didReplace = TextUtil.SuccessfulReplace(ValidateOutputFile, oldRoot, newRoot, OutputFilePath, Program.FunctionalTest, out string replacedOutputPath);
             pathReplacedRefineSettings =
                 new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, replacedOutputPath);
             return didReplace;
         }
 
-        #region Read/Write XML
-
-        private enum Attr
+        public RefineSettings ForcePathReplace(string oldRoot, string newRoot)
         {
-            RemoveDecoys,
-            RemoveResults,
-            OutputFilePath
-        };
+            var path = !string.IsNullOrEmpty(OutputFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, OutputFilePath) : string.Empty;
+            return new RefineSettings(_commandValues, RemoveDecoys, RemoveResults, path);
+        }
+
+        #region Read/Write XML
 
         public static RefineSettings ReadXml(XmlReader reader)
         {
-            if (!reader.Name.Equals("refine_settings"))
+            XmlUtil.ReadUntilElement(reader);
+            var removeDecoys = reader.GetBoolAttribute(XML_TAGS.remove_decoys);
+            var removeResults = reader.GetBoolAttribute(XML_TAGS.remove_results);
+            var outputFilePath = reader.GetAttribute(XML_TAGS.output_file_path);
+            var commandList = new List<Tuple<RefineVariable, string>>();
+            if (reader.ReadToDescendant(XMLElements.COMMAND_ARGUMENT))
             {
-                // This is an old configuration with no refine settings
+                do
+                {
+                    var variable =
+                        (RefineVariable) Enum.Parse(typeof(RefineVariable), reader.GetAttribute(XML_TAGS.name));
+                    var value = reader.GetAttribute(XML_TAGS.value);
+                    commandList.Add(new Tuple<RefineVariable, string>(variable, value));
+                } while (reader.ReadToNextSibling(XMLElements.COMMAND_ARGUMENT));
+            }
+            var commandValues = RefineInputObject.FromInvariantCommandList(commandList);
+            return new RefineSettings(commandValues, removeDecoys, removeResults, outputFilePath);
+        }
+
+        public static RefineSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!XmlUtil.ReadNextElement(reader, "refine_settings"))
+            {
+                // This is a very old configuration with no refine settings
                 return new RefineSettings(new RefineInputObject(), false, false,
                     string.Empty);
             }
-            var removeDecoys = reader.GetBoolAttribute(Attr.RemoveDecoys);
-            var removeResults = reader.GetBoolAttribute(Attr.RemoveResults);
-            var outputFilePath = FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, reader.GetAttribute(Attr.OutputFilePath));
+            var removeDecoys = reader.GetBoolAttribute(OLD_XML_TAGS.RemoveDecoys);
+            var removeResults = reader.GetBoolAttribute(OLD_XML_TAGS.RemoveResults);
+            var outputFilePath = reader.GetAttribute(OLD_XML_TAGS.OutputFilePath);
             var commandList = new List<Tuple<RefineVariable, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
@@ -160,13 +186,19 @@ namespace SkylineBatch
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("refine_settings");
-            writer.WriteAttribute(Attr.RemoveDecoys, RemoveDecoys);
-            writer.WriteAttribute(Attr.RemoveResults, RemoveResults);
-            writer.WriteAttributeIfString(Attr.OutputFilePath, OutputFilePath);
+            writer.WriteStartElement(XML_EL);
+            writer.WriteAttribute(XML_TAGS.remove_decoys, RemoveDecoys);
+            writer.WriteAttribute(XML_TAGS.remove_results, RemoveResults);
+            writer.WriteAttributeIfString(XML_TAGS.output_file_path, OutputFilePath);
             var commandList = _commandValues.AsCommandList(CultureInfo.InvariantCulture);
             foreach (var commandValue in commandList)
-                writer.WriteElementString("command_value", commandValue);
+            {
+                writer.WriteStartElement(XMLElements.COMMAND_ARGUMENT);
+                writer.WriteAttributeIfString(XML_TAGS.name, commandValue.Item1.ToString());
+                var value = !string.IsNullOrEmpty(commandValue.Item2) ? commandValue.Item2 : true.ToString();
+                writer.WriteAttributeIfString(XML_TAGS.value, value);
+                writer.WriteEndElement();
+            }
             writer.WriteEndElement();
         }
         #endregion

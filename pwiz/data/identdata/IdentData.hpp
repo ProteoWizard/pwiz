@@ -29,7 +29,7 @@
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/common/ParamTypes.hpp"
-#include "boost/logic/tribool.hpp"
+#include "boost/logic/tribool_io.hpp"
 #include <vector>
 #include <string>
 #include <map>

@@ -21,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Runtime.CompilerServices;
+using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -43,6 +45,7 @@ namespace SkylineBatch
         // Parameters for running tests
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static string TestDirectory { get; set; }       
+        public static readonly string TEST_VERSION = "1000.0.0.0";
 
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         // public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
@@ -53,6 +56,7 @@ namespace SkylineBatch
         {
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
+            InitializeVersion();
 
             if (!FunctionalTest)
             {
@@ -84,6 +88,7 @@ namespace SkylineBatch
                 });
             }
 
+            var restart = false;
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
@@ -97,36 +102,101 @@ namespace SkylineBatch
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+                string xmlFile = null;
                 try
                 {
-                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
+                    xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
+                        .FilePath;
+                    if (!File.Exists(xmlFile))
+                    {
+                        Settings.Default.Upgrade();
+                        _ = SharedBatch.Properties.Settings.Default.InstallationId;
+                    }
+                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, xmlFile));
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // ignored
+                    restart = true;
+                    if (xmlFile == null && (e is ConfigurationErrorsException))
+                        xmlFile = ((ConfigurationErrorsException)e).Filename;
+                    ProgramLog.Error(e.Message, e);
+                    var folderToCopy = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    var message = string.Format("Opening the {0} saved settings file caused the following error: {1}", AppName(), e.Message);
+                    if (!string.IsNullOrEmpty(xmlFile))
+                    {
+                        File.Copy(xmlFile, newFileName, true);
+                        File.Delete(xmlFile);
+                        //Directory.Delete(Path.GetDirectoryName(xmlFile));
+                        message += Environment.NewLine + Environment.NewLine +
+                                   string.Format(
+                                       SharedBatch.Properties.Resources
+                                           .Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       AppName()) +
+                                   Environment.NewLine +
+                                   newFileName;
+                    }
+                    MessageBox.Show(message);
                 }
-                
-                if (!InitSkylineSettings()) return;
-                RInstallations.FindRDirectory();
 
-                AddFileTypesToRegistry();
-                InitializeVersion();
-                var openFile = GetFirstArg(args);
+                if (!restart)
+                {
+                    if (!FunctionalTest) SendAnalyticsHit();
+                    if (!InitSkylineSettings()) return;
+                    Settings.Default.UpdateIfNecessary();
+                    RInstallations.FindRDirectory();
 
-                MainWindow = new MainForm(openFile);
-                MainWindow.Text = Version();
-                Application.Run(MainWindow);
+                    AddFileTypesToRegistry();
+                    var openFile = GetFirstArg(args);
+
+                    MainWindow = new MainForm(openFile);
+                    MainWindow.Text = Version();
+                    Application.Run(MainWindow);
+                }
 
                 mutex.ReleaseMutex();
             }
+            if (restart) Application.Restart();
         }
 
         private static void InitializeVersion()
         {
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                : string.Empty;
+            if (ApplicationDeployment.IsNetworkDeployed)
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            else
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyFileVersionAttribute)attrs[0]).Version;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).FileVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion ?? string.Empty;
+                }
+                catch (Exception)
+                {
+                    _version = string.Empty;
+                }
+            }
+            if (FunctionalTest)
+                _version = TEST_VERSION;
         }
 
         private static string GetFirstArg(string[] args)
@@ -134,7 +204,6 @@ namespace SkylineBatch
             string arg;
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
                 var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 arg = activationData != null && activationData.Length > 0
                     ? activationData[0]
@@ -142,7 +211,6 @@ namespace SkylineBatch
             }
             else
             {
-                _version = string.Empty;
                 arg = args.Length > 0 ? args[0] : string.Empty;
             }
 
@@ -186,7 +254,49 @@ namespace SkylineBatch
                     appExe, configFileIconPath);
             }
         }
-        
+
+        // ReSharper disable once UnusedMember.Local
+        private static void SendAnalyticsHit()
+        {
+            // ReSharper disable LocalizableElement
+            var postData = "v=1"; // Version 
+            postData += "&t=event"; // Event hit type
+            postData += "&tid=UA-9194399-1"; // Tracking Id 
+            postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
+            postData += "&ec=InstanceBatch"; // Event Category
+            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : "Version unspecified") + "batch"); // version should never be unspecified
+            var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
+            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
+            postData += "&p=" + "Instance"; // Page
+
+            var data = Encoding.UTF8.GetBytes(postData);
+            var analyticsUrl = "http://www.google-analytics.com/collect";
+            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
+
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            try
+            {
+                using (Stream stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+            } catch (Exception e)
+            {
+                ProgramLog.Error(string.Format(Resources.Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_, analyticsUrl), e);
+                return;
+            }
+
+            var response = (HttpWebResponse)request.GetResponse();
+            var responseStream = response.GetResponseStream();
+            if (null != responseStream)
+            {
+                new StreamReader(responseStream).ReadToEnd();
+            }
+            // ReSharper restore LocalizableElement
+        }
+
         public static string Version()
         {
             return $"{AppName()} {_version}";

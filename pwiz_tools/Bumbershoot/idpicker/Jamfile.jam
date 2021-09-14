@@ -124,6 +124,7 @@ rule test-properties ( targets + : sources * : properties * )
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/Test/$(PLATFORM)/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 rule do_IDPicker_test ( targets + : sources * : properties * )
@@ -212,7 +213,6 @@ install install_cli
         Qonverter//gene2protein.db3 
     : # requirements
         <conditional>@install-requirements
-        <conditional>@gcc-install-dll-path
     ;
 
 install install
@@ -223,7 +223,6 @@ install install
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-requirements
-        <conditional>@gcc-install-dll-path
     ;
 
 # TODO: figure out why this hangs on TeamCity 64-bit builds, but works fine with 32-bit builds

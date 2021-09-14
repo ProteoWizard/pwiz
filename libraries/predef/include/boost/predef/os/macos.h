@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Copyright Franz Detro 2014
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
@@ -19,23 +19,24 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_OS_MACOS`]
+/* tag::reference[]
+= `BOOST_OS_MACOS`
 
-[@http://en.wikipedia.org/wiki/Mac_OS Mac OS] operating system.
+http://en.wikipedia.org/wiki/Mac_OS[Mac OS] operating system.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`macintosh`] [__predef_detection__]]
-    [[`Macintosh`] [__predef_detection__]]
-    [[`__APPLE__`] [__predef_detection__]]
-    [[`__MACH__`] [__predef_detection__]]
+| `macintosh` | {predef_detection}
+| `Macintosh` | {predef_detection}
+| `+__APPLE__+` | {predef_detection}
+| `+__MACH__+` | {predef_detection}
 
-    [[`__APPLE__`, `__MACH__`] [10.0.0]]
-    [[ /otherwise/ ] [9.0.0]]
-    ]
- */
+| `+__APPLE__+`, `+__MACH__+` | 10.0.0
+| `_otherwise_` | 9.0.0
+|===
+*/ // end::reference[]
 
 #define BOOST_OS_MACOS BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -59,8 +60,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_OS_MACOS_NAME "Mac OS"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_OS_MACOS,BOOST_OS_MACOS_NAME)
-
-
-#endif

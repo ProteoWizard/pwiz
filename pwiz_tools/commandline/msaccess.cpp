@@ -81,7 +81,7 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
         string name, args;
         istringstream iss(*it);
         iss >> name;
-        getline(iss, args);
+        getlinePortable(iss, args);
 
         if (supportedAnalyzer(name, analyzer_strings<MetadataReporter>::id()))
         {

@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model
 {
     public class CustomIon : CustomMolecule, IAuditLogComparable
     {
-        public static readonly CustomIon EMPTY = new CustomIon();
+        public new static readonly CustomIon EMPTY = new CustomIon();
 
         [TrackChildren(ignoreName:true, ignoreDefaultParent:true)]
         public Adduct Adduct { get; private set; }
@@ -83,6 +83,11 @@ namespace pwiz.Skyline.Model
 
         public new bool IsEmpty { get { return ReferenceEquals(this, EMPTY) || (Adduct.IsEmpty && base.IsEmpty); } }
 
+        public static bool IsNullOrEmpty(CustomIon ion)
+        {
+            return ion == null || ion.IsEmpty;
+        }
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -129,7 +134,7 @@ namespace pwiz.Skyline.Model
             var tsv = ToTSV();
             return AccessionNumbers.EscapeTabsForXML(tsv);
         }
-        public new static CustomMolecule FromSerializableString(string val)
+        public new static CustomIon FromSerializableString(string val)
         {
             var tsv = MoleculeAccessionNumbers.UnescapeTabsForXML(val);
             return FromTSV(tsv);

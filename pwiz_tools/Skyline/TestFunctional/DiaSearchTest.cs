@@ -307,7 +307,6 @@ namespace pwiz.SkylineTestFunctional
                         {"RTOverlap", new AbstractDdaSearchEngine.Setting("RTOverlap", 0.05, 0, 10)},
                         {"CorrThreshold", new AbstractDdaSearchEngine.Setting("CorrThreshold", 0.1, 0, 10)},
                         {"DeltaApex", new AbstractDdaSearchEngine.Setting("DeltaApex", 0.6, 0, 10)},
-                        {"Thread", new AbstractDdaSearchEngine.Setting("Thread", 1, 0, 64)},
                     };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
