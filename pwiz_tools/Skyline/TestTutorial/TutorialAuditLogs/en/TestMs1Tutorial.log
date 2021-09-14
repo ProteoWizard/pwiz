@@ -73,90 +73,90 @@ Import FASTA =
     FASTA file = "12_proteins.062011.fasta"
 }
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
+Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777.3677++
+Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777.3677++
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ in "1_MCF7_TiB_L" from 38.88 to 38.79
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [568, 581] > 777.3677++ in "1_MCF7_TiB_L" from 39.21 to 39.39
+Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777.3677++
+Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777.3677++ in "1_MCF7_TiB_L" from 38.88 to 38.79
+Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777.3677++ in "1_MCF7_TiB_L" from 39.21 to 39.39
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
+Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ in "1_MCF7_TiB_L" from 36.79 to 36.50
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ in "1_MCF7_TiB_L" from 37.36 to 38.00
+Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ in "1_MCF7_TiB_L" from 36.79 to 36.50
+Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ in "1_MCF7_TiB_L" from 37.36 to 38.00
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
+Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
+Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
+Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 40.5
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
+Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
+Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
+Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 40.8
 
-Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
+Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
 All Info  :
-Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Picked child precursor - 732.3099+++ (irank 2) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Picked child precursor [M+1] - 732.6442+++ (irank 1) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Picked child precursor [M+2] - 732.9785+++ (irank 3) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Picked child precursor [M+3] - 733.3127+++ (irank 4) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
-Picked child precursor [M+4] - 733.6468+++ (irank 5) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++
+Picked 5 children for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Picked child precursor - 732.3099+++ (irank 2) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Picked child precursor [M+1] - 732.6442+++ (irank 1) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Picked child precursor [M+2] - 732.9785+++ (irank 3) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Picked child precursor [M+3] - 733.3127+++ (irank 4) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
+Picked child precursor [M+4] - 733.6468+++ (irank 5) for sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
+Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
+Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
+Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "1_MCF7_TiB_L" at 37.0
 
-Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
-Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
+Undo Redo : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
+Summary   : Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
 All Info  :
-Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
+Picked peak sp|Q09666|AHNK_HUMAN > K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] (missed 1) > 732.3099+++ > precursor - 732.3099+++ (irank 2) in "5b_MCF7_TiTip3" at 37.4
 
-Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
+Undo Redo : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Summary   : Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
 All Info  :
-Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Picked child precursor - 693.2957+++ (irank 1) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Picked child precursor [M+1] - 693.6300+++ (irank 2) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Picked child precursor [M+2] - 693.9643+++ (irank 3) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Picked child precursor [M+3] - 694.2985+++ (irank 4) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Picked child precursor [M+4] - 694.6326+++ (irank 5) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
+Picked 5 children for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Picked child precursor - 693.2957+++ (irank 1) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Picked child precursor [M+1] - 693.6300+++ (irank 2) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Picked child precursor [M+2] - 693.9643+++ (irank 3) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Picked child precursor [M+3] - 694.2985+++ (irank 4) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Picked child precursor [M+4] - 694.6326+++ (irank 5) for sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
 
-Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
+Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Summary   : Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
 All Info  :
-Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++
-Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++ in "5b_MCF7_TiTip3" from 37.34 to 37.34
-Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] (missed 1) > 693.2957+++ in "5b_MCF7_TiTip3" from 39.33 to 38.07
+Changed peak bounds of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++
+Changed start time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++ in "5b_MCF7_TiTip3" from 37.34 to 37.34
+Changed end time of all peaks of sp|Q09666|AHNK_HUMAN > K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] (missed 1) > 693.2957+++ in "5b_MCF7_TiTip3" from 39.33 to 38.07
 
-Undo Redo : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Summary   : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
+Undo Redo : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Summary   : Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
 All Info  :
-Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor - 838.3391+++ (irank 2) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor [M+1] - 838.6734+++ (irank 1) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor [M+2] - 839.0077+++ (irank 3) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor [M+3] - 839.3419+++ (irank 4) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor [M+4] - 839.6761+++ (irank 5) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
-Picked child precursor [M+5] - 840.0103+++ (irank 6) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] (missed 1) > 838.3391+++
+Picked 6 children for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor - 838.3391+++ (irank 2) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor [M+1] - 838.6734+++ (irank 1) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor [M+2] - 839.0077+++ (irank 3) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor [M+3] - 839.3419+++ (irank 4) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor [M+4] - 839.6761+++ (irank 5) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
+Picked child precursor [M+5] - 840.0103+++ (irank 6) for sp|Q9NYF8|BCLF1_HUMAN > R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] (missed 1) > 838.3391+++
 
-Undo Redo : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Summary   : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
+Undo Redo : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Summary   : Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
 All Info  :
-Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor - 1065.9279++++ (irank 5) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+1] - 1066.1786++++ (irank 2) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+2] - 1066.4293++++ (irank 1) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+3] - 1066.6800++++ (irank 3) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+4] - 1066.9306++++ (irank 4) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+5] - 1067.1813++++ (irank 6) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+6] - 1067.4320++++ (irank 7) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
-Picked child precursor [M+7] - 1067.6826++++ (irank 8) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065.9279++++
+Picked 8 children for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor - 1065.9279++++ (irank 5) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+1] - 1066.1786++++ (irank 2) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+2] - 1066.4293++++ (irank 1) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+3] - 1066.6800++++ (irank 3) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+4] - 1066.9306++++ (irank 4) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+5] - 1067.1813++++ (irank 6) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+6] - 1067.4320++++ (irank 7) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
+Picked child precursor [M+7] - 1067.6826++++ (irank 8) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] (missed 2) > 1065.9279++++
 
 Undo Redo : Peptide Settings -- Prediction > Time window changed to "10"
 Summary   : Settings > Peptide Settings -- Prediction > Time window changed to "10"

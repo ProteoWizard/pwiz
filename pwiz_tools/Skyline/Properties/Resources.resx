@@ -8106,9 +8106,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_RenderTip_Losses" xml:space="preserve">
     <value>Losses</value>
   </data>
-  <data name="CopyEmfToolStripMenuItem_AddToContextMenu_Copy" xml:space="preserve">
-    <value>Copy</value>
-  </data>
   <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
     <value>Annotation conflict for '{0}' found attempting to merge annotations.</value>
   </data>
@@ -8491,9 +8488,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
-  </data>
-  <data name="CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard" xml:space="preserve">
-    <value>Unable to copy metafile image to the clipboard.</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The peptide '{0}' appears multiple times in the added list.</value>
@@ -11495,6 +11489,48 @@ In any of the following directories:
 If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
 
 </value>
+  </data>  
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Collision Cross Section (sq A)</value>
+  </data>
+  <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
+    <value>{0}{1} ppm</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Decoy" xml:space="preserve">
+    <value>Decoy</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
+    <value>Library Intensity</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
+    <value>Fragment Name</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
+    <value>Protein Description</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
+    <value>Explicit Delustering Potential</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
+    <value>Molecule List Name</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name" xml:space="preserve">
+    <value>Molecule Name</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula" xml:space="preserve">
+    <value>Molecular Formula</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z" xml:space="preserve">
+    <value>Molecular Formula and/or Precursor m/z</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Adduct and/or Precursor Charge</value>
+  </data>
+  <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
+    <value>Copy</value>
   </data>
   <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
     <value>Replicates</value>

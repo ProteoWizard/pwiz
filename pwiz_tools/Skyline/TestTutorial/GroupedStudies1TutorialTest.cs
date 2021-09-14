@@ -56,7 +56,6 @@ namespace pwiz.SkylineTestTutorial
     public class GroupedStudies1TutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestGroupedStudies1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -349,7 +348,7 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.Molecules, 1);
             ActivateReplicate("D_196_REP3");
 
-            RunUI(() => Assert.AreEqual("R.LGGEEVSVACK.L [237, 247]", SkylineWindow.SelectedNode.Text));
+            RunUI(() => Assert.AreEqual("R.LGGEEVSVACK.L [238, 248]", SkylineWindow.SelectedNode.Text));
 
             PauseForScreenShot("Retention Times graph for LGGEEVSVACK peptide", 20);
 
@@ -398,7 +397,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                Assert.AreEqual("R.GSYNLQDLLAQAK.L [378, 390]", SkylineWindow.SelectedNode.Text);
+                Assert.AreEqual("R.GSYNLQDLLAQAK.L [379, 391]", SkylineWindow.SelectedNode.Text);
                 SkylineWindow.AutoZoomNone();
             });
 

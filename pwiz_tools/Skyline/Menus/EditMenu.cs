@@ -147,15 +147,7 @@ namespace pwiz.Skyline.Menus
             sbData.Append(stringWriter);
             dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
 
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetDataObject(dataObj);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetCopyErrorMessage());
-            }
+            ClipboardHelper.SetClipboardData(SkylineWindow, dataObj, false);
         }
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
@@ -400,8 +392,8 @@ namespace pwiz.Skyline.Menus
                 if (inputType == SrmDocument.DOCUMENT_TYPE.small_molecules && 
                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
                 {
-                    SkylineWindow.InsertSmallMoleculeTransitionList(text,
-                        Resources.SkylineWindow_Paste_Paste_transition_list);
+                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false, inputType);
                 }
                 // If the text contains numbers, see if it can be imported as a mass list.
                 // It is definitely not a sequence, if it has numbers.  Whereas, sequences do

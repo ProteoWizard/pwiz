@@ -83,7 +83,7 @@ namespace SkylineBatchTest
 
             var validMainSettings = new MainSettings(validTemplate, validAnalysisFolder, validDataDir, null, string.Empty, null, string.Empty);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
-            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, TestUtils.GetSkylineDir());
+            var validSkylineSettings = new SkylineSettings(SkylineType.Custom, null, TestUtils.GetSkylineDir());
             var validFileSettings = FileSettings.FromUi(string.Empty, string.Empty, string.Empty, false, false, true);
             var validRefineSettings = new RefineSettings(new RefineInputObject(), false, false, string.Empty);
 
@@ -193,7 +193,7 @@ namespace SkylineBatchTest
                 null, string.Empty, null, testConfig.MainSettings.ReplicateNamingPattern);
             var differentMainSettings = new SkylineBatchConfig("name", false, false, DateTime.MinValue, 
                 differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), TestUtils.GetTestReportSettings(), 
-                new SkylineSettings(SkylineType.Skyline));
+                new SkylineSettings(SkylineType.Skyline, null));
             Assert.IsFalse(Equals(testConfig, differentMainSettings));
         }
     }

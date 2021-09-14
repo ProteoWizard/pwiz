@@ -45,11 +45,11 @@ All Info  :
 Set standard type for DFDSLGTLR
 Targets > PosCtrl > DFDSLGTLR > Standard type changed from Missing to "QC"
 
-Undo Redo : Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Summary   : Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+Undo Redo : Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [267, 286]
+Summary   : Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [267, 286] > Standard type changed from Missing to "QC"
 All Info  :
-Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [266, 285]
-Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [266, 285] > Standard type changed from Missing to "QC"
+Set standard type for R.GGYAGMLVGSVGETVAQLAR.T [267, 286]
+Targets > Rv2623|TB31.7 > R.GGYAGMLVGSVGETVAQLAR.T [267, 286] > Standard type changed from Missing to "QC"
 
 Undo Redo : Deleted target iRTpeptides > LGGNEQVTR
 Summary   : Deleted target iRTpeptides > LGGNEQVTR
