@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Menus
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         /// <summary>
