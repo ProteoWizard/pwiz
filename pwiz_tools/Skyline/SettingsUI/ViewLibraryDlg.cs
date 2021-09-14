@@ -969,7 +969,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);
         }
 
         public void LockYAxis(bool lockY)

@@ -636,9 +636,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return GetGraphItems(graphControl.GraphPane).Last(); }
         }
-        public GraphPane GraphItem
+        public GraphPane GraphPane
         {
             get { return graphControl.GraphPane; }
+        }
+
+        public MSGraphControl GraphControl
+        {
+            get { return graphControl; }
         }
 
         public double? BestPeakTime

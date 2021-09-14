@@ -5775,7 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}..
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -7722,29 +7722,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copy.
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_AddToContextMenu_Copy {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_AddToContextMenu_Copy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metafile image copied to clipboard.
         /// </summary>
         public static string CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard {
             get {
                 return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to copy metafile image to the clipboard..
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard", resourceCulture);
             }
         }
         
@@ -14749,6 +14731,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}{1} ppm.
+        /// </summary>
+        public static string GraphSpectrum_MassErrorFormat_ppm {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_MassErrorFormat_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {
@@ -16224,7 +16215,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -21010,7 +21001,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -35295,6 +35286,15 @@ namespace pwiz.Skyline.Properties {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string ZedGraphClipboard_CreateCopyMenuItems_Copy {
+            get {
+                return ResourceManager.GetString("ZedGraphClipboard_CreateCopyMenuItems_Copy", resourceCulture);
             }
         }
         
