@@ -1405,13 +1405,14 @@ namespace pwiz.Skyline.Model
             MassListImporter importer, 
             IdentityPath to, 
             out IdentityPath firstAdded,
-            List<string> columnPositions = null)
+            List<string> columnPositions = null,
+            bool hasHeaders = true)
         {
             List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
+            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1436,7 +1437,8 @@ namespace pwiz.Skyline.Model
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups,
                                           List<string> columnPositions = null,
-                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none)
+                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none,
+                                          bool hasHeaders = true)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1452,7 +1454,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     var lines = inputs.ReadLines(progressMonitor);
-                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions);
+                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
                 }
                 catch (LineColNumberedIoException x)

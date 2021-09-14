@@ -8106,9 +8106,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_RenderTip_Losses" xml:space="preserve">
     <value>Losses</value>
   </data>
-  <data name="CopyEmfToolStripMenuItem_AddToContextMenu_Copy" xml:space="preserve">
-    <value>Copy</value>
-  </data>
   <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
     <value>Annotation conflict for '{0}' found attempting to merge annotations.</value>
   </data>
@@ -8491,9 +8488,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
-  </data>
-  <data name="CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard" xml:space="preserve">
-    <value>Unable to copy metafile image to the clipboard.</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The peptide '{0}' appears multiple times in the added list.</value>
@@ -11495,8 +11489,12 @@ In any of the following directories:
 If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
 
 </value>
-  </data>  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+  </data>  
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
+  </data>
+  <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
+    <value>{0}{1} ppm</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
     <value>iRT</value>
@@ -11533,5 +11531,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
     <value>Skyline 21.1</value>
+  </data>
+  <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
+    <value>Copy</value>
   </data>
 </root>
