@@ -3097,6 +3097,18 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFullScanMassError {
+            get {
+                return ((bool)(this["ShowFullScanMassError"]));
+            }
+            set {
+                this["ShowFullScanMassError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ExportSureQuant {
             get {
                 return ((bool)(this["ExportSureQuant"]));
@@ -3128,16 +3140,17 @@ namespace pwiz.Skyline.Properties {
             set {
                 this["IntensityThresholdValue"] = value;
             }
-
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowFullScanMassError {
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double IntensityThresholdMin {
             get {
-                return ((bool)(this["ShowFullScanMassError"]));
+                return ((double)(this["IntensityThresholdMin"]));
             }
             set {
-                this["ShowFullScanMassError"] = value;
+                this["IntensityThresholdMin"] = value;
             }
         }
         
@@ -3150,18 +3163,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["SyncMZScale"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
-        public double IntensityThresholdMin {
-            get {
-                return ((double)(this["IntensityThresholdMin"]));
-            }
-            set {
-                this["IntensityThresholdMin"] = value;
             }
         }
     }
