@@ -62,6 +62,7 @@ namespace TestPerf
             };
             RunFunctionalTest();
         }
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
         private const string OXIDATION_M = "Oxidation (M)";
