@@ -5775,7 +5775,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}..
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -7722,29 +7722,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copy.
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_AddToContextMenu_Copy {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_AddToContextMenu_Copy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metafile image copied to clipboard.
         /// </summary>
         public static string CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard {
             get {
                 return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to copy metafile image to the clipboard..
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard", resourceCulture);
             }
         }
         
@@ -14729,6 +14711,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphFullScan_LoadScan_Spectrum_unavailable {
             get {
                 return ResourceManager.GetString("GraphFullScan_LoadScan_Spectrum_unavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}{1} ppm.
+        /// </summary>
+        public static string GraphSpectrum_MassErrorFormat_ppm {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_MassErrorFormat_ppm", resourceCulture);
             }
         }
         
@@ -35279,6 +35270,15 @@ namespace pwiz.Skyline.Properties {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string ZedGraphClipboard_CreateCopyMenuItems_Copy {
+            get {
+                return ResourceManager.GetString("ZedGraphClipboard_CreateCopyMenuItems_Copy", resourceCulture);
             }
         }
         
