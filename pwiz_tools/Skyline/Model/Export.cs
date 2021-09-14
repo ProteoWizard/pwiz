@@ -723,7 +723,7 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
         {
-            var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
+            var exporter = InitExporter(new ThermoFusionMassListExporter(document));
             exporter.UseSlens = UseSlens;
             exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
@@ -1883,11 +1883,9 @@ namespace pwiz.Skyline.Model
         public ThermoFusionMethodExporter(SrmDocument document)
             : base(document)
         {
-            IsolationList = true;
-            IsPrecursorLimited = true;
         }
 
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (fileName != null)
                 EnsureLibraries();
@@ -3544,19 +3542,15 @@ namespace pwiz.Skyline.Model
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
-        }
-
-        // Write values separated by the field separator, and a line separator at the end.
-        private void Write(TextWriter writer, params string[] vals)
-        {
-            writer.WriteLine(string.Join(FieldSeparator.ToString(CultureInfo.InvariantCulture), vals));
+            IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
                 ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
-                : @"Compound,Formula,Adduct,m/z,z,t start (min),t stop (min),CID Collision Energy (%)";
+                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
             if (WriteFaimsCv)
@@ -3578,10 +3572,36 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            if (Tune3Columns)
+            {
+                writer.Write(@"{0} ({1})",
+                    nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
+                    nodeTranGroup.TransitionGroup.LabelType);
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+                writer.Write(FieldSeparator);
+            }
 
-            string start = string.Empty;
-            string end = string.Empty;
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+
+            var z = nodeTranGroup.TransitionGroup.PrecursorCharge;  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
+            if (Tune3Columns)
+            {
+                writer.Write(Math.Abs(z).ToString(CultureInfo));
+                writer.Write(FieldSeparator);
+                writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
+            }
+            else
+            {
+                writer.Write(z.ToString(CultureInfo));
+            }
+            writer.Write(FieldSeparator);
+
+            var start = string.Empty;
+            var end = string.Empty;
             if (MethodType == ExportMethodType.Scheduled)
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
@@ -3595,11 +3615,14 @@ namespace pwiz.Skyline.Model
                     end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
                 }
             }
+            writer.Write(start);
+            writer.Write(FieldSeparator);
+            writer.Write(end);
+            writer.Write(FieldSeparator);
 
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
-            bool wideWindowDia = false;
+            var wideWindowDia = false;
             if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
             {
                 // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
@@ -3610,43 +3633,22 @@ namespace pwiz.Skyline.Model
                         iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
                 }
             }
-            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
-            var writeColumns = new List<string> {precursorMz, z, start, end, collisionEnergy};
-            if (Tune3Columns)
-            {
-                writeColumns.InsertRange(0, new []
-                {
-                    string.Format(@"{0} ({1})",
-                        nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
-                        nodeTranGroup.TransitionGroup.LabelType),
-                    string.Empty,
-                    string.Empty
-                });
-            }
+            writer.Write((wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo));
+
             if (UseSlens)
             {
-                var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
-                writeColumns.Add(slens);
+                writer.Write(FieldSeparator);
+                writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
             if (WriteFaimsCv)
             {
                 var cv = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step);
-                writeColumns.Add(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
+                writer.Write(FieldSeparator);
+                writer.Write(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
             }
-            Write(writer, writeColumns.ToArray());
+            writer.WriteLine();
         }
-    }
-
-    public class ThermoFusionIsolationListExporter : ThermoFusionMassListExporter
-    {
-        public ThermoFusionIsolationListExporter(SrmDocument document)
-            : base(document)
-        {
-            IsolationList = true;
-            IsPrecursorLimited = true;
-        }
-
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public virtual void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
