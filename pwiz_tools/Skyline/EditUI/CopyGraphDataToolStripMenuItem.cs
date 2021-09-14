@@ -34,12 +34,11 @@ namespace pwiz.Skyline.EditUI
         {
             ZedGraphControl = zedGraphControl;
             Text = Resources.CopyGraphDataToolStripMenuItem_CopyGraphDataToolStripMenuItem_Copy_Data;
-            Click += CopyGraphDataToolStripMenuItem_Click;
         }
         
         public ZedGraphControl ZedGraphControl { get; private set; }
 
-        void CopyGraphDataToolStripMenuItem_Click(object sender, EventArgs e)
+        protected override void OnClick(EventArgs e)
         {
             CopyGraphData(ZedGraphControl);
         }

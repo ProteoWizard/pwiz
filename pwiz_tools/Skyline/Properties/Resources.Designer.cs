@@ -7722,29 +7722,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copy.
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_AddToContextMenu_Copy {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_AddToContextMenu_Copy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metafile image copied to clipboard.
         /// </summary>
         public static string CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard {
             get {
                 return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to copy metafile image to the clipboard..
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard", resourceCulture);
             }
         }
         
@@ -35279,6 +35261,15 @@ namespace pwiz.Skyline.Properties {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string ZedGraphClipboard_CreateCopyMenuItems_Copy {
+            get {
+                return ResourceManager.GetString("ZedGraphClipboard_CreateCopyMenuItems_Copy", resourceCulture);
             }
         }
         
