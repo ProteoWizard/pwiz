@@ -73,7 +73,16 @@ namespace pwiz.SkylineTestFunctional
             ClipboardEx.UseInternalClipboard(false);
             RunUI(() =>
             {
-                Clipboard.SetText("hello");
+                try
+                {
+                    Clipboard.SetText("hello");
+                }
+                catch (Exception e)
+                {
+                    string clipboardMessage = ClipboardHelper.GetCopyErrorMessage();
+                    throw new AssertFailedException(clipboardMessage, e);
+                }
+
                 Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
