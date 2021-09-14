@@ -41,6 +41,11 @@ namespace pwiz.Skyline.Model.Results
         public double? ExtractionWidth;
         public IonMobilityFilter _ionMobilityInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
+        public bool MatchMz(double mz)
+        {
+            return mz >= ProductMz.Value - ExtractionWidth / 2 &&
+                   mz < ProductMz.Value + ExtractionWidth / 2;
+        }
 
         public override string ToString() // Not user facing, for debug convenience only
         {
