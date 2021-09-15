@@ -432,6 +432,7 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\ZedGraphClipboard.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -616,6 +617,7 @@
     <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
     <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\Scoring\PeakScoreCalculator.cs" />
+    <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
