@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Sets _newChromatogramData to indicate which replicates have files whose ImportTime
-        ///is different from what is in the cache file.
+        /// is different from what is in the cache file.
         /// </summary>
         private void CheckForNewChromatogramData()
         {
@@ -678,7 +678,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Set the <see cref="ChromFileInfo.ImportTime"/> values to the times from
-        /// the ChromatogramCache so that the <see cref="HasNewChromatogramData"/> will
+        /// the ChromatogramCache so that <see cref="HasNewChromatogramData"/> will
         /// return false.
         /// </summary>
         public MeasuredResults UpdateImportTimes()
