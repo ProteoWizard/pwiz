@@ -1,9 +1,12 @@
 ﻿using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.PeakFinding;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -27,24 +30,22 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(doc.IsLoaded);
             var chromatogramSet = doc.Settings.MeasuredResults.Chromatograms[0];
             var peakGroupIntegrator = PeakGroupIntegrator
-                .GetPeakGroupIntegrators(doc, doc.GetPathTo((int) SrmDocument.Level.Molecules, 0), chromatogramSet, chromatogramSet.MSDataFileInfos[0]).FirstOrDefault();
+                .GetPeakGroupIntegrators(doc, doc.GetPathTo((int) SrmDocument.Level.Molecules, 0), chromatogramSet,
+                    chromatogramSet.MSDataFileInfos[0]).FirstOrDefault();
             Assert.IsNotNull(peakGroupIntegrator);
             var peptideChromDataSets = peakGroupIntegrator.MakePeptideChromDataSets();
             Assert.IsNotNull(peptideChromDataSets);
-            var peakFinder = PeakFinders.NewDefaultPeakFinder();
-            var firstChromDataSets = peptideChromDataSets.DataSets.First();
-            var firstChromData = firstChromDataSets.Chromatograms.First();
-            var timeIntensities = firstChromData.TimeIntensities;
-            peakFinder.SetChromatogram(firstChromData.Times, firstChromData.Intensities);
-            var foundPeak = peakFinder.GetPeak(timeIntensities.IndexOfNearestTime(56.5f),
-                timeIntensities.IndexOfNearestTime(57.5f));
-            ChromDataPeak chromDataPeak = new ChromDataPeak(firstChromData, foundPeak);
-            ChromDataPeakList peakGroup = new ChromDataPeakList(chromDataPeak, firstChromDataSets.Chromatograms);
-            PeptideChromDataPeak peak = new PeptideChromDataPeak(firstChromDataSets, peakGroup);
-            foreach (var chromDataSet in peptideChromDataSets.DataSets.Skip(1))
-            {
-                
-            }
+            peptideChromDataSets.PickChromatogramPeaks(new ExplicitPeakBounds(56.5, 57.5, 0));
+            var dataSchema = new SkylineDataSchema(docContainer, DataSchemaLocalizer.INVARIANT);
+            var precursor = new Precursor(dataSchema,
+                new IdentityPath(peakGroupIntegrator.PeptideIdentityPath,
+                    peakGroupIntegrator.ComparableGroup.First().TransitionGroup));
+            var replicate = new Replicate(dataSchema, 0);
+            var resultFile = new ResultFile(replicate, chromatogramSet.MSDataFileInfos.First().FileId, 0);
+            var precursorResult = new PrecursorResult(precursor, resultFile);
+            var chromatogramGroupInfos = peptideChromDataSets.MakeChromatogramGroupInfos().ToList();
+            var scores = precursorResult.GetPeakScores(chromatogramGroupInfos[0]).ToList();
+            Assert.IsNotNull(scores);
         }
 
         private SrmDocument ResolveLibraries(SrmDocument document, string folderPath)

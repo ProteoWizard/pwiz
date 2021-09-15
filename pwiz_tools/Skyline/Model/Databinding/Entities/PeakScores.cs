@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private static readonly int? INDEX_RETENTION_TIME_DIFFERENCE =
             IndexOfScore<MQuestRetentionTimePredictionCalc>();
 
-        public static DefaultPeakScores CalculateScores(PeakScoreCalculator scoreCalculator)
+        public static DefaultPeakScores CalculateScores(IPeakScoreCalculator scoreCalculator)
         {
             var scores = new List<float>();
             var model = LegacyScoringModel.DEFAULT_MODEL;

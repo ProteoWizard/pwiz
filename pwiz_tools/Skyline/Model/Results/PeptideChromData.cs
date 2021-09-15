@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -153,6 +154,12 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
+            var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
+            PickChromatogramPeaks(explicitPeakBounds);
+        }
+
+        public void PickChromatogramPeaks(ExplicitPeakBounds explicitPeakBounds)
+        {
             TimeIntervals intersectedTimeIntervals = null;
             if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
             {
@@ -178,7 +185,6 @@ namespace pwiz.Skyline.Model.Results
             }
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
-            var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
 
             // If an explicit retention time was provided, limit peak picking to that window
             var explicitRetentionTime = NodePep?.ExplicitRetentionTime;
@@ -595,7 +601,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                // If any peak trunctation occurred in peaks that should be matching
+                // If any peak truncation occurred in peaks that should be matching
                 if (peakNarrowest != null && !ReferenceEquals(peakBest, peakNarrowest))
                 {
                     foreach (var peak in peakSet)
@@ -976,6 +982,20 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             return Equals(nodeGroup1.TransitionGroup.PrecursorAdduct, nodeGroup2.TransitionGroup.PrecursorAdduct) &&
                    ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType);
+        }
+
+        public IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos()
+        {
+            var scoreTypeIndices = Enumerable.Range(0, DetailedPeakFeatureCalculators.Count)
+                .ToDictionary(i => DetailedPeakFeatureCalculators[i].GetType(), i => i);
+            var chromCachedFile = new ChromCachedFile(FileInfo.FilePath, default(ChromCachedFile.FlagValues),
+                FileInfo.FileWriteTime ?? DateTime.FromBinary(0), FileInfo.FileWriteTime, (float) FileInfo.MaxRetentionTime, (float) FileInfo.MaxIntensity, FileInfo.IonMobilityUnits, 
+                FileInfo.SampleId, FileInfo.InstrumentSerialNumber, FileInfo.InstrumentInfoList);
+            
+            foreach (var chromDataSet in DataSets)
+            {
+                yield return chromDataSet.ToChromatogramGroupInfo(scoreTypeIndices, chromCachedFile);
+            }
         }
     }
 

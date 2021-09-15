@@ -1,12 +1,17 @@
 ﻿
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class PeakScoreCalculator
+    public interface IPeakScoreCalculator
+    {
+        float Calculate(IPeakFeatureCalculator peakFeatureCalculator);
+    }
+
+    public class CandidatePeakScoreCalculator : IPeakScoreCalculator
     {
         private ChromatogramGroupInfo _chromatogramGroupInfo;
         private PeakScoringContext _peakScoringContext;
         private IPeptidePeakData<ISummaryPeakData> _summaryPeakData;
-        public PeakScoreCalculator(int peakIndex, ChromatogramGroupInfo chromatogramGroup, PeakScoringContext context,
+        public CandidatePeakScoreCalculator(int peakIndex, ChromatogramGroupInfo chromatogramGroup, PeakScoringContext context,
             IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             PeakIndex = peakIndex;
@@ -26,6 +31,5 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             return _chromatogramGroupInfo.GetScore(peakFeatureCalculator.GetType(), PeakIndex);
         }
-
     }
 }

@@ -274,6 +274,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             var chromatogramGroup = new ChromatogramGroup(this);
             var peakGroups = new List<CandidatePeakGroup>();
+            foreach (var peakScores in GetPeakScores(chromatogramGroup.ChromatogramGroupInfo))
+            {
+                var peakGroup = new CandidatePeakGroup(chromatogramGroup, peakGroups.Count, peakScores);
+                peakGroup.UpdateChosen(this);
+                peakGroups.Add(peakGroup);
+
+            }
+            return ImmutableList.ValueOf(peakGroups);
+        }
+
+        public IEnumerable<DefaultPeakScores> GetPeakScores(ChromatogramGroupInfo chromatogramGroupInfo)
+        {
             var context = new PeakScoringContext(SrmDocument);
             var nodeGroup = Precursor.DocNode;
             var nodePep = Precursor.Peptide.DocNode;
@@ -283,18 +295,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             Assume.IsNotNull(comparableGroup);
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(SrmDocument, nodePep,
                 comparableGroup, GetResultFile().Replicate.ChromatogramSet,
-                chromatogramGroup.ChromatogramGroupInfo);
+                chromatogramGroupInfo);
             while (summaryData.NextPeakIndex())
             {
-                var peakScoreCalculator = new PeakScoreCalculator(summaryData.PeakIndex,
-                    chromatogramGroup.ChromatogramGroupInfo, context, summaryData);
-                var defaultPeakScores = DefaultPeakScores.CalculateScores(peakScoreCalculator);
-                var peakGroup = new CandidatePeakGroup(chromatogramGroup, summaryData.PeakIndex, defaultPeakScores);
-                peakGroup.UpdateChosen(this);
-                peakGroups.Add(peakGroup);
+                var peakScoreCalculator = new CandidatePeakScoreCalculator(summaryData.PeakIndex,
+                    chromatogramGroupInfo, context, summaryData);
+                yield return DefaultPeakScores.CalculateScores(peakScoreCalculator);
             }
-
-            return ImmutableList.ValueOf(peakGroups);
         }
     }
 }

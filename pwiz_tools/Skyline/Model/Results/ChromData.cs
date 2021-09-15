@@ -385,6 +385,15 @@ namespace pwiz.Skyline.Model.Results
         {
             return Key + string.Format(@" ({0})", ProviderId);
         }
+
+        public ChromTransition MakeChromTransition()
+        {
+            return new ChromTransition(Key.Product,
+                Key.ExtractionWidth,
+                (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
+                (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                Key.Source);
+        }
     }
 
     internal sealed class ChromDataPeak : ITransitionPeakData<IDetailedPeakData>, IDetailedPeakData
