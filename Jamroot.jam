@@ -179,7 +179,12 @@ rule without-binary-msdata ( properties * )
    }
 }
 
-if [ modules.peek : NT ]
+local default_build_path = [ MATCH --build-path=(.*) : [ modules.peek : ARGV ] ] ;
+if $(default_build_path)
+{
+    path-constant PWIZ_BUILD_PATH : $(default_build_path) ;
+}
+else if [ modules.peek : NT ]
 {
     path-constant PWIZ_BUILD_PATH : build-nt-x86 ; # force x86 since .NET projects assume that location
 }
