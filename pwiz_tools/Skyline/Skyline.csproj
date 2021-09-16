@@ -420,6 +420,7 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\ZedGraphClipboard.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -598,6 +599,7 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
