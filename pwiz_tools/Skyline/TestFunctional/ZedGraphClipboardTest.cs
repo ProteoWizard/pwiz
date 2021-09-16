@@ -75,11 +75,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 try
                 {
-                    Clipboard.SetText("hello");
+                    Clipboard.SetDataObject("hello");
                 }
-                catch (Exception e)
+                catch (ExternalException e)
                 {
-                    string clipboardMessage = ClipboardHelper.GetCopyErrorMessage();
+                    string clipboardMessage = ClipboardHelper.GetCopyErrorMessage() + " HResult:" + e.HResult;
                     throw new AssertFailedException(clipboardMessage, e);
                 }
 
