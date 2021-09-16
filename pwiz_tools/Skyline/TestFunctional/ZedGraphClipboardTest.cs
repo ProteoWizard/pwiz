@@ -71,18 +71,9 @@ namespace pwiz.SkylineTestFunctional
             // Switch to using the system clipboard for the rest of the test so that we can test the "Copy Metafile"
             // menu item as well as testing the message when the clipboard is locked.
             ClipboardEx.UseInternalClipboard(false);
+            RetryActionIfMessage(() => ClipboardHelper.SetClipboardText(graphChromatogram, "hello"));
             RunUI(() =>
             {
-                try
-                {
-                    Clipboard.SetDataObject("hello");
-                }
-                catch (ExternalException e)
-                {
-                    string clipboardMessage = ClipboardHelper.GetCopyErrorMessage() + " HResult:" + e.HResult;
-                    throw new AssertFailedException(clipboardMessage, e);
-                }
-
                 Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
@@ -113,6 +104,39 @@ namespace pwiz.SkylineTestFunctional
             ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText));
         }
 
+        /// <summary>
+        /// Perform an action. If the action ends up bringing up a message box, then OK the message and retry again.
+        /// </summary>
+        /// <param name="action">The action to be performed on the UI thread which might fail and cause a message box to appear</param>
+        /// <param name="setupAction">Optional action to be performed on the test thread each time before <paramref name="action"/> is invoked.</param>
+        private void RetryActionIfMessage(Action action, Action setupAction = null)
+        {
+            int retry = 0;
+            while (true)
+            {
+                setupAction?.Invoke();
+                bool success = false;
+                SkylineWindow.BeginInvoke(new Action(() =>
+                {
+                    action();
+                    success = true;
+                }));
+                WaitForCondition(() => success || null != FindOpenForm<AlertDlg>());
+                if (success)
+                {
+                    return;
+                }
+                retry++;
+                if (retry >= 10)
+                {
+                    Assert.Fail("Failed to do clipboard action after {0} attempts", retry);
+                }
+                var alertDlg = FindOpenForm<AlertDlg>();
+                Assert.IsNotNull(alertDlg);
+                Console.Out.WriteLine("Failed, found message {0}, Retry #{1}", alertDlg.Message, retry);
+            }
+        }
+
         private void ClickCopyItemWithLockedClipboard(ToolStripMenuItem menuItem)
         {
             RunWithLockedClipboard(() =>
@@ -126,9 +150,16 @@ namespace pwiz.SkylineTestFunctional
 
         private void ClickContextMenuItem(ZedGraphControl zedGraphControl, string menuItemText)
         {
-            var menuItem = ShowContextMenuItem(zedGraphControl, menuItemText);
-            Assert.IsNotNull(menuItem);
-            RunUI(() => menuItem.PerformClick());
+            ToolStripMenuItem menuItem = null;
+            RetryActionIfMessage(()=>
+            {
+                Assert.IsNotNull(menuItem);
+                menuItem.PerformClick();
+            }, () =>
+            {
+                menuItem = ShowContextMenuItem(zedGraphControl, menuItemText);
+                Assert.IsNotNull(menuItem);
+            });
         }
 
         /// <summary>
