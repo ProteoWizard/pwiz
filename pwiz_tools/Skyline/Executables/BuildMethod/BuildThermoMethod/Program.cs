@@ -79,8 +79,9 @@ namespace BuildThermoMethod
                     "   -e               Endura method\n" +
                     "   -q               Quantiva method\n" +
                     "   -a               Altis method\n" +
-                    "   -p               Exploris SureQuant method\n" +
-                    "   -l               Fusion Lumos SureQuant method\n" +
+                    "   -p               Exploris method\n" +
+                    "   -l               Fusion Lumos method\n" +
+                    "   -c               Eclipse method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -x               Export method XML to <basename>.xml file\n" +
                     "   -s               Transition list is read from stdin.\n" +
@@ -189,7 +190,8 @@ namespace BuildThermoMethod
                         item.RetentionStart = timeParse;
                 }
                 else if (curHeader.Equals("end time (min)", StringComparison.InvariantCultureIgnoreCase) ||
-                         curHeader.Equals("t end (min)", StringComparison.InvariantCultureIgnoreCase))
+                         curHeader.Equals("t end (min)", StringComparison.InvariantCultureIgnoreCase) ||
+                         curHeader.Equals("t stop (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
                     parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
                     if (!parseFail)
@@ -328,6 +330,7 @@ namespace BuildThermoMethod
         private const string InstrumentFusion = "OrbitrapFusion";
         private const string InstrumentExploris = "OrbitrapExploris480";
         private const string InstrumentFusionLumos = "OrbitrapFusionLumos";
+        private const string InstrumentEclipse = "OrbitrapEclipse";
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
         private const string InstrumentAltis = "TSQAltis";
@@ -375,6 +378,9 @@ namespace BuildThermoMethod
                         break;
                     case 'l':
                         InstrumentType = InstrumentFusionLumos;
+                        break;
+                    case 'c':
+                        InstrumentType = InstrumentEclipse;
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -544,17 +550,19 @@ namespace BuildThermoMethod
 
                         switch (InstrumentType)
                         {
-                            case InstrumentFusion:
-                                mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(listItems, outMeth));
-                                break;
+                            // case InstrumentFusion:
+                            //     mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(InstrumentType, listItems, outMeth));
+                            //     break;
                             case InstrumentExploris:
-                                mx.ApplyMethodModificationsFromXML(GetExplorisModificationXml(listItems, outMeth));
+                                mx.ApplyMethodModificationsFromXML(GetExplorisXml(InstrumentType, listItems, outMeth));
                                 break;
+                            case InstrumentEclipse:
+                            case InstrumentFusion:
                             case InstrumentFusionLumos:
-                                mx.ApplyMethodModificationsFromXML(GetFusionLumosModificationXml(listItems, outMeth));
+                                mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
                                 break;
                             default:
-                                mx.ImportMassListFromXML(GetTsqMassListXml(listItems, outMeth));
+                                mx.ImportMassListFromXML(GetHyperionXml(listItems, outMeth));
                                 break;
                         }
                         mx.SaveAs(outMeth);
@@ -608,7 +616,7 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Endura/Quantiva methods
-        private string GetTsqMassListXml(IEnumerable<ListItem> items, string outMethod)
+        private string GetHyperionXml(IEnumerable<ListItem> items, string outMethod)
         {
             var method = new Method
             {
@@ -640,13 +648,13 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Fusion methods
-        private string GetFusionModificationXml(IEnumerable<ListItem> items, string outMethod)
+        private string GetFusionModificationXml(string instrument, IEnumerable<ListItem> items, string outMethod)
         {
             var itemsEnumerated = items.ToArray();
             var methodModifications = new XmlFusion.MethodModifications
             {
                 Version = XmlFusion.Version.Item1,
-                Model = InstrumentFusion,
+                Model = instrument,
                 Family = XmlFusion.Family.Calcium,
                 Type = XmlFusion.Type.SL,
                 Modification = new[]
@@ -692,7 +700,7 @@ namespace BuildThermoMethod
         }
 
         // Get XML for Exploris methods
-        private string GetExplorisModificationXml(IList<ListItem> items, string outMethod)
+        private string GetExplorisXml(string instrument, IList<ListItem> items, string outMethod)
         {
             var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
 
@@ -712,6 +720,7 @@ namespace BuildThermoMethod
 
             var modifications = new List<XmlExploris.Modification>();
             var recordIndex = 0;
+            var modIndex = 1;
             foreach (var record in records)
             {
                 var mass = new List<XmlExploris.MassListRecord>();
@@ -721,27 +730,26 @@ namespace BuildThermoMethod
 
                 foreach (var item in record.Value)
                 {
-                    if (surequant && groupMz != item.PrecursorMz)
-                    {
-                        groupMz = item.PrecursorMz;
-                        mass.Add(new XmlExploris.MassListRecord
-                        {
-                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
-                            MOverZSpecified = item.PrecursorMz.HasValue,
-                            Z = item.SureQuantInfo.Charge,
-                            ZSpecified = true,
-                            StartTime = item.RetentionStart.GetValueOrDefault(),
-                            StartTimeSpecified = item.RetentionStart.HasValue,
-                            EndTime = item.RetentionEnd.GetValueOrDefault(),
-                            EndTimeSpecified = item.RetentionEnd.HasValue,
-                            CompoundName = item.Compound,
-                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
-                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
-                        });
-                    }
-
                     if (surequant)
                     {
+                        if (groupMz != item.PrecursorMz)
+                        {
+                            groupMz = item.PrecursorMz;
+                            mass.Add(new XmlExploris.MassListRecord
+                            {
+                                MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                MOverZSpecified = item.PrecursorMz.HasValue,
+                                Z = item.SureQuantInfo.Charge,
+                                ZSpecified = true,
+                                StartTime = item.RetentionStart.GetValueOrDefault(),
+                                StartTimeSpecified = item.RetentionStart.HasValue,
+                                EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                EndTimeSpecified = item.RetentionEnd.HasValue,
+                                CompoundName = item.Compound,
+                                IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                                IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                            });
+                        }
                         if (!item.SureQuantInfo.IsPrecursor)
                         {
                             massTrigger.Add(new XmlExploris.MassListRecord
@@ -760,8 +768,10 @@ namespace BuildThermoMethod
                     {
                         mass.Add(new XmlExploris.MassListRecord
                         {
-                            MOverZ = item.ProductMz.GetValueOrDefault(),
-                            MOverZSpecified = item.ProductMz.HasValue,
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.Charge.GetValueOrDefault(),
+                            ZSpecified = item.Charge.HasValue,
                             StartTime = item.RetentionStart.GetValueOrDefault(),
                             StartTimeSpecified = item.RetentionStart.HasValue,
                             EndTime = item.RetentionEnd.GetValueOrDefault(),
@@ -777,7 +787,7 @@ namespace BuildThermoMethod
 
                 modifications.Add(new XmlExploris.Modification
                 {
-                    Order = surequant ? 2 * recordIndex + 1 : recordIndex + 1, // 1, 3, 5, ...
+                    Order = modIndex++,
                     Experiment = new[]
                     {
                         new XmlExploris.Experiment
@@ -799,7 +809,7 @@ namespace BuildThermoMethod
                 {
                     modifications.Add(new XmlExploris.Modification
                     {
-                        Order = 2 * recordIndex + 2, // 2, 4, 6, ...
+                        Order = modIndex++,
                         Experiment = new[]
                         {
                             new XmlExploris.Experiment
@@ -824,7 +834,7 @@ namespace BuildThermoMethod
             var methodModifications = new XmlExploris.MethodModifications
             {
                 Version = XmlExploris.Version.Item1,
-                Model = InstrumentExploris,
+                Model = instrument,
                 Family = XmlExploris.Family.Merkur,
                 Type = XmlExploris.Type.SL,
                 Modification = modifications.ToArray()
@@ -833,8 +843,8 @@ namespace BuildThermoMethod
             return Serialize(methodModifications, outMethod);
         }
 
-        // Get XML for Fusion Lumos methods
-        private string GetFusionLumosModificationXml(IList<ListItem> items, string outMethod)
+        // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)
+        private string GetCalciumXml(string instrument, IList<ListItem> items, string outMethod)
         {
             var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
 
@@ -854,6 +864,7 @@ namespace BuildThermoMethod
 
             var modifications = new List<XmlCalcium.Modification>();
             var recordIndex = 0;
+            var modIndex = 1;
             foreach (var record in records)
             {
                 var mass = new List<XmlCalcium.MassListRecord>();
@@ -863,27 +874,26 @@ namespace BuildThermoMethod
 
                 foreach (var item in record.Value)
                 {
-                    if (surequant && groupMz != item.PrecursorMz)
-                    {
-                        groupMz = item.PrecursorMz;
-                        mass.Add(new XmlCalcium.MassListRecord
-                        {
-                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
-                            MOverZSpecified = item.PrecursorMz.HasValue,
-                            Z = item.SureQuantInfo.Charge,
-                            ZSpecified = true,
-                            StartTime = item.RetentionStart.GetValueOrDefault(),
-                            StartTimeSpecified = item.RetentionStart.HasValue,
-                            EndTime = item.RetentionEnd.GetValueOrDefault(),
-                            EndTimeSpecified = item.RetentionEnd.HasValue,
-                            CompoundName = item.Compound,
-                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
-                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
-                        });
-                    }
-
                     if (surequant)
                     {
+                        if (groupMz != item.PrecursorMz)
+                        {
+                            groupMz = item.PrecursorMz;
+                            mass.Add(new XmlCalcium.MassListRecord
+                            {
+                                MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                MOverZSpecified = item.PrecursorMz.HasValue,
+                                Z = item.SureQuantInfo.Charge,
+                                ZSpecified = true,
+                                StartTime = item.RetentionStart.GetValueOrDefault(),
+                                StartTimeSpecified = item.RetentionStart.HasValue,
+                                EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                EndTimeSpecified = item.RetentionEnd.HasValue,
+                                CompoundName = item.Compound,
+                                IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                                IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                            });
+                        }
                         if (!item.SureQuantInfo.IsPrecursor)
                         {
                             massTrigger.Add(new XmlCalcium.MassListRecord
@@ -900,12 +910,16 @@ namespace BuildThermoMethod
                     {
                         mass.Add(new XmlCalcium.MassListRecord
                         {
-                            MOverZ = item.ProductMz.GetValueOrDefault(),
-                            MOverZSpecified = item.ProductMz.HasValue,
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.Charge.GetValueOrDefault(),
+                            ZSpecified = item.Charge.HasValue,
                             StartTime = item.RetentionStart.GetValueOrDefault(),
                             StartTimeSpecified = item.RetentionStart.HasValue,
                             EndTime = item.RetentionEnd.GetValueOrDefault(),
                             EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CollisionEnergyCID = item.CollisionEnergy.GetValueOrDefault(),
+                            CollisionEnergyCIDSpecified = item.CollisionEnergy.HasValue,
                             CompoundName = item.Compound,
                             IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
                             IntensityThresholdSpecified = item.IntensityThreshold.HasValue
@@ -915,7 +929,7 @@ namespace BuildThermoMethod
 
                 modifications.Add(new XmlCalcium.Modification
                 {
-                    Order = surequant ? 2 * recordIndex + 1 : recordIndex + 1, // 1, 3, 5, ...
+                    Order = modIndex++,
                     Experiment = new[]
                     {
                         new XmlCalcium.Experiment
@@ -937,7 +951,7 @@ namespace BuildThermoMethod
                 {
                     modifications.Add(new XmlCalcium.Modification
                     {
-                        Order = 2 * recordIndex + 2, // 2, 4, 6, ...
+                        Order = modIndex++,
                         Experiment = new[]
                         {
                             new XmlCalcium.Experiment
@@ -962,7 +976,7 @@ namespace BuildThermoMethod
             var methodModifications = new XmlCalcium.MethodModifications
             {
                 Version = XmlCalcium.Version.Item1,
-                Model = InstrumentFusionLumos,
+                Model = instrument,
                 Family = XmlCalcium.Family.Calcium,
                 Type = XmlCalcium.Type.SL,
                 Modification = modifications.ToArray()

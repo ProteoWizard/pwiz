@@ -188,6 +188,7 @@ namespace pwiz.Skyline.Model
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
         public const string THERMO_EXPLORIS = "Thermo Exploris";
         public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos";
+        public const string THERMO_ECLIPSE = "Thermo Eclipse";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -215,8 +216,9 @@ namespace pwiz.Skyline.Model
                 THERMO_LTQ,
                 THERMO_QUANTIVA,
                 THERMO_ALTIS,
-                THERMO_FUSION,
                 THERMO_EXPLORIS,
+                THERMO_ECLIPSE,
+                THERMO_FUSION,
                 THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
@@ -488,11 +490,11 @@ namespace pwiz.Skyline.Model
                         return ExportThermoFusionIsolationList(doc, path, template);
                     }
                     else
-                        return ExportThermoFusionMethod(doc, path, template);
+                        return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
+                case ExportInstrumentType.THERMO_ECLIPSE:
                 case ExportInstrumentType.THERMO_EXPLORIS:
-                    return ExportThermoExplorisMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
-                    return ExportThermoFusionLumosMethod(doc, path, template);
+                    return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.SHIMADZU:
                     if (type == ExportFileType.List)
                         return ExportShimadzuCsv(doc, path);
@@ -722,20 +724,6 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public AbstractMassListExporter ExportThermoFusionMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new ThermoFusionMethodExporter(document));
-            exporter.UseSlens = UseSlens;
-            exporter.WriteFaimsCv = WriteCompensationVoltages;
-
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
-            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-
-            return exporter;
-        }
-
         public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoFusionMassListExporter(document));
@@ -779,27 +767,14 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportIsolationList(fileName, m));
         }
 
-        public AbstractMassListExporter ExportThermoExplorisMethod(SrmDocument document, string fileName,
-            string templateName)
+        public AbstractMassListExporter ExportThermoSureQuantMethod(SrmDocument document, string fileName,
+            string templateName, string instrumentType)
         {
-            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, ExportInstrumentType.THERMO_EXPLORIS, ExportSureQuant));
+            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, instrumentType, ExportSureQuant));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            exporter.IntensityThresholdPercent = IntensityThresholdPercent;
-            exporter.IntensityThresholdValue = IntensityThresholdValue;
-            exporter.IntensityThresholdMin = IntensityThresholdMin;
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-
-            return exporter;
-        }
-
-        public AbstractMassListExporter ExportThermoFusionLumosMethod(SrmDocument document, string fileName,
-            string templateName)
-        {
-            var exporter = InitExporter(new ThermoSureQuantMethodExporter(document, ExportInstrumentType.THERMO_FUSION_LUMOS, ExportSureQuant));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
+            exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             exporter.IntensityThresholdPercent = IntensityThresholdPercent;
             exporter.IntensityThresholdValue = IntensityThresholdValue;
@@ -1281,7 +1256,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            writer.Write(nodeTranGroup.PrecursorCharge>0?@"Positive":@"Negative");
+            writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
             writer.Write(FieldSeparator);
             writer.Write((Math.Truncate(1000*nodeTranGroup.PrecursorMz)/1000).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -1925,15 +1900,22 @@ namespace pwiz.Skyline.Model
 
     public class ThermoSureQuantMethodExporter : ThermoMassListExporter
     {
-        public ThermoSureQuantMethodExporter(SrmDocument document, string instrumentType, bool surequantMethod)
+        public ThermoSureQuantMethodExporter(SrmDocument document, string instrumentType, bool surequant)
             : base(document)
         {
+            if (!surequant)
+            {
+                IsPrecursorLimited = true;
+                IsolationList = true;
+            }
             _instrumentType = instrumentType;
-            _surequantMethod = surequantMethod;
+            _surequant = surequant;
         }
 
         private readonly string _instrumentType;
-        private readonly bool _surequantMethod;
+        private readonly bool _surequant;
+
+        public bool WriteFaimsCv { get; set; }
 
         private const double DEFAULT_INTENSITY_THRESHOLD_PERCENT = 1;
 
@@ -1947,7 +1929,7 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
-            if (_surequantMethod)
+            if (_surequant)
             {
                 writer.Write(@"SureQuant Info");
                 writer.Write(FieldSeparator);
@@ -1956,9 +1938,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             if (RetentionStartAndEnd)
             {
-                writer.Write(@"Start Time (min)");
+                writer.Write(@"t start (min)");
                 writer.Write(FieldSeparator);
-                writer.Write(@"End Time (min)");
+                writer.Write(@"t stop (min)");
                 writer.Write(FieldSeparator);
             }
             else
@@ -1970,15 +1952,20 @@ namespace pwiz.Skyline.Model
             }
             writer.Write(@"Polarity");
             writer.Write(FieldSeparator);
-            writer.Write(@"Precursor (m/z)");
+            writer.Write(@"m/z");
             writer.Write(FieldSeparator);
             writer.Write(@"Product (m/z)");
             writer.Write(FieldSeparator);
-            writer.Write(@"Collision Energy (V)");
+            writer.Write(@"CID Collision Energy (%)");
             if (UseSlens)
             {
                 writer.Write(FieldSeparator);
                 writer.Write(@"S-lens");
+            }
+            if (WriteFaimsCv)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(@"FAIMS CV (V)");
             }
             writer.Write(FieldSeparator);
             writer.Write(@"Intensity Threshold");
@@ -1994,7 +1981,7 @@ namespace pwiz.Skyline.Model
             TransitionDocNode nodeTran,
             int step)
         {
-            if (_surequantMethod)
+            if (_surequant)
             {
                 // <precursor charge><H|L><target>;[*]<transition name>
                 var surequantInfo = nodeTranGroup.PrecursorCharge.ToString(CultureInfo);
@@ -2076,13 +2063,20 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write((Math.Truncate(1000 * nodeTranGroup.PrecursorMz) / 1000).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            writer.Write(nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty);
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(ThermoFusionMassListExporter.GetCE(Document).ToString(CultureInfo));
+
             if (UseSlens)
             {
                 writer.Write(FieldSeparator);
                 writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
+            }
+            if (WriteFaimsCv)
+            {
+                var cv = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step);
+                writer.Write(FieldSeparator);
+                writer.Write(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
             }
             var maxHeight = (double?) null;
             if (IntensityThresholdPercent.HasValue)
@@ -2121,30 +2115,16 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.THERMO_EXPLORIS:
                     argv.Add(@"-p");
                     break;
+                case ExportInstrumentType.THERMO_FUSION:
+                    argv.Add(@"-f");
+                    break;
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
                     argv.Add(@"-l");
                     break;
+                case ExportInstrumentType.THERMO_ECLIPSE:
+                    argv.Add(@"-c");
+                    break;
             }
-            MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
-        }
-    }
-
-    public class ThermoFusionMethodExporter : ThermoFusionMassListExporter
-    {
-        public ThermoFusionMethodExporter(SrmDocument document)
-            : base(document)
-        {
-        }
-
-        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
-        {
-            if (fileName != null)
-                EnsureLibraries();
-
-            if (!InitExport(fileName, progressMonitor))
-                return;
-
-            var argv = new List<string> {@"-f"};
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -3870,21 +3850,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(end);
             writer.Write(FieldSeparator);
-
-            // Note that this is normalized CE (not absolute)
-            var fullScan = Document.Settings.TransitionSettings.FullScan;
-            var wideWindowDia = false;
-            if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
-            {
-                // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
-                var scheme = fullScan.IsolationScheme;
-                if (!scheme.FromResults && !scheme.IsAllIons)
-                {
-                    wideWindowDia = scheme.PrespecifiedIsolationWindows.Average(
-                        iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
-                }
-            }
-            writer.Write((wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo));
+            writer.Write(GetCE(Document).ToString(CultureInfo));
 
             if (UseSlens)
             {
@@ -3899,6 +3865,24 @@ namespace pwiz.Skyline.Model
             }
             writer.WriteLine();
         }
+
+        public static double GetCE(SrmDocument doc)
+        {
+            // Note that this is normalized CE (not absolute)
+            var fullScan = doc.Settings.TransitionSettings.FullScan;
+            var wideWindowDia = false;
+            if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
+            {
+                // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
+                var scheme = fullScan.IsolationScheme;
+                if (!scheme.FromResults && !scheme.IsAllIons)
+                {
+                    wideWindowDia = scheme.PrespecifiedIsolationWindows.Average(iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
+                }
+            }
+            return wideWindowDia ? WIDE_NCE : NARROW_NCE;
+        }
+
         public virtual void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (!InitExport(fileName, progressMonitor))

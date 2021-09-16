@@ -210,7 +210,6 @@ namespace pwiz.Skyline.FileUI
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
-            cbWriteCoV.Top = cbSlens.Bottom;
             panelSureQuant.Top = labelMaxTransitions.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
@@ -308,6 +307,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_Q_EXACTIVE) ||
                    Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
                    Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
+                   Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -634,9 +634,12 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateThermoFaimsCvControl()
         {
+            var fusionMethod = InstrumentType == ExportInstrumentType.THERMO_FUSION && _fileType == ExportFileType.Method;
+            cbWriteCoV.Top = !fusionMethod ? cbSlens.Bottom : panelTuneColumns.Top - cbWriteCoV.Height;
+            cbWriteCoV.Left = !fusionMethod ? cbIgnoreProteins.Left : panelTuneColumns.Left + cbTune3.Left;
             cbWriteCoV.Visible = cbWriteCoV.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
-                InstrumentType == ExportInstrumentType.THERMO_FUSION ||
+                (InstrumentType == ExportInstrumentType.THERMO_FUSION && !cbSureQuant.Checked) ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
@@ -646,16 +649,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void UpdateThermoTuneControls()
-        {
-            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION;
-        }
-
         private void UpdateThermoSureQuantControls()
         {
             panelSureQuant.Visible =
-                InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
-                InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS;
+                _fileType == ExportFileType.Method &&
+                (InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
+                 InstrumentType == ExportInstrumentType.THERMO_FUSION ||
+                 InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS||
+                 InstrumentType == ExportInstrumentType.THERMO_ECLIPSE);
             if (cbSureQuant.Checked)
             {
                 if (!lblIntensityThresholdType.Visible)
@@ -681,6 +682,9 @@ namespace pwiz.Skyline.FileUI
                     textIntensityThresholdMin.Hide();
                 }
             }
+
+            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION && !cbSureQuant.Checked;
+            UpdateThermoFaimsCvControl();
         }
 
         private void UpdateMaxTransitions()
@@ -1680,7 +1684,6 @@ namespace pwiz.Skyline.FileUI
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
             UpdateThermoFaimsCvControl();
-            UpdateThermoTuneControls();
             UpdateThermoSureQuantControls();
             UpdateMaxLabel(standard);
         }
