@@ -32,18 +32,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public static class PeakFeatureEnumerator
     {
         public static PeakTransitionGroupFeatureSet GetPeakFeatures(this SrmDocument document,
-            IList<IPeakFeatureCalculator> calcs,
-            IProgressMonitor progressMonitor = null,
-            bool verbose = false)
-        {
-            return GetPeakFeatures(document, document.GetMoleculeGroupPairs(), calcs, progressMonitor, verbose);
-        }
-
-        public static PeakTransitionGroupFeatureSet GetPeakFeatures(SrmDocument document,
-            IList<SrmDocument.MoleculeGroupPair> moleculeGroupPairs,
-            IList<IPeakFeatureCalculator> calcs,
-            IProgressMonitor progressMonitor,
-            bool verbose)
+                                                                               IList<IPeakFeatureCalculator> calcs,
+                                                                               IProgressMonitor progressMonitor = null,
+                                                                               bool verbose = false)
         {
             // Get features for each peptide
             int totalPeptides = document.MoleculeCount;
@@ -59,9 +50,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             // Using Parallel.For is quicker, but order needs to be maintained
-            var peakFeatureLists = new PeakTransitionGroupFeatures[moleculeGroupPairs.Count][];
+            var moleculeGroupPairs = document.GetMoleculeGroupPairs();
+            var peakFeatureLists = new PeakTransitionGroupFeatures[moleculeGroupPairs.Length][];
             int peakFeatureCount = 0;
-            ParallelEx.For(0, moleculeGroupPairs.Count, i =>
+            ParallelEx.For(0, moleculeGroupPairs.Length, i =>
             {
                 var pair = moleculeGroupPairs[i];
                 var nodePepGroup = pair.NodeMoleculeGroup;

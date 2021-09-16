@@ -24,7 +24,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -152,13 +151,29 @@ namespace pwiz.Skyline.Model.Results
             return _dataSets.Count > 0;
         }
 
+        public delegate PeakBounds ExplicitPeakBoundsFunc(TransitionGroup transitionGroup, Transition transition);
+
         public void PickChromatogramPeaks()
         {
             var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
-            PickChromatogramPeaks(explicitPeakBounds);
+            var peakBounds = explicitPeakBounds == null
+                ? null
+                : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
+            PickChromatogramPeaks(peakBounds);
         }
 
-        public void PickChromatogramPeaks(ExplicitPeakBounds explicitPeakBounds)
+        public void PickChromatogramPeaks(PeakBounds peakBounds)
+        {
+            ExplicitPeakBoundsFunc explicitPeakBoundsFunc = null;
+            if (peakBounds != null)
+            {
+                explicitPeakBoundsFunc = (transitionGroup, transition) => peakBounds;
+            }
+
+            PickChromatogramPeaks(explicitPeakBoundsFunc);
+        }
+
+        public void PickChromatogramPeaks(ExplicitPeakBoundsFunc explicitPeakBoundsFunc)
         {
             TimeIntervals intersectedTimeIntervals = null;
             if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
@@ -196,13 +211,13 @@ namespace pwiz.Skyline.Model.Results
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
             {
-                if (explicitPeakBounds == null)
+                if (explicitPeakBoundsFunc == null)
                 {
                     chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes, explicitRetentionTime);
                 }
                 else
                 {
-                    chromDataSet.SetExplicitPeakBounds(explicitPeakBounds);
+                    chromDataSet.SetExplicitPeakBounds(transition=>explicitPeakBoundsFunc(chromDataSet.NodeGroup?.TransitionGroup, transition));
                 }
             }
 

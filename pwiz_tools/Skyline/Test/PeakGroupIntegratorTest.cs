@@ -2,11 +2,11 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -35,7 +35,7 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(peakGroupIntegrator);
             var peptideChromDataSets = peakGroupIntegrator.MakePeptideChromDataSets();
             Assert.IsNotNull(peptideChromDataSets);
-            peptideChromDataSets.PickChromatogramPeaks(new ExplicitPeakBounds(56.5, 57.5, 0));
+            peptideChromDataSets.PickChromatogramPeaks((transitionGroup, transition)=>new PeakBounds(56.5, 57.5));
             var dataSchema = new SkylineDataSchema(docContainer, DataSchemaLocalizer.INVARIANT);
             var precursor = new Precursor(dataSchema,
                 new IdentityPath(peakGroupIntegrator.PeptideIdentityPath,

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Lib;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results
@@ -66,7 +61,7 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<float> ScorePeak(double startTime, double endTime, IEnumerable<DetailedPeakFeatureCalculator> calculators)
         {
             var peptideChromDataSets = MakePeptideChromDataSets();
-            var explicitPeakBounds = new ExplicitPeakBounds(startTime, endTime, 0);
+            var explicitPeakBounds = new PeakBounds(startTime, endTime);
             peptideChromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             return peptideChromDataSets.DataSets[0].PeakSets.First().DetailScores;
         }

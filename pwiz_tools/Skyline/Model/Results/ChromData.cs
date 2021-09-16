@@ -206,11 +206,11 @@ namespace pwiz.Skyline.Model.Results
             RawPeaks = new IFoundPeak[0];
         }
 
-        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
+        public void SetExplicitPeakBounds(PeakBounds peakBounds)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            if (peakBounds.IsEmpty)
+            if (peakBounds == null)
             {
                 RawPeaks = new IFoundPeak[0];
             }

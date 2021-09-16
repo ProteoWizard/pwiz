@@ -26,7 +26,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -431,11 +430,11 @@ namespace pwiz.Skyline.Model.Results
         private const int MINIMUM_PEAKS = 3;
         private const int MAX_PEAKS_CHECKED = 20;
 
-        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
+        public void SetExplicitPeakBounds(Func<Transition, PeakBounds> peakBoundsFunc)
         {
             foreach (var chromData in _listChromData)
             {
-                chromData.SetExplicitPeakBounds(peakBounds);
+                chromData.SetExplicitPeakBounds(peakBoundsFunc(chromData.DocNode?.Transition));
 
             }
             var firstChromData = _listChromData.First();
