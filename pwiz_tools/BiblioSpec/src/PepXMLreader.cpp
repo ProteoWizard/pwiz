@@ -236,7 +236,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
        if (search_engine_version.find("msfragger") == 0)
        {
-           // Prefer MGF over raw data for performance reasons
+           // Only the MGF file from MSFragger will match up with the scan numbers from an MSFragger pepXML file from a timsTOF dataset, but
+           // other extensions must be supported for MSFragger searches of non-timsTOF datasets (e.g. mzML, Thermo RAW)
            extensions.insert(extensions.begin(), "_calibrated.mgf");
            extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated, so place first in list
            if (analysisType_ != MSFRAGGER_ANALYSIS)
