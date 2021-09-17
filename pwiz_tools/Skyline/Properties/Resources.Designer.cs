@@ -32536,12 +32536,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An isolation window width value is not allowed in Targeted mode..
+        ///   Looks up a localized string similar to An isolation window width value is not allowed in {0} mode..
         /// </summary>
-        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode {
+        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode {
             get {
-                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_T" +
-                        "argeted_mode", resourceCulture);
+                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__" +
+                        "0___mode", resourceCulture);
             }
         }
         
@@ -33114,6 +33114,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_sepa" +
                         "rated_list_of_integers_describing_charge_states_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SureQuant acquisition method requires &quot;Triggered Chromatogram Extraction&quot;. Unchecking this option will switch to the PRM acquisition method. Do you want to continue?.
+        /// </summary>
+        public static string TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisi" +
+                        "tion_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option" +
+                        "_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_", resourceCulture);
             }
         }
         
