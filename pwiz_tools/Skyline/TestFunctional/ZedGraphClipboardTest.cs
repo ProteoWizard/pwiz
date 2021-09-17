@@ -134,6 +134,7 @@ namespace pwiz.SkylineTestFunctional
                 var alertDlg = FindOpenForm<AlertDlg>();
                 Assert.IsNotNull(alertDlg);
                 Console.Out.WriteLine("Failed, found message {0}, Retry #{1}", alertDlg.Message, retry);
+                OkDialog(alertDlg, alertDlg.OkDialog);
             }
         }
 
