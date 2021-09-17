@@ -135,8 +135,9 @@ namespace SkylineTester
             this.runLoops = new System.Windows.Forms.RadioButton();
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
-            this.runDemoMode = new System.Windows.Forms.CheckBox();
-            this.runFullQualityPass = new System.Windows.Forms.CheckBox();
+            this.runMode = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.showTutorialsOnly = new System.Windows.Forms.CheckBox();
             this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
@@ -1167,8 +1168,9 @@ namespace SkylineTester
             this.testsGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.testsGroup.Controls.Add(this.runDemoMode);
-            this.testsGroup.Controls.Add(this.runFullQualityPass);
+            this.testsGroup.Controls.Add(this.runMode);
+            this.testsGroup.Controls.Add(this.label20);
+            this.testsGroup.Controls.Add(this.showTutorialsOnly);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
             this.testsGroup.Controls.Add(this.runCheckedTests);
@@ -1181,28 +1183,42 @@ namespace SkylineTester
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
             // 
-            // runDemoMode
+            // runMode
             // 
-            this.runDemoMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runDemoMode.AutoSize = true;
-            this.runDemoMode.Location = new System.Drawing.Point(275, 558);
-            this.runDemoMode.Name = "runDemoMode";
-            this.runDemoMode.Size = new System.Drawing.Size(104, 17);
-            this.runDemoMode.TabIndex = 33;
-            this.runDemoMode.Text = "Run demo mode";
-            this.runDemoMode.UseVisualStyleBackColor = true;
+            this.runMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.runMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.runMode.Items.AddRange(new object[] {
+            "Test",
+            "Quality",
+            "Demo",
+            "Covershot"});
+            this.runMode.Location = new System.Drawing.Point(276, 553);
+            this.runMode.Name = "runMode";
+            this.runMode.Size = new System.Drawing.Size(121, 21);
+            this.runMode.TabIndex = 0;
             // 
-            // runFullQualityPass
+            // label20
             // 
-            this.runFullQualityPass.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runFullQualityPass.AutoSize = true;
-            this.runFullQualityPass.Location = new System.Drawing.Point(275, 534);
-            this.runFullQualityPass.Margin = new System.Windows.Forms.Padding(4);
-            this.runFullQualityPass.Name = "runFullQualityPass";
-            this.runFullQualityPass.Size = new System.Drawing.Size(120, 17);
-            this.runFullQualityPass.TabIndex = 32;
-            this.runFullQualityPass.Text = "Run full quality pass";
-            this.runFullQualityPass.UseVisualStyleBackColor = true;
+            this.label20.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(273, 536);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(37, 13);
+            this.label20.TabIndex = 35;
+            this.label20.Text = "Mode:";
+            // 
+            // showTutorialsOnly
+            // 
+            this.showTutorialsOnly.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.showTutorialsOnly.AutoSize = true;
+            this.showTutorialsOnly.Location = new System.Drawing.Point(307, 1);
+            this.showTutorialsOnly.Name = "showTutorialsOnly";
+            this.showTutorialsOnly.Size = new System.Drawing.Size(88, 17);
+            this.showTutorialsOnly.TabIndex = 34;
+            this.showTutorialsOnly.Text = "Tutorials only";
+            this.showTutorialsOnly.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.showTutorialsOnly.UseVisualStyleBackColor = true;
+            this.showTutorialsOnly.CheckedChanged += new System.EventHandler(this.showTutorialsOnly_CheckedChanged);
             // 
             // testsTree
             // 
@@ -2631,7 +2647,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 374;
+            this.outputSplitContainer.SplitterDistance = 350;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2653,7 +2669,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 374);
+            this.commandShell.Size = new System.Drawing.Size(671, 350);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2671,7 +2687,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 178);
+            this.errorConsole.Size = new System.Drawing.Size(671, 202);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -3324,7 +3340,6 @@ namespace SkylineTester
         private Label label18;
         private WindowThumbnail qualityThumbnail;
         private Label qualityTestName;
-        private CheckBox runFullQualityPass;
         private TabPage tabNightly;
         private TableLayoutPanel nightlyTableLayout;
         private Panel panel3;
@@ -3401,7 +3416,6 @@ namespace SkylineTester
         private CheckBox showMatchingPagesTutorial;
         private ToolStripMenuItem optionsToolStripMenuItem;
         private ToolStripMenuItem accessInternet;
-        private CheckBox runDemoMode;
         private ToolTip toolTip1;
         private CheckBox nightlyExit;
         private GroupBox groupBox19;
@@ -3445,5 +3459,8 @@ namespace SkylineTester
         private RadioButton modeTutorialsCoverShots;
         private TextBox pauseStartingPage;
         private Label labelPauseStartingPage;
+        private ComboBox runMode;
+        private Label label20;
+        private CheckBox showTutorialsOnly;
     }
 }
