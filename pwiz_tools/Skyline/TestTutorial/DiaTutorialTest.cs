@@ -21,6 +21,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -39,12 +40,6 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class DiaTutorialTest : AbstractFunctionalTestEx
     {
-        private readonly string[] _importFiles =
-            {
-                "20130311_DIA_Pit01",
-                "20130311_DIA_Pit02"
-            };
-
         private const string DIA_IMPORTED_CHECKPOINT = "DIA-tutorial-imported.sky";
         private const string DIA_TUTORIAL_CHECKPOINT = "DIA-tutorial.sky";
 
@@ -147,17 +142,6 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => exportIsolationDlg.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE);
             PauseForScreenShot<ExportMethodDlg>("Export Isolation List form", 12);
             OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(GetTestPath("DIA_tutorial_isolation_list.csv")));
-
-            // Change library filtering
-            // TODO: Make unnecessary. Adjust library transition ranking
-            var newTransitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-            {
-                newTransitionSettings.SelectedTab = TransitionSettingsUI.TABS.Library;
-                newTransitionSettings.UseLibraryPick = true;
-                newTransitionSettings.Filtered = true;
-            });
-            OkDialog(newTransitionSettings, newTransitionSettings.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(DIA_TUTORIAL_CHECKPOINT)));
 
@@ -404,6 +388,51 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.TransitionGroups, 13);
 
             PauseForScreenShot<GraphChromatogram>("Chromatograms and peak areas", 35);
+
+            if (IsCoverShotMode)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 12;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowChromatogramLegends(true);
+                });
+
+                RestoreCoverViewOnScreen();
+                ClickChromatogram("Pit02", 44.1353, 926456.5, PaneKey.PRODUCTS);
+                TreeNode selectedNode = null;
+                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() =>
+                {
+                    transitionSettingsUI.Top = SkylineWindow.Top;
+                    transitionSettingsUI.Left = SkylineWindow.Left - transitionSettingsUI.Width - 20;
+                });
+                var isolationSchemeForm = ShowDialog<EditIsolationSchemeDlg>(transitionSettingsUI.EditCurrentIsolationScheme);
+                RunUI(() =>
+                {
+                    isolationSchemeForm.Top = SkylineWindow.Bottom - isolationSchemeForm.Height - 34;
+                    isolationSchemeForm.Left = SkylineWindow.Left + 40;
+                    isolationSchemeForm.Width = 400;
+                });
+                var isolationSchemeGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationSchemeForm.OpenGraph);
+                RunUI(() =>
+                {
+                    isolationSchemeGraph.Height -= 58;
+                    isolationSchemeGraph.Top = SkylineWindow.Bottom - isolationSchemeGraph.Height;
+                    isolationSchemeGraph.Left = SkylineWindow.Left;
+                    isolationSchemeGraph.Width = 480;
+                });
+                TakeCoverShot();
+                OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
+                OkDialog(isolationSchemeForm, isolationSchemeForm.OkDialog);
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                return;
+            }
 
             if (IsFullImportMode)
             {

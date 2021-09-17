@@ -35,12 +35,6 @@ Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed fr
 Settings > Transition Settings -- Full-Scan > Mass accuracy changed from Missing to "20"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
 
-Undo Redo : Transition Settings -- Library > Pick changed to "From filtered product ions"
-Summary   : Settings > Transition Settings -- Library > Pick changed to "From filtered product ions"
-All Info  :
-Transition Settings -- Library > Pick changed to "From filtered product ions"
-Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
-
 Undo Redo : Added spectral library "DIA-tutorial"
 Summary   : Added spectral library "DIA-tutorial"
 All Info  :
