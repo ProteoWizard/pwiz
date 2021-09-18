@@ -2558,11 +2558,12 @@ namespace pwiz.Skyline
             }
 
             // Regular expression for an argument: a hyphen surrounded by zero or more word characters
-            // (i.e. letters, numbers or punctuation connector) or hyphens
-            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*");
+            // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
+            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
             /// <summary>
             /// HTML encodes the string.
-            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that arguments do not get broken across lines.
+            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that argument names do not get broken across lines.
             /// </summary>
             private static string HtmlEncode(string str)
             {
