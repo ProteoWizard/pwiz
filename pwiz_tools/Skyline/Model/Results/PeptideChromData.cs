@@ -1001,13 +1001,17 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos()
         {
+            return MakeChromatogramGroupInfos(DataSets);
+        }
+        internal IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos(IEnumerable<ChromDataSet> dataSets)
+        {
             var scoreTypeIndices = Enumerable.Range(0, DetailedPeakFeatureCalculators.Count)
                 .ToDictionary(i => DetailedPeakFeatureCalculators[i].GetType(), i => i);
             var chromCachedFile = new ChromCachedFile(FileInfo.FilePath, default(ChromCachedFile.FlagValues),
                 FileInfo.FileWriteTime ?? DateTime.FromBinary(0), FileInfo.FileWriteTime, (float) FileInfo.MaxRetentionTime, (float) FileInfo.MaxIntensity, FileInfo.IonMobilityUnits, 
                 FileInfo.SampleId, FileInfo.InstrumentSerialNumber, FileInfo.InstrumentInfoList);
             
-            foreach (var chromDataSet in DataSets)
+            foreach (var chromDataSet in dataSets)
             {
                 yield return chromDataSet.ToChromatogramGroupInfo(scoreTypeIndices, chromCachedFile);
             }

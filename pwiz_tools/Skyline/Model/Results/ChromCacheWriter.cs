@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         protected List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-        protected BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
+        private BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
             new BlockedArrayList<ChromGroupHeaderEntry>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
         protected List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
@@ -65,6 +65,12 @@ namespace pwiz.Skyline.Model.Results
         protected string CachePath { get; private set; }
 
         public CacheFormat CacheFormat { get; protected set; }
+
+        protected void AddChromGroup(ChromGroupHeaderEntry chromGroupHeaderEntry)
+        {
+            Assume.AreNotEqual(-1, chromGroupHeaderEntry.ChromGroupHeaderInfo.CompressedSize);
+            _listGroups.Add(chromGroupHeaderEntry);
+        }
 
         protected void Complete(Exception x)
         {

@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
 
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {
-                        _listGroups.Add(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,
+                        AddChromGroup(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,
                                             offsetFiles,
                                             offsetTransitions,
                                             offsetPeaks,

@@ -14,11 +14,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private ChromatogramGroup _chromatogramGroup;
         private int _peakIndex;
-        public CandidatePeakGroup(ChromatogramGroup chromatogramGroup, int peakIndex, DefaultPeakScores defaultPeakScores) : base(chromatogramGroup.DataSchema)
+        public CandidatePeakGroup(ChromatogramGroup chromatogramGroup, int peakIndex, AllPeakScores defaultPeakScores) : base(chromatogramGroup.DataSchema)
         {
             _chromatogramGroup = chromatogramGroup;
             _peakIndex = peakIndex;
-            DefaultPeakScores = defaultPeakScores;
+            AllPeakScores = defaultPeakScores;
         }
 
         private PrecursorResult GetPrecursorResult()
@@ -100,9 +100,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         object ILinkValue.Value => this;
 
-
-
-        public DefaultPeakScores DefaultPeakScores
+        public AllPeakScores AllPeakScores
         {
             get;
         }

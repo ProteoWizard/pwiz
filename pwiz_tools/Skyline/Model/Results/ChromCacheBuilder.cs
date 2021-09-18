@@ -1371,7 +1371,7 @@ namespace pwiz.Skyline.Model.Results
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
             }
 
-            _listGroups.Add(new ChromGroupHeaderEntry(indexInFile, header));
+            AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
         }
     }
 

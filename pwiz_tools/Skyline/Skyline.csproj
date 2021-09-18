@@ -543,6 +543,7 @@
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\Collections\CandidatePeakGroups.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
+    <Compile Include="Model\Databinding\Entities\AllPeakScores.cs" />
     <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <DesignTime>True</DesignTime>

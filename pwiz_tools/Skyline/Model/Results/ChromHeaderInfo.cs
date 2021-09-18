@@ -318,6 +318,8 @@ namespace pwiz.Skyline.Model.Results
             chromGroupHeaderInfo._startPeakIndex = startPeakIndex;
             chromGroupHeaderInfo._startScoreIndex = startScoreIndex;
             chromGroupHeaderInfo._locationPoints = locationPoints;
+            chromGroupHeaderInfo._compressedSize = compressedSize;
+            chromGroupHeaderInfo._uncompressedSize = uncompressedSize;
             return chromGroupHeaderInfo;
         }
 

@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
@@ -32,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -42,11 +45,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
         private readonly CachedValue<IList<CandidatePeakGroup>> _candidatePeaks;
+        private readonly CachedValue<AllPeakScores> _defaultPeakScores;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
             _candidatePeaks = CachedValue.Create(DataSchema, GetCandidatePeakGroups);
+            _defaultPeakScores = CachedValue.Create(DataSchema, GetDefaultPeakScores);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -265,6 +270,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public AllPeakScores AllPeakScores
+        {
+            get
+            {
+                return _defaultPeakScores.Value;
+            }
+        }
+
         public int GetCandidatePeakGroupCount()
         {
             return new ChromatogramGroup(this).ChromatogramGroupInfo?.NumPeaks ?? 0;
@@ -284,14 +297,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return ImmutableList.ValueOf(peakGroups);
         }
 
-        public IEnumerable<DefaultPeakScores> GetPeakScores(ChromatogramGroupInfo chromatogramGroupInfo)
+        public IEnumerable<AllPeakScores> GetPeakScores(ChromatogramGroupInfo chromatogramGroupInfo)
         {
             var context = new PeakScoringContext(SrmDocument);
-            var nodeGroup = Precursor.DocNode;
             var nodePep = Precursor.Peptide.DocNode;
-            var comparableGroup = PeakFeatureEnumerator.ComparableGroups(nodePep)
-                .Select(ImmutableList.ValueOf)
-                .FirstOrDefault(group => group.Any(docNode => ReferenceEquals(docNode, nodeGroup)));
+            var comparableGroup = FindComparableGroup();
             Assume.IsNotNull(comparableGroup);
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(SrmDocument, nodePep,
                 comparableGroup, GetResultFile().Replicate.ChromatogramSet,
@@ -300,8 +310,60 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 var peakScoreCalculator = new CandidatePeakScoreCalculator(summaryData.PeakIndex,
                     chromatogramGroupInfo, context, summaryData);
-                yield return DefaultPeakScores.CalculateScores(peakScoreCalculator);
+                yield return AllPeakScores.MakeAllPeakScores(peakScoreCalculator);
             }
+        }
+
+        private AllPeakScores GetDefaultPeakScores()
+        {
+            var comparableGroup = FindComparableGroup();
+            var peakGroupIntegrator = PeakGroupIntegrator.GetPeakGroupIntegrator(SrmDocument,
+                Precursor.Peptide.IdentityPath, comparableGroup.Select(tg=>tg.TransitionGroup), 
+                GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo);
+            var peptideChromDataSets = peakGroupIntegrator.MakePeptideChromDataSets();
+            peptideChromDataSets.PickChromatogramPeaks(FindPeakBounds);
+            var transitionGroupDocNode = Precursor.DocNode;
+            var chromDataSets = peptideChromDataSets.DataSets.Where(dataSet =>
+                ReferenceEquals(transitionGroupDocNode.TransitionGroup, dataSet.NodeGroup?.TransitionGroup)).ToList();
+            var chromatogramGroupInfo = peptideChromDataSets.MakeChromatogramGroupInfos(chromDataSets).FirstOrDefault();
+            if (chromatogramGroupInfo == null)
+            {
+                return null;
+            }
+
+            return GetPeakScores(chromatogramGroupInfo).FirstOrDefault();
+        }
+
+        private PeakBounds FindPeakBounds(TransitionGroup transitionGroup, Model.Transition transition)
+        {
+            var peptideDocNode = Precursor.Peptide.DocNode;
+            var transitionDocNode = (TransitionDocNode) peptideDocNode.FindNode(new IdentityPath(transitionGroup, transition));
+            var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode?.Results);
+            if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
+            {
+                return null;
+            }
+
+            return new PeakBounds(transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime);
+        }
+
+        /// <summary>
+        /// Returns the set of TransitionGroups under the peptide that participate with each other in peak finding.
+        /// </summary>
+        private ImmutableList<TransitionGroupDocNode> FindComparableGroup()
+        {
+            var transitionGroup = Precursor.DocNode.TransitionGroup;
+            foreach (var groupDocNodes in PeakFeatureEnumerator.ComparableGroups(Precursor.Peptide.DocNode))
+            {
+                var groupList = ImmutableList.ValueOf(groupDocNodes);
+                if (groupList.Any(docNode => ReferenceEquals(transitionGroup, docNode.TransitionGroup)))
+                {
+                    return groupList;
+                }
+            }
+
+            Assume.Fail(@"Comparable group not found");
+            return null;
         }
     }
 }

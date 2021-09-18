@@ -948,6 +948,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
         }
+
+        protected override float Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData)
+        {
+            var score = base.Calculate(context, summaryPeakData);
+            var peakDatas = summaryPeakData.AnalyteGroupPeakData.SelectMany(data => data.TransitionPeakData.Select(pd=>pd.PeakData)).ToList();
+            var firstPeakData = peakDatas[0];
+            Console.Out.WriteLine("Retention Time: {0} Score: {1} Lengths: {2} Areas: {3}",
+                firstPeakData.Times[firstPeakData.TimeIndex], score,
+                string.Join(",", peakDatas.Select(peakData => peakData.Length)),
+                string.Join(",", peakDatas.Select(peakData => peakData.Area))
+            );
+            return score;
+        }
     }
 
     public class MQuestStandardWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestStandardCrossCorrelations>
