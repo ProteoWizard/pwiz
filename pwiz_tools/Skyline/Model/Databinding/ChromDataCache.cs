@@ -55,28 +55,10 @@ namespace pwiz.Skyline.Model.Databinding
         private ChromatogramGroupInfo LoadChromatogramInfo(SrmDocument document, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             IdentityPath precursorIdentityPath, bool loadPoints)
         {
-            var measuredResults = document.Settings.MeasuredResults;
-            if (null == measuredResults)
-            {
-                return null;
-            }
-            var tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
-            ChromatogramGroupInfo[] chromatogramGroupInfos;
-            if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, loadPoints,
-                out chromatogramGroupInfos))
-            {
-                return null;
-            }
-            foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
-            {
-                if (Equals(chromatogramGroupInfo.FilePath, filePath))
-                {
-                    return chromatogramGroupInfo;
-                }
-            }
-            return null;
+            return document.Settings.LoadChromatogramGroup(
+                chromatogramSet, filePath, peptideDocNode, precursorDocNode, loadPoints);
         }
 
         private class Key

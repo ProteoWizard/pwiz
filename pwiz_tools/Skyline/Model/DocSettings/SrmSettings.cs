@@ -1994,6 +1994,24 @@ namespace pwiz.Skyline.Model.DocSettings
             return result;
         }
 
+        public ChromatogramGroupInfo LoadChromatogramGroup(ChromatogramSet chromatogramSet, MsDataFileUri dataFilePath, PeptideDocNode peptide,
+            TransitionGroupDocNode transitionGroup, bool loadPoints)
+        {
+            if (!HasResults)
+            {
+                return null;
+            }
+
+            if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
+                (float) TransitionSettings.Instrument.MzMatchTolerance, loadPoints, out var infoSet))
+            {
+                return null;
+            }
+
+            return infoSet.FirstOrDefault(chromatogramGroupInfo =>
+                Equals(chromatogramGroupInfo.FilePath, dataFilePath));
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

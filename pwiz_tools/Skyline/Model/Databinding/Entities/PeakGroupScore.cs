@@ -7,6 +7,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -23,6 +24,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get;
         }
+        [Format(Formats.PEAK_SCORE, NullValue = TextUtil.EXCEL_NA)]
         public double? ModelScore { get; } 
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
@@ -50,6 +52,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return new PeakGroupScore(featureValues, modelScore, weightedFeatures);
+        }
+
+        public override string ToString()
+        {
+            if (ModelScore.HasValue)
+            {
+                return ModelScore.Value.ToString(Formats.PEAK_SCORE);
+            }
+
+            return string.Empty;
         }
     }
 

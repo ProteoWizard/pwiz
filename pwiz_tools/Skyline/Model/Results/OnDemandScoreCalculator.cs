@@ -110,9 +110,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                var otherChromatogramGroupInfo =
-                    PeakFeatureEnumerator.SummaryTransitionGroupPeakData.FindChromatogramGroupInfo(
-                        Document, PeptideDocNode, otherTransitionGroup, ChromatogramSet, ChromFileInfo.FilePath);
+                var otherChromatogramGroupInfo = Document.Settings.LoadChromatogramGroup(
+                    ChromatogramSet, ChromFileInfo.FilePath, PeptideDocNode, otherTransitionGroup, false);
                 if (otherChromatogramGroupInfo != null)
                 {
                     transitionGroups.Add(otherTransitionGroup);
