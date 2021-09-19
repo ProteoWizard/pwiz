@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using SkylineTool;
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
+        private readonly CachedValue<PeakScoreCache> _detailScores;
 
         private SrmDocument _batchChangesOriginalDocument;
         private List<EditDescription> _batchEditDescriptions;
@@ -64,6 +66,7 @@ namespace pwiz.Skyline.Model.Databinding
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
+            _detailScores = CachedValue.Create(this, () => new PeakScoreCache(Document));
         }
 
         public override string DefaultUiMode
@@ -114,7 +117,8 @@ namespace pwiz.Skyline.Model.Databinding
             return base.GetPropertyDescriptors(type)
                 .Concat(GetAnnotations(type))
                 .Concat(GetRatioProperties(type))
-                .Concat(GetListProperties(type));
+                .Concat(GetListProperties(type))
+                .Concat(GetFeatureProperties(type));
         }
 
         public IEnumerable<PropertyDescriptor> GetAnnotations(Type type)
@@ -174,6 +178,11 @@ namespace pwiz.Skyline.Model.Databinding
         public IEnumerable<RatioPropertyDescriptor> GetRatioProperties(Type type)
         {
             return RatioPropertyDescriptor.ListProperties(Document, type);
+        }
+
+        public IEnumerable<FeaturePropertyDescriptor> GetFeatureProperties(Type type)
+        {
+            return FeaturePropertyDescriptor.ListProperties(type, DataSchemaLocalizer.Language);
         }
 
         public SrmDocument Document
@@ -270,6 +279,11 @@ namespace pwiz.Skyline.Model.Databinding
         public AnnotationCalculator AnnotationCalculator
         {
             get { return _annotationCalculator.Value; }
+        }
+
+        public PeakScoreCache PeakScoreCache
+        {
+            get { return _detailScores.Value; }
         }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)

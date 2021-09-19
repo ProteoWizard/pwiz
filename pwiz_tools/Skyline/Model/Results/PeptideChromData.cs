@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexInFile { get; set; }
 
-        private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
+        internal IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
             get
             {

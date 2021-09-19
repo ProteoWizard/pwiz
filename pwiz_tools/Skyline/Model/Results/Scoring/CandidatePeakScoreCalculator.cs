@@ -1,12 +1,7 @@
 ﻿
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public interface IPeakScoreCalculator
-    {
-        float Calculate(IPeakFeatureCalculator peakFeatureCalculator);
-    }
-
-    public class CandidatePeakScoreCalculator : IPeakScoreCalculator
+    public class CandidatePeakScoreCalculator
     {
         private ChromatogramGroupInfo _chromatogramGroupInfo;
         private PeakScoringContext _peakScoringContext;

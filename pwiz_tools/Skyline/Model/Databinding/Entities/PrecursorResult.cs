@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -34,7 +33,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ZedGraph;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -45,13 +43,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
         private readonly CachedValue<IList<CandidatePeakGroup>> _candidatePeaks;
-        private readonly CachedValue<PeakScores> _peakScores;
+        private readonly CachedValue<PeakGroupScore> _peakScores;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
             _candidatePeaks = CachedValue.Create(DataSchema, GetCandidatePeakGroups);
-            _peakScores = CachedValue.Create(DataSchema, GetDefaultPeakScores);
+            _peakScores = CachedValue.Create(DataSchema, GetMyPeakScore);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -270,7 +268,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public PeakScores AllPeakScores
+        public PeakGroupScore PeakScore
         {
             get
             {
@@ -287,9 +285,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             var chromatogramGroup = new ChromatogramGroup(this);
             var peakGroups = new List<CandidatePeakGroup>();
-            foreach (var peakScores in GetPeakScores(chromatogramGroup.ChromatogramGroupInfo))
+            var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
+                Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
+            foreach (var peakScores in onDemandScoreCalculator.CalculateCandidatePeakScores(Precursor.DocNode,
+                chromatogramGroup.ChromatogramGroupInfo))
             {
-                var peakGroup = new CandidatePeakGroup(chromatogramGroup, peakGroups.Count, peakScores);
+                var peakGroup = new CandidatePeakGroup(chromatogramGroup, peakGroups.Count, GetPeakScores(peakScores));
                 peakGroup.UpdateChosen(this);
                 peakGroups.Add(peakGroup);
 
@@ -297,7 +298,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return ImmutableList.ValueOf(peakGroups);
         }
 
-        public IEnumerable<PeakScores> GetPeakScores(ChromatogramGroupInfo chromatogramGroupInfo)
+        public PeakGroupScore GetPeakScores(FeatureValues featureValues)
         {
             var context = new PeakScoringContext(SrmDocument);
             var nodePep = Precursor.Peptide.DocNode;
@@ -307,36 +308,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
             }
-            Assume.IsNotNull(comparableGroup);
-            var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(SrmDocument, nodePep,
-                comparableGroup, GetResultFile().Replicate.ChromatogramSet,
-                chromatogramGroupInfo);
-            while (summaryData.NextPeakIndex())
-            {
-                var peakScoreCalculator = new CandidatePeakScoreCalculator(summaryData.PeakIndex,
-                    chromatogramGroupInfo, context, summaryData);
-                yield return PeakScores.MakePeakScores(peakScoreCalculator, model);
-            }
+            return PeakGroupScore.MakePeakScores(featureValues, model);
         }
 
-        private PeakScores GetDefaultPeakScores()
+        private PeakGroupScore GetMyPeakScore()
         {
-            var comparableGroup = FindComparableGroup();
-            var peakGroupIntegrator = PeakGroupIntegrator.GetPeakGroupIntegrator(SrmDocument,
-                Precursor.Peptide.IdentityPath, comparableGroup.Select(tg=>tg.TransitionGroup), 
-                GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo);
-            var peptideChromDataSets = peakGroupIntegrator.MakePeptideChromDataSets();
-            peptideChromDataSets.PickChromatogramPeaks(FindPeakBounds);
-            var transitionGroupDocNode = Precursor.DocNode;
-            var chromDataSets = peptideChromDataSets.DataSets.Where(dataSet =>
-                ReferenceEquals(transitionGroupDocNode.TransitionGroup, dataSet.NodeGroup?.TransitionGroup)).ToList();
-            var chromatogramGroupInfo = peptideChromDataSets.MakeChromatogramGroupInfos(chromDataSets).FirstOrDefault();
-            if (chromatogramGroupInfo == null)
-            {
-                return null;
-            }
-
-            return GetPeakScores(chromatogramGroupInfo).FirstOrDefault();
+            var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
+                Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
+            var featureScores = onDemandScoreCalculator.CalculateTransitionGroupFeatureValues(Precursor.DocNode.TransitionGroup);
+            return GetPeakScores(featureScores);
         }
 
         private PeakBounds FindPeakBounds(TransitionGroup transitionGroup, Model.Transition transition)

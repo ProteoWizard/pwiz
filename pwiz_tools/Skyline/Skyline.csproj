@@ -555,7 +555,8 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
-    <Compile Include="Model\Databinding\Entities\PeakScores.cs" />
+    <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
+    <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
@@ -615,9 +616,11 @@
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
-    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
-    <Compile Include="Model\Results\Scoring\PeakScoreCalculator.cs" />
+    <Compile Include="Model\Results\OnDemandScoreCalculator.cs" />
+    <Compile Include="Model\Results\Scoring\Calculators.cs" />
+    <Compile Include="Model\Results\Scoring\CandidatePeakScoreCalculator.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\Scoring\DetailScores.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
