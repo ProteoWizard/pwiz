@@ -1332,9 +1332,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Add to header list
-            var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities);
-            header = header.ChangeFileLocations(0, _listTransitions.Count, _peakCount, scoresIndex, location,
-                lenCompressed, lenUncompressed);
+            var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities, lenCompressed, lenUncompressed);
+            header.Offset(0, _listTransitions.Count, _peakCount, scoresIndex, location);
             header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 
             int? transitionPeakCount = null;

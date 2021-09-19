@@ -202,9 +202,10 @@ namespace pwiz.Skyline.Model.Results
         private const byte NO_MAX_PEAK = 0xFF;
 
         public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
+            int compressedSize, int uncompressedSize,
             int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
             double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
-            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, -1, -1, 0, flags, statusId,
+            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
                 statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
         {
         }
@@ -306,20 +307,6 @@ namespace pwiz.Skyline.Model.Results
             // For dealing with pre-V11 caches where we didn't record chromatogram polarity
             var chromGroupHeaderInfo = this;
             chromGroupHeaderInfo._flagBits |= (ushort)FlagValues.polarity_negative;
-            return chromGroupHeaderInfo;
-        }
-
-        public ChromGroupHeaderInfo ChangeFileLocations(int fileIndex, int startTransitionIndex, int startPeakIndex,
-            int startScoreIndex, long locationPoints, int compressedSize, int uncompressedSize)
-        {
-            var chromGroupHeaderInfo = this;
-            chromGroupHeaderInfo._fileIndex = CheckUShort(fileIndex);
-            chromGroupHeaderInfo._startTransitionIndex = startTransitionIndex;
-            chromGroupHeaderInfo._startPeakIndex = startPeakIndex;
-            chromGroupHeaderInfo._startScoreIndex = startScoreIndex;
-            chromGroupHeaderInfo._locationPoints = locationPoints;
-            chromGroupHeaderInfo._compressedSize = compressedSize;
-            chromGroupHeaderInfo._uncompressedSize = uncompressedSize;
             return chromGroupHeaderInfo;
         }
 

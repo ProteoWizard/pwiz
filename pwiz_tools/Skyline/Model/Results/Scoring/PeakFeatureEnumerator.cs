@@ -23,7 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -129,18 +128,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static IEnumerable<IEnumerable<TransitionGroupDocNode>> ComparableGroups(PeptideDocNode nodePep)
         {
-            // Everything with relative RT not unknown makes up a comparable set
-            yield return from nodeGroup in nodePep.TransitionGroups
-                         where nodeGroup.RelativeRT != RelativeRT.Unknown
-                         select nodeGroup;
-
-            // Each other label type makes up a comparable set, i.e. charge states of a label type
-            foreach (var nodeGroups in from nodeGroup in nodePep.TransitionGroups
-                                            where nodeGroup.RelativeRT == RelativeRT.Unknown
-                                            group nodeGroup by nodeGroup.TransitionGroup.LabelType)
-            {
-                yield return nodeGroups;
-            }
+            return nodePep.GetComparableGroups();
         }
 
         private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,

@@ -300,9 +300,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public PeakGroupScore GetPeakScores(FeatureValues featureValues)
         {
-            var context = new PeakScoringContext(SrmDocument);
-            var nodePep = Precursor.Peptide.DocNode;
-            var comparableGroup = FindComparableGroup();
             var model = SrmDocument.Settings.PeptideSettings.Integration.PeakScoringModel;
             if (model == null || !model.IsTrained)
             {
@@ -330,25 +327,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return new PeakBounds(transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime);
-        }
-
-        /// <summary>
-        /// Returns the set of TransitionGroups under the peptide that participate with each other in peak finding.
-        /// </summary>
-        private ImmutableList<TransitionGroupDocNode> FindComparableGroup()
-        {
-            var transitionGroup = Precursor.DocNode.TransitionGroup;
-            foreach (var groupDocNodes in PeakFeatureEnumerator.ComparableGroups(Precursor.Peptide.DocNode))
-            {
-                var groupList = ImmutableList.ValueOf(groupDocNodes);
-                if (groupList.Any(docNode => ReferenceEquals(transitionGroup, docNode.TransitionGroup)))
-                {
-                    return groupList;
-                }
-            }
-
-            Assume.Fail(@"Comparable group not found");
-            return null;
         }
     }
 }

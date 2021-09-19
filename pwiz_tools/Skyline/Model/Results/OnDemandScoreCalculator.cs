@@ -251,19 +251,5 @@ namespace pwiz.Skyline.Model.Results
 
             return null;
         }
-
-        public IList<TransitionGroupDocNode> FindComparableGroup(TransitionGroupDocNode transitionGroupDocNode)
-        {
-            var transitionGroup = transitionGroupDocNode.TransitionGroup;
-            foreach (var groupDocNodes in PeakFeatureEnumerator.ComparableGroups(PeptideDocNode))
-            {
-                var groupList = groupDocNodes.ToList();
-                if (groupList.Any(docNode => ReferenceEquals(transitionGroup, docNode.TransitionGroup)))
-                {
-                    return groupList;
-                }
-            }
-            return null;
-        }
     }
 }

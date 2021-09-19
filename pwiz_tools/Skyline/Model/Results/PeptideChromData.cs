@@ -21,18 +21,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-[assembly: InternalsVisibleTo("Test")]
 namespace pwiz.Skyline.Model.Results
 {
-
-    public sealed class PeptideChromDataSets
+    internal sealed class PeptideChromDataSets
     {
         private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
         public const double TIME_MIN_DELTA = 0.2 / 60;
@@ -78,9 +75,9 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo FileInfo { get; private set; }
 
-        internal IList<ChromDataSet> DataSets { get { return _dataSets; } }
+        public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
-        internal RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
+        public RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
 
@@ -138,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<int> ProviderIds { get { return _dataSets.SelectMany(d => d.ProviderIds); } }
 
-        internal bool Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider)
         {
             //Console.Out.WriteLine("Starting {0} {1} {2}", this.NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
             foreach (var set in _dataSets.ToArray())
@@ -635,7 +632,7 @@ namespace pwiz.Skyline.Model.Results
             return listPeakSets;
         }
 
-        internal int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
+        public int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
         {
             // TODO: Do we want to keep this?
             // All identified peaks come first
@@ -836,7 +833,7 @@ namespace pwiz.Skyline.Model.Results
             return p1.CombinedScore.CompareTo(p2.CombinedScore);
         }
 
-        internal void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
+        public void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
         {
             // If this is coming from the same PeptideDocNode, then just add it, otherwise
             // a merged copy of the PeptideDocNode needs to be created that includes

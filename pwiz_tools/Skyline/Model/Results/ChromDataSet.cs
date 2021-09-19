@@ -1365,12 +1365,14 @@ namespace pwiz.Skyline.Model.Results
             return flags;
         }
 
-        public ChromGroupHeaderInfo MakeChromGroupHeaderInfo(TimeIntensitiesGroup groupOfTimeIntensities)
+        public ChromGroupHeaderInfo MakeChromGroupHeaderInfo(TimeIntensitiesGroup groupOfTimeIntensities, int compressedSize, int uncompressedSize)
         {
             return new ChromGroupHeaderInfo(PrecursorMz,
                 Count,
                 CountPeaks,
                 MaxPeakIndex,
+                compressedSize,
+                uncompressedSize,
                 groupOfTimeIntensities.NumInterpolatedPoints,
                 GetFlagValues(groupOfTimeIntensities),
                 StatusId,
@@ -1384,7 +1386,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramGroupInfo ToChromatogramGroupInfo(IDictionary<Type, int> scoreTypeIndices, ChromCachedFile chromCachedFile)
         {
             var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
-            var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup);
+            var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
             var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToList();
