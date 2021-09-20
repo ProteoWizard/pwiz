@@ -9,7 +9,7 @@
 # When a build is NOT triggered, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
 #
 # The 'targets' dictionary maps build config ids (e.g. 'bt83') to the status name shown in GitHub (e.g. "teamcity - Core Windows x86");
-# these names must match the status name reported by the corresponding TeamCity configs (usually the name of the config as seen on the TeamCity project page).
+# THESE NAMES MUST MATCH THE STATUS NAME REPORTED BY THE CORRESPONDING TEAMCITY CONFIGS (usually the name of the config as seen on the TeamCity project page).
 # There are metatargets in this dictionary which create aliases to group targets together (e.g. 'CoreWindows' maps to "bt83", "bt36", and "bt143").
 #
 # The 'matchPaths' list is a list of tuples where the first value is a regular expression to match against the list of changed files and the second value is a set of targets picked out from the 'targets' dictionary.
@@ -103,8 +103,8 @@ targets['SkylineRelease'] = \
     'release':
     {
         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline release (Windows x86_64)"
-        ,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline release (Windows x86)"
+        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
+        ,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
     }
 }
 
@@ -124,7 +124,7 @@ targets['Container'] = \
     },
     'release':
     {
-        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline release Docker container (Wine x86_64)"
+        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"
     }
 }
 
