@@ -1064,6 +1064,11 @@ rule copy-assemblies ( target : properties * )
     }
 }
 
+local rule read-version ( file ) 
+{
+    MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe \"$(file)\"" ] ;
+}
+
 local rule set-manifest-dependencies ( target : properties * )
 {
     local manifest-dependencies-string ;
@@ -1074,8 +1079,14 @@ local rule set-manifest-dependencies ( target : properties * )
         for local dependency in $(manifest-dependencies)
         {
             local dependency-path = [ path.native [ $(dependency).name ] ] ;
-            local dependency-version = [ MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe $(dependency-path)" ] ] ;
-            
+            if ! [ path.exists $(dependency-path) ]
+            {
+                import errors : user-error : errors.user-error ;
+                errors.user-error "cannot find manifest-dependency: " $(dependency-path) ;
+            }
+
+            local dependency-version = [ read-version "$(dependency-path)" ] ;
+
             # unknown version will cause a runtime-error; is there a better solution?
             dependency-version ?= "unknown" ;
             
@@ -1705,7 +1716,7 @@ local rule configure-really ( version ? : options * )
                     vcvarsall.bat ] ;
             }
 
-            local default-setup-amd64 = vcvarsx86_amd64.bat ;
+            local default-setup-amd64 = vcvars64.bat ;
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
             local default-setup-arm   = vcvarsx86_arm.bat ;

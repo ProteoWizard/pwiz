@@ -7722,29 +7722,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copy.
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_AddToContextMenu_Copy {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_AddToContextMenu_Copy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metafile image copied to clipboard.
         /// </summary>
         public static string CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard {
             get {
                 return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to copy metafile image to the clipboard..
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard", resourceCulture);
             }
         }
         
@@ -14713,6 +14695,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}{1} ppm.
+        /// </summary>
+        public static string GraphSpectrum_MassErrorFormat_ppm {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_MassErrorFormat_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {
@@ -15883,6 +15874,53 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecular Formula and/or Precursor m/z.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or_Precursor_m_z {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Molecular_Formula_and_or" +
+                        "_Precursor_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Adduct and/or Precursor Charge.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_" +
+                        "Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Delustering Potential.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column {0}.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_DisplayData_Column__0_ {
@@ -15910,6 +15948,15 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_h" +
                         "eader___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_fo" +
                         "r_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecular Formula.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula", resourceCulture);
             }
         }
         
@@ -16000,6 +16047,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z {
             get {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Description.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description", resourceCulture);
             }
         }
         
@@ -21174,6 +21230,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision Cross Section (sq A).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section (sq A).
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_ {
@@ -21188,6 +21253,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Cone_Voltage {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Cone_Voltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decoy.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Decoy {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Decoy", resourceCulture);
             }
         }
         
@@ -21282,11 +21356,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragment Name.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Fragment_Name {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_iRT {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Label Type.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Label_Type {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Label_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Intensity.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Library_Intensity {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Library_Intensity", resourceCulture);
             }
         }
         
@@ -32218,12 +32319,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An isolation window width value is not allowed in Targeted mode..
+        ///   Looks up a localized string similar to An isolation window width value is not allowed in {0} mode..
         /// </summary>
-        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode {
+        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode {
             get {
-                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_T" +
-                        "argeted_mode", resourceCulture);
+                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__" +
+                        "0___mode", resourceCulture);
             }
         }
         
@@ -32796,6 +32897,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_sepa" +
                         "rated_list_of_integers_describing_charge_states_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SureQuant acquisition method requires &quot;Triggered Chromatogram Extraction&quot;. Unchecking this option will switch to the PRM acquisition method. Do you want to continue?.
+        /// </summary>
+        public static string TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisi" +
+                        "tion_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option" +
+                        "_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -34932,6 +35044,15 @@ namespace pwiz.Skyline.Properties {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string ZedGraphClipboard_CreateCopyMenuItems_Copy {
+            get {
+                return ResourceManager.GetString("ZedGraphClipboard_CreateCopyMenuItems_Copy", resourceCulture);
             }
         }
         

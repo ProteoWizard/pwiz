@@ -70,9 +70,9 @@ namespace pwiz.SkylineTest
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 new[] { @"TestFunctional.cs" }, // Only these files should contain this
                 string.Empty, // No file content required for inspection
-                @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
-                true, // Pattern is not a regular expression
-                @"This appears to be temporary debugging code that should not be checked in."); // Explanation for prohibition, appears in report
+                @"^\s*PauseTest(UI)?\(", // Forbidden pattern (uncommented PauseTest or PauseTestUI)
+                true, // Pattern is a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
 
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask

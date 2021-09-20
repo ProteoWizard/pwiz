@@ -2771,20 +2771,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else if (AcquisitionMethod == FullScanAcquisitionMethod.DDA)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else
+                if (AcquisitionMethod == FullScanAcquisitionMethod.DIA)
                 {
                     if (IsolationScheme == null)
                         throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+                }
+                else
+                {
+                    if (IsolationScheme != null)
+                    {
+                        string message = string.Format(Resources
+                                .TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
+                            AcquisitionMethod);
+                        throw new InvalidDataException(message);
+                    }
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
