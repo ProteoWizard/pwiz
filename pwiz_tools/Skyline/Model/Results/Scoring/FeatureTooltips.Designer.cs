@@ -22,7 +22,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class FeatureTooltips {
+    internal class FeatureTooltips {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Results.Scoring.FeatureTooltips", typeof(FeatureTooltips).Assembly);
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to MQuest co-elution score of analyte precursors weighted by the sum of the transition areas.
         /// </summary>
-        public static string Co_elution__weighted_ {
+        internal static string Co_elution__weighted_ {
             get {
                 return ResourceManager.GetString("Co-elution (weighted)", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Fraction of transition peaks across all precursors for which &quot;Coeluting&quot; is true.
         /// </summary>
-        public static string Co_elution_count {
+        internal static string Co_elution_count {
             get {
                 return ResourceManager.GetString("Co-elution count", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to MQuest co-elution score weighted by the sum of the transition areas.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Default_co_elution__weighted_ {
+        internal static string Default_co_elution__weighted_ {
             get {
                 return ResourceManager.GetString("Default co-elution (weighted)", resourceCulture);
             }
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Fraction of transition peaks for which &quot;Coeluting&quot; is true.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Default_co_elution_count {
+        internal static string Default_co_elution_count {
             get {
                 return ResourceManager.GetString("Default co-elution count", resourceCulture);
             }
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///Otherwise, dot product of MS1 transition areas against predicted isotope distribution.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Default_dotp_or_idotp {
+        internal static string Default_dotp_or_idotp {
             get {
                 return ResourceManager.GetString("Default dotp or idotp", resourceCulture);
             }
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Log10 of the sum of the transition peak areas.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Default_Intensity {
+        internal static string Default_Intensity {
             get {
                 return ResourceManager.GetString("Default Intensity", resourceCulture);
             }
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to MQuest shape score, weighted by the sum of the transition peak areas.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Default_shape__weighted_ {
+        internal static string Default_shape__weighted_ {
             get {
                 return ResourceManager.GetString("Default shape (weighted)", resourceCulture);
             }
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to A score of 1 or 0 depending on whether the peak overlaps with the retention time of an MS/MS identification..
         /// </summary>
-        public static string Identified_count {
+        internal static string Identified_count {
             get {
                 return ResourceManager.GetString("Identified count", resourceCulture);
             }
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Log10 of the sum of the transition peak areas across analyte precursors..
         /// </summary>
-        public static string Intensity {
+        internal static string Intensity {
             get {
                 return ResourceManager.GetString("Intensity", resourceCulture);
             }
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Normalized contrast angle of MS2 transition areas against library intensities.
         ///Calculated using analyte precursors..
         /// </summary>
-        public static string Library_intensity_dot_product {
+        internal static string Library_intensity_dot_product {
             get {
                 return ResourceManager.GetString("Library intensity dot-product", resourceCulture);
             }
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Normalized contrast angle of the MS1 transition areas against the predicted isotope distribution.
         ///Calculated using analyte precursor with the highest score..
         /// </summary>
-        public static string Precursor_isotope_dot_product {
+        internal static string Precursor_isotope_dot_product {
             get {
                 return ResourceManager.GetString("Precursor isotope dot product", resourceCulture);
             }
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Average mass error across analyte MS1 transitions weighted by transition area..
         /// </summary>
-        public static string Precursor_mass_error {
+        internal static string Precursor_mass_error {
             get {
                 return ResourceManager.GetString("Precursor mass error", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to The shape correlation score between MS1 ions and MS2 ions.
         ///Calculated using internal standard precursors if they exist, otherwise analyte precursors..
         /// </summary>
-        public static string Precursor_product_shape_score {
+        internal static string Precursor_product_shape_score {
             get {
                 return ResourceManager.GetString("Precursor-product shape score", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Average mass error across analyte MS2 transitions weighted by transition area..
         /// </summary>
-        public static string Product_mass_error {
+        internal static string Product_mass_error {
             get {
                 return ResourceManager.GetString("Product mass error", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to MQuest co elution score, weighted by the sum of the transition peak areas..
         /// </summary>
-        public static string Reference_co_elution__weighted_ {
+        internal static string Reference_co_elution__weighted_ {
             get {
                 return ResourceManager.GetString("Reference co-elution (weighted)", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Fraction of transitions across internal standard precursors for which &quot;Coeluting&quot; is true..
         /// </summary>
-        public static string Reference_co_elution_count {
+        internal static string Reference_co_elution_count {
             get {
                 return ResourceManager.GetString("Reference co-elution count", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Normalized contrast angle of the correlation between analyte and internal standard transition peak areas..
         /// </summary>
-        public static string Reference_intensity_dot_product {
+        internal static string Reference_intensity_dot_product {
             get {
                 return ResourceManager.GetString("Reference intensity dot-product", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to MQuest shape score, weighted by the sum of the transition peak areas..
         /// </summary>
-        public static string Reference_shape__weighted_ {
+        internal static string Reference_shape__weighted_ {
             get {
                 return ResourceManager.GetString("Reference shape (weighted)", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Difference between predicted retention time and peak apex time..
         /// </summary>
-        public static string Retention_time_difference {
+        internal static string Retention_time_difference {
             get {
                 return ResourceManager.GetString("Retention time difference", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Square of difference between predicted retention time and peak apex time..
         /// </summary>
-        public static string Retention_time_squared_difference {
+        internal static string Retention_time_squared_difference {
             get {
                 return ResourceManager.GetString("Retention time squared difference", resourceCulture);
             }
@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to MQuest shape score, weighted by the sum of the transition peak areas.
         ///Calculated using analyte precursors..
         /// </summary>
-        public static string Shape__weighted_ {
+        internal static string Shape__weighted_ {
             get {
                 return ResourceManager.GetString("Shape (weighted)", resourceCulture);
             }
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
         ///Calculated using analyte precursors..
         /// </summary>
-        public static string Signal_to_noise {
+        internal static string Signal_to_noise {
             get {
                 return ResourceManager.GetString("Signal to noise", resourceCulture);
             }
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to MQuest co elution score, weighted by the sum of the transition peak areas.
         ///Calculated using internal standard precursors..
         /// </summary>
-        public static string Standard_co_elution__weighted_ {
+        internal static string Standard_co_elution__weighted_ {
             get {
                 return ResourceManager.GetString("Standard co-elution (weighted)", resourceCulture);
             }
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Log10 of the sum of the transition peak areas across internal standard precursors..
         /// </summary>
-        public static string Standard_Intensity {
+        internal static string Standard_Intensity {
             get {
                 return ResourceManager.GetString("Standard Intensity", resourceCulture);
             }
@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Normalized contrast angle of MS2 transition areas against library intensities.
         ///Calculated using internal standard precursors..
         /// </summary>
-        public static string Standard_library_dot_product {
+        internal static string Standard_library_dot_product {
             get {
                 return ResourceManager.GetString("Standard library dot-product", resourceCulture);
             }
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         /// <summary>
         ///   Looks up a localized string similar to Average mass error across internal standard MS2 transitions weighted by transition area..
         /// </summary>
-        public static string Standard_product_mass_error {
+        internal static string Standard_product_mass_error {
             get {
                 return ResourceManager.GetString("Standard product mass error", resourceCulture);
             }
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to MQuest shape score, weighted by the sum of the transition peak areas.
         ///Calculated using internal standard precursors..
         /// </summary>
-        public static string Standard_shape__weighted_ {
+        internal static string Standard_shape__weighted_ {
             get {
                 return ResourceManager.GetString("Standard shape (weighted)", resourceCulture);
             }
@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model.Results.Scoring {
         ///   Looks up a localized string similar to Log of the ratio of the peak height to the median intensity beyond the bounds of the peak.
         ///Calculated using internal standard precursors..
         /// </summary>
-        public static string Standard_signal_to_noise {
+        internal static string Standard_signal_to_noise {
             get {
                 return ResourceManager.GetString("Standard signal to noise", resourceCulture);
             }
