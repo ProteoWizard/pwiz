@@ -204,8 +204,8 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                TargetCounts = new[] { 13, 262, 321, 1926 },
-                FinalTargetCounts = new[] { 12, 262, 321, 1926 },
+                TargetCounts = new[] { 13, 260, 320, 1920 },
+                FinalTargetCounts = new[] { 12, 260, 320, 1920 },
                 ScoringModelCoefficients = "0.2438|-0.6626|4.3517|-0.1746|-0.0965|0.7356|0.0573|-0.0565",
                 MassErrorStats = new[]
                 {
@@ -237,8 +237,8 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
-                TargetCounts = new[] { 4009, 31210, 34134, 204804 },
-                FinalTargetCounts = new[] { 2046, 22132, 24187, 145122 },
+                TargetCounts = new[] { 3988, 30908, 33830, 202978 },
+                FinalTargetCounts = new[] { 2037, 21924, 23974, 143842 },
                 ScoringModelCoefficients = "0.3533|-0.8979|3.7557|0.1866|-0.0797|0.7328|-0.0001|-0.0587",
                 MassErrorStats = new[]
                 {
@@ -456,8 +456,7 @@ namespace TestPerf
             {
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
-                // TODO(kaipot): Set back to true after fixing issue with iRT peptide with 5 MS/MS peaks in QE data
-                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = !Equals("QE", _instrumentValues.InstrumentTypeName);
+                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
                     Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED

@@ -430,7 +430,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var docImportFasta = docNew;
                         longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                         {
-                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, longWaitBroker, ref selectedPath, out newPeptideGroups, out error);
+                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, irtStandard, longWaitBroker,
+                                ref selectedPath, out newPeptideGroups, out error);
                         });
                         docNew = docImportFasta;
                     }
@@ -453,8 +454,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                             {
-                                IdentityPath nextAdd;
-                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, longWaitBroker, to, out selectedPath, out nextAdd, out newPeptideGroups);
+                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, irtStandard,
+                                    longWaitBroker, to, out selectedPath, out _, out newPeptideGroups);
                             });
                             docNew = docImportFasta;
                         }
