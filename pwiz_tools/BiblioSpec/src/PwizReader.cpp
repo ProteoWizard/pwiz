@@ -85,7 +85,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         // With this block, I get errors for getSpectrum(n,data,SCAN_NUM_ID)
         // TODO: find out why look-up by index breaks when
         // non-sequential and remove this
-        if( idType_ == BiblioSpec::INDEX_ID ){ 
+        if( idType_ == BiblioSpec::INDEX_ID ){
             for(size_t i=0; i < allSpectra_->size(); i++){
                 SpectrumPtr spec = allSpectra_->spectrum(i, false);
                 if( spec == NULL ){
@@ -94,7 +94,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
                                  "opening file %s for lookup by index.",
                                  i, fileName_.c_str());
                 } 
-                if(lexical_cast<int>(spec->cvParam(MS_ms_level).value) != 2){
+                if(lexical_cast<int>(spec->cvParam(MS_ms_level).value) != 2 ||
+                                     spec->precursors.size() == 0){
                     continue;
                 }
                 double mz = spec->precursors[0].selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();

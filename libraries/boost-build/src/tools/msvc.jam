@@ -1716,7 +1716,7 @@ local rule configure-really ( version ? : options * )
                     vcvarsall.bat ] ;
             }
 
-            local default-setup-amd64 = vcvarsx86_amd64.bat ;
+            local default-setup-amd64 = vcvars64.bat ;
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
             local default-setup-arm   = vcvarsx86_arm.bat ;

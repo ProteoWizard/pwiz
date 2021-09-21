@@ -347,10 +347,12 @@
             // 
             // comboAcquisitionMethod
             // 
+            this.comboAcquisitionMethod.DisplayMember = "Label";
             this.comboAcquisitionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAcquisitionMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
             this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
+            this.toolTip.SetToolTip(this.comboAcquisitionMethod, resources.GetString("comboAcquisitionMethod.ToolTip"));
             this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
             // 
             // label20
@@ -368,6 +370,12 @@
             resources.ApplyResources(this.textPrecursorCharges, "textPrecursorCharges");
             this.textPrecursorCharges.Name = "textPrecursorCharges";
             // 
+            // toolTip
+            // 
+            this.toolTip.AutoPopDelay = 32767;
+            this.toolTip.InitialDelay = 500;
+            this.toolTip.ReshowDelay = 100;
+            // 
             // cbHighSelectivity
             // 
             resources.ApplyResources(this.cbHighSelectivity, "cbHighSelectivity");
@@ -375,10 +383,13 @@
             this.toolTip.SetToolTip(this.cbHighSelectivity, resources.GetString("cbHighSelectivity.ToolTip"));
             this.cbHighSelectivity.UseVisualStyleBackColor = true;
             // 
-            // useSpectralLibraryIonMobilityValuesControl1
+            // usercontrolIonMobilityFiltering
             // 
+            this.usercontrolIonMobilityFiltering.IonMobilityFilterResolvingPower = null;
+            this.usercontrolIonMobilityFiltering.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");
             this.usercontrolIonMobilityFiltering.Name = "usercontrolIonMobilityFiltering";
+            this.usercontrolIonMobilityFiltering.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // FullScanSettingsControl
             // 
