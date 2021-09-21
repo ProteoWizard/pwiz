@@ -146,15 +146,7 @@ namespace pwiz.Skyline.Menus
             sbData.Append(stringWriter);
             dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
 
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetDataObject(dataObj);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetCopyErrorMessage());
-            }
+            ClipboardHelper.SetClipboardData(SkylineWindow, dataObj, false);
         }
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
