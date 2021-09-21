@@ -115,20 +115,20 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 13, 270, 290, 1740 },
-                FinalTargetCounts = new[] { 12, 270, 290, 1740 },
-                ScoringModelCoefficients = "0.3540|-0.6788|3.8096|-0.4059|-0.4976|1.0246|-0.1091|-0.0610",
+                TargetCounts = new[] { 13, 268, 288, 1728 },
+                FinalTargetCounts = new[] { 12, 268, 288, 1728 },
+                ScoringModelCoefficients = "0.2924|-0.5958|4.3173|-0.3341|-0.5752|0.8511|0.0417|-0.0726",
                 MassErrorStats = new[]
                 {
-                    new[] {2.9, 4.6},
-                    new[] {2.6, 4.4},
-                    new[] {3.7, 4.5},
-                    new[] {5.7, 3.9},
-                    new[] {4.6, 4.3},
-                    new[] {-0.3, 3.9},
-                    new[] {1.2, 3.8},
+                    new[] {3, 4.4},
+                    new[] {2.8, 4.1},
+                    new[] {3.9, 4.3},
+                    new[] {5.9, 3.6},
+                    new[] {4.8, 4},
+                    new[] {-0.2, 3.4},
+                    new[] {1.1, 3.8},
                 },
-                DiffPeptideCounts = new[] { 143, 44, 31, 57 },
+                DiffPeptideCounts = new[] { 142, 44, 30, 57 },
                 UnpolishedProteins = 9,
             };
 
@@ -147,22 +147,22 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 4731, 36796, 38124, 228744 },
-                FinalTargetCounts = new[] { 2401, 26196, 27126, 162756 },
-                ScoringModelCoefficients = "-0.0107|-0.7657|4.2047|-0.1745|-0.2528|0.7345|0.2656|-0.0616",
+                TargetCounts = new[] { 4700, 36622, 37950, 227700 },
+                FinalTargetCounts = new[] { 2398, 26102, 27032, 162192 },
+                ScoringModelCoefficients = "-0.0479|-0.7510|4.2746|-0.2467|-0.2652|0.7547|0.2904|-0.0663",
                 MassErrorStats = new[]
                 {
-                    new[] {2.7, 4.7},
-                    new[] {2.4, 4.4},
-                    new[] {3.9, 4.3},
-                    new[] {5.1, 4.2},
-                    new[] {4.4, 4.4},
-                    new[] {-0.3, 4.1},
-                    new[] {1, 4.2},
+                    new[] {2.8, 4.6},
+                    new[] {2.4, 4.3},
+                    new[] {3.9, 4.2},
+                    new[] {5.2, 4.1},
+                    new[] {4.5, 4.2},
+                    new[] {-0.3, 3.9},
+                    new[] {1, 4.1},
                 },
-                DiffPeptideCounts = new[] { 12822, 7966, 2698, 2147 },
-                UnpolishedProteins = 2195,
-                PolishedProteins = 2396,
+                DiffPeptideCounts = new[] { 12783, 7943, 2689, 2140 },
+                UnpolishedProteins = 2206,
+                PolishedProteins = 2393,
             };
 
             if (!IsCoverShotMode)
@@ -457,7 +457,7 @@ namespace TestPerf
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 // TODO(kaipot): Set back to true after fixing issue with iRT peptide with 5 MS/MS peaks in QE data
-                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false;
+                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = !Equals("QE", _instrumentValues.InstrumentTypeName);
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
                     Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED

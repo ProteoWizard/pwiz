@@ -247,10 +247,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
                             .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor })
                             .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_3.GetKey())
-                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey()));
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey())
+                            .ChangeMeasuredIons(Array.Empty<MeasuredIon>()));
+                    }
+                    else if (settings.Libraries.Pick == TransitionLibraryPick.all)
+                    {
+                        // Adjust filters to match "all" picking, since they are ignored in the current settings
+                        settings = settings.ChangeFilter(settings.Filter
+                            .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.GetKey())
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey())
+                            .ChangeMeasuredIons(Array.Empty<MeasuredIon>())
+                            .ChangeExclusionUseDIAWindow(false));
                     }
 
-                    var libraries = settings.Libraries;
+                    var libraries = settings.Libraries.ChangePick(TransitionLibraryPick.filter);    // Always apply the filter when the wizard is used
                     var defLibraries = defSettings.Libraries;
                     if (libraries.IonMatchTolerance == defLibraries.IonMatchTolerance)
                         libraries = libraries.ChangeIonMatchTolerance(0.05);
@@ -396,8 +406,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
-            TransitionLibraryPick pick = TransitionLibraryPick.filter;
-            var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
+            var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, TransitionLibraryPick.filter);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
