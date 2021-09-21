@@ -366,30 +366,25 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
             {
                 sqlite::query::rows row = *itr;
-                const int colFrameId = 0;
-                const int colScanBegin = 1;
-                const int colScanEnd = 2;
-                const int colIsolationMz = 3;
-                const int colIsolationWidth = 4;
-                const int colCE = 5;
-                const int colWindowGroup = 6;
+                int idx = -1;
 
-                int64_t frameId = row.get<sqlite3_int64>(colFrameId);
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
 
                 auto findItr = frames_.find(frameId);
                 if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
                     continue;
                 auto& frame = findItr->second;
 
-                int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+                int scanBegin = row.get<int>(++idx);
+                int scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
-                info.isolationMz = row.get<double>(colIsolationMz);
-                info.isolationWidth = row.get<double>(colIsolationWidth);
-                info.collisionEnergy = row.get<double>(colCE);
-                int windowGroup = row.get<int>(colWindowGroup);
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+                int windowGroup = row.get<int>(++idx);
 
-                info.numScans = 1 + scanEnd - scanBegin;
+                // NB: some data has ScanNumEnd > NumScans, which should not happen because ScanNumEnd is supposed to be an exclusive 0-based index, so clamp it here
+                info.numScans = min(frame->numScans(), 1 + scanEnd) - scanBegin;
 
                 if (!isolationMzFilter_.empty())
                 {

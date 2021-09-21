@@ -110,6 +110,8 @@ namespace pwiz.Skyline.SettingsUI
             set { comboAcquisitionMethod.SelectedItem = value; }
         }
 
+        public ComboBox ComboAcquisitionMethod => comboAcquisitionMethod;
+
         public FullScanMassAnalyzerType ProductMassAnalyzer
         {
             get
@@ -534,6 +536,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public EventHandler IsolationSchemeChangedEvent { get; set; }
 
+        public event Action AcquisitionMethodChanged;
+
         private void comboAcquisitionMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
             var acquisitionMethod = AcquisitionMethod;
@@ -571,6 +575,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
+            AcquisitionMethodChanged?.Invoke();
         }
 
         private void EnableIsolationScheme(bool enable)
@@ -1018,7 +1023,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 groupBoxRetentionTimeToKeep.Enabled = true;
             }
-            if (radioKeepAllTime.Checked && !disabled && AcquisitionMethod != FullScanAcquisitionMethod.Targeted)
+            if (radioKeepAllTime.Checked && !disabled && ShouldAdviseAgainstFullGradientChromatograms(AcquisitionMethod))
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
@@ -1070,6 +1075,23 @@ namespace pwiz.Skyline.SettingsUI
             {
                 tbxTimeAroundPrediction.Enabled = false;
             }
+        }
+
+        /// <summary>
+        /// Returns true if the user should be encouraged to use one of the retention time filtering
+        /// options to prevent full gradient chromatograms from being extracted.
+        /// </summary>
+        private bool ShouldAdviseAgainstFullGradientChromatograms(
+            FullScanAcquisitionMethod fullScanAcquisitionMethod)
+        {
+            if (fullScanAcquisitionMethod == FullScanAcquisitionMethod.PRM ||
+                fullScanAcquisitionMethod == FullScanAcquisitionMethod.SureQuant ||
+                fullScanAcquisitionMethod == FullScanAcquisitionMethod.Targeted)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }

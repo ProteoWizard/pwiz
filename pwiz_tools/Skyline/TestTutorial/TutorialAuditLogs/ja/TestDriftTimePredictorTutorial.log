@@ -14,11 +14,11 @@ Extra Info: ファイル名 =
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"
 
-Undo Redo : K.TCVADESHAGCEK.S [75, 87]のメモが編集されました
-Summary   : ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [75, 87]>メモが"Lost in yeast samples"に変更されました
+Undo Redo : K.TCVADESHAGCEK.S [76, 88]のメモが編集されました
+Summary   : ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [76, 88]>メモが"Lost in yeast samples"に変更されました
 All Info  :
-K.TCVADESHAGCEK.S [75, 87]のメモが編集されました
-ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [75, 87]>メモは見つかりませんから"Lost in yeast samples"に変更されました
+K.TCVADESHAGCEK.S [76, 88]のメモが編集されました
+ターゲット>gi|1351907|sp|P02769.4|ALBU_BOVIN>K.TCVADESHAGCEK.S [76, 88]>メモは見つかりませんから"Lost in yeast samples"に変更されました
 
 Undo Redo : 結果が管理されました
 Summary   : 結果が管理されました
@@ -35,8 +35,8 @@ All Info  :
 設定>トランジションの設定－イオン移動度>イオン移動度ライブラリは"None"から"BSA"に変更されました
 設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>ファイルパスは"BSA.imsdb"です
 設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>項目が追加されましたは"38"です
-設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>LSIDは"urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:f7ec5daf-cff5-4a19-b77a-a6e723fe8503:1.1"です
-設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>タイムスタンプは"2020-09-20T14:26:32-07:00"です
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>LSIDは"urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:a208fc7b-2ed2-41d6-a9e3-d0f111256b36:1.1"です
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>タイムスタンプは"2021-08-14T05:58:37-07:00"です
 設定>トランジションの設定－イオン移動度>イオン移動度フィルタウィンドウ幅計算タイプは"なし"から"分解能"に変更されました
 設定>トランジションの設定－イオン移動度>分解能は"0"から"50"に変更されました
 

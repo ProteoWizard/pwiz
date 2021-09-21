@@ -734,6 +734,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
+
             return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
@@ -743,6 +744,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
+                ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
                 LineWidth = Settings.Default.SpectrumLineWidth

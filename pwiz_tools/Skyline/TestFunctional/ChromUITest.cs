@@ -111,11 +111,11 @@ namespace pwiz.SkylineTestFunctional
         {
             var graphChrom = SkylineWindow.GetGraphChrom(chromName);
             // Graph objects will not be present when the program is off screen
-            if (!graphChrom.GraphItem.GraphObjList.Any() && Program.SkylineOffscreen)
+            if (!graphChrom.GraphPane.GraphObjList.Any() && Program.SkylineOffscreen)
                 return graphChrom.GraphItems.Sum(g => g.RawTimesCount);
 
             int count = 0;
-            foreach (var graphObj in graphChrom.GraphItem.GraphObjList)
+            foreach (var graphObj in graphChrom.GraphPane.GraphObjList)
             {
                 var objTag = graphObj.Tag as ChromGraphItem.GraphObjTag;
                 if (objTag != null && objTag.GraphObjType == ChromGraphItem.GraphObjType.raw_time)
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             var graphChrom = SkylineWindow.GetGraphChrom("1");
             // If the entire graph object list may be empty when the graph is offscreen
             // It is not worth it to make this work.
-            if (!graphChrom.GraphItem.GraphObjList.Any() && Program.SkylineOffscreen)
+            if (!graphChrom.GraphPane.GraphObjList.Any() && Program.SkylineOffscreen)
                 return;
 
             var norect = GetChromRect(graphChrom);
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static GraphObj GetChromRect(GraphChromatogram graphChrom)
         {
-            return graphChrom.GraphItem.GraphObjList.FirstOrDefault(obj =>
+            return graphChrom.GraphPane.GraphObjList.FirstOrDefault(obj =>
             {
                 var objTag = obj.Tag as ChromGraphItem.GraphObjTag;
                 return objTag != null && objTag.GraphObjType == ChromGraphItem.GraphObjType.original_peak_shading;

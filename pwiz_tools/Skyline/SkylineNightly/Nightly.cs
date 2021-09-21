@@ -306,20 +306,31 @@ namespace SkylineNightly
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterDirBasis + ".zip");
-            const int attempts = 30;
+            const int attempts = 120; // Retry for up to two hours
+            var useLastSuccessfulInsteadOfLastFinished = false;
             string branchUrl = null;
             for (int i = 0; i < attempts; i++)
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, _runMode);
+                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished);
                 }
                 catch (Exception ex)
                 {
-                    Log("Exception while downloading SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
-                    if (i == attempts-1)
+                    if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to download SkylineTester");
+                        QuitWithError("Unable to download SkylineTester");
+                    }
+
+                    // After 30 minutes, start trying for lastSuccessful build instead
+                    useLastSuccessfulInsteadOfLastFinished = i > 30; 
+                    if (useLastSuccessfulInsteadOfLastFinished)
+                    {
+                        Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, attempting download of lastSuccessful build instead of lastFinished.)");
+                    }
+                    else
+                    {
+                        Log("Exception while downloading SkylineTester: " + ex.Message + " (Retrying every 60 seconds for 30 minutes.)");
                     }
                     Thread.Sleep(60*1000);  // one minute
                     continue;
@@ -327,7 +338,7 @@ namespace SkylineNightly
 
                 // Install SkylineTester.
                 if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
-                    LogAndThrow("SkylineTester installation failed.");
+                    QuitWithError("SkylineTester installation failed.");
                 try
                 {
                     // Delete zip file.
@@ -357,7 +368,7 @@ namespace SkylineNightly
                     Log("Exception while unzipping SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
                     if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to identify branch from Version.cpp in SkylineTester");
+                        QuitWithError("Unable to identify branch from Version.cpp in SkylineTester");
                     }
                     Thread.Sleep(60 * 1000);  // one minute
                 }
@@ -370,7 +381,7 @@ namespace SkylineNightly
             {
                 if (stream == null)
                 {
-                    LogAndThrow(result = "Embedded resource is broken");
+                    QuitWithError(result = "Embedded resource is broken");
                     return result; 
                 }
                 using (var reader = new StreamReader(stream))
@@ -420,7 +431,7 @@ namespace SkylineNightly
                 var skylineTesterProcess = Process.Start(processInfo);
                 if (skylineTesterProcess == null)
                 {
-                    LogAndThrow(result = "SkylineTester did not start");
+                    QuitWithError(result = "SkylineTester did not start");
                     return result;
                 }
                 Log("SkylineTester started");
@@ -523,7 +534,7 @@ namespace SkylineNightly
             Log(_startTime.ToShortDateString());
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
+        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate)
         {
             // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
             // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly
@@ -546,7 +557,15 @@ namespace SkylineNightly
                 var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
                 string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, branchType);
-                Log("Download SkylineTester zip file as " + zipFileLink);
+                if (desperate)
+                {
+                    zipFileLink = zipFileLink.Replace(".lastFinished", ".lastSuccessful");
+                    Log("In retry, download possibly stale (\".lastSuccessful\" rather than \".lastFinished\") SkylineTester zip file as " + zipFileLink);
+                }
+                else
+                {
+                    Log("Download SkylineTester zip file as " + zipFileLink);
+                }
                 client.DownloadFile(zipFileLink, skylineTesterZip); // N.B. depending on caller to do try/catch
             }
         }
@@ -1118,9 +1137,9 @@ namespace SkylineNightly
             }
         }
 
-        private string Log(string message)
+        private void Log(string message)
         {
-            return Log(LogFileName, message);
+            Log(LogFileName, message);
         }
 
         public static string Log(string logFileName, string message)
@@ -1137,11 +1156,10 @@ namespace SkylineNightly
             return timestampedMessage;
         }
 
-        private void LogAndThrow(string message)
+        private void QuitWithError(string message)
         {
-            var timestampedMessage = Log(message);
             SaveErrorScreenshot();
-            throw new Exception(timestampedMessage);
+            Finish("Quit with error",message);
         }
 
         private void SaveErrorScreenshot()
