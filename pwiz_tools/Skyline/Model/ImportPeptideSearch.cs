@@ -468,10 +468,10 @@ namespace pwiz.Skyline.Model
             return refine.Refine(document);
         }
 
-        public static SrmDocument ImportFasta(SrmDocument document, string fastaPath, IProgressMonitor monitor,
+        public static SrmDocument ImportFasta(SrmDocument document, string fastaPath, IrtStandard irtStandard, IProgressMonitor monitor,
             IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd, out List<PeptideGroupDocNode> peptideGroupsNew)
         {
-            var importer = new FastaImporter(document, false);
+            var importer = new FastaImporter(document, irtStandard);
             using (TextReader reader = File.OpenText(fastaPath))
             {
                 peptideGroupsNew = importer.Import(reader, monitor, Helpers.CountLinesInFile(fastaPath)).ToList();
