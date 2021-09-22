@@ -155,7 +155,8 @@ namespace TestPerf
             foreach (var searchFile in searchFiles)
             {
                 // delete -diaumpire files so they get regenerated instead of reused
-                foreach (var diaumpireFile in Directory.GetFiles(Path.GetDirectoryName(searchFile), "*-diaumpire.*"))
+                var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
+                foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
                     FileEx.SafeDelete(diaumpireFile);
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
             }
@@ -296,9 +297,6 @@ namespace TestPerf
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
             });
-
-            IDictionary<string, object> diaUmpireParameters = null;
-            SearchSettingsControl.DdaSearchSettings searchSettings = null;
 
             RunUI(() =>
             {
