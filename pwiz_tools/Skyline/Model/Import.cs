@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Model
 
         private const int PERCENT_READER = 95;
 
-        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false)
+        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
@@ -482,7 +482,8 @@ namespace pwiz.Skyline.Model
             if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
                 InputType =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings, 
+                       defaultDocumentType) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
             }
             if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
