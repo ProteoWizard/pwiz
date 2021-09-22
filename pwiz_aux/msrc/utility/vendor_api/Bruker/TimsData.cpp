@@ -792,6 +792,8 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
 
     intensities.resize(frameProxy.getTotalNbrPeaks());
     mobilities.resize(intensities.size());
+    if (intensities.empty())
+        return;
     double* itr = &intensities[0];
     double* itr2 = &mobilities[0];
     for (int i = 0; i <= range; ++i)
