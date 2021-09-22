@@ -207,9 +207,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     string queryCalibrations = "SELECT MAX(TimsCalibration) FROM Frames";
     size_t calibrationsCount = sqlite::query(db, queryCalibrations.c_str()).begin()->get<sqlite3_int64>(0);
-    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex; 
-    scanNumberByOneOverK0ByCalibrationIndex.reserve(calibrationsCount);
-    oneOverK0ByScanNumberByCalibration_.reserve(calibrationsCount);
+    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex(calibrationsCount);
+    oneOverK0ByScanNumberByCalibration_.resize(calibrationsCount);
 
     std::string querySelect =
         "SELECT f.Id, Time, Polarity, ScanMode, MsMsType, MaxIntensity, SummedIntensities, NumScans, NumPeaks, "
@@ -221,7 +220,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     sqlite::query q(db, querySelect.c_str());
 
     int maxNumScans = 0;
-    vector<TimsFramePtr> representativeFrameByCalibrationIndex; // the first frame for each calibration index
+    vector<TimsFramePtr> representativeFrameByCalibrationIndex(calibrationsCount); // the first frame for each calibration index
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
@@ -263,13 +262,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
         int calibrationIndex = row.get<int>(++idx);
-        bool newCalibrationIndex = oneOverK0ByScanNumberByCalibration_.size() <= calibrationIndex;
-        if (newCalibrationIndex)
-        {
-            oneOverK0ByScanNumberByCalibration_.resize(calibrationIndex + 1);
-            representativeFrameByCalibrationIndex.resize(calibrationIndex + 1);
-            scanNumberByOneOverK0ByCalibrationIndex.resize(calibrationIndex + 1);
-        }
+        bool newCalibrationIndex = representativeFrameByCalibrationIndex[calibrationIndex] == nullptr;
 
         TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
                                          msmsType, rt,
