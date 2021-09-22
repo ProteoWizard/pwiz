@@ -214,9 +214,16 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         " ORDER BY Id"; // we currently depend on indexing the frames_ vector by Id (which so far has always been sorted by time)
     sqlite::query q(db, querySelect.c_str());
 
-    int maxNumScans = 0;
-    vector<TimsFramePtr> representativeFrameByCalibrationIndex; // the first frame for each calibration index
-    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex;
+    string queryCalibrations = "SELECT MAX(TimsCalibration) FROM Frames";
+    size_t calibrationsCount = sqlite::query(db, queryCalibrations.c_str()).begin()->get<sqlite3_int64>(0);
+    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex(calibrationsCount);
+    oneOverK0ByScanNumberByCalibration_.resize(calibrationsCount);
+
+    string queryNumScans = "SELECT MAX(NumScans) FROM Frames";
+    size_t maxNumScans = sqlite::query(db, queryNumScans.c_str()).begin()->get<sqlite3_int64>(0);
+    vector<double> scanNumbers(maxNumScans + 1);
+    for (int i = 0; i <= maxNumScans; ++i)
+        scanNumbers[i] = i;
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
@@ -249,8 +256,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         if (numPeaks == 0)
             continue;
 
-        maxNumScans = max(maxNumScans, numScans);
-
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
         optional<double> isolationWidth(row.get<optional<double> >(++idx));
@@ -258,13 +263,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
         int calibrationIndex = row.get<int>(++idx);
-        bool newCalibrationIndex = oneOverK0ByScanNumberByCalibration_.size() <= calibrationIndex;
-        if (newCalibrationIndex)
-        {
-            oneOverK0ByScanNumberByCalibration_.resize(calibrationIndex + 1);
-            representativeFrameByCalibrationIndex.resize(calibrationIndex + 1);
-            scanNumberByOneOverK0ByCalibrationIndex.resize(calibrationIndex + 1);
-        }
 
         TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
                                          msmsType, rt,
@@ -276,25 +274,17 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                                          calibrationIndex, oneOverK0ByScanNumberByCalibration_[calibrationIndex]);
         frames_[frameId] = frame;
 
-        if (newCalibrationIndex)
-            representativeFrameByCalibrationIndex[calibrationIndex] = frame;
+        if (oneOverK0ByScanNumberByCalibration_[calibrationIndex].empty()) // First use of this calibration?
+        {
+            // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
+            tdfStorage_.scanNumToOneOverK0(frameId, scanNumbers, oneOverK0ByScanNumberByCalibration_[calibrationIndex]);
+            for (int j = 0; j < scanNumbers.size(); ++j)
+                scanNumberByOneOverK0ByCalibrationIndex[calibrationIndex][oneOverK0ByScanNumberByCalibration_[calibrationIndex][j]] = scanNumbers[j];
+        }
     }
 
     if (frames_.empty())
         return;
-
-    // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
-    vector<double> scanNumbers(maxNumScans+1);
-    for (int i = 0; i <= maxNumScans; ++i)
-        scanNumbers[i] = i;
-    for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
-    {
-        vector<double>& oneOverK0 = oneOverK0ByScanNumberByCalibration_[i];
-        tdfStorage_.scanNumToOneOverK0(representativeFrameByCalibrationIndex[i]->frameId_, scanNumbers, oneOverK0);
-
-        for (int j = 0; j < scanNumbers.size(); ++j)
-            scanNumberByOneOverK0ByCalibrationIndex[i][oneOverK0[j]] = scanNumbers[j];
-    }
 
     bool isDdaPasef = db.has_table("PasefFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PasefFrameMsMsInfo").begin()->get<int>(0) > 0;
     bool isDiaPasef = !isDdaPasef && db.has_table("DiaFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM DiaFrameMsMsInfo").begin()->get<int>(0) > 0;
