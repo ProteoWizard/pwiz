@@ -67,7 +67,8 @@ namespace pwiz.Skyline.Model
         public FastaImporter(SrmDocument document, IrtStandard standard)
             : this(document, false)
         {
-            _irtTargets = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            _irtTargets = new TargetMap<bool>(standard?.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)) ??
+                                              Array.Empty<KeyValuePair<Target, bool>>());
         }
 
         public SrmDocument Document { get; private set; }
