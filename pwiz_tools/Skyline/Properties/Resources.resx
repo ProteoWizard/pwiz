@@ -11466,4 +11466,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_" xml:space="preserve">
+    <value>Error getting database Id for score {0}</value>
+  </data>
 </root>
