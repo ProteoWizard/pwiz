@@ -489,6 +489,7 @@ namespace pwiz.SkylineTestTutorial
         {
             MassErrorHistogramGraphPane pane;
             Assert.IsTrue(SkylineWindow.GraphMassError.TryGetGraphPane(out pane));
+            WaitForConditionUI(() => !double.IsNaN(pane.Mean) && !double.IsNaN(pane.StdDev));
             Assert.AreEqual(mean, pane.Mean, 0.05);
             Assert.AreEqual(stdev, pane.StdDev, 0.05);
         }
