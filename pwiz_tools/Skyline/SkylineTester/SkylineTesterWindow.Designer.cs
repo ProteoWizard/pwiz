@@ -77,6 +77,7 @@ namespace SkylineTester
             this.statusRunTime = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabs = new System.Windows.Forms.TabControl();
             this.tabForms = new System.Windows.Forms.TabPage();
+            this.showChangedFiles = new System.Windows.Forms.CheckBox();
             this.groupBox12 = new System.Windows.Forms.GroupBox();
             this.showFormNames = new System.Windows.Forms.CheckBox();
             this.label15 = new System.Windows.Forms.Label();
@@ -437,6 +438,7 @@ namespace SkylineTester
             // tabForms
             // 
             this.tabForms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
+            this.tabForms.Controls.Add(this.showChangedFiles);
             this.tabForms.Controls.Add(this.groupBox12);
             this.tabForms.Controls.Add(this.label15);
             this.tabForms.Controls.Add(this.groupBox13);
@@ -450,6 +452,17 @@ namespace SkylineTester
             this.tabForms.TabIndex = 1;
             this.tabForms.Text = "Forms";
             // 
+            // showChangedFiles
+            // 
+            this.showChangedFiles.AutoSize = true;
+            this.showChangedFiles.Location = new System.Drawing.Point(16, 235);
+            this.showChangedFiles.Name = "showChangedFiles";
+            this.showChangedFiles.Size = new System.Drawing.Size(126, 17);
+            this.showChangedFiles.TabIndex = 5;
+            this.showChangedFiles.Text = "Show changed forms";
+            this.showChangedFiles.UseVisualStyleBackColor = true;
+            this.showChangedFiles.CheckedChanged += new System.EventHandler(this.showChangedFiles_CheckedChanged);
+            // 
             // groupBox12
             // 
             this.groupBox12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
@@ -458,7 +471,7 @@ namespace SkylineTester
             this.groupBox12.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox12.Name = "groupBox12";
             this.groupBox12.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox12.Size = new System.Drawing.Size(280, 49);
+            this.groupBox12.Size = new System.Drawing.Size(280, 62);
             this.groupBox12.TabIndex = 2;
             this.groupBox12.TabStop = false;
             this.groupBox12.Text = "Options";
@@ -2672,7 +2685,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 374;
+            this.outputSplitContainer.SplitterDistance = 362;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -3176,6 +3189,7 @@ namespace SkylineTester
             this.statusStrip1.PerformLayout();
             this.tabs.ResumeLayout(false);
             this.tabForms.ResumeLayout(false);
+            this.tabForms.PerformLayout();
             this.groupBox12.ResumeLayout(false);
             this.groupBox12.PerformLayout();
             this.groupBox13.ResumeLayout(false);
@@ -3490,5 +3504,6 @@ namespace SkylineTester
         private Button diffButton;
         private ComboBox formsLanguageDiff;
         private Label label20;
+        private CheckBox showChangedFiles;
     }
 }

@@ -296,7 +296,7 @@ Config parseCommandArgs(int argc, const char* argv[])
         std::ifstream is(config.configFilename.c_str());
         ostringstream oss;
         string line;
-        while(getline(is, line).good())
+        while(getlinePortable(is, line).good())
             oss << line << " ";
 
         config.pseudo2dConfig.process(oss.str());

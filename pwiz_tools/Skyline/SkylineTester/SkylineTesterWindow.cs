@@ -413,7 +413,7 @@ namespace SkylineTester
         public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
-            var assembly = Assembly.LoadFrom(dllPath);
+            var assembly = LoadFromAssembly.Try(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
@@ -1740,7 +1740,11 @@ namespace SkylineTester
 
         private void diffButton_Click(object sender, EventArgs e)
         {
-            string formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+            var formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+
+            if (formName != null && formName.Contains("."))
+                formName = formName.Substring(0, formName.IndexOf(".", StringComparison.Ordinal));
+
             if (formName != null)
             {
                 ShowDiff(GetPathForLanguage(formName, formsLanguage.SelectedItem.ToString()),
@@ -1790,7 +1794,70 @@ namespace SkylineTester
             else
                 diffButton.Enabled = true;
         }
-        
+
+        private string[] GetChangedFileList()
+        {
+            var skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
+            var procStartInfo = new ProcessStartInfo("cmd", "/c " + skylineDir + " & git diff --name-only");
+
+            procStartInfo.RedirectStandardOutput = true;
+            procStartInfo.UseShellExecute = false;
+            procStartInfo.CreateNoWindow = true;
+            var cmd = new Process();
+            cmd.StartInfo = procStartInfo;
+            cmd.Start();
+
+            var changedFiles = cmd.StandardOutput.ReadToEnd();
+            return changedFiles.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+        }
+
+        private static string GetFileName(string file)
+        {
+            var fileName = Path.GetFileName(file);
+            return fileName.Substring(0, fileName.IndexOf(".", StringComparison.Ordinal));
+        }
+
+        private void showChangedFiles_CheckedChanged(object sender, EventArgs e)
+        {
+            var changedFilesArray = GetChangedFileList();
+
+            if (showChangedFiles.Checked)
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    var formNoExt = row.Cells[0].Value.ToString().Split('.')[0];
+
+                    foreach (var file in changedFilesArray)
+                    {
+                        if (!Equals(file, ""))
+                        {
+                            var filename = GetFileName(file);
+                            if (Equals(formNoExt, filename))
+                            {
+                                row.Visible = true;
+                                break;
+                            }
+                            else
+                            {
+                                row.Visible = false;
+                            }
+                        }
+                    }
+                }
+                formsGrid.Update();
+                formsGrid.Refresh();
+            }
+            else
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    row.Visible = true;
+                }
+                formsGrid.Update();
+                formsGrid.Refresh();
+            }
+        }
+
         #endregion Control events
     }
 }

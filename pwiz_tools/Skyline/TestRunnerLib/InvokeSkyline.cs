@@ -5,6 +5,33 @@ using System.Text;
 
 namespace TestRunnerLib
 {
+
+    public class LoadFromAssembly
+    {
+        // Offer a more detailed error message when we fail to load a DLL
+        public static Assembly Try(string dllPath)
+        {
+            try
+            {
+                return Assembly.LoadFrom(dllPath);
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine(string.Format("Error in Assembly.LoadFrom({0}) at", dllPath));
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                throw new Exception(errMessage.ToString(), ex);
+            }
+        }
+    }
+
     public class InvokeSkyline
     {
         private readonly Type _skylineProgram;
@@ -14,7 +41,7 @@ namespace TestRunnerLib
             var skylinePath = GetAssemblyPath("Skyline-daily.exe"); // Keep -daily
             if (!File.Exists(skylinePath))
                 skylinePath = GetAssemblyPath("Skyline.exe");
-            var skylineAssembly = Assembly.LoadFrom(skylinePath);
+            var skylineAssembly = LoadFromAssembly.Try(skylinePath);
             _skylineProgram = skylineAssembly.GetType("pwiz.Skyline.Program");
         }
 

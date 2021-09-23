@@ -402,6 +402,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bal::contains(fileType, "MassHunter") ||
             fileType == "Bruker FID" ||
             fileType == "Bruker TDF" ||
+            fileType == "Mobilion MBI" ||
             fileType == "UIMF" ||
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;
@@ -788,7 +789,7 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             {
                 ifstream urls(filepath.string().c_str());
                 string url;
-                while (getline(urls, url))
+                while (getlinePortable(urls, url))
                 {
                     if (isPathTestable(url))
                     {

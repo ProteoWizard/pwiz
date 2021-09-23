@@ -159,11 +159,28 @@ namespace SkylineBatch
 
         public static SkylineBatchConfig ReadXml(XmlReader reader)
         {
-            var name = reader.GetAttribute(XML_TAGS.name);
-            var enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
-            var logTestFormat = reader.GetBoolAttribute(XML_TAGS.log_test_format);
+            return ReadXml(reader, Settings.Default.XmlVersion);
+        }
+
+        public static SkylineBatchConfig ReadXml(XmlReader reader, decimal version)
+        {
+            string name;
+            bool enabled;
+            bool logTestFormat;
             DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
+            switch (version)
+            {
+                case 21.1M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                case 20.2M:
+                    ReadConfigVariables_20_2(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                default:
+                    throw new ArgumentException(string.Format(
+                        Resources.XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_,
+                        version));
+            }
 
             XmlUtil.ReadUntilElement(reader);
             MainSettings mainSettings = null;
@@ -174,15 +191,23 @@ namespace SkylineBatch
             string exceptionMessage = null;
             try
             {
-                mainSettings = MainSettings.ReadXml(reader);
-                XmlUtil.ReadUntilElement(reader);
-                fileSettings = FileSettings.ReadXml(reader);
-                XmlUtil.ReadUntilElement(reader);
-                refineSettings = RefineSettings.ReadXml(reader);
-                XmlUtil.ReadUntilElement(reader);
-                reportSettings = ReportSettings.ReadXml(reader);
-                XmlUtil.ReadUntilElement(reader);
-                skylineSettings = SkylineSettings.ReadXml(reader);
+                switch (version)
+                {
+                    case 21.1M:
+                        mainSettings = MainSettings.ReadXml(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXml(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    default: // 20.2M
+                        mainSettings = MainSettings.ReadXmlVersion_20_2(reader);
+                        fileSettings = FileSettings.ReadXmlVersion_20_2(reader);
+                        refineSettings = RefineSettings.ReadXmlVersion_20_2(reader);
+                        reportSettings = ReportSettings.ReadXmlVersion_20_2(reader);
+                        skylineSettings = SkylineSettings.ReadXmlVersion_20_2(reader);
+                        break;
+                }
             }
             catch (ArgumentException e)
             {
@@ -199,6 +224,22 @@ namespace SkylineBatch
 
             return new SkylineBatchConfig(name, enabled, logTestFormat, modified, mainSettings, fileSettings,
                 refineSettings, reportSettings, skylineSettings);
+        }
+
+        private static void ReadConfigVariables(XmlReader reader, out string name, out bool enabled, out bool logTestFormat, out DateTime modified)
+        {
+            name = reader.GetAttribute(XML_TAGS.name);
+            enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
+            logTestFormat = !SkylineInstallations.HasLocalSkylineCmd && reader.GetBoolAttribute(XML_TAGS.log_test_format);
+            DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
+        }
+
+        private static void ReadConfigVariables_20_2(XmlReader reader, out string name, out bool enabled, out bool logTestFormat, out DateTime modified)
+        {
+            name = reader.GetAttribute(OLD_XML_TAGS.Name);
+            enabled = reader.GetBoolAttribute(OLD_XML_TAGS.Enabled);
+            logTestFormat = false;
+            DateTime.TryParse(reader.GetAttribute(OLD_XML_TAGS.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
         }
 
         public void WriteXml(XmlWriter writer)

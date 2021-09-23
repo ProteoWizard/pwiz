@@ -1522,28 +1522,39 @@ namespace pwiz.SkylineTestUtil
             if (!IsRecordAuditLogForTutorials)
             {
                 Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName);
+                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName, projectFile);
             }
 
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            if (Equals(expected, actual))
+            if (AreEquivalentAuditLogs(expected, actual))
                 return;
 
             if (ForceMzml)
             {
                 // If the only difference is in the mention of a raw file extension, ignore that
                 var extMzml = @".mzml";
-                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                var actualParts = actual.Split(new[] {extMzml, @".mzML", @".MZML" }, StringSplitOptions.None);
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
-                    var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
-                    if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
+                    if (index - actualParts[0].Length > 0)
                     {
-                        return;
+                        var extExpected =
+                            expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
+                        var mzmlExpected =
+                            expected.Replace(extExpected, extMzml); // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
+                        var mzmlActual =
+                            string.Join(extMzml, actualParts); // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
+
+                        if (AreEquivalentAuditLogs(mzmlExpected, mzmlActual))
+                            return;
+
+                        // Make sure to report the difference that causes the failure below
+                        expected = mzmlExpected;
+                        actual = mzmlActual;
                     }
                 }
             }
@@ -1551,7 +1562,9 @@ namespace pwiz.SkylineTestUtil
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)
+            {
                 AssertEx.NoDiff(expected, actual);
+            }
             else
             {
                 // Copy the just recorded file to the project for comparison or commit
@@ -1560,6 +1573,20 @@ namespace pwiz.SkylineTestUtil
                     Console.WriteLine(@"Successfully recorded tutorial audit log");
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
+            }
+        }
+
+        private static bool AreEquivalentAuditLogs(string expected, string actual)
+        {
+            try
+            {
+                // Asserts that the files are the same other than generated GUIDs and timestamps
+                AssertEx.NoDiff(expected, actual);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 

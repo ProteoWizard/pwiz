@@ -109,6 +109,7 @@ rule test_msi ( targets + : sources * : properties * )
     }
 
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 actions test_msi

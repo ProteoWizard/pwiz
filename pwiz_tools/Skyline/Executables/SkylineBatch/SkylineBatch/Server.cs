@@ -203,6 +203,23 @@ namespace SkylineBatch
                 password = reader.GetAttribute(XML_TAGS.password) ?? string.Empty;
             }
             string uriText = reader.GetAttribute(XML_TAGS.url);
+            
+            // Consume tag
+            reader.Read();
+            var encrypt = encryptedPassword != null || string.IsNullOrEmpty(password);
+            return CreateServerFromInputs(uriText, username, password, encrypt);
+        }
+
+        public static Server ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var username = reader.GetAttribute(XML_TAGS.username) ?? string.Empty;
+            var password = reader.GetAttribute(XML_TAGS.password) ?? string.Empty;
+            var url = reader.GetAttribute(OLD_XML_TAGS.uri);
+            return CreateServerFromInputs(url, username, password, false);
+        }
+
+        private static Server CreateServerFromInputs(string uriText, string username, string password, bool encrypt)
+        {
             if (string.IsNullOrEmpty(uriText))
             {
                 throw new InvalidDataException(Resources.Server_ReadXml_A_Panorama_server_must_be_specified_);
@@ -217,9 +234,6 @@ namespace SkylineBatch
             {
                 throw new InvalidDataException(Resources.Server_ReadXml_Server_URL_is_corrupt_);
             }
-            // Consume tag
-            reader.Read();
-            var encrypt = encryptedPassword != null || string.IsNullOrEmpty(password);
             var server = new Server(uri, username, password, encrypt);
             server.Validate();
             return server;

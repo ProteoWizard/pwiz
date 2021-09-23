@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
 using Ionic.Zip;
 using Microsoft.Win32;
 using SharedBatch.Properties;
@@ -112,6 +113,23 @@ namespace SharedBatch
                 return null;
             }
             return GetInitialDirectory(directoryName);
+        }
+
+        // Returns the directory of the path regardless of whether it exists.
+        // If the path is already a directory it returns the path, if it does not have a directory it returns an empty string
+        public static string GetPathDirectory(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            if (!Path.HasExtension(path)) return path;
+            try
+            {
+                return Path.GetDirectoryName(path);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
 
         public static void CreateDirectory(string path)
@@ -463,6 +481,48 @@ namespace SharedBatch
         public void Dispose()
         {
             Directory.Delete(DirPath);
+        }
+    }
+
+    public class UiFileUtil
+    {
+
+        public static string OpenFile(string initialDirectory, string filter, bool saveFileDialog)
+        {
+            FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
+            dialog.InitialDirectory = initialDirectory;
+            dialog.Filter = filter;
+            DialogResult result = dialog.ShowDialog();
+            return result == DialogResult.OK ? dialog.FileName : null;
+        }
+
+        public static string OpenFolder(string initialPath)
+        {
+            var dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = initialPath;
+            var dialogOpenedTime = DateTime.Now;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                var folderDirectory = Path.GetDirectoryName(dialog.SelectedPath);
+                if (!Directory.Exists(dialog.SelectedPath) && folderDirectory != null)
+                {
+                    var folders = Directory.GetDirectories(folderDirectory);
+                    var lastCreatedFolder = folders[0];
+                    var lastCreationTime = Directory.GetCreationTime(lastCreatedFolder);
+                    foreach (var folder in folders)
+                    {
+                        if (Directory.GetCreationTime(folder) > lastCreationTime)
+                        {
+                            lastCreatedFolder = folder;
+                            lastCreationTime = Directory.GetCreationTime(folder);
+                        }
+                    }
+                    if (lastCreationTime > dialogOpenedTime)
+                        dialog.SelectedPath = lastCreatedFolder;
+                }
+                return dialog.SelectedPath;
+            }
+            return null;
         }
     }
 

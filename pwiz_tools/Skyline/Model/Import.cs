@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
@@ -35,6 +36,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Array = System.Array;
+using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model
 {
@@ -299,6 +301,8 @@ namespace pwiz.Skyline.Model
 
         private IList<string> _lines;
 
+        public IList<string> Lines { get { return _lines; } }
+
         public MassListInputs(string initText, bool fullText = false)
         {
             if (fullText)
@@ -369,31 +373,44 @@ namespace pwiz.Skyline.Model
             return inputLines;
         }
 
+        /// <summary>
+        /// Attempt to find the format of columnar data and throw an exception upon failure
+        /// </summary>
         private void InitFormat(IList<string> inputLines)
         {
             if (FormatProvider == null)
             {
-                char sep;
-                IFormatProvider provider;
-                Type[] columnTypes;
-                string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
-                if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+                // Throw an exception if we cannot work out the format of the input
+                if (!TryInitFormat(inputLines, out var provider, out var sep))
                 {
-                    throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                }
-                // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
-                if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                {
-                    inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
-                    if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
-                        columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
-                    {
-                        throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                    }
+                    throw new IOException(Resources
+                        .SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
                 FormatProvider = provider;
                 Separator = sep;
             }
+        }
+
+        /// <summary>
+        /// Attempt to find the column separator and format provider for the input lines. Also useful for testing if data is columnar
+        /// </summary>
+        public static bool TryInitFormat(IList<string> inputLines, out IFormatProvider provider, out char sep)
+        {
+            Type[] columnTypes;
+            string inputLine = 0 < inputLines.Count ? inputLines[0] : string.Empty;
+            if (!MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes))
+            {
+                return false;
+            }
+
+            // If there are no numbers in the first line, try the second. Without numbers the format provider may not be correct
+            if (columnTypes.All(t => Type.GetTypeCode(t) != TypeCode.Double))
+            {
+                inputLine = 1 < inputLines.Count ? inputLines[1] : string.Empty;
+                return MassListImporter.IsColumnar(inputLine, out provider, out sep, out columnTypes) ||
+                       columnTypes.All(t => Type.GetTypeCode(t) == TypeCode.Double);
+            }
+            return true;
         }
 
         public IFormatProvider FormatProvider { get; set; }
@@ -412,19 +429,33 @@ namespace pwiz.Skyline.Model
 
         private int _linesSeen;
 
-        public MassListImporter(SrmDocument document, MassListInputs inputs)
+        // This constructor is only suitable for investigating the peptide-vs-small molecule nature of inputs
+        // CONSIDER(henryS) Arguably that code should be split out into its own class
+        public MassListImporter(SrmSettings settings, MassListInputs inputs)
+        {
+            Settings = settings;
+            Inputs = inputs;
+            InputType = SrmDocument.DOCUMENT_TYPE.none;
+        }
+
+        // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
+        public MassListImporter(SrmDocument document, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Document = document;
+            Settings = document.Settings;
             Inputs = inputs;
+            InputType = inputType;
         }
 
         public SrmDocument Document { get; private set; }
         public MassListRowReader RowReader { get; private set; }
-        public SrmSettings Settings { get { return Document.Settings; } }
+        public SrmSettings Settings { get; private set; }
         public MassListInputs Inputs { get; private set; }
         public IFormatProvider FormatProvider { get { return Inputs.FormatProvider; } }
         public char Separator { get { return Inputs.Separator; } }
-        public bool IsSmallMoleculeInput { get; private set; }
+        // What we believe the text we are importing describes: proteomics vs small_molecule vs none (meaning unknown).
+        // InputType is never set to 'mixed' as we handle small molecule and proteomics input separately 
+        public SrmDocument.DOCUMENT_TYPE InputType { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -433,7 +464,7 @@ namespace pwiz.Skyline.Model
 
         private const int PERCENT_READER = 95;
 
-        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors)
+        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
@@ -447,12 +478,42 @@ namespace pwiz.Skyline.Model
             var lines = new List<string>(Inputs.ReadLines(progressMonitor, status));
             status = status.NextSegment();
             _linesSeen = 0;
-
-            if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines))
+            // Decide if the input is peptide or small molecule if we haven't already
+            if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
-                IsSmallMoleculeInput = true;
+                InputType =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings, 
+                       defaultDocumentType) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+            }
+            if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
                 if (progressMonitor != null)
                     progressMonitor.UpdateProgress(status.Complete());
+
+                // Now that we use ColumnSelectDlg to look at Small Molecule transition lists,
+                // we need to create a RowReader for these too
+                // Check first line for validity
+                var line = lines.FirstOrDefault();
+                if (string.IsNullOrEmpty(line))
+                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+                indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+                if (indices.Headers != null)
+                {
+                    lines.RemoveAt(0);
+                    _linesSeen++;
+                }
+
+                // If no numeric columns in the first row
+                if (rowReadRequired)
+                {
+                    RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
+                    if (RowReader == null)
+                    {
+                        RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
+                        if (RowReader == null)
+                            throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                    }
+                }
                 return true;
             }
 
@@ -469,27 +530,65 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                // Check first line for validity
-                var line = lines.FirstOrDefault();
-                if (string.IsNullOrEmpty(line))
-                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
-                indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
-                if (indices.Headers != null)
+                if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
                 {
-                    lines.RemoveAt(0);
-                    _linesSeen++;
+                    RowReader = rowReader;
                 }
-
-                // If no numeric columns in the first row
-                RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
-                if (RowReader == null)
+                else
                 {
-                    RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
-                    if (RowReader == null)
-                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
+                    if (mzException != null)
+                    {
+                        throw mzException;
+                    }
+                    else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                    {
+                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                            -1);
+                    }
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// // Attempt to create either an ExPeptideRowReader or a GeneralRowReader
+        /// </summary>
+        public bool TryCreateRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+            IProgressStatus status, out MassListRowReader rowReader, out MzMatchException mzException)
+        {
+            mzException = null;
+
+            // Check first line for validity
+            var line = lines.FirstOrDefault();
+            if (string.IsNullOrEmpty(line))
+                throw new InvalidDataException(Resources
+                    .MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+            var indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
+            if (indices.Headers != null)
+            {
+                lines.RemoveAt(0);
+                _linesSeen++;
+            }
+
+            // If no numeric columns in the first row
+            rowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
+            if (rowReader == null)
+            {
+                try
+                {
+                    rowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines,
+                        tolerateErrors,
+                        progressMonitor, status);
+                }
+                catch(MzMatchException exception)
+                {
+                    // If we find a valid amino acid sequence but no valid precursor or product m/z column, catch the exception
+                    // as it could be a small molecule transition list. If we decide later it is a peptide transition list,
+                    // we throw the exception then
+                    mzException = exception;
+                }
+            }
+            return rowReader != null;
         }
 
         public IEnumerable<PeptideGroupDocNode> DoImport(IProgressMonitor progressMonitor,
@@ -618,8 +717,10 @@ namespace pwiz.Skyline.Model
         {
             var info = rowReader.TransitionInfo;
             var irt = rowReader.Irt;
+            var explicitRT = rowReader.ExplicitRetentionTimeInfo;
             var libraryIntensity = rowReader.LibraryIntensity;
             var productMz = rowReader.ProductMz;
+            var note = rowReader.Note;
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
@@ -662,7 +763,7 @@ namespace pwiz.Skyline.Model
             }
             try
             {
-                seqBuilder.AppendTransition(info, irt, libraryIntensity, productMz, lineText, lineNum);
+                seqBuilder.AppendTransition(info, irt, explicitRT, libraryIntensity, productMz, note, lineText, lineNum);
             }
             catch (InvalidDataException x)
             {
@@ -801,6 +902,53 @@ namespace pwiz.Skyline.Model
                 get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
 
+            public string Note { get { return ColumnString(Fields, Indices.NoteColumn); } }
+
+            public ExplicitRetentionTimeInfo ExplicitRetentionTimeInfo
+            {
+                get
+                {
+                    var explicitRT = ColumnDouble(Fields, Indices.ExplicitRetentionTimeColumn, FormatProvider);
+                    return explicitRT.HasValue ? 
+                        new ExplicitRetentionTimeInfo(explicitRT.Value, ColumnDouble(Fields, Indices.ExplicitRetentionTimeWindowColumn, FormatProvider)) : 
+                        null;
+                }
+            }
+
+            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues
+            {
+                get
+                {
+                    var explicitCompensationVoltage =
+                        ColumnDouble(Fields, Indices.ExplicitCompensationVoltageColumn, FormatProvider); // FAIMS is a form of ion mobility
+                    var imUnits = explicitCompensationVoltage.HasValue ? 
+                        eIonMobilityUnits.compensation_V :
+                        IonMobilityFilter.IonMobilityUnitsFromL10NString(ColumnString(Fields, Indices.ExplicitIonMobilityUnitsColumn));  // TODO(HenryE): handle garbage inputs for ion mobility type
+                    var explicitIonMobility = explicitCompensationVoltage ?? ColumnDouble(Fields, Indices.ExplicitIonMobilityColumn, FormatProvider);
+
+                    return ExplicitTransitionGroupValues.Create(
+                        ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
+                        explicitIonMobility,
+                        imUnits,
+                        ColumnDouble(Fields, Indices.CollisionCrossSectionColumn, FormatProvider));
+                }
+            }
+            
+            public ExplicitTransitionValues ExplicitTransitionValues
+            {
+                get
+                {
+                    return ExplicitTransitionValues.Create(
+                            ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ExplicitIonMobilityHighEnergyOffsetColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.SLensColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ConeVoltageColumn, FormatProvider),
+                            ColumnDouble(Fields, Indices.ExplicitDelusteringPotentialColumn, FormatProvider));
+                }
+            }
+
+
+
             public PeptideModifications GetModifications(SrmDocument document)
             {
                 return ModMatcher.GetDocModifications(document);
@@ -893,7 +1041,7 @@ namespace pwiz.Skyline.Model
                     if (!precursorCharge.IsEmpty)
                     {
                         info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
-                                                                  precursorMassShift));
+                                                                  precursorMassShift, info.ExplicitTransitionValues));
                     }
                     else
                     {
@@ -915,7 +1063,7 @@ namespace pwiz.Skyline.Model
                         if (!precursorCharge.IsEmpty)
                         {
                             info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
-                                                                      precursorMassShift));
+                                                                      precursorMassShift, info.ExplicitTransitionValues));
                         }
                         else
                         {
@@ -1019,7 +1167,7 @@ namespace pwiz.Skyline.Model
 
                     if (!productCharge.IsEmpty && ionType.HasValue && ordinal.HasValue)
                     {
-                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift);
+                        transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift, info);
                     }
                     else
                     {
@@ -1054,7 +1202,7 @@ namespace pwiz.Skyline.Model
             {
                 double result;
                 // CONSIDER: This does not allow exponents or thousands separators like the default double.Parse(). Should it?
-                if (column == -1)
+                if (column == -1 || column >= fields.Length)
                 {
                     return 0;
                 }
@@ -1066,7 +1214,7 @@ namespace pwiz.Skyline.Model
             private static double? ColumnDouble(string[] fields, int column, IFormatProvider provider)
             {
                 double result;
-                if (column != -1 && double.TryParse(fields[column], NumberStyles.Float|NumberStyles.AllowThousands, provider, out result))
+                if (column != -1 && column < fields.Length && double.TryParse(fields[column], NumberStyles.Float|NumberStyles.AllowThousands, provider, out result))
                     return result;
                 return null;
             }
@@ -1074,9 +1222,15 @@ namespace pwiz.Skyline.Model
             private static int? ColumnInt(string[] fields, int column, IFormatProvider provider)
             {
                 int result;
-                if (column != -1 && int.TryParse(fields[column], NumberStyles.Integer, provider, out result))
+                if (column != -1 && column < fields.Length && int.TryParse(fields[column], NumberStyles.Integer, provider, out result))
                     return result;
                 return null;
+            }
+
+            private static string ColumnString(string[] fields, int column)
+            {
+                var value = column != -1 && column < fields.Length ? fields[column].Trim() : null;
+                return string.IsNullOrEmpty(value) ? null : value;
             }
 
             protected static int FindPrecursor(string[] fields,
@@ -1129,7 +1283,7 @@ namespace pwiz.Skyline.Model
                         if (!charge.IsEmpty)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift));
+                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift, null)); // This is exploratory, explicit transition values don't matter here
                         }
                     }
                 }
@@ -1220,7 +1374,7 @@ namespace pwiz.Skyline.Model
                     proteinName = Fields[ProteinColumn];
                 string peptideSequence = RemoveSequenceNotes(Fields[PeptideColumn]);
                 string modifiedSequence = RemoveModifiedSequenceNotes(Fields[PeptideColumn]);
-                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy);
+                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionValues, Note);
 
                 if (LabelTypeColumn != -1)
                 {
@@ -1763,7 +1917,7 @@ namespace pwiz.Skyline.Model
                     string peptideSequence = GetSequence(match);
                     string modifiedSequence = GetModifiedSequence(match);
 
-                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy)
+                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionValues, Note)
                         {
                             DefaultLabelType = GetLabelType(match, Settings),
                             IsExplicitLabelType = true
@@ -2018,14 +2172,14 @@ namespace pwiz.Skyline.Model
         }
 
         public string[] Headers { get; private set; }
-
+        // All of these column variables must end with the string "Column" so that the reflection code in 
+        // ColumnSelectDlg works
         public int ProteinColumn { get; set; }
         public int PeptideColumn { get; set; }
         public int PrecursorColumn { get; set; }
         public int PrecursorChargeColumn { get; set; }
         public int ProductColumn { get; set; }
-        public int ProductChargeColumn { get; set; }
-
+        
         /// <summary>
         /// A column specifying the <see cref="IsotopeLabelType"/> (optional)
         /// </summary>
@@ -2051,19 +2205,75 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public int LibraryColumn { get; set; }
 
-        private ColumnIndices()
+        // After this point are new columns added that were initially only supported for small molecule transition lists
+
+        public int ExplicitRetentionTimeColumn { get; set; }
+
+        public int ExplicitRetentionTimeWindowColumn { get; set; }
+
+        public int ExplicitCollisionEnergyColumn { get; set; }
+
+        public int NoteColumn { get; set; }
+
+        public int SLensColumn { get; set; }
+
+        public int ConeVoltageColumn { get; set; }
+
+        public int ExplicitIonMobilityColumn { get; set; }
+
+        public int ExplicitIonMobilityUnitsColumn { get; set; }
+
+        public int ExplicitIonMobilityHighEnergyOffsetColumn { get; set; }
+
+        public int ExplicitCompensationVoltageColumn { get; set; }
+
+        public int ExplicitDelusteringPotentialColumn { get; set; }
+
+        public int CollisionCrossSectionColumn { get; set; }
+
+        public int ProteinDescriptionColumn { get; set; }
+
+        // From here on is new columns for Small Molecules only
+        public int PrecursorAdductColumn { get; set; }
+
+        public int ProductNameColumn { get; set; }
+
+        public int ProductFormulaColumn { get; set; }
+
+        public int ProductNeutralLossColumn { get; set; }
+
+        public int ProductAdductColumn { get; set; }
+
+        public int ProductChargeColumn { get; set; }
+
+        public int InChiKeyColumn { get; set; }
+
+        public int CASColumn { get; set; }
+
+        public int HMDBColumn { get; set; }
+
+        public int InChiColumn { get; set; }
+
+        public int SMILESColumn { get; set; }
+
+        public int KEGGColumn { get; set; }
+
+        public int MoleculeListNameColumn { get; set; }
+
+        public int MolecularFormulaColumn { get; set; }
+
+        public int MoleculeNameColumn { get; set; }
+
+        public ColumnIndices()
         {
-            ProteinColumn = -1;
-            PeptideColumn = -1;
-            PrecursorColumn = -1;
-            PrecursorChargeColumn = -1;
-            ProductColumn = -1;
-            ProductChargeColumn = -1;
-            DecoyColumn = -1;
-            IrtColumn = -1;
-            LibraryColumn = -1;
-            LabelTypeColumn = -1;
-            FragmentNameColumn = -1;
+            // Iterates through the column indices and initializes them all to -1
+            foreach (var property in GetType().GetProperties())
+            {
+                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                {
+                    property.SetValue(this, -1);
+                }
+            }
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -2080,42 +2290,123 @@ namespace pwiz.Skyline.Model
             // Remove spaces and make lowercase. This matches the format of the names they are tested against
             return col.ToLowerInvariant().Replace(@" ", string.Empty);
         }
+
+        private bool FindValueMatch(string key, string header)
+        {
+            foreach (var item in SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms)
+            {
+                if (item.Value.Equals(key))
+                {
+                    // Remove whitespace and make the strings lowercase for comparison
+                    var lowerValue = item.Key.ToLower();
+                    lowerValue = lowerValue.Replace(@" ", string.Empty);
+                    var lowerHeader = header.ToLower();
+                    lowerHeader = lowerHeader.Replace(@" ", string.Empty);
+                    var lowerKey = item.Value.ToLower();
+                    lowerKey = lowerKey.Replace(@" ", string.Empty);
+                    if (lowerValue.Equals(lowerHeader) || lowerKey.Equals(lowerHeader))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void FindColumns(string[] headers)
         {
             Headers = headers;
+            int index = 0;
+            foreach (string header in headers)
+            {
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, header))
+                    MoleculeListNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.namePrecursor, header))
+                    MoleculeNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.nameProduct, header))
+                    ProductNameColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, header))
+                    MolecularFormulaColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.formulaProduct, header))
+                    ProductFormulaColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, header))
+                    ProductNeutralLossColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, header))
+                    PrecursorColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.mzProduct, header))
+                    ProductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, header))
+                    PrecursorChargeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.chargeProduct, header))
+                    ProductChargeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, header))
+                    ExplicitRetentionTimeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, header))
+                    ExplicitRetentionTimeWindowColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.cePrecursor, header))
+                    ExplicitCollisionEnergyColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imPrecursor, header))
+                    ExplicitIonMobilityColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, header))
+                    ExplicitIonMobilityHighEnergyOffsetColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imUnits, header))
+                    ExplicitIonMobilityUnitsColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, header))
+                    CollisionCrossSectionColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.slens, header))
+                    SLensColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.coneVoltage, header))
+                    ConeVoltageColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, header))
+                    ExplicitCompensationVoltageColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, header))
+                    ExplicitDelusteringPotentialColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.note, header))
+                    NoteColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header))
+                    LabelTypeColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, header))
+                    PrecursorAdductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.adductProduct, header))
+                    ProductAdductColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idCAS, header))
+                    CASColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChiKey, header))
+                    InChiKeyColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idInChi, header))
+                    InChiColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idHMDB, header))
+                    HMDBColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idKEGG, header))
+                    KEGGColumn = index;
+                if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idSMILES, header))
+                    SMILESColumn = index;
+                index++;
+            }
+
             ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(FormatHeader(col)));
-            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
-            ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(FormatHeader(col)));
             DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(FormatHeader(col)));
             IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(FormatHeader(col)));
             LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(FormatHeader(col)));
-            LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(FormatHeader(col)));
             FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col)));
+            ProteinDescriptionColumn = headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col)));
+            PeptideColumn = headers.IndexOf(col => PeptideNames.Contains(FormatHeader(col)));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
         public void ResetDuplicateColumns(int index)
         {
-            if (DecoyColumn == index)
-                DecoyColumn = -1;
-            if (IrtColumn == index)
-                IrtColumn = -1;
-            if (LabelTypeColumn == index)
-                LabelTypeColumn = -1;
-            if (LibraryColumn == index)
-                LibraryColumn = -1;
-            if (PeptideColumn == index)
-                PeptideColumn = -1;
-            if (PrecursorColumn == index)
-                PrecursorColumn = -1;
-            if (ProductColumn == index)
-                ProductColumn = -1;
-            if (ProteinColumn == index)
-                ProteinColumn = -1;
-            if (FragmentNameColumn == index)
-                FragmentNameColumn = -1;
-            if (PrecursorChargeColumn == index)
-                PrecursorChargeColumn = -1;
+            // Iterates through the column indices, if they share an index with index they are reset to -1
+            foreach (var property in GetType().GetProperties())
+            {
+                if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
+                {
+                    if ((int)property.GetValue(this, null) == index)
+                    {
+                        property.SetValue(this, -1);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2143,6 +2434,26 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
         public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
         public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeNames { get { return new[] { @"explicitretentiontime", @"precursorrt" }; } }
+        public static IEnumerable<string> ExplicitRetentionTimeWindowNames { get { return new[] { @"explicitretentiontimewindow", @"precursorrtwindow" }; } }
+        public static IEnumerable<string> ExplicitCollisionEnergyNames { get { return new[] { @"explicitcollisionenergy" }; } }
+        public static IEnumerable<string> NoteNames { get { return new[] { @"note" }; } }
+        public static IEnumerable<string> SLensNames { get { return new[] { @"slens", @"s-lens" }; } }
+        public static IEnumerable<string> ConeVoltageNames { get { return new[] { @"conevoltage" }; } }
+        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
+        public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
+        public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
+        public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
+        public static IEnumerable<string> PeptideNames { get { return new[] { @"peptidemodifiedsequence", @"peptide" }; } }
+        public static IEnumerable<string> MolecularFormulaNames { get { return new[] { @"molecularformula", @"precursorformula" }; } }
+        public static IEnumerable<string> PrecursorAdductNames { get { return new[] { @"precursoradduct" }; } }
+        public static IEnumerable<string> ProductNames { get { return new[] { @"productmz", @"productm/z" }; } }
+        public static IEnumerable<string> PrecursorNames { get { return new[] { @"precursormz", @"precursorm/z" }; } }
+        public static IEnumerable<string> ProductFormulaNames { get { return new[] { @"productformula" }; } }
+        public static IEnumerable<string> ProductAdductNames { get { return new[] { @"productadduct" }; } }
+        public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname" }; } }
+        public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
+        public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname" }; } }
         // ReSharper restore StringLiteralTypo
     }
 
@@ -2151,7 +2462,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ExTransitionInfo
     {
-        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy)
+        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, ExplicitTransitionValues explicitTransitionValues, string note)
         {
             ProteinName = proteinName;
             PeptideTarget = new Target(peptideSequence);
@@ -2160,6 +2471,8 @@ namespace pwiz.Skyline.Model
             IsDecoy = isDecoy;
             DefaultLabelType = IsotopeLabelType.light;
             TransitionExps = new List<TransitionExp>();
+            ExplicitTransitionValues = explicitTransitionValues;
+            Note = note;
         }
 
         public string ProteinName { get; private set; }
@@ -2167,6 +2480,8 @@ namespace pwiz.Skyline.Model
         public string PeptideSequence { get { return PeptideTarget.Sequence; } }
         public string ModifiedSequence { get; set; }
         public double PrecursorMz { get; private set; }
+        public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
+        public string Note { get; private set; }
 
         public bool IsDecoy { get; private set; }
 
@@ -2196,12 +2511,14 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class TransitionExp
     {
-        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift)
+        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift, ExplicitTransitionValues explicitTransitionValues)
         {
             Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift);
+            ExplicitTransitionValues = explicitTransitionValues;
         }
 
         public bool IsDecoy { get { return Precursor.MassShift.HasValue; } }
+        public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
         public TransitionCalc.MassShiftType ProductShiftType
         {
             get
@@ -2268,7 +2585,7 @@ namespace pwiz.Skyline.Model
 
     public sealed class ProductExp
     {
-        public ProductExp(Adduct productAdduct, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift)
+        public ProductExp(Adduct productAdduct, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift, ExTransitionInfo info)
         {
             Adduct = productAdduct;
             IonType = ionType;
@@ -2277,6 +2594,7 @@ namespace pwiz.Skyline.Model
             MassShift = null;
             if (massShift != 0)
                 MassShift = massShift;
+            ExInfo = info;
         }
 
         public Adduct Adduct { get; private set; }
@@ -2284,6 +2602,7 @@ namespace pwiz.Skyline.Model
         public int FragmentOrdinal { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public int? MassShift { get; private set; }
+        public ExTransitionInfo ExInfo { get; private set; }
     }
 
     public class MzMatchException : LineColNumberedIoException
@@ -2345,6 +2664,7 @@ namespace pwiz.Skyline.Model
 
         private FastaSequence _activeFastaSeq;
         private Peptide _activePeptide;
+        private ExplicitRetentionTimeInfo _activeExplicitRetentionTimeInfo;
         private string _activeModifiedSequence;
         private readonly string _sourceFile;
         // Order is important to making the variable modification choice deterministic
@@ -2500,7 +2820,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void AppendTransition(ExTransitionInfo info, double? irt, double? libraryIntensity, double productMz, string lineText, long lineNum)
+        public void AppendTransition(ExTransitionInfo info, double? irt, ExplicitRetentionTimeInfo explicitRT, double? libraryIntensity, double productMz, string note, string lineText, long lineNum)
         {
             _autoManageChildren = false;
             // Treat this like a peptide list from now on.
@@ -2576,6 +2896,7 @@ namespace pwiz.Skyline.Model
                 _activePrecursorMz = info.PrecursorMz;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
+                _activeExplicitRetentionTimeInfo = explicitRT;
             }
             var intersectPrecursors = new List<PrecursorExp>(_activePrecursorExps.Intersect(
                 info.TransitionExps.Select(exp => exp.Precursor)));
@@ -2646,7 +2967,7 @@ namespace pwiz.Skyline.Model
             _groupLibTriples.Sort(TransitionGroupLibraryIrtTriple.CompareTriples);
             var finalGroupLibTriples = FinalizeTransitionGroups(_groupLibTriples);
             var finalTransitionGroups = finalGroupLibTriples.Select(triple => triple.NodeGroup).ToArray();
-            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0], null, null,
+            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0], null, _activeExplicitRetentionTimeInfo,
                 finalTransitionGroups, false);
             var finalLibrarySpectra = new List<SpectrumMzInfo>();
             double? peptideIrt = GetPeptideIrt(finalGroupLibTriples);
@@ -2794,9 +3115,10 @@ namespace pwiz.Skyline.Model
                     int? massShift = productExp.MassShift;
                     if (massShift == null && precursorExp.MassShift.HasValue)
                         massShift = 0;
+                    var annotations = string.IsNullOrEmpty(productExp.ExInfo.Note) ? Annotations.EMPTY : new Annotations(productExp.ExInfo.Note, null, 0);
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
-                    return new TransitionDocNode(tran, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+                    return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);
                 });
             // m/z calculated later
             var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions));

@@ -40,7 +40,7 @@ namespace SkylineBatchTest
 
         }
 
-        private bool ConfigStopped(MainForm mainForm, bool expectedAnswer)
+        private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
             bool worked = false;
             RunUI(() =>
@@ -63,10 +63,10 @@ namespace SkylineBatchTest
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
             var tenSeconds = new TimeSpan(0,0,10);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, true, tenSeconds, 200,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
                 "Config did not start");
             var oneMinute = new TimeSpan(0, 1, 0);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, false, oneMinute, 1000,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
             Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")));
             Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")).Length);
@@ -119,10 +119,10 @@ namespace SkylineBatchTest
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
             var tenSeconds = new TimeSpan(0, 0, 10);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, true, tenSeconds, 200,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
                 "Config did not start");
             var oneMinute = new TimeSpan(0, 1, 0);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, false, oneMinute, 1000,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
             Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")));
             Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")).Length);

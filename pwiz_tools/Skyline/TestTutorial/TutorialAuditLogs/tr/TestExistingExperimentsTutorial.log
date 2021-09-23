@@ -335,20 +335,20 @@ Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
 Undo Redo : Changed quantitative on 4 transitions
-Summary   : Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] changed
+Summary   : Targets > YDL055C > K.ETFPILVEEK.Q [197, 206] changed
 All Info  :
 Changed quantitative on 4 transitions
-Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > V [y4] - 504,2664+ (rank 3) > Quantitative changed from True to False
-Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > E [y3] - 405,1980+ (rank 2) > Quantitative changed from True to False
-Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606,8337++ (heavy) > V [y4] - 512,2806+ (rank 3) > Quantitative changed from True to False
-Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606,8337++ (heavy) > E [y3] - 413,2122+ (rank 2) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++ > V [y4] - 504,2664+ (rank 3) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++ > E [y3] - 405,1980+ (rank 2) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [197, 206] > 606,8337++ (heavy) > V [y4] - 512,2806+ (rank 3) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [197, 206] > 606,8337++ (heavy) > E [y3] - 413,2122+ (rank 2) > Quantitative changed from True to False
 
-Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++
-Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++
+Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++
+Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++
 All Info  :
-Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++
-Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ in "silac_1_to_4" from 29,63 to 29,80
-Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ in "silac_1_to_4" from 30,47 to 30,40
+Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++
+Changed start time of all peaks of YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++ in "silac_1_to_4" from 29,63 to 29,80
+Changed end time of all peaks of YDL055C > K.ETFPILVEEK.Q [197, 206] > 602,8266++ in "silac_1_to_4" from 30,47 to 30,40
 
 Undo Redo : Peptide Settings changed
 Summary   : Settings > Peptide Settings changed

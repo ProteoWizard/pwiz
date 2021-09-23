@@ -34,15 +34,12 @@ namespace SkylineBatch.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string InstalledVersion {
+        [global::System.Configuration.DefaultSettingValueAttribute("21.1")]
+        public decimal XmlVersion {
             get {
-                return ((string)(this["InstalledVersion"]));
-            }
-            set {
-                this["InstalledVersion"] = value;
+                return ((decimal)(this["XmlVersion"]));
             }
         }
     }

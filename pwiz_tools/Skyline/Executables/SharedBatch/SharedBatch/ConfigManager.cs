@@ -30,9 +30,9 @@ using SharedBatch.Properties;
 
 namespace SharedBatch
 {
-    public delegate IConfig Importer(XmlReader reader);
+    public delegate IConfig Importer(XmlReader reader, decimal importingXmlVersion);
 
-    public delegate string XmlUpdater(string oldXmlFile, string newVersion);
+    public delegate string XmlUpdater(string oldXmlFile, decimal currentXmlVersion);
 
     public class ConfigManager
     {
@@ -40,8 +40,6 @@ namespace SharedBatch
         // The UI should reflect the configs, runners, and log files from this class
 
         protected Importer importer; // a ReadXml method to import the configurations
-
-        protected XmlUpdater getUpdatedXml; // a ReadXml method to import the configurations
 
         protected ImmutableList<IConfig> _configList { get; private set; } // the list of configurations. Every config must have a validation status in _configValidation
 
@@ -74,7 +72,7 @@ namespace SharedBatch
 
         protected void AssertAllInitialized()
         {
-            if (importer == null || getUpdatedXml == null || _configList == null || _configValidation == null || 
+            if (importer == null || _configList == null || _configValidation == null || 
                 _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
                 throw new NullReferenceException("Not all Config Manager variables have been initialized.");
         }
@@ -82,10 +80,10 @@ namespace SharedBatch
         public int SelectedConfig { get; private set; } // index of the selected configuration
         public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
         
-        protected List<IConfig> LoadConfigList(string version)
+        protected List<IConfig> LoadConfigList(decimal currentXmlVersion)
         {
             ConfigList.Importer = importer;
-            ConfigList.Version = version;
+            ConfigList.XmlVersion = currentXmlVersion;
             // Do not load saved configurations in test mode
             return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
         }
@@ -176,14 +174,10 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var state = new ConfigManagerState(this);
-                if (newIndex < 0 || newIndex >= _configList.Count)
-                    throw new IndexOutOfRangeException(string.Format(
-                        Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, newIndex));
-                if (state.selected != newIndex)
+                new ConfigManagerState(this).ValidateState(newIndex);
+                if (SelectedConfig != newIndex)
                 {
-                    state.selected = newIndex;
-                    SetState(state);
+                    SelectedConfig = newIndex;
                     _uiControl?.UpdateUiConfigurations();
                 }
             }
@@ -193,11 +187,9 @@ namespace SharedBatch
         {
             lock (_lock)
             {
-                var state = new ConfigManagerState(this);
                 if (SelectedConfig >= 0)
                 {
-                    state.selected = -1;
-                    SetState(state);
+                    SelectedConfig = -1;
                     _uiControl?.UpdateUiConfigurations();
                 }
             }
@@ -205,7 +197,7 @@ namespace SharedBatch
 
         protected void AssertConfigSelected(ConfigManagerState state)
         {
-            if (state.selected < 0)
+            if (SelectedConfig < 0)
             {
                 throw new IndexOutOfRangeException(Resources
                     .ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_);
@@ -334,27 +326,26 @@ namespace SharedBatch
                     config.GetName()));
                 var configList = state.configList.Insert(index, config);
                 var configValidation = state.configValidation.Add(config.GetName(), true);
-                return new ConfigManagerState()
+                return new ConfigManagerState(state)
                 {
                     configList = configList,
                     configValidation = configValidation,
-                    selected = index
+                    selected = index,
+                    editedConfigFromRedo = index
                 };
             }
         }
 
-        public void MoveSelectedConfig(bool moveUp)
+        protected ConfigManagerState MoveSelectedConfig(ConfigManagerState state, bool moveUp)
         {
-            lock (_lock)
-            {
-                var state = new ConfigManagerState(this);
-                var movingConfig = _configList[SelectedConfig];
-                var delta = moveUp ? -1 : 1;
-                state.configList = state.configList.Remove(movingConfig);
-                state.configList = state.configList.Insert(SelectedConfig + delta, movingConfig);
-                state.selected += delta;
-                SetState(state);
-            }
+            var movingConfig = _configList[SelectedConfig];
+            var delta = moveUp ? -1 : 1;
+            state.configList = state.configList.Remove(movingConfig);
+            state.configList = state.configList.Insert(SelectedConfig + delta, movingConfig);
+            state.editedConfigFromUndo = state.selected;
+            state.selected += delta;
+            state.editedConfigFromRedo = state.selected;
+            return state;
         }
 
         protected ConfigManagerState UserRemoveAt(int index, ConfigManagerState state)
@@ -390,7 +381,8 @@ namespace SharedBatch
             return new ConfigManagerState(state)
             {
                 configList = configList,
-                configValidation = configValidation
+                configValidation = configValidation,
+                editedConfigFromUndo = index
             };
         }
 
@@ -455,7 +447,7 @@ namespace SharedBatch
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
         // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string filePath, string installedVersion, ShowDownloadedFileForm showDownloadedFileForm)
+        protected List<IConfig> ImportFrom(string filePath, decimal currentXmlVersion, ShowDownloadedFileForm showDownloadedFileForm)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
@@ -473,8 +465,8 @@ namespace SharedBatch
             }
 
             var readConfigs = new List<IConfig>();
-            var addedConfigs = new List<IConfig>();
             var readXmlErrors = new List<string>();
+
             // read configs from file
             try
             {
@@ -486,31 +478,21 @@ namespace SharedBatch
                         {
                             if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
                             {
-                                var fileVersion = reader.GetAttribute(Attr.version);
-                                // check if the configuration file needs to be updated
-                                if (fileVersion == null)
+                                var importingXmlVersion = ConfigList.ReadXmlVersion(reader);
+                                if (importingXmlVersion > currentXmlVersion)
                                 {
-                                    reader.Dispose(); // Close the file first so that we don't get an exception when it is opened again below.
-                                    stream.Dispose();
-                                    var newFile = getUpdatedXml(filePath, installedVersion);
-                                    if (newFile == null)
-                                    {
-                                        DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
-                                            filePath));
-                                        return new List<IConfig>();
-                                    }
-                                    return ImportFrom(newFile, installedVersion, null);
-                                }
-                                // check that the configuration file is not newer than the program version
-                                var oldVersion = new Version(fileVersion);
-                                var newVersion = new Version(installedVersion);
-                                if (oldVersion > newVersion)
-                                {
-                                    DisplayError(string.Format(Resources.ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_, fileVersion, installedVersion));
-                                    return new List<IConfig>();
+                                    throw new ArgumentException(string.Format(
+                                        Resources
+                                            .ConfigManager_ImportFrom_The_version_of_the_file_to_import_from__0__is_newer_than_the_version_of_the_program__1___Please_update_the_program_to_import_configurations_from_this_file_,
+                                        importingXmlVersion, currentXmlVersion));
                                 }
 
                                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
+                                var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
+                                oldFolder = oldFolder?? reader.GetAttribute(Attr.SavedPathRoot);
+                                if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
+                                    oldFolder = Path.GetDirectoryName(oldConfigFile);
+
                                 if (!string.IsNullOrEmpty(oldFolder))
                                 {
                                     var newFolder = string.IsNullOrEmpty(copiedDestination)
@@ -539,7 +521,7 @@ namespace SharedBatch
                                         IConfig config = null;
                                         try
                                         {
-                                            config = importer(reader);
+                                            config = importer(reader, importingXmlVersion);
                                         }
                                         catch (Exception ex)
                                         {
@@ -567,7 +549,7 @@ namespace SharedBatch
                         Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__,
                         filePath) + Environment.NewLine +
                     e.Message);
-                return addedConfigs;
+                return new List<IConfig>();
             }
 
             // delete temporary file used to rewrite XML
@@ -579,7 +561,7 @@ namespace SharedBatch
                 // warn if no configs found
                 DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
                     filePath));
-                return addedConfigs;
+                return new List<IConfig>();
             }
 
             var duplicateConfigNames = new List<string>();
@@ -612,7 +594,7 @@ namespace SharedBatch
                 }
             }
             
-            var numAdded = 0;
+            var addedConfigs = new List<IConfig>();
 
             foreach (IConfig config in readConfigs)
             {
@@ -625,11 +607,10 @@ namespace SharedBatch
                 else
                     addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
                 addedConfigs.Add(addingConfig);
-                numAdded++;
             }
 
             message.Append(Resources.ConfigManager_Import_Number_of_configurations_imported_);
-            message.Append(numAdded).Append(Environment.NewLine);
+            message.Append(addedConfigs.Count).Append(Environment.NewLine);
 
             if (readXmlErrors.Count > 0)
             {
@@ -658,7 +639,7 @@ namespace SharedBatch
             return names;
         }
 
-        public void ExportConfigs(string filePath, string version, int[] indiciesToSave)
+        public void ExportConfigs(string filePath, decimal xmlVersion, int[] indiciesToSave)
         {
             var state = new ConfigManagerState(this);
             var directory = string.Empty;
@@ -697,7 +678,7 @@ namespace SharedBatch
                     {
                         writer.WriteStartElement("config_list");
                         writer.WriteAttributeString(Attr.saved_path_root, directory);
-                        writer.WriteAttributeString(Attr.version, version);
+                        writer.WriteAttribute(Attr.xml_version, xmlVersion);
                         foreach (int index in indiciesToSave)
                             state.configList[index].WriteXml(writer);
                         writer.WriteEndElement();
@@ -710,13 +691,18 @@ namespace SharedBatch
         public enum Attr
         {
             saved_path_root,
-            version
+            xml_version,
+
+            // deprecated
+            version,
+            SavedConfigsFilePath,
+            SavedPathRoot
         }
 
         #endregion
         
         #region Tests
-        
+
         public bool ConfigListEquals(List<IConfig> otherConfigs)
         {
             lock (_lock)
@@ -894,11 +880,13 @@ namespace SharedBatch
 
         #endregion
 
+        // Updates the config manager to a new valid state when the configuration list has changed
+        // newState should contain a configuration list that is different from the current state in at least one way
         protected void SetState(ConfigManagerState newState)
         {
             lock (_lock)
             {
-                newState.ValidateState();
+                newState.ValidateState(newState.selected);
                 _configList = newState.configList;
                 _configValidation = newState.configValidation;
                 SelectedConfig = newState.selected;
@@ -906,15 +894,19 @@ namespace SharedBatch
             }
         }
 
-
+        // Represents a state of the config manager
         protected class ConfigManagerState
         {
             public ImmutableList<IConfig> configList;
             public ImmutableDictionary<string, bool> configValidation;
             public int selected;
+            public int editedConfigFromUndo; // -1 or the index of a configuration to be selected if an operation is undone
+            public int editedConfigFromRedo; // -1 or the index of a configuration to be selected if an operation is redone
 
             public ConfigManagerState()
             {
+                editedConfigFromUndo = -1;
+                editedConfigFromRedo = -1;
             }
 
             public ConfigManagerState(ConfigManager configManager)
@@ -922,6 +914,8 @@ namespace SharedBatch
                 configList = configManager._configList;
                 configValidation = configManager._configValidation;
                 selected = configManager.SelectedConfig;
+                editedConfigFromUndo = -1;
+                editedConfigFromRedo = -1;
             }
 
             public ConfigManagerState(ConfigManagerState state)
@@ -929,17 +923,20 @@ namespace SharedBatch
                 configList = state.configList;
                 configValidation = state.configValidation;
                 selected = state.selected;
+                editedConfigFromUndo = state.editedConfigFromUndo;
+                editedConfigFromRedo = state.editedConfigFromRedo;
             }
 
-            public void ValidateState()
+            public void ValidateState(int selectedConfig)
             {
                 foreach (var config in configList)
                 {
                     if (configList.Count != configValidation.Count || !configValidation.ContainsKey(config.GetName()))
                         throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
                 }
-                if (selected < -1 || selected > configList.Count)
-                    throw new ArgumentException("Could not validate the new selected configuration in the list. The operation did not succeed.");
+                if (selectedConfig < -1 || selectedConfig >= configList.Count)
+                    throw new IndexOutOfRangeException(string.Format(
+                        Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, selectedConfig));
             }
 
         }

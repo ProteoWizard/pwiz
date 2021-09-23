@@ -53,6 +53,7 @@ rule setup_templates ( targets + : sources * : properties * )
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
     OUTPUT_PATH on $(targets) = [ path.native $(PWIZ_BUILD_PATH)/SkylineDeploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 
@@ -126,7 +127,7 @@ actions test_msi
     echo Installing $(ARTIFACT_NAME)...
     set TEMP=%LOCALAPPDATA%\Temp
     copy "$(LOCATION)\$(ARTIFACT_NAME).msi" "%TEMP%"
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 60000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-install.log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-install.log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
     set status=%EXIT%
@@ -140,9 +141,9 @@ actions test_msi
 
     set PATH_TMP=%PATH%
     set PATH=
-    copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)"
-    copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)"
-    copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)"
+    copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)" >nul
+    copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)" >nul
+    copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)" >nul
     $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
     set TEST_EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
@@ -152,9 +153,8 @@ actions test_msi
     $(TEST_PRECOMMAND)
 
     echo Uninstalling $(ARTIFACT_NAME)...
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 60000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
-    rmdir /s /q "$(INSTALL_PATH)"
     IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
     IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
 
@@ -164,8 +164,8 @@ actions test_msi
     IF %TEST_EXIT% EQU 0 echo Deployment test passed. > "$(LOCATION)\Test.passed"
 
     rmdir /s /q "$(INSTALL_PATH)"
-    copy "%TEMP%\$(ARTIFACT_NAME)-install.log" "$(LOCATION)"
-    copy "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" "$(LOCATION)"
+    copy "%TEMP%\$(ARTIFACT_NAME)-install.log" "$(LOCATION)" >nul
+    copy "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" "$(LOCATION)" >nul
     del "%TEMP%\$(ARTIFACT_NAME).msi"
 
     IF %TEST_EXIT% NEQ 0 exit 1
