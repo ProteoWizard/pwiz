@@ -1431,16 +1431,6 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            void printfiles(string desc, string dir)
-            {
-                Console.Out.WriteLine(@"***** {0} is: {1}", desc, Path.GetFullPath(dir));
-                foreach (var f in Directory.GetFiles(dir))
-                    Console.Out.WriteLine(@"* {0}", Path.GetFileName(f));
-                Console.Out.WriteLine(@"****************************************");
-            }
-            printfiles(@"Current directory", Directory.GetCurrentDirectory());
-            printfiles(@"Method exe directory", Path.GetDirectoryName(EXE_BUILD_SHIMADZU_METHOD));
-
             var argv = new List<string>();
             MethodExporter.ExportMethod(EXE_BUILD_SHIMADZU_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }

@@ -595,11 +595,17 @@
       <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_Shimadzu_MethodConverter.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodConverter.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Method_Shimadzu_MethodWriter.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodWriter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_Shimadzu.LabSolutions.IO.IoModule.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Thermo_files" Directory="Method_Thermo_directory">
