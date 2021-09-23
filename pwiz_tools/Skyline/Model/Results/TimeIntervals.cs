@@ -26,6 +26,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public class TimeIntervals
     {
+        public static readonly TimeIntervals EMPTY = FromIntervalsSorted(new KeyValuePair<float, float>[0]);
         public static TimeIntervals FromIntervals(IEnumerable<KeyValuePair<float, float>> intervals)
         {
             return FromIntervalsSorted(MergeIntervals(intervals));
@@ -39,6 +40,10 @@ namespace pwiz.Skyline.Model.Results
                 Starts = ImmutableList.ValueOf(list.Select(kvp => kvp.Key)),
                 Ends = ImmutableList.ValueOf(list.Select(kvp => kvp.Value))
             };
+        }
+
+        private TimeIntervals()
+        {
         }
 
         public ImmutableList<float> Starts { get; private set; }

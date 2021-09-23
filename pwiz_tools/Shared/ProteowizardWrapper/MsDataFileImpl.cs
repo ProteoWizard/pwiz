@@ -394,6 +394,13 @@ namespace pwiz.ProteowizardWrapper
                     if (!param.empty() && param.cvid != CVID.MS_instrument_model)
                     {
                         instrumentModel = param.name;
+
+                        // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
+                        UserParam uParam = ic.userParam(@"instrument model");
+                        if (HasInfo(uParam))
+                        {
+                            instrumentModel = uParam.value;
+                        }
                     }
                     if(instrumentModel == null)
                     {
@@ -402,6 +409,14 @@ namespace pwiz.ProteowizardWrapper
                         if (HasInfo(uParam))
                         {
                             instrumentModel = uParam.value;
+                        }
+                        else
+                        {
+                            uParam = ic.userParam(@"instrument model");
+                            if (HasInfo(uParam))
+                            {
+                                instrumentModel = uParam.value;
+                            }
                         }
                     }
 

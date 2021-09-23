@@ -102,10 +102,10 @@ void BuildParser::setSpecFileName(
             }
             if (path.empty())
                 path = ".";
-            for (const auto& dir : bfs::directory_iterator(path)) {
-                bfs::path dirPath = dir.path();
-                string trialName = dirPath.filename().string();
-                for (const string& ext : extensions) {
+            for (const string& ext : extensions) { // Search for extensions in priority order
+                for (const auto& dir : bfs::directory_iterator(path)) {
+                    bfs::path dirPath = dir.path();
+                    string trialName = dirPath.filename().string();
                     // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
                     if (!bal::iequals(fileroot + ext, trialName))
                         continue;

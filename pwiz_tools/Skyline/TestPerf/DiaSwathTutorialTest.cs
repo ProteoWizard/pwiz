@@ -107,7 +107,6 @@ namespace TestPerf
         private string RootName { get; set; }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -136,7 +135,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaTtofFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -196,7 +194,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -226,7 +223,6 @@ namespace TestPerf
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaQeFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues

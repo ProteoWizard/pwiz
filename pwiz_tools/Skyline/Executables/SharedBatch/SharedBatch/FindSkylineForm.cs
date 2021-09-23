@@ -34,7 +34,7 @@ namespace SharedBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var skylineSettings = new SkylineSettings(SkylineType.Custom, textSkylineInstallPath.Text);
+            var skylineSettings = new SkylineSettings(SkylineType.Custom, null, textSkylineInstallPath.Text);
             try
             {
                 skylineSettings.Validate();
