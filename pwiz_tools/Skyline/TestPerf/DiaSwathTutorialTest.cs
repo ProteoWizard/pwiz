@@ -120,11 +120,11 @@ namespace TestPerf
                 ScoringModelCoefficients = "0.2924|-0.5958|4.3173|-0.3341|-0.5752|0.8511|0.0417|-0.0726",
                 MassErrorStats = new[]
                 {
-                    new[] {3, 4.4},
+                    new[] {3.0, 4.4},
                     new[] {2.8, 4.1},
                     new[] {3.9, 4.3},
                     new[] {5.9, 3.6},
-                    new[] {4.8, 4},
+                    new[] {4.8, 4.0},
                     new[] {-0.2, 3.4},
                     new[] {1.1, 3.8},
                 },
@@ -158,7 +158,7 @@ namespace TestPerf
                     new[] {5.2, 4.1},
                     new[] {4.5, 4.2},
                     new[] {-0.3, 3.9},
-                    new[] {1, 4.1},
+                    new[] {1.0, 4.1},
                 },
                 DiffPeptideCounts = new[] { 12783, 7943, 2689, 2140 },
                 UnpolishedProteins = 2206,
@@ -206,19 +206,19 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                 TargetCounts = new[] { 13, 260, 320, 1920 },
                 FinalTargetCounts = new[] { 12, 260, 320, 1920 },
-                ScoringModelCoefficients = "0.2438|-0.6626|4.3517|-0.1746|-0.0965|0.7356|0.0573|-0.0565",
+                ScoringModelCoefficients = "0.2811|-0.7513|4.5007|-0.0685|-0.0877|0.7776|0.0656|-0.0423",
                 MassErrorStats = new[]
                 {
-                    new[] {1.5, 4.1},
-                    new[] {1.1, 4.1},
-                    new[] {1.4, 4.2},
-                    new[] {1.7, 3.8},
-                    new[] {1.6, 4.1},
+                    new[] {1.6, 4.2},
+                    new[] {1.3, 4.0},
+                    new[] {1.5, 4.4},
+                    new[] {1.9, 3.7},
+                    new[] {1.8, 4.4},
                     new[] {1.8, 4.1},
-                    new[] {1.3, 4.1},
+                    new[] {1.3, 4.3},
                 },
-                DiffPeptideCounts = new[] { 137, 46, 28, 52 },
-                UnpolishedProteins = 6,
+                DiffPeptideCounts = new[] { 136, 45, 28, 52 },
+                UnpolishedProteins = 8,
             };
 
             if (!IsCoverShotMode)
@@ -239,20 +239,20 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                 TargetCounts = new[] { 3988, 30908, 33830, 202978 },
                 FinalTargetCounts = new[] { 2037, 21924, 23974, 143842 },
-                ScoringModelCoefficients = "0.3533|-0.8979|3.7557|0.1866|-0.0797|0.7328|-0.0001|-0.0587",
+                ScoringModelCoefficients = "0.3276|-0.8806|3.7935|0.1941|-0.0792|0.7469|0.0042|-0.0647",
                 MassErrorStats = new[]
                 {
+                    new[] {1.9, 4.7},
+                    new[] {1.5, 4.6},
+                    new[] {2.0, 4.8},
+                    new[] {2.1, 4.6},
+                    new[] {2.1, 4.8},
+                    new[] {2.2, 4.6},
                     new[] {1.9, 4.8},
-                    new[] {1.4, 4.7},
-                    new[] {1.9, 4.8},
-                    new[] {2.1, 4.7},
-                    new[] {2, 4.9},
-                    new[] {2.1, 4.7},
-                    new[] {1.8, 4.8},
                 },
-                DiffPeptideCounts = new[] { 10557, 6451, 2251, 1844 },
-                UnpolishedProteins = 1652,
-                PolishedProteins = 2035,
+                DiffPeptideCounts = new[] { 10440, 6377, 2237, 1815 },
+                UnpolishedProteins = 1640,
+                PolishedProteins = 2030,
             };
 
             if (!IsCoverShotMode)
@@ -1031,7 +1031,7 @@ namespace TestPerf
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.#}, {1:0.#}}},", mean, stdDev);  // Not L10N
+                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
             else
             {
                 Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);
