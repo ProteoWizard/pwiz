@@ -256,7 +256,7 @@ namespace TestPerf
                 importRangesDlg.Open();
             });
 
-            WaitForConditionUI(() => !isolationScheme.ImportingFromFile);
+            WaitForConditionUI(() => 28 == isolationScheme.GetIsolationWindows().Count);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);

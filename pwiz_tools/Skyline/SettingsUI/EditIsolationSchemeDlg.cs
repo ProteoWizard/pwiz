@@ -942,8 +942,6 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver.OnPaste();
         }
 
-        public bool ImportingFromFile { get; set; }
-
         #endregion
 
 
@@ -1037,7 +1035,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             try
             {
-                ImportingFromFile = true;
                 IsolationScheme isolationScheme = null;
                 using (var dlg = new LongWaitDlg
                 {
@@ -1069,10 +1066,6 @@ namespace pwiz.Skyline.SettingsUI
             catch (Exception x)
             {
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_, x.Message), x);
-            }
-            finally
-            {
-                ImportingFromFile = false;
             }
         }
     }
