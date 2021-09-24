@@ -103,6 +103,10 @@ namespace pwiz.Skyline.Model
                             }
                         }
 
+                        // TODO: The VariableWindows UserParam is being truncated so can't be checked here if it's an mz5 output file; fix mz5 UserParams not able to be longer than 256 bytes?
+                        //if (equivalentConfig && outputFileConfig.WindowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
+                        //    equivalentConfig = outputFileConfig.VariableWindows.SequenceEqual(_diaUmpireConfig.VariableWindows);
+
                         if (equivalentConfig)
                         {
                             progressMonitor?.UpdateProgress(status.ChangeMessage(
@@ -129,7 +133,8 @@ namespace pwiz.Skyline.Model
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath)} " +
-                            //" --filter \"peakPicking true 1-\"" + 
+                            " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
+                            " --filter \"peakPicking true 1-\"" + 
                             " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
