@@ -113,6 +113,7 @@ namespace pwiz.Topograph.Test
             var chromatogramDatas = peptideFileAnalysis.GetChromatograms();
             Assert.IsFalse(chromatogramDatas.Chromatograms.Count == 0);
             chromatogramGenerator.Stop();
+            workspace.ResultCalculator?.Stop();
             while (chromatogramGenerator.IsThreadAlive)
             {
                 Thread.Sleep(100);

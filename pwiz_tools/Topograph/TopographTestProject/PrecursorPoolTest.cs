@@ -48,6 +48,7 @@ namespace pwiz.Topograph.Test
             var precursorEnrichment = turnoverCalculator.ComputePrecursorEnrichmentAndTurnover(dict, out turnover, out turnoverScore, out bestMatch);
             Assert.AreEqual(.7, turnover);
             Assert.AreEqual(58, precursorEnrichment["Tracer"]);
+            workspace.ResultCalculator?.Stop();
         }
     }
 }
