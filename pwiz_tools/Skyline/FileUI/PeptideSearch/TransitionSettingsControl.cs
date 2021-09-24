@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -20,9 +21,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _documentContainer = documentContainer;
             InitializeComponent();
 
-            foreach (string item in TransitionFilter.GetStartFragmentFinderLabels())
+            foreach (string item in TransitionFilter.GetFilterStartFragmentFinderLabels())
                 comboRangeFrom.Items.Add(item);
-            foreach (string item in TransitionFilter.GetEndFragmentFinderLabels())
+            foreach (string item in TransitionFilter.GetFilterEndFragmentFinderLabels())
                 comboRangeTo.Items.Add(item);
 
             SetFields(_documentContainer.Document.Settings.TransitionSettings);
@@ -107,12 +108,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             PeptidePrecursorCharges = settings.Filter.PeptidePrecursorCharges.ToArray();
             PeptideIonCharges = settings.Filter.PeptideProductCharges.ToArray();
             PeptideIonTypes = settings.Filter.PeptideIonTypes.ToArray();
-            ExclusionUseDIAWindow = settings.Filter.ExclusionUseDIAWindow;
             IonMatchTolerance = settings.Libraries.IonMatchTolerance;
             MinIonCount = settings.Libraries.MinIonCount;
             IonCount = settings.Libraries.IonCount;
-            IonRangeFrom = settings.Filter.FragmentRangeFirst.Label;
-            IonRangeTo = settings.Filter.FragmentRangeLast.Label;
+            // If library picking set to "all", make filter settings equivalent for "filter"
+            if (settings.Libraries.Pick == TransitionLibraryPick.all)
+            {
+                comboRangeFrom.SelectedIndex = 0;
+                comboRangeTo.SelectedIndex = 0;
+                ExclusionUseDIAWindow = false;
+            }
+            else
+            {
+                ExclusionUseDIAWindow = settings.Filter.ExclusionUseDIAWindow;
+                IonRangeFrom = settings.Filter.FragmentRangeFirst.Label;
+                IonRangeTo = settings.Filter.FragmentRangeLast.Label;
+            }
             MinIonMz = settings.Instrument.MinMz;
             MaxIonMz = settings.Instrument.MaxMz;
         }
@@ -133,7 +144,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtPrecursorIonCharges.Text = value.ToString(@", "); }
         }
 
-        public IonType[] InitialPeptideIonTypes // For recovering inital settings when user is messing with Full Scan MS1 settings
+        public IonType[] InitialPeptideIonTypes // For recovering initial settings when user is messing with Full Scan MS1 settings
         {
             get;
         }
@@ -171,13 +182,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string IonRangeFrom
         {
             get { return comboRangeFrom.SelectedItem.ToString(); }
-            set { comboRangeFrom.SelectedItem = value; }
+            set
+            {
+                if (comboRangeFrom.Items.Contains(value))
+                    comboRangeFrom.SelectedItem = value;
+                else
+                    comboRangeFrom.SelectedIndex = 0;
+            }
         }
 
         public string IonRangeTo
         {
             get { return comboRangeTo.SelectedItem.ToString(); }
-            set { comboRangeTo.SelectedItem = value; }
+            set
+            {
+                if (comboRangeTo.Items.Contains(value))
+                    comboRangeTo.SelectedItem = value;
+                else
+                    comboRangeTo.SelectedIndex = 0;
+            }
         }
 
         public int MinIonMz
@@ -224,10 +247,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
                             .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor })
                             .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_3.GetKey())
-                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey()));
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey())
+                            .ChangeMeasuredIons(Array.Empty<MeasuredIon>()));
+                    }
+                    else if (settings.Libraries.Pick == TransitionLibraryPick.all)
+                    {
+                        // Adjust filters to match "all" picking, since they are ignored in the current settings
+                        settings = settings.ChangeFilter(settings.Filter
+                            .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.GetKey())
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey())
+                            .ChangeMeasuredIons(Array.Empty<MeasuredIon>())
+                            .ChangeExclusionUseDIAWindow(false));
                     }
 
-                    var libraries = settings.Libraries;
+                    var libraries = settings.Libraries.ChangePick(TransitionLibraryPick.filter);    // Always apply the filter when the wizard is used
                     var defLibraries = defSettings.Libraries;
                     if (libraries.IonMatchTolerance == defLibraries.IonMatchTolerance)
                         libraries = libraries.ChangeIonMatchTolerance(0.05);
@@ -308,6 +341,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IonFilter ? IonRangeFrom : settings.Filter.FragmentRangeFirst.Label);
             string fragmentRangeLast = TransitionFilter.GetEndFragmentNameFromLabel(
                 IonFilter ? IonRangeTo : settings.Filter.FragmentRangeLast.Label);
+            var measuredIons = settings.Filter.MeasuredIons;
+            // If the base library settings were "all", clear the measured ion list to remain
+            // consistent with switching to "filter" below.
+            if (settings.Libraries.Pick == TransitionLibraryPick.all)
+            {
+                measuredIons = new List<MeasuredIon>();
+            }
             var filter = new TransitionFilter(
                 peptidePrecursorCharges,
                 peptideProductCharges,
@@ -317,7 +357,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Filter.SmallMoleculeIonTypes, 
                 fragmentRangeFirst,
                 fragmentRangeLast,
-                settings.Filter.MeasuredIons,
+                measuredIons,
                 settings.Filter.PrecursorMzWindow,
                 exclusionUseDIAWindow,
                 settings.Filter.AutoSelect);
@@ -366,8 +406,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
-            TransitionLibraryPick pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.all;
-            var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
+            var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, TransitionLibraryPick.filter);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);

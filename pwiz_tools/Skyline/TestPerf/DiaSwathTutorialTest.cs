@@ -114,20 +114,20 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 14, 283, 303, 1817 },
-                FinalTargetCounts = new[] { 13, 283, 303, 1817 },
-                ScoringModelCoefficients = "0.7882|-0.7943|4.1296|-1.5888|-0.6563|0.9829|-0.1724|-0.0530",
+                TargetCounts = new[] { 13, 268, 288, 1728 },
+                FinalTargetCounts = new[] { 12, 268, 288, 1728 },
+                ScoringModelCoefficients = "0.2924|-0.5958|4.3173|-0.3341|-0.5752|0.8511|0.0417|-0.0726",
                 MassErrorStats = new[]
                 {
-                    new[] {2.9, 4.5},
-                    new[] {2.7, 4.3},
-                    new[] {3.8, 4.5},
-                    new[] {5.7, 3.7},
-                    new[] {4.6, 4.3},
-                    new[] {-0.4, 3.7},
-                    new[] {1.1, 3.9},
+                    new[] {3.0, 4.4},
+                    new[] {2.8, 4.1},
+                    new[] {3.9, 4.3},
+                    new[] {5.9, 3.6},
+                    new[] {4.8, 4.0},
+                    new[] {-0.2, 3.4},
+                    new[] {1.1, 3.8},
                 },
-                DiffPeptideCounts = new[] { 144, 44, 32, 57 },
+                DiffPeptideCounts = new[] { 142, 44, 30, 57 },
                 UnpolishedProteins = 9,
             };
 
@@ -145,22 +145,22 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 4908, 38022, 39357, 236142 },
-                FinalTargetCounts = new[] { 2471, 27054, 27992, 167952 },
-                ScoringModelCoefficients = "0.4355|-0.8038|3.9214|-0.2504|-0.4049|0.7040|0.0230|-0.0713",
+                TargetCounts = new[] { 4700, 36622, 37950, 227700 },
+                FinalTargetCounts = new[] { 2398, 26102, 27032, 162192 },
+                ScoringModelCoefficients = "-0.0479|-0.7510|4.2746|-0.2467|-0.2652|0.7547|0.2904|-0.0663",
                 MassErrorStats = new[]
                 {
-                    new[] {2.7, 4.6},
-                    new[] {2.4, 4.4},
-                    new[] {3.9, 4.3},
-                    new[] {5.1, 4.2},
-                    new[] {4.4, 4.2},
-                    new[] {-0.4, 4},
-                    new[] {1, 4.1},
+                    new[] {2.8, 4.6},
+                    new[] {2.4, 4.3},
+                    new[] {3.9, 4.2},
+                    new[] {5.2, 4.1},
+                    new[] {4.5, 4.2},
+                    new[] {-0.3, 3.9},
+                    new[] {1.0, 4.1},
                 },
-                DiffPeptideCounts = new[] { 13119, 8169, 2779, 2160 },
-                UnpolishedProteins = 2175,
-                PolishedProteins = 2465,
+                DiffPeptideCounts = new[] { 12783, 7943, 2689, 2140 },
+                UnpolishedProteins = 2206,
+                PolishedProteins = 2393,
             };
 
             if (!IsCoverShotMode)
@@ -201,21 +201,21 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                TargetCounts = new[] { 14, 285, 345, 2069 },
-                FinalTargetCounts = new[] { 13, 285, 345, 2069 },
-                ScoringModelCoefficients = "0.2908|-0.7014|2.8523|0.9414|-0.0450|1.0464|0.1098|-0.1017",
+                TargetCounts = new[] { 13, 260, 320, 1920 },
+                FinalTargetCounts = new[] { 12, 260, 320, 1920 },
+                ScoringModelCoefficients = "0.2811|-0.7513|4.5007|-0.0685|-0.0877|0.7776|0.0656|-0.0423",
                 MassErrorStats = new[]
                 {
-                    new[] {2.1, 3.1},
-                    new[] {1.5, 3.3},
-                    new[] {2, 3.5},
-                    new[] {2.2, 2.6},
-                    new[] {2.2, 3.3},
-                    new[] {2.5, 2.3},
-                    new[] {2.1, 3.1},
+                    new[] {1.6, 4.2},
+                    new[] {1.3, 4.0},
+                    new[] {1.5, 4.4},
+                    new[] {1.9, 3.7},
+                    new[] {1.8, 4.4},
+                    new[] {1.8, 4.1},
+                    new[] {1.3, 4.3},
                 },
-                DiffPeptideCounts = new[] { 145, 50, 31, 53 },
-                UnpolishedProteins = 7,
+                DiffPeptideCounts = new[] { 136, 45, 28, 52 },
+                UnpolishedProteins = 8,
             };
 
             if (!IsCoverShotMode)
@@ -233,22 +233,22 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
-                TargetCounts = new[] { 4065, 32056, 34984, 209904 },
-                FinalTargetCounts = new[] { 2081, 22732, 24786, 148716 },
-                ScoringModelCoefficients = "0.2850|-0.9053|3.4232|0.8132|-0.0432|0.8881|-0.0244|-0.0709",
+                TargetCounts = new[] { 3988, 30908, 33830, 202978 },
+                FinalTargetCounts = new[] { 2037, 21924, 23974, 143842 },
+                ScoringModelCoefficients = "0.3276|-0.8806|3.7935|0.1941|-0.0792|0.7469|0.0042|-0.0647",
                 MassErrorStats = new[]
                 {
-                    new[] {2.3, 3.5},
-                    new[] {1.8, 3.5},
-                    new[] {2.4, 3.5},
-                    new[] {2.5, 3.5},
-                    new[] {2.5, 3.6},
-                    new[] {2.5, 3.5},
-                    new[] {2.3, 3.5},
+                    new[] {1.9, 4.7},
+                    new[] {1.5, 4.6},
+                    new[] {2.0, 4.8},
+                    new[] {2.1, 4.6},
+                    new[] {2.1, 4.8},
+                    new[] {2.2, 4.6},
+                    new[] {1.9, 4.8},
                 },
-                DiffPeptideCounts = new[] { 10101, 6256, 2168, 1666 },
-                UnpolishedProteins = 1236,
-                PolishedProteins = 2034,
+                DiffPeptideCounts = new[] { 10440, 6377, 2237, 1815 },
+                UnpolishedProteins = 1640,
+                PolishedProteins = 2030,
             };
 
             if (!IsCoverShotMode)
@@ -308,7 +308,7 @@ namespace TestPerf
 
             RunFunctionalTest();
 
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
+            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
         }
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
@@ -452,8 +452,6 @@ namespace TestPerf
             {
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
@@ -473,6 +471,8 @@ namespace TestPerf
                     };
                 }
                 // Verify other values shown in the tutorial
+                Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom);
+                Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
@@ -580,8 +580,8 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
             PauseForScreenShot("mProphet model form", 14);
+            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
 
@@ -1027,7 +1027,7 @@ namespace TestPerf
         {
             double mean = massErrorPane.Mean, stdDev = massErrorPane.StdDev;
             if (IsRecordMode)
-                Console.WriteLine(@"new[] {{{0:0.#}, {1:0.#}}},", mean, stdDev);  // Not L10N
+                Console.WriteLine(@"new[] {{{0:0.0}, {1:0.0}}},", mean, stdDev);  // Not L10N
             else
             {
                 Assert.AreEqual(_analysisValues.MassErrorStats[index][0], mean, 0.05);
