@@ -1944,7 +1944,7 @@ namespace pwiz.Skyline
                 try
                 {
                     IdentityPath firstAdded, nextAdd;
-                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, progressMonitor, null,
+                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, import.IrtStandard, progressMonitor, null,
                         out firstAdded, out nextAdd, out peptideGroupsNew);
                 }
                 catch (Exception x)

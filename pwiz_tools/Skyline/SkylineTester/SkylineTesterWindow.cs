@@ -190,6 +190,8 @@ namespace SkylineTester
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
+            runMode.SelectedIndex = 0;
+
             InitLanguages(formsLanguage);
             InitLanguages(tutorialsLanguage);
             EnableButtonSelectFailedTests(false); // No tests run yet
@@ -344,22 +346,31 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                foreach (var testDll in TEST_DLLS)
+                var arrayDllNames = showTutorialsOnly.Checked ? TUTORIAL_DLLS : TEST_DLLS;
+                foreach (var testDll in arrayDllNames)
                 {
                     var tests = GetTestInfos(testDll).OrderBy(test => test).ToArray();
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
-                    var childNodes = new TreeNode[tests.Length];
-                    for (int i = 0; i < childNodes.Length; i++)
-                        childNodes[i] = new TreeNode(tests[i]);
-                    skylineNode.Nodes.Add(new TreeNode(dllName, childNodes));
+                    var childNodes = new List<TreeNode>(tests.Length);
+                    foreach (var test in tests)
+                    {
+                        if (!showTutorialsOnly.Checked || test.EndsWith("Tutorial"))
+                            childNodes.Add(new TreeNode(test));
+                    }
+                    skylineNode.Nodes.Add(new TreeNode(dllName, childNodes.ToArray()));
                 }
+
+                bool tutorialsLoaded = false;
 
                 RunUI(() =>
                 {
+                    testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
+
+                    tutorialsLoaded = tutorialsTree.Nodes.Count > 0;
 
 //                    var focusNode = new TreeNode("Focus tests");
 //                    focusNode.Nodes.Add(new TreeNode("Mzml speed", new []{new TreeNode("x")}));
@@ -367,6 +378,9 @@ namespace SkylineTester
 //                    testsTree.Nodes.Add(focusNode);
 //                    focusNode.Expand();
                 });
+
+                if (tutorialsLoaded)
+                    return;
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
@@ -385,6 +399,7 @@ namespace SkylineTester
                     {
                         tutorialNodes[i] = new TreeNode(tutorialTests[i]);
                     }
+                    tutorialsTree.Nodes.Clear();
                     tutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
                     tutorialsTree.ExpandAll();
                     tutorialsTree.Nodes[0].Checked = true;
@@ -1027,8 +1042,8 @@ namespace SkylineTester
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
-                runFullQualityPass,
-                runDemoMode,
+                showTutorialsOnly,
+                runMode,
 
                 // Build
                 buildTrunk,
@@ -1452,8 +1467,7 @@ namespace SkylineTester
         public Button           RunBuild                    { get { return runBuild; } }
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
         public Button           RunForms                    { get { return runForms; } }
-        public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
-        public CheckBox         RunDemoMode                 { get { return runDemoMode; } }
+        public ComboBox         RunTestMode                 { get { return runMode; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
@@ -1463,6 +1477,7 @@ namespace SkylineTester
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
         public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
+        public CheckBox         ShowTutorialsOnly           { get { return showTutorialsOnly; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
@@ -1712,6 +1727,13 @@ namespace SkylineTester
         private void radioNightlyHandles_CheckedChanged(object sender, EventArgs e)
         {
             _tabNightly.UpdateGraph();
+        }
+
+        private void showTutorialsOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            var loader = new BackgroundWorker();
+            loader.DoWork += BackgroundLoad;
+            loader.RunWorkerAsync();
         }
 
         #endregion Control events
