@@ -1320,9 +1320,6 @@
   <data name="ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool" xml:space="preserve">
     <value>You must enter a valid title for the tool.</value>
   </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_" xml:space="preserve">
-    <value>The transition count {0} exceeds the maximum allowed for this instrument type.</value>
-  </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
@@ -3149,9 +3146,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_RemovePeak_Remove_peak_from__0__" xml:space="preserve">
     <value>Remove peak from {0}</value>
   </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type" xml:space="preserve">
-    <value>The transition count {0} exceeds the maximum allowed for this instrument type</value>
-  </data>
   <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_" xml:space="preserve">
     <value>The following peptide in the peak boundaries file was not recognized:</value>
   </data>
@@ -3693,9 +3687,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__" xml:space="preserve">
     <value>Fragment ordinal {0} may not be less than 1.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter" xml:space="preserve">
-    <value>Unexpected response {0} from Shimadzu method converter</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>Are you sure you want to continue?</value>
@@ -10607,66 +10598,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
   </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_" xml:space="preserve">
-    <value>Input string is empty.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_" xml:space="preserve">
-    <value>Input string cannot be parsed.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_" xml:space="preserve">
-    <value>Output path is not specified.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_" xml:space="preserve">
-    <value>Cannot open output file.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_" xml:space="preserve">
-    <value>Invalid parameter. Cannot create output method.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_" xml:space="preserve">
-    <value>Output file type is not supported.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_" xml:space="preserve">
-    <value>Exception raised during output serialization.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__" xml:space="preserve">
-    <value>Number of events exceed the maximum allowed by LabSolutions (1000).</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_" xml:space="preserve">
-    <value>Output method does not contain any events.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_" xml:space="preserve">
-    <value>Input events are not contiguous.</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order" xml:space="preserve">
-    <value>Input events are not in ascending order</value>
-  </data>
-  <data name="ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_" xml:space="preserve">
-    <value>Shimadzu method writer encountered an error:</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_" xml:space="preserve">
-    <value>Input string is empty.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_" xml:space="preserve">
-    <value>Input string cannot be parsed.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_" xml:space="preserve">
-    <value>Cannot open output file.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_" xml:space="preserve">
-    <value>Invalid parameter. Cannot create output method.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__" xml:space="preserve">
-    <value>Number of events exceed maximum allowed by LabSolutions (1000).</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_" xml:space="preserve">
-    <value>Input events are not contiguous.</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order" xml:space="preserve">
-    <value>Input events are not in ascending order</value>
-  </data>
-  <data name="ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_" xml:space="preserve">
-    <value>Shimadzu method converter encountered an error:</value>
-  </data>
   <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
     <value>Skyline 20.1</value>
   </data>
@@ -11537,5 +11468,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
     <value>Copy</value>
+  </data>
+  <data name="BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_" xml:space="preserve">
+    <value>Error getting database Id for score {0}</value>
   </data>
 </root>

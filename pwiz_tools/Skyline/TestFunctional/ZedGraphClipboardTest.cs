@@ -68,40 +68,51 @@ namespace pwiz.SkylineTestFunctional
             ClickContextMenuItem(graphChromatogram.GraphControl, copyMenuText);
             Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
 
+            bool canUseSystemClipboard = RunPerfTests;
             // Switch to using the system clipboard for the rest of the test so that we can test the "Copy Metafile"
             // menu item as well as testing the message when the clipboard is locked.
-            ClipboardEx.UseInternalClipboard(false);
+            // Only use the system clipboard if RunPerfTests is true, because tests using the system clipboard can be annoying.
+            if (canUseSystemClipboard)
+            {
+                ClipboardEx.UseInternalClipboard(false);
+            }
             RetryActionIfMessage(() => ClipboardHelper.SetClipboardText(graphChromatogram, "hello"));
             RunUI(() =>
             {
-                Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
+                Assert.IsTrue(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
             ClickContextMenuItem(graphChromatogram.GraphControl, copyMenuText);
             RunUI(() =>
             {
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Text));
+                Assert.IsFalse(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            ClickContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText);
-            RunUI(() =>
+            if (canUseSystemClipboard)
             {
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Text));
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
-                Assert.IsTrue(HasClipboardFormat(DataFormats.EnhancedMetafile));
-            });
+                ClickContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText);
+                RunUI(() =>
+                {
+                    Assert.IsFalse(HasClipboardFormat(DataFormats.UnicodeText));
+                    Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
+                    Assert.IsTrue(HasClipboardFormat(DataFormats.EnhancedMetafile));
+                });
+            }
             ClickContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText);
             RunUI(() =>
             {
-                Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
+                Assert.IsTrue(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMenuText));
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText));
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText));
+            if (canUseSystemClipboard)
+            {
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMenuText));
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText));
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText));
+            }
         }
 
         /// <summary>
