@@ -97,31 +97,31 @@ Extra Info: 提取色谱图 =
     每个目标的诱饵数目 = "1"
 }
 
-Undo Redo : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
-Summary   : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
+Undo Redo : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
+Summary   : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
 All Info  :
-已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
-已将“Pit01”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 所有峰的开始时间从 45.96 更改到 45.30
-已将“Pit01”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 所有峰的结束时间从 46.39 更改到 46.30
+已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
+已将“Pit01”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 所有峰的开始时间从 45.96 更改到 45.30
+已将“Pit01”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 所有峰的结束时间从 46.39 更改到 46.30
 
-Undo Redo : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
-Summary   : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
+Undo Redo : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
+Summary   : 已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
 All Info  :
-已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 的峰界限
-已将“Pit02”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 所有峰的开始时间从 45.85 更改到 45.41
-已将“Pit02”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688.3192++ 所有峰的结束时间从 46.29 更改到 46.41
+已更改 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 的峰界限
+已将“Pit02”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 所有峰的开始时间从 45.85 更改到 45.41
+已将“Pit02”中的 sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688.3192++ 所有峰的结束时间从 46.29 更改到 46.41
 
-Undo Redo : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
-Summary   : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
+Undo Redo : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
+Summary   : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
 All Info  :
-已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
-已将“Pit01”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 所有峰的开始时间从 65.36 更改到 65.36
-已将“Pit01”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 所有峰的结束时间从 66.05 更改到 66.70
+已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
+已将“Pit01”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 所有峰的开始时间从 65.36 更改到 65.36
+已将“Pit01”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 所有峰的结束时间从 66.05 更改到 66.70
 
-Undo Redo : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
-Summary   : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
+Undo Redo : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
+Summary   : 已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
 All Info  :
-已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 的峰界限
-已将“Pit02”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 所有峰的开始时间从 64.89 更改到 64.89
-已将“Pit02”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603.2922++ 所有峰的结束时间从 65.69 更改到 66.19
+已更改 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 的峰界限
+已将“Pit02”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 所有峰的开始时间从 64.89 更改到 64.89
+已将“Pit02”中的 sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603.2922++ 所有峰的结束时间从 65.69 更改到 66.19
 

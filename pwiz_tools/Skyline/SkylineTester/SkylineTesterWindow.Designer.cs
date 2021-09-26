@@ -140,7 +140,7 @@ namespace SkylineTester
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
             this.runMode = new System.Windows.Forms.ComboBox();
-            this.label20 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
             this.showTutorialsOnly = new System.Windows.Forms.CheckBox();
             this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
@@ -1223,7 +1223,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.testsGroup.Controls.Add(this.runMode);
-            this.testsGroup.Controls.Add(this.label20);
+            this.testsGroup.Controls.Add(this.label21);
             this.testsGroup.Controls.Add(this.showTutorialsOnly);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
@@ -1251,15 +1251,15 @@ namespace SkylineTester
             this.runMode.Size = new System.Drawing.Size(121, 21);
             this.runMode.TabIndex = 0;
             // 
-            // label20
+            // label21
             // 
-            this.label20.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(273, 536);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(37, 13);
-            this.label20.TabIndex = 35;
-            this.label20.Text = "Mode:";
+            this.label21.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(273, 536);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(37, 13);
+            this.label21.TabIndex = 35;
+            this.label21.Text = "Mode:";
             // 
             // showTutorialsOnly
             // 
@@ -3520,7 +3520,7 @@ namespace SkylineTester
         private Label label20;
         private CheckBox showChangedFiles;
         private ComboBox runMode;
-        private Label label20;
+        private Label label21;
         private CheckBox showTutorialsOnly;
     }
 }

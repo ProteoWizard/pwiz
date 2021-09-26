@@ -456,7 +456,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02", (41.67).ToString(CultureInfo.CurrentCulture)));
                 RunUI(() =>
                 {
-                    SkylineWindow.GraphFullScan.SetMzRange(504, 506);
+                    SkylineWindow.GraphFullScan.SetMzScale(new MzRange(504, 506));
                     SkylineWindow.GraphFullScan.Parent.Parent.Height -= 15;    // Not quite as tall to fit 3 into one page
                 });
                 PauseForScreenShot<GraphFullScan>("Full-Scan MS1 spectrum metafile (1/3)", 39);

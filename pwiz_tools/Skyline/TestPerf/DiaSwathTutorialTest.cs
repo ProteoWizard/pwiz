@@ -114,8 +114,8 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 13, 268, 288, 1728 },
-                FinalTargetCounts = new[] { 12, 268, 288, 1728 },
+                TargetCounts = new[] { 14, 279, 299, 1793 },
+                FinalTargetCounts = new[] { 13, 279, 299, 1793 },
                 ScoringModelCoefficients = "0.2924|-0.5958|4.3173|-0.3341|-0.5752|0.8511|0.0417|-0.0726",
                 MassErrorStats = new[]
                 {
@@ -201,8 +201,8 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                TargetCounts = new[] { 13, 260, 320, 1920 },
-                FinalTargetCounts = new[] { 12, 260, 320, 1920 },
+                TargetCounts = new[] { 14, 271, 331, 1985 },
+                FinalTargetCounts = new[] { 13, 271, 331, 1985 },
                 ScoringModelCoefficients = "0.2811|-0.7513|4.5007|-0.0685|-0.0877|0.7776|0.0656|-0.0423",
                 MassErrorStats = new[]
                 {

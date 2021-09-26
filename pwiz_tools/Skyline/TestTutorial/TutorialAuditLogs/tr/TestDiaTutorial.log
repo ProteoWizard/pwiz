@@ -97,31 +97,31 @@ Import FASTA =
     Decoys per target = "1"
 }
 
-Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
-Summary   : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
+Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
+Summary   : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
 All Info  :
-Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
-Changed start time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++ in "Pit01" from 45,96 to 45,30
-Changed end time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++ in "Pit01" from 46,39 to 46,30
+Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
+Changed start time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++ in "Pit01" from 45,96 to 45,30
+Changed end time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++ in "Pit01" from 46,39 to 46,30
 
-Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
-Summary   : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
+Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
+Summary   : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
 All Info  :
-Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++
-Changed start time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++ in "Pit02" from 45,85 to 45,41
-Changed end time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [64, 74] > 688,3192++ in "Pit02" from 46,29 to 46,41
+Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
+Changed start time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++ in "Pit02" from 45,85 to 45,41
+Changed end time of all peaks of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++ in "Pit02" from 46,29 to 46,41
 
-Undo Redo : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
-Summary   : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
+Undo Redo : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
+Summary   : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
 All Info  :
-Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
-Changed start time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++ in "Pit01" from 65,36 to 65,36
-Changed end time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++ in "Pit01" from 66,05 to 66,70
+Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
+Changed start time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++ in "Pit01" from 65,36 to 65,36
+Changed end time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++ in "Pit01" from 66,05 to 66,70
 
-Undo Redo : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
-Summary   : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
+Undo Redo : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
+Summary   : Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
 All Info  :
-Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++
-Changed start time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++ in "Pit02" from 64,89 to 64,89
-Changed end time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [184, 192] > 603,2922++ in "Pit02" from 65,69 to 66,19
+Changed peak bounds of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++
+Changed start time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++ in "Pit02" from 64,89 to 64,89
+Changed end time of all peaks of sp|P01242|SOM2_HUMAN > K.NYGLLYCFR.K [185, 193] > 603,2922++ in "Pit02" from 65,69 to 66,19
 
