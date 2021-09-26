@@ -1084,7 +1084,6 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            var control = menuStrip.SourceControl.Parent.Parent as IMzScaleCopyable;
             if (control?.ControlType == SpectrumControlType.LibraryMatch)
             {
                 scoreContextMenuItem.Checked = set.ShowLibraryScores;

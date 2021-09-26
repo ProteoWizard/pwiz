@@ -1195,7 +1195,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
                 menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
-                menuStrip.Items.Insert(1, showIonTypesRanksToolStripMenuItem);
+                menuStrip.Items.Insert(1, showPeakAnnotationsContextMenuItem);
                 menuStrip.Items.Insert(2, toolStripSeparator1);
 
                 var currentTransition =
@@ -1315,13 +1315,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private void toolStripButtonShowAnnotations_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Checked;
-            showIonTypesRanksToolStripMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
+            showPeakAnnotationsContextMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }
 
         private void showIonTypesRanksToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            _showIonSeriesAnnotations = showIonTypesRanksToolStripMenuItem.Checked;
+            _showIonSeriesAnnotations = showPeakAnnotationsContextMenuItem.Checked;
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }
