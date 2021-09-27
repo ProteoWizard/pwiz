@@ -81,7 +81,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public static NormalizeOption AreaNormalizeOption
         {
             get { return Settings.Default.AreaNormalizeOption; }
-            set { Settings.Default.AreaNormalizeOption = value; }
         }
 
         public static NormalizeOption AreaCVNormalizeOption
@@ -95,10 +94,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 return option;
-            }
-            set
-            {
-                AreaNormalizeOption = value;
             }
         }
 
