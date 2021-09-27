@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Model
         private int _countPeptides;
         private int _countIons;
         readonly ModificationMatcher _modMatcher;
+        private readonly TargetMap<bool> _irtTargets;
 
         public FastaImporter(SrmDocument document, bool peptideList)
         {
@@ -63,6 +64,13 @@ namespace pwiz.Skyline.Model
             : this(document, true)
         {
             _modMatcher = modMatcher;
+        }
+
+        public FastaImporter(SrmDocument document, IrtStandard standard)
+            : this(document, false)
+        {
+            _irtTargets = new TargetMap<bool>(standard?.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)) ??
+                                              Array.Empty<KeyValuePair<Target, bool>>());
         }
 
         public SrmDocument Document { get; private set; }
@@ -135,8 +143,8 @@ namespace pwiz.Skyline.Model
                             AddPeptideGroup(peptideGroupsNew, dictGroupsNew, set, seqBuilder);
 
                         seqBuilder = _modMatcher == null
-                            ? new PeptideGroupBuilder(line, PeptideList, Document.Settings, null)
-                            : new PeptideGroupBuilder(line, _modMatcher, Document.Settings, null);
+                            ? new PeptideGroupBuilder(line, PeptideList, Document.Settings, null, _irtTargets)
+                            : new PeptideGroupBuilder(line, _modMatcher, Document.Settings, null, _irtTargets);
                     }
                     catch (Exception x)
                     {
@@ -464,7 +472,7 @@ namespace pwiz.Skyline.Model
 
         private const int PERCENT_READER = 95;
 
-        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false)
+        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
@@ -482,7 +490,8 @@ namespace pwiz.Skyline.Model
             if (InputType == SrmDocument.DOCUMENT_TYPE.none)
             {
                 InputType =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(lines, Settings, 
+                       defaultDocumentType) ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
             }
             if (InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
@@ -764,13 +773,13 @@ namespace pwiz.Skyline.Model
                 }
                 FastaSequence fastaSeq;
                 if (name != null && dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
-                    seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings, sourceFile);
+                    seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings, sourceFile, null);
                 else
                 {
                     string safeName = name != null ?
                         Helpers.GetUniqueName(name, dictNameSeq.Keys) :
                         Document.GetPeptideGroupId(true);
-                    seqBuilder = new PeptideGroupBuilder(@">>" + safeName, true, Document.Settings, sourceFile) {BaseName = name};
+                    seqBuilder = new PeptideGroupBuilder(@">>" + safeName, true, Document.Settings, sourceFile, null) {BaseName = name};
                 }
             }
             try
@@ -2679,6 +2688,10 @@ namespace pwiz.Skyline.Model
         private ExplicitRetentionTimeInfo _activeExplicitRetentionTimeInfo;
         private string _activeModifiedSequence;
         private readonly string _sourceFile;
+
+        private readonly TargetMap<bool> _irtTargets;
+        private const int IRT_MIN_ION_COUNT = 3;
+
         // Order is important to making the variable modification choice deterministic
         // when more than one potential set of variable modifications work to explain
         // the contents of the active peptide.
@@ -2696,7 +2709,7 @@ namespace pwiz.Skyline.Model
         private readonly ModificationMatcher _modMatcher;
         private bool _autoManageChildren;
 
-        public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings, string sourceFile)
+        public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings, string sourceFile, TargetMap<bool> irtTargets)
         {
             _activeFastaSeq = fastaSequence;
             _autoManageChildren = true;
@@ -2718,10 +2731,11 @@ namespace pwiz.Skyline.Model
             _peptideGroupErrorInfo = new List<TransitionImportErrorInfo>();
             _activeModifiedSequence = null;
             _sourceFile = sourceFile;
+            _irtTargets = irtTargets;
         }
 
-        public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings, string sourceFile)
-            : this(null, settings, sourceFile)
+        public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings, string sourceFile, TargetMap<bool> irtTargets)
+            : this(null, settings, sourceFile, irtTargets)
         {
             int start = (line.Length > 0 && line[0] == '>' ? 1 : 0);
             // If there is a second >, then this is a custom name, and not
@@ -2761,8 +2775,8 @@ namespace pwiz.Skyline.Model
             PeptideList = peptideList;
         }
 
-        public PeptideGroupBuilder(string line, ModificationMatcher modMatcher, SrmSettings settings, string sourceFile)
-            : this(line, true, settings, sourceFile)
+        public PeptideGroupBuilder(string line, ModificationMatcher modMatcher, SrmSettings settings, string sourceFile, TargetMap<bool> irtTargets)
+            : this(line, true, settings, sourceFile, irtTargets)
         {
             _modMatcher = modMatcher;
         }
@@ -3232,14 +3246,13 @@ namespace pwiz.Skyline.Model
                 nodePepGroup = (PeptideGroupDocNode) nodePepGroup.ChangeAutoManageChildren(false);
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
-            nodePepGroup = nodePepGroup.ChangeSettings(_settings, diff);
+            nodePepGroup = EnsureIrts(nodePepGroup.ChangeSettings(_settings, diff), diff);
 
             List<DocNode> newChildren = new List<DocNode>(nodePepGroup.Children.Count);
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
                 var nodePepAdd = nodePep;
-                Adduct charge;
-                if (_charges.TryGetValue(nodePep.Id.GlobalIndex, out charge))
+                if (_charges.TryGetValue(nodePep.Id.GlobalIndex, out var charge))
                 {
                     var settingsCharge = _settings.ChangeTransitionFilter(f => f.ChangePeptidePrecursorCharges(new[] {charge}));
                     nodePepAdd = (PeptideDocNode) nodePep.ChangeSettings(settingsCharge, diff)
@@ -3248,6 +3261,23 @@ namespace pwiz.Skyline.Model
                 newChildren.Add(nodePepAdd);
             }
             return (PeptideGroupDocNode) nodePepGroup.ChangeChildren(newChildren);
+        }
+
+        private PeptideGroupDocNode EnsureIrts(PeptideGroupDocNode nodePepGroup, SrmSettingsDiff diff)
+        {
+            if (_irtTargets == null || _settings.TransitionSettings.Libraries.MinIonCount <= IRT_MIN_ION_COUNT ||
+                nodePepGroup.PeptideCount == 0 || nodePepGroup.PeptideCount == _irtTargets.Count ||
+                nodePepGroup.Peptides.Any(nodePep => !_irtTargets.ContainsKey(nodePep.ModifiedTarget)))
+            {
+                return nodePepGroup;
+            }
+
+            // Check if lowering the minimum ion count results in more peptides
+            var nodePepGroupPermissive =
+                nodePepGroup.ChangeSettings(_settings.ChangeTransitionLibraries(libs => libs.ChangeMinIonCount(IRT_MIN_ION_COUNT)), diff);
+            return nodePepGroupPermissive.PeptideCount > nodePepGroup.PeptideCount
+                ? (PeptideGroupDocNode)nodePepGroupPermissive.ChangeAutoManageChildren(false)
+                : nodePepGroup;
         }
     }
 
