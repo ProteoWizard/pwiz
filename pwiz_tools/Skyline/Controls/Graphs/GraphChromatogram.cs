@@ -598,7 +598,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (toolBar.Visible)
                     iSelected = comboFiles.SelectedIndex;
 
-                return _arrayChromInfo[iSelected];
+                return _arrayChromInfo?[iSelected];
             }
         }
 

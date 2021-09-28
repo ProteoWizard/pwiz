@@ -1,0 +1,20 @@
+[VERSION#1]
+
+[DATE]
+Acquired Date=21-Dec-2020
+Acquired Time=03:25:08
+[INSTRUMENT]
+Quad Resolution=15.0
+Collision Cell Pressure=3.0
+Collision Cell Gradient=4.0
+Ion Energy=0.2
+Post Filter=2
+Resolution Mode=Resolution
+Pusher Period=85
+[SONAR#1]
+Scan Time=0.1
+Start M/Z=400.0
+End M/Z=1000.0
+Quadrupole Window=20.0
+Calibration=400,-1.1422,2.5378,7.1251
+Calibration=1000,207.3578,211.2178,216.0451
