@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -610,6 +611,7 @@ namespace pwiz.Skyline.Model
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
+            SrmDocument docNew;
             var loadMonitor = new LoadMonitor(this, container, container.Document);
 
             IPeakScoringModel scoringModel = new MProphetPeakScoringModel(
@@ -619,10 +621,20 @@ namespace pwiz.Skyline.Model
             var targetDecoyGenerator = new TargetDecoyGenerator(docCurrent, scoringModel, this, loadMonitor);
 
             // Get scores for target and decoy groups.
-            List<IList<float[]>> targetTransitionGroups, decoyTransitionGroups;
-            targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
+            targetDecoyGenerator.GetTransitionGroups(out var targetTransitionGroups, out var decoyTransitionGroups);
             if (!decoyTransitionGroups.Any())
-                throw new InvalidDataException();
+            {
+                // user removed the decoys, show error and unset the AutoTrain flag
+                UpdateProgress(new ProgressStatus().ChangeErrorException(new InvalidOperationException(TextUtil.LineSeparate(
+                    Resources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_mProphet_model_will_not_be_automatically_trained_,
+                    Resources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_an_mProphet_model_manually_))));
+                do
+                {
+                    docCurrent = container.Document;
+                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i => i.ChangeAutoTrain(false)));
+                } while (!CompleteProcessing(container, docNew, docCurrent));
+                return true;
+            }
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
@@ -637,7 +649,6 @@ namespace pwiz.Skyline.Model
             // Train the model.
             scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, targetDecoyGenerator, initialParams, null, null, scoringModel.UsesSecondBest, true, loadMonitor);
 
-            SrmDocument docNew;
             do
             {
                 docCurrent = container.Document;
