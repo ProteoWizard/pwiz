@@ -2059,6 +2059,7 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
             case MS_glutamyl_endopeptidase: cut="E"; nocut=""; sense="C"; break;
             case MS_leukocyte_elastase:     cut="ALIV"; nocut="P"; sense="C"; break;
             case MS_2_iodobenzoate:         cut="W"; nocut=""; sense="C"; break;
+            case MS_LysargiNase:            cut="KR"; nocut=""; sense="N"; break;
             case MS_unspecific_cleavage:    cut="X"; nocut=""; sense="C"; break;
             case MS_no_cleavage:            cut=""; nocut=""; sense="C"; break;
             default:
