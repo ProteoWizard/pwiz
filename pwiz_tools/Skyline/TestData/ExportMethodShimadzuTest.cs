@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestData
             var exporter = new ShimadzuMethodExporter(doc) {RunLength = 30};
             exporter.ExportMethod(outPath, templatePath, null);
 
-            Assert.AreEqual(540672, new FileInfo(outPath).Length);
+            Assert.AreEqual(569344, new FileInfo(outPath).Length);
         }
     }
 }

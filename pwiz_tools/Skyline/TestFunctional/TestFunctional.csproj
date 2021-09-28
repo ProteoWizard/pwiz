@@ -165,6 +165,7 @@
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
@@ -192,10 +193,12 @@
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
+    <Compile Include="PrmAcquisitionMethodTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
     <Compile Include="QuantitativePeakAreaTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
+    <Compile Include="ReimportResultsTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SettingsChangeReimportTest.cs" />
@@ -349,6 +352,7 @@
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
     <Compile Include="SummaryGraphVisibilityTest.cs" />
+    <Compile Include="SureQuantAcquisitionMethodSettingTest.cs" />
     <Compile Include="SureQuantScanDescriptionTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
@@ -530,6 +534,7 @@
     <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
+    <None Include="ReimportResultsTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameProteinsTest.zip" />
@@ -572,6 +577,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

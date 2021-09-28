@@ -146,15 +146,7 @@ namespace pwiz.Skyline.Menus
             sbData.Append(stringWriter);
             dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
 
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetDataObject(dataObj);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetCopyErrorMessage());
-            }
+            ClipboardHelper.SetClipboardData(SkylineWindow, dataObj, false);
         }
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
@@ -392,7 +384,7 @@ namespace pwiz.Skyline.Menus
             else
             {
                 var inputType =
-                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings)
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, Program.ModeUI )
                         ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
                 
                 // Perhaps it's a small molecule list with headers

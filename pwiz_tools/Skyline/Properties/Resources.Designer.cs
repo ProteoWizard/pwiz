@@ -2379,6 +2379,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error getting database Id for score {0}.
+        /// </summary>
+        public static string BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_ {
+            get {
+                return ResourceManager.GetString("BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Libraries must be fully loaded before they can be minimized..
         /// </summary>
         public static string BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed {
@@ -5775,7 +5784,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Failed to load {0}.
+        ///   Looks up a localized string similar to Error: Failed to load {0}..
         /// </summary>
         public static string CommandLine_ImportSkyr_ {
             get {
@@ -7722,29 +7731,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Copy.
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_AddToContextMenu_Copy {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_AddToContextMenu_Copy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metafile image copied to clipboard.
         /// </summary>
         public static string CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard {
             get {
                 return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to copy metafile image to the clipboard..
-        /// </summary>
-        public static string CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard {
-            get {
-                return ResourceManager.GetString("CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard", resourceCulture);
             }
         }
         
@@ -14709,6 +14700,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphFullScan_LoadScan_Spectrum_unavailable {
             get {
                 return ResourceManager.GetString("GraphFullScan_LoadScan_Spectrum_unavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}{1} ppm.
+        /// </summary>
+        public static string GraphSpectrum_MassErrorFormat_ppm {
+            get {
+                return ResourceManager.GetString("GraphSpectrum_MassErrorFormat_ppm", resourceCulture);
             }
         }
         
@@ -26481,15 +26481,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open output file..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error copying template file {0} to destination {1}..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__ {
@@ -26500,220 +26491,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception raised during output serialization..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not contiguous..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not in ascending order.
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string cannot be parsed..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string is empty..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid parameter. Cannot create output method..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_metho" +
-                        "d_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number of events exceed the maximum allowed by LabSolutions (1000)..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_b" +
-                        "y_LabSolutions__1000__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output file type is not supported..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output method does not contain any events..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output path is not specified..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shimadzu method writer encountered an error:.
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_" +
-                        "allowed_for_this_instrument_type_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method writer..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_ {
             get {
                 return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_" +
                         "writer_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot open output file..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not contiguous..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not in ascending order.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending" +
-                        "_order", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string cannot be parsed..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string is empty..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid parameter. Cannot create output method..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_" +
-                        "output_method_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number of events exceed maximum allowed by LabSolutions (1000)..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_a" +
-                        "llowed_by_LabSolutions__1000__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shimadzu method converter encountered an error:.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encount" +
-                        "ered_an_error_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_" +
-                        "the_maximum_allowed_for_this_instrument_type", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method converter.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shim" +
-                        "adzu_method_converter", resourceCulture);
             }
         }
         
@@ -27010,6 +26793,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_V20_2_Skyline_20_2 {
             get {
                 return ResourceManager.GetString("SkylineVersion_V20_2_Skyline_20_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 21.1.
+        /// </summary>
+        public static string SkylineVersion_V21_1_Skyline_21_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V21_1_Skyline_21_1", resourceCulture);
             }
         }
         
@@ -32545,12 +32337,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An isolation window width value is not allowed in Targeted mode..
+        ///   Looks up a localized string similar to An isolation window width value is not allowed in {0} mode..
         /// </summary>
-        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode {
+        public static string TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode {
             get {
-                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_T" +
-                        "argeted_mode", resourceCulture);
+                return ResourceManager.GetString("TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__" +
+                        "0___mode", resourceCulture);
             }
         }
         
@@ -33123,6 +32915,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_sepa" +
                         "rated_list_of_integers_describing_charge_states_between__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The SureQuant acquisition method requires &quot;Triggered Chromatogram Extraction&quot;. Unchecking this option will switch to the PRM acquisition method. Do you want to continue?.
+        /// </summary>
+        public static string TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisi" +
+                        "tion_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option" +
+                        "_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -34177,7 +33980,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by [rest of string was truncated]&quot;;.
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities mea [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError {
             get {
@@ -34194,7 +33997,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by  [rest of string was truncated]&quot;;.
+        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities meas [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {
@@ -35259,6 +35062,15 @@ namespace pwiz.Skyline.Properties {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string ZedGraphClipboard_CreateCopyMenuItems_Copy {
+            get {
+                return ResourceManager.GetString("ZedGraphClipboard_CreateCopyMenuItems_Copy", resourceCulture);
             }
         }
         
