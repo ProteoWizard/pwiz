@@ -2379,6 +2379,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error getting database Id for score {0}.
+        /// </summary>
+        public static string BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_ {
+            get {
+                return ResourceManager.GetString("BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Libraries must be fully loaded before they can be minimized..
         /// </summary>
         public static string BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed {
@@ -26472,15 +26481,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot open output file..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error copying template file {0} to destination {1}..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__ {
@@ -26491,220 +26491,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception raised during output serialization..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not contiguous..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not in ascending order.
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string cannot be parsed..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string is empty..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid parameter. Cannot create output method..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_metho" +
-                        "d_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number of events exceed the maximum allowed by LabSolutions (1000)..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_b" +
-                        "y_LabSolutions__1000__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output file type is not supported..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output method does not contain any events..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output path is not specified..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shimadzu method writer encountered an error:.
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type..
-        /// </summary>
-        public static string ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_ {
-            get {
-                return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_" +
-                        "allowed_for_this_instrument_type_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method writer..
         /// </summary>
         public static string ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_ {
             get {
                 return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_" +
                         "writer_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot open output file..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not contiguous..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input events are not in ascending order.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending" +
-                        "_order", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string cannot be parsed..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Input string is empty..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid parameter. Cannot create output method..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_" +
-                        "output_method_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number of events exceed maximum allowed by LabSolutions (1000)..
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_a" +
-                        "llowed_by_LabSolutions__1000__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shimadzu method converter encountered an error:.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_ {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encount" +
-                        "ered_an_error_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The transition count {0} exceeds the maximum allowed for this instrument type.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_" +
-                        "the_maximum_allowed_for_this_instrument_type", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unexpected response {0} from Shimadzu method converter.
-        /// </summary>
-        public static string ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter {
-            get {
-                return ResourceManager.GetString("ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shim" +
-                        "adzu_method_converter", resourceCulture);
             }
         }
         
@@ -27001,6 +26793,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_V20_2_Skyline_20_2 {
             get {
                 return ResourceManager.GetString("SkylineVersion_V20_2_Skyline_20_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 21.1.
+        /// </summary>
+        public static string SkylineVersion_V21_1_Skyline_21_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V21_1_Skyline_21_1", resourceCulture);
             }
         }
         

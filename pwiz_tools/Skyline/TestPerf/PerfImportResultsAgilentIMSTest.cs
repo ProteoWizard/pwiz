@@ -151,7 +151,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var chromCachedFile = new ChromCachedFile(new MsDataFilePath(chromFileInfo.FilePath.GetFileName()), 0,
                 new DateTime(0), chromFileInfo.RunStartTime, (float) chromFileInfo.MaxRetentionTime,
                 (float) chromFileInfo.MaxIntensity, chromFileInfo.IonMobilityUnits, null, null, chromFileInfo.InstrumentInfoList);
-            return chromFileInfo.ChangeInfo(chromCachedFile);
+            return chromFileInfo.ChangeInfo(chromCachedFile).ChangeImportTime(null);
         }
     }
 }
