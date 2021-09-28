@@ -29,10 +29,11 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ChromatogramCache : Immutable, IDisposable
+    public sealed class ChromatogramCache : Immutable, IDisposable, IChromDataReader
     {
         public const CacheFormatVersion FORMAT_VERSION_CACHE_11 = CacheFormatVersion.Eleven; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         public const CacheFormatVersion FORMAT_VERSION_CACHE_10 = CacheFormatVersion.Ten; // Introduces waters lockmass correction in MSDataFileUri syntax
@@ -289,8 +290,7 @@ namespace pwiz.Skyline.Model.Results
                                              _textIdBytes,
                                              _cachedFiles,
                                              _chromTransitions,
-                                             _chromatogramPeaks,
-                                             _scores);
+                                             this);
         }
 
         public int Count
@@ -1553,6 +1553,74 @@ namespace pwiz.Skyline.Model.Results
             byte[] result = new byte[textIdLength];
             Array.Copy(_textIdBytes, textIdOffset, result, 0, textIdLength);
             return result;
+        }
+
+        public byte[] ReadTimeIntensitiesBytes(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            Stream stream = ReadStream.Stream;
+            byte[] pointsCompressed = new byte[chromGroupHeaderInfo.CompressedSize];
+            lock (stream)
+            {
+                try
+                {
+                    // Seek to stored location
+                    stream.Seek(chromGroupHeaderInfo.LocationPoints, SeekOrigin.Begin);
+
+                    // Single read to get all the points
+                    if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
+                        throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
+                }
+                catch (Exception)
+                {
+                    // If an exception is thrown, close the stream in case the failure is something
+                    // like a network failure that can be remedied by re-opening the stream.
+                    ReadStream.CloseStream();
+                    throw;
+                }
+            }
+            return pointsCompressed;
+        }
+
+        public TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            var compressedBytes = ReadTimeIntensitiesBytes(chromGroupHeaderInfo);
+            int uncompressedSize = chromGroupHeaderInfo.UncompressedSize;
+            if (uncompressedSize < 0) // Before version 11
+            {
+                int numPoints = chromGroupHeaderInfo.NumPoints;
+                int numTrans = chromGroupHeaderInfo.NumTransitions;
+                bool hasErrors = chromGroupHeaderInfo.HasMassErrors;
+                bool hasMs1ScanIds = chromGroupHeaderInfo.HasMs1ScanIds;
+                bool hasFragmentScanIds = chromGroupHeaderInfo.HasFragmentScanIds;
+                bool hasSimScanIds = chromGroupHeaderInfo.HasSimScanIds;
+
+                uncompressedSize = GetChromatogramsByteCount(numTrans, numPoints, hasErrors, hasMs1ScanIds,
+                    hasFragmentScanIds, hasSimScanIds);
+            }
+            var uncompressedBytes = compressedBytes.Uncompress(uncompressedSize);
+            if (chromGroupHeaderInfo.HasRawChromatograms)
+            {
+                return RawTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes));
+            }
+            else
+            {
+                var chromTransitions = Enumerable.Range(chromGroupHeaderInfo.StartTransitionIndex, chromGroupHeaderInfo.NumTransitions)
+                    .Select(i => _chromTransitions[i]).ToArray();
+                return InterpolatedTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes),
+                    chromGroupHeaderInfo, chromTransitions);
+            }
+        }
+
+        public IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            return ReadOnlyList.Create(chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions,
+                i => _chromatogramPeaks[chromGroupHeaderInfo.StartPeakIndex + i]);
+        }
+
+        public IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            return ReadOnlyList.Create(chromGroupHeaderInfo.NumPeaks * _scoreTypeIndices.Count,
+                i => _scores[i + chromGroupHeaderInfo.StartScoreIndex]);
         }
     }
 

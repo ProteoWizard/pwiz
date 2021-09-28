@@ -42,24 +42,6 @@ namespace pwiz.Skyline.Model.Results
     [StructLayout(LayoutKind.Sequential, Pack=4)]
     public struct ChromGroupHeaderInfo4
     {
-        public ChromGroupHeaderInfo4(float precursor, int fileIndex, int numTransitions, int startTransitionIndex,
-                int numPeaks, int startPeakIndex, int maxPeakIndex,
-                int numPoints, int compressedSize, long location)
-            : this()
-        {
-            Precursor = precursor;
-            FileIndex = fileIndex;
-            NumTransitions = numTransitions;
-            StartTransitionIndex = startTransitionIndex;
-            NumPeaks = numPeaks;
-            StartPeakIndex = startPeakIndex;
-            MaxPeakIndex = maxPeakIndex;
-            NumPoints = numPoints;
-            CompressedSize = compressedSize;
-            Align = 0;
-            LocationPoints = location;
-        }
-
         public ChromGroupHeaderInfo4(ChromGroupHeaderInfo header) : this()
         {
             Precursor = (float) header.Precursor;
@@ -2239,32 +2221,26 @@ namespace pwiz.Skyline.Model.Results
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
-        protected readonly IReadOnlyList<ChromPeak> _allPeaks;
-        protected readonly IReadOnlyList<float> _allScores;
+        protected readonly IChromDataReader _chromDataReader;
+        protected IList<ChromPeak> _chromPeaks;
+        protected IList<float> _scores;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
-                                     IReadOnlyList<ChromPeak> allPeaks,
-                                     IReadOnlyList<float> allScores)
+                                     IChromDataReader chromDataReader)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
             _textIdBytes = textIdBytes;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
-            _allPeaks = allPeaks;
-            _allScores = allScores;
+            _chromDataReader = chromDataReader;
         }
 
         protected ChromatogramGroupInfo()
-        {
-        }
-
-        protected ChromatogramGroupInfo(ChromGroupHeaderInfo header, ChromatogramGroupInfo copyFrom) 
-            : this(header, copyFrom._scoreTypeIndices, copyFrom._textIdBytes, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores)
         {
         }
 
@@ -2298,12 +2274,42 @@ namespace pwiz.Skyline.Model.Results
             return _scoreTypeIndices.ContainsKey(scoreType);
         }
 
+        protected IList<float> ReadScores()
+        {
+            if (_scores == null)
+            {
+                _scores = _chromDataReader.ReadScores(Header);
+            }
+
+            return _scores;
+        }
+
+        protected TimeIntensitiesGroup ReadTimeIntensities()
+        {
+            if (TimeIntensitiesGroup == null)
+            {
+                TimeIntensitiesGroup = _chromDataReader.ReadTimeIntensities(Header);
+            }
+
+            return TimeIntensitiesGroup;
+        }
+
+        protected IList<ChromPeak> ReadPeaks()
+        {
+            if (_chromPeaks == null)
+            {
+                _chromPeaks = _chromDataReader.ReadPeaks(Header);
+            }
+
+            return _chromPeaks;
+        }
+
         public float GetScore(Type scoreType, int peakIndex)
         {
             int scoreIndex;
             if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
                 return float.NaN;
-            return _allScores[_groupHeaderInfo.StartScoreIndex + peakIndex*_scoreTypeIndices.Count + scoreIndex];
+            return ReadScores()[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets
@@ -2319,10 +2325,11 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromPeak> GetPeaks(int transitionIndex)
         {
-            int startPeak = _groupHeaderInfo.StartPeakIndex + (transitionIndex * _groupHeaderInfo.NumPeaks);
+            var peaks = ReadPeaks();
+            int startPeak = transitionIndex * _groupHeaderInfo.NumPeaks;
             int endPeak = startPeak + _groupHeaderInfo.NumPeaks;
             for (int i = startPeak; i < endPeak; i++)
-                yield return _allPeaks[i];
+                yield return peaks[i];
         }
 
         public ChromatogramInfo GetTransitionInfo(int index)
@@ -2478,7 +2485,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak GetTransitionPeak(int transitionIndex, int peakIndex)
         {
-            return _allPeaks[_groupHeaderInfo.StartPeakIndex + transitionIndex*_groupHeaderInfo.NumPeaks + peakIndex];
+            return ReadPeaks()[transitionIndex*_groupHeaderInfo.NumPeaks + peakIndex];
         }
 
         // ReSharper disable SuggestBaseTypeForParameter

@@ -1410,15 +1410,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits); 
-            var groupInfo = new ChromatogramGroupInfo(header,
-                    new Dictionary<Type, int>(),
-                    new byte[0],
-                    new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(ionMobilityFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
-                    peaks,
-                    null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+            var chromDataReader = new StaticChromDataReader(TimeIntensitiesGroup.Singleton(timeIntensities), peaks, Array.Empty<float>());
 
+            var groupInfo = new ChromatogramGroupInfo(header,
+                new Dictionary<Type, int>(),
+                new byte[0],
+                new ChromCachedFile[0],
+                new[]
+                {
+                    new ChromTransition(chromData.Mz, 0,
+                        (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
+                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0), ChromSource.unknown),
+                }, chromDataReader);
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
     }
