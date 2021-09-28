@@ -229,23 +229,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         result->defaultArrayLength = 0;
     }
 
-    float minMZ, maxMZ;
-    if (isMS && ie.block >= 0 && hasSonarFunctions())
-    {
-        if (config_.combineIonMobilitySpectra)
-        {
-            rawdata_->Info.GetPrecursorMassRange(ie.function, minMZ, maxMZ); // Get the overall quadrupole filter range
-        }
-        else
-        {
-            rawdata_->Info.GetPrecursorMassRange(ie.function, ie.scan, minMZ, maxMZ); // Get the quadrupole filter range this spectrum
-        }
-    }
-    else
+    float minMZ = 0, maxMZ = 0;
+    if (isMS)
     {
         rawdata_->Info.GetAcquisitionMassRange(ie.function, minMZ, maxMZ);
+        scan.scanWindows.push_back(ScanWindow(minMZ, maxMZ, xUnit));
+
+        if (!config_.combineIonMobilitySpectra && hasSonarFunctions())
+        {
+            float minQuadMz, maxQuadMz;
+            rawdata_->Info.GetPrecursorMassRange(ie.function, ie.scan, minQuadMz, maxQuadMz); // Get the quadrupole filter range this spectrum
+            scan.userParams.emplace_back("scanning quadrupole position lower bound", toString(minQuadMz), "xsd:float", MS_m_z);
+            scan.userParams.emplace_back("scanning quadrupole position upper bound", toString(maxQuadMz), "xsd:float", MS_m_z);
+        }
     }
-    scan.scanWindows.push_back(ScanWindow(minMZ, maxMZ, xUnit));
 
     if (detailLevel < DetailLevel_FastMetadata)
         return result;
