@@ -123,21 +123,21 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if ((runOption == RunBatchOptions.ALL || runOption == RunBatchOptions.DOWNLOAD_DATA) 
-                && Config.MainSettings.WillDownloadData)
+            // Download necessary files
+            if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY && Config.MainSettings.WillDownloadData)
             {
                 if (Config.MainSettings.Template.PanoramaFile != null)
                     DownloadPanoramaFile(serverFiles, Config.MainSettings.Template.PanoramaFile);
                 await DownloadData(serverFiles);
-                if(Config.MainSettings.AnnotationsDownload != null)
+                if (Config.MainSettings.AnnotationsDownload != null)
                     DownloadPanoramaFile(serverFiles, Config.MainSettings.AnnotationsDownload);
-                if (Config.ReportSettings.WillDownloadData)
+            }
+            if (Config.ReportSettings.WillDownloadData)
+            {
+                foreach (var report in Config.ReportSettings.Reports)
                 {
-                    foreach (var report in Config.ReportSettings.Reports)
-                    {
-                        foreach (var remoteRScript in report.RScriptServers.Values)
-                            DownloadPanoramaFile(serverFiles, remoteRScript);
-                    }
+                    foreach (var remoteRScript in report.RScriptServers.Values)
+                        DownloadPanoramaFile(serverFiles, remoteRScript);
                 }
             }
             

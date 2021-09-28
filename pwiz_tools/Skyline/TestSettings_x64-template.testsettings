@@ -28,6 +28,10 @@
     <DeploymentItem filename="Method\Bruker\BdalRetentionTimeMassList.dll" outputDirectory="Method\Bruker" />
     <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.xml" outputDirectory="Method\Bruker" />
     <DeploymentItem filename="Method\Bruker\BDal.Submethod.Wrapper.dll" outputDirectory="Method\Bruker" />
+    <DeploymentItem filename="Method\Shimadzu\BuildShimadzuMethod.exe" outputDirectory="Method\Shimadzu" />
+    <DeploymentItem filename="Method\Shimadzu\MethodConverter.dll" outputDirectory="Method\Shimadzu" />
+    <DeploymentItem filename="Method\Shimadzu\MethodWriter.dll" outputDirectory="Method\Shimadzu" />
+    <DeploymentItem filename="Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" outputDirectory="Method\Shimadzu" />
     <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
     <!-- BiblioSpec library building -->
     <DeploymentItem filename="BlibBuild.exe" />
@@ -54,7 +58,9 @@
 
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
-    <Timeouts runTimeout="10800000" testTimeout="480000" />
+    <!-- MSTest timeouts interfere with Code Coverage test runs, which can be quite slow.
+         We have our own hang detection for Nightly test runs so we don't really need this anyway.  -->
+    <Timeouts runTimeout="0" testTimeout="0" />
     <TestTypeSpecific>
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>

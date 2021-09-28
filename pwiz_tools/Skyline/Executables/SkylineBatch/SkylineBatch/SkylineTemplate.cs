@@ -332,6 +332,14 @@ namespace SkylineBatch
             return new PanoramaFile(server, downloadFolder, fileName);
         }
 
+        public new static PanoramaFile ReadXmlVersion_20_2(XmlReader reader)
+        {
+            if (!reader.ReadToDescendant("panorama_file")) return null;
+            var downloadFolder = reader.GetAttribute(OLD_XML_TAGS.DownloadFolder);
+            var fileName = reader.GetAttribute(OLD_XML_TAGS.FileName);
+            var server = Server.ReadXmlVersion_20_2(reader);
+            return new PanoramaFile(server, downloadFolder, fileName);
+        }
 
         protected bool Equals(PanoramaFile other)
         {

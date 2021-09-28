@@ -45,7 +45,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class PerfImportBrukerPasefMascotTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPasefMascotImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE

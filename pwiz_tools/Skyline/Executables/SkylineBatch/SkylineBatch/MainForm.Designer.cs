@@ -65,6 +65,8 @@
             this.btnOpenTemplate = new System.Windows.Forms.ToolStripButton();
             this.btnOpenResults = new System.Windows.Forms.ToolStripButton();
             this.btnOpenAnalysis = new System.Windows.Forms.ToolStripButton();
+            this.btnUndo = new System.Windows.Forms.ToolStripButton();
+            this.btnRedo = new System.Windows.Forms.ToolStripButton();
             this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
@@ -162,6 +164,7 @@
             this.tabLog.Controls.Add(this.textBoxLog);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
+            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             this.tabLog.Leave += new System.EventHandler(this.tabLog_Leave);
             // 
             // label1
@@ -293,7 +296,9 @@
             this.btnDelete,
             this.btnOpenTemplate,
             this.btnOpenResults,
-            this.btnOpenAnalysis});
+            this.btnOpenAnalysis,
+            this.btnUndo,
+            this.btnRedo});
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -345,6 +350,22 @@
             this.btnOpenAnalysis.Name = "btnOpenAnalysis";
             this.btnOpenAnalysis.Click += new System.EventHandler(this.btnOpenAnalysis_Click);
             // 
+            // btnUndo
+            // 
+            this.btnUndo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnUndo, "btnUndo");
+            this.btnUndo.Image = global::SkylineBatch.Properties.Resources.Edit_Undo;
+            this.btnUndo.Name = "btnUndo";
+            this.btnUndo.Click += new System.EventHandler(this.btnUndo_Click);
+            // 
+            // btnRedo
+            // 
+            this.btnRedo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnRedo, "btnRedo");
+            this.btnRedo.Image = global::SkylineBatch.Properties.Resources.Edit_Redo;
+            this.btnRedo.Name = "btnRedo";
+            this.btnRedo.Click += new System.EventHandler(this.btnRedo_Click);
+            // 
             // btnAddConfig
             // 
             resources.ApplyResources(this.btnAddConfig, "btnAddConfig");
@@ -373,6 +394,7 @@
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
+            this.tabMain.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tabMain_KeyDown);
             // 
             // MainForm
             // 
@@ -437,5 +459,7 @@
         private System.Windows.Forms.ColumnHeader columnStartTime;
         private System.Windows.Forms.ColumnHeader columnRunTime;
         private System.Windows.Forms.Button btnLogStop;
+        private System.Windows.Forms.ToolStripButton btnUndo;
+        private System.Windows.Forms.ToolStripButton btnRedo;
     }
 }

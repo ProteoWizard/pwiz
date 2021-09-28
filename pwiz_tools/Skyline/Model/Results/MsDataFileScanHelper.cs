@@ -266,7 +266,8 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider != null)
             {
                 Source = scanProvider.Transitions[transitionIndex].Source;
-                Assume.IsTrue(Source == ScanProvider.Source);
+                if (Source != ScanProvider.Source)
+                    Assume.Fail($@"unexpected ChromSource '{ScanProvider.Source}' in transition {transitionIndex} ({scanProvider.Transitions[transitionIndex]})");
                 TransitionIndex = transitionIndex;
                 ScanIndex = scanIndex;
                 FileName = scanProvider.DataFilePath.GetFileName();

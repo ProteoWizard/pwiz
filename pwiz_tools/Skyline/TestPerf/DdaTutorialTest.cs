@@ -38,7 +38,6 @@ namespace TestPerf
     public class DdaTutorialTest : AbstractFunctionalTest
     {
         [TestMethod]
-        [Timeout(2 * 60 * 60 * 1000)]  // These can take a long time in code coverage mode (2 hours)
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -62,6 +61,7 @@ namespace TestPerf
             };
             RunFunctionalTest();
         }
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
         private const string OXIDATION_M = "Oxidation (M)";
