@@ -326,6 +326,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var header = _chromatogramGroupInfo.Header;
                 int numPeaks = header.NumPeaks;
+                var groupPeaks = cache.ReadPeaks(header);
                 var retainedPeakIndexes = new HashSet<int>();
                 if (!OptimizedStartTime.HasValue || !OptimizedEndTime.HasValue)
                 {
@@ -341,9 +342,7 @@ namespace pwiz.Skyline.Model.Results
                             if (!RetainedTransitionIndexes.Contains(transitionIndex))
                                 continue;
 
-                            var peak = cache.GetPeak(header.StartPeakIndex +
-                                                       transitionIndex * header.NumPeaks +
-                                                       iPeak);
+                            var peak = groupPeaks[transitionIndex * header.NumPeaks + iPeak];
                             if (peak.StartTime < OptimizedStartTime.Value || peak.EndTime > OptimizedEndTime.Value)
                             {
                                 outsideRange = true;
@@ -364,13 +363,14 @@ namespace pwiz.Skyline.Model.Results
                     MaxPeakIndex = -1;
 
                 var peakScores = new List<float>();
+                var groupScores = cache.ReadScores(header);
                 for (int iPeak = 0; iPeak < numPeaks; iPeak++)
                 {
                     if (!retainedPeakIndexes.Contains(iPeak))
                         continue;
 
-                    int iScores = header.StartScoreIndex + iPeak * cache.ScoreTypesCount;
-                    peakScores.AddRange(cache.GetCachedScores(iScores));
+                    int iScores = iPeak * cache.ScoreTypesCount;
+                    peakScores.AddRange(Enumerable.Range(iScores, cache.ScoreTypesCount).Select(i => groupScores[i]));
                 }
                 PeakScores = peakScores.ToArray();
                 var peaks = new List<ChromPeak>();
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!retainedPeakIndexes.Contains(iPeak))
                             continue;
 
-                        var originalPeak = cache.GetPeak(header.StartPeakIndex + originalIndex*numPeaks + iPeak);
+                        var originalPeak = groupPeaks[header.StartPeakIndex + originalIndex*numPeaks + iPeak];
                         peaks.Add(originalPeak);
                         TotalPeakCount++;
                     }
