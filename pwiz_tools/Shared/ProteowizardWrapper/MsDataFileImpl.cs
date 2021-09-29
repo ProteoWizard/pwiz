@@ -941,11 +941,15 @@ namespace pwiz.ProteowizardWrapper
                         data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                         {
-                            data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
-                            if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                            data = TryGetIonMobilityData(s, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, ref _cvidIonMobility);
+                            if (data == null)
                             {
-                                _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
-                                return null;
+                                data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                                {
+                                    _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
+                                    return null;
+                                }
                             }
                         }
                         break;
