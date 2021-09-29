@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -208,6 +209,53 @@ namespace pwiz.SkylineTest
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
+
+            // Offer a more detailed error message when we fail to load a DLL
+            Assembly TryGetAssembly(Type type)
+            {
+                try
+                {
+                    return Assembly.GetAssembly(type);
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    var errMessage = new StringBuilder();
+                    errMessage.AppendLine(string.Format("Error in Assembly.GetAssembly({0}) at", type));
+                    errMessage.AppendLine(ex.StackTrace);
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(string.Format(ex.Message));
+                    foreach (var loaderException in ex.LoaderExceptions)
+                    {
+                        errMessage.AppendLine();
+                        errMessage.AppendLine(loaderException.Message);
+                    }
+                    throw new Exception(errMessage.ToString(), ex);
+                }
+            }
+
+            // Offer a more detailed error message when we fail to load a DLL
+            Type[] TryGetTypes(Assembly assembly)
+            {
+                try
+                {
+                    return assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    var errMessage = new StringBuilder();
+                    errMessage.AppendLine(string.Format("Error in Assembly.GetTypes({0}) at", assembly));
+                    errMessage.AppendLine(ex.StackTrace);
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(string.Format(ex.Message));
+                    foreach (var loaderException in ex.LoaderExceptions)
+                    {
+                        errMessage.AppendLine();
+                        errMessage.AppendLine(loaderException.Message);
+                    }
+                    throw new Exception(errMessage.ToString(), ex);
+                }
+            }
+
             var forms = new HashSet<string>();
             var formTypes = new HashSet<Type>(inUseFormTypes);
             foreach (var t in directParentTypes)
@@ -218,8 +266,8 @@ namespace pwiz.SkylineTest
             foreach (var formType in formTypes)
             {
                 // Now find all forms that inherit from formType
-                var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
-                foreach (var form in assembly.GetTypes()
+                var assembly = formType == typeof(Form) ? TryGetAssembly(typeof(FormEx)) : TryGetAssembly(formType);
+                foreach (var form in TryGetTypes(assembly)
                     .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
                                 formType.IsAssignableFrom(t))) // Interface type match
                 {

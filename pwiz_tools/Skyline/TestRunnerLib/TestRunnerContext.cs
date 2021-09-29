@@ -40,6 +40,20 @@ namespace TestRunnerLib
             throw new NotImplementedException();
         }
 
+        public override void Write(string format, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteLine(string msg)
+        {
+            throw new NotImplementedException();
+        }
+        public override void Write(string msg)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void AddResultFile(string fileName)
         {
             throw new NotImplementedException();

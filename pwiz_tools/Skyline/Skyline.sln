@@ -6,9 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Skyline.vsmdi = Skyline.vsmdi
 		TestSettings_x64.runsettings = TestSettings_x64.runsettings
-		TestSettings_x64.testsettings = TestSettings_x64.testsettings
 		TestSettings_x86.runsettings = TestSettings_x86.runsettings
-		TestSettings_x86.testsettings = TestSettings_x86.testsettings
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyline", "Skyline.csproj", "{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}"

@@ -14,8 +14,11 @@
   
   <MSTest>
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-    <CaptureTraceOutput>false</CaptureTraceOutput>
+    <CaptureTraceOutput>False</CaptureTraceOutput>
     <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
-    <DeploymentEnabled>False</DeploymentEnabled>
+    <DeploymentEnabled>True</DeploymentEnabled>
   </MSTest>
+  <MSTestV2>
+    <DeployTestSourceDependencies>false</DeployTestSourceDependencies>
+  </MSTestV2>
 </RunSettings>

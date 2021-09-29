@@ -42,6 +42,18 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     [TestClass]
     [DeploymentItem("SkylineLog4Net.config")]
+
+    // We don't want to run from the build directory, so deploy its contents instead
+#if WIN32 && DEBUG
+    [DeploymentItem("bin/x86/Debug")]
+#elif WIN32
+    [DeploymentItem("bin/x86/Release")]
+#elif DEBUG
+    [DeploymentItem("bin/x64/Debug")]
+#else
+    [DeploymentItem("bin/x64/Release")]
+#endif
+
     public class AbstractUnitTest
     {
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
