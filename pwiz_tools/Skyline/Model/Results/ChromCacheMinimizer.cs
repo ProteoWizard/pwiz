@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!retainedPeakIndexes.Contains(iPeak))
                             continue;
 
-                        var originalPeak = groupPeaks[header.StartPeakIndex + originalIndex*numPeaks + iPeak];
+                        var originalPeak = groupPeaks[originalIndex*numPeaks + iPeak];
                         peaks.Add(originalPeak);
                         TotalPeakCount++;
                     }
@@ -753,7 +753,8 @@ namespace pwiz.Skyline.Model.Results
                                                _textIdBytes,
                                                _scoreTypes,
                                                _scoreCount,
-                                               _peakCount);
+                                               _peakCount,
+                                               out _);
             }
 
             public ImmutableList<byte> GetNewTextId(ChromGroupHeaderInfo chromGroupHeaderInfo)

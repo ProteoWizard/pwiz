@@ -132,8 +132,8 @@ namespace pwiz.Skyline.Model.Results
                             throw new InvalidDataException(@"Data cache files with different score types cannot be joined.");
                     }
                     _scoreCount += rawData.NumScores;
-                    inStream.Seek(rawData.LocationScores, SeekOrigin.Begin);
-                    inStream.TransferBytes(_fsScores.FileStream, rawData.NumScores * sizeof(float));
+                    inStream.Seek(rawData.LocationScoreValues, SeekOrigin.Begin);
+                    inStream.TransferBytes(_fsScores.FileStream, rawData.NumScores * ChromatogramCache.SCORE_VALUE_SIZE);
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {
                         _listGroups.Add(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,

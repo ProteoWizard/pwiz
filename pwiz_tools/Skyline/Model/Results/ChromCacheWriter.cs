@@ -75,15 +75,12 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (x == null && !_status.IsFinal)
                     {
-                        long locationScanIds = 0, countBytesScanIds = 0;
                         CacheHeaderStruct newCacheHeader = default(CacheHeaderStruct);
+                        long scoreValueLocation = 0;
                         if (_fs.Stream != null)
                         {
                             try
                             {
-                                locationScanIds = _fs.Stream.Position;
-                                countBytesScanIds = _fsScans.Stream.Position;
-
                                 _listGroups.Sort();
                                 var listChromGroupHeaderInfos = ReadOnlyList.Create(_listGroups.Count,
                                     i => _listGroups[i].ChromGroupHeaderInfo);
@@ -98,7 +95,8 @@ namespace pwiz.Skyline.Model.Results
                                                                _listTextIdBytes,
                                                                _listScoreTypes,
                                                                _scoreCount,
-                                                               _peakCount);
+                                                               _peakCount,
+                                                               out scoreValueLocation);
 
                                 _loader.StreamManager.Finish(_fs.Stream);
                                 _fs.Stream = null;
@@ -137,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
                             _listTextIdBytes = null;
 
                             var rawData = new ChromatogramCache.RawData(newCacheHeader, arrayCachFiles,
-                                arrayChromEntries, arrayTransitions, _listScoreTypes, textIdBytes);
+                                arrayChromEntries, arrayTransitions, _listScoreTypes, scoreValueLocation, textIdBytes);
                             result = new ChromatogramCache(CachePath, rawData, readStream);
                             _status = _status.Complete();
                             _loader.UpdateProgress(_status);

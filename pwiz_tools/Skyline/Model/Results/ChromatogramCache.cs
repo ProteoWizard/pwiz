@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Results
         public const string PEAKS_EXT = ".peaks";
         public const string SCANS_EXT = ".scans";
         public const string SCORES_EXT = ".scores";
+        public const int SCORE_VALUE_SIZE = sizeof(float);
 
         public static CacheFormatVersion FORMAT_VERSION_CACHE
         {
@@ -210,20 +211,21 @@ namespace pwiz.Skyline.Model.Results
         public byte[] LoadMSDataFileScanIdBytes(int fileIndex)
         {
             var cachedFile = CachedFiles[fileIndex];
-            byte[] scanIdBytes = new byte[cachedFile.SizeScanIds];
-            if (scanIdBytes.Length > 0)
+            if (cachedFile.SizeScanIds == 0)
             {
-                Stream stream = ReadStream.Stream;
-                lock (stream)
-                {
-                    stream.Seek(_rawData.LocationScanIds + cachedFile.LocationScanIds, SeekOrigin.Begin);
-
-                    // Single read to get all the points
-                    if (stream.Read(scanIdBytes, 0, scanIdBytes.Length) < scanIdBytes.Length)
-                        throw new IOException(Resources.ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs);
-                }
+                return Array.Empty<byte>();
             }
-            return scanIdBytes;
+            return CallWithStream(stream =>
+            {
+                byte[] scanIdBytes = new byte[cachedFile.SizeScanIds];
+                stream.Seek(_rawData.LocationScanIds + cachedFile.LocationScanIds, SeekOrigin.Begin);
+
+                // Single read to get all the points
+                if (stream.Read(scanIdBytes, 0, scanIdBytes.Length) < scanIdBytes.Length)
+                    throw new IOException(Resources
+                        .ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs);
+                return scanIdBytes;
+            });
         }
 
         public IEnumerable<ChromatogramGroupInfo> LoadChromatogramInfos(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
@@ -462,12 +464,13 @@ namespace pwiz.Skyline.Model.Results
         {
             public RawData(CacheHeaderStruct header, IEnumerable<ChromCachedFile> chromCacheFiles,
                 BlockedArray<ChromGroupHeaderInfo> chromatogramEntries, BlockedArray<ChromTransition> transitions, 
-                IEnumerable<Type> scoreTypes, byte[] textIdBytes) : this(header)
+                IEnumerable<Type> scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
             {
                 ChromCacheFiles = ImmutableList.ValueOf(chromCacheFiles);
                 ChromatogramEntries = chromatogramEntries;
                 ChromTransitions = transitions;
                 ScoreTypes = ImmutableList.ValueOf(scoreTypes);
+                LocationScoreValues = locationScoreValues;
                 TextIdBytes = textIdBytes;
             }
 
@@ -477,7 +480,6 @@ namespace pwiz.Skyline.Model.Results
                 NumPeaks = header.numPeaks;
                 LocationPeaks = header.locationPeaks;
                 NumPeaks = header.numPeaks;
-                LocationScores = header.locationScores;
                 NumScores = header.numScores;
                 LocationScanIds = header.locationScanIds;
                 if (FormatVersion > CacheFormatVersion.Eight)
@@ -524,11 +526,15 @@ namespace pwiz.Skyline.Model.Results
             public int NumPeaks { get; private set; }
             public ImmutableList<Type> ScoreTypes { get; private set; }
 
-            public RawData ChangeScoreTypes(IEnumerable<Type> types)
+            public RawData ChangeScoreTypes(IEnumerable<Type> types, long locationScoreValues)
             {
-                return ChangeProp(ImClone(this), im => im.ScoreTypes = ImmutableList.ValueOf(types));
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.ScoreTypes = ImmutableList.ValueOf(types);
+                    im.LocationScoreValues = locationScoreValues;
+                });
             }
-            public long LocationScores { get; private set; }
+            public long LocationScoreValues { get; private set; }
             public int NumScores { get; private set; }
             public byte[] TextIdBytes { get; private set; }
 
@@ -838,10 +844,6 @@ namespace pwiz.Skyline.Model.Results
                 stream.Seek(cacheHeader.locationTextIdBytes, SeekOrigin.Begin);
                 ReadComplete(stream, raw.TextIdBytes, raw.TextIdBytes.Length);
             }
-            else
-            {
-                Assume.IsNull(raw.TextIdBytes);
-            }
             if (formatVersion > CacheFormatVersion.Four && cacheHeader.numScoreTypes > 0)
             {
                 // Read scores
@@ -857,8 +859,8 @@ namespace pwiz.Skyline.Model.Results
                     scoreTypes[i] = Type.GetType(Encoding.UTF8.GetString(typeNameBuffer, 0, lenTypeName));
                 }
 
-                raw = raw.ChangeScoreTypes(scoreTypes);
-                Assume.AreEqual(raw.LocationScores, cacheHeader.locationScores);
+                raw = raw.ChangeScoreTypes(scoreTypes, stream.Position);
+                Assume.AreEqual(raw.LocationScoreValues, stream.Position);
             }
             else
             {
@@ -930,7 +932,8 @@ namespace pwiz.Skyline.Model.Results
                          originalCache._rawData.TextIdBytes,   // Cached sequence and custom ion id bytes remain unchanged
                          scoreTypes,
                          scoureCount,
-                         peakCount);
+                         peakCount, 
+                         out long _);
         }
 
         public static CacheHeaderStruct WriteStructs(CacheFormat cacheFormat,
@@ -944,8 +947,10 @@ namespace pwiz.Skyline.Model.Results
                                         ICollection<byte> textIdBytes,
                                         ICollection<Type> scoreTypes,
                                         int scoreCount,
-                                        int peakCount)
+                                        int peakCount,
+                                        out long scoreValueLocation)
         {
+            scoreValueLocation = 0;
             var formatVersion = cacheFormat.FormatVersion;
             long locationScans = outStream.Position;
             if (formatVersion > FORMAT_VERSION_CACHE_8)
@@ -981,6 +986,7 @@ namespace pwiz.Skyline.Model.Results
                     byte[] typesBuffer = new byte[len];
                     Encoding.UTF8.GetBytes(sbTypes.ToString(), 0, sbTypes.Length, typesBuffer, 0);
                     outStream.Write(typesBuffer, 0, len);
+                    scoreValueLocation = outStream.Position;
                     outStreamScores.Seek(0, SeekOrigin.Begin);
                     outStreamScores.CopyTo(outStream);
                 }
@@ -1363,8 +1369,8 @@ namespace pwiz.Skyline.Model.Results
                             scoreCount += end - start;
                             if (scoreCount > 0)
                             {
-                                inStream.Seek(_rawData.LocationScores + start * sizeof(float), SeekOrigin.Begin);
-                                inStream.TransferBytes(fsScores.FileStream, (end - start) * sizeof(float));
+                                inStream.Seek(_rawData.LocationScoreValues + start * SCORE_VALUE_SIZE, SeekOrigin.Begin);
+                                inStream.TransferBytes(fsScores.FileStream, (end - start) * SCORE_VALUE_SIZE);
                             }
                         }
                     }
@@ -1409,7 +1415,7 @@ namespace pwiz.Skyline.Model.Results
                     listKeepTextIdBytes,
                     scoreTypes,
                     scoreCount,
-                    peakCount);
+                    peakCount, out long scoreValueLocation);
 
                 CommitCache(fs);
 
@@ -1417,7 +1423,7 @@ namespace pwiz.Skyline.Model.Results
                 fsScores.Stream.Seek(0, SeekOrigin.Begin);
                 var rawData =
                     new RawData(newCacheHeader, listKeepCachedFiles, listKeepEntries.ToBlockedArray(),
-                        listKeepTransitions.ToBlockedArray(), scoreTypes, listKeepTextIdBytes.ToArray());
+                        listKeepTransitions.ToBlockedArray(), scoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
                 return new ChromatogramCache(cachePathOpt,
                                 rawData,
                     // Create a new read stream, for the newly created file
@@ -1543,18 +1549,29 @@ namespace pwiz.Skyline.Model.Results
 
         public byte[] ReadTimeIntensitiesBytes(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
-            Stream stream = ReadStream.Stream;
-            byte[] pointsCompressed = new byte[chromGroupHeaderInfo.CompressedSize];
+            return CallWithStream(stream =>
+            {
+                byte[] pointsCompressed = new byte[chromGroupHeaderInfo.CompressedSize];
+                // Seek to stored location
+                stream.Seek(chromGroupHeaderInfo.LocationPoints, SeekOrigin.Begin);
+
+                // Single read to get all the points
+                if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
+                    throw new IOException(Resources
+                        .ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
+                return pointsCompressed;
+
+            });
+        }
+
+        private T CallWithStream<T>(Func<Stream, T> func)
+        {
+            var stream = ReadStream.Stream;
             lock (stream)
             {
                 try
                 {
-                    // Seek to stored location
-                    stream.Seek(chromGroupHeaderInfo.LocationPoints, SeekOrigin.Begin);
-
-                    // Single read to get all the points
-                    if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                        throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
+                    return func(stream);
                 }
                 catch (Exception)
                 {
@@ -1564,7 +1581,6 @@ namespace pwiz.Skyline.Model.Results
                     throw;
                 }
             }
-            return pointsCompressed;
         }
 
         public TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo)
@@ -1599,25 +1615,30 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
-            lock (ReadStream.Stream)
+            return CallWithStream(stream =>
             {
-                ReadStream.Stream.Seek(
+                stream.Seek(
                     _rawData.LocationPeaks + _rawData.CacheFormat.ChromPeakSize * chromGroupHeaderInfo.StartPeakIndex,
                     SeekOrigin.Begin);
-                return _rawData.CacheFormat.ChromPeakSerializer().ReadArray(ReadStream.Stream,
+                return _rawData.CacheFormat.ChromPeakSerializer().ReadArray(stream,
                     chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions);
-            }
+            });
         }
 
         public IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
-            lock (ReadStream.Stream)
+            return CallWithStream(stream =>
             {
-                ReadStream.Stream.Seek(_rawData.LocationScores + chromGroupHeaderInfo.StartScoreIndex * sizeof(float),
+                stream.Seek(_rawData.LocationScoreValues + chromGroupHeaderInfo.StartScoreIndex * SCORE_VALUE_SIZE,
                     SeekOrigin.Begin);
-                return PrimitiveArrays.Read<float>(ReadStream.Stream,
+                return PrimitiveArrays.Read<float>(stream,
                     chromGroupHeaderInfo.NumPeaks * _scoreTypeIndices.Count);
-            }
+            });
+        }
+
+        public IList<ChromGroupHeaderInfo> ChromatogramsSortedByScoreIndex()
+        {
+            return ChromGroupHeaderInfos.OrderBy(i => i.StartScoreIndex).ToList();
         }
     }
 
