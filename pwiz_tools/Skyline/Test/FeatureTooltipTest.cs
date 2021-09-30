@@ -34,13 +34,12 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestFeatureTooltips()
         {
-            var resourceManager = FeatureTooltips.ResourceManager;
             var missingTooltips = new List<string>();
             foreach (var calculator in PeakFeatureCalculator.Calculators.OrderBy(c => c.HeaderName,
                 StringComparer.InvariantCultureIgnoreCase))
             {
-                var tooltip = resourceManager.GetString(calculator.HeaderName);
-                if (tooltip == null)
+                var tooltip = calculator.Tooltip;
+                if (string.IsNullOrEmpty(tooltip))
                 {
                     Console.Out.WriteLine("<data name=\"{0}\" xml:space=\"preserve\"><value></value></data>", calculator.HeaderName);
                     missingTooltips.Add(calculator.HeaderName);
