@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Results
         private static readonly HashSet<MsDataFileUri> EMPTY_FILES = new HashSet<MsDataFileUri>();
 
         private ImmutableList<ChromatogramSet> _chromatograms;
+        private ImmutableList<bool> _newChromatogramData;
         private ImmutableDictionary<string, int> _dictNameToIndex;
         private ImmutableDictionary<int, int> _dictIdToIndex;
         private HashSet<MsDataFileUri> _setFiles;
@@ -105,6 +106,7 @@ namespace pwiz.Skyline.Model.Results
                 EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
                 EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
                 EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
+                CheckForNewChromatogramData();
             }
         }
 
@@ -455,12 +457,66 @@ namespace pwiz.Skyline.Model.Results
         private void SetClonedCacheState(ChromatogramCache cacheFinal, IList<ChromatogramCache> partialCaches = null)
         {
             _cacheFinal = cacheFinal;
+            if (_cacheRecalc != null)
+            {
+                if (partialCaches != null &&
+                    partialCaches.Any(partialCache => partialCache.CachePath == _cacheRecalc.CachePath))
+                {
+                    // If any of the partial caches has the same cache file path as _cacheRecalc,
+                    // it means that the file has been replaced on disk and _cacheRecalc can only throw
+                    // FileModifiedException
+                    _cacheRecalc = null;
+                }
+            }
             if (_cacheFinal != null)
             {
                 _cacheRecalc = null;
             }
             _listPartialCaches = MakeReadOnly(partialCaches);
             _setCachedFiles = new HashSet<MsDataFileUri>(CachedFilePaths.Select(p => p.GetLocation()));
+            CheckForNewChromatogramData();
+        }
+
+        private IDictionary<MsDataFileUri, DateTime> GetImportTimesFromCacheFiles()
+        {
+            return CollectionUtil.SafeToDictionary(Caches.SelectMany(cache => cache.CachedFiles)
+                .Where(file => file.ImportTime.HasValue).Select(file =>
+                    new KeyValuePair<MsDataFileUri, DateTime>(file.FilePath, file.ImportTime.Value)));
+        }
+
+        /// <summary>
+        /// Sets _newChromatogramData to indicate which replicates have files whose ImportTime
+        /// is different from what is in the cache file.
+        /// </summary>
+        private void CheckForNewChromatogramData()
+        {
+            var changedReplicateIndexes = new HashSet<int>();
+            var importTimes = GetImportTimesFromCacheFiles();
+            for (int replicateIndex = 0; replicateIndex < Chromatograms.Count; replicateIndex++)
+            {
+                var chromatogramSet = Chromatograms[replicateIndex];
+                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    if (importTimes.TryGetValue(chromFileInfo.FilePath, out DateTime cachedImportTime))
+                    {
+                        if (!Equals(cachedImportTime, chromFileInfo.ImportTime))
+                        {
+                            changedReplicateIndexes.Add(replicateIndex);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (changedReplicateIndexes.Any())
+            {
+                _newChromatogramData = ImmutableList.ValueOf(Enumerable.Range(0, Chromatograms.Count)
+                    .Select(changedReplicateIndexes.Contains));
+            }
+            else
+            {
+                _newChromatogramData = null;
+            }
         }
 
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
@@ -605,6 +661,70 @@ namespace pwiz.Skyline.Model.Results
         public bool HasAllIonsChromatograms
         {
             get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }
+        }
+
+        /// <summary>
+        /// Returns true if the data in the chromatogram cache is newer than what the SrmDocument
+        /// knows about.
+        /// </summary>
+        public bool HasNewChromatogramData(int resultsIndex)
+        {
+            if (_newChromatogramData == null || resultsIndex < 0 || resultsIndex >= _newChromatogramData.Count)
+            {
+                return false;
+            }
+            return _newChromatogramData[resultsIndex];
+        }
+
+        /// <summary>
+        /// Set the <see cref="ChromFileInfo.ImportTime"/> values to the times from
+        /// the ChromatogramCache so that <see cref="HasNewChromatogramData"/> will
+        /// return false.
+        /// </summary>
+        public MeasuredResults UpdateImportTimes()
+        {
+            if (_newChromatogramData == null)
+            {
+                return this;
+            }
+
+            var cacheFileImportTimes = GetImportTimesFromCacheFiles();
+            var newChromatograms = new List<ChromatogramSet>();
+            for (int resultsIndex = 0; resultsIndex < Chromatograms.Count; resultsIndex++)
+            {
+                var chromatograms = Chromatograms[resultsIndex];
+                if (!HasNewChromatogramData(resultsIndex))
+                {
+                    newChromatograms.Add(chromatograms);
+                    continue;
+                }
+
+                var newFileInfos = new List<ChromFileInfo>();
+                foreach (var chromFileInfo in chromatograms.MSDataFileInfos)
+                {
+                    if (cacheFileImportTimes.TryGetValue(chromFileInfo.FilePath, out DateTime importTime))
+                    {
+                        newFileInfos.Add(chromFileInfo.ChangeImportTime(importTime));
+                    }
+                    else
+                    {
+                        newFileInfos.Add(chromFileInfo.ChangeImportTime(null));
+                    }
+                }
+                newChromatograms.Add(chromatograms.ChangeMSDataFileInfos(newFileInfos));
+            }
+
+            return ChangeChromatograms(newChromatograms);
+        }
+
+        /// <summary>
+        /// Sets the ImportTimes on all of the ChromFileInfo's to null so that they will not
+        /// be written out when saving a .sky in an earlier format.
+        /// </summary>
+        public MeasuredResults ClearImportTimes()
+        {
+            return ChangeChromatograms(Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
+                chrom.MSDataFileInfos.Select(info => info.ChangeImportTime(null)).ToList())).ToList());
         }
 
         public IEnumerable<string> QcTraceNames
