@@ -1249,7 +1249,7 @@ namespace pwiz.Skyline.Model
         {
             var measuredResults = settingsNew.MeasuredResults;
             var settingsOld = diff.SettingsOld;
-            var dictChromIdIndex = settingsOld?.MeasuredResults?.IdToIndexDictionary ?? EMPTY_RESULTS_LOOKUP;
+            var dictChromIdIndex = settingsOld?.MeasuredResults?.IdToIndexDictionary;
             var chromatograms = measuredResults.Chromatograms[chromIndex];
             var resultsHandler = settingsNew.PeptideSettings.Integration.ResultsHandler;
             bool chromatogramDataChanged = measuredResults.HasNewChromatogramData(chromIndex);
@@ -1262,35 +1262,25 @@ namespace pwiz.Skyline.Model
             {
                 iResultOld = chromIndex;
             }
-            else if (!dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld) ||
-                (Results != null && iResultOld >= Results.Count))
+            else if (dictChromIdIndex == null
+                     || !dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld)
+                     || Results != null && iResultOld >= Results.Count)
             {
                 iResultOld = -1;
             }
-            // But never if performing reintegration, since there will always be existing information
-            // for everything, and this will just cause reintegration to do nothing.
-            else if (resultsHandler == null)
-            {
-                Assume.IsNotNull(settingsOld);
-                Debug.Assert(settingsOld != null);
-                Assume.IsTrue(settingsOld.HasResults);
 
-                // If there is existing results information, and it was set
-                // by the user, then preserve it, and skip automatic peak picking
-                var resultOld = Results != null ? Results[iResultOld] : default(ChromInfoList<TransitionGroupChromInfo>);
-                if (!resultOld.IsEmpty &&
-                        (// Unfortunately, it is always possible that new results need
-                         // to be added from other files.  So this must be handled below.
-                         //(UserSetResults(resultOld) && setTranPrevious == null) ||
-                         // or this set of results is not yet loaded
-                         !chromatograms.IsLoadedAndAvailable(measuredResults) ||
-                         // or not forcing a full recalc of all peaks, chromatograms have not
-                         // changed and the node has not otherwise changed yet.
-                         // (happens while loading results)
-                         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                         (!diff.DiffResultsAll && !chromatogramDataChanged && settingsOld != null &&
-                          ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
-                          Equals(this, nodePrevious))))
+            if (iResultOld != -1)
+            {
+                if (Results == null || iResultOld >= Results.Count || Results[iResultOld].IsEmpty)
+                {
+                    iResultOld = -1;
+                }
+            }
+
+            // Check whether we can reuse the existing information without having to look at the ChromatogramInfo
+            if (iResultOld != -1 && resultsHandler == null)
+            {
+                if (CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld))
                 {
                     for (int iTran = 0; iTran < Children.Count; iTran++)
                     {
@@ -1319,13 +1309,13 @@ namespace pwiz.Skyline.Model
             // Check for any user set transitions in the previous node that
             // should be used to set peak boundaries on any new nodes.
             Dictionary<int, TransitionChromInfo> dictUserSetInfoBest = null;
-            bool missmatchedEmptyReintegrated = false;
+            bool mismatchedEmptyReintegrated = false;
             if (keepUserSet && iResultOld != -1)
             {
                 // Or we have reintegrated peaks that are not matching the current integrate all setting
                 if (settingsOld == null)
-                    missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
-                if (setTranPrevious != null || missmatchedEmptyReintegrated || chromatogramDataChanged)
+                    mismatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
+                if (setTranPrevious != null || mismatchedEmptyReintegrated || chromatogramDataChanged)
                     dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
             }
             float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
@@ -1445,7 +1435,7 @@ namespace pwiz.Skyline.Model
                             notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE ||
                                          chromInfo.UserSet == UserSet.REINTEGRATED;
                         }
-                        if (!keepUserSet || notUserSet || missmatchedEmptyReintegrated || chromatogramDataChanged)
+                        if (!keepUserSet || notUserSet || mismatchedEmptyReintegrated || chromatogramDataChanged)
                         {
                             ChromPeak peak = ChromPeak.EMPTY;
                             IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
@@ -1455,7 +1445,7 @@ namespace pwiz.Skyline.Model
                                 if (dictUserSetInfoBest != null)
                                 {
                                     TransitionChromInfo chromInfoBest;
-                                    if (missmatchedEmptyReintegrated)
+                                    if (mismatchedEmptyReintegrated)
                                     {
                                         // If we are reintegrating, then copy the peak boundaries of the best peak
                                         dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex,
@@ -1515,6 +1505,36 @@ namespace pwiz.Skyline.Model
                 else
                     resultsCalc.AddTransitionChromInfo(iTran, listTranInfo);
             }
+        }
+
+        private bool CanUseOldResults(SrmSettings settingsNew, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
+        {
+            var measuredResults = settingsNew.MeasuredResults;
+            var chromatograms = settingsNew.MeasuredResults.Chromatograms[chromIndex];
+            var settingsOld = diff.SettingsOld;
+            if (!chromatograms.IsLoadedAndAvailable(measuredResults))
+            {
+                return true;
+            }
+
+            if (diff.DiffResultsAll)
+            {
+                return false;
+            }
+            if (measuredResults.HasNewChromatogramData(chromIndex))
+            {
+                return false;
+            }
+            if (!ReferenceEquals(chromatograms, settingsOld?.MeasuredResults?.Chromatograms[iResultOld]))
+            {
+                return false;
+            }
+            if (!Equals(this, nodePrevious))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private TransitionGroupDocNode UpdateResultsToEmpty(MeasuredResults measuredResults)
