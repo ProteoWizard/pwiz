@@ -1093,6 +1093,15 @@ namespace pwiz.Skyline.Model
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
                     settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
 
+                if (settingsNew.MeasuredResults != null)
+                {
+                    var updatedImportTimes = settingsNew.MeasuredResults.UpdateImportTimes();
+                    if (!ReferenceEquals(updatedImportTimes, settingsNew.MeasuredResults))
+                    {
+                        settingsNew = settingsNew.ChangeMeasuredResults(updatedImportTimes);
+                    }
+                }
+                
                 // Don't change the children, if the resulting list contains
                 // only reference equal children of the same length and in the
                 // same order.

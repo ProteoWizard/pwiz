@@ -233,6 +233,12 @@ struct PWIZ_API_DECL RawData
         return 0; // Bin is outside of valid range
     }
 
+    // Return the nominal m/z for the bin, generally just for display purposes
+    void SonarBinToPrecursorMzRange(int bin, float &quadrupoleRangeLow, float &quadrupoleRangeHigh)
+    {
+        FindSonarFunction();
+        Info.GetPrecursorMassRange(workingSonarFunctionIndex_, bin, quadrupoleRangeLow, quadrupoleRangeHigh);
+    }
 
     bool HasCcsCalibration() const
     {
