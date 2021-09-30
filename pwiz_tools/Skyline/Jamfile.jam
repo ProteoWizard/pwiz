@@ -122,9 +122,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
 
+        echo Updating NuGet packages for Skyline, including MSTestV2 for tests...
+        msbuild $(SKYLINE_PATH)/Skyline.sln -t:restore -p:RestorePackagesConfig=true /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM)
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+        
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        # installs MSTestV2
-        msbuild $(SKYLINE_PATH)/Skyline.sln -t:restore -p:RestorePackagesConfig=true 
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
         
