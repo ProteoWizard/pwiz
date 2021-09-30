@@ -788,10 +788,25 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            float tolerance,
+            bool loadPoints,
+            List<ChromatogramGroupInfo> listChromBuffer, // List can be used to avoid extra allocation
+            out ChromatogramGroupInfo[] infoSet)
+        {
+            return TryLoadChromatogram(chromatogram,
+                nodePep,
+                nodeGroup,
+                tolerance,
+                listChromBuffer, // List can be used to avoid extra allocation
+                out infoSet);
+        }
+
+        public bool TryLoadChromatogram(ChromatogramSet chromatogram,
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
-                                        bool loadPoints,
                                         List<ChromatogramGroupInfo> listChromBuffer,   // List can be used to avoid extra allocation
                                         out ChromatogramGroupInfo[] infoSet)
         {
