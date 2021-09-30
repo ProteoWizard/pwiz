@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -123,18 +122,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     transitionGroupDocNodes = transitionGroups[iHeader];
                 }
-                
-                if (readChromatograms)
-                {
-                    try
-                    {
-                        chromGroupInfo.ReadChromatogram(ChromatogramCache, true);
-                    }
-                    catch (Exception exception)
-                    {
-                        Trace.TraceWarning(@"Unable to read chromatogram {0}", exception);
-                    }
-                }
 
                 if (minimizer.Exception != null)
                     break;
@@ -176,8 +163,6 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MinimizedChromGroup MinimizeChromGroup(Settings settings, ChromatogramGroupInfo chromatogramGroupInfo, IList<TransitionGroupDocNode> transitionGroups)
         {
-            chromatogramGroupInfo.EnsureDecompressed();
-
             var fileIndexes = new List<int>();
             for (int fileIndex = 0; fileIndex < Document.Settings.MeasuredResults.Chromatograms.Count; fileIndex++)
             {

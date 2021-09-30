@@ -758,8 +758,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 foreach (var chromInfo in cache.LoadAllIonsChromatogramInfo(extractor, chromatogram))
                 {
-                    if (loadPoints)
-                        chromInfo.ReadChromatogram(cache);
                     listChrom.Add(chromInfo);
                 }
             }
@@ -836,8 +834,6 @@ namespace pwiz.Skyline.Model.Results
                     // Short-circuit further processing for common case in label free data
                     if (_cacheFinal != null && info.Count == 1)
                     {
-                        if (loadPoints)
-                            info[0].ReadChromatogram(cache);
                         return true;
                     }
 
@@ -861,9 +857,6 @@ namespace pwiz.Skyline.Model.Results
                             listChrom.Clear();
 
                         maxTranMatch = tranMatch;
-                        // Read the points now, if requested.
-                        if (loadPoints)
-                            chromInfo.ReadChromatogram(cache);
                         listChrom.Add(chromInfo);
                     }
                 }

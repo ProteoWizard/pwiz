@@ -2224,6 +2224,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IChromDataReader _chromDataReader;
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
+        private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
@@ -2265,9 +2266,17 @@ namespace pwiz.Skyline.Model.Results
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }
         public int BestPeakIndex { get { return MaxPeakIndex; } }
 
-        private byte[] DeferedCompressedBytes { get; set; }
-
-        public TimeIntensitiesGroup TimeIntensitiesGroup { get; set; }
+        public TimeIntensitiesGroup TimeIntensitiesGroup
+        {
+            get
+            {
+                if (_timeIntensitiesGroup == null)
+                {
+                    _timeIntensitiesGroup = _chromDataReader.ReadTimeIntensities(Header);
+                }
+                return _timeIntensitiesGroup;
+            }
+        }
 
         public bool HasScore(Type scoreType)
         {
@@ -2282,16 +2291,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return _scores;
-        }
-
-        protected TimeIntensitiesGroup ReadTimeIntensities()
-        {
-            if (TimeIntensitiesGroup == null)
-            {
-                TimeIntensitiesGroup = _chromDataReader.ReadTimeIntensities(Header);
-            }
-
-            return TimeIntensitiesGroup;
         }
 
         protected IList<ChromPeak> ReadPeaks()
@@ -2525,81 +2524,6 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return countMatches;
-        }
-
-        public virtual void ReadChromatogram(ChromatogramCache cache, bool deferDecompression = false)
-        {
-            var compressedBytes = DeferedCompressedBytes ?? ReadCompressedBytes(cache);
-
-            if (deferDecompression)
-                DeferedCompressedBytes = compressedBytes;
-            else
-            {
-                CompressedBytesToTimeIntensities(compressedBytes);
-                DeferedCompressedBytes = null;
-            }
-        }
-
-        public void EnsureDecompressed()
-        {
-            if (DeferedCompressedBytes != null)
-                CompressedBytesToTimeIntensities(DeferedCompressedBytes);
-        }
-
-        public byte[] ReadCompressedBytes(ChromatogramCache cache)
-        {
-            Stream stream = cache.ReadStream.Stream;
-            byte[] pointsCompressed = new byte[_groupHeaderInfo.CompressedSize];
-            lock (stream)
-            {
-                try
-                {
-                    // Seek to stored location
-                    stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
-
-                    // Single read to get all the points
-                    if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                        throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
-                }
-                catch (Exception)
-                {
-                    // If an exception is thrown, close the stream in case the failure is something
-                    // like a network failure that can be remedied by re-opening the stream.
-                    cache.ReadStream.CloseStream();
-                    throw;
-                }
-            }
-            return pointsCompressed;
-        }
-
-        public void CompressedBytesToTimeIntensities(byte[] pointsCompressed)
-        {
-            int uncompressedSize = _groupHeaderInfo.UncompressedSize;
-            if (uncompressedSize < 0) // Before version 11
-            {
-                int numPoints = _groupHeaderInfo.NumPoints;
-                int numTrans = _groupHeaderInfo.NumTransitions;
-                bool hasErrors = _groupHeaderInfo.HasMassErrors;
-                bool hasMs1ScanIds = _groupHeaderInfo.HasMs1ScanIds;
-                bool hasFragmentScanIds = _groupHeaderInfo.HasFragmentScanIds;
-                bool hasSimScanIds = _groupHeaderInfo.HasSimScanIds;
-
-                uncompressedSize = ChromatogramCache.GetChromatogramsByteCount(
-                    numTrans, numPoints, hasErrors,
-                    hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds);
-            }
-            var uncompressedBytes = pointsCompressed.Uncompress(uncompressedSize);
-            if (_groupHeaderInfo.HasRawChromatograms)
-            {
-                TimeIntensitiesGroup = RawTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes));
-            }
-            else
-            {
-                var chromTransitions = Enumerable.Range(Header.StartTransitionIndex, Header.NumTransitions)
-                    .Select(i => _allTransitions[i]).ToArray();
-                TimeIntensitiesGroup = InterpolatedTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes),
-                    Header, chromTransitions);
-            }
         }
 
         public class PathEqualityComparer : IEqualityComparer<ChromatogramGroupInfo>

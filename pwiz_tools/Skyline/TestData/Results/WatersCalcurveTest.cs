@@ -258,6 +258,11 @@ namespace pwiz.SkylineTestData.Results
                         ChromatogramGroupInfo[] chromGroupInfo;
                         Assert.IsTrue(results.TryLoadChromatogram(chromSet, pair.NodePep, pair.NodeGroup,
                                                                   tolerance, true, out chromGroupInfo));
+                        foreach (var group in chromGroupInfo)
+                        {
+                            // Force the points to be read from disk
+                            Assert.IsNotNull(group.TimeIntensitiesGroup);
+                        }
                     }
                 }
                 
