@@ -4085,12 +4085,27 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetNormalizationMethod(NormalizeOption ratioIndex, bool update = true)
+        public void SetNormalizationMethod(NormalizeOption normalizeOption, bool update = true)
         {
-            AreaGraphController.AreaNormalizeOption = ratioIndex;
-
+            Settings.Default.AreaNormalizeOption = normalizeOption;
+            SequenceTree.NormalizeOption = normalizeOption;
             if(update)
                 UpdatePeakAreaGraph();
+        }
+
+        public NormalizeOption AreaNormalizeOption
+        {
+            get
+            {
+                return Settings.Default.AreaNormalizeOption;
+            }
+            set
+            {
+                if (!Equals(value, AreaNormalizeOption))
+                {
+                    SetNormalizationMethod(value);
+                }
+            }
         }
 
         public void SetNormalizationMethod(NormalizationMethod normalizationMethod, bool update = true)
@@ -4231,10 +4246,10 @@ namespace pwiz.Skyline
 
         public void NormalizeAreaGraphTo(NormalizeOption areaView)
         {
-            AreaGraphController.AreaNormalizeOption = areaView;
+            AreaNormalizeOption = areaView;
 
-            if (AreaGraphController.AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaGraphController.AreaNormalizeOption == NormalizeOption.MAXIMUM)
+            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
+                AreaNormalizeOption == NormalizeOption.MAXIMUM)
                 Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
@@ -4248,7 +4263,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaLogScale = isChecked ;
             if (isChecked)
-                AreaGraphController.AreaNormalizeOption = NormalizeOption.NONE;
+                AreaNormalizeOption = NormalizeOption.NONE;
             UpdateSummaryGraphs();
         }
 
