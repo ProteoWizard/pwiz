@@ -261,19 +261,14 @@ namespace pwiz.Skyline.Util
                 return;
             }
 
-            if (!fileStream.Name.EndsWith("Site20_Study9p_unmixed.skyd"))
+            if (!fileStream.Name.EndsWith(".skyd"))
             {
                 return;
             }
 
             Console.Out.WriteLine("{0}: {1} {2}", operation, fileStream.Name, id.GlobalIndex);
-            Console.Out.WriteLine("{0}: Begin Stack Trace>>>>>>>", id.GlobalIndex);
-            var stackTrace = new StackTrace(true);
-            foreach (var line in stackTrace.ToString().Split(new []{Environment.NewLine}, StringSplitOptions.None))
-            {
-                Console.Out.WriteLine("{0}: {1}", id.GlobalIndex, line);
-            }
-            Console.Out.WriteLine("<<<<<<<End Stack Trace: {0}", id.GlobalIndex);
+            Console.Out.WriteLine("{0}: Begin Stack Trace>>>>>>>\r\n{1}\r\n<<<<<<<End Stack Trace: {0}", id.GlobalIndex, new StackTrace(true));
+            Console.Out.Flush();
         }
 
         public void DisconnectWhile(IPooledStream stream, Action act)

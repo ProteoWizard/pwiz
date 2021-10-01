@@ -384,9 +384,10 @@ namespace pwiz.SkylineTestData.Results
             {
                 testFilesDir.Dispose();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
 #warning "Don't commit this to master".
+                Console.Out.WriteLine("Swallowing exception: {0}", ex);
                 // Swallow the exception so the test still passes, so we can see the output
             }
         }
