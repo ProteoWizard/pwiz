@@ -179,6 +179,14 @@ print("Current commit: '%s'" % current_commit)
 print("Changed files:\n", changed_files)
 changed_files = changed_files.splitlines()
 
+# substitute "release" for specific skyline_##.# versions
+base_branch = re.sub("Skyline/skyline_.*", "release", base_branch)
+
+# promote branch-specific targets into main match dictionaries
+for tuple in matchPaths:
+    if base_branch in tuple[1]:
+        tuple[1].update(tuple[1][base_branch])
+
 # match changed file paths to triggers
 triggers = {}
 if current_branch == "master" and len(changed_files) == 0:
@@ -193,11 +201,9 @@ else:
         triggered = False # only trigger once per path
         for tuple in matchPaths:
             if re.match(tuple[0], path):
-                targetsForBaseBranch = tuple[1]
-                if isinstance(targetsForBaseBranch, dict):
-                    targetsForBaseBranch = targetsForBaseBranch[re.sub("Skyline/skyline_.*", "release", base_branch)]
-                for target in targetsForBaseBranch:
-                    if target not in triggers:
+                for target in tuple[1]:
+                    isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
+                    if not isBaseBranchDict and target not in triggers:
                         triggers[target] = path
                     triggered = True
             if triggered:
@@ -206,20 +212,12 @@ else:
 notBuilding = {}
 building = {}
 for targetKey in targets:
-    for targetOrBaseBranch in targets[targetKey]:
-        targetsForBaseBranch = targets[targetKey][targetOrBaseBranch]
-        if isinstance(targetsForBaseBranch, dict):
-            for target in targetsForBaseBranch:
-                if target not in triggers:
-                    notBuilding[target] = targetsForBaseBranch[target]
-                else:
-                    building[target] = targetsForBaseBranch[target]
+    for target in targets[targetKey]:
+        isBaseBranchDict = isinstance(targets[targetKey][target], dict) # these targets were promoted into top-level above
+        if not isBaseBranchDict and target not in triggers:
+            notBuilding[target] = targets[targetKey][target]
         else:
-            target = targetOrBaseBranch
-            if target not in triggers:
-                    notBuilding[target] = targets[targetKey][target]
-            else:
-                building[target] = targets[targetKey][target]
+            building[target] = targets[targetKey][target]
 
 # Trigger builds
 teamcityUrl = "https://teamcity.labkey.org/httpAuth/app/rest/buildQueue"
