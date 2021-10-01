@@ -1240,12 +1240,12 @@ namespace pwiz.Skyline.Model
             var measuredResults = settingsNew.MeasuredResults;
             for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
-                AddReplicateResults(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious);
+                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
 
-        private void AddReplicateResults(TransitionGroupResultsCalculator resultsCalc, int chromIndex, SrmSettings settingsNew, SrmSettingsDiff diff, PeptideDocNode nodePep, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious)
+        private void CalcResultsForReplicate(TransitionGroupResultsCalculator resultsCalc, int chromIndex, SrmSettings settingsNew, SrmSettingsDiff diff, PeptideDocNode nodePep, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious)
         {
             var measuredResults = settingsNew.MeasuredResults;
             var settingsOld = diff.SettingsOld;
@@ -1507,6 +1507,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Returns true if the area values in the TransitionChromInfo's can be trusted so that the data from the .skyd does not need to be examined.
+        /// </summary>
         private bool CanUseOldResults(SrmSettings settingsNew, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
         {
             var measuredResults = settingsNew.MeasuredResults;
@@ -1516,8 +1519,11 @@ namespace pwiz.Skyline.Model
             {
                 return true;
             }
-
-            if (diff.DiffResultsAll)
+            if (settingsOld == null)
+            {
+                return false;
+            }
+            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance != settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
             {
                 return false;
             }
@@ -1525,7 +1531,7 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
-            if (!ReferenceEquals(chromatograms, settingsOld?.MeasuredResults?.Chromatograms[iResultOld]))
+            if (!ReferenceEquals(chromatograms, settingsOld.MeasuredResults?.Chromatograms[iResultOld]))
             {
                 return false;
             }
@@ -1534,6 +1540,18 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
+            foreach (var transition in Transitions)
+            {
+                if (transition.Results == null || iResultOld >= transition.Results.Count)
+                {
+                    return false;
+                }
+
+                if (transition.Results[iResultOld].IsEmpty)
+                {
+                    return false;
+                }
+            }
             return true;
         }
 
