@@ -769,45 +769,17 @@ namespace pwiz.Skyline.Model.Results
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
-                                        bool loadPoints,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, loadPoints, out infoSet);
+            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, out infoSet);
         }
 
-        private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = new ChromatogramGroupInfo[0];
+        private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = Array.Empty<ChromatogramGroupInfo>();
 
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
-                                        bool loadPoints,
-                                        out ChromatogramGroupInfo[] infoSet)
-        {
-            return TryLoadChromatogram(chromatogram, nodePep, nodeGroup, tolerance, loadPoints, null, out infoSet);
-        }
-
-        public bool TryLoadChromatogram(ChromatogramSet chromatogram,
-            PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup,
-            float tolerance,
-            bool loadPoints,
-            List<ChromatogramGroupInfo> listChromBuffer, // List can be used to avoid extra allocation
-            out ChromatogramGroupInfo[] infoSet)
-        {
-            return TryLoadChromatogram(chromatogram,
-                nodePep,
-                nodeGroup,
-                tolerance,
-                listChromBuffer, // List can be used to avoid extra allocation
-                out infoSet);
-        }
-
-        public bool TryLoadChromatogram(ChromatogramSet chromatogram,
-                                        PeptideDocNode nodePep,
-                                        TransitionGroupDocNode nodeGroup,
-                                        float tolerance,
-                                        List<ChromatogramGroupInfo> listChromBuffer,   // List can be used to avoid extra allocation
                                         out ChromatogramGroupInfo[] infoSet)
         {
             // Add precursor matches to a list, if they match at least 1 transition
@@ -835,19 +807,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 var infoEnum = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram);
-                IList<ChromatogramGroupInfo> info = listChromBuffer;
-                infoSet = null;
-                if (info == null)
-                    info = infoSet = infoEnum.ToArray();
-                else
-                {
-                    listChromBuffer.Clear();
-                    listChromBuffer.AddRange(infoEnum);
-                }
-                foreach (var chromInfo in info)
+                infoSet = infoEnum.ToArray();
+                foreach (var chromInfo in infoSet)
                 {
                     // Short-circuit further processing for common case in label free data
-                    if (_cacheFinal != null && info.Count == 1)
+                    if (_cacheFinal != null && infoSet.Length == 1)
                     {
                         return true;
                     }
@@ -900,17 +864,8 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listChrom = listChromFinal;
             }
-            if (listChromBuffer != null)
-            {
-                listChromBuffer.Clear();
-                listChromBuffer.AddRange(listChrom);
-                infoSet = null;
-            }
-            else
-            {
-                infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS)
-                    ? EMPTY_GROUP_INFOS : listChrom.ToArray();
-            }
+            infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS)
+                ? EMPTY_GROUP_INFOS : listChrom.ToArray();
             return listChrom.Count > 0;
         }
 

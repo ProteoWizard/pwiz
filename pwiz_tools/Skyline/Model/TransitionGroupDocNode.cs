@@ -1320,8 +1320,7 @@ namespace pwiz.Skyline.Model
             }
             float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
 
-            ChromatogramGroupInfo[] temp;   // Dummy variable, using list instead to avoid extra allocation
-            if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, null, out temp))
+            if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, out var chromGroupInfos))
             {
                 bool useOldResults = iResultOld != -1 && !chromatograms.IsLoadedAndAvailable(measuredResults);
 
@@ -1352,11 +1351,10 @@ namespace pwiz.Skyline.Model
             // resulted in writing precursor entries multiple times to the cache file.
             // This code also corrects that problem by ignoring all but the first
             // instance.
-            IList<ChromatogramGroupInfo> chromGroupInfos = temp;
-            if (chromGroupInfos.Count > 1)
+            if (chromGroupInfos.Length > 1)
                 chromGroupInfos = chromGroupInfos.Distinct(ChromatogramGroupInfo.PathComparer).ToArray();
             // Find the file indexes once
-            int countGroupInfos = chromGroupInfos.Count;
+            int countGroupInfos = chromGroupInfos.Length;
             var fileIds = new ChromFileInfoId[countGroupInfos];
             // and matching reintegration statistics, if any
             PeakFeatureStatistics[] reintegratePeaks = resultsHandler != null

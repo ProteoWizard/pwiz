@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 ChromatogramGroupInfo[] arrayChromInfo;
                 if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroups[0],
-                                                                           mzMatchTolerance, false, out arrayChromInfo))
+                                                                           mzMatchTolerance, out arrayChromInfo))
                 {
                     continue;
                 }
@@ -489,8 +489,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 ChromatogramGroupInfo[] arrayChromInfo;
                 var measuredResults = document.Settings.MeasuredResults;
                 float mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                if (measuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroup, mzMatchTolerance, false,
-                                                        out arrayChromInfo))
+                if (measuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroup, mzMatchTolerance, out arrayChromInfo))
                 {
                     _chromGroupInfo = arrayChromInfo.FirstOrDefault(ci =>
                         Equals(ci.FilePath, chromGroupInfoPrimary.FilePath));

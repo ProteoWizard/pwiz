@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
@@ -34,7 +35,6 @@ using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -2221,7 +2221,8 @@ namespace pwiz.Skyline.Model.Results
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
-        protected readonly IChromDataReader _chromDataReader;
+        [CanBeNull]
+        protected IChromDataReader _chromDataReader;
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
@@ -2272,7 +2273,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_timeIntensitiesGroup == null)
                 {
-                    _timeIntensitiesGroup = _chromDataReader.ReadTimeIntensities(Header);
+                    _timeIntensitiesGroup = _chromDataReader?.ReadTimeIntensities(Header);
                 }
                 return _timeIntensitiesGroup;
             }
@@ -2287,7 +2288,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_scores == null)
             {
-                _scores = _chromDataReader.ReadScores(Header);
+                _scores = _chromDataReader?.ReadScores(Header);
             }
 
             return _scores;
@@ -2297,7 +2298,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_chromPeaks == null)
             {
-                _chromPeaks = _chromDataReader.ReadPeaks(Header);
+                _chromPeaks = _chromDataReader?.ReadPeaks(Header);
             }
 
             return _chromPeaks;
@@ -2541,6 +2542,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 return obj.FilePath.GetHashCode();
             }
+        }
+
+        /// <summary>
+        /// Throw away chromatogram and peaks.
+        /// </summary>
+        public void DiscardData()
+        {
+            _chromDataReader = null;
+            _timeIntensitiesGroup = null;
+            _chromPeaks = null;
         }
 
         public static PathEqualityComparer PathComparer { get; private set; }

@@ -2576,14 +2576,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listFiles = new List<MsDataFileUri>();
                 for (int i = 0; i < nodeGroups.Length; i++)
                 {
-                    ChromatogramGroupInfo[] arrayChromInfo;
                     if (!results.TryLoadChromatogram(
                         chromatograms, 
                         nodePeps[i], 
                         nodeGroups[i], 
                         mzMatchTolerance, 
-                        true,
-                        out arrayChromInfo))
+                        out var arrayChromInfo))
                     {
                         listArrayChromInfo.Add(null);
                         continue;

@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
                     ChromatogramGroupInfo[] chromatogramGroupInfos = null;
                     Helpers.TryTwice(() =>
                     {
-                        Assert.IsTrue(measuredResults.TryLoadChromatogram(0, molecule, transitionGroup, tolerance, true, out chromatogramGroupInfos));
+                        Assert.IsTrue(measuredResults.TryLoadChromatogram(0, molecule, transitionGroup, tolerance, out chromatogramGroupInfos));
                     });
                     Assert.AreEqual(1, chromatogramGroupInfos.Length);
                     list.Add(chromatogramGroupInfos[0].TimeIntensitiesGroup);
