@@ -227,10 +227,7 @@ namespace pwiz.Skyline.Util
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
-                if (connection is FileStream fileStream && Program.logFileSystem)
-                {
-                    Console.Out.WriteLine("Opening {0}: {1} {2}<<<<<", fileStream.Name, id.GlobalIndex, new StackTrace(true));
-                }
+                LogConnection("Opening", id, connection);
                 _connections.Add(id.GlobalIndex, connection);
                 return connection;
             }            
@@ -248,15 +245,35 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (!_connections.TryGetValue(id.GlobalIndex, out connection))
                     return;
-                if (connection is FileStream fileStream && Program.logFileSystem)
-                {
-                    Console.Out.WriteLine("Closing {0}: {1} {2}<<<<<", fileStream.Name, id.GlobalIndex, new StackTrace(true));
-                }
+                LogConnection("Closing", id, connection);
                 _connections.Remove(id.GlobalIndex);
                 // Disconnect inside lock, since a new attempt to connect
                 // may fail if the old connection is not fully disconnected.
                 connection.Dispose();
             }
+        }
+
+        private void LogConnection(string operation, Identity id, IDisposable connection)
+        {
+            if (!Program.logFileSystem)
+            {
+                return;
+            }
+
+            var fileStream = connection as FileStream;
+            if (fileStream == null)
+            {
+                return;
+            }
+
+            Console.Out.WriteLine("{0}: {1} {2}", operation, fileStream.Name, id.GlobalIndex);
+            Console.Out.WriteLine("{0}: Begin Stack Trace>>>>>>>", id.GlobalIndex);
+            var stackTrace = new StackTrace(true);
+            foreach (var line in stackTrace.ToString().Split(new []{Environment.NewLine}, StringSplitOptions.None))
+            {
+                Console.Out.WriteLine("{0}: {1}", id.GlobalIndex, line);
+            }
+            Console.Out.WriteLine("<<<<<<<End Stack Trace: {0}", id.GlobalIndex);
         }
 
         public void DisconnectWhile(IPooledStream stream, Action act)
