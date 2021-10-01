@@ -216,6 +216,10 @@ for targetKey in targets:
         isBaseBranchDict = isinstance(targets[targetKey][target], dict) # these targets were promoted into top-level above
         if not isBaseBranchDict and target not in triggers:
             notBuilding[target] = targets[targetKey][target]
+        elif isBaseBranchDict:
+            for target2 in targets[targetKey][target]:
+                if target2 not in triggers:
+                    notBuilding[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
 
