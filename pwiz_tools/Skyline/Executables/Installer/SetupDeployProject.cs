@@ -22,11 +22,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.IO;
 
 namespace SetupDeployProject
@@ -58,7 +54,6 @@ namespace SetupDeployProject
                 string installerOutputDirectory = Path.Combine(skylinePath, "bin", platform);
 
                 string filelistPath = Path.Combine(templateDirectory, "FileList64-template.txt");
-                string testSettingsPath = Path.Combine(skylinePath, $"TestSettings_{platform}-template.testsettings");
 
                 var wxsVendorDlls = new StringBuilder();
                 var filelistDlls = new List<string>();
@@ -91,7 +86,7 @@ namespace SetupDeployProject
                     {
                         var preReplaceLength = filelistTemplate.Length;
                         string automaticIncludedFilename = $"{filename} (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)";
-                        if (filelistTemplate.ToString().IndexOf(automaticIncludedFilename) > 0)
+                        if (filelistTemplate.ToString().IndexOf(automaticIncludedFilename, StringComparison.Ordinal) > 0)
                             continue;
                         filelistTemplate.Replace(filename, automaticIncludedFilename);
                         bool didReplace = filelistTemplate.Length != preReplaceLength;
@@ -100,10 +95,6 @@ namespace SetupDeployProject
                     }
                     File.WriteAllText(filelistPath.Replace("-template", ""), filelistTemplate.ToString());
                 }
-
-                var testSettingsTemplate = new StringBuilder(File.ReadAllText(testSettingsPath));
-                testSettingsTemplate.Replace("__VENDOR_DLLS__", testSettingDlls.ToString());
-                File.WriteAllText(testSettingsPath.Replace("-template", ""), testSettingsTemplate.ToString());
 
                 /*var httpSources = Regex.Matches(wxsTemplate.ToString(), "Name=\"(.*)\" Source=\"(http://.*?)\"");
                 WebClient webClient = null;
