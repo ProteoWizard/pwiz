@@ -57,6 +57,8 @@ namespace pwiz.Skyline
     /// </summary>
     public static class Program
     {
+        public static string DONT_CHECK_IN = "dont check in";
+        public static bool logFileSystem = false;
         public const int LICENSE_VERSION_CURRENT = 5;   // Added Shimadzu license
         public const int EXIT_CODE_SUCCESS = 0;
         public const int EXIT_CODE_FAILURE_TO_START = 1;

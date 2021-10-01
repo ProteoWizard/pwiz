@@ -227,9 +227,9 @@ namespace pwiz.Skyline.Util
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
-                if (connection is FileStream fileStream)
+                if (connection is FileStream fileStream && Program.logFileSystem)
                 {
-                    Console.Out.WriteLine("Opening {0}: {1}", fileStream.Name, id.GlobalIndex);
+                    Console.Out.WriteLine("Opening {0}: {1} {2}<<<<<", fileStream.Name, id.GlobalIndex, new StackTrace(true));
                 }
                 _connections.Add(id.GlobalIndex, connection);
                 return connection;
@@ -248,9 +248,9 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (!_connections.TryGetValue(id.GlobalIndex, out connection))
                     return;
-                if (connection is FileStream fileStream)
+                if (connection is FileStream fileStream && Program.logFileSystem)
                 {
-                    Console.Out.WriteLine("Closing {0}: {1}", fileStream.Name, id.GlobalIndex);
+                    Console.Out.WriteLine("Closing {0}: {1} {2}<<<<<", fileStream.Name, id.GlobalIndex, new StackTrace(true));
                 }
                 _connections.Remove(id.GlobalIndex);
                 // Disconnect inside lock, since a new attempt to connect
