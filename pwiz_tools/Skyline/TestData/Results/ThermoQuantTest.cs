@@ -202,15 +202,7 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoRatioTest()
         {
-            try
-            {
-                Program.logFileSystem = true;
-                DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.none);
-            }
-            finally
-            {
-                Program.logFileSystem = false;
-            }
+            DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
@@ -230,6 +222,7 @@ namespace pwiz.SkylineTestData.Results
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
+            Program.logFileSystem = true;
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
