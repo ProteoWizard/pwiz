@@ -42,7 +42,7 @@ using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScaleCopyable
+    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScalePlot
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
@@ -981,6 +981,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return SpectrumControlType.FullScanViewer; }
         }
 
+        public bool IsAnnotated => _showIonSeriesAnnotations;
 
         private void ZoomYAxis()
         {
@@ -1194,7 +1195,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
                 menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
-                menuStrip.Items.Insert(1, showIonTypesRanksToolStripMenuItem);
+                menuStrip.Items.Insert(1, showPeakAnnotationsContextMenuItem);
                 menuStrip.Items.Insert(2, toolStripSeparator1);
 
                 var currentTransition =
@@ -1314,13 +1315,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private void toolStripButtonShowAnnotations_CheckedChanged(object sender, EventArgs e)
         {
             _showIonSeriesAnnotations = toolStripButtonShowAnnotations.Checked;
-            showIonTypesRanksToolStripMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
+            showPeakAnnotationsContextMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }
 
         private void showIonTypesRanksToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            _showIonSeriesAnnotations = showIonTypesRanksToolStripMenuItem.Checked;
+            _showIonSeriesAnnotations = showPeakAnnotationsContextMenuItem.Checked;
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
         }

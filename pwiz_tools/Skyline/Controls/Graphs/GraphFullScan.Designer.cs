@@ -47,7 +47,7 @@
             this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showIonTypesRanksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showPeakAnnotationsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
@@ -210,7 +210,7 @@
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showScanNumberContextMenuItem,
-            this.showIonTypesRanksToolStripMenuItem,
+            this.showPeakAnnotationsContextMenuItem,
             this.toolStripSeparator1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
@@ -223,10 +223,10 @@
             // 
             // showIonTypesRanksToolStripMenuItem
             // 
-            this.showIonTypesRanksToolStripMenuItem.CheckOnClick = true;
-            this.showIonTypesRanksToolStripMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
-            resources.ApplyResources(this.showIonTypesRanksToolStripMenuItem, "showIonTypesRanksToolStripMenuItem");
-            this.showIonTypesRanksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
+            this.showPeakAnnotationsContextMenuItem.CheckOnClick = true;
+            this.showPeakAnnotationsContextMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
+            resources.ApplyResources(this.showPeakAnnotationsContextMenuItem, "showIonTypesRanksToolStripMenuItem");
+            this.showPeakAnnotationsContextMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
             // 
             // toolStripSeparator1
             // 
@@ -270,7 +270,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;
-        private System.Windows.Forms.ToolStripMenuItem showIonTypesRanksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showPeakAnnotationsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
