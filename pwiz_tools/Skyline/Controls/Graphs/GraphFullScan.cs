@@ -39,6 +39,7 @@ using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 using Thread = System.Threading.Thread;
 using Transition = pwiz.Skyline.Model.Transition;
+using PeakType = pwiz.Skyline.Model.Results.MsDataFileScanHelper.PeakType;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -96,6 +97,13 @@ namespace pwiz.Skyline.Controls.Graphs
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
+            comboBoxPeakType.Items.Clear();
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault));
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.centroided));
+            comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.profile));
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
+            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
+            this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
         }
 
         public ZedGraphControl ZedGraphControl
@@ -112,6 +120,29 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _msDataFileScanHelper.MsDataSpectra = spectra;
             _rmis = null;
+
+
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
+            if (peakType != PeakType.chromDefault)
+            {
+                var requestedCentroids = (peakType == PeakType.centroided);
+                if (spectra[0].Centroided != requestedCentroids)
+                {
+                    MessageDlg.Show(this, string.Format(
+                        Resources.GraphFullScan_SetSpectraUI__peak_type_not_available,
+                        _msDataFileScanHelper.GetPeakTypeLocalizedName(requestedCentroids
+                            ? PeakType.centroided
+                            : PeakType.profile),
+                        _msDataFileScanHelper.GetPeakTypeLocalizedName(spectra[0].Centroided
+                            ? PeakType.centroided
+                            : PeakType.profile)));
+
+                    this.comboBoxPeakType.SelectedIndexChanged -= this.comboBoxPeakType_SelectedIndexChanged;
+                    Settings.Default.FullScanPeakType = PeakType.chromDefault.ToString();
+                    comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault);
+                    this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
+                }
+            }
 
             _heatMapData = null;
             if (_msDataFileScanHelper.MsDataSpectra == null)
@@ -230,7 +261,17 @@ namespace pwiz.Skyline.Controls.Graphs
             lblScanId.Text = (scanId+1).ToString(@"D");
 
             RunBackground(LoadingTextIfNoChange);
-            _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
+
+            var peakType = _msDataFileScanHelper.ParsePeakTypeEnumName(Settings.Default.FullScanPeakType);
+            if (peakType == PeakType.chromDefault)
+                _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId);
+            else
+            {
+                if (_msDataFileScanHelper.Source == ChromSource.fragment)
+                    _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, null, peakType == PeakType.centroided);
+                else
+                    _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanId, peakType == PeakType.centroided);
+            }
         }
 
         private void RunBackground(Action action)
@@ -1036,6 +1077,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
+            comboBoxPeakType.Visible = spectrumBtn.Checked;
+            toolStripLabelPeakType.Visible = spectrumBtn.Checked;
 
             if (selectionChanged)
                 CreateGraph();
@@ -1304,6 +1347,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             toolStripButtonShowAnnotations.Checked = isChecked;
         }
+
+        public void SetPeakTypeSelection(PeakType peakType)
+        {
+            comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
+        }
+
+        public MsDataFileScanHelper MsDataFileScanHelper
+        {
+            get => _msDataFileScanHelper;
+        }
+
         #endregion Test support
 
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1324,6 +1378,12 @@ namespace pwiz.Skyline.Controls.Graphs
             _showIonSeriesAnnotations = showPeakAnnotationsContextMenuItem.Checked;
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
             UpdateUI();
+        }
+
+        private void comboBoxPeakType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Settings.Default.FullScanPeakType = _msDataFileScanHelper.PeakTypeFromLocalizedName((string) comboBoxPeakType.SelectedItem).ToString();
+            LoadScan(false, true);
         }
     }
 
