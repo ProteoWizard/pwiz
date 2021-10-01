@@ -158,6 +158,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
         case InstrumentSource_ESI:
         case InstrumentSource_MULTI_MODE:
         case InstrumentSource_Ultraspray:
+        case InstrumentSource_VIP_HESI:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_ESI, 1));
             configurations.back().componentList.back().set(MS_electrospray_inlet);
