@@ -58,13 +58,15 @@ namespace pwiz.Skyline.Controls.Graphs
     }
 
     public enum SpectrumControlType { LibraryMatch, FullScanViewer }
-    public interface IMzScaleCopyable
+
+    public interface IMzScalePlot
     {
         void SetMzScale(MzRange range);
         MzRange Range { get; }
         void ApplyMZZoomState(ZoomState scaleState);
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
+        bool IsAnnotated { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
         MzRange GetMzRange(SpectrumControlType controlType);
     }
     
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -1315,6 +1317,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+        public bool IsAnnotated => true;
 
         public double MzMax
         {
