@@ -1187,6 +1187,10 @@ namespace pwiz.SkylineTestUtil
                         target = ForceDocumentLoad(target, testDir);
                         actual = ForceDocumentLoad(actual, testDir);
                     }
+
+                    target = ResultsUtil.ClearFileImportTimes(target);
+                    actual = ResultsUtil.ClearFileImportTimes(actual);
+
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
                     return;

@@ -268,10 +268,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        void GraphSummary.IController.OnNormalizeOptionChanged()
-        {
-        }
-
         void GraphSummary.IController.OnResultsIndexChanged()
         {
             if (_controllerInterface.GraphSummary.GraphPanes.OfType<DetectionsByReplicatePane>().Any())
