@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline.EditUI
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
         {
             var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
-            if ((document = fastaHelper.AddFasta(document, null, ref selectedPath, out newPeptideGroups, out var error)) == null)
+            if ((document = fastaHelper.AddFasta(document, null, null, ref selectedPath, out newPeptideGroups, out var error)) == null)
             {
                 fastaHelper.ShowFastaError(error);
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
@@ -1971,7 +1972,8 @@ namespace pwiz.Skyline.EditUI
         private readonly ToolTip _helpTip;
         private ToolTip HelpTip { get { return _helpTip; } }
 
-        public SrmDocument AddFasta(SrmDocument document, IProgressMonitor monitor, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups, out PasteError error)
+        public SrmDocument AddFasta(SrmDocument document, IrtStandard irtStandard, IProgressMonitor monitor,
+            ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups, out PasteError error)
         {
             newPeptideGroups = new List<PeptideGroupDocNode>();
             var text = TbxFasta.Text;
@@ -2040,7 +2042,7 @@ namespace pwiz.Skyline.EditUI
             if ((error = CheckSequence(aa, lastNameLine, lines)) != null)
                 return null;
 
-            var importer = new FastaImporter(document, false);
+            var importer = new FastaImporter(document, irtStandard);
             try
             {
                 var reader = new StringReader(TbxFasta.Text);

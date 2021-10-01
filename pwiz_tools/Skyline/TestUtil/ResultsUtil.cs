@@ -162,6 +162,19 @@ namespace pwiz.SkylineTestUtil
                          CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
             return cacheSize;
         }
+
+        /// <summary>
+        /// Set all of ImportTime values in all of the ChromFileInfos to null.
+        /// </summary>
+        public static SrmDocument ClearFileImportTimes(SrmDocument document)
+        {
+            var newMeasuredResults = document.MeasuredResults?.ClearImportTimes();
+            if (Equals(newMeasuredResults, document.MeasuredResults))
+            {
+                return document;
+            }
+            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
+        }
     }
 
     public class DocResultsState
@@ -510,6 +523,6 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return maxTime;
-        }        
+        }
     }
 }
