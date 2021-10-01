@@ -255,13 +255,13 @@ namespace pwiz.Skyline.Util
 
         private void LogConnection(string operation, Identity id, IDisposable connection)
         {
-            if (!Program.logFileSystem)
+            var fileStream = connection as FileStream;
+            if (fileStream == null)
             {
                 return;
             }
 
-            var fileStream = connection as FileStream;
-            if (fileStream == null)
+            if (!fileStream.Name.EndsWith("Site20_Study9p_unmixed.skyd"))
             {
                 return;
             }
