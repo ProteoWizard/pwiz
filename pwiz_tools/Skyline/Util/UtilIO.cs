@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Util
                 connection = connect();
                 if (connection is FileStream fileStream)
                 {
-                    Console.Out.WriteLine("Opening {0}", fileStream.Name);
+                    Console.Out.WriteLine("Opening {0}: {1}", fileStream.Name, id.GlobalIndex);
                 }
                 _connections.Add(id.GlobalIndex, connection);
                 return connection;
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Util
                     return;
                 if (connection is FileStream fileStream)
                 {
-                    Console.Out.WriteLine("Closing {0}", fileStream.Name);
+                    Console.Out.WriteLine("Closing {0}: {1}", fileStream.Name, id.GlobalIndex);
                 }
                 _connections.Remove(id.GlobalIndex);
                 // Disconnect inside lock, since a new attempt to connect
