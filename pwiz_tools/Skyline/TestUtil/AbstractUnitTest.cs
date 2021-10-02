@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -347,9 +348,17 @@ namespace pwiz.SkylineTestUtil
 
             SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
 
-//            var log = new Log<AbstractUnitTest>();
-//            log.Info(TestContext.TestName + " started");
+            //            var log = new Log<AbstractUnitTest>();
+            //            log.Info(TestContext.TestName + " started");
 
+            // Remove any existing config file as a workaround for issue described at
+            // https://stackoverflow.com/questions/9111504/missing-configsections-in-config-file-after-deployment/15134508#15134508
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+            if (config.HasFile && File.Exists(config.FilePath))
+            {
+                File.Delete(config.FilePath);
+            }
+            
             Settings.Init();
 
             STOPWATCH.Restart();
