@@ -1627,18 +1627,17 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
+            var scoreValueCount = chromGroupHeaderInfo.NumPeaks * _scoreTypeIndices.Count;
+            if (scoreValueCount == 0)
+            {
+                return Array.Empty<float>();
+            }
             return CallWithStream(stream =>
             {
                 stream.Seek(_rawData.LocationScoreValues + chromGroupHeaderInfo.StartScoreIndex * SCORE_VALUE_SIZE,
                     SeekOrigin.Begin);
-                return PrimitiveArrays.Read<float>(stream,
-                    chromGroupHeaderInfo.NumPeaks * _scoreTypeIndices.Count);
+                return PrimitiveArrays.Read<float>(stream, scoreValueCount);
             });
-        }
-
-        public IList<ChromGroupHeaderInfo> ChromatogramsSortedByScoreIndex()
-        {
-            return ChromGroupHeaderInfos.OrderBy(i => i.StartScoreIndex).ToList();
         }
     }
 
