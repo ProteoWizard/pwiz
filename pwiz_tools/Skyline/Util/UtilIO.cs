@@ -227,7 +227,6 @@ namespace pwiz.Skyline.Util
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
-                LogConnection("Opening", id, connection);
                 _connections.Add(id.GlobalIndex, connection);
                 return connection;
             }            
@@ -245,30 +244,11 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (!_connections.TryGetValue(id.GlobalIndex, out connection))
                     return;
-                LogConnection("Closing", id, connection);
                 _connections.Remove(id.GlobalIndex);
                 // Disconnect inside lock, since a new attempt to connect
                 // may fail if the old connection is not fully disconnected.
                 connection.Dispose();
             }
-        }
-
-        private void LogConnection(string operation, Identity id, IDisposable connection)
-        {
-            var fileStream = connection as FileStream;
-            if (fileStream == null)
-            {
-                return;
-            }
-
-            if (!fileStream.Name.EndsWith(".skyd"))
-            {
-                return;
-            }
-
-            Console.Out.WriteLine("{0}: {1} {2}", operation, fileStream.Name, id.GlobalIndex);
-            Console.Out.WriteLine("{0}: Begin Stack Trace>>>>>>>\r\n{1}\r\n<<<<<<<End Stack Trace: {0}", id.GlobalIndex, new StackTrace(true));
-            Console.Out.Flush();
         }
 
         public void DisconnectWhile(IPooledStream stream, Action act)
