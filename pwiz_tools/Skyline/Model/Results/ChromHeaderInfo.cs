@@ -2268,6 +2268,7 @@ namespace pwiz.Skyline.Model.Results
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }
         public int BestPeakIndex { get { return MaxPeakIndex; } }
 
+        [Browsable(false)]
         public TimeIntensitiesGroup TimeIntensitiesGroup
         {
             get
@@ -2371,11 +2372,6 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz GetProductLocal(int transitionIndex)
         {
             return new SignedMz(_allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex].Product, _groupHeaderInfo.NegativeCharge);
-        }
-
-        protected ChromTransition GetChromTransitionGlobal(int index)
-        {
-            return _allTransitions[index];
         }
 
         public ChromTransition GetChromTransitionLocal(int transitionIndex)
