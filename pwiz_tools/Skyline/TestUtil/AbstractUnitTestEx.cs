@@ -60,67 +60,65 @@ namespace pwiz.SkylineTestUtil
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,
             RefinementSettings.ConvertToSmallMoleculesMode mode)
         {
-            if (doc == null)
+            using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
             {
-                using (var cmd = new CommandLine())
+                if (doc == null)
                 {
-                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
-                    var docLoad = cmd.Document;
-                    using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
+                    using (var cmd = new CommandLine())
                     {
-                        docContainer.SetDocument(docLoad, null, true);
+                        Assert.IsTrue(
+                            cmd.OpenSkyFile(
+                                docPath)); // Handles any path shifts in database files, like our .imsdb file
+                        var docLoad = cmd.Document;
+                        docContainer.SetDocument(docLoad, docContainer.Document, true);
                         docContainer.AssertComplete();
                         doc = docContainer.Document;
                     }
                 }
-            }
-            if (mode == RefinementSettings.ConvertToSmallMoleculesMode.none)
-            {
-                return doc;
-            }
 
-            var docOriginal = doc;
-            var refine = new RefinementSettings();
-            docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
-            var docSmallMol =
-                refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
-            var listChromatograms = new List<ChromatogramSet>();
-            if (dataPaths != null)
-            {
-                foreach (var dataPath in dataPaths)
+                if (mode == RefinementSettings.ConvertToSmallMoleculesMode.none)
                 {
-                    if (!string.IsNullOrEmpty(dataPath))
+                    return doc;
+                }
+
+                var docOriginal = doc;
+                var refine = new RefinementSettings();
+                docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
+                var docSmallMol =
+                    refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
+                var listChromatograms = new List<ChromatogramSet>();
+                if (dataPaths != null)
+                {
+                    foreach (var dataPath in dataPaths)
                     {
-                        listChromatograms.Add(AssertResult.FindChromatogramSet(docSmallMol, new MsDataFilePath(dataPath)) ??
-                                              new ChromatogramSet(Path.GetFileName(dataPath).Replace('.', '_'),
-                                                  new[] { dataPath }));
+                        if (!string.IsNullOrEmpty(dataPath))
+                        {
+                            listChromatograms.Add(
+                                AssertResult.FindChromatogramSet(docSmallMol, new MsDataFilePath(dataPath)) ??
+                                new ChromatogramSet(Path.GetFileName(dataPath).Replace('.', '_'),
+                                    new[] {dataPath}));
+                        }
                     }
                 }
-            }
-            var docResults = docSmallMol.ChangeMeasuredResults(listChromatograms.Any() ? new MeasuredResults(listChromatograms) : null);
 
-            // Since refine isn't in a document container, have to close the streams manually to avoid file locking trouble (thanks, Nick!)
-            foreach (var library in docResults.Settings.PeptideSettings.Libraries.Libraries)
-            {
-                foreach (var stream in library.ReadStreams)
-                {
-                    stream.CloseStream();
-                }
-            }
+                var docResults =
+                    docSmallMol.ChangeMeasuredResults(listChromatograms.Any()
+                        ? new MeasuredResults(listChromatograms)
+                        : null);
 
-            // Save and restore to ensure library caches
-            var cmdline = new CommandLine();
-            cmdline.SaveDocument(docResults, docPath, TextWriter.Null);
-            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
-            docResults = cmdline.Document;
-            using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
-            {
-                docContainer.SetDocument(docResults, null, true);
+                // Save and restore to ensure library caches
+                var cmdline = new CommandLine();
+                cmdline.SaveDocument(docResults, docPath, TextWriter.Null);
+                Assert.IsTrue(
+                    cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
+                docResults = cmdline.Document;
+                docContainer.SetDocument(docResults, docContainer.Document, true);
                 docContainer.AssertComplete();
                 doc = docContainer.Document;
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath),
+                    mode);
+                return doc;
             }
-            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
-            return doc;
         }
     }
 }
