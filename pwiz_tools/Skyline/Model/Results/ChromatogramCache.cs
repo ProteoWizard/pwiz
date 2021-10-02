@@ -117,7 +117,6 @@ namespace pwiz.Skyline.Model.Results
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly LibKeyMap<int[]> _chromEntryIndex;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
-        private bool _disposed;
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
@@ -289,7 +288,6 @@ namespace pwiz.Skyline.Model.Results
         public void Dispose()
         {
             ReadStream.CloseStream();
-            _disposed = true;
         }
 
         private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
@@ -1568,10 +1566,6 @@ namespace pwiz.Skyline.Model.Results
 
         private T CallWithStream<T>(Func<Stream, T> func)
         {
-            if (_disposed)
-            {
-                throw new InvalidOperationException();
-            }
             var stream = ReadStream.Stream;
             lock (stream)
             {

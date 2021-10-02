@@ -1832,7 +1832,6 @@ namespace pwiz.Skyline.Model
                     TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
                     nameSet));
             }
-
             // Get the chromatograms for only the file of interest
             int indexInfo = arrayChromInfo.IndexOf(info => Equals(filePath, info.FilePath));
             if (indexInfo == -1)

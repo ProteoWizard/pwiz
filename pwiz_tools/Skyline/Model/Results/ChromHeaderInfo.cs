@@ -2542,7 +2542,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Throw away chromatogram and peaks.
+        /// Throw away chromatogram and peaks, and disconnect from the ChromatogramCache.
+        /// This object be able to provide information about the ChromGroupHeaderInfo and ChromTransition's,
+        /// but will not have any chromatogram or peak data.
         /// </summary>
         public void DiscardData()
         {
