@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Results
             get { return CacheFormatVersion.CURRENT; }
         }
 
-        // Set default block size for scoures BlockedArray<float>
+        // Set default block size for scores BlockedArray<float>
         public const int DEFAULT_SCORES_BLOCK_SIZE = 100*1024*1024;  // 100 megabytes
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (int i in ChromatogramIndexesMatching(nodePep, precursorMz, tolerance, chromatograms))
             {
                 var entry = ChromGroupHeaderInfos[i];
-                // If explict retention time info is available, use that to discard obvious mismatches
+                // If explicit retention time info is available, use that to discard obvious mismatches
                 if (!explicitRT.HasValue || // No explicit RT
                     !entry.StartTime.HasValue || // No time data loaded yet
                     (entry.StartTime <= explicitRT && explicitRT <= entry.EndTime))
@@ -374,7 +374,7 @@ namespace pwiz.Skyline.Model.Results
                     return true;
                 }
                 // Older .skyd files used just the name of the molecule as the TextId.
-                // We can't rely on the formatversion in the .skyd, because of the way that .skyd files can get merged.
+                // We can't rely on the FormatVersion in the .skyd, because of the way that .skyd files can get merged.
                 if (EqualTextIdBytes(nodePep.CustomMolecule.InvariantName, textIdIndex, textIdLen))
                 {
                     return true;
@@ -892,48 +892,10 @@ namespace pwiz.Skyline.Model.Results
             return BitConverter.ToInt32(bytes, ibyte);
         }
         
-        private static float GetFloat(byte[] bytes, int index)
-        {
-            int ibyte = index * 4;
-            return BitConverter.ToSingle(bytes, ibyte);
-        }
-
         private static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
                 throw new InvalidDataException(Resources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
-        }
-
-        /// <summary>
-        /// Write mostly new information taken from an existing cache, without
-        /// breaking encapsulation.
-        /// </summary>
-        public static void WriteStructs(CacheFormat cacheFormat, 
-                                        Stream outStream,
-                                        Stream outStreamScans,
-                                        Stream outStreamPeaks,
-                                        Stream outStreamScores,
-                                        ICollection<ChromCachedFile> chromCachedFiles,
-                                        ICollection<ChromGroupHeaderInfo> chromatogramEntries,
-                                        ICollection<ChromTransition> chromTransitions,
-                                        ICollection<Type> scoreTypes,
-                                        int scoureCount,
-                                        int peakCount,
-                                        ChromatogramCache originalCache)
-        {
-            WriteStructs(cacheFormat,
-                         outStream,
-                         outStreamScans,
-                         outStreamPeaks,
-                         outStreamScores,
-                         chromCachedFiles,
-                         chromatogramEntries,
-                         chromTransitions,
-                         originalCache._rawData.TextIdBytes,   // Cached sequence and custom ion id bytes remain unchanged
-                         scoreTypes,
-                         scoureCount,
-                         peakCount, 
-                         out long _);
         }
 
         public static CacheHeaderStruct WriteStructs(CacheFormat cacheFormat,
@@ -1135,7 +1097,7 @@ namespace pwiz.Skyline.Model.Results
             Buffer.BlockCopy(times, 0, points, 0, sizeArray);
             int offset = sizeArray;
 
-            // Write intensites
+            // Write intensities
             for (int i = 0; i < numTrans; i++, offset += sizeArray)
             {
                 Buffer.BlockCopy(intensities[i], 0, points, offset, sizeArray);
@@ -1277,7 +1239,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             CacheFormat cacheFormat = CacheFormat.FromVersion(formatVersion ?? CacheFormatVersion.CURRENT);
-                        Assume.IsTrue(keepFilePaths.Count > 0);
+            Assume.IsTrue(keepFilePaths.Count > 0);
 
             // Sort by file, points location into new array
             // CONSIDER: This is limited to 2 GB allocation size, but 4 bytes per Tuple instead of 72 bytes per header
@@ -1424,10 +1386,9 @@ namespace pwiz.Skyline.Model.Results
                 var rawData =
                     new RawData(newCacheHeader, listKeepCachedFiles, listKeepEntries.ToBlockedArray(),
                         listKeepTransitions.ToBlockedArray(), scoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
-                return new ChromatogramCache(cachePathOpt,
-                                rawData,
+                return new ChromatogramCache(cachePathOpt, rawData,
                     // Create a new read stream, for the newly created file
-                                streamManager.CreatePooledStream(cachePathOpt, false));
+                    streamManager.CreatePooledStream(cachePathOpt, false));
             }
         }
 
