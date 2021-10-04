@@ -450,6 +450,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public static IEnumerable<FoundResultsFile> EnsureUniqueNames(IList<FoundResultsFile> files)
+        {
+            // Enforce uniqueness in names (might be constructed from list of files a.raw, a.mzML)
+            return Helpers.EnsureUniqueNames(files.Select(f => f.Name).ToList()).Zip(files.Select(f => f.Path),
+                (name, path) => new FoundResultsFile(name, path));
+        }
+
         public static SrmDocument PrepareImportFasta(SrmDocument document)
         {
             // First preserve the state of existing document nodes in the tree
