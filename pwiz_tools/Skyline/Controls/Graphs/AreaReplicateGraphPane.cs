@@ -267,12 +267,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarSettings.Type = BarType.Cluster;
             }
 
-            IsotopeLabelType standardType = null;
+            var standardType = (normalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)?.FindIsotopeLabelType(document.Settings);
 
-            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
-            {
-                standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
-            }
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
             DataScalingOption dataScalingOption;
             if (optimizationPresent && displayType == DisplayTypeChrom.single &&
@@ -319,7 +315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (parentGroupNode.HasLibInfo)
                             ExpectedVisible = AreaExpectedValue.library;
                     }
-                    if (ratioToLabel != null && !ratioToLabel.IsotopeLabelType.IsLight && isShowingMsMs)
+                    if (ratioToLabel != null)
                         ExpectedVisible = AreaExpectedValue.ratio_heavy;
                 }
             }
@@ -490,10 +486,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
 
-                    // Add area for this transition to each area entry
+                    // Aggregate area of this transition for each area entry
                     Func<double,double, double> aggregateFunc = (sums, y) => sums + y;
+                    //if bar type is cluster we need to show dotp label at the highest peak level, not at the total peak height
                     if (BarSettings.Type == BarType.Cluster)
-                        aggregateFunc = Math.Max;
+                        aggregateFunc = Math.Max;   
                     AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
 
                     var lineItem = curveItem as LineItem;
@@ -838,7 +835,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToHeavy)
                     {
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
-                        if (precursorNodePath.Peptide != null && nodeGroup.LabelType.Equals(IsotopeLabelType.light))
+                        if (precursorNodePath.Peptide != null)
                         {
                             var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
                                 ratioToHeavy,
