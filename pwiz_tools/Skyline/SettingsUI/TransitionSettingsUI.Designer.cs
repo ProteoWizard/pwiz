@@ -542,20 +542,17 @@
             this.panelPick.Controls.Add(this.textIonCount);
             resources.ApplyResources(this.panelPick, "panelPick");
             this.panelPick.Name = "panelPick";
-            this.modeUIHandler.SetUIMode(this.panelPick, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // label22
             // 
             resources.ApplyResources(this.label22, "label22");
             this.label22.Name = "label22";
-            this.modeUIHandler.SetUIMode(this.label22, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textMinIonCount
             // 
             resources.ApplyResources(this.textMinIonCount, "textMinIonCount");
             this.textMinIonCount.Name = "textMinIonCount";
             this.helpTip.SetToolTip(this.textMinIonCount, resources.GetString("textMinIonCount.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.textMinIonCount, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // radioAllAndFiltered
             // 
@@ -588,20 +585,17 @@
             // 
             resources.ApplyResources(this.label14, "label14");
             this.label14.Name = "label14";
-            this.modeUIHandler.SetUIMode(this.label14, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // label15
             // 
             resources.ApplyResources(this.label15, "label15");
             this.label15.Name = "label15";
-            this.modeUIHandler.SetUIMode(this.label15, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textIonCount
             // 
             resources.ApplyResources(this.textIonCount, "textIonCount");
             this.textIonCount.Name = "textIonCount";
             this.helpTip.SetToolTip(this.textIonCount, resources.GetString("textIonCount.ToolTip"));
-            this.modeUIHandler.SetUIMode(this.textIonCount, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // textTolerance
             // 
