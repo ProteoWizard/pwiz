@@ -941,11 +941,15 @@ namespace pwiz.ProteowizardWrapper
                         data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                         {
-                            data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
-                            if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                            data = TryGetIonMobilityData(s, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, ref _cvidIonMobility);
+                            if (data == null)
                             {
-                                _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
-                                return null;
+                                data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                                {
+                                    _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
+                                    return null;
+                                }
                             }
                         }
                         break;
@@ -1201,7 +1205,7 @@ namespace pwiz.ProteowizardWrapper
         private MsDataSpectrum _lastSpectrumInfo;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
-            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
+            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel || _lastSpectrum == null)
             {
                 _lastScanIndex = scanIndex;
                 _lastDetailLevel = detailLevel;

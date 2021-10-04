@@ -351,7 +351,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.stripVersionFromSoftware)->zero_tokens(),
             ": if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML")
         ("singleThreaded",
-            po::value<boost::tribool>(&config.singleThreaded)->zero_tokens()->default_value(boost::indeterminate),
+            po::value<boost::tribool>(&config.singleThreaded)->implicit_value(true)->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),

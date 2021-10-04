@@ -636,7 +636,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
+            SkylineWindow.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }

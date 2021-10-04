@@ -2228,6 +2228,15 @@
   <data name="GraphFullScan_GraphFullScan_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
+  <data name="GraphFullScan_PeakType_ChromDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Centroided" xml:space="preserve">
+    <value>Centroided</value>
+  </data>
+  <data name="GraphFullScan_PeakType_Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
   <data name="SkylineWindow_FindIrtDatabase_Find_iRT_Calculator" xml:space="preserve">
     <value>Find iRT Calculator</value>
   </data>
@@ -11423,6 +11432,9 @@ If you do not have the original file, you may build the library with embedded sp
   </data>  
   <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
+  </data>
+  <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
+    <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
   </data>
   <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
     <value>{0}{1} ppm</value>
