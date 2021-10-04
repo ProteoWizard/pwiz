@@ -517,18 +517,21 @@ namespace pwiz.SkylineTestTutorial
             ClickChromatogram(TIP_NAME, 33.2, 328.1);
             PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
 
-            RunUI(() =>
+            if (PreferWiff)
             {
-                Assert.AreEqual(726,  SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
-                SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
-            });
-            WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(726, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
+                });
+                WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
 
-            RunUI(() =>
-            {
-                Assert.AreEqual(36, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
-                SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
-            });
+                RunUI(() =>
+                {
+                    Assert.AreEqual(36, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
+                });
+            }
 
             RunUI(() => SkylineWindow.HideFullScanGraph());
 
