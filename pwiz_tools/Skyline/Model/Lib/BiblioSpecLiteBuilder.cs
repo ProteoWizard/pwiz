@@ -207,6 +207,7 @@ namespace pwiz.Skyline.Model.Lib
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);
             progress.UpdateProgress(status);
+            
             // Write the non-redundant library to a temporary file first
             try
             {
