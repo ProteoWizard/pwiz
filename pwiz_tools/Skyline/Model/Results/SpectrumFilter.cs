@@ -1165,7 +1165,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            else
+            else if (acquisitionMethod == FullScanAcquisitionMethod.DDA)
             {
                 foreach (var filterPair in _filterMzValues)
                 {
@@ -1174,6 +1174,11 @@ namespace pwiz.Skyline.Model.Results
                         filterPairs.Add(filterPair);
                     }
                 }
+            }
+            else // PRM or SureQuant
+            {
+                return FindFilterPairs(new IsolationWindowFilter(isoWin.IsolationMz, 2 * _instrument.MzMatchTolerance),
+                    FullScanAcquisitionMethod.DIA, true);
             }
 
             _filterPairDictionary[isoWinKey] = filterPairs;
