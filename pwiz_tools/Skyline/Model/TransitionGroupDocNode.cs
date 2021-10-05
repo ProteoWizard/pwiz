@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// For t eransition lists with explicit values for CE, ion mobilitytc
+        /// For transition lists with explicit values for CE, ion mobility
         /// </summary>
         [TrackChildren]
         public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
@@ -524,7 +524,7 @@ namespace pwiz.Skyline.Model
                             !chromInfo.StartRetentionTime.HasValue ||
                             !chromInfo.EndRetentionTime.HasValue)
                         return null;
-                    // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regresson
+                    // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regression
                     if (i >= Results.Count - centerTimes.Length)
                     {
                         valTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;
@@ -781,7 +781,7 @@ namespace pwiz.Skyline.Model
                 calc = settings.GetPrecursorCalc(labelType, mods);
                 mass = calc.GetPrecursorMass(seq);
                 mz = SequenceMassCalc.GetMZ(mass, adduct) + 
-                    SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
+                     SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
                 if (TransitionGroup.DecoyMassShift.HasValue)
                     mass = new TypedMass(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
             }
