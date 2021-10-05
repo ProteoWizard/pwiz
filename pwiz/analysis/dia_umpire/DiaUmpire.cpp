@@ -356,6 +356,9 @@ namespace DiaUmpire {
             }
         }
 
+        if (iterateAndCheckCancellation(sl_.size(), sl_.size(), progressMessage, DiaUmpireStep::AssignSpectraToWindows))
+            return false;
+
         if (ms1Count_ == 0)
             throw runtime_error("[DiaUmpire::BuildDIAWindows] no MS1 scans detected; they are required for DIA Umpire to work");
 
@@ -630,6 +633,9 @@ namespace DiaUmpire {
             }
             else
                 ++scansRead;
+
+            if (iterateAndCheckCancellation(scansRead, endIndex + 1, progressMessage, step))
+                return nullptr;
         }
 
         while (scansRead < totalScans)
