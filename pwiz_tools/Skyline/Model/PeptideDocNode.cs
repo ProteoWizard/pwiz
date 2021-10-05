@@ -503,7 +503,7 @@ namespace pwiz.Skyline.Model
                 var i1 = i;
                 var zScores = Children.Cast<TransitionGroupDocNode>()
                     .Where(nodeTranGroup => nodeTranGroup.HasResults)
-                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1].AsList())
+                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1])
                     .Where(ci => ci.ZScore.HasValue)
                     .Select(ci => ci.ZScore.Value).ToArray();
                 var zScore = zScores.Length > 0 ? (float?) zScores.Max() : null;
