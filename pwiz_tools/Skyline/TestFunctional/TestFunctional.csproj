@@ -163,6 +163,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
@@ -436,6 +437,7 @@
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
+    <None Include="AreaNormalizeOptionTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AssociateProteinVariantTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
