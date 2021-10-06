@@ -75,6 +75,16 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
 
+            // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null,  // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"^\s*RunPerfTests\s*\=\s*true", // Forbidden pattern (uncommented enabling of perftests in IDE)
+                true, // Pattern is a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. PerfTests are normally enabled/disabled by the automated test framework."); // Explanation for prohibition, appears in report
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -115,7 +125,7 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
-                13); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+                11); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
