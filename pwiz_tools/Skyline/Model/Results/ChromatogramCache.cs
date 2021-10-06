@@ -478,8 +478,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 LocationPeaks = header.locationPeaks;
                 NumPeaks = header.numPeaks;
-                LocationPeaks = header.locationPeaks;
-                NumPeaks = header.numPeaks;
                 NumScores = header.numScores;
                 LocationScanIds = header.locationScanIds;
                 if (FormatVersion > CacheFormatVersion.Eight)
@@ -1576,13 +1574,17 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
+            return ReadPeaksStartingAt(chromGroupHeaderInfo.StartPeakIndex,
+                chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions);
+        }
+
+        private IList<ChromPeak> ReadPeaksStartingAt(long startPeakIndex, int count)
+        {
             return CallWithStream(stream =>
             {
-                stream.Seek(
-                    _rawData.LocationPeaks + _rawData.CacheFormat.ChromPeakSize * chromGroupHeaderInfo.StartPeakIndex,
+                stream.Seek(_rawData.LocationPeaks + _rawData.CacheFormat.ChromPeakSize * startPeakIndex,
                     SeekOrigin.Begin);
-                return _rawData.CacheFormat.ChromPeakSerializer().ReadArray(stream,
-                    chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions);
+                return _rawData.CacheFormat.ChromPeakSerializer().ReadArray(stream, count);
             });
         }
 
