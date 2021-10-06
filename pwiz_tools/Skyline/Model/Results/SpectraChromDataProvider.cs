@@ -1562,6 +1562,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _dataFile.GetInstrumentConfigInfoList(); }
         }
 
+        public IEnumerable<string> FileContentList
+        {
+            get { return _dataFile.GetFileContentList(); }
+        }
+
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
         public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format

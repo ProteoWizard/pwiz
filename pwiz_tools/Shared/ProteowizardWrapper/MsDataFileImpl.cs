@@ -374,6 +374,11 @@ namespace pwiz.ProteowizardWrapper
                    MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
         }
 
+        public IEnumerable<string> GetFileContentList()
+        {
+            return _msDataFile.fileDescription.fileContent.cvParams.Select(cv => cv.name);
+        }
+
         /// <summary>
         /// Record any instrument info found in the file, along with any Waters lockmass info we have
         /// </summary>

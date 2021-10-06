@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.Results
         bool IsWatersFile { get; }
         bool IsAgilentFile { get; }
         IEnumerable<MsInstrumentConfigInfo> ConfigInfoList { get; }
+        IEnumerable<string> FileContentList { get; }
     }
 
     public interface IIonMobilityFunctionsProvider
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isIonMobilityFiltered;
         private readonly bool _isElectronIonizationMse; // All ions, data MS1 only, but produces just fragments
         private readonly IEnumerable<MsInstrumentConfigInfo> _configInfoList;
+        private readonly IEnumerable<string> _fileContentList;
         private readonly IIonMobilityFunctionsProvider _ionMobilityFunctionsProvider;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
@@ -101,6 +103,8 @@ namespace pwiz.Skyline.Model.Results
                 _isWatersFile = instrumentInfo.IsWatersFile;
                 _isWatersSonar = instrumentInfo.IsWatersSonarData;
                 _configInfoList = instrumentInfo.ConfigInfoList;
+                _fileContentList = instrumentInfo.FileContentList;
+                _sourceHasDeclaredMS2Scans = _fileContentList.Contains(@"MSn spectrum");
             }
             IsFirstPass = firstPass;
 
@@ -543,6 +547,11 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
         {
             get { return _configInfoList; }
+        }
+
+        public IEnumerable<string> FileContentList
+        {
+            get { return _fileContentList; }
         }
 
         /// <summary>
@@ -1233,7 +1242,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 isolationWidthValue = isolationWidth.Value - (isolationScheme.PrecursorFilter ?? 0)*2;
             }
-
+            else if (isolationScheme.IsAllIons)
+            {
+                isolationWidthValue = Double.MaxValue;
+            }
                 // No defined isolation scheme?
             else
             {
