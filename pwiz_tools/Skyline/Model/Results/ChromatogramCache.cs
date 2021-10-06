@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results
             get { return CacheFormatVersion.CURRENT; }
         }
 
-        // Set default block size for scoures BlockedArray<float>
+        // Set default block size for scores BlockedArray<float>
         public const int DEFAULT_SCORES_BLOCK_SIZE = 100*1024*1024;  // 100 megabytes
 
         /// <summary>
@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private readonly ImmutableList<ChromCachedFile> _cachedFiles;
+        private IDictionary<MsDataFileUri, ImmutableList<int>> _cachedFileIndexes;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private BlockedArray<ChromGroupHeaderInfo> _chromatogramEntries;
         private BlockedArray<ChromTransition> _chromTransitions;
@@ -128,6 +129,8 @@ namespace pwiz.Skyline.Model.Results
             CachePath = cachePath;
             Version = raw.FormatVersion;
             _cachedFiles = MakeReadOnly(raw.ChromCacheFiles);
+            _cachedFileIndexes = Enumerable.Range(0, _cachedFiles.Count).ToLookup(i => _cachedFiles[i].FilePath, i => i)
+                .ToDictionary(group => group.Key, group => ImmutableList.ValueOf(group));
             _chromatogramEntries = raw.ChromatogramEntries;
             _chromTransitions = raw.ChromTransitions;
             _chromatogramPeaks = raw.ChromatogramPeaks;
@@ -338,6 +341,15 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
+            ICollection<int> fileIndexes = null;
+            if (chromatograms != null)
+            {
+                fileIndexes = GetCachedFileIndexes(chromatograms);
+                if (fileIndexes == null)
+                {
+                    yield break;
+                }
+            }
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
                 bool anyFound = false;
@@ -349,9 +361,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         continue;
                     }
-                    if (chromatograms != null &&
-                        !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex]
-                            .FilePath))
+                    if (fileIndexes != null && !fileIndexes.Contains(entry.FileIndex))
                     {
                         continue;
                     }
@@ -373,9 +383,7 @@ namespace pwiz.Skyline.Model.Results
                 var entry = _chromatogramEntries[i];
                 if (!MatchMz(precursorMz, entry.Precursor, tolerance))
                     break;
-                if (chromatograms != null &&
-                    !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex]
-                        .FilePath))
+                if (fileIndexes != null && !fileIndexes.Contains(entry.FileIndex))
                 {
                     continue;
                 }
@@ -1542,6 +1550,31 @@ namespace pwiz.Skyline.Model.Results
             return new LibKeyMap<int[]>(
                 ImmutableList.ValueOf(chromGroupIndexes.Select(indexes=>indexes.ToArray())), 
                 libraryKeys);
+        }
+
+        private ICollection<int> GetCachedFileIndexes(ChromatogramSet chromatogramSet)
+        {
+            ICollection<int> currentCollection = null;
+            foreach (MsDataFilePath path in chromatogramSet.MSDataFilePaths)
+            {
+                var location = path.GetLocation();
+                if (!_cachedFileIndexes.TryGetValue(location, out var list))
+                {
+                    continue;
+                }
+
+                if (currentCollection == null)
+                {
+                    currentCollection = list;
+                }
+                else
+                {
+                    var hashSet = currentCollection as HashSet<int> ?? new HashSet<int>(currentCollection);
+                    hashSet.UnionWith(list);
+                    currentCollection = hashSet;
+                }
+            }
+            return currentCollection;
         }
 
         public byte[] GetTextIdBytes(int textIdOffset, int textIdLength)
