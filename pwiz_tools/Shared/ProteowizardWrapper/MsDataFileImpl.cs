@@ -488,6 +488,11 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
         }
 
+        public bool HasDeclaredMSnSpectra
+        {
+            get { return _msDataFile.fileDescription.fileContent.hasCVParam(CVID.MS_MSn_spectrum); }
+        }
+
         public bool IsWatersLockmassCorrectionCandidate
         {
             get

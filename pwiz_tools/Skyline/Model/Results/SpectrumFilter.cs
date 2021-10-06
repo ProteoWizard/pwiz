@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results
         bool IsWatersFile { get; }
         bool IsAgilentFile { get; }
         IEnumerable<MsInstrumentConfigInfo> ConfigInfoList { get; }
-        IEnumerable<string> FileContentList { get; }
+        bool HasDeclaredMSnSpectra { get; }
     }
 
     public interface IIonMobilityFunctionsProvider
@@ -77,12 +77,11 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isIonMobilityFiltered;
         private readonly bool _isElectronIonizationMse; // All ions, data MS1 only, but produces just fragments
         private readonly IEnumerable<MsInstrumentConfigInfo> _configInfoList;
-        private readonly IEnumerable<string> _fileContentList;
         private readonly IIonMobilityFunctionsProvider _ionMobilityFunctionsProvider;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
-        private bool _sourceHasDeclaredMS2Scans; // Used in all-ions mode to discern low and high energy scans for Bruker
+        private bool _sourceHasDeclaredMSnSpectra; // Used in all-ions mode to discern low and high energy scans for Bruker
 
         private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.summed);
         private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, ChromExtractor.base_peak);
@@ -103,8 +102,7 @@ namespace pwiz.Skyline.Model.Results
                 _isWatersFile = instrumentInfo.IsWatersFile;
                 _isWatersSonar = instrumentInfo.IsWatersSonarData;
                 _configInfoList = instrumentInfo.ConfigInfoList;
-                _fileContentList = instrumentInfo.FileContentList;
-                _sourceHasDeclaredMS2Scans = _fileContentList.Contains(@"MSn spectrum");
+                _sourceHasDeclaredMSnSpectra = instrumentInfo.HasDeclaredMSnSpectra;
             }
             IsFirstPass = firstPass;
 
@@ -544,14 +542,14 @@ namespace pwiz.Skyline.Model.Results
             get { return _isAgilentMse; }
         }
 
+        public bool HasDeclaredMSnSpectra
+        {
+            get { return _sourceHasDeclaredMSnSpectra; }
+        }
+
         public IEnumerable<MsInstrumentConfigInfo> ConfigInfoList
         {
             get { return _configInfoList; }
-        }
-
-        public IEnumerable<string> FileContentList
-        {
-            get { return _fileContentList; }
         }
 
         /// <summary>
@@ -718,7 +716,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (!EnabledMsMs)
                 return false;
-            _sourceHasDeclaredMS2Scans |= (dataSpectrum.Level == 2);
+            _sourceHasDeclaredMSnSpectra |= (dataSpectrum.Level == 2);
             if (_mseLevel > 0)
                 return UpdateMseLevel(dataSpectrum) == 2;
             return dataSpectrum.Level > 1;
@@ -765,7 +763,7 @@ namespace pwiz.Skyline.Model.Results
                 else if (!_isWatersMse)
                 {
                     // Bruker - Alternate between 1 and 2 if everything is declared as MS1, assume first is low energy
-                    _mseLevel = _mseLastSpectrum == null || _sourceHasDeclaredMS2Scans 
+                    _mseLevel = _mseLastSpectrum == null || _sourceHasDeclaredMSnSpectra
                         ? dataSpectrum.Level  
                         : (_mseLevel % 2) + 1;
                     returnval = _mseLevel;
