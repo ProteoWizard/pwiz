@@ -36,7 +36,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void BrukerAllIonsbbCIDImportTest()
         { 
-RunPerfTests = true; // Uncomment this to force test to run in IDE
+            // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
             TestFilesZip = GetPerfTestDataURL(@"PerfImportBrukerAllIonsbbCID.zip");
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
