@@ -1296,7 +1296,7 @@ namespace pwiz.Skyline.Model
                         if (results.IsEmpty)
                             resultsCalc.AddTransitionChromInfo(iTran, null);
                         else
-                            resultsCalc.AddTransitionChromInfo(iTran, results.ToArray());
+                            resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
                     }
 
                     return;
@@ -1350,7 +1350,7 @@ namespace pwiz.Skyline.Model
                     if (results.IsEmpty)
                         resultsCalc.AddTransitionChromInfo(iTran, null);
                     else
-                        resultsCalc.AddTransitionChromInfo(iTran, results.ToArray());
+                        resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
                 }
 
                 return;
@@ -1364,7 +1364,7 @@ namespace pwiz.Skyline.Model
             // This code also corrects that problem by ignoring all but the first
             // instance.
             if (chromGroupInfos.Count > 1)
-                chromGroupInfos = chromGroupInfos.Distinct(ChromatogramGroupInfo.PathComparer).ToArray();
+                chromGroupInfos = chromGroupInfos.Distinct(ChromatogramGroupInfo.PathComparer).ToList();
             // Find the file indexes once
             int countGroupInfos = chromGroupInfos.Count;
             var fileIds = new ChromFileInfoId[countGroupInfos];

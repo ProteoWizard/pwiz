@@ -2370,10 +2370,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var source = _allTransitions[index].Source;
             bool isMs1Chromatogram = source == ChromSource.ms1 || source == ChromSource.sim;
-            bool isTranMs1 = nodeTran == null || nodeTran.IsMs1;
             // Don't allow fragment ions to match data from MS1
-            if (!isTranMs1 && isMs1Chromatogram)
+            if (isMs1Chromatogram && nodeTran != null && !nodeTran.IsMs1)
+            {
                 return false;
+            }
             var globalMz = GetProductGlobal(index);
             var tranMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             return tranMz.CompareTolerant(globalMz, tolerance) == 0;
