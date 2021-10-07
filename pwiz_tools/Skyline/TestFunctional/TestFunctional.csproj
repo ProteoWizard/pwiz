@@ -356,6 +356,7 @@
     <Compile Include="SureQuantAcquisitionMethodSettingTest.cs" />
     <Compile Include="SureQuantScanDescriptionTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
+    <Compile Include="SynchronizedIntegrationTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
@@ -564,6 +565,7 @@
     <None Include="SummaryGraphVisibilityTest.zip" />
     <None Include="SureQuantScanDescriptionTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
+    <None Include="SynchronizedIntegrationTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
