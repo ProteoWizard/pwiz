@@ -587,7 +587,6 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
-    <Compile Include="Model\Results\IChromDataReader.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

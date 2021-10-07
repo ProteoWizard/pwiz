@@ -2223,7 +2223,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         [CanBeNull]
-        protected ChromDataReader _chromDataReader;
+        protected ChromatogramCache _chromatogramCache;
         protected IList<ChromPeak> _chromPeaks;
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
@@ -2233,18 +2233,28 @@ namespace pwiz.Skyline.Model.Results
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
-                                     ChromDataReader chromDataReader)
+                                     ChromatogramCache chromatogramCache)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
             _textIdBytes = textIdBytes;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
-            _chromDataReader = chromDataReader;
+            _chromatogramCache = chromatogramCache;
         }
 
-        protected ChromatogramGroupInfo()
+        public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
+            TimeIntensitiesGroup timeIntensitiesGroup)
         {
+            _groupHeaderInfo = groupHeaderInfo;
+            _textIdBytes = Array.Empty<byte>();
+            _allFiles = Array.Empty<ChromCachedFile>();
+            _allTransitions = allTransitions;
+            _chromPeaks = peaks;
+            _timeIntensitiesGroup = timeIntensitiesGroup;
+            _scoreTypeIndices = new Dictionary<Type, int>();
+            _scores = Array.Empty<float>();
         }
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
@@ -2275,7 +2285,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_timeIntensitiesGroup == null)
                 {
-                    _timeIntensitiesGroup = _chromDataReader?.ReadTimeIntensities(Header);
+                    _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
                 }
                 return _timeIntensitiesGroup;
             }
@@ -2290,7 +2300,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_scores == null)
             {
-                _scores = _chromDataReader?.ReadScores(Header);
+                _scores = _chromatogramCache?.ReadScores(Header);
             }
 
             return _scores;
@@ -2300,7 +2310,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_chromPeaks == null)
             {
-                _chromPeaks = _chromDataReader?.ReadPeaks(Header);
+                _chromPeaks = _chromatogramCache?.ReadPeaks(Header);
             }
 
             return _chromPeaks;
@@ -2548,7 +2558,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void DiscardData()
         {
-            _chromDataReader = null;
+            _chromatogramCache = null;
             _timeIntensitiesGroup = null;
             _chromPeaks = null;
         }
@@ -2560,18 +2570,31 @@ namespace pwiz.Skyline.Model.Results
             PathComparer = new PathEqualityComparer();
         }
 
-        public static void LoadAllPeaks(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos, bool loadScoresToo)
+        /// <summary>
+        /// Loads the peaks (and optionally the scores as well) for a list of ChromatogramGroupInfos.
+        /// 
+        /// </summary>
+        public static void LoadPeaksForAll(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos, bool loadScoresToo)
         {
             foreach (var grouping in chromatogramGroupInfos.Distinct()
-                .GroupBy(chromatogramGroupInfo => chromatogramGroupInfo._chromDataReader))
+                .GroupBy(chromatogramGroupInfo => chromatogramGroupInfo._chromatogramCache))
             {
+                if (grouping.Key == null)
+                {
+                    continue;
+                }
                 var groupInfos = grouping.ToList();
                 var headers = groupInfos.Select(group => group.Header).ToList();
-                var peaksAndScores = grouping.Key.ReadAllPeaks(headers, loadScoresToo);
-                for (int i = 0; i < peaksAndScores.Count; i++)
+                var peaksArray = new IList<ChromPeak>[headers.Count];
+                var scoresArray = loadScoresToo ? new IList<float>[headers.Count] : null;
+                grouping.Key.ReadDataForAll(headers, peaksArray, scoresArray);
+                for (int i = 0; i < headers.Count; i++)
                 {
-                    groupInfos[i]._chromPeaks = peaksAndScores[i].Item1;
-                    groupInfos[i]._scores = peaksAndScores[i].Item2;
+                    groupInfos[i]._chromPeaks = peaksArray[i];
+                    if (scoresArray != null)
+                    {
+                        groupInfos[i]._scores = scoresArray[i];
+                    }
                 }
             }
         }

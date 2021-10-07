@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 Assume.AreEqual(chromGroupInfos.Count, chromatograms.Count);
                 nodeGroupChromGroupInfos.Add(chromGroupInfos);
             }
-            ChromatogramGroupInfo.LoadAllPeaks(nodeGroupChromGroupInfos.SelectMany(list1=>list1.SelectMany(list2=>list2)), true);
+            ChromatogramGroupInfo.LoadPeaksForAll(nodeGroupChromGroupInfos.SelectMany(list1=>list1.SelectMany(list2=>list2)), true);
 
             for (int replicateIndex = 0; replicateIndex < chromatograms.Count; replicateIndex++)
             {

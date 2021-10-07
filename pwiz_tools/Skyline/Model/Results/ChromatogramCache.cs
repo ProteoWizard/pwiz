@@ -117,7 +117,6 @@ namespace pwiz.Skyline.Model.Results
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly LibKeyMap<int[]> _chromEntryIndex;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
-        private readonly ChromDataReaderImpl _chromDataReader;
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
@@ -128,7 +127,6 @@ namespace pwiz.Skyline.Model.Results
                 _scoreTypeIndices.Add(raw.ScoreTypes[i], i);
             ReadStream = readStream;
             _chromEntryIndex = MakeChromEntryIndex();
-            _chromDataReader = new ChromDataReaderImpl(this);
         }
 
         public string CachePath { get; private set; }
@@ -269,7 +267,7 @@ namespace pwiz.Skyline.Model.Results
                                              _rawData.TextIdBytes,
                                              _rawData.ChromCacheFiles,
                                              _rawData.ChromTransitions,
-                                             _chromDataReader);
+                                             this);
         }
 
         public IReadOnlyList<ChromGroupHeaderInfo> ChromGroupHeaderInfos
@@ -1580,7 +1578,7 @@ namespace pwiz.Skyline.Model.Results
                 chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions);
         }
 
-        private IList<ChromPeak> ReadPeaksStartingAt(long startPeakIndex, int count)
+        public IList<ChromPeak> ReadPeaksStartingAt(long startPeakIndex, int count)
         {
             return CallWithStream(stream => ReadPeaksStartingAt(stream, startPeakIndex, count));
         }
@@ -1619,64 +1617,52 @@ namespace pwiz.Skyline.Model.Results
             return PrimitiveArrays.Read<float>(stream, scoreValueCount);
         }
 
-        private class ChromDataReaderImpl : ChromDataReader
+        /// <summary>
+        /// Reads the peaks and/or the scores for a list of ChromGroupHeaderInfo's.
+        /// The passed in arrays must either be null, or must have a length equal to the number of ChromGroupHeaderInfo's.
+        /// </summary>
+        public void ReadDataForAll(IList<ChromGroupHeaderInfo> chromGroupHeaderInfos, IList<ChromPeak>[] peaks, IList<float>[] scores)
         {
-            private ChromatogramCache _cache;
-            public ChromDataReaderImpl(ChromatogramCache cache)
+            if (peaks != null)
             {
-                _cache = cache;
+                Assume.AreEqual(chromGroupHeaderInfos.Count, peaks.Length);
             }
 
-            public override TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            if (scores != null)
             {
-                return _cache.ReadTimeIntensities(chromGroupHeaderInfo);
+                Assume.AreEqual(chromGroupHeaderInfos.Count, scores.Length);
             }
-
-            public override IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return _cache.ReadPeaks(chromGroupHeaderInfo);
-            }
-
-            public override IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
-            {
-                return _cache.ReadScores(chromGroupHeaderInfo);
-            }
-
-            public override IList<Tuple<IList<ChromPeak>, IList<float>>> ReadAllPeaks(IList<ChromGroupHeaderInfo> chromGroupHeaderInfos, bool readScoresToo)
-            {
-                var peaks = new IList<ChromPeak>[chromGroupHeaderInfos.Count];
-                var scores = new IList<float>[chromGroupHeaderInfos.Count];
-                using (var stream = new FileStream(_cache.CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                if (peaks != null)
                 {
                     // Read the peaks for all of the ChromGroupHeaderInfos
                     // We process these in order of StartPeakIndex, because, in theory, it might make seeking in the file stream faster,
                     // but it does not seem to make a difference in practice
                     foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                        .OrderBy(i=>chromGroupHeaderInfos[i].StartPeakIndex))
+                        .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
                     {
-                        peaks[index] = _cache.ReadPeaks(stream, chromGroupHeaderInfos[index]);
-                    }
-
-                    if (readScoresToo)
-                    {
-                        // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
-                        // so process those at the same time
-                        foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                            .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
-                                chromGroupHeaderInfos[i].NumPeaks))
-                            .OrderBy(group => group.Key.Item1))
-                        {
-                            var groupScores = _cache.ReadScoresStartingAt(stream, indexGroup.Key.Item1,
-                                indexGroup.Key.Item2 * _cache.ScoreTypesCount);
-                            foreach (var index in indexGroup)
-                            {
-                                scores[index] = groupScores;
-                            }
-                        }
+                        peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
                     }
                 }
 
-                return peaks.Zip(scores, Tuple.Create).ToList();
+                if (scores != null)
+                {
+                    // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
+                    // so process those at the same time
+                    foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
+                        .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
+                            chromGroupHeaderInfos[i].NumPeaks))
+                        .OrderBy(group => group.Key.Item1))
+                    {
+                        var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
+                            indexGroup.Key.Item2 * ScoreTypesCount);
+                        foreach (var index in indexGroup)
+                        {
+                            scores[index] = groupScores;
+                        }
+                    }
+                }
             }
         }
     }

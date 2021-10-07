@@ -1243,7 +1243,7 @@ namespace pwiz.Skyline.Model
             {
                 allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
                     (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
-                ChromatogramGroupInfo.LoadAllPeaks(allChromatogramGroupInfos.SelectMany(list=>list), false);
+                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list=>list), false);
             }
             for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
