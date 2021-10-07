@@ -11490,13 +11490,16 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_" xml:space="preserve">
     <value>Error getting database Id for score {0}</value>
   </data>
-  <data name="ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_mProphet_model_will_not_be_automatically_trained_" xml:space="preserve">
-    <value>The decoys have been removed from the document, so the mProphet model will not be automatically trained.</value>
+  <data name="ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_" xml:space="preserve">
+    <value>The decoys have been removed from the document, so the peak scoring model will not be automatically trained.</value>
   </data>
-  <data name="ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_an_mProphet_model_manually_" xml:space="preserve">
-    <value>If you re-add decoys to the document you can add and train an mProphet model manually.</value>
+  <data name="ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_" xml:space="preserve">
+    <value>If you re-add decoys to the document you can add and train a peak scoring model manually.</value>
   </data>
-  <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mProphet_model___0_" xml:space="preserve">
-    <value>An error occurred while training the mProphet model: {0}</value>
+  <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_" xml:space="preserve">
+    <value>An error occurred while training the peak scoring model: {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_does_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_" xml:space="preserve">
+    <value>Acquisition method is set to DIA, but the document does not contain decoys. Do you want to generate decoys before importing results?</value>
   </data>
 </root>

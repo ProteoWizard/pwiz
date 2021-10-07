@@ -2598,6 +2598,7 @@ namespace pwiz.Skyline
             }
 
             var decoyGroup = DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy);
+            var isDia = Equals(DocumentUI.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA);
             if (decoyGroup != null)
             {
                 decoyGroup.CheckDecoys(DocumentUI, out var numNoSource, out var numWrongTransitionCount, out var proportionDecoysMatch);
@@ -2644,6 +2645,25 @@ namespace pwiz.Skyline
                     }
                 }
             }
+            else if (isDia)
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    Resources.SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_does_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                {
+                    switch (dlg.ShowDialog(this))
+                    {
+                        case DialogResult.Yes:
+                            if (!ShowGenerateDecoysDlg(dlg))
+                                return;
+                            break;
+                        case DialogResult.No:
+                            break;
+                        case DialogResult.Cancel:
+                            return;
+                    }
+                }
+            }
 
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
@@ -2666,8 +2686,15 @@ namespace pwiz.Skyline
                     if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, DocumentUI, ref namedResults))
                         return; // User cancelled, no change
 
-                    ModifyDocument(description,
-                        doc => ImportResults(doc, namedResults, dlg.OptimizationName),
+                    ModifyDocument(description, doc =>
+                        {
+                            if (isDia && doc.Molecules.Any(m => m.IsDecoy))
+                            {
+                                doc = doc.ChangeSettings(doc.Settings.ChangePeptideIntegration(i =>
+                                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
+                            }
+                            return ImportResults(doc, namedResults, dlg.OptimizationName);
+                        },
                         docPair => dlg.FormSettings.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
 
                     // Select the first replicate to which results were added.

@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_21_1 = new DocumentFormat(21.1); // Release format
         public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Import Time
         public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration
+        public static readonly DocumentFormat VERSION_21_13 = new DocumentFormat(21.13); // Auto-train peak scoring model
         public static readonly DocumentFormat CURRENT = VERSION_21_12;
 
 
