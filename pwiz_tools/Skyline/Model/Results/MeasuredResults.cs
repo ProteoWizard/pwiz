@@ -782,19 +782,7 @@ namespace pwiz.Skyline.Model.Results
                                         float tolerance,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            // Add precursor matches to a list, if they match at least 1 transition
-            // in this group, and are potentially the maximal transition match.
-
-            // Using only the maximum works well for the case where there are 2
-            // precursors in the same document that match a single entry.
-            // TODO: But it messes up when there are 2 sets of transitions for
-            //       the same precursor covering different numbers of transitions.
-            //       Skyline never creates this case, but it has been reported
-            // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
-            // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
-            int maxTranMatch = 1;
-
-            IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
+            IEnumerable<ChromatogramGroupInfo> infoEnum = Enumerable.Empty<ChromatogramGroupInfo>();
             foreach (var cache in CachesEx)
             {
                 if (_cacheFinal == null && cache.CachedFiles.Count == 1)
@@ -806,41 +794,65 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
                 }
-                var infoEnum = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram);
-                infoSet = infoEnum.ToArray();
-                foreach (var chromInfo in infoSet)
-                {
-                    // Short-circuit further processing for common case in label free data
-                    if (_cacheFinal != null && infoSet.Length == 1)
-                    {
-                        return true;
-                    }
 
-                    // If the chromatogram set has an optimization function, then the number
-                    // of matching chromatograms per transition is a reflection of better
-                    // matching.  Otherwise, we only expect one match per transition.
-                    //
-                    // For small molecules we will likely have to select from several chromInfos all with same Q1>Q3,
-                    // so we examine peaks for match with explicitRT if provided
-                    bool multiMatch = chromatogram.OptimizationFunction != null;
-                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
-                    // CONSIDER: This is pretty tricky code, and we are currently favoring
-                    //           peak proximity to explicit retention time over number of matching
-                    //           transitions.
-                    if (tranMatch >= maxTranMatch)
-                    {
-                        if (ReferenceEquals(listChrom, EMPTY_GROUP_INFOS))
-                            listChrom = new List<ChromatogramGroupInfo>();
-                        // If new maximum, clear anything collected at the previous maximum
-                        if (tranMatch > maxTranMatch)
-                            listChrom.Clear();
-
-                        maxTranMatch = tranMatch;
-                        listChrom.Add(chromInfo);
-                    }
-                }
+                infoEnum = infoEnum.Concat(cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram));
             }
 
+            infoSet = infoEnum.ToArray();
+            // Short-circuit further processing for common case in label free data
+            if (infoSet.Length == 1)
+            {
+                return true;
+            }
+
+            var listChrom = GetMatchingChromatograms(chromatogram, nodePep, nodeGroup, tolerance, infoSet);
+            if (listChrom.Count == 0)
+            {
+                infoSet = EMPTY_GROUP_INFOS;
+                return false;
+            }
+            infoSet = listChrom.ToArray();
+            return true;
+        }
+
+        private IList<ChromatogramGroupInfo> GetMatchingChromatograms(ChromatogramSet chromatogram,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            float tolerance, 
+            IEnumerable<ChromatogramGroupInfo> infoSet)
+        {
+            // Add precursor matches to a list, if they match at least 1 transition
+            // in this group, and are potentially the maximal transition match.
+
+            // Using only the maximum works well for the case where there are 2
+            // precursors in the same document that match a single entry.
+            // TODO: But it messes up when there are 2 sets of transitions for
+            //       the same precursor covering different numbers of transitions.
+            //       Skyline never creates this case, but it has been reported
+            // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
+            // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
+            int maxTranMatch = 1;
+            // If the chromatogram set has an optimization function, then the number
+            // of matching chromatograms per transition is a reflection of better
+            // matching.  Otherwise, we only expect one match per transition.
+            bool multiMatch = chromatogram.OptimizationFunction != null;
+            List<ChromatogramGroupInfo> listChrom = new List<ChromatogramGroupInfo>();
+            foreach (var chromInfo in infoSet)
+            {
+                int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
+                // CONSIDER: This is pretty tricky code, and we are currently favoring
+                //           peak proximity to explicit retention time over number of matching
+                //           transitions.
+                if (tranMatch >= maxTranMatch)
+                {
+                    // If new maximum, clear anything collected at the previous maximum
+                    if (tranMatch > maxTranMatch)
+                        listChrom.Clear();
+
+                    maxTranMatch = tranMatch;
+                    listChrom.Add(chromInfo);
+                }
+            }
             // If more than one value was found, make a final pass to ensure that there
             // is only one precursor match per file.
             if (listChrom.Count > 1)
@@ -864,9 +876,25 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listChrom = listChromFinal;
             }
-            infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS)
-                ? EMPTY_GROUP_INFOS : listChrom.ToArray();
-            return listChrom.Count > 0;
+
+            return listChrom;
+        }
+
+        public List<IList<ChromatogramGroupInfo>> LoadChromatogramForAllReplicates(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            float tolerance)
+        {
+            var chromatogramGroupInfosByFile = CachesEx.SelectMany(cache => cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, null))
+                .ToLookup(chromGroupInfo=>chromGroupInfo.FilePath.GetLocation());
+            var result = new List<IList<ChromatogramGroupInfo>>();
+            foreach (var chromatogramSet in Chromatograms)
+            {
+                var listChrom = chromatogramSet.MSDataFileInfos
+                    .SelectMany(fileInfo => chromatogramGroupInfosByFile[fileInfo.FilePath.GetLocation()]).ToList();
+                result.Add(GetMatchingChromatograms(chromatogramSet, nodePep, nodeGroup, tolerance, listChrom));
+            }
+            Assume.AreEqual(Chromatograms.Count, result.Count);
+            return result;
         }
 
         public bool ContainsChromatogram(string name)

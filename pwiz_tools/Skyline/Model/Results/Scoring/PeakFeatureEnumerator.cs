@@ -154,21 +154,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
             float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            foreach (var chromatogramSet in chromatograms)
+            var nodeGroupChromGroupInfos = new List<List<IList<ChromatogramGroupInfo>>>();
+            foreach (var nodeGroup in nodeGroups)
             {
-                ChromatogramGroupInfo[] arrayChromInfo;
-                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroups[0],
-                                                                           mzMatchTolerance, out arrayChromInfo))
-                {
-                    continue;
-                }
+                var chromGroupInfos = document.Settings.MeasuredResults
+                    .LoadChromatogramForAllReplicates(nodePep, nodeGroup, mzMatchTolerance);
+                Assume.AreEqual(chromGroupInfos.Count, chromatograms.Count);
+                nodeGroupChromGroupInfos.Add(chromGroupInfos);
+            }
 
-                foreach (var chromGroupInfo in arrayChromInfo)
+            for (int replicateIndex = 0; replicateIndex < chromatograms.Count; replicateIndex++)
+            {
+                var chromatogramSet = chromatograms[replicateIndex];
+                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                 {
-                    var peakId = new PeakTransitionGroupId(nodePepGroup, nodePep, labelType, chromatogramSet, chromGroupInfo, runEnumDict);
+                    var peakId = new PeakTransitionGroupId(nodePepGroup, nodePep, labelType, chromatogramSet, chromFileInfo, runEnumDict);
                     var listRunFeatures = new List<PeakGroupFeatures>();
-
-                    var summaryPeakData = new SummaryPeptidePeakData(document, nodePep, nodeGroups, chromatogramSet, chromGroupInfo);
+                    var msDataFileLocation = chromFileInfo.FilePath.GetLocation();
+                    var chromGroupInfos = nodeGroupChromGroupInfos.Select(
+                        list => list[replicateIndex].FirstOrDefault(chromGroupInfo =>
+                            Equals(chromGroupInfo.FilePath.GetLocation(), msDataFileLocation))).ToList();
+                    if (chromGroupInfos[0] == null)
+                    {
+                        continue;
+                    }
+                    
+                    var summaryPeakData = new SummaryPeptidePeakData(document, nodePep, nodeGroups, chromatogramSet, chromFileInfo, chromGroupInfos);
                     var context = new PeakScoringContext(document);
 
                     while (summaryPeakData.NextPeakIndex())
@@ -216,18 +227,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                           PeptideDocNode nodePep,
                                           IList<TransitionGroupDocNode> nodeGroups,
                                           ChromatogramSet chromatogramSet,
-                                          ChromatogramGroupInfo chromGroupInfoPrimary)
+                                          ChromFileInfo chromFileInfo,
+                                          IList<ChromatogramGroupInfo> chromGroupInfos)
             {
                 _peakIndex = -1;
-                _chromGroupInfoPrimary = chromGroupInfoPrimary;
+                _chromGroupInfoPrimary = chromGroupInfos[0];
 
                 NodePep = nodePep;
-                FileInfo = chromatogramSet.GetFileInfo(chromGroupInfoPrimary);
+                FileInfo = chromFileInfo;
                 TransitionGroupPeakData = new SummaryTransitionGroupPeakData[nodeGroups.Count];
                 for (int i = 0; i < nodeGroups.Count; i++)
                 {
                     TransitionGroupPeakData[i] = new SummaryTransitionGroupPeakData(document,
-                        nodePep, nodeGroups[i], chromatogramSet, chromGroupInfoPrimary);
+                        nodePep, nodeGroups[i], chromatogramSet, chromGroupInfos[i]);
                 }
                 // Avoid extra ToArray() calls, since they show up in a profiler for big files
                 bool? standard;
@@ -477,7 +489,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                   PeptideDocNode nodePep,
                                                   TransitionGroupDocNode nodeGroup,
                                                   ChromatogramSet chromatogramSet,
-                                                  ChromatogramGroupInfo chromGroupInfoPrimary)
+                                                  ChromatogramGroupInfo chromGroupInfo)
             {
                 _peakIndex = -1;
 
@@ -486,41 +498,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     .Contains(nodeGroup.TransitionGroup.LabelType);
                 TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData = EMPTY_DATA;
 
-                ChromatogramGroupInfo[] arrayChromInfo;
-                var measuredResults = document.Settings.MeasuredResults;
-                float mzMatchTolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                if (measuredResults.TryLoadChromatogram(chromatogramSet, nodePep, nodeGroup, mzMatchTolerance, out arrayChromInfo))
+                _chromGroupInfo = chromGroupInfo;
+                if (_chromGroupInfo != null)
                 {
-                    _chromGroupInfo = arrayChromInfo.FirstOrDefault(ci =>
-                        Equals(ci.FilePath, chromGroupInfoPrimary.FilePath));
-
-                    if (_chromGroupInfo != null)
+                    int ms1Count = 0, ms2Count = 0, totalCount = 0;
+                    // Assume there will be one per transtion
+                    var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
+                    float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                    foreach (var nodeTran in nodeGroup.Transitions)
                     {
-                        int ms1Count = 0, ms2Count = 0, totalCount = 0;
-                        // Assume there will be one per transtion
-                        var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
-                        foreach (var nodeTran in nodeGroup.Transitions)
-                        {
-                            var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
-                            if (tranInfo == null)
-                                continue;
-                            listPeakData[totalCount++] = new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
-                            if (nodeTran.IsMs1)
-                                ms1Count++;
-                            else
-                                ms2Count++;
-                        }
-                        // If something was missing reallocate, which can't be slower than List.ToArray()
-                        if (totalCount < listPeakData.Length)
-                        {
-                            var peakDatasShort = new ITransitionPeakData<ISummaryPeakData>[totalCount];
-                            Array.Copy(listPeakData, peakDatasShort, totalCount);
-                            listPeakData = peakDatasShort;
-                        }
-                        TransitionPeakData = listPeakData.ToArray();
-                        Ms1TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, true);
-                        Ms2TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, false);
+                        var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
+                        if (tranInfo == null)
+                            continue;
+                        listPeakData[totalCount++] = new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
+                        if (nodeTran.IsMs1)
+                            ms1Count++;
+                        else
+                            ms2Count++;
                     }
+                    // If something was missing reallocate, which can't be slower than List.ToArray()
+                    if (totalCount < listPeakData.Length)
+                    {
+                        var peakDatasShort = new ITransitionPeakData<ISummaryPeakData>[totalCount];
+                        Array.Copy(listPeakData, peakDatasShort, totalCount);
+                        listPeakData = peakDatasShort;
+                    }
+                    TransitionPeakData = listPeakData.ToArray();
+                    Ms1TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, true);
+                    Ms2TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, false);
                 }
             }
 
@@ -636,14 +641,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                      PeptideDocNode nodePep,
                                      IsotopeLabelType labelType,
                                      ChromatogramSet chromatogramSet,
-                                     ChromatogramGroupInfo chromGroupInfo,
+                                     ChromFileInfo chromFileInfo,
                                      IDictionary<int, int> runEnumDict)
         {
             NodePepGroup = nodePepGroup;
             LabelType = labelType;
             ChromatogramSet = chromatogramSet;
-            FilePath = chromGroupInfo.FilePath;
-            FileId = chromatogramSet.FindFile(chromGroupInfo);
+            FilePath = chromFileInfo.FilePath;
+            FileId = chromFileInfo.FileId;
             Run = runEnumDict[FileId.GlobalIndex];
 
             // Avoid hanging onto the peptide, since it can end up being the primary memory root
