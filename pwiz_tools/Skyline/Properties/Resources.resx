@@ -11481,6 +11481,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>Change synchronized integration to {0}</value>
+  </data>
   <data name="BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_" xml:space="preserve">
     <value>Error getting database Id for score {0}</value>
   </data>
