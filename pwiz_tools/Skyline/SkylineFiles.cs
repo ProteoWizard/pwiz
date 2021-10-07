@@ -1316,8 +1316,49 @@ namespace pwiz.Skyline
 
         public void ShowExportSpectralLibraryDialog()
         {
-            var libraryExporter = new SpectralLibraryExporter(Document, DocumentFilePath);
-            libraryExporter.ShowExportSpectralLibraryDialog(this);
+            if (Document.MoleculeTransitionGroupCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
+                return;
+            }
+            else if (!Document.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
+                return;
+            }
+
+            using (var dlg = new SaveFileDialog
+            {
+                Title = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                OverwritePrompt = true,
+                DefaultExt = BiblioSpecLiteSpec.EXT,
+                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
+            })
+            {
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                try
+                {
+                    using (var longWaitDlg = new LongWaitDlg
+                    {
+                        Text = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                        Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
+                    })
+                    {
+                        longWaitDlg.PerformWork(this, 800, monitor =>
+                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, monitor));
+                    }
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(string.Format(
+                        Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__, dlg.FileName), x.Message), x);
+                }
+            }
         }
 
 
@@ -1894,7 +1935,7 @@ namespace pwiz.Skyline
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = current.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true);                  
+                    importer = current.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);                  
                 });
                 if (importer == null || status.IsCanceled)
                 {

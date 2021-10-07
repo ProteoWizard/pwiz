@@ -458,10 +458,13 @@ namespace pwiz.Skyline.Controls
             get { return _normalizeOption; }
             set
             {
-                if (_normalizeOption != value)
+                if (value == NormalizeOption.GLOBAL_STANDARDS || value.IsRatioToLabel)
                 {
-                    _normalizeOption = value;
-                    UpdateNodeStates();
+                    if (_normalizeOption != value)
+                    {
+                        _normalizeOption = value;
+                        UpdateNodeStates();
+                    }
                 }
             }
         }

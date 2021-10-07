@@ -68,40 +68,85 @@ namespace pwiz.SkylineTestFunctional
             ClickContextMenuItem(graphChromatogram.GraphControl, copyMenuText);
             Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
 
+            bool canUseSystemClipboard = RunPerfTests;
             // Switch to using the system clipboard for the rest of the test so that we can test the "Copy Metafile"
             // menu item as well as testing the message when the clipboard is locked.
-            ClipboardEx.UseInternalClipboard(false);
+            // Only use the system clipboard if RunPerfTests is true, because tests using the system clipboard can be annoying.
+            if (canUseSystemClipboard)
+            {
+                ClipboardEx.UseInternalClipboard(false);
+            }
+            RetryActionIfMessage(() => ClipboardHelper.SetClipboardText(graphChromatogram, "hello"));
             RunUI(() =>
             {
-                Clipboard.SetText("hello");
-                Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
+                Assert.IsTrue(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
             ClickContextMenuItem(graphChromatogram.GraphControl, copyMenuText);
             RunUI(() =>
             {
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Text));
+                Assert.IsFalse(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            ClickContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText);
-            RunUI(() =>
+            if (canUseSystemClipboard)
             {
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Text));
-                Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
-                Assert.IsTrue(HasClipboardFormat(DataFormats.EnhancedMetafile));
-            });
+                ClickContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText);
+                RunUI(() =>
+                {
+                    Assert.IsFalse(HasClipboardFormat(DataFormats.UnicodeText));
+                    Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
+                    Assert.IsTrue(HasClipboardFormat(DataFormats.EnhancedMetafile));
+                });
+            }
             ClickContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText);
             RunUI(() =>
             {
-                Assert.IsTrue(HasClipboardFormat(DataFormats.Text));
+                Assert.IsTrue(HasClipboardFormat(DataFormats.UnicodeText));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMenuText));
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText));
-            ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText));
+            if (canUseSystemClipboard)
+            {
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMenuText));
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText));
+                ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyDataMenuText));
+            }
+        }
+
+        /// <summary>
+        /// Perform an action. If the action ends up bringing up a message box, then OK the message and retry again.
+        /// </summary>
+        /// <param name="action">The action to be performed on the UI thread which might fail and cause a message box to appear</param>
+        /// <param name="setupAction">Optional action to be performed on the test thread each time before <paramref name="action"/> is invoked.</param>
+        private void RetryActionIfMessage(Action action, Action setupAction = null)
+        {
+            int retry = 0;
+            while (true)
+            {
+                setupAction?.Invoke();
+                bool success = false;
+                SkylineWindow.BeginInvoke(new Action(() =>
+                {
+                    action();
+                    success = true;
+                }));
+                WaitForCondition(() => success || null != FindOpenForm<AlertDlg>());
+                if (success)
+                {
+                    return;
+                }
+                retry++;
+                if (retry >= 10)
+                {
+                    Assert.Fail("Failed to do clipboard action after {0} attempts", retry);
+                }
+                var alertDlg = FindOpenForm<AlertDlg>();
+                Assert.IsNotNull(alertDlg);
+                Console.Out.WriteLine("Failed, found message {0}, Retry #{1}", alertDlg.Message, retry);
+                OkDialog(alertDlg, alertDlg.OkDialog);
+            }
         }
 
         private void ClickCopyItemWithLockedClipboard(ToolStripMenuItem menuItem)
@@ -117,9 +162,16 @@ namespace pwiz.SkylineTestFunctional
 
         private void ClickContextMenuItem(ZedGraphControl zedGraphControl, string menuItemText)
         {
-            var menuItem = ShowContextMenuItem(zedGraphControl, menuItemText);
-            Assert.IsNotNull(menuItem);
-            RunUI(() => menuItem.PerformClick());
+            ToolStripMenuItem menuItem = null;
+            RetryActionIfMessage(()=>
+            {
+                Assert.IsNotNull(menuItem);
+                menuItem.PerformClick();
+            }, () =>
+            {
+                menuItem = ShowContextMenuItem(zedGraphControl, menuItemText);
+                Assert.IsNotNull(menuItem);
+            });
         }
 
         /// <summary>

@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// For t eransition lists with explicit values for CE, ion mobilitytc
+        /// For transition lists with explicit values for CE, ion mobility
         /// </summary>
         [TrackChildren]
         public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
@@ -524,7 +524,7 @@ namespace pwiz.Skyline.Model
                             !chromInfo.StartRetentionTime.HasValue ||
                             !chromInfo.EndRetentionTime.HasValue)
                         return null;
-                    // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regresson
+                    // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regression
                     if (i >= Results.Count - centerTimes.Length)
                     {
                         valTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;
@@ -781,7 +781,7 @@ namespace pwiz.Skyline.Model
                 calc = settings.GetPrecursorCalc(labelType, mods);
                 mass = calc.GetPrecursorMass(seq);
                 mz = SequenceMassCalc.GetMZ(mass, adduct) + 
-                    SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
+                     SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
                 if (TransitionGroup.DecoyMassShift.HasValue)
                     mass = new TypedMass(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
             }
@@ -1258,6 +1258,7 @@ namespace pwiz.Skyline.Model
                 for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
                 {
                     var chromatograms = measuredResults.Chromatograms[chromIndex];
+                    bool chromatogramDataChanged = measuredResults.HasNewChromatogramData(chromIndex);
 
                     resultsCalc.AddSet();
 
@@ -1292,7 +1293,7 @@ namespace pwiz.Skyline.Model
                                  // changed and the node has not otherwise changed yet.
                                  // (happens while loading results)
                                  // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                                 (!diff.DiffResultsAll && settingsOld != null &&
+                                 (!diff.DiffResultsAll && !chromatogramDataChanged && settingsOld != null &&
                                   ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
                                   Equals(this, nodePrevious))))
                         {
@@ -1318,14 +1319,14 @@ namespace pwiz.Skyline.Model
                         // Or we have reintegrated peaks that are not matching the current integrate all setting
                         if (settingsOld == null)
                             missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
-                        if (setTranPrevious != null || missmatchedEmptyReintegrated)
+                        if (setTranPrevious != null || missmatchedEmptyReintegrated || chromatogramDataChanged)
                             dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
                     }
 
                     bool loadPoints;
                     if (dictUserSetInfoBest != null)
                     {
-                        loadPoints = dictUserSetInfoBest.Values.Any(chromInfo => !chromInfo.IsEmpty);
+                        loadPoints = chromatogramDataChanged || dictUserSetInfoBest.Values.Any(chromInfo => !chromInfo.IsEmpty);
                     }
                     else
                     {
@@ -1358,7 +1359,7 @@ namespace pwiz.Skyline.Model
                     {
                         // Make sure each file only appears once in the list, since downstream
                         // code has problems with multiple measurements in the same file.
-                        // Most measuremenst should happen only once per replicate, meaning this
+                        // Most measurements should happen only once per replicate, meaning this
                         // if clause is an unusual case.  A race condition pre-0.7 occasionally
                         // resulted in writing precursor entries multiple times to the cache file.
                         // This code also corrects that problem by ignoring all but the first
@@ -1446,20 +1447,33 @@ namespace pwiz.Skyline.Model
                                         notUserSet = chromInfo == null || chromInfo.UserSet == UserSet.FALSE ||
                                                      chromInfo.UserSet == UserSet.REINTEGRATED;
                                     }
-                                    if (!keepUserSet || notUserSet || missmatchedEmptyReintegrated)
+                                    if (!keepUserSet || notUserSet || missmatchedEmptyReintegrated || chromatogramDataChanged)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
                                         IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
                                         if (info != null)
                                         {
-                                            // If the peak boundaries have been set by the user, make sure this peak matches
-                                            TransitionChromInfo chromInfoBest;
                                             TransitionGroupChromInfo chromGroupInfoMatch;
-                                            if (dictUserSetInfoBest != null &&
-                                                    dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex, out chromInfoBest))
+                                            if (dictUserSetInfoBest != null)
                                             {
-                                                peak = CalcPeak(settingsNew, info, chromInfoBest);
-                                                userSet = chromInfoBest.UserSet;
+                                                TransitionChromInfo chromInfoBest;
+                                                if (missmatchedEmptyReintegrated)
+                                                {
+                                                    // If we are reintegrating, then copy the peak boundaries of the best peak
+                                                    dictUserSetInfoBest.TryGetValue(fileId.GlobalIndex,
+                                                        out chromInfoBest);
+                                                }
+                                                else
+                                                {
+                                                    // Otherwise, use the same peak boundaries
+                                                    chromInfoBest = chromInfo;
+                                                }
+                                                
+                                                if (chromInfoBest != null)
+                                                {
+                                                    peak = CalcPeak(settingsNew, info, chromInfoBest);
+                                                    userSet = chromInfoBest.UserSet;
+                                                }
                                             }
                                             // Or if there is a matching peak on another precursor in the peptide
                                             else if (nodePep.HasResults && !HasResults &&

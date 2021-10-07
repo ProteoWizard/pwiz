@@ -45,6 +45,9 @@ Import Peptide Search > Configure Transition Settings > Use DIA precursor window
 Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0,05"
 Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
 Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
+Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
+Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
 Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
 Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "ETH TTOF (64 variable)"
 Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "400", End = "407,7", Margin = "0,5" }
@@ -140,7 +143,10 @@ Configure Transition Settings =
     Use DIA precursor window for exclusion = True,
     Ion match tolerance = "0,05",
     Pick min product ions = "6",
-    Pick product ions = "6"
+    Pick product ions = "6",
+    Product ion selection start = "ion 3",
+    Product ion selection end = "last ion",
+    Max ion m/z = "2000"
 },
 Configure Full-Scan Settings = 
 {

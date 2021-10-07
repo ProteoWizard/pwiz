@@ -1216,6 +1216,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return FragmentStartFinders.Select(f => f.Label);
         }
 
+        public static IEnumerable<string> GetFilterStartFragmentFinderLabels()
+        {
+            return FragmentStartFinders
+                .Where(f => f is OrdinalFragmentFinder || Equals(DEFAULT_START_FINDER, f.Name))
+                .Select(f => f.Label);
+        }
+
         public static string GetStartFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
@@ -1292,6 +1299,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public static IEnumerable<string> GetEndFragmentFinderLabels()
         {
             return FragmentEndFinders.Select(f => f.Label);
+        }
+
+        public static IEnumerable<string> GetFilterEndFragmentFinderLabels()
+        {
+            return FragmentEndFinders
+                .Where(f => f is LastFragmentFinder)
+                .Select(f => f.Label);
         }
 
         public static IEndFragmentFinder GetEndFragmentFinder(string finderName)
@@ -2771,20 +2785,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else if (AcquisitionMethod == FullScanAcquisitionMethod.DDA)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else
+                if (AcquisitionMethod == FullScanAcquisitionMethod.DIA)
                 {
                     if (IsolationScheme == null)
                         throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+                }
+                else
+                {
+                    if (IsolationScheme != null)
+                    {
+                        string message = string.Format(Resources
+                                .TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
+                            AcquisitionMethod);
+                        throw new InvalidDataException(message);
+                    }
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);

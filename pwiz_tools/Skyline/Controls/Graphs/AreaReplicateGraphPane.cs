@@ -266,13 +266,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             IsotopeLabelType standardType = null;
 
-            if (normalizeOption.IsRatioToLabel)
+            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
-                normalizeOption = GraphSummary.NormalizeOption;
-                if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
-                {
-                    standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
-                }
+                standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
             }
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
             DataScalingOption dataScalingOption;
