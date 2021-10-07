@@ -1238,14 +1238,21 @@ namespace pwiz.Skyline.Model
 
             var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
+            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
+            if (MustReadAllChromatograms(settingsNew, diff))
+            {
+                allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
+                    (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                ChromatogramGroupInfo.LoadAllPeaks(allChromatogramGroupInfos.SelectMany(list=>list), false);
+            }
             for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
-                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious);
+                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
 
-        private void CalcResultsForReplicate(TransitionGroupResultsCalculator resultsCalc, int chromIndex, SrmSettings settingsNew, SrmSettingsDiff diff, PeptideDocNode nodePep, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious)
+        private void CalcResultsForReplicate(TransitionGroupResultsCalculator resultsCalc, int chromIndex, SrmSettings settingsNew, SrmSettingsDiff diff, PeptideDocNode nodePep, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious, IList<ChromatogramGroupInfo> chromGroupInfos)
         {
             var measuredResults = settingsNew.MeasuredResults;
             var settingsOld = diff.SettingsOld;
@@ -1319,8 +1326,13 @@ namespace pwiz.Skyline.Model
                     dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
             }
             float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
-
-            if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance, out var chromGroupInfos))
+            if (chromGroupInfos == null)
+            {
+                measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
+                    out var arrayChromGroupInfo);
+                chromGroupInfos = arrayChromGroupInfo ?? Array.Empty<ChromatogramGroupInfo>();
+            }
+            if (chromGroupInfos.Count == 0)
             {
                 bool useOldResults = iResultOld != -1 && !chromatograms.IsLoadedAndAvailable(measuredResults);
 
@@ -1351,10 +1363,10 @@ namespace pwiz.Skyline.Model
             // resulted in writing precursor entries multiple times to the cache file.
             // This code also corrects that problem by ignoring all but the first
             // instance.
-            if (chromGroupInfos.Length > 1)
+            if (chromGroupInfos.Count > 1)
                 chromGroupInfos = chromGroupInfos.Distinct(ChromatogramGroupInfo.PathComparer).ToArray();
             // Find the file indexes once
-            int countGroupInfos = chromGroupInfos.Length;
+            int countGroupInfos = chromGroupInfos.Count;
             var fileIds = new ChromFileInfoId[countGroupInfos];
             // and matching reintegration statistics, if any
             PeakFeatureStatistics[] reintegratePeaks = resultsHandler != null
@@ -1505,11 +1517,37 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private bool MustReadAllChromatograms(SrmSettings settingsNew, SrmSettingsDiff settingsDiff)
+        {
+            if (null != settingsNew.PeptideSettings.Integration.ResultsHandler)
+            {
+                return true;
+            }
+
+            var settingsOld = settingsDiff.SettingsOld;
+            if (settingsOld == null)
+            {
+                return true;
+            }
+
+            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance !=
+                settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Returns true if the area values in the TransitionChromInfo's can be trusted so that the data from the .skyd does not need to be examined.
         /// </summary>
         private bool CanUseOldResults(SrmSettings settingsNew, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
         {
+            if (MustReadAllChromatograms(settingsNew, diff))
+            {
+                return false;
+            }
             var measuredResults = settingsNew.MeasuredResults;
             var chromatograms = settingsNew.MeasuredResults.Chromatograms[chromIndex];
             var settingsOld = diff.SettingsOld;

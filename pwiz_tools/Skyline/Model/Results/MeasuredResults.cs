@@ -880,7 +880,7 @@ namespace pwiz.Skyline.Model.Results
             return listChrom;
         }
 
-        public List<IList<ChromatogramGroupInfo>> LoadChromatogramForAllReplicates(PeptideDocNode nodePep,
+        public List<IList<ChromatogramGroupInfo>> LoadChromatogramsForAllReplicates(PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup,
             float tolerance)
         {

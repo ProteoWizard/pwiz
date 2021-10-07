@@ -16,18 +16,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public interface IChromDataReader
+    public abstract class ChromDataReader
     {
-        TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo);
-        IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo);
-        IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo);
+        public abstract TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo);
+        public abstract IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo);
+        public abstract IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo);
+
+        public virtual IList<Tuple<IList<ChromPeak>, IList<float>>> ReadAllPeaks(
+            IList<ChromGroupHeaderInfo> chromGroupHeaderInfos, bool readScoresToo)
+        {
+            return chromGroupHeaderInfos.Select(chromGroupHeaderInfo =>
+                Tuple.Create(ReadPeaks(chromGroupHeaderInfo), readScoresToo ? ReadScores(chromGroupHeaderInfo) : null)).ToList();
+        }
     }
 
-    public class StaticChromDataReader : IChromDataReader
+    public class StaticChromDataReader : ChromDataReader
     {
         private TimeIntensitiesGroup _timeIntensities;
         private IList<ChromPeak> _peaks;
@@ -40,17 +50,17 @@ namespace pwiz.Skyline.Model.Results
             _scores = scores;
         }
 
-        public TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        public override TimeIntensitiesGroup ReadTimeIntensities(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
             return _timeIntensities;
         }
 
-        public IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        public override IList<ChromPeak> ReadPeaks(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
             return _peaks;
         }
 
-        public IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        public override IList<float> ReadScores(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
             return _scores;
         }
