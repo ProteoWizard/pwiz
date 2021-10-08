@@ -10885,6 +10885,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change synchronized integration to {0}.
+        /// </summary>
+        public static string EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_ {
+            get {
+                return ResourceManager.GetString("EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to create a new optimization library file? Any changes to the current library will be lost..
         /// </summary>
         public static string EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_ {
@@ -14894,6 +14903,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicates.
+        /// </summary>
+        public static string GroupByItem_ToString_Replicates {
+            get {
+                return ResourceManager.GetString("GroupByItem_ToString_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquired Time.
         /// </summary>
         public static string GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time {
@@ -15596,12 +15614,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while training the mProphet model: {0}.
+        /// </summary>
+        public static string ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mProphet_model___0_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mP" +
+                        "rophet_model___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you re-add decoys to the document you can add and train an mProphet model manually..
+        /// </summary>
+        public static string ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_an_mProphet_model_manually_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_yo" +
+                        "u_can_add_and_train_an_mProphet_model_manually_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The current peak scoring model is incompatible with one or more peptides in the document..
         /// </summary>
         public static string ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incom" +
                         "patible_with_one_or_more_peptides_in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The decoys have been removed from the document, so the mProphet model will not be automatically trained..
+        /// </summary>
+        public static string ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_mProphet_model_will_not_be_automatically_trained_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_d" +
+                        "ocument__so_the_mProphet_model_will_not_be_automatically_trained_", resourceCulture);
             }
         }
         

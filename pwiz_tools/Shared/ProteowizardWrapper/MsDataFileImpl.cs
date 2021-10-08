@@ -374,6 +374,11 @@ namespace pwiz.ProteowizardWrapper
                    MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
         }
 
+        public IEnumerable<string> GetFileContentList()
+        {
+            return _msDataFile.fileDescription.fileContent.cvParams.Select(cv => cv.name);
+        }
+
         /// <summary>
         /// Record any instrument info found in the file, along with any Waters lockmass info we have
         /// </summary>
@@ -481,6 +486,11 @@ namespace pwiz.ProteowizardWrapper
         public bool IsWatersFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
+        }
+
+        public bool HasDeclaredMSnSpectra
+        {
+            get { return _msDataFile.fileDescription.fileContent.hasCVParam(CVID.MS_MSn_spectrum); }
         }
 
         public bool IsWatersLockmassCorrectionCandidate
