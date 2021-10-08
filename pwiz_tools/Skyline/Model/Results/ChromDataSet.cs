@@ -135,11 +135,14 @@ namespace pwiz.Skyline.Model.Results
             if (count < _listPeakSets.Count)
                 _listPeakSets.RemoveRange(count, _listPeakSets.Count - count);
         }
-
-        public ImmutableList<TransitionGroupDocNode> NodeGroups { get; set; }
+        public TransitionGroupDocNode NodeGroup
+        {
+            get { return NodeGroups.FirstOrDefault()?.Item2; }
+        }
+        public ImmutableList<Tuple<PeptideDocNode, TransitionGroupDocNode>> NodeGroups { get; set; }
         public IEnumerable<IsotopeLabelType> LabelTypes
         {
-            get { return NodeGroups.Select(g => g.LabelType); }
+            get { return NodeGroups.Select(g => g.Item2.LabelType); }
         }
 
         /// <summary>
@@ -236,6 +239,7 @@ namespace pwiz.Skyline.Model.Results
             }
             // Enforce expected sorting if product ions are coming from different groups
             _listChromData.Sort();
+            NodeGroups = ImmutableList.ValueOf(NodeGroups.Concat(chromDataSet.NodeGroups));
         }
 
         public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
@@ -1256,7 +1260,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return MergeRelativeRTs(NodeGroups.Select(group => group.RelativeRT));
+                return MergeRelativeRTs(NodeGroups.Select(group => group.Item2.RelativeRT));
             }
         }
 

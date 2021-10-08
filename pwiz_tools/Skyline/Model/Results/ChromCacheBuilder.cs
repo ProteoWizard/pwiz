@@ -666,7 +666,11 @@ namespace pwiz.Skyline.Model.Results
                     _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
                 dictPeptideChromData.Add(key, pepDataSets);
             }
-            chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
+
+            if (peptidePrecursorMz.NodeGroup != null)
+            {
+                chromDataSet.NodeGroups = ImmutableList.ValueOf(chromDataSet.NodeGroups.Append(Tuple.Create(peptidePrecursorMz.NodePeptide, peptidePrecursorMz.NodeGroup)));
+            }
             pepDataSets.Add(nodePep, chromDataSet);
         }
 
