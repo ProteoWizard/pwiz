@@ -1,7 +1,7 @@
 format-version: 1.2
-data-version: 4.1.51
-date: 24:03:2021 00:00
-saved-by: Eric Deutsch
+data-version: 4.1.56
+date: 25:06:2021 00:00
+saved-by: Chris Bielow
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
 import: http://ontologies.berkeleybop.org/uo.obo
@@ -19,6 +19,7 @@ remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
 remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 remark: creator: Pierre-Alain Binz <pierre-alain.binz <-at-> chuv.ch>
 remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
+remark: creator: Joshua Klein <jaklein <-at-> bu.edu>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -16112,8 +16113,8 @@ relationship: has_units UO:0000028 ! millisecond
 
 [Term]
 id: MS:1002477
-name: mean drift time array
-def: "Array of drift times, averaged from a matrix of binned m/z and drift time values, corresponding to spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+name: mean ion mobility drift time array
+def: "Array of population mean ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1002893 ! ion mobility array
 relationship: has_units UO:0000028 ! millisecond
@@ -17631,6 +17632,20 @@ def: "Attrbiute of an entire list of protein groups." [PSI:PI]
 is_a: MS:1002405 ! protein group-level result list attribute
 
 [Term]
+id: MS:1002707
+name: (?=[KR])
+def: "Regular expression for LysargiNase." [PSI:PI]
+is_a: MS:1001180 ! Cleavage agent regular expression
+
+[Term]
+id: MS:1002708
+name: LysargiNase
+def: "Metalloproteinase found in Methanosarcina acetivorans that cleaves on the N-terminal side of lysine and arginine residues." [PMID:25419962]
+synonym: "Tryp-N" EXACT []
+is_a: MS:1001045 ! cleavage agent name
+relationship: has_regexp MS:1002707 ! (?=[KR])
+
+[Term]
 id: MS:1002719
 name: Pegasus BT
 def: "LECO bench-top GC time-of-flight mass spectrometer." [PSI:PI]
@@ -18248,7 +18263,7 @@ relationship: has_units MS:1002814 ! volt-second per square centimeter
 [Term]
 id: MS:1002816
 name: mean ion mobility array
-def: "Array of drift times, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+def: "Array of population mean ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1002893 ! ion mobility array
 relationship: has_units UO:0000028 ! millisecond
@@ -18755,7 +18770,7 @@ is_a: MS:1002345 ! PSM-level attribute
 [Term]
 id: MS:1002893
 name: ion mobility array
-def: "An array of ion mobility data." [PSI:PI]
+def: "Abstract array of ion mobility data values. A more specific child term concept should be specified in data files to make precise the nature of the data being provided." [PSI:PI]
 is_a: MS:1000513 ! binary data array
 
 [Term]
@@ -19502,7 +19517,7 @@ is_a: MS:1003123 ! Bruker Daltonics timsTOF series
 [Term]
 id: MS:1003006
 name: mean inverse reduced ion mobility array
-def: "Array of inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+def: "Array of population mean ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1002893 ! ion mobility array
 relationship: has_units MS:1002814 ! volt-second per square centimeter
@@ -19510,7 +19525,7 @@ relationship: has_units MS:1002814 ! volt-second per square centimeter
 [Term]
 id: MS:1003007
 name: raw ion mobility array
-def: "Array of raw drift times." [PSI:MS]
+def: "Array of raw ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1002893 ! ion mobility array
 relationship: has_units UO:0000028 ! millisecond
@@ -19519,7 +19534,7 @@ relationship: has_units UO:0000010 ! second
 [Term]
 id: MS:1003008
 name: raw inverse reduced ion mobility array
-def: "Array of raw inverse reduced ion mobilities." [PSI:MS]
+def: "Array of raw ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1002893 ! ion mobility array
 relationship: has_units MS:1002814 ! volt-second per square centimeter
@@ -20449,14 +20464,15 @@ relationship: has_regexp MS:1002505 ! regular expression for modification locali
 [Term]
 id: MS:1003149
 name: PTMProphet normalized information content
-def: " PTMProphet-computed PSM-specific normalized (0.0 – 1.0) measure of information content across all modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+def: "PTMProphet-computed PSM-specific normalized (0.0 - 1.0) measure of information content across all modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
 is_a: MS:1001968 ! PTM localization PSM-level statistic
 relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
 
 [Term]
 id: MS:1003150
 name: PTMProphet information content
-def: " PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
+def: "PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type." [DOI:10.1021/acs.jproteome.9b00205, PMID:31290668]
 is_a: MS:1001968 ! PTM localization PSM-level statistic
 relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
 
@@ -20466,6 +20482,88 @@ name: SHA-256
 def: "SHA-256 (member of Secure Hash Algorithm-2 family) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000561 ! data file checksum type
+
+[Term]
+id: MS:1003152
+name: GCMS-QP2010SE
+def: "Shimadzu Scientific Instruments GCMS-QP2010SE." [PSI:MS]
+is_a: MS:1000603 ! Shimadzu Scientific Instruments instrument model
+
+[Term]
+id: MS:1003153
+name: raw ion mobility drift time array
+def: "Array of raw ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002893 ! ion mobility array
+relationship: has_units UO:0000028 ! millisecond
+relationship: has_units UO:0000010 ! second
+
+[Term]
+id: MS:1003154
+name: deconvoluted ion mobility array
+def: "Array of ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002893 ! ion mobility array
+relationship: has_units UO:0000028 ! millisecond
+relationship: has_units UO:0000010 ! second
+
+[Term]
+id: MS:1003155
+name: deconvoluted inverse reduced ion mobility array
+def: "Array of ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002893 ! ion mobility array
+relationship: has_units MS:1002814 ! volt-second per square centimeter
+
+[Term]
+id: MS:1003156
+name: deconvoluted ion mobility drift time array
+def: "Array of mean ion mobility values from a drift time device, reported in seconds (or milliseconds), as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1002893 ! ion mobility array
+relationship: has_units UO:0000028 ! millisecond
+relationship: has_units UO:0000010 ! second
+
+[Term]
+id: MS:1003157
+name: scanning quadrupole position lower bound m/z array
+def: "Array of m/z values representing the lower bound m/z of the quadrupole position at each point in the spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000513 ! binary data array
+relationship: has_units MS:1000040 ! m/z
+
+[Term]
+id: MS:1003158
+name: scanning quadrupole position upper bound m/z array
+def: "Array of m/z values representing the upper bound m/z of the quadrupole position at each point in the spectrum." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000513 ! binary data array
+relationship: has_units MS:1000040 ! m/z
+
+[Term]
+id: MS:1003159
+name: isolation window full range
+def: "Indicates an acquisition mode in which the isolation window is a full range, rather than a subset of the full range." [PSI:MS]
+is_a: MS:1000792 ! isolation window attribute
+
+[Term]
+id: MS:1003160
+name: mzQC format
+def: "Proteomics Standards Initiative mzQC format for quality control data." [PSI:MS]
+is_a: MS:1003161 ! quality control data format
+
+[Term]
+id: MS:1003161
+name: quality control data format
+def: "Grouping term for quality control data formats." [PSI:MS]
+is_a: MS:1001459 ! file format
+
+[Term]
+id: MS:1003162
+name: PTX-QC
+def: "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization." [DOI:10.1021/acs.jproteome.5b00780, PMID:26653327, https://github.com/cbielow/PTXQC/]
+is_a: MS:1001456 ! analysis software
+synonym: "PTXQC" EXACT []
 
 [Term]
 id: PEFF:0000001

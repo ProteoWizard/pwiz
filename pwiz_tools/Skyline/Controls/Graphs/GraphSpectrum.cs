@@ -58,13 +58,15 @@ namespace pwiz.Skyline.Controls.Graphs
     }
 
     public enum SpectrumControlType { LibraryMatch, FullScanViewer }
-    public interface IMzScaleCopyable
+
+    public interface IMzScalePlot
     {
         void SetMzScale(MzRange range);
         MzRange Range { get; }
         void ApplyMZZoomState(ZoomState scaleState);
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
+        bool IsAnnotated { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
         MzRange GetMzRange(SpectrumControlType controlType);
     }
     
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -732,6 +734,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
+
             return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
@@ -741,6 +744,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
+                ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
                 LineWidth = Settings.Default.SpectrumLineWidth
@@ -1313,6 +1317,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+        public bool IsAnnotated => true;
 
         public double MzMax
         {

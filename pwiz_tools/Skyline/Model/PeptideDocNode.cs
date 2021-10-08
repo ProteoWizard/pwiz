@@ -496,12 +496,36 @@ namespace pwiz.Skyline.Model
                 return -1;
 
             int iBest = -1;
-            double bestArea = Double.MinValue;
+            double? bestZScore = null;
+            double bestArea = double.MinValue;
             for (int i = 0; i < Results.Count; i++)
             {
-                double combinedScore = 0;
+                var i1 = i;
+                var zScores = Children.Cast<TransitionGroupDocNode>()
+                    .Where(nodeTranGroup => nodeTranGroup.HasResults)
+                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1])
+                    .Where(ci => ci.ZScore.HasValue)
+                    .Select(ci => ci.ZScore.Value).ToArray();
+                var zScore = zScores.Length > 0 ? (float?) zScores.Max() : null;
+
+                if (zScore.HasValue)
+                {
+                    if (!bestZScore.HasValue || zScore.Value > bestZScore.Value)
+                    {
+                        iBest = i;
+                        bestZScore = zScore.Value;
+                    }
+                    continue;
+                }
+                else if (bestZScore.HasValue)
+                {
+                    continue;
+                }
+
+                double maxScore = 0;
                 foreach (TransitionGroupDocNode nodeGroup in Children)
                 {
+
                     double groupArea = 0;
                     double groupTranMeasured = 0;
                     bool isGroupIdentified = false;
@@ -533,14 +557,14 @@ namespace pwiz.Skyline.Model
                         groupArea += tranArea/resultCount;
                         groupTranMeasured += tranMeasured/resultCount;
                     }
-                    combinedScore += ChromDataPeakList.ScorePeak(groupArea,
-                        LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count),
-                        isGroupIdentified);
+
+                    maxScore = Math.Max(maxScore, 
+                        ChromDataPeakList.ScorePeak(groupArea, LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count), isGroupIdentified));
                 }
-                if (combinedScore > bestArea)
+                if (maxScore > bestArea)
                 {
                     iBest = i;
-                    bestArea = combinedScore;
+                    bestArea = maxScore;
                 }
             }
             return iBest;            

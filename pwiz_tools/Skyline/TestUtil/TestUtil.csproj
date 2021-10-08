@@ -436,7 +436,10 @@
     <EmbeddedResource Include="Schemas\Skyline_20.21.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Schemas\Skyline_21_1.xsd">
+    <EmbeddedResource Include="Schemas\Skyline_21.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_21.11.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

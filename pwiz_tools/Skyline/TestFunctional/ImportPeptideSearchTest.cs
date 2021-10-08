@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
                 new ImportPeptideSearch.FoundResultsFile(PREFIX + "b", "path2"),
                 new ImportPeptideSearch.FoundResultsFile(PREFIX + "a", "path3")
             };
-            var result = ImportResultsControl.EnsureUniqueNames(list);
+            var result = ImportPeptideSearch.EnsureUniqueNames(list).ToArray();
             Assert.AreEqual(list[0].Name, result[0].Name);
             Assert.AreEqual(list[1].Name, result[1].Name);
             Assert.AreEqual(list[2].Name + "2", result[2].Name);

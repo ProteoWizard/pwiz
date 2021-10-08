@@ -470,6 +470,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.Flags,
                                      _currentFileInfo.LastWriteTime,
                                      _currentFileInfo.StartTime,
+                                     DateTime.UtcNow,
                                      (float) (provider.MaxRetentionTime ?? 0),
                                      (float) (provider.MaxIntensity ?? 0),
                                      _currentFileInfo.SizeScanIds,

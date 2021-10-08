@@ -382,11 +382,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     ;
     explicit Skyline.exe ;
 
-    # this is the default target which builds Skyline and then cleans it so the first subsequent build in the IDE doesn't mess up the Content file copies
+    # this is the default target which builds Skyline
     make Build
         : # sources
         : # actions
-            @do_skyline_clean
+            @do_skyline_build
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
