@@ -231,7 +231,6 @@ namespace MSConvertGUI
             this.clientScopeTextBox.Name = "clientScopeTextBox";
             this.clientScopeTextBox.Size = new System.Drawing.Size(297, 20);
             this.clientScopeTextBox.TabIndex = 2;
-            this.clientScopeTextBox.Text = "unifi";
             // 
             // identityServerTextBox
             // 
@@ -241,7 +240,6 @@ namespace MSConvertGUI
             this.identityServerTextBox.Name = "identityServerTextBox";
             this.identityServerTextBox.Size = new System.Drawing.Size(297, 20);
             this.identityServerTextBox.TabIndex = 1;
-            this.identityServerTextBox.Text = "<HostURL>:50333";
             // 
             // panel1
             // 
