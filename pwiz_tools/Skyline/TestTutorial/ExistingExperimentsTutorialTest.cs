@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -651,19 +652,19 @@ namespace pwiz.SkylineTestTutorial
             SkylineWindow.UpdatePeakAreaGraph();
         }
 
-        private void VerifyRdotPLabels(string[] replicates, string[] rdotps)
+        private void VerifyRdotPLabels(string[] replicates, double[] rdotps)
         {
             if (!Program.SkylineOffscreen)
             {
                 var rdotpLabels = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.GraphObjList.OfType<TextObj>().ToList()
                     .FindAll(txt => txt.Text.StartsWith(@"rdotp")).Select((obj) => obj.Text).ToArray();
 
-                Assert.IsTrue(Enumerable.Range(0, replicates.Length).All(i =>
+                for (var i =0; i < replicates.Length; i++)
                 {
                     var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
                         .FindIndex(label => replicates[i].Equals(label));
-                    return rdotpLabels[repIndex - 1].Equals("rdotp\n" + rdotps[i]);
-                }));
+                    Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, "{0}\n{1:F02}", "rdotp", rdotps[i]), rdotpLabels[repIndex - 1]);
+                }
             }
         }
 

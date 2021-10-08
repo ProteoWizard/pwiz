@@ -315,8 +315,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (parentGroupNode.HasLibInfo)
                             ExpectedVisible = AreaExpectedValue.library;
                     }
-                    if (ratioToLabel != null)
+                    if (ratioToLabel != null && !ratioToLabel.IsotopeLabelType.Equals(parentGroupNode.LabelType))
                         ExpectedVisible = AreaExpectedValue.ratio_heavy;
+                    
                 }
             }
 
@@ -832,13 +833,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     var document = GraphSummary.DocumentUIContainer.DocumentUI;
                     var normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
                     values = new float?[] { };
-                    if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToHeavy)
+                    if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                     {
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
-                        if (precursorNodePath.Peptide != null)
+                        if (precursorNodePath.Peptide != null && !nodeGroup.LabelType.Equals(ratioToLabel.IsotopeLabelType))
                         {
                             var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
-                                ratioToHeavy,
+                                ratioToLabel,
                                 precursorNodePath.Peptide, nodeGroup,
                                 nodeGroup.GetChromInfoEntry(indexResult));
                             if(ratio?.HasDotProduct ?? false)
