@@ -36,6 +36,8 @@
             this.applyPeakGroupGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupApplyToByGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeakGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.synchronizeIntegrationContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator33 = new System.Windows.Forms.ToolStripSeparator();
             this.legendChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakBoundariesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,6 +101,8 @@
             this.applyPeakGroupGraphMenuItem,
             this.groupApplyToByGraphMenuItem,
             this.removePeakGraphMenuItem,
+            this.toolStripSeparator1,
+            this.synchronizeIntegrationContextMenuItem,
             this.toolStripSeparator33,
             this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
@@ -151,6 +155,18 @@
             resources.ApplyResources(this.removePeakGraphMenuItem, "removePeakGraphMenuItem");
             this.removePeakGraphMenuItem.DropDownOpening += new System.EventHandler(this.removePeakMenuItem_DropDownOpening);
             this.removePeakGraphMenuItem.Click += new System.EventHandler(this.removePeakMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // synchronizeIntegrationContextMenuItem
+            // 
+            this.synchronizeIntegrationContextMenuItem.CheckOnClick = true;
+            this.synchronizeIntegrationContextMenuItem.Name = "synchronizeIntegrationContextMenuItem";
+            resources.ApplyResources(this.synchronizeIntegrationContextMenuItem, "synchronizeIntegrationContextMenuItem");
+            this.synchronizeIntegrationContextMenuItem.Click += new System.EventHandler(this.synchronizeIntegrationContextMenuItem_Click);
             // 
             // toolStripSeparator33
             // 
@@ -569,5 +585,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator19;
         private System.Windows.Forms.ToolStripMenuItem zoomChromContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator26;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem synchronizeIntegrationContextMenuItem;
     }
 }

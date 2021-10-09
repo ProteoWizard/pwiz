@@ -408,21 +408,6 @@
       </xs:element>
       <xs:element name="transition_integration">
         <xs:complexType>
-          <xs:sequence>
-            <xs:element name="synchronize_integration" minOccurs="0" maxOccurs="1">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="target" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:attribute name="value" type="xs:string" use="required"/>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:sequence>
-                <xs:attribute name="group_by" type="xs:string"/>
-                <xs:attribute name="all" type="xs:boolean"/>
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
           <xs:attribute name="integrate_all" type="xs:boolean"/>
         </xs:complexType>
       </xs:element>
