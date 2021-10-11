@@ -2057,9 +2057,6 @@
   <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
     <value>Adding 1 modification.</value>
   </data>
-  <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
-    <value>The calculator {0} requires all of its standard peptides in order to determine a regression.</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Collision_Energy" xml:space="preserve">
     <value>Opt Collision Energy</value>
   </data>
@@ -11498,5 +11495,10 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mProphet_model___0_" xml:space="preserve">
     <value>An error occurred while training the mProphet model: {0}</value>
+  </data>
+  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
+    <value>The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
+
+{3}</value>
   </data>
 </root>
