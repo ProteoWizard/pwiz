@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(()=>editAccountDlg.SetRemoteAccount(UnifiTestUtil.GetTestAccount()));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
             OpenFile(openDataSourceDialog, "Company");
-            OpenFile(openDataSourceDialog, "Test Data");
+            OpenFile(openDataSourceDialog, "Demo Department");
             OpenFile(openDataSourceDialog, "HDMSe");
             OpenFile(openDataSourceDialog, "250 fmol Hi3 E coli peptides 3-6 min");
             var lockMassDlg = WaitForOpenForm<ImportResultsLockMassDlg>();
