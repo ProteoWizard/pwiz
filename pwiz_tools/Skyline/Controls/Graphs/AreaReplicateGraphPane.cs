@@ -34,7 +34,7 @@ using Array = System.Array;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, isotope_dist, ratio_heavy }  
+    public enum AreaExpectedValue { none, library, isotope_dist, ratio_to_label }  
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var children = ((PeptideDocNode) selectedNode).TransitionGroups
                     .Where(PaneKey.IncludesTransitionGroup)
                     .ToArray();
-                if (children.Length == 1 && displayType != DisplayTypeChrom.total && normalizeOption != NormalizeOption.CALIBRATED)
+                if (children.Length == 1 && normalizeOption != NormalizeOption.CALIBRATED)
                 {
                     selectedNode = parentNode = children[0];
                     identityPath = new IdentityPath(identityPath, parentNode.Id);
@@ -302,7 +302,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
                 bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
-                var ratioToLabel = normalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel;
                 if (!IsMultiSelect)
                 {
                     if (isFullScanMs)
@@ -315,10 +314,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (parentGroupNode.HasLibInfo)
                             ExpectedVisible = AreaExpectedValue.library;
                     }
-                    if (ratioToLabel != null && !ratioToLabel.IsotopeLabelType.Equals(parentGroupNode.LabelType))
-                        ExpectedVisible = AreaExpectedValue.ratio_heavy;
-                    
                 }
+            }
+            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel && !IsMultiSelect)
+            {
+                var graphLabelType = parentGroupNode?.LabelType ?? PaneKey.IsotopeLabelType;
+                if (graphLabelType != null && !ratioToLabel.IsotopeLabelType.Equals(graphLabelType))
+                    ExpectedVisible = AreaExpectedValue.ratio_to_label;
             }
 
             var graphType = AreaGraphController.GraphDisplayType;
@@ -444,7 +446,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null)
+                    if (nodeGroup != null && countNodes > 1)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -693,6 +695,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
+            GraphSummary.GraphControl.Refresh();
         }
 
         private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas, Func<double, double, double> aggregateFunc)
@@ -829,7 +832,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct);
                     }
                     break;
-                case AreaExpectedValue.ratio_heavy:
+                case AreaExpectedValue.ratio_to_label:
                     var document = GraphSummary.DocumentUIContainer.DocumentUI;
                     var normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
                     values = new float?[] { };
@@ -873,7 +876,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return @"dotp";
                     case AreaExpectedValue.isotope_dist:
                         return @"idotp";
-                    case AreaExpectedValue.ratio_heavy:
+                    case AreaExpectedValue.ratio_to_label:
                         return @"rdotp";
                     default:
                         return string.Empty; 
@@ -981,9 +984,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 base.InitData();
          
-                if (_expectedVisible != AreaExpectedValue.none)
+                if (_expectedVisible != AreaExpectedValue.none && _docNode is TransitionGroupDocNode nodeGroup)
                 {
-                    var nodeGroup = (TransitionGroupDocNode) _docNode;
                     var expectedIntensities = from nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, DisplayType)
                                               select GetExpectedValue(nodeTran);
                     var intensityArray = expectedIntensities.ToArray();
