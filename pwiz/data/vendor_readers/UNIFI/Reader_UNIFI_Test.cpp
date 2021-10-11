@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
     #ifdef PWIZ_READER_UNIFI
     bool testAcceptOnly = false;
 
-    if (::getenv("UNIFI_USERNAME") == nullptr ||
-        ::getenv("UNIFI_PASSWORD") == nullptr)
+    if (::getenv("UNIFI_USERNAME") == nullptr || bal::trim_copy(string(::getenv("UNIFI_USERNAME"))).empty() ||
+        ::getenv("UNIFI_PASSWORD") == nullptr || bal::trim_copy(string(::getenv("UNIFI_PASSWORD"))).empty())
     {
         cerr << "UNIFI_USERNAME and UNIFI_PASSWORD are not set; Reader_UNIFI_Test is only testing that it can identify files, not read them." << endl;
         testAcceptOnly = true;
