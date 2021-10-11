@@ -3759,7 +3759,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           MsDataFileUri filePath,
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
-                                          PeakIdentification identified,
+                                          PeakIdentification? identified,
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
@@ -3773,8 +3773,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public Transition Transition { get; private set; }
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
-        public PeakIdentification Identified { get; private set; }
-        public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
+        public PeakIdentification? Identified { get; private set; }
+        public bool IsIdentified { get { return Identified.HasValue && Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
     }
 
