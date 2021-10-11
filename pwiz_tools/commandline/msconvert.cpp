@@ -73,6 +73,7 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
@@ -333,7 +334,7 @@ Config parseCommandLine(int argc, char** argv)
             ": write selected reaction monitoring as spectra, not chromatograms")
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
-            ": write all drift bins/scans in a frame/block as one spectrum instead of individual spectra")
+            ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
@@ -350,7 +351,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.stripVersionFromSoftware)->zero_tokens(),
             ": if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML")
         ("singleThreaded",
-            po::value<boost::tribool>(&config.singleThreaded)->zero_tokens()->default_value(boost::indeterminate),
+            po::value<boost::tribool>(&config.singleThreaded)->implicit_value(true)->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
@@ -520,7 +521,7 @@ Config parseCommandLine(int argc, char** argv)
         while (is)
         {
             string filename;
-            getline(is, filename);
+            getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
         }
     }
@@ -853,7 +854,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         Config configCopy(config);
         if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
             configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-        configCopy.writeConfig.useWorkerThreads = !config.singleThreaded;
+        configCopy.writeConfig.useWorkerThreads = !bool(config.singleThreaded);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
@@ -934,7 +935,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             Config configCopy(config);
             if (boost::indeterminate(config.singleThreaded) && boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr) != nullptr)
                 configCopy.singleThreaded = !boost::dynamic_pointer_cast<SpectrumListWrapper>(msd.run.spectrumListPtr)->benefitsFromWorkerThreads();
-            configCopy.writeConfig.useWorkerThreads = !configCopy.singleThreaded;
+            configCopy.writeConfig.useWorkerThreads = !bool(configCopy.singleThreaded);
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);

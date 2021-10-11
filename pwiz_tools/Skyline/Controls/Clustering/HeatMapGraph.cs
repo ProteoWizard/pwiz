@@ -307,6 +307,11 @@ namespace pwiz.Skyline.Controls.Clustering
 
         private void ScaleAxisLabels()
         {
+            if (_yAxisLabelScaler == null || _xAxisLabelScaler == null)
+            {
+                // It is possible for this method to be called before the HeatMapGraph constructor has finished
+                return;
+            }
             _yAxisLabelScaler.ScaleAxisLabels();
             zedGraphControl1.AxisChange();
             _xAxisLabelScaler.ScaleAxisLabels();

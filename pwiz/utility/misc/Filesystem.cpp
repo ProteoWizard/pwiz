@@ -25,9 +25,10 @@
 
 #include "Filesystem.hpp"
 
-#ifdef WIN32
+#ifdef _MSC_VER
     #define _WIN32_WINNT 0x0600
     #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
     #define NOGDI
     #include <windows.h>
     #include <direct.h>
@@ -53,6 +54,7 @@
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/locale/conversion.hpp>
+#include <boost/locale/encoding_utf.hpp>
 #include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>

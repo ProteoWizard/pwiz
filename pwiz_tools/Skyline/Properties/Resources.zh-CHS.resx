@@ -2370,10 +2370,6 @@
   <data name="ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_" xml:space="preserve">
     <value>此次导入好像比预期的时间长。如果是从网络驱动器导入，请考虑取消这次导入，复制到本地磁盘，再重试。</value>
   </data>
-  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>加载{0}失败。
- {1}</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Error__To_create_the_iRT_database___0___for_this_assay_library__you_must_specify_the_iRT_standards_using_either_of_the_arguments__1__or__2_" xml:space="preserve">
     <value>错误：要为此分析库创建 iRT 数据库“{0}”，您必须使用参数 {1} 或 {2} 指定 iRT 标准</value>
   </data>
@@ -3119,9 +3115,6 @@
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>肽段{0}经多次发现带有用户修饰。</value>
-  </data>
-  <data name="CommandLine_Run_No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>没有新结果被添加。跳过 Panorama 导入。</value>
   </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>共享文件</value>
@@ -5264,9 +5257,6 @@
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均质量(&amp;V)：</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
-    <value>警告：无法读取文件{0}。 忽视...</value>
-  </data>
   <data name="PythonInstaller_DownloadPython_Download_failed_" xml:space="preserve">
     <value>下载失败。</value>
   </data>
@@ -5839,9 +5829,6 @@
   </data>
   <data name="OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_" xml:space="preserve">
     <value>库路径不可为空。</value>
-  </data>
-  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>取消从{0}安装工具。</value>
   </data>
   <data name="AllChromatogramsGraph_btnCancelFile_Click_Cancel_file" xml:space="preserve">
     <value>取消文件</value>
@@ -7278,9 +7265,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
     <value>核选最大并行{0}计数和优步计数。</value>
   </data>
-  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>警告：重复测定{0}已经存在于特定文档中，并且“--导入-附加”选项未指定。 重复测定不会添加到文档中。</value>
-  </data>
   <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
     <value>重叠</value>
   </data>
@@ -7643,9 +7627,6 @@
   </data>
   <data name="ResultsGrid_ResultsGrid_Isotope_Dot_Product" xml:space="preserve">
     <value>同位素点积值</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_An_error_occurred_on_the_Panorama_server___0___importing_the_file_" xml:space="preserve">
-    <value>导入文件时 Panorama 服务器 ({0}) 出现错误。</value>
   </data>
   <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
     <value>错误：如果 {0} 是参数，则工具必须具有报告标题。使用“--工具-报告”参数来指定报告。</value>
@@ -10056,20 +10037,6 @@
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>已嵌入</value>
   </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
-    <value>无法在与 MaxQuant 输入文件“{1}”相同的目录中或其父目录或祖父目录中找到与“{0}”匹配的外部谱图文件。
-
-如果您没有原始文件，则可以使用输入文件中的嵌入谱图来构建库。然而，MaxQuant 已嵌入谱图中的子离子是已去卷积电荷状态，并且将仅包含单电荷子离子，可能不代表由质谱仪测得的强度。
-
-</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
-    <value>单击“已嵌入”使用已嵌入的谱图。
-单击“重试”尝试使用位于输入文件旁边的原始谱图文件（具有支持的文件扩展名：{0}）再次构建。</value>
-  </data>
-  <data name="CommandLine_ShowLibraryMissingExternalSpectraError_DescriptionWithSupportedExtensions__0__" xml:space="preserve">
-    <value>使用参数“--导入-搜索-首选-已嵌入-谱图”来强制库构建使用嵌入的谱图，或将原始谱图文件放在输入文件（带有支持的文件扩展名：{0}）旁并重新运行。</value>
-  </data>
   <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
     <value>错误：无法连接到网站{0}</value>
   </data>
@@ -10312,20 +10279,11 @@
   <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
     <value>更新计算后注释</value>
   </data>
-  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
-    <value>无需要导入的重复测定。</value>
-  </data>
   <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
     <value>错误：{1} 的正则表达式“{0}”无法解析。</value>
   </data>
   <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
     <value>文件“{0}” 无样品。无法应用样品名称模式。忽视。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>无任何文件符合这一文件名称模式“ {0}”。</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>无任何文件符合这一样品名称模式“ {0}”。</value>
   </data>
   <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
     <value>本文档中已经存在重复测定”{0}“，使用”{1}“代替。</value>
@@ -10605,9 +10563,6 @@
   </data>
   <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
     <value>不支持在 ZIP 文件中的文档。</value>
-  </data>
-  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>Panorama 服务器中取消了文档导入{0}。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
     <value>工作细节可见于 {0}。</value>
@@ -11103,9 +11058,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT标准名称 '{0}' 无效。</value>
-  </data>
-  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>使用 CiRT 肽段时必须设置 {0}。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT 标准设置为 {0}，但找到多个 iRT 标准。必须明确设置 iRT 标准。</value>

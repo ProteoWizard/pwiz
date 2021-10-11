@@ -356,6 +356,11 @@ namespace SkylineTester
             _process.StartInfo.Arguments = arguments;
             _process.StartInfo.StandardOutputEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
             _process.StartInfo.StandardErrorEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
+
+            // Configure git to fail if its https connection stalls out, so our retry logic can kick in
+            _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_LIMIT", @"1000"); // Fail if transfer rate falls below 1Kbps,
+            _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
+
             _process.OutputDataReceived += HandleOutput;
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;

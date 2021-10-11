@@ -565,6 +565,8 @@
     <ClCompile Include="pwiz\utility\misc\BinaryDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReaderTest.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\DiaUmpire.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\IsotopePatternMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -998,11 +1000,20 @@
     <ClInclude Include="pwiz_tools\BiblioSpec\src\BuildParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpire.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpireMath.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\InstrumentParameter.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternMap.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternRange.ipp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCluster.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCurve.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\ScanData.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />
     <None Include="scripts\wix\vendor-dlls.wxs-fragment" />
     <None Include="scripts\wix\pwiz-setup.py" />
     <None Include="scripts\wix\pwiz-setup.wxs.template" />
+    <None Include="libraries\boost-build\src\tools\msvc.jam" />
   </ItemGroup>
 </Project>

@@ -291,7 +291,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
         {
 
             if ( string::npos == nextStr.rfind('=') )
-                throw user_error("[SpectrumList_PeakPicker] = sign required after keyword argument");
+                throw user_error("[SpectrumList_PeakPicker] = sign required after keyword argument: " + nextStr);
 
             string keyword = nextStr.substr(0,nextStr.rfind('='));
             string paramVal = nextStr.substr(nextStr.rfind('=')+1);
@@ -316,7 +316,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
             }
             else
             {
-                throw user_error("[SpectrumList_PeakPicker] Invalid keyword argument.");
+                throw user_error("[SpectrumList_PeakPicker] Invalid keyword argument: " + keyword);
             }
 
         }
@@ -406,7 +406,7 @@ SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg, 
     if (!bRemover && ("addMissing"!=action))
         throw user_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
     string msLevelSets;
-    getline(parser, msLevelSets);
+    getlinePortable(parser, msLevelSets);
     if (""==msLevelSets) msLevelSets="1-"; // default is all msLevels
 
     IntegerSet msLevelsToFilter;
@@ -550,7 +550,7 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg,
         else if ( boost::iequals(buf,"hi_res") )
             hires = true;
         else
-            throw user_error("[filterCreator_MS2Deisotope] Invalid keyword entered.");
+            throw user_error("[filterCreator_MS2Deisotope] Invalid keyword entered: " + buf);
 
 
         int whileLoopCnt = 0;
@@ -574,7 +574,7 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg,
             }
 
             if ( string::npos == buf.rfind('=') )
-                throw user_error("[filterCreator_MS2Deisotope] = sign required after keyword argument");
+                throw user_error("[filterCreator_MS2Deisotope] = sign required after keyword argument: " + buf);
 
             string keyword = buf.substr(0,buf.rfind('='));
             string paramVal = buf.substr(buf.rfind('=')+1);
@@ -602,7 +602,7 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg,
             }
             else
             {
-                throw user_error("[filterCreator_MS2Deisotope] Invalid keyword entered.");
+                throw user_error("[filterCreator_MS2Deisotope] Invalid keyword entered: " + keyword);
             }
 
             whileLoopCnt++;
@@ -1154,7 +1154,7 @@ SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string&
     {
 
         if ( string::npos == nextStr.rfind('=') )
-            throw user_error("[filterCreator_turbocharger] = sign required after keyword argument");
+            throw user_error("[filterCreator_turbocharger] = sign required after keyword argument: " + nextStr);
 
         string keyword = nextStr.substr(0,nextStr.rfind('='));
         string paramVal = nextStr.substr(nextStr.rfind('=')+1);
@@ -1210,7 +1210,7 @@ SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string&
         }
         else
         {
-            throw user_error("[filterCreator_turbocharger] Invalid keyword entered.");
+            throw user_error("[filterCreator_turbocharger] Invalid keyword entered: " + keyword);
         }
 
             
@@ -1369,7 +1369,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     if (parser)
     {
         string msLevelSets;
-        getline(parser, msLevelSets);
+        getlinePortable(parser, msLevelSets);
 
         if (!msLevelSets.empty())
         {
@@ -1480,7 +1480,7 @@ SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const st
     string includeArg;
     string matchStringArg;
     parser >> matchExactArg >> includeArg;
-    getline(parser, matchStringArg);
+    getlinePortable(parser, matchStringArg);
     bal::trim(matchStringArg);
 
     bool matchExact;

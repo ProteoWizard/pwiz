@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -51,7 +52,7 @@ namespace SkylineBatch
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, DateTime.Now, 
+            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, _invalidConfig.LogTestFormat, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // replace old configuration
@@ -76,25 +77,50 @@ namespace SkylineBatch
 
         private async Task<MainSettings> FixInvalidMainSettings()
         {
-            var validTemplateFilePath = mainSettings.TemplateFilePath;
-            if (mainSettings.DependentConfigName == null)
-                validTemplateFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file, 
-                mainSettings.TemplateFilePath, MainSettings.ValidateTemplateFile, PathDialogOptions.File, PathDialogOptions.ExistingOptional);
-            var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
-                mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, PathDialogOptions.Folder);
-            var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
-                mainSettings.DataFolderPath, MainSettings.ValidateDataFolder, PathDialogOptions.Folder);
-            var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
-                MainSettings.ValidateAnnotationsFile, PathDialogOptions.File);
+            var validTemplate = mainSettings.Template;
+            if (mainSettings.Template.IsIndependent())
+            {
+                if (mainSettings.Template.PanoramaFile == null)
+                {
+                    var validTemplateFile = await GetValidPath(
+                        Resources.InvalidConfigSetupForm_FixInvalidMainSettings_Skyline_template_file,
+                        mainSettings.Template.FilePath, SkylineTemplate.ValidateTemplateFileNotDownloading, TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, PathDialogOptions.File);
+                    validTemplate = SkylineTemplate.FromUi(validTemplateFile, mainSettings.Template.DependentConfigName,
+                        mainSettings.Template.PanoramaFile);
+                }
+                else
+                {
+                    var invalidPanoramaFile = mainSettings.Template.PanoramaFile;
+                    var validDownloadFolder = await GetValidPath(
+                        Resources.InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into,
+                        invalidPanoramaFile.DownloadFolder, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
+                    validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
+                        new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
+                }
+            }
 
-            return new MainSettings(validTemplateFilePath, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server, 
-                validAnnotationsFilePath, mainSettings.ReplicateNamingPattern, mainSettings.DependentConfigName);
+            var validAnalysisFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder, 
+                mainSettings.AnalysisFolderPath, MainSettings.ValidateAnalysisFolder, null, PathDialogOptions.Folder);
+            var dataValidator = mainSettings.Server != null ? MainSettings.ValidateDataFolderWithServer : (Validator)MainSettings.ValidateDataFolderWithoutServer;
+            var validDataFolderPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_data_folder, 
+                mainSettings.DataFolderPath, dataValidator, null, PathDialogOptions.Folder);
+            var annotationsValidator = mainSettings.AnnotationsDownload != null ? MainSettings.ValidateAnnotationsWithServer : (Validator)MainSettings.ValidateAnnotationsWithoutServer;
+            var validAnnotationsFilePath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file, mainSettings.AnnotationsFilePath,
+                annotationsValidator, TextUtil.FILTER_CSV, PathDialogOptions.File);
+            var validAnnotationsDownload =
+                !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
+                    ? new PanoramaFile(mainSettings.AnnotationsDownload,
+                        Path.GetDirectoryName(validAnnotationsFilePath), mainSettings.AnnotationsDownload.FileName)
+                    : null;
+
+            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,
+                validAnnotationsFilePath, validAnnotationsDownload, mainSettings.ReplicateNamingPattern);
         }
 
         private async Task<RefineSettings> FixInvalidRefineSettings()
         {
             var validOutputPath = await GetValidPath(Resources.InvalidConfigSetupForm_FixInvalidRefineSettings_path_to_the_refined_output_file,
-                refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, PathDialogOptions.File, PathDialogOptions.Save);
+                refineSettings.OutputFilePath, RefineSettings.ValidateOutputFile, TextUtil.FILTER_SKY, PathDialogOptions.File, PathDialogOptions.Save);
             return RefineSettings.GetPathChanged(refineSettings, validOutputPath);
         }
 
@@ -107,24 +133,40 @@ namespace SkylineBatch
                 var report = reportSettings.Reports[i];
                 var validReportPath = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__report, 
                         report.Name), report.ReportPath, 
-                    ReportInfo.ValidateReportPath, PathDialogOptions.File);
+                    ReportInfo.ValidateReportPath, TextUtil.FILTER_SKYR, PathDialogOptions.File);
                 var validScripts = new List<Tuple<string, string>>();
+                var validRemoteFiles = new Dictionary<string, PanoramaFile>();
                 foreach (var scriptAndVersion in report.RScripts)
                 {
                     var validVersion = await GetValidRVersion(scriptAndVersion.Item1, scriptAndVersion.Item2);
-                    var validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
-                        scriptAndVersion.Item1, 
-                        ReportInfo.ValidateRScriptPath, PathDialogOptions.File);
-                    
+                    string validRScript;
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                    {
+                        var validFolder = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            FileUtil.GetDirectorySafe(scriptAndVersion.Item1),
+                            ReportInfo.ValidateRScriptWithServer, null, PathDialogOptions.Folder);
+                        validRScript = Path.Combine(validFolder,
+                            report.RScriptServers[scriptAndVersion.Item1].FileName);
+                    }
+                    else
+                    {
+                        validRScript = await GetValidPath(string.Format(Resources.InvalidConfigSetupForm_FixInvalidReportSettings__0__R_script, Path.GetFileNameWithoutExtension(scriptAndVersion.Item1)),
+                            scriptAndVersion.Item1,
+                            ReportInfo.ValidateRScriptWithoutServer, TextUtil.FILTER_R, PathDialogOptions.File);
+                    }
                     validScripts.Add(new Tuple<string, string>(validRScript, validVersion));
+                    if (report.RScriptServers.ContainsKey(scriptAndVersion.Item1))
+                        validRemoteFiles.Add(validRScript, report.RScriptServers[scriptAndVersion.Item1].ReplaceFolder(Path.GetDirectoryName(validRScript)));
                 }
-                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, report.UseRefineFile));
+                validReports.Add(new ReportInfo(report.Name, report.CultureSpecific, validReportPath, validScripts, validRemoteFiles, report.UseRefineFile));
             }
             return new ReportSettings(validReports);
         }
         
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
+            if (!string.IsNullOrEmpty(SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath))
+                return new SkylineSettings(SkylineType.Local, null, SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath);
             var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
@@ -133,11 +175,11 @@ namespace SkylineBatch
         
         #region Get Valid Variables
 
-        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] dialogOptions)
+        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, string filter, params PathDialogOptions[] dialogOptions)
         {
             var path = invalidPath;
             
-            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, dialogOptions);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, filter, dialogOptions);
             path = (string) await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))
@@ -196,6 +238,9 @@ namespace SkylineBatch
         
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);

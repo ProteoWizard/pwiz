@@ -43,7 +43,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillIMSImportTest()
         {
             // RunPerfTests = true;  // Uncomment to force this to run in UI

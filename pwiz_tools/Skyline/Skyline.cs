@@ -2163,7 +2163,7 @@ namespace pwiz.Skyline
                             OwnedForms[libraryExpIndex].Activate();
                     }
 
-                    HandleStandardsChanged(oldStandard);
+                    HandleStandardsChanged(oldStandard, RCalcIrt.Calculator(Document));
                 }
             }
 
@@ -2172,12 +2172,23 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)
+        public void HandleStandardsChanged(ICollection<Target> oldStandard, RCalcIrt calc)
         {
-            var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
-            calc = calc.Initialize(null) as RCalcIrt;
+            var dbPath = calc.DatabasePath;
+            try
+            {
+                calc = calc.Initialize(null) as RCalcIrt;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(
+                        Resources.SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_,
+                        dbPath), e);
+                return;
+            }
             if (calc == null)
                 return;
             var newStandard = calc.GetStandardPeptides().ToArray();
@@ -3392,15 +3403,14 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
+                _skyline.AreaNormalizeOption = _ratioIndex;
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
+                    { Checked = skylineWindow.SequenceTree.NormalizeOption == i };
                 menu.DropDownItems.Add(item);
             }
         }

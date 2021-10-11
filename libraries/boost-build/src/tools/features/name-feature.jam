@@ -3,9 +3,19 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.name]]`name`::
+When used in requirements of a prebuilt library target this feature specifies
+the name of the library (the name of the library file without any
+platform-specific suffixes or prefixes). See <<Prebuilt targets>> for examples.
++
+When used in requirements of an `<install>` target it specifies the name of the
+target file.
+
+|# # end::doc[]
 
 feature.feature name
     :

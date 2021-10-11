@@ -763,11 +763,15 @@ namespace pwiz.Skyline.Model.Results
 
                 DateTime modifiedTime = DateTime.FromBinary(cachedFileStruct.modified);
                 DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : (DateTime?)null;
+                DateTime? importTime = cachedFileStruct.importTime != 0
+                    ? DateTime.FromBinary(cachedFileStruct.importTime)
+                    : (DateTime?) null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
                 raw.ChromCacheFiles[i] = new ChromCachedFile(filePath,
                                                              cachedFileStruct.flags,
                                                              modifiedTime,
                                                              runstartTime,
+                                                             importTime,
                                                              cachedFileStruct.maxRetentionTime,
                                                              cachedFileStruct.maxIntensity,
                                                              cachedFileStruct.sizeScanIds,
@@ -1003,7 +1007,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     modified = cachedFile.FileWriteTime.ToBinary(),
                     lenPath = filePathBytes.Length,
-                    runstart = cachedFile.RunStartTime.HasValue ? cachedFile.RunStartTime.Value.ToBinary() : 0,
+                    runstart = cachedFile.RunStartTime?.ToBinary() ?? 0,
                     lenInstrumentInfo = instrumentInfoBytes.Length,
                     flags = cachedFile.Flags,
                     maxRetentionTime = cachedFile.MaxRetentionTime,
@@ -1013,6 +1017,7 @@ namespace pwiz.Skyline.Model.Results
                     ticArea = cachedFile.TicArea.GetValueOrDefault(),
                     lenSampleId = sampleIdBytes.Length,
                     lenSerialNumber = serialNumberBytes.Length,
+                    importTime = cachedFile.ImportTime?.ToBinary() ?? 0
                 };
                 cachedFileSerializer.WriteItems(outStream, new []{cachedFileStruct});
                 // Write variable length buffers

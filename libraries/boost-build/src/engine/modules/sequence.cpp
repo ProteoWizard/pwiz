@@ -43,7 +43,6 @@ LIST * sequence_select_highest_ranked( FRAME * frame, int flags )
         LISTITER iter = list_begin( rank );
         LISTITER const end = list_end( rank );
         LISTITER elements_iter = list_begin( elements );
-        LISTITER const elements_end = list_end( elements );
         for ( ; iter != end; iter = list_next( iter ), elements_iter =
             list_next( elements_iter ) )
             if ( atoi( object_str( list_item( iter ) ) ) == highest_rank )

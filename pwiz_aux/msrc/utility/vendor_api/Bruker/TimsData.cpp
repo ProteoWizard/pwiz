@@ -205,6 +205,11 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         spectra_.reserve(countNonEmpty * nScans);
     }
 
+    string queryCalibrations = "SELECT MAX(TimsCalibration) FROM Frames";
+    size_t calibrationsCount = sqlite::query(db, queryCalibrations.c_str()).begin()->get<sqlite3_int64>(0);
+    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex(calibrationsCount);
+    oneOverK0ByScanNumberByCalibration_.resize(calibrationsCount);
+
     std::string querySelect =
         "SELECT f.Id, Time, Polarity, ScanMode, MsMsType, MaxIntensity, SummedIntensities, NumScans, NumPeaks, "
         "Parent, TriggerMass, IsolationWidth, PrecursorCharge, CollisionEnergy, TimsCalibration-1 "
@@ -215,8 +220,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     sqlite::query q(db, querySelect.c_str());
 
     int maxNumScans = 0;
-    vector<TimsFramePtr> representativeFrameByCalibrationIndex; // the first frame for each calibration index
-    vector<map<double, int>> scanNumberByOneOverK0ByCalibrationIndex;
+    vector<TimsFramePtr> representativeFrameByCalibrationIndex(calibrationsCount); // the first frame for each calibration index
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
     {
@@ -258,13 +262,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
         int calibrationIndex = row.get<int>(++idx);
-        bool newCalibrationIndex = oneOverK0ByScanNumberByCalibration_.size() <= calibrationIndex;
-        if (newCalibrationIndex)
-        {
-            oneOverK0ByScanNumberByCalibration_.resize(calibrationIndex + 1);
-            representativeFrameByCalibrationIndex.resize(calibrationIndex + 1);
-            scanNumberByOneOverK0ByCalibrationIndex.resize(calibrationIndex + 1);
-        }
+        bool newCalibrationIndex = representativeFrameByCalibrationIndex[calibrationIndex] == nullptr;
 
         TimsFramePtr frame = boost::make_shared<TimsFrame>(*this, frameId,
                                          msmsType, rt,
@@ -366,30 +364,25 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
             {
                 sqlite::query::rows row = *itr;
-                const int colFrameId = 0;
-                const int colScanBegin = 1;
-                const int colScanEnd = 2;
-                const int colIsolationMz = 3;
-                const int colIsolationWidth = 4;
-                const int colCE = 5;
-                const int colWindowGroup = 6;
+                int idx = -1;
 
-                int64_t frameId = row.get<sqlite3_int64>(colFrameId);
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
 
                 auto findItr = frames_.find(frameId);
                 if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
                     continue;
                 auto& frame = findItr->second;
 
-                int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+                int scanBegin = row.get<int>(++idx);
+                int scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
-                info.isolationMz = row.get<double>(colIsolationMz);
-                info.isolationWidth = row.get<double>(colIsolationWidth);
-                info.collisionEnergy = row.get<double>(colCE);
-                int windowGroup = row.get<int>(colWindowGroup);
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+                int windowGroup = row.get<int>(++idx);
 
-                info.numScans = 1 + scanEnd - scanBegin;
+                // NB: some data has ScanNumEnd > NumScans, which should not happen because ScanNumEnd is supposed to be an exclusive 0-based index, so clamp it here
+                info.numScans = min(frame->numScans(), 1 + scanEnd) - scanBegin;
 
                 if (!isolationMzFilter_.empty())
                 {
@@ -807,6 +800,8 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
 
     intensities.resize(frameProxy.getTotalNbrPeaks());
     mobilities.resize(intensities.size());
+    if (intensities.empty())
+        return;
     double* itr = &intensities[0];
     double* itr2 = &mobilities[0];
     for (int i = 0; i <= range; ++i)

@@ -58,9 +58,9 @@ namespace SharedBatch
         {
             get
             {
-                if (radioButtonSkyline.Enabled && radioButtonSkyline.Checked)
+                if (radioButtonSkyline.Checked)
                     return SkylineType.Skyline;
-                if (radioButtonSkylineDaily.Enabled && radioButtonSkylineDaily.Checked)
+                if (radioButtonSkylineDaily.Checked)
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;
@@ -71,14 +71,14 @@ namespace SharedBatch
         public string CommandPath => textSkylineInstallationPath.Text;
 
 
-        public object GetVariable() => new SkylineSettings(Type, CommandPath);
+        public object GetVariable() => new SkylineSettings(Type, null, CommandPath);
 
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
             try
             {
-                var newSettings = new SkylineSettings(Type, CommandPath);
+                var newSettings = new SkylineSettings(Type, null, CommandPath);
                 newSettings.Validate();
                 if (!newSettings.CmdPath.Equals(_initialSkylineCmdPath))
                     _mainUiControl.ReplaceAllSkylineVersions(newSettings);
@@ -109,10 +109,10 @@ namespace SharedBatch
             btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
         }
 
-        public void SetText(string value)
+        public void SetInput(object variable)
         {
             radioButtonSpecifySkylinePath.Checked = true;
-            textSkylineInstallationPath.Text = value;
+            textSkylineInstallationPath.Text = (string)variable;
         }
     }
 }
