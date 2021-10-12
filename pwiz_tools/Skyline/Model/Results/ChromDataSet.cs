@@ -54,15 +54,20 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
-        private Target _target;
-
-        public ChromDataSet(bool isTimeNormalArea, Target target, FullScanAcquisitionMethod fullScanAcquisitionMethod, params ChromData[] arrayChromData)
+        public ChromDataSet(bool isTimeNormalArea, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, FullScanAcquisitionMethod fullScanAcquisitionMethod, params ChromData[] arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
             FullScanAcquisitionMethod = fullScanAcquisitionMethod;
                  
             _listChromData.AddRange(arrayChromData);
-            _target = target;
+            if (transitionGroupDocNode != null)
+            {
+                NodeGroups = ImmutableList.Singleton(Tuple.Create(peptideDocNode, transitionGroupDocNode));
+            }
+            else
+            {
+                NodeGroups = ImmutableList<Tuple<PeptideDocNode, TransitionGroupDocNode>>.EMPTY;
+            }
         }
 
         public void ClearDataDocNodes()
@@ -150,13 +155,19 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
+        public bool OverrideTextId { get; set; }
+
         public Target ModifiedSequence
         {
             get
             {
-                if (_target != null)
+                if (OverrideTextId)
                 {
-                    return _target;
+                    var peptideDocNode = NodeGroups.FirstOrDefault()?.Item1;
+                    if (peptideDocNode != null)
+                    {
+                        return peptideDocNode.ModifiedTarget;
+                    }
                 }
                 return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;
             }
@@ -232,14 +243,22 @@ namespace pwiz.Skyline.Model.Results
         public void Merge(ChromDataSet chromDataSet)
         {
             var setKeys = new HashSet<ChromKey>(_listChromData.Select(d => d.Key));
+            bool anyAdded = false;
             foreach (var chromData in chromDataSet._listChromData)
             {
-                if (!setKeys.Contains(chromData.Key))
+                if (setKeys.Add(chromData.Key))
+                {
+                    anyAdded = true;
                     Add(chromData);
+                }
             }
-            // Enforce expected sorting if product ions are coming from different groups
-            _listChromData.Sort();
-            NodeGroups = ImmutableList.ValueOf(NodeGroups.Concat(chromDataSet.NodeGroups));
+
+            if (anyAdded)
+            {
+                // Enforce expected sorting if product ions are coming from different groups
+                _listChromData.Sort();
+                NodeGroups = ImmutableList.ValueOf(NodeGroups.Concat(chromDataSet.NodeGroups));
+            }
         }
 
         public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
