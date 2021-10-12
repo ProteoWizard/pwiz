@@ -296,6 +296,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ExpectedVisible = AreaExpectedValue.none;
             if (parentGroupNode != null &&
                     displayType != DisplayTypeChrom.total &&
+                    !normalizeOption.IsRatioToLabel &&
                     !(optimizationPresent && displayType == DisplayTypeChrom.single))
             {
                 var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType).ToArray();
@@ -491,7 +492,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Aggregate area of this transition for each area entry
                     Func<double,double, double> aggregateFunc = (sums, y) => sums + y;
-                    //if bar type is cluster we need to show dotp label at the highest peak level, not at the total peak height
+                    //if bar type is cluster we need to show dotp label above the highest peak, not at the total peak height
                     if (BarSettings.Type == BarType.Cluster)
                         aggregateFunc = Math.Max;   
                     AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
@@ -602,7 +603,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (IsDotProductVisible)
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
-
                     YAxis.Scale.MaxAuto = false;
                     YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized);
                     YAxis.Type = AxisType.Linear;
