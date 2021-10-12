@@ -42,7 +42,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return document.Settings.PeptideSettings.Integration.IsAutoTrain;
+            return document.Settings.PeptideSettings.Integration.IsAutoTrain &&
+                   document.Settings.HasResults && document.MeasuredResults.IsLoaded &&
+                   !(previous.Settings.HasResults && previous.MeasuredResults.IsLoaded);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -160,6 +162,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return _cachedFeatureScores;
         }
 
+        // Return the type of peak scoring model that was automatically trained between the previous and current document, if any.
         public static PeptideIntegration.AutoTrainType CompletedType(SrmDocument current, SrmDocument previous)
         {
             if (current == null || previous == null)
