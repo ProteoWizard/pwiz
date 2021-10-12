@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -345,16 +344,6 @@ namespace TestPerf
         /// Change to true to write coefficient arrays.
         /// </summary>
         private bool IsRecordMode { get { return false; } }
-
-        private string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
-        {
-            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
-            var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
-            Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
-        }
 
         protected override void DoTest()
         {

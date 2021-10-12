@@ -536,8 +536,7 @@ namespace pwiz.SkylineTestUtil
         {
             var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            if (!graphChromatogram.TestFullScanSelection(x, y, paneKey))
-                Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+            Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 
         private static GraphChromatogram GetGraphChrom(string graphName)

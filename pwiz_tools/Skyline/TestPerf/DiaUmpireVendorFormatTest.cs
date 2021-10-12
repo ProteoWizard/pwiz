@@ -121,7 +121,7 @@ namespace TestPerf
 
         private void RunTest()
         {
-            RunPerfTests = true;
+            // RunPerfTests = true; // Uncomment this to force perf tests to run under Test Explorer
 
             RunFunctionalTest();
         }

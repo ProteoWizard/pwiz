@@ -1569,7 +1569,6 @@ namespace pwiz.Skyline
             }
         }
 
-
         public void ApplyPeak(bool subsequent, bool group)
         {
             EditMenu.ApplyPeak(subsequent, group);
@@ -1717,6 +1716,7 @@ namespace pwiz.Skyline
         {
             SetAutoZoomChrom(AutoZoomChrom.both);
         }
+
         public void ShowChromatogramProperties()
         {
             using (var dlg = new ChromChartPropertyDlg())
@@ -1952,15 +1952,23 @@ namespace pwiz.Skyline
         /// <summary>
         /// Modifies a document in response to the user clicking on a peak in the GraphChromatogram.
         /// </summary>
-        private static SrmDocument PickPeak(SrmDocument document, PickedPeakEventArgs e)
+        private SrmDocument PickPeak(SrmDocument document, PickedPeakEventArgs e)
         {
             document = document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime, UserSet.TRUE);
+
             var activeTransitionGroup = (TransitionGroupDocNode) document.FindNode(e.GroupPath);
+            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
+
+            document = ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
+                new ChangedPeakBoundsEventArgs(e.GroupPath, null, e.NameSet, e.FilePath,
+                    new ScaledRetentionTime(activeChromInfo.StartRetentionTime.GetValueOrDefault()),
+                    new ScaledRetentionTime(activeChromInfo.EndRetentionTime.GetValueOrDefault()), null,
+                    PeakBoundsChangeType.both), false));
+
             if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
             {
                 return document;
             }
-            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
             var peptide = (PeptideDocNode) document.FindNode(e.GroupPath.Parent);
             // See if there are any other transition groups that should have their peak bounds set to the same value
             foreach (var transitionGroup in peptide.TransitionGroups)
@@ -2036,7 +2044,8 @@ namespace pwiz.Skyline
                     message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
                 }
                 ModifyDocument(message,
-                    doc => ChangePeakBounds(Document, eMulti.Changes), docPair =>
+                    doc => ChangePeakBounds(doc, eMulti.Changes.SelectMany(change => GetSynchronizedPeakBoundChanges(doc, change, true))),
+                    docPair =>
                     {
                         var names = eMulti.Changes.Select(change =>
                             GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition)).ToArray();
@@ -2140,7 +2149,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// Modifies a document in response to a user's mouse dragging on a GraphChromatogram.
         /// </summary>
-        private static SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
+        public SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
@@ -2183,6 +2192,54 @@ namespace pwiz.Skyline
                 }
             }
             return document;
+        }
+
+        public IEnumerable<ChangedPeakBoundsEventArgs> GetSynchronizedPeakBoundChanges(SrmDocument document, ChangedPeakBoundsEventArgs change, bool includeSelf)
+        {
+            if (includeSelf)
+                yield return change;
+
+            var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToArray();
+            if (syncTargets.Length == 0)
+                yield break;
+
+            var thisChromSet = document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom => Equals(change.NameSet, chrom.Name));
+            var thisFile = thisChromSet?.FindFile(change.FilePath);
+
+            var transformOp = GetRetentionTimeTransformOperation();
+            var thisStart = change.StartTime.MeasuredTime;
+            var thisEnd = change.EndTime.MeasuredTime;
+            if (transformOp != null)
+            {
+                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                if (regressionThis != null)
+                {
+                    thisStart = regressionThis.GetY(thisStart);
+                    thisEnd = regressionThis.GetY(thisEnd);
+                }
+            }
+
+            foreach (var chromSet in syncTargets)
+            {
+                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
+                {
+                    var start = thisStart;
+                    var end = thisEnd;
+
+                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    {
+                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        if (regression != null)
+                        {
+                            start = regression.GetX(thisStart);
+                            end = regression.GetX(thisEnd);
+                        }
+                    }
+
+                    yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), change.Identified, change.ChangeType);
+                }
+            }
         }
 
         private void graphChromatogram_PickedSpectrum(object sender, PickedSpectrumEventArgs e)
