@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 flags &= ~FlagValues.polarity_negative;
             }
-            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues) ((int) ionMobilityUnits << 8);
+            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
@@ -402,7 +402,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return (eIonMobilityUnits)((int)(Flags & FlagValues.ion_mobility_type_bitmask) >> 8);
+                var ionMobilityBits = Flags & FlagValues.ion_mobility_type_bitmask;
+                if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+                {
+                    return (eIonMobilityUnits)(-1);
+                }
+                return (eIonMobilityUnits)((int)ionMobilityBits >> 8);
             }
         }
 
@@ -1120,7 +1125,7 @@ namespace pwiz.Skyline.Model.Results
                 if (nextTime > prevTime)
                 {
                     double width = nextTime - prevTime;
-                    double area = intensity * width;
+                    double area = intensity * width * 60;
                     totalArea += area;
                     if (timeIntensities.MassErrors != null)
                     {
@@ -1244,6 +1249,10 @@ namespace pwiz.Skyline.Model.Results
             : this()
         {
             var times = timeIntensities.Times;
+            if (times.Count == 0)
+            {
+                return;
+            }
             var intensities = timeIntensities.Intensities;
             var massErrors = timeIntensities.MassErrors;
             // Get the interval being used to convert from Crawdad index based numbers
@@ -1553,7 +1562,12 @@ namespace pwiz.Skyline.Model.Results
 
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
-            return (eIonMobilityUnits)((int)(flags & FlagValues.ion_mobility_type_bitmask) >> 4);
+            var ionMobilityBits = flags & FlagValues.ion_mobility_type_bitmask;
+            if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
+            {
+                return (eIonMobilityUnits)(-1);
+            }
+            return (eIonMobilityUnits)((int)ionMobilityBits >> 4);
         }
 
         private static bool UsedMs1CentroidsFlags(FlagValues flags)
@@ -1569,7 +1583,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, null, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
         {
         }
 
@@ -1577,6 +1591,7 @@ namespace pwiz.Skyline.Model.Results
                                FlagValues flags,
                                DateTime fileWriteTime,
                                DateTime? runStartTime,
+                               DateTime? importTime,
                                float maxRT,
                                float maxIntensity,
                                int sizeScanIds,
@@ -1597,9 +1612,10 @@ namespace pwiz.Skyline.Model.Results
             if (fileUri.LegacyGetCentroidMs2())
                 flags |= FlagValues.used_ms2_centroids;
             FilePath = fileUri.RemoveLegacyParameters();
-            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues)((int)ionMobilityUnits << 4);
+            Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | ((FlagValues)((int)ionMobilityUnits << 4) & FlagValues.ion_mobility_type_bitmask);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
+            ImportTime = importTime;
             MaxRetentionTime = maxRT;
             MaxIntensity = maxIntensity;
             SizeScanIds = sizeScanIds;
@@ -1614,6 +1630,7 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public DateTime? ImportTime { get; private set; }
         public float MaxRetentionTime { get; private set; }
         public float MaxIntensity { get; private set; }
         public int SizeScanIds { get; private set; }

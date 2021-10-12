@@ -63,6 +63,13 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     extensions.push_back(".mz5"); // look for spec in mz5 files
     extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
+#ifdef VENDOR_READERS
+    extensions.push_back(".raw"); // Waters/Thermo
+    extensions.push_back(".wiff"); // Sciex
+    extensions.push_back(".wiff2"); // Sciex
+    extensions.push_back(".d"); // Bruker/Agilent
+    extensions.push_back(".lcd"); // Shimadzu
+#endif
     extensions.push_back(".ms2");
     extensions.push_back(".cms2");
     extensions.push_back(".bms2");
@@ -229,9 +236,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
        if (search_engine_version.find("msfragger") == 0)
        {
-           extensions.push_back("_uncalibrated.mgf");
-           extensions.push_back("_calibrated.mgf");
-
+           // Only the MGF file from MSFragger will match up with the scan numbers from an MSFragger pepXML file from a timsTOF dataset, but
+           // other extensions must be supported for MSFragger searches of non-timsTOF datasets (e.g. mzML, Thermo RAW)
+           extensions.insert(extensions.begin(), "_calibrated.mgf");
+           extensions.insert(extensions.begin(), "_uncalibrated.mgf"); // Prefer uncalibrated, so place first in list
            if (analysisType_ != MSFRAGGER_ANALYSIS)
                parentAnalysisType_ = MSFRAGGER_ANALYSIS;
        }
@@ -295,6 +303,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
        ionMobility = getDoubleAttrValueOr("ion_mobility", attr, 0.0);
+       if (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
+           if (ionMobility > 0 && !bal::iends_with(getSpecFileName(), "calibrated.mgf"))
+               throw BlibException(false, "To import an MSFragger search of timsTOF data (with ion_mobility attribute), the corresponding *_uncalibrated.mgf or *_calibrated.mgf file is required. The *_uncalibrated.mgf file is preferred because the peaks have not been deisotoped.");
+       }
    } else if(isElement("search_hit", name)) {
        // Only use this search hit, if rank is 1 or missing (zero)
        if (atoi(getAttrValue("hit_rank",attr)) < 2 && state == STATE_ROOT) {

@@ -26,6 +26,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
@@ -47,8 +48,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
-
-        public static Color ColorSelected { get { return Color.Red; } }
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
@@ -475,7 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Color color = COLOR_MSMSID_TIME;
                         if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
                         {
-                            color = ColorSelected;
+                            color = ColorScheme.ChromGraphItemSelected;
                         }
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
                             Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
@@ -487,7 +486,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var retentionTime in MidasRetentionMsMs)
                     {
                         var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
-                            ? ColorSelected
+                            ? ColorScheme.ChromGraphItemSelected
                             : COLOR_MSMSID_TIME;
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
                     }
@@ -691,7 +690,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         IsClippedToChartRect = true,
                         Location = { CoordinateFrame = CoordType.AxisXYScale },
                         ZOrder = ZOrder.A_InFront,
-                        Line = { Width = 1, Style = DashStyle.Dash, Color = ColorSelected},
+                        Line = { Width = 1, Style = DashStyle.Dash, Color = ColorScheme.ChromGraphItemSelected },
                         Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
                     };
                     annotations.Add(stick);
@@ -702,7 +701,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
             TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight)
             {
-                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, isBold, false, false)
+                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorScheme.ChromGraphItemSelected, isBold, false, false)
                 {
                     Border = new Border { IsVisible = false },
                     Fill = FontSpec.Fill
@@ -837,6 +836,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Ion mobility values
             if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && 
+                ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.waters_sonar && // SONAR data isn't really ion mobility, it just uses some of the same filter mechanisms
                 (Settings.Default.ShowCollisionCrossSection || Settings.Default.ShowIonMobility))
             {
                 if (Settings.Default.ShowCollisionCrossSection && 

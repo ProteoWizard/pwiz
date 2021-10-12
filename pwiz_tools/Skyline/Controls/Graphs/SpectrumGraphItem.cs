@@ -55,11 +55,22 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
-        public static string GetTitle(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        public static string GetLibraryPrefix(string libraryName)
         {
-            string libraryNamePrefix = string.Empty;
-            //if (!string.IsNullOrEmpty(libraryNamePrefix))
-            //    libraryNamePrefix += @" - ";
+            return !string.IsNullOrEmpty(libraryName) ? libraryName + @" - " : string.Empty;
+        }
+
+        public static string RemoveLibraryPrefix(string title, string libraryName)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
+            if (!string.IsNullOrEmpty(libraryNamePrefix) && title.StartsWith(libraryNamePrefix))
+                return title.Substring(libraryNamePrefix.Length);
+            return title;
+        }
+
+        public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
             string sequence;
@@ -90,7 +101,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     
@@ -110,6 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
+        public bool ShowMassError { get; set; }
         public bool ShowDuplicates { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
@@ -130,13 +142,17 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec _fontSpecPrecursor;
         private FontSpec FONT_SPEC_Z { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.z), ref _fontSpecZ); } }
         private FontSpec _fontSpecOtherIons;
-        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.a), ref _fontSpecOtherIons); } } // Small molecule fragments etc
         private FontSpec _fontSpecNone;
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(IonTypeExtension.GetTypeColor(null), ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
+        private FontSpec GetOtherIonsFontSpec(int rank = 0)
+        {
+            // Consider the rank of small molecule fragments when selecting the color for the FontSpec
+            return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.custom, rank), ref _fontSpecOtherIons);
+        }
         protected AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
         {
             SpectrumInfo = spectrumInfo;
@@ -258,7 +274,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                     if (rmi.Rank == 0 && !rmi.HasAnnotations)
                         return null; // Small molecule fragments - only force annotation if ranked
-                    fontSpec = FONT_SPEC_OTHER_IONS;
+                    fontSpec = GetOtherIonsFontSpec(rmi.Rank);
                     }
                     break;
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
@@ -310,6 +326,14 @@ namespace pwiz.Skyline.Controls.Graphs
             if (ShowObservedMz)
             {
                 sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
+            }
+
+            if (ShowMassError)
+            {
+                var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
+                massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
+                massError = Math.Round(massError, 1);
+                sb.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
             }
             return sb.ToString();
         }

@@ -999,8 +999,8 @@ namespace pwiz.Skyline
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
-                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        PanoramaServerUri);
+                    WriteLine(Resources.CommandLine_GeneralException_Error___0_, 
+                        string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, PanoramaServerUri));
                     return false;
                 }
 
@@ -1069,11 +1069,11 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
                 return null;
@@ -1088,12 +1088,12 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_,
+                        Resources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1890,7 +1890,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Unexpected behavior, but better to output the error then appear to crash, and
+                // Unexpected behavior, but better to output the error than appear to crash, and
                 // have Windows write it to the application event log.
                 WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 WriteLine(x.StackTrace);
@@ -2557,10 +2557,33 @@ namespace pwiz.Skyline
                 // ReSharper restore LocalizableElement
             }
 
+            // Regular expression for an argument: a hyphen surrounded by zero or more word characters
+            // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
+            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            /// <summary>
+            /// HTML encodes the string.
+            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that argument names do not get broken across lines.
+            /// </summary>
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
-                return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
+                str = str ?? string.Empty;
+                var result = new StringBuilder();
+                int charIndex = 0;
+                var matchCollection = REGEX_ARGUMENT.Matches(str);
+                foreach (Match match in matchCollection)
+                {
+                    result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex, match.Index - charIndex)));
+                    // ReSharper disable LocalizableElement
+                    result.Append("<nobr>");
+                    result.Append(HttpUtility.HtmlEncode(match.Value));
+                    result.Append("</nobr>");
+                    // ReSharper restore LocalizableElement
+                    charIndex = match.Index + match.Length;
+                }
+
+                result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex)));
+                return result.ToString();
             }
         }
 

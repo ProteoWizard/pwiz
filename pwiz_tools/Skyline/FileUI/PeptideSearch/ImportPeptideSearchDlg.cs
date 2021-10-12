@@ -566,8 +566,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
 
                         bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
-                        if (!hasMatchedMods && !BuildPepSearchLibControl.PerformDDASearch)
-                            _pagesToSkip.Add(Pages.match_modifications_page);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
                             _pagesToSkip.Add(Pages.import_fasta_page);
                         if (!BuildPepSearchLibControl.PerformDDASearch)
@@ -1038,10 +1036,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
 
             // Import results only on "finish"
-            var namedResults =
-                ImportResultsControl.FoundResultsFiles.Select(
-                    kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                    .ToList();
+            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
+                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
+                .ToList();
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
             if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))

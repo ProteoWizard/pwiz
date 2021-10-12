@@ -26,11 +26,11 @@
 
 #include "SpectrumList_Thermo.hpp"
 
+#include <thread>
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/range/algorithm/count_if.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <thread>
 
 using namespace pwiz::cv;
 
@@ -948,7 +948,14 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* ra
         if (masterScan > -1)
         {
             if (masterScan == ie.scan)
-                return index;
+            {
+                if (static_cast<int>(ie.msOrder) == precursorMsLevel)
+                    return index;
+
+                // master scan is a non-precursor triggering scan (e.g. ETD triggers HCD of the same MS level)
+                masterScan = -1;
+                continue;
+            }
 
             // master scan not in index (i.e. SIM scan without simAsSpectra)
             if (masterScan > ie.scan)

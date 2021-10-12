@@ -975,6 +975,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case cw : tag += cw ;
         case darwin* : tag += xgcc ;
         case edg* : tag += edg ;
+        case embarcadero* : tag += embtc ;
         case gcc* :
         {
             switch [ $(property-set).get <target-os> ]
@@ -1020,13 +1021,13 @@ local rule toolset-tag ( name : type ? : property-set )
     }
 
     # From GCC 5, versioning changes and minor becomes patch
-    if $(tag) = gcc && [ numbers.less 4 $(version[1]) ]
+    if ( $(tag) = gcc || $(tag) = mgw ) && $(version[1]) && [ numbers.less 4 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
 
     # Ditto, from Clang 4
-    if ( $(tag) = clang || $(tag) = clangw ) && [ numbers.less 3 $(version[1]) ]
+    if ( $(tag) = clang || $(tag) = clangw ) && $(version[1]) && [ numbers.less 3 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
@@ -1041,6 +1042,13 @@ local rule toolset-tag ( name : type ? : property-set )
 
     # On borland, version is not added for compatibility with V1.
     if $(tag) = bcb
+    {
+        version = ;
+    }
+
+    # Use un-versioned toolset name for Embarcadero, to avoid having to update
+    # the auto-linking logic on every release.
+    if $(tag) = embtc
     {
         version = ;
     }
@@ -1074,7 +1082,8 @@ local rule runtime-tag ( name : type ? : property-set )
     # known to care about runtime debugging.
     if ( <toolset>msvc in $(properties) ) ||
         ( <stdlib>stlport in $(properties) ) ||
-        ( <toolset-intel:platform>win in $(properties) )
+        ( <toolset-intel:platform>win in $(properties) ) ||
+        ( <toolset-clang:platform>win in $(properties) )
     {
         if <runtime-debugging>on in $(properties) { tag += g ; }
     }

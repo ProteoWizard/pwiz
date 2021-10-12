@@ -63,10 +63,8 @@
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_67_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_67_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_67_0;$(SolutionDir)libraries\SQLite;$(SolutionDir)libraries\CSpline;$(SolutionDir)libraries\Eigen;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_67_0;$(SolutionDir)libraries\SQLite;$(SolutionDir)libraries\CSpline;$(SolutionDir)libraries\Eigen;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_76_0;$(SolutionDir)libraries\SQLite;$(SolutionDir)libraries\CSpline;$(SolutionDir)libraries\Eigen;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_76_0;$(SolutionDir)libraries\SQLite;$(SolutionDir)libraries\CSpline;$(SolutionDir)libraries\Eigen;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">
     <BuildLog />
@@ -122,6 +120,8 @@
     <ClCompile Include="pwiz\analysis\demux\PrecursorMaskCodecTest.cpp" />
     <ClCompile Include="pwiz\analysis\demux\SpectrumPeakExtractor.cpp" />
     <ClCompile Include="pwiz\analysis\demux\SpectrumPeakExtractorTest.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\DiaUmpire.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\IsotopePatternMap.cpp" />
     <ClCompile Include="pwiz\analysis\frequency\FrequencyEstimatorPhysicalModel.cpp" />
     <ClCompile Include="pwiz\analysis\frequency\FrequencyEstimatorPhysicalModelTest.cpp" />
     <ClCompile Include="pwiz\analysis\frequency\FrequencyEstimatorSimple.cpp" />
@@ -214,6 +214,8 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeStateCalculatorTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Demux.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DemuxTest.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_Filter.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_FilterTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
@@ -669,6 +671,8 @@
     <ClCompile Include="pwiz\utility\bindings\CLI\cvgen_cli.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\examples.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\proteome.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmSchedulerTest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\tradata\Diff.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
@@ -820,7 +824,7 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.cpp">
       <AdditionalUsingDirectories>%(Directory);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
-      <ForcedUsingFiles>Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;DataReader.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
+      <ForcedUsingFiles>Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
       <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReaderTest.cpp" />
@@ -899,11 +903,20 @@
     <ClInclude Include="pwiz\analysis\demux\OverlapDemultiplexer.hpp" />
     <ClInclude Include="pwiz\analysis\demux\PrecursorMaskCodec.hpp" />
     <ClInclude Include="pwiz\analysis\demux\SpectrumPeakExtractor.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpire.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpireMath.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\InstrumentParameter.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternMap.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternRange.ipp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCluster.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCurve.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\ScanData.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_MZRefiner.hpp" />
@@ -977,12 +990,15 @@
     <ClInclude Include="pwiz\utility\bindings\CLI\proteome\ProteomeData.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\proteome\ProteomeDataFile.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\proteome\Reader.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\prmscheduler.h" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\Diff.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\examples.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\Reader.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraData.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraDataFile.hpp" />
     <ClInclude Include="pwiz\utility\misc\BinaryData.hpp" />
+    <ClInclude Include="pwiz\utility\misc\sort_together.hpp" />
     <ClInclude Include="pwiz\utility\misc\std.hpp" />
     <ClInclude Include="pwiz\Version.hpp" />
     <ClInclude Include="pwiz\analysis\Version.hpp" />
@@ -1276,6 +1292,15 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICalibration.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICollection.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIConstants.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFile.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFrame.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIGate.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIMetadata.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIScan.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIUtils.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.h" />
@@ -1294,6 +1319,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\MassLynxRawScanStatsReader.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\RawData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\WatersRawFile.hpp" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\BuildParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
@@ -1303,6 +1329,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />
+    <None Include="libraries\boost-build\src\tools\msvc.jam" />
     <None Include="scripts\wix\pwiz-setup.py" />
     <None Include="scripts\wix\pwiz-setup.wxs.template" />
     <None Include="scripts\wix\vendor-dlls.wxs-fragment" />

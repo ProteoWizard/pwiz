@@ -1316,8 +1316,49 @@ namespace pwiz.Skyline
 
         public void ShowExportSpectralLibraryDialog()
         {
-            var libraryExporter = new SpectralLibraryExporter(Document, DocumentFilePath);
-            libraryExporter.ShowExportSpectralLibraryDialog(this);
+            if (Document.MoleculeTransitionGroupCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
+                return;
+            }
+            else if (!Document.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
+                return;
+            }
+
+            using (var dlg = new SaveFileDialog
+            {
+                Title = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                OverwritePrompt = true,
+                DefaultExt = BiblioSpecLiteSpec.EXT,
+                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
+            })
+            {
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                try
+                {
+                    using (var longWaitDlg = new LongWaitDlg
+                    {
+                        Text = Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library,
+                        Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
+                    })
+                    {
+                        longWaitDlg.PerformWork(this, 800, monitor =>
+                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, monitor));
+                    }
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(string.Format(
+                        Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__, dlg.FileName), x.Message), x);
+                }
+            }
         }
 
 
@@ -1460,17 +1501,10 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Manually construct an AlertDlg so we can prevent the Peptide -> Molecule translation that MessageDlg does
-                using (var alertDlg = new AlertDlg(TextUtil.LineSeparate(
+                // Specify that we want a MessageDlg that ignores UI mode
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
                     string.Format(Resources.SkylineWindow_ImportPeakBoundariesFile_Failed_reading_the_file__0__,
-                        peakBoundariesFile), x.Message), MessageBoxButtons.OK)
-                {
-                    Exception = x
-                })
-                {
-                    alertDlg.GetModeUIHelper().ModeUI = SrmDocument.DOCUMENT_TYPE.none;
-                    alertDlg.ShowDialog(this);
-                }
+                        peakBoundariesFile), x.Message), x, true); // "true" here means that we want to ignore the UI mode in the context of the MessageDlg
             }
         }
 
@@ -1716,7 +1750,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void InsertSmallMoleculeTransitionList(string csvText, string description)
+        public void InsertSmallMoleculeTransitionList(string csvText, string description, List<string> columnPositions = null)
         {
             IdentityPath selectPath = null;
             Exception modifyingDocumentException = null;
@@ -1729,7 +1763,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText), columnPositions);
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -1871,45 +1905,98 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
+        /// <summary>
+        /// Process and then add the mass list to the document
+        /// </summary>
+        public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
-            IdentityPath selectPath;
-            List<MeasuredRetentionTime> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
-            List<PeptideGroupDocNode> peptideGroups;
+            IdentityPath selectPath = null;
+            bool isSmallMoleculeList = true;
+            bool useColSelectDlg = true;
+            bool hasHeaders = false;
+            List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
+            List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
+            List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+            List<PeptideGroupDocNode> peptideGroups = new List<PeptideGroupDocNode>();
+            List<string> columnPositions = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
             MassListImporter importer = null;
-            var analyzingMessage = string.Format( Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
+            var analyzingMessage = string.Format(Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
             using (var longWaitDlg0 = new LongWaitDlg(this)
             {
                 Text = analyzingMessage,
             })
             {
+                var current = docCurrent;
                 var status = longWaitDlg0.PerformWork(this, 1000, longWaitBroker =>
                 {
                     // PreImport of mass list
-                    importer = docCurrent.PreImportMassList(inputs, longWaitBroker, true);
+                    importer = current.PreImportMassList(inputs, longWaitBroker, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);                  
                 });
                 if (importer == null || status.IsCanceled)
                 {
                     return;
                 }
             }
-
-            using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+            hasHeaders = importer.RowReader.Indices.Headers != null;
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
-                if (columnDlg.ShowDialog(this) != DialogResult.OK)
-                    return;
+                List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
+                var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
+                // Try importing that list to check for errors
+                docCurrent = docCurrent.ImportMassList(input, importer, null,
+                    insertPath, out selectPath, out irtPeptides,
+                    out librarySpectra, out testErrorList, out peptideGroups);
+                if (!testErrorList.Any())
+                {
+                    useColSelectDlg = false;
+                }
+            }
 
-                var insParams = columnDlg.InsertionParams;
-                docNew = insParams.Document;
-                selectPath = insParams.SelectPath;
-                irtPeptides = insParams.IrtPeptides;
-                librarySpectra = insParams.LibrarySpectra;
-                peptideGroups = insParams.PeptideGroups;
+            if (useColSelectDlg)
+            {
+                // Allow the user to assign column types if it is a proteomics transition list
+                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                {
+                    if (columnDlg.ShowDialog(this) != DialogResult.OK)
+                        return;
+
+                    var insParams = columnDlg.InsertionParams;
+                    docNew = insParams.Document;
+                    selectPath = insParams.SelectPath;
+                    irtPeptides = insParams.IrtPeptides;
+                    librarySpectra = insParams.LibrarySpectra;
+                    peptideGroups = insParams.PeptideGroups;
+                    columnPositions = insParams.ColumnHeaderList;
+                    isSmallMoleculeList = insParams.IsSmallMoleculeList;
+                }
+            }
+
+            if (isSmallMoleculeList)
+            {
+                if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                {
+                    docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                        out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
+                }
+               
+            }
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                if (errorList.Any())
+                {
+                    // Currently small molecules show just one error with no ability to continue.
+                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    {
+                        errorDlg.ShowDialog(this);
+                        return;
+                    }
+                }
             }
 
             if (assayLibrary)
@@ -1977,11 +2064,11 @@ namespace pwiz.Skyline
                     // If the document was changed during the operation, try all the changes again
                     // using the information given by the user.
                     docCurrent = DocumentUI;
-                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath);
+                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath, columnPositions, hasHeaders);
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);
-                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath);
+                        doc = doc.ImportMassList(irtInputs, iRTimporter, null, out selectPath, columnPositions, hasHeaders);
                     }
                     var newSettings = doc.Settings;
                     if (retentionTimeRegressionStore != null)
@@ -3052,7 +3139,7 @@ namespace pwiz.Skyline
                 if (buttonPress == DialogResult.Yes)
                 {
                     // person intends to register                   
-                    WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html"); 
+                    WebHelpers.OpenLink(this, @"https://panoramaweb.org/signup.url"); 
                     tag = true;
                 }
 

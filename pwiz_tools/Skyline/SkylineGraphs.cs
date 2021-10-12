@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -705,10 +705,10 @@ namespace pwiz.Skyline
 
             var listUpdateGraphs = new List<IUpdatable>(listVisibleChrom.ToArray());
             
-            if (_graphSpectrum != null && _graphSpectrum.Visible)
-                listUpdateGraphs.Add(_graphSpectrum);
-            if (_graphFullScan != null && _graphFullScan.Visible)
-                listUpdateGraphs.Add(_graphFullScan);
+            foreach(var spectrumGraph in ListMzScaleCopyables())
+                if(spectrumGraph is IUpdatable updatable)
+                    listUpdateGraphs.Add(updatable);
+
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));
@@ -908,6 +908,39 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
 
+        public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
+        {
+            if(ListMzScaleCopyables().Count() < 2)
+                return;
+            Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
+            if (!Settings.Default.SyncMZScale)
+                return;
+
+            if (source == null)
+            {
+                source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
+                if (source == null)
+                    return;
+            }
+
+            foreach (var targetGraph in ListMzScaleCopyables())
+            {
+                if(!ReferenceEquals(targetGraph, source))
+                    targetGraph.SetMzScale(source.Range);
+            }
+        }
+        private void synchMzScaleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SynchMzScaleToolStripMenuItemClick();
+        }
+
+        //Testing support
+        public void SynchMzScale(IMzScalePlot source)
+        {
+            synchMzScaleToolStripMenuItem.Checked = true;
+            SynchMzScaleToolStripMenuItemClick(source);
+        }
+
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var set = _graphSpectrumSettings;
@@ -956,6 +989,12 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph(false);
         }
 
+        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
+            UpdateSpectrumGraph(false);
+        }
+
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
             ToggleObservedMzValues();
@@ -985,51 +1024,79 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
+            var control = menuStrip.SourceControl.Parent.Parent as IMzScalePlot;
             int iInsert = 0;
-            if (isProteomic)
+            if (control?.IsAnnotated ?? false)
             {
-                aionsContextMenuItem.Checked = set.ShowAIons;
-                menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-                bionsContextMenuItem.Checked = set.ShowBIons;
-                menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-                cionsContextMenuItem.Checked = set.ShowCIons;
-                menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-                xionsContextMenuItem.Checked = set.ShowXIons;
-                menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-                yionsContextMenuItem.Checked = set.ShowYIons;
-                menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-                zionsContextMenuItem.Checked = set.ShowZIons;
-                menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
-            }
-            else
-            {
-                fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
-                menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
-            }
+                if (isProteomic)
+                {
+                    aionsContextMenuItem.Checked = set.ShowAIons;
+                    menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
+                    bionsContextMenuItem.Checked = set.ShowBIons;
+                    menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
+                    cionsContextMenuItem.Checked = set.ShowCIons;
+                    menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
+                    xionsContextMenuItem.Checked = set.ShowXIons;
+                    menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
+                    yionsContextMenuItem.Checked = set.ShowYIons;
+                    menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
+                    zionsContextMenuItem.Checked = set.ShowZIons;
+                    menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+                }
+                else
+                {
+                    fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+                    menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
+                }
 
-            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
-            menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-            menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-            if (chargesContextMenuItem.DropDownItems.Count == 0)
-            {
-                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+                menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
+                menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
+                if (chargesContextMenuItem.DropDownItems.Count == 0)
+                {
+                    chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         charge1ContextMenuItem,
                         charge2ContextMenuItem,
                         charge3ContextMenuItem,
                         charge4ContextMenuItem,
                     });
+                }
+
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+                ranksContextMenuItem.Checked = set.ShowRanks;
+                menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+                if (control.ControlType == SpectrumControlType.LibraryMatch)
+                {
+                    scoreContextMenuItem.Checked = set.ShowLibraryScores;
+                    menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+                }
+
+                ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
+                menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
+                observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
+                menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+                duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
+                menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            scoreContextMenuItem.Checked = set.ShowLibraryScores;
-            menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            if (control?.ControlType == SpectrumControlType.LibraryMatch)
+            {
+                scoreContextMenuItem.Checked = set.ShowLibraryScores;
+                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            }
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
             menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+
+            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
+
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
@@ -1038,7 +1105,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
 
             // Need to test small mol
-            if (isProteomic)
+            if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
                 prositLibMatchItem.Checked = Settings.Default.Prosit;
                 menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
@@ -1048,8 +1115,18 @@ namespace pwiz.Skyline
             }
 
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
-            menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
+            if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
+            {
+                showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
+                menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
+            }
+            /*
+            if(ListMzScaleCopyables().Count() >=2)
+            {
+                menuStrip.Items.Insert(iInsert++, synchMzScaleToolStripMenuItem);
+                synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
+            }
+            */
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
@@ -1059,7 +1136,8 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+
+            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
@@ -1132,6 +1210,13 @@ namespace pwiz.Skyline
             get { return _graphSpectrum != null && _graphSpectrum.Visible; }
         }
 
+        public void SetShowMassError(bool show)
+        {
+            Settings.Default.ShowFullScanMassError = show;
+            UpdateSpectrumGraph(false);
+
+        }
+
         private GraphSpectrum CreateGraphSpectrum()
         {
             // Create a new spectrum graph
@@ -1140,6 +1225,7 @@ namespace pwiz.Skyline
             _graphSpectrum.FormClosed += graphSpectrum_FormClosed;
             _graphSpectrum.VisibleChanged += graphSpectrum_VisibleChanged;
             _graphSpectrum.SelectedSpectrumChanged += graphSpectrum_SelectedSpectrumChanged;
+            _graphSpectrum.ZoomEvent += mzGraph_ZoomAllMz;
             return _graphSpectrum;
         }
 
@@ -1150,6 +1236,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.FormClosed -= graphSpectrum_FormClosed;
                 _graphSpectrum.VisibleChanged -= graphSpectrum_VisibleChanged;
                 _graphSpectrum.SelectedSpectrumChanged -= graphSpectrum_SelectedSpectrumChanged;
+                _graphSpectrum.ZoomEvent -= mzGraph_ZoomAllMz;
                 _graphSpectrum.HideOnClose = false;
                 _graphSpectrum.Close();
                 _graphSpectrum = null;
@@ -1198,6 +1285,7 @@ namespace pwiz.Skyline
         {
             if (_graphSpectrum != null)
                 _graphSpectrum.UpdateUI(selectionChanged);
+            _graphFullScan?.UpdateUI();
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)
@@ -1289,6 +1377,7 @@ namespace pwiz.Skyline
             _graphFullScan.FormClosed += graphFullScan_FormClosed;
             _graphFullScan.VisibleChanged += graphFullScan_VisibleChanged;
             _graphFullScan.SelectedScanChanged += graphFullScan_SelectedScanChanged;
+            _graphFullScan.ZoomEvent += mzGraph_ZoomAllMz;
             return _graphFullScan;
         }
 
@@ -1299,6 +1388,7 @@ namespace pwiz.Skyline
                 _graphFullScan.FormClosed -= graphFullScan_FormClosed;
                 _graphFullScan.VisibleChanged -= graphFullScan_VisibleChanged;
                 _graphFullScan.SelectedScanChanged -= graphFullScan_SelectedScanChanged;
+                _graphFullScan.ZoomEvent -= mzGraph_ZoomAllMz;
                 _graphFullScan.HideOnClose = false;
                 _graphFullScan.Close();
                 _graphFullScan = null;
@@ -1326,6 +1416,41 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+
+        private void mzGraph_ZoomAllMz(object sender, ZoomEventArgs newState)
+        {
+            foreach (var target in ListMzScaleCopyables())
+            {
+                if (!ReferenceEquals(target, sender))
+                    target.ApplyMZZoomState(newState.ZoomState);
+            }
+        }
+
+        private IEnumerable<IMzScalePlot> ListMzScaleCopyables()
+        {
+            if (_graphFullScan != null && _graphFullScan.Visible)
+            {
+                yield return _graphFullScan;
+            }
+
+            if (_graphSpectrum != null && _graphSpectrum.Visible)
+            {
+                yield return _graphSpectrum;
+            }
+        }
+
+        MzRange ISpectrumScaleProvider.GetMzRange(SpectrumControlType controlType)
+        {
+            switch (controlType)
+            {
+                case SpectrumControlType.FullScanViewer:
+                    return _graphFullScan?.Range;
+                case SpectrumControlType.LibraryMatch:
+                    return _graphSpectrum?.Range;
+                default:
+                    return null;
+            }
+        }
         #endregion
 
         #region Chromatogram graphs
@@ -1443,7 +1568,6 @@ namespace pwiz.Skyline
                     nodeGroup => GraphChromatogram.IsMultipleIonSources(fullScan, nodeGroup));
             }
         }
-
 
         public void ApplyPeak(bool subsequent, bool group)
         {
@@ -1592,6 +1716,7 @@ namespace pwiz.Skyline
         {
             SetAutoZoomChrom(AutoZoomChrom.both);
         }
+
         public void ShowChromatogramProperties()
         {
             using (var dlg = new ChromChartPropertyDlg())
@@ -1827,15 +1952,23 @@ namespace pwiz.Skyline
         /// <summary>
         /// Modifies a document in response to the user clicking on a peak in the GraphChromatogram.
         /// </summary>
-        private static SrmDocument PickPeak(SrmDocument document, PickedPeakEventArgs e)
+        private SrmDocument PickPeak(SrmDocument document, PickedPeakEventArgs e)
         {
             document = document.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime, UserSet.TRUE);
+
             var activeTransitionGroup = (TransitionGroupDocNode) document.FindNode(e.GroupPath);
+            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
+
+            document = ChangePeakBounds(document, GetSynchronizedPeakBoundChanges(document,
+                new ChangedPeakBoundsEventArgs(e.GroupPath, null, e.NameSet, e.FilePath,
+                    new ScaledRetentionTime(activeChromInfo.StartRetentionTime.GetValueOrDefault()),
+                    new ScaledRetentionTime(activeChromInfo.EndRetentionTime.GetValueOrDefault()), null,
+                    PeakBoundsChangeType.both), false));
+
             if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
             {
                 return document;
             }
-            var activeChromInfo = FindChromInfo(document, activeTransitionGroup, e.NameSet, e.FilePath);
             var peptide = (PeptideDocNode) document.FindNode(e.GroupPath.Parent);
             // See if there are any other transition groups that should have their peak bounds set to the same value
             foreach (var transitionGroup in peptide.TransitionGroups)
@@ -1911,7 +2044,8 @@ namespace pwiz.Skyline
                     message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
                 }
                 ModifyDocument(message,
-                    doc => ChangePeakBounds(Document, eMulti.Changes), docPair =>
+                    doc => ChangePeakBounds(doc, eMulti.Changes.SelectMany(change => GetSynchronizedPeakBoundChanges(doc, change, true))),
+                    docPair =>
                     {
                         var names = eMulti.Changes.Select(change =>
                             GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition)).ToArray();
@@ -2015,7 +2149,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// Modifies a document in response to a user's mouse dragging on a GraphChromatogram.
         /// </summary>
-        private static SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
+        public SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
@@ -2058,6 +2192,54 @@ namespace pwiz.Skyline
                 }
             }
             return document;
+        }
+
+        public IEnumerable<ChangedPeakBoundsEventArgs> GetSynchronizedPeakBoundChanges(SrmDocument document, ChangedPeakBoundsEventArgs change, bool includeSelf)
+        {
+            if (includeSelf)
+                yield return change;
+
+            var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToArray();
+            if (syncTargets.Length == 0)
+                yield break;
+
+            var thisChromSet = document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom => Equals(change.NameSet, chrom.Name));
+            var thisFile = thisChromSet?.FindFile(change.FilePath);
+
+            var transformOp = GetRetentionTimeTransformOperation();
+            var thisStart = change.StartTime.MeasuredTime;
+            var thisEnd = change.EndTime.MeasuredTime;
+            if (transformOp != null)
+            {
+                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                if (regressionThis != null)
+                {
+                    thisStart = regressionThis.GetY(thisStart);
+                    thisEnd = regressionThis.GetY(thisEnd);
+                }
+            }
+
+            foreach (var chromSet in syncTargets)
+            {
+                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
+                {
+                    var start = thisStart;
+                    var end = thisEnd;
+
+                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    {
+                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        if (regression != null)
+                        {
+                            start = regression.GetX(thisStart);
+                            end = regression.GetX(thisEnd);
+                        }
+                    }
+
+                    yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), change.Identified, change.ChangeType);
+                }
+            }
         }
 
         private void graphChromatogram_PickedSpectrum(object sender, PickedSpectrumEventArgs e)
@@ -2334,7 +2516,7 @@ namespace pwiz.Skyline
             else if (controller is DetectionsGraphController)
                 BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
 
-            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         public SrmDocument SelectionDocument
@@ -3980,12 +4162,27 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetNormalizationMethod(NormalizeOption ratioIndex, bool update = true)
+        public void SetNormalizationMethod(NormalizeOption normalizeOption, bool update = true)
         {
-            AreaGraphController.AreaNormalizeOption = ratioIndex;
-
+            Settings.Default.AreaNormalizeOption = normalizeOption;
+            SequenceTree.NormalizeOption = normalizeOption;
             if(update)
                 UpdatePeakAreaGraph();
+        }
+
+        public NormalizeOption AreaNormalizeOption
+        {
+            get
+            {
+                return Settings.Default.AreaNormalizeOption;
+            }
+            set
+            {
+                if (!Equals(value, AreaNormalizeOption))
+                {
+                    SetNormalizationMethod(value);
+                }
+            }
         }
 
         public void SetNormalizationMethod(NormalizationMethod normalizationMethod, bool update = true)
@@ -4126,10 +4323,10 @@ namespace pwiz.Skyline
 
         public void NormalizeAreaGraphTo(NormalizeOption areaView)
         {
-            AreaGraphController.AreaNormalizeOption = areaView;
+            AreaNormalizeOption = areaView;
 
-            if (AreaGraphController.AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaGraphController.AreaNormalizeOption == NormalizeOption.MAXIMUM)
+            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
+                AreaNormalizeOption == NormalizeOption.MAXIMUM)
                 Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
@@ -4143,7 +4340,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaLogScale = isChecked ;
             if (isChecked)
-                AreaGraphController.AreaNormalizeOption = NormalizeOption.NONE;
+                AreaNormalizeOption = NormalizeOption.NONE;
             UpdateSummaryGraphs();
         }
 

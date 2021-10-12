@@ -290,11 +290,10 @@ namespace pwiz.Skyline
             }
             // If the parent directory ends with .zip and lives in AppData\Local\Temp
             // then the user has double-clicked a file in Windows Explorer inside a ZIP file
-            if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
-                parentDir.ToLower().Contains(@"appdata\local\temp"))
+            if (DirectoryEx.IsTempZipFolder(parentDir, out string zipFileName))
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_,
-                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, Path.GetFileName(parentDir), Path.GetFileName(_fileToOpen))));
+                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, zipFileName, Path.GetFileName(_fileToOpen))));
                 return false;
             }
 
@@ -2164,7 +2163,7 @@ namespace pwiz.Skyline
                             OwnedForms[libraryExpIndex].Activate();
                     }
 
-                    HandleStandardsChanged(oldStandard);
+                    HandleStandardsChanged(oldStandard, RCalcIrt.Calculator(Document));
                 }
             }
 
@@ -2173,12 +2172,23 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)
+        public void HandleStandardsChanged(ICollection<Target> oldStandard, RCalcIrt calc)
         {
-            var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
-            calc = calc.Initialize(null) as RCalcIrt;
+            var dbPath = calc.DatabasePath;
+            try
+            {
+                calc = calc.Initialize(null) as RCalcIrt;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(
+                        Resources.SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_,
+                        dbPath), e);
+                return;
+            }
             if (calc == null)
                 return;
             var newStandard = calc.GetStandardPeptides().ToArray();
@@ -2830,6 +2840,10 @@ namespace pwiz.Skyline
                         _tool.RunTool(_parent.Document, _parent, null, _parent, _parent);
                     }
                 }
+                catch (ToolDeprecatedException e)
+                {
+                    MessageDlg.Show(_parent, e.Message);
+                }
                 catch (WebToolException e)
                 {
                     WebHelpers.ShowLinkFailure(_parent, e.Link);
@@ -2984,6 +2998,11 @@ namespace pwiz.Skyline
         #endregion
 
         #region SequenceTree events
+
+        public bool SequenceTreeFormIsVisible
+        {
+            get { return _sequenceTreeForm != null && _sequenceTreeForm.Visible; }
+        }
 
         public void ShowSequenceTreeForm(bool show, bool forceUpdate = false)
         {
@@ -3384,15 +3403,14 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
+                _skyline.AreaNormalizeOption = _ratioIndex;
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
+                    { Checked = skylineWindow.SequenceTree.NormalizeOption == i };
                 menu.DropDownItems.Add(item);
             }
         }

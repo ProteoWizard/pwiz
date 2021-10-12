@@ -78,111 +78,6 @@ using boost::container::flat_multimap;
 namespace sqlite = sqlite3pp;
 
 
-namespace boost { namespace serialization {
-
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void save(
-    Archive & ar,
-    const flat_map<Key, Type, Compare, Allocator> &t,
-    const unsigned int /* file_version */
-){
-    //boost::serialization::stl::save_collection<Archive, flat_map<Key, Type, Compare, Allocator> >(ar, t);
-    unsigned count = t.size();
-    ar << BOOST_SERIALIZATION_NVP(count);
-    for (unsigned i = 0; i <count; ++i) {
-        U item = t[i];
-        ar << boost::serialization::make_nvp("item", item);
-    }
-}
-
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void load(
-    Archive & ar,
-    flat_map<Key, Type, Compare, Allocator> &t,
-    const unsigned int /* file_version */
-){
-    /*boost::serialization::stl::load_collection<
-        Archive,
-        flat_map<Key, Type, Compare, Allocator>,
-        boost::serialization::stl::archive_input_map<Archive, flat_map<Key, Type, Compare, Allocator> >,
-        boost::serialization::stl::no_reserve_imp<flat_map<Key, Type, Compare, Allocator> >
-    >(ar, t);*/
-
-    unsigned count(0);
-    ar >> BOOST_SERIALIZATION_NVP(count);
-    t.clear();
-    t.reserve(count);
-    for (unsigned i = 0; i <count; ++i) {
-        U item;
-        ar >> boost::serialization::make_nvp("item", item);
-        t.push_back(item);
-    }
-}
-
-// split non-intrusive serialization function member into separate
-// non intrusive save/load member functions
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void serialize(
-    Archive & ar,
-    flat_map<Key, Type, Compare, Allocator> &t,
-    const unsigned int file_version
-){
-    boost::serialization::split_free(ar, t, file_version);
-}
-
-// flat_multimap
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void save(
-    Archive & ar,
-    const flat_multimap<Key, Type, Compare, Allocator> &t,
-    const unsigned int /* file_version */
-){
-    //boost::serialization::stl::save_collection<Archive, flat_multimap<Key, Type, Compare, Allocator> >(ar, t);
-    unsigned count = t.size();
-    ar << BOOST_SERIALIZATION_NVP(count);
-    for (unsigned i = 0; i <count; ++i) {
-        U item = t[i];
-        ar << boost::serialization::make_nvp("item", item);
-    }
-}
-
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void load(
-    Archive & ar,
-    flat_multimap<Key, Type, Compare, Allocator> &t,
-    const unsigned int /* file_version */
-){
-    /*boost::serialization::stl::load_collection<
-        Archive,
-        flat_multimap<Key, Type, Compare, Allocator>,
-        boost::serialization::stl::archive_input_map<Archive, flat_multimap<Key, Type, Compare, Allocator> >,
-        boost::serialization::stl::no_reserve_imp<flat_multimap<Key, Type, Compare, Allocator> >
-    >(ar, t);*/
-    unsigned count(0);
-    ar >> BOOST_SERIALIZATION_NVP(count);
-    t.clear();
-    t.reserve(count);
-    for (unsigned i = 0; i <count; ++i) {
-        U item;
-        ar >> boost::serialization::make_nvp("item", item);
-        t.push_back(item);
-    }
-}
-
-// split non-intrusive serialization function member into separate
-// non intrusive save/load member functions
-template<class Archive, class Type, class Key, class Compare, class Allocator>
-inline void serialize(
-    Archive & ar,
-    flat_multimap<Key, Type, Compare, Allocator> &t,
-    const unsigned int file_version
-){
-    boost::serialization::split_free(ar, t, file_version);
-}
-
-} } // namespace boost::serialization
-
-
 namespace freicore
 {
 
@@ -1106,7 +1001,7 @@ namespace pepitome
             size_t numPeaks;
             vector<string> tokens;
 
-            while(getline(library, buf)) 
+            while(getlinePortable(library, buf))
             {
                 size_t bufLength = buf.length()+1;
                 dataOffset += bufLength;
@@ -1187,7 +1082,7 @@ namespace pepitome
                 double parentMass;
                 int charge;
                 size_t numPeaks;
-                while(getline(library,buf)) 
+                while(getlinePortable(library,buf))
                 {
                     size_t bufLength = buf.length()+1;
                     dataOffset += bufLength;

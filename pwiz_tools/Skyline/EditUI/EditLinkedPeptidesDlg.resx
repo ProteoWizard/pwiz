@@ -286,7 +286,7 @@
     <value>dataGridViewCrosslinks</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.2.1.392, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>

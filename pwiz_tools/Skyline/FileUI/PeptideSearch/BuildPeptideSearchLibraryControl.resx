@@ -259,7 +259,7 @@
     <value>7</value>
   </data>
   <data name="lblStandardPeptides.Text" xml:space="preserve">
-    <value>iRT standard peptides:</value>
+    <value>iR&amp;T standard peptides:</value>
   </data>
   <data name="&gt;&gt;lblStandardPeptides.Name" xml:space="preserve">
     <value>lblStandardPeptides</value>
@@ -346,7 +346,7 @@
     <value>10</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
-    <value>&amp;Filter for document peptides</value>
+    <value>Filt&amp;er for document peptides</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
@@ -376,7 +376,7 @@
     <value>6</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
-    <value>&amp;Remove Files</value>
+    <value>Rem&amp;ove Files</value>
   </data>
   <data name="&gt;&gt;btnRemFile.Name" xml:space="preserve">
     <value>btnRemFile</value>
@@ -427,7 +427,7 @@
     <value>3</value>
   </data>
   <data name="lblFileCaption.Text" xml:space="preserve">
-    <value>&amp;Search files:</value>
+    <value>&amp;Result files:</value>
   </data>
   <data name="&gt;&gt;lblFileCaption.Name" xml:space="preserve">
     <value>lblFileCaption</value>
@@ -517,7 +517,7 @@
     <value>1</value>
   </data>
   <data name="radioDIA.Text" xml:space="preserve">
-    <value>DIA</value>
+    <value>&amp;DIA</value>
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>
@@ -547,7 +547,7 @@
     <value>2</value>
   </data>
   <data name="radioPRM.Text" xml:space="preserve">
-    <value>PRM</value>
+    <value>&amp;PRM</value>
   </data>
   <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
     <value>radioPRM</value>
@@ -574,7 +574,7 @@
     <value>0</value>
   </data>
   <data name="radioDDA.Text" xml:space="preserve">
-    <value>DDA with MS1 filtering</value>
+    <value>DDA with MS&amp;1 filtering</value>
   </data>
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
     <value>radioDDA</value>
@@ -631,7 +631,7 @@
     <value>2</value>
   </data>
   <data name="radioButtonNewLibrary.Text" xml:space="preserve">
-    <value>Build</value>
+    <value>&amp;Build</value>
   </data>
   <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
     <value>radioButtonNewLibrary</value>
@@ -661,7 +661,7 @@
     <value>3</value>
   </data>
   <data name="radioExistingLibrary.Text" xml:space="preserve">
-    <value>Use existing</value>
+    <value>&amp;Use existing</value>
   </data>
   <data name="&gt;&gt;radioExistingLibrary.Name" xml:space="preserve">
     <value>radioExistingLibrary</value>
@@ -739,7 +739,7 @@
     <value>4</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
-    <value>Browse...</value>
+    <value>Br&amp;owse...</value>
   </data>
   <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
@@ -769,7 +769,7 @@
     <value>3</value>
   </data>
   <data name="lblLibraryPath.Text" xml:space="preserve">
-    <value>Path:</value>
+    <value>Pat&amp;h:</value>
   </data>
   <data name="&gt;&gt;lblLibraryPath.Name" xml:space="preserve">
     <value>lblLibraryPath</value>

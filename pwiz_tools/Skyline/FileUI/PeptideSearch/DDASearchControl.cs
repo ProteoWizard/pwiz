@@ -66,6 +66,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateUI = UpdateSearchEngineProgress;
         }
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <remarks>Moved from .Designer.cs file.</remarks>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            cancelToken?.Cancel();
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
             if (Program.MainWindow != null)
@@ -76,15 +92,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             string message = status.IsError ? status.ErrorException.ToString() : status.Message;
 
-            var newEntry = new ProgressEntry(DateTime.Now, message);
-            _progressTextItems.Add(newEntry);
-            txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
-
             if (status.IsError)
             {
                 MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
                 return;
             }
+
+            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
+                return;
+
+            var newEntry = new ProgressEntry(DateTime.Now, message);
+            _progressTextItems.Add(newEntry);
+            txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
 
             int percentComplete = status.PercentComplete;
             if (status.SegmentCount > 0)
@@ -135,7 +154,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else if (!t.Result)
                 {
-                    UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_RunSearch_Conversion_failed_));
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_failed_));
                     Cancel();
                 }
                 else
@@ -170,7 +189,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else
                 {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).Complete());
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).ChangeSegments(0, 0).Complete());
                 }
             }
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
@@ -218,11 +237,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
+            if (IsCanceled)
+                return UpdateProgressResponse.cancel;
+
             if (InvokeRequired)
                 Invoke(new MethodInvoker(() => UpdateProgress(status)));
             else
                 UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
-            return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+
+            return UpdateProgressResponse.normal;
         }
     }
 }

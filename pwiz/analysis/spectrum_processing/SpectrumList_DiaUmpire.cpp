@@ -80,6 +80,14 @@ PWIZ_API_DECL SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(const MSData& msd, 
     for (const auto& kvp : config.instrumentParameters.GetParameterMap())
         method.userParams.emplace_back(kvp.first, kvp.second);
 
+    if (config.diaTargetWindowScheme == DiaUmpire::TargetWindow::Scheme::SWATH_Variable)
+    {
+        string windowStr;
+        for (auto& window : config.diaVariableWindows)
+            windowStr += toString(window.mzRange.begin) + "-" + toString(window.mzRange.end) + " ";
+        method.userParams.emplace_back("VariableWindows", windowStr);
+    }
+
     if (!dp_->processingMethods.empty())
         method.softwarePtr = dp_->processingMethods[0].softwarePtr;
 

@@ -99,11 +99,23 @@ inline char alnum_lower(char c)
     return isalnum(c) ? static_cast<char>(tolower(c)) : c == '+' ? c : ' ';
 }
 
+inline char alnum_lower_regex(char c)
+{
+    // c -> lower-case, whitespace, +, or _ for things that appear to be part of a regex
+    return isalnum(c) ? static_cast<char>(tolower(c)) : c == '+' ? c : '_';    
+}
 
 string preprocess(const string& s)
 {
     string result = s;
-    transform(result.begin(), result.end(), result.begin(), alnum_lower);
+    if (bal::starts_with(s, "(?<=")) // Looks like a regex
+    {
+        transform(result.begin(), result.end(), result.begin(), alnum_lower_regex);
+    }
+    else
+    {
+        transform(result.begin(), result.end(), result.begin(), alnum_lower);
+    }
     return result;
 }
 

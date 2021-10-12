@@ -115,6 +115,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 _isDdaSearch = value;
                 _fastaFile = true;
+
+                targetFastaPanel.Visible = _isDdaSearch;
             }
         }
 
@@ -428,7 +430,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var docImportFasta = docNew;
                         longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                         {
-                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, longWaitBroker, ref selectedPath, out newPeptideGroups, out error);
+                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, irtStandard, longWaitBroker,
+                                ref selectedPath, out newPeptideGroups, out error);
                         });
                         docNew = docImportFasta;
                     }
@@ -451,8 +454,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                             {
-                                IdentityPath nextAdd;
-                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, longWaitBroker, to, out selectedPath, out nextAdd, out newPeptideGroups);
+                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, irtStandard,
+                                    longWaitBroker, to, out selectedPath, out _, out newPeptideGroups);
                             });
                             docNew = docImportFasta;
                         }
@@ -472,7 +475,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
 
                 // Filter proteins based on number of peptides and add decoys
-                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0))
+                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, irtStandard, DecoyGenerationMethod, NumDecoys ?? 0))
                 {
                     docNew = dlg.ShowDialog(WizardForm) == DialogResult.OK ? dlg.DocumentFinal : null;
                 }
@@ -480,19 +483,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
                 if (docNew == null)
                     return false;
-
-                // Add iRT standards if not present
-                if (irtStandard != null && irtStandard.HasDocument)
-                {
-                    var standardMap = new TargetMap<bool>(irtStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-                    var docStandards = new TargetMap<bool>(docNew.Peptides
-                        .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget)).Select(nodePep =>
-                            new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-                    if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
-                    {
-                        docNew = irtStandard.ImportTo(docNew);
-                    }
-                }
 
                 if (AutoTrain)
                 {

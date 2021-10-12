@@ -41,9 +41,9 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 4.1.41
-//   date: 30:07:2020 18:25
-//   saved-by: Matt Chambers
+//   data-version: 4.1.56
+//   date: 25:06:2021 00:00
+//   saved-by: Chris Bielow
 //   auto-generated-by: OBO-Edit 2.3.1
 //   import: http://ontologies.berkeleybop.org/pato.obo
 //   import: http://ontologies.berkeleybop.org/uo.obo
@@ -53,6 +53,7 @@
 //   remark: namespace: MS
 //   remark: namespace: PEFF
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
+//   remark: creator: Yasset Perez-Riverol <yperez <-at-> ebi.ac.uk>
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 //   remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
@@ -60,6 +61,7 @@
 //   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 //   remark: creator: Pierre-Alain Binz <pierre-alain.binz <-at-> chuv.ch>
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
+//   remark: creator: Joshua Klein <jaklein <-at-> bu.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -71,7 +73,7 @@
 // [unimod.obo]
 #define _UNIMOD_OBO_
 //   format-version: 1.2
-//   date: 2020:06:09 11:01
+//   date: 2021:03:11 13:32
 //
 // [unit.obo]
 #define _UNIT_OBO_
@@ -2330,10 +2332,10 @@ enum PWIZ_API_DECL CVID
     /// Bruker/Agilent YEP format: Bruker/Agilent YEP file format.
     MS_Bruker_Agilent_YEP_format = 1000567,
 
-    /// MD5: MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files.
+    /// MD5: MD5 (Message-Digest algorithm 5) is a (now deprecated) cryptographic hash function with a 128-bit hash value used to check the integrity of files.
     MS_MD5 = 1000568,
 
-    /// SHA-1: SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity.
+    /// SHA-1: SHA-1 (Secure Hash Algorithm-1) is a cryptographic hash function designed by the National Security Agency (NSA). It is also used to verify file integrity. Since 2011 it has been deprecated by the NIST as a U. S. government standard.
     MS_SHA_1 = 1000569,
 
     /// spectra combination: Method used to combine the mass spectra.
@@ -7901,8 +7903,8 @@ enum PWIZ_API_DECL CVID
     /// ion mobility drift time: Drift time of an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This time might refer to the central value of a bin into which all ions within a narrow range of drift time have been aggregated.
     MS_ion_mobility_drift_time = 1002476,
 
-    /// mean drift time array: Array of drift times, averaged from a matrix of binned m/z and drift time values, corresponding to spectrum of individual peaks encoded with an m/z array.
-    MS_mean_drift_time_array = 1002477,
+    /// mean ion mobility drift time array: Array of population mean ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array.
+    MS_mean_ion_mobility_drift_time_array = 1002477,
 
     /// mean charge array: Array of mean charge values where the mean charge is calculated as a weighted mean of the charges of individual peaks that are aggregated into a processed spectrum.
     MS_mean_charge_array = 1002478,
@@ -8597,6 +8599,15 @@ enum PWIZ_API_DECL CVID
     /// protein group-level result list statistic: Attrbiute of an entire list of protein groups.
     MS_protein_group_level_result_list_statistic = 1002706,
 
+    /// (?=[KR]): Regular expression for LysargiNase.
+    MS_____KR__ = 1002707,
+
+    /// LysargiNase: Metalloproteinase found in Methanosarcina acetivorans that cleaves on the N-terminal side of lysine and arginine residues.
+    MS_LysargiNase = 1002708,
+
+    /// Tryp-N (LysargiNase): Metalloproteinase found in Methanosarcina acetivorans that cleaves on the N-terminal side of lysine and arginine residues.
+    MS_Tryp_N = MS_LysargiNase,
+
     /// Pegasus BT: LECO bench-top GC time-of-flight mass spectrometer.
     MS_Pegasus_BT = 1002719,
 
@@ -8891,7 +8902,7 @@ enum PWIZ_API_DECL CVID
     /// inverse reduced ion mobility: Ion mobility measurement for an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This might refer to the central value of a bin into which all ions within a narrow range of mobilities have been aggregated.
     MS_inverse_reduced_ion_mobility = 1002815,
 
-    /// mean ion mobility array: Array of drift times, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array.
+    /// mean ion mobility array: Array of population mean ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array.
     MS_mean_ion_mobility_array = 1002816,
 
     /// Bruker TDF format: Bruker TDF raw file format.
@@ -9122,7 +9133,7 @@ enum PWIZ_API_DECL CVID
     /// ion mobility attribute: An attribute describing ion mobility searches.
     MS_ion_mobility_attribute = 1002892,
 
-    /// ion mobility array: An array of ion mobility data.
+    /// ion mobility array: Abstract array of ion mobility data values. A more specific child term concept should be specified in data files to make precise the nature of the data being provided.
     MS_ion_mobility_array = 1002893,
 
     /// InChIKey: Unique chemical structure identifier for chemical compounds.
@@ -9452,13 +9463,13 @@ enum PWIZ_API_DECL CVID
     /// timsTOF Pro: Bruker Daltonics' timsTOF Pro.
     MS_timsTOF_Pro = 1003005,
 
-    /// mean inverse reduced ion mobility array: Array of inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array.
+    /// mean inverse reduced ion mobility array: Array of population mean ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array.
     MS_mean_inverse_reduced_ion_mobility_array = 1003006,
 
-    /// raw ion mobility array: Array of raw drift times.
+    /// raw ion mobility array: Array of raw ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array.
     MS_raw_ion_mobility_array = 1003007,
 
-    /// raw inverse reduced ion mobility array: Array of raw inverse reduced ion mobilities.
+    /// raw inverse reduced ion mobility array: Array of raw ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array.
     MS_raw_inverse_reduced_ion_mobility_array = 1003008,
 
     /// Shimadzu Biotech LCD format: Shimadzu Biotech LCD file format.
@@ -9773,6 +9784,159 @@ enum PWIZ_API_DECL CVID
     /// Orbitrap ID-X: Thermo Scientific Orbitrap ID-X mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.
     MS_Orbitrap_ID_X = 1003112,
 
+    /// OpenMS:ConsensusID PEP: The OpenMS ConsesusID tool posterior error probability
+    MS_OpenMS_ConsensusID_PEP = 1003113,
+
+    /// OpenMS:Best PSM Score: The score of the best PSM selected by the underlying identification tool
+    MS_OpenMS_Best_PSM_Score = 1003114,
+
+    /// OpenMS:Target-decoy PSM q-value: The OpenMS Target-decoy q-values at PSM level
+    MS_OpenMS_Target_decoy_PSM_q_value = 1003115,
+
+    /// OpenMS:Target-decoy peptide q-value: The OpenMS Target-decoy q-values at peptide sequence level
+    MS_OpenMS_Target_decoy_peptide_q_value = 1003116,
+
+    /// OpenMS:Target-decoy protein q-value: The OpenMS Target-decoy q-values at protein level
+    MS_OpenMS_Target_decoy_protein_q_value = 1003117,
+
+    /// EPIFANY: A Method for Efficient High-Confidence Protein Inference. The tool is part of the OpenMS framework
+    MS_EPIFANY = 1003118,
+
+    /// EPIFANY:Protein posterior probability: Protein Posterior probability calculated by EPIFANY protein inference algorithm
+    MS_EPIFANY_Protein_posterior_probability = 1003119,
+
+    /// OpenMS:LFQ intensity: The data type LFQ intensity produced by OpenMS.
+    MS_OpenMS_LFQ_intensity = 1003120,
+
+    /// OpenMS:LFQ spectral count: The data type LFQ spectral count produced by OpenMS.
+    MS_OpenMS_LFQ_spectral_count = 1003121,
+
+    /// rapifleX: Bruker Daltonics' rapiflex: MALDI TOF/TOF.
+    MS_rapifleX = 1003122,
+
+    /// Bruker Daltonics timsTOF series: Bruker Daltonics timsTOF series
+    MS_Bruker_Daltonics_timsTOF_series = 1003123,
+
+    /// timsTOF fleX: Bruker Daltonics' timsTOF fleX
+    MS_timsTOF_fleX = 1003124,
+
+    /// ProSight:spectral Q-value: ProSight spectrum-level Q-value.
+    MS_ProSight_spectral_Q_value = 1003125,
+
+    /// ProSight:spectral P-score: ProSight spectrum-level P-score.
+    MS_ProSight_spectral_P_score = 1003126,
+
+    /// ProSight:spectral E-value: ProSight spectrum-level E-value.
+    MS_ProSight_spectral_E_value = 1003127,
+
+    /// ProSight:spectral C-score: ProSight spectrum-level C-score.
+    MS_ProSight_spectral_C_score = 1003128,
+
+    /// proteoform-level Q-value: Estimation of the Q-value for proteoforms.
+    MS_proteoform_level_Q_value = 1003129,
+
+    /// ProSight:proteoform Q-value: ProSight proteoform-level Q-value.
+    MS_ProSight_proteoform_Q_value = 1003130,
+
+    /// isoform-level identification attribute: Isoform level information.
+    MS_isoform_level_identification_attribute = 1003131,
+
+    /// isoform-level identification statistic: Identification confidence metric for a isoform.
+    MS_isoform_level_identification_statistic = 1003132,
+
+    /// isoform-level Q-value: Estimation of the Q-value for isoforms.
+    MS_isoform_level_Q_value = 1003133,
+
+    /// ProSight:isoform Q-value: ProSight isoform-level Q-value.
+    MS_ProSight_isoform_Q_value = 1003134,
+
+    /// ProSight:protein Q-value: ProSight protein-level Q-value.
+    MS_ProSight_protein_Q_value = 1003135,
+
+    /// ProSight input parameter: Search engine input parameters specific to ProSight.
+    MS_ProSight_input_parameter = 1003136,
+
+    /// TDPortal input parameter: Search engine input parameters specific to TDPortal.
+    MS_TDPortal_input_parameter = 1003137,
+
+    /// ProSight:Run delta m mode: If true, runs delta m mode in ProSight.
+    MS_ProSight_Run_delta_m_mode = 1003138,
+
+    /// ProSight:Run Subsequence Search mode: If true, runs Subsequence Search mode in ProSight.
+    MS_ProSight_Run_Subsequence_Search_mode = 1003139,
+
+    /// ProSight:Run Annotated Proteoform Search mode: If true, runs Annotated Proteoform Search mode in ProSight.
+    MS_ProSight_Run_Annotated_Proteoform_Search_mode = 1003140,
+
+    /// ProSight: ProSight: Database search engine for top-down proteomics.
+    MS_ProSight = 1003141,
+
+    /// TDPortal: TDPortal: Database search engine for top-down proteomics.
+    MS_TDPortal = 1003142,
+
+    /// mass array: A data array of mass values.
+    MS_mass_array = 1003143,
+
+    /// Triple Quad 7500: SCIEX Triple Quad 7500.
+    MS_Triple_Quad_7500 = 1003144,
+
+    /// ThermoRawFileParser: Cross-platform software to convert Thermo RAW files to a number of open formats.
+    MS_ThermoRawFileParser = 1003145,
+
+    /// pyteomics: Python module that helps handling various proteomics data analysis tasks.
+    MS_pyteomics = 1003146,
+
+    /// PTMProphet probability: Probability that one mass modification has been correctly localized to a specific residue as computed by PTMProphet.
+    MS_PTMProphet_probability = 1003147,
+
+    /// PTMProphet mean best probability: PSM-specific average of the m best site probabilities over all potential sites where m is the number of modifications of a specific type, as computed by PTMProphet.
+    MS_PTMProphet_mean_best_probability = 1003148,
+
+    /// PTMProphet normalized information content: PTMProphet-computed PSM-specific normalized (0.0 - 1.0) measure of information content across all modifications of a specific type.
+    MS_PTMProphet_normalized_information_content = 1003149,
+
+    /// PTMProphet information content: PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type.
+    MS_PTMProphet_information_content = 1003150,
+
+    /// SHA-256: SHA-256 (member of Secure Hash Algorithm-2 family) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity.
+    MS_SHA_256 = 1003151,
+
+    /// GCMS-QP2010SE: Shimadzu Scientific Instruments GCMS-QP2010SE.
+    MS_GCMS_QP2010SE = 1003152,
+
+    /// raw ion mobility drift time array: Array of raw ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array.
+    MS_raw_ion_mobility_drift_time_array = 1003153,
+
+    /// deconvoluted ion mobility array: Array of ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.
+    MS_deconvoluted_ion_mobility_array = 1003154,
+
+    /// deconvoluted inverse reduced ion mobility array: Array of ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.
+    MS_deconvoluted_inverse_reduced_ion_mobility_array = 1003155,
+
+    /// deconvoluted ion mobility drift time array: Array of mean ion mobility values from a drift time device, reported in seconds (or milliseconds), as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.
+    MS_deconvoluted_ion_mobility_drift_time_array = 1003156,
+
+    /// scanning quadrupole position lower bound m/z array: Array of m/z values representing the lower bound m/z of the quadrupole position at each point in the spectrum.
+    MS_scanning_quadrupole_position_lower_bound_m_z_array = 1003157,
+
+    /// scanning quadrupole position upper bound m/z array: Array of m/z values representing the upper bound m/z of the quadrupole position at each point in the spectrum.
+    MS_scanning_quadrupole_position_upper_bound_m_z_array = 1003158,
+
+    /// isolation window full range: Indicates an acquisition mode in which the isolation window is a full range, rather than a subset of the full range.
+    MS_isolation_window_full_range = 1003159,
+
+    /// mzQC format: Proteomics Standards Initiative mzQC format for quality control data.
+    MS_mzQC_format = 1003160,
+
+    /// quality control data format: Grouping term for quality control data formats.
+    MS_quality_control_data_format = 1003161,
+
+    /// PTX-QC: Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.
+    MS_PTX_QC = 1003162,
+
+    /// PTXQC (PTX-QC): Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.
+    MS_PTXQC = MS_PTX_QC,
+
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 200000000,
 
@@ -10043,7 +10207,7 @@ enum PWIZ_API_DECL CVID
     /// Benzoyl: Labeling reagent light form (N-term & K).
     UNIMOD_Benzoyl = 200000136,
 
-    /// Hex(5)HexNAc(2): N-linked glycan core.
+    /// Hex(5)HexNAc(2): M5/Man5.
     UNIMOD_Hex_5_HexNAc_2_ = 200000137,
 
     /// Dansyl: 5-dimethylaminonaphthalene-1-sulfonyl.
@@ -10106,7 +10270,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(2)HexNAc(2)dHex(1): Hex2HexNAc2dHex1.
     UNIMOD_Hex_2_HexNAc_2_dHex_1_ = 200000158,
 
-    /// Hex(3)HexNAc(2): Hex3HexNAc2.
+    /// Hex(3)HexNAc(2): M3/Man3.
     UNIMOD_Hex_3_HexNAc_2_ = 200000159,
 
     /// Hex(1)HexNAc(1)NeuAc(2): Hex HexNAc NeuAc(2) ---OR--- Hex HexNAc(3) HexA.
@@ -10313,22 +10477,22 @@ enum PWIZ_API_DECL CVID
     /// DeStreak: Cysteine mercaptoethanol.
     UNIMOD_DeStreak = 200000303,
 
-    /// dHex(1)Hex(3)HexNAc(4): Fucosylated biantennary (-2 galactose).
+    /// dHex(1)Hex(3)HexNAc(4): FA2/G0F.
     UNIMOD_dHex_1_Hex_3_HexNAc_4_ = 200000305,
 
-    /// dHex(1)Hex(4)HexNAc(4): DHex Hex(4) HexNAc(4) ---OR--- Hex(4) HexNAc(4) Pent Me.
+    /// dHex(1)Hex(4)HexNAc(4): FA2G1/G1F.
     UNIMOD_dHex_1_Hex_4_HexNAc_4_ = 200000307,
 
-    /// dHex(1)Hex(5)HexNAc(4): Fucosylated biantennary.
+    /// dHex(1)Hex(5)HexNAc(4): FA2G2/G2F.
     UNIMOD_dHex_1_Hex_5_HexNAc_4_ = 200000308,
 
-    /// Hex(3)HexNAc(4): Biantennary (-2 galactose).
+    /// Hex(3)HexNAc(4): A2/G0.
     UNIMOD_Hex_3_HexNAc_4_ = 200000309,
 
-    /// Hex(4)HexNAc(4): Biantennary (-1 galactose).
+    /// Hex(4)HexNAc(4): A2G1/G1.
     UNIMOD_Hex_4_HexNAc_4_ = 200000310,
 
-    /// Hex(5)HexNAc(4): Biantennary.
+    /// Hex(5)HexNAc(4): A2G2/G2.
     UNIMOD_Hex_5_HexNAc_4_ = 200000311,
 
     /// Cysteinyl: Cysteinylation.
@@ -11524,9 +11688,6 @@ enum PWIZ_API_DECL CVID
 
     /// Methylmalonylation: Methylmalonylation on Serine.
     UNIMOD_Methylmalonylation = 200000914,
-
-    /// Ethoxyformyl: Ethoxyformylation.
-    UNIMOD_Ethoxyformyl = 200000915,
 
     /// Label:13C(4)15N(2)+GG: 13C(4) 15N(2) Lysine glygly.
     UNIMOD_Label_13C_4_15N_2__GG = 200000923,
@@ -12731,16 +12892,16 @@ enum PWIZ_API_DECL CVID
     /// EDEDTIDVFQQQTGG: Sumoylation by SUMO-2/3 after Cyanogen bromide (CNBr) cleavage.
     UNIMOD_EDEDTIDVFQQQTGG = 200001406,
 
-    /// Hex(5)HexNAc(4)NeuAc(2): Hex(5) HexNAc(4) NeuAc(2).
+    /// Hex(5)HexNAc(4)NeuAc(2): A2G2S2/G2S2.
     UNIMOD_Hex_5_HexNAc_4_NeuAc_2_ = 200001408,
 
-    /// Hex(5)HexNAc(4)NeuAc(1): Hex(5) HexNAc(4) NeuAc.
+    /// Hex(5)HexNAc(4)NeuAc(1): A2G2S1/G2S1.
     UNIMOD_Hex_5_HexNAc_4_NeuAc_1_ = 200001409,
 
-    /// dHex(1)Hex(5)HexNAc(4)NeuAc(1): DHex Hex(5) HexNAc(4) NeuAc.
+    /// dHex(1)Hex(5)HexNAc(4)NeuAc(1): FA2G2S1/G2FS1.
     UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_1_ = 200001410,
 
-    /// dHex(1)Hex(5)HexNAc(4)NeuAc(2): DHex Hex(5) HexNAc(4) NeuAc(2).
+    /// dHex(1)Hex(5)HexNAc(4)NeuAc(2): FA2G2S2/G2FS2.
     UNIMOD_dHex_1_Hex_5_HexNAc_4_NeuAc_2_ = 200001411,
 
     /// s-GlcNAc: O3S1HexNAc1.
@@ -12884,7 +13045,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(3)HexNAc(4)Sulf(1): Hex(3) HexNAc(4) Sulf.
     UNIMOD_Hex_3_HexNAc_4_Sulf_1_ = 200001464,
 
-    /// Hex(6)HexNAc(2): Hex(6) HexNAc(2).
+    /// Hex(6)HexNAc(2): M6/Man6.
     UNIMOD_Hex_6_HexNAc_2_ = 200001465,
 
     /// Hex(4)HexNAc(3)Pent(1): Hex(4) HexNAc(3) Pent.
@@ -12929,7 +13090,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(4)HexNAc(4)Sulf(1): Hex(4) HexNAc(4) Sulf.
     UNIMOD_Hex_4_HexNAc_4_Sulf_1_ = 200001479,
 
-    /// Hex(7)HexNAc(2): Hex(7) HexNAc(2).
+    /// Hex(7)HexNAc(2): M7/Man7.
     UNIMOD_Hex_7_HexNAc_2_ = 200001480,
 
     /// dHex(2)Hex(4)HexNAc(3): DHex(2) Hex(4) HexNAc(3).
@@ -13001,7 +13162,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(5)HexNAc(4)Sulf(1): Hex(5) HexNAc(4) Sulf.
     UNIMOD_Hex_5_HexNAc_4_Sulf_1_ = 200001503,
 
-    /// Hex(8)HexNAc(2): Hex(8) HexNAc(2).
+    /// Hex(8)HexNAc(2): M8/Man8.
     UNIMOD_Hex_8_HexNAc_2_ = 200001504,
 
     /// dHex(1)Hex(3)HexNAc(4)Pent(2): DHex Hex(3) HexNAc(4) Pent(2).
@@ -13082,7 +13243,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(3)HexNAc(6)Sulf(2): Hex(3) HexNAc(6) Sulf(2).
     UNIMOD_Hex_3_HexNAc_6_Sulf_2_ = 200001530,
 
-    /// Hex(9)HexNAc(2): Hex(9) HexNAc(2).
+    /// Hex(9)HexNAc(2): M9/Man9.
     UNIMOD_Hex_9_HexNAc_2_ = 200001531,
 
     /// Hex(4)HexNAc(6): Hex(4) HexNAc(6).
@@ -13166,7 +13327,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(3)HexNAc(7)Sulf(1): Hex(3) HexNAc(7) Sulf.
     UNIMOD_Hex_3_HexNAc_7_Sulf_1_ = 200001558,
 
-    /// Hex(6)HexNAc(5): Hex(6) HexNAc(5).
+    /// Hex(6)HexNAc(5): A3G3.
     UNIMOD_Hex_6_HexNAc_5_ = 200001559,
 
     /// Hex(5)HexNAc(4)NeuAc(1)Sulf(1): Hex(5) HexNAc(4) NeuAc Sulf.
@@ -13763,7 +13924,7 @@ enum PWIZ_API_DECL CVID
     /// dHex(2)Hex(3)HexNAc(3): DHex(2) Hex(3) HexNAc(3).
     UNIMOD_dHex_2_Hex_3_HexNAc_3_ = 200001771,
 
-    /// Hex(3)HexNAc(5): Hex(3) HexNAc(5).
+    /// Hex(3)HexNAc(5): A3.
     UNIMOD_Hex_3_HexNAc_5_ = 200001772,
 
     /// Hex(4)HexNAc(3)NeuAc(1): Hex(4) HexNAc(3) NeuAc ---OR--- Hex(3) HexNAc(4) Kdn.
@@ -13775,7 +13936,7 @@ enum PWIZ_API_DECL CVID
     /// dHex(1)Hex(3)HexNAc(5): DHex Hex(3) HexNAc(5).
     UNIMOD_dHex_1_Hex_3_HexNAc_5_ = 200001775,
 
-    /// Hex(3)HexNAc(6): Hex(3) HexNAc(6).
+    /// Hex(3)HexNAc(6): A4.
     UNIMOD_Hex_3_HexNAc_6_ = 200001776,
 
     /// Hex(4)HexNAc(4)NeuAc(1): Hex(4) HexNAc(4) NeuAc.
@@ -14242,6 +14403,39 @@ enum PWIZ_API_DECL CVID
 
     /// His+O(2): Photo-induced histidine adduct.
     UNIMOD_His_O_2_ = 200002027,
+
+    /// Hex(6)HexNAc(5)NeuAc(3): A3G3S3.
+    UNIMOD_Hex_6_HexNAc_5_NeuAc_3_ = 200002028,
+
+    /// Hex(7)HexNAc(6): A4G4.
+    UNIMOD_Hex_7_HexNAc_6_ = 200002029,
+
+    /// Met+O(2): Photo-induced Methionine Adduct.
+    UNIMOD_Met_O_2_ = 200002033,
+
+    /// Gly+O(2): Photo-induced Glycine Adduct.
+    UNIMOD_Gly_O_2_ = 200002034,
+
+    /// Pro+O(2): Photo-induced Proline adduct.
+    UNIMOD_Pro_O_2_ = 200002035,
+
+    /// Lys+O(2): Photo-induced Lysine adduct.
+    UNIMOD_Lys_O_2_ = 200002036,
+
+    /// Glu+O(2): Photo-induced Glutamate adduct.
+    UNIMOD_Glu_O_2_ = 200002037,
+
+    /// LTX+Lophotoxin: Addition of lophotoxin to tyrosine.
+    UNIMOD_LTX_Lophotoxin = 200002039,
+
+    /// MBS+peptide: MBS_233p24 plus peptide 1250p53.
+    UNIMOD_MBS_peptide = 200002040,
+
+    /// 3-hydroxybenzyl-phosphate: 3-hydroxybenzyl phosphate.
+    UNIMOD_3_hydroxybenzyl_phosphate = 200002041,
+
+    /// phenyl-phosphate: Phenyl phosphate.
+    UNIMOD_phenyl_phosphate = 200002042,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 300000000,
@@ -15221,14 +15415,14 @@ enum PWIZ_API_DECL CVID
     /// centiRay: A unit of genetic map distance defined corresponding to an interval in which there is a 1% probability of X-irradiation induced breakage. To be completely specified, the unit must be qualified by the radiation in dosage in rads (e.g. cR8000), because this determines the actual breakage probability.
     UO_centiRay = 300000327,
 
-    /// kilobasepair: A unit equal to one thousand base pairs.
-    UO_kilobasepair = 300000328,
+    /// kilo base pair: A unit equal to one thousand base pairs.
+    UO_kilo_base_pair = 300000328,
 
-    /// megabasepair: A unit equal to one million base pairs
-    UO_megabasepair = 300000329,
+    /// mega base pair: A unit equal to one million base pairs
+    UO_mega_base_pair = 300000329,
 
-    /// gigabasepair: A unit equal to one billion base pairs.
-    UO_gigabasepair = 300000330,
+    /// giga base pair: A unit equal to one billion base pairs.
+    UO_giga_base_pair = 300000330,
 
     /// gigabyte: An information unit which is equal to 1000000000 bytes.
     UO_gigabyte = 300000331,
@@ -15381,7 +15575,49 @@ enum PWIZ_API_DECL CVID
     UO_micromole_300010048 = 300010048,
 
     /// gram per square meter: An area density unit which is equal to the mass of an object in grams divided by the surface area in meters squared.
-    UO_gram_per_square_meter = 300010049
+    UO_gram_per_square_meter = 300010049,
+
+    /// nanogram per microliter: A mass unit density which is equal to mass of an object in nanograms divided by the volume in microliters.
+    UO_nanogram_per_microliter = 300010050,
+
+    /// large calorie: A unit of energy widely used in nutrition, equivalent to the amount of heat needed to cause one kilogram of water to rise in temperature by one degree Celsius.
+    UO_large_calorie = 300010051,
+
+    /// pounds per square inch: A pressure unit which is equal to 6894.757 pascal.
+    UO_pounds_per_square_inch = 300010052,
+
+    /// micrograms per wheaton bottle: A unit of mass concentration defined as the number of micrograms of a substance per 250 ml Wheaton bottle.
+    UO_micrograms_per_wheaton_bottle = 300010053,
+
+    /// picoampere: An electric current unit current which is equal to one trillionth of an ampere or 10^[-12] A.
+    UO_picoampere = 300010054,
+
+    /// centigray: An absorbed dose unit which is equal to 0.01 gray (Gy)
+    UO_centigray = 300010055,
+
+    /// gigaelectronvolt: A unit of energy that is equal to one thousand million electronvolts.
+    UO_gigaelectronvolt = 300010056,
+
+    /// gigaelectronvolt per nucleon: Derived unit which is equal to the total kinetic energy of an atomic nucleus in GeV divided by the number of nucleons in the nucleus
+    UO_gigaelectronvolt_per_nucleon = 300010057,
+
+    /// megaelectronvolt per nucleon: Derived unit which is equal to the total kinetic energy of an atomic nucleus in MeV divided by the number of nucleons in the nucleus
+    UO_megaelectronvolt_per_nucleon = 300010058,
+
+    /// kiloelectronvolt per micron: A derived unit equal to the energy deposited by ionizing radiation per micron of path length in matter
+    UO_kiloelectronvolt_per_micron = 300010059,
+
+    /// gray per minute: A derived absorbed dose unit which is equal to one gray absorbed per minute.
+    UO_gray_per_minute = 300010060,
+
+    /// centigray per minute: A derived absorbed dose unit which is equal to one centigray absorbed per minute.
+    UO_centigray_per_minute = 300010061,
+
+    /// milligray per minute: A derived absorbed dose unit which is equal to one milligray absorbed per minute.
+    UO_milligray_per_minute = 300010062,
+
+    /// milligray per day: A derived absorbed dose unit which is equal to one milligray absorbed per day.
+    UO_milligray_per_day = 300010063
 }; // enum CVID
 
 

@@ -6,7 +6,7 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #
-# Boost.Build V2 toolset for the IBM XL C++ compiler
+# B2 V2 toolset for the IBM XL C++ compiler
 #
 
 import toolset : flags ;
@@ -23,12 +23,12 @@ generators.override xlcpp.searched-lib-generator : searched-lib-generator ;
 # Configure the xlcpp toolset
 rule init ( version ? : command * : options * )
 {
-    local condition = [ 
+    local condition = [
         common.check-init-parameters xlcpp : version $(version) ] ;
-              
+
     command = [ common.get-invocation-command xlcpp : xlC
         : $(command) : "/usr/xlcpp/bin/xlC" ] ;
-        
+
     common.handle-options xlcpp : $(condition) : $(command) : $(options) ;
 }
 
@@ -105,6 +105,19 @@ else
 flags xlcpp CFLAGS <profiling>on : -pg ;
 flags xlcpp LINKFLAGS <profiling>on : -pg ;
 
+# Declare flags and actions for compilation
+flags xlcpp.compile.c++ OPTIONS <cxxstd>98 : -std=c++03 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>03 : -std=c++03 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>0x : -std=c++11 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>11 : -std=c++11 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>1y : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>14 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>1z : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>17 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>2a : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>20 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>latest : -std=c++1y ;
+
 flags xlcpp.compile OPTIONS <cflags> ;
 flags xlcpp.compile.c++ OPTIONS <cxxflags> ;
 flags xlcpp DEFINES <define> ;
@@ -136,7 +149,7 @@ actions xlcpp.link bind NEEDLIBS
 
 actions xlcpp.link.dll bind NEEDLIBS
 {
-    xlC -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
+    xlC -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions xlcpp.compile.c

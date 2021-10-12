@@ -51,6 +51,8 @@
             this.applyPeakGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupApplyToByToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeakToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.synchronizedIntegrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -209,10 +211,11 @@
             this.applyPeakSubsequentToolStripMenuItem,
             this.applyPeakGroupToolStripMenuItem,
             this.groupApplyToByToolStripMenuItem,
-            this.removePeakToolStripMenuItem});
+            this.removePeakToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.synchronizedIntegrationToolStripMenuItem});
             this.integrationToolStripMenuItem.Name = "integrationToolStripMenuItem";
             resources.ApplyResources(this.integrationToolStripMenuItem, "integrationToolStripMenuItem");
-            this.applyPeakAllToolStripMenuItem.Click += new System.EventHandler(this.applyPeakAllMenuItem_Click);
             // 
             // applyPeakAllToolStripMenuItem
             // 
@@ -242,6 +245,18 @@
             this.removePeakToolStripMenuItem.Name = "removePeakToolStripMenuItem";
             resources.ApplyResources(this.removePeakToolStripMenuItem, "removePeakToolStripMenuItem");
             this.removePeakToolStripMenuItem.Click += new System.EventHandler(this.removePeakMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // synchronizedIntegrationToolStripMenuItem
+            // 
+            this.synchronizedIntegrationToolStripMenuItem.CheckOnClick = true;
+            this.synchronizedIntegrationToolStripMenuItem.Name = "synchronizedIntegrationToolStripMenuItem";
+            resources.ApplyResources(this.synchronizedIntegrationToolStripMenuItem, "synchronizedIntegrationToolStripMenuItem");
+            this.synchronizedIntegrationToolStripMenuItem.Click += new System.EventHandler(this.synchronizedIntegrationToolStripMenuItem_Click);
             // 
             // insertToolStripMenuItem
             // 
@@ -386,7 +401,6 @@
             this.irtStandardMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             resources.ApplyResources(this.irtStandardMenuItem, "irtStandardMenuItem");
             this.irtStandardMenuItem.Name = "irtStandardMenuItem";
-            this.irtStandardMenuItem.Name = "irtStandardMenuItem";
             // 
             // modifyPeptideMenuItem
             // 
@@ -473,5 +487,7 @@
         private System.Windows.Forms.ToolStripMenuItem manageUniquePeptidesMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator30;
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem synchronizedIntegrationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

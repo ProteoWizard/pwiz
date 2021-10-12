@@ -302,4 +302,31 @@
   <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
     <value>不合格</value>
   </data>
+  <data name="RatioToLabel_GetAxisTitle__0__Ratio_To__1_" xml:space="preserve">
+    <value>{1}に対する{0}の比</value>
+    <comment>Example: Peak Area Ratio To Global Standards</comment>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0_" xml:space="preserve">
+    <value>{0}をサロゲート</value>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__" xml:space="preserve">
+    <value>{0}をサロゲート ({1})</value>
+    <comment>Example: Surrogate Leucine (Heavy)</comment>
+  </data>
+  <data name="NormalizeOption_MAXIMUM_Maximum" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="NormalizeOption_TOTAL_Total" xml:space="preserve">
+    <value>合計</value>
+  </data>
+  <data name="NormalizeOption_DEFAULT_Default_Normalization_Method" xml:space="preserve">
+    <value>デフォルトの正規化メソッド</value>
+  </data>
+  <data name="NormalizeOption_CALIBRATED_Calibration_Curve" xml:space="preserve">
+    <value>校正曲線</value>
+  </data>
+  <data name="SkylineWindow_MakeNormalizeToMenuItem_Default___0__" xml:space="preserve">
+    <value>デフォルト ({0})</value>
+    <comment>Example: Default (Global Standards)</comment>
+  </data>
 </root>

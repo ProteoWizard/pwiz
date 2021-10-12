@@ -31,13 +31,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -55,12 +69,19 @@
     </Compile>
     <Compile Include="ChildProcessTracker.cs" />
     <Compile Include="ConfigManager.cs" />
+    <Compile Include="FileOpenedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileOpenedForm.Designer.cs">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FilePathControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUtil.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,7 +90,16 @@
     </Compile>
     <Compile Include="Interfaces.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="LongWaitDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LongWaitDlg.Designer.cs">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LongWaitOperation.cs" />
     <Compile Include="MainFormUtils.cs" />
+    <Compile Include="PanoramaJsonObject.cs" />
+    <Compile Include="PanoramaUtil.cs" />
     <Compile Include="ProcessRunner.cs" />
     <Compile Include="ProgramLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -106,14 +136,20 @@
       <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileOpenedForm.resx">
+      <DependentUpon>FileOpenedForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FilePathControl.resx">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FindSkylineForm.resx">
       <DependentUpon>FindSkylineForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="LongWaitDlg.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="ShareConfigsForm.resx">
@@ -127,13 +163,13 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>cd "C:\Branches\Skylinework20210223_SkylineBatch_functionality_for_NEU_configs\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\SharedBatch\SharedBatch\bin\Debug"
-del "SharedBatch.dll" "SharedBatch.dll.config" "SharedBatch.pdb"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -185,7 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         color = GraphSummary.StateProvider.GetPeptideGraphInfo(peptideDocNode).Color;
                         if (identityPath.Equals(selectedTreeNode.Path) && step == 0)
                         {
-                            color = ChromGraphItem.ColorSelected;
+                            color = ColorScheme.ChromGraphItemSelected;
                             isSelected = true;
                         }
                     }
@@ -203,7 +204,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else if (ReferenceEquals(docNode, selectedNode) && step == 0)
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                         isSelected = true;
                     }
                     else

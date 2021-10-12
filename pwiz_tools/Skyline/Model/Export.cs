@@ -39,8 +39,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Shimadzu.LabSolutions.MethodConverter;
-using Shimadzu.LabSolutions.MethodWriter;
 using ZedGraph;
 using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
@@ -266,7 +264,7 @@ namespace pwiz.Skyline.Model
         public static string TransitionListExtension(string instrument)
         {
             return Equals(instrument, SHIMADZU)
-                ? ShimadzuNativeMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
+                ? ShimadzuMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
                 : TextUtil.EXT_CSV;
         }
 
@@ -641,10 +639,10 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportShimadzuCsv(SrmDocument document, string fileName)
         {
-            var exporter = InitExporter(new ShimadzuNativeMassListExporter(document));
+            var exporter = InitExporter(new ShimadzuMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            PerformLongExport(m => exporter.ExportNativeList(fileName, m));
+            PerformLongExport(m => exporter.ExportMethod(fileName, m));
 
             return exporter;
         }
@@ -711,6 +709,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoFusionMethodExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
 
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
@@ -722,8 +721,9 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
         {
-            var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
+            var exporter = InitExporter(new ThermoFusionMassListExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -1257,6 +1257,9 @@ namespace pwiz.Skyline.Model
 
     public class ShimadzuMassListExporter : AbstractMassListExporter
     {
+        public const string EXT_SHIMADZU_TRANSITION_LIST = ".txt";
+        public const string EXE_BUILD_SHIMADZU_METHOD = @"Method\Shimadzu\BuildShimadzuMethod";
+
         public double? RunLength { get; set; }
         private int LastFileNumber { get; set; }
 
@@ -1304,10 +1307,7 @@ namespace pwiz.Skyline.Model
             LastFileNumber = -1;
         }
 
-        protected override string InstrumentType
-        {
-            get { return ExportInstrumentType.SHIMADZU; }
-        }
+        protected override string InstrumentType { get { return ExportInstrumentType.SHIMADZU; } }
         
         public override bool HasHeaders { get { return true; } }
 
@@ -1408,59 +1408,14 @@ namespace pwiz.Skyline.Model
             writer.Write(positiveIon ? 0 : 1);
             writer.WriteLine();
         }
-    }
 
-    public class ShimadzuNativeMassListExporter : ShimadzuMassListExporter
-    {
-        public const string EXT_SHIMADZU_TRANSITION_LIST = ".txt";
-//        public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod";
-
-        public ShimadzuNativeMassListExporter(SrmDocument document)
-            : base(document)
-        {
-        }
-
-        public void ExportNativeList(string fileName, IProgressMonitor progressMonitor)
+        public void ExportMethod(string fileName, IProgressMonitor progressMonitor)
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty, Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
-            string ext = Path.GetExtension(fileName);
-
-            var methodConverter = new MassMethodConverter();
-            foreach (KeyValuePair<string, StringBuilder> pair in MemoryOutput)
-            {
-                string suffix = pair.Key.Substring(MEMORY_KEY_ROOT.Length);
-                suffix = Path.GetFileNameWithoutExtension(suffix);
-                string methodName = baseName + suffix + ext;
-
-                using (var fs = new FileSaver(methodName))
-                {
-                    string tranList = pair.Value.ToString();
-                    var result = methodConverter.ConvertMethod(fs.SafeName, tranList);
-                    if (result != ConverterResult.OK)
-                    {
-                        var errorMessages = new Dictionary<ConverterResult, string>
-                        {
-                            {ConverterResult.InputIsEmpty, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_string_is_empty_},
-                            {ConverterResult.InputCannotBeParsed, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_},
-                            {ConverterResult.CannotOpenOutputFile, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_},
-                            {ConverterResult.InvalidParameter, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Invalid_parameter__Cannot_create_output_method_},
-                            {ConverterResult.OutOfRangeEventNoError, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Number_of_events_exceed_maximum_allowed_by_LabSolutions__1000__},
-                            {ConverterResult.EventNotContiguous, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_},
-                            {ConverterResult.EventNotAscending, Resources.ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order},
-                            {ConverterResult.MaxTransitionError, string.Format(
-                                Resources.ShimadzuNativeMassListExporter_ExportNativeList_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type,
-                                tranList.Split('\n').Length)},
-                        };
-                        if (!errorMessages.TryGetValue(result, out var errorMessage))
-                            errorMessage = string.Format(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Unexpected_response__0__from_Shimadzu_method_converter, result);
-                        Assume.Fail(TextUtil.LineSeparate(Resources.ShimadzuNativeMassListExporter_ExportNativeList_Shimadzu_method_converter_encountered_an_error_, errorMessage));
-                    }
-                    fs.Commit();
-                }
-            }
+            var argv = new List<string>();
+            MethodExporter.ExportMethod(EXE_BUILD_SHIMADZU_METHOD, argv, fileName, null, MemoryOutput, progressMonitor);
         }
     }
 
@@ -1476,78 +1431,8 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty, Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
-            string ext = Path.GetExtension(fileName);
-
-            var methodWriter = new MassMethodWriter();
-
-            foreach (KeyValuePair<string, StringBuilder> pair in MemoryOutput)
-            {
-                string suffix = pair.Key.Substring(MEMORY_KEY_ROOT.Length);
-                suffix = Path.GetFileNameWithoutExtension(suffix);
-                string methodName = baseName + suffix + ext;
-
-                try
-                {
-                    // MethodWriter receives the template and overwrites it, so copy template to final output name
-                    // The template is required to have .lcm extension
-                    File.Copy(templateName, methodName, true);
-                }
-                catch (Exception x)
-                {
-                    throw new IOException(TextUtil.LineSeparate(string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Error_copying_template_file__0__to_destination__1__, templateName, methodName), x.Message));
-                }
-
-                string tranList = pair.Value.ToString();
-                WriterResult result;
-                CultureInfo originalCulture = Thread.CurrentThread.CurrentCulture;
-                try
-                {
-                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-                    result = methodWriter.WriteMethod(methodName, tranList);
-                }
-                finally
-                {
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    Thread.CurrentThread.CurrentCulture = originalCulture;
-                }
-                if (result != WriterResult.OK)
-                {
-                    // Writing the method failed, delete the copied template file
-                    if (File.Exists(methodName))
-                    {
-                        try
-                        {
-                            File.Delete(methodName);
-                        }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch
-                        {
-                        }
-                    }
-
-                    var errorMessages = new Dictionary<WriterResult, string>
-                    {
-                        {WriterResult.InputIsEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Input_string_is_empty_},
-                        {WriterResult.InputCannotBeParsed, Resources.ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_},
-                        {WriterResult.OutputIsEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_},
-                        {WriterResult.CannotOpenFile, Resources.ShimadzuMethodExporter_ExportMethod_Cannot_open_output_file_},
-                        {WriterResult.InvalidParameter, Resources.ShimadzuMethodExporter_ExportMethod_Invalid_parameter__Cannot_create_output_method_},
-                        {WriterResult.UnsupportedFile, Resources.ShimadzuMethodExporter_ExportMethod_Output_file_type_is_not_supported_},
-                        {WriterResult.SerializeIOException, Resources.ShimadzuMethodExporter_ExportMethod_Exception_raised_during_output_serialization_},
-                        {WriterResult.OutOfRangeEventNoError, Resources.ShimadzuMethodExporter_ExportMethod_Number_of_events_exceed_the_maximum_allowed_by_LabSolutions__1000__},
-                        {WriterResult.OutputMethodEmpty, Resources.ShimadzuMethodExporter_ExportMethod_Output_method_does_not_contain_any_events_},
-                        {WriterResult.EventNotContiguous, Resources.ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_},
-                        {WriterResult.EventNotAscending, Resources.ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order},
-                        {WriterResult.MaxTransitionError, string.Format(
-                            Resources.ShimadzuMethodExporter_ExportMethod_The_transition_count__0__exceeds_the_maximum_allowed_for_this_instrument_type_,
-                            tranList.Split('\n').Length)},
-                    };
-                    if (!errorMessages.TryGetValue(result, out var errorMessage))
-                        errorMessage = string.Format(Resources.ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_writer_, result);
-                    Assume.Fail(TextUtil.LineSeparate(Resources.ShimadzuMethodExporter_ExportMethod_Shimadzu_method_writer_encountered_an_error_, errorMessage));
-                }
-            }
+            var argv = new List<string>();
+            MethodExporter.ExportMethod(EXE_BUILD_SHIMADZU_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
 
@@ -1881,11 +1766,9 @@ namespace pwiz.Skyline.Model
         public ThermoFusionMethodExporter(SrmDocument document)
             : base(document)
         {
-            IsolationList = true;
-            IsPrecursorLimited = true;
         }
 
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (fileName != null)
                 EnsureLibraries();
@@ -2148,20 +2031,6 @@ namespace pwiz.Skyline.Model
 
             writer.Write(oneLine.Replace(',', FieldSeparator));
             writer.WriteLine();
-        }
-
-        protected override bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
-                nodeGroup.TransitionCount > 1 && PrimaryTransitionCount > 0)
-            {
-                // If we know the top ranked transition for every precursor and this is not it, skip writing it
-                int? rank = GetRank(nodeGroup, nodeGroupPrimary, nodeTran);
-                return !rank.HasValue || rank.Value > PrimaryTransitionCount;
-            }
-            return false;
         }
 
         protected virtual string GetOptionalColumns(string dp,
@@ -3551,24 +3420,24 @@ namespace pwiz.Skyline.Model
         public bool Tune3 { get; set; }
         public bool Tune3Columns { get { return IsolationList && Tune3; } }
 
+        public bool WriteFaimsCv { get; set; }
+
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
-        }
-
-        // Write values separated by the field separator, and a line separator at the end.
-        private void Write(TextWriter writer, params string[] vals)
-        {
-            writer.WriteLine(string.Join(FieldSeparator.ToString(CultureInfo.InvariantCulture), vals));
+            IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
                 ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
-                : @"Compound,Formula,Adduct,m/z,z,t start (min),t stop (min),CID Collision Energy (%)";
+                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
+            if (WriteFaimsCv)
+                hdr += @",FAIMS CV (V)";
             return hdr.Replace(',', fieldSeparator);
         }
 
@@ -3586,10 +3455,36 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            if (Tune3Columns)
+            {
+                writer.Write(@"{0} ({1})",
+                    nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
+                    nodeTranGroup.TransitionGroup.LabelType);
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+                writer.Write(FieldSeparator);
+                writer.Write(string.Empty);
+                writer.Write(FieldSeparator);
+            }
 
-            string start = string.Empty;
-            string end = string.Empty;
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+
+            var z = nodeTranGroup.TransitionGroup.PrecursorCharge;  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
+            if (Tune3Columns)
+            {
+                writer.Write(Math.Abs(z).ToString(CultureInfo));
+                writer.Write(FieldSeparator);
+                writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
+            }
+            else
+            {
+                writer.Write(z.ToString(CultureInfo));
+            }
+            writer.Write(FieldSeparator);
+
+            var start = string.Empty;
+            var end = string.Empty;
             if (MethodType == ExportMethodType.Scheduled)
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
@@ -3603,11 +3498,14 @@ namespace pwiz.Skyline.Model
                     end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
                 }
             }
+            writer.Write(start);
+            writer.Write(FieldSeparator);
+            writer.Write(end);
+            writer.Write(FieldSeparator);
 
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
-            bool wideWindowDia = false;
+            var wideWindowDia = false;
             if (fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA && fullScan.IsolationScheme != null)
             {
                 // Suggested by Thermo to use 27 for normal isolation ranges and 30 for wider windows
@@ -3618,38 +3516,22 @@ namespace pwiz.Skyline.Model
                         iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
                 }
             }
-            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
-            var writeColumns = new List<string> {precursorMz, z, start, end, collisionEnergy};
-            if (Tune3Columns)
-            {
-                writeColumns.InsertRange(0, new []
-                {
-                    string.Format(@"{0} ({1})",
-                        nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
-                        nodeTranGroup.TransitionGroup.LabelType),
-                    string.Empty,
-                    string.Empty
-                });
-            }
+            writer.Write((wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo));
+
             if (UseSlens)
             {
-                var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
-                writeColumns.Add(slens);
+                writer.Write(FieldSeparator);
+                writer.Write((ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
-            Write(writer, writeColumns.ToArray());
+            if (WriteFaimsCv)
+            {
+                var cv = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step);
+                writer.Write(FieldSeparator);
+                writer.Write(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
+            }
+            writer.WriteLine();
         }
-    }
-
-    public class ThermoFusionIsolationListExporter : ThermoFusionMassListExporter
-    {
-        public ThermoFusionIsolationListExporter(SrmDocument document)
-            : base(document)
-        {
-            IsolationList = true;
-            IsPrecursorLimited = true;
-        }
-
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public virtual void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
@@ -4284,7 +4166,7 @@ namespace pwiz.Skyline.Model
                     status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
                     status = status.ChangeSegments(0, dictTranLists.Count);
                 }
-                progressMonitor.UpdateProgress(status);
+                progressMonitor?.UpdateProgress(status);
 
                 psiExporter.RunProcess(stdinBuilder.ToString(), @"MESSAGE: ", progressMonitor, ref status); 
 

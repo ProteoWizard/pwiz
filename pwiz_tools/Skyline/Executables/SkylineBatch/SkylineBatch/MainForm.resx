@@ -154,7 +154,7 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;btnDeleteLogs.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnExportConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -222,42 +222,6 @@
   <data name="&gt;&gt;btnImportConfigs.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="btnViewLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnViewLog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnViewLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>538, 22</value>
-  </data>
-  <data name="btnViewLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnViewLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnViewLog.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="btnViewLog.Text" xml:space="preserve">
-    <value>&amp;View Log</value>
-  </data>
-  <data name="btnViewLog.ToolTip" xml:space="preserve">
-    <value>Export saved configurations...</value>
-  </data>
-  <data name="&gt;&gt;btnViewLog.Name" xml:space="preserve">
-    <value>btnViewLog</value>
-  </data>
-  <data name="&gt;&gt;btnViewLog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnViewLog.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnViewLog.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="btnRunBatch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -268,7 +232,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="btnRunBatch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 23</value>
+    <value>175, 23</value>
   </data>
   <data name="btnRunBatch.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -289,43 +253,43 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnRunBatch.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
-  <data name="btnCancel.Enabled" type="System.Boolean, mscorlib">
+  <data name="btnStop.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="btnStop.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>195, 22</value>
+  <data name="btnStop.Location" type="System.Drawing.Point, System.Drawing">
+    <value>179, 22</value>
   </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="btnStop.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnStop.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+  <data name="btnStop.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
-  <data name="btnCancel.Text" xml:space="preserve">
+  <data name="btnStop.Text" xml:space="preserve">
     <value>St&amp;op</value>
   </data>
-  <data name="btnCancel.ToolTip" xml:space="preserve">
-    <value>Import saved configurations...</value>
+  <data name="btnStop.ToolTip" xml:space="preserve">
+    <value>Stop the current batch run</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
+  <data name="&gt;&gt;btnStop.Name" xml:space="preserve">
+    <value>btnStop</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnStop.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnStop.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="&gt;&gt;btnStop.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="btnOpenFolder.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -358,6 +322,45 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;btnOpenFolder.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnLogStop.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnLogStop.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnLogStop.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnLogStop.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 426</value>
+  </data>
+  <data name="btnLogStop.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnLogStop.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnLogStop.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="btnLogStop.Text" xml:space="preserve">
+    <value>&amp;Stop</value>
+  </data>
+  <data name="btnLogStop.ToolTip" xml:space="preserve">
+    <value>Import saved configurations...</value>
+  </data>
+  <data name="&gt;&gt;btnLogStop.Name" xml:space="preserve">
+    <value>btnLogStop</value>
+  </data>
+  <data name="&gt;&gt;btnLogStop.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnLogStop.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;btnLogStop.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="systray_icon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -794,32 +797,8 @@
   <metadata name="batchRunDropDown.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>285, 17</value>
   </metadata>
-  <data name="startFromStepOne.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 22</value>
-  </data>
-  <data name="startFromStepOne.Text" xml:space="preserve">
-    <value>Run all steps</value>
-  </data>
-  <data name="startFromStepTwo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 22</value>
-  </data>
-  <data name="startFromStepTwo.Text" xml:space="preserve">
-    <value>Run from step 2: data import</value>
-  </data>
-  <data name="startFromStepThree.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 22</value>
-  </data>
-  <data name="startFromStepThree.Text" xml:space="preserve">
-    <value>Run from step 3: export reports</value>
-  </data>
-  <data name="startFromStepFour.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 22</value>
-  </data>
-  <data name="startFromStepFour.Text" xml:space="preserve">
-    <value>Run from step 4: run R scripts</value>
-  </data>
   <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>239, 92</value>
+    <value>61, 4</value>
   </data>
   <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
     <value>batchRunDropDown</value>
@@ -858,7 +837,7 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="comboLogList.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 23</value>
@@ -882,7 +861,7 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;comboLogList.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textBoxLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -897,7 +876,7 @@
     <value>Vertical</value>
   </data>
   <data name="textBoxLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>619, 402</value>
+    <value>619, 359</value>
   </data>
   <data name="textBoxLog.TabIndex" type="System.Int32, mscorlib">
     <value>24</value>
@@ -915,7 +894,7 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;textBoxLog.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tabLog.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -950,32 +929,44 @@
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listViewConfigName.Text" xml:space="preserve">
+  <data name="columnConfigName.Text" xml:space="preserve">
     <value>Configuration</value>
   </data>
-  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
-    <value>241</value>
+  <data name="columnConfigName.Width" type="System.Int32, mscorlib">
+    <value>196</value>
   </data>
-  <data name="listViewModified.Text" xml:space="preserve">
+  <data name="columnModified.Text" xml:space="preserve">
     <value>Modified</value>
   </data>
-  <data name="listViewModified.Width" type="System.Int32, mscorlib">
-    <value>108</value>
+  <data name="columnModified.Width" type="System.Int32, mscorlib">
+    <value>84</value>
   </data>
-  <data name="listViewStatus.Text" xml:space="preserve">
+  <data name="columnStatus.Text" xml:space="preserve">
     <value>Status</value>
   </data>
-  <data name="listViewStatus.Width" type="System.Int32, mscorlib">
-    <value>117</value>
+  <data name="columnStatus.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="columnStartTime.Text" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="columnStartTime.Width" type="System.Int32, mscorlib">
+    <value>69</value>
+  </data>
+  <data name="columnRunTime.Text" xml:space="preserve">
+    <value>Run Time</value>
+  </data>
+  <data name="columnRunTime.Width" type="System.Int32, mscorlib">
+    <value>62</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 24</value>
+    <value>7, 23</value>
   </data>
   <data name="listViewConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>510, 381</value>
+    <value>510, 382</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1032,7 +1023,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnRunOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>172, 22</value>
+    <value>156, 22</value>
   </data>
   <data name="btnRunOptions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -1089,7 +1080,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 403</value>
@@ -1240,6 +1231,30 @@
   </data>
   <data name="btnOpenAnalysis.ToolTipText" xml:space="preserve">
     <value>Open Folder</value>
+  </data>
+  <data name="btnUndo.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnUndo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnUndo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 20</value>
+  </data>
+  <data name="btnUndo.Text" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="btnRedo.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnRedo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnRedo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 20</value>
+  </data>
+  <data name="btnRedo.Text" xml:space="preserve">
+    <value>Redo</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -1882,46 +1897,34 @@
   <data name="&gt;&gt;systray_icon.Type" xml:space="preserve">
     <value>System.Windows.Forms.NotifyIcon, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;startFromStepOne.Name" xml:space="preserve">
-    <value>startFromStepOne</value>
+  <data name="&gt;&gt;columnConfigName.Name" xml:space="preserve">
+    <value>columnConfigName</value>
   </data>
-  <data name="&gt;&gt;startFromStepOne.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;startFromStepTwo.Name" xml:space="preserve">
-    <value>startFromStepTwo</value>
-  </data>
-  <data name="&gt;&gt;startFromStepTwo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;startFromStepThree.Name" xml:space="preserve">
-    <value>startFromStepThree</value>
-  </data>
-  <data name="&gt;&gt;startFromStepThree.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;startFromStepFour.Name" xml:space="preserve">
-    <value>startFromStepFour</value>
-  </data>
-  <data name="&gt;&gt;startFromStepFour.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigName.Name" xml:space="preserve">
-    <value>listViewConfigName</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigName.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnConfigName.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewModified.Name" xml:space="preserve">
-    <value>listViewModified</value>
+  <data name="&gt;&gt;columnModified.Name" xml:space="preserve">
+    <value>columnModified</value>
   </data>
-  <data name="&gt;&gt;listViewModified.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnModified.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewStatus.Name" xml:space="preserve">
-    <value>listViewStatus</value>
+  <data name="&gt;&gt;columnStatus.Name" xml:space="preserve">
+    <value>columnStatus</value>
   </data>
-  <data name="&gt;&gt;listViewStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnStartTime.Name" xml:space="preserve">
+    <value>columnStartTime</value>
+  </data>
+  <data name="&gt;&gt;columnStartTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnRunTime.Name" xml:space="preserve">
+    <value>columnRunTime</value>
+  </data>
+  <data name="&gt;&gt;columnRunTime.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUpArrow.Name" xml:space="preserve">
@@ -1958,6 +1961,18 @@
     <value>btnOpenAnalysis</value>
   </data>
   <data name="&gt;&gt;btnOpenAnalysis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnUndo.Name" xml:space="preserve">
+    <value>btnUndo</value>
+  </data>
+  <data name="&gt;&gt;btnUndo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRedo.Name" xml:space="preserve">
+    <value>btnRedo</value>
+  </data>
+  <data name="&gt;&gt;btnRedo.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

@@ -340,6 +340,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waters SONAR.
+        /// </summary>
+        public static string eIonMobilityUnits_waters_sonar {
+            get {
+                return ResourceManager.GetString("eIonMobilityUnits_waters_sonar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DDA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DDA {
@@ -363,6 +372,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string FullScanAcquisitionMethod_None {
             get {
                 return ResourceManager.GetString("FullScanAcquisitionMethod_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PRM.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_PRM {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_PRM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SureQuant.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_SureQuant {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_SureQuant", resourceCulture);
             }
         }
         

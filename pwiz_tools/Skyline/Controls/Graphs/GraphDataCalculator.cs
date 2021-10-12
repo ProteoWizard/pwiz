@@ -38,20 +38,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private Tuple<CancellationTokenSource, PaneProgressBar> _progressTuple;
 
 
-        public GraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl)
+        public GraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl, GraphPane graphPane)
         {
             ParentCancellationToken = parentCancellationToken;
             ZedGraphControl = zedGraphControl;
+            GraphPane = graphPane;
         }
 
         public CancellationToken ParentCancellationToken { get; }
 
-        public ZedGraphControl ZedGraphControl { get; private set; }
+        public ZedGraphControl ZedGraphControl { get; }
 
-        public virtual GraphPane GraphPane
-        {
-            get { return ZedGraphControl.GraphPane; }
-        }
+        public virtual GraphPane GraphPane { get; }
 
         public TInput Input
         {
@@ -99,16 +97,16 @@ namespace pwiz.Skyline.Controls.Graphs
             ActionUtil.RunAsync(() =>
             {
                 var results = CalculateResults(input, cancellationToken);
-                if (Equals(results, default(TResults)))
-                {
-                    return;
-                }
+                    if (Equals(results, default(TResults)))
+                    {
+                        return;
+                    }
                 BeginInvoke(cancellationToken, ()=> {
                     Assume.IsTrue(ReferenceEquals(_progressTuple.Item1, cancellationTokenSource));
                     _progressTuple.Item2.Dispose();
                     _progressTuple = null;
-                    Results = results;
-                    ResultsAvailable();
+                        Results = results;
+                        ResultsAvailable();
                 });
             });
         }

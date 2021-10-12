@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -450,6 +451,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public static IEnumerable<FoundResultsFile> EnsureUniqueNames(IList<FoundResultsFile> files)
+        {
+            // Enforce uniqueness in names (might be constructed from list of files a.raw, a.mzML)
+            return Helpers.EnsureUniqueNames(files.Select(f => f.Name).ToList()).Zip(files.Select(f => f.Path),
+                (name, path) => new FoundResultsFile(name, path));
+        }
+
         public static SrmDocument PrepareImportFasta(SrmDocument document)
         {
             // First preserve the state of existing document nodes in the tree
@@ -468,10 +476,10 @@ namespace pwiz.Skyline.Model
             return refine.Refine(document);
         }
 
-        public static SrmDocument ImportFasta(SrmDocument document, string fastaPath, IProgressMonitor monitor,
+        public static SrmDocument ImportFasta(SrmDocument document, string fastaPath, IrtStandard irtStandard, IProgressMonitor monitor,
             IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd, out List<PeptideGroupDocNode> peptideGroupsNew)
         {
-            var importer = new FastaImporter(document, false);
+            var importer = new FastaImporter(document, irtStandard);
             using (TextReader reader = File.OpenText(fastaPath))
             {
                 peptideGroupsNew = importer.Import(reader, monitor, Helpers.CountLinesInFile(fastaPath)).ToList();
@@ -483,6 +491,29 @@ namespace pwiz.Skyline.Model
         public static SrmDocument RemoveProteinsByPeptideCount(SrmDocument document, int minPeptides)
         {
             return minPeptides > 0 ? new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document) : document;
+        }
+
+        public static SrmDocument AddStandardsToDocument(SrmDocument doc, IrtStandard standard)
+        {
+            if (standard == null)
+                return doc;
+
+            var standardMap = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var docStandards = new TargetMap<bool>(doc.Peptides
+                .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget))
+                .Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+            if (standard.Peptides.All(pep => docStandards.ContainsKey(pep.ModifiedTarget)))
+                return doc; // document already contains all standards
+            else if (standard.HasDocument)
+                return standard.ImportTo(doc);
+
+            var modMatcher = new ModificationMatcher();
+            modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
+                Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
+                standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
+                ).ToArray());
+            return (SrmDocument) doc.Insert(doc.Children.FirstOrDefault()?.Id, group);
         }
 
         public class FoundResultsFile
@@ -587,7 +618,22 @@ namespace pwiz.Skyline.Model
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
+            SrmDocument docNew;
             var loadMonitor = new LoadMonitor(this, container, container.Document);
+
+            bool Error(string message)
+            {
+                // Show an error message and set the AutoTrain flag to false.
+                var status = new ProgressStatus().ChangeWarningMessage(message);
+                UpdateProgress(status);
+                do
+                {
+                    docCurrent = container.Document;
+                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i => i.ChangeAutoTrain(false)));
+                } while (!CompleteProcessing(container, docNew, docCurrent));
+                UpdateProgress(status.Complete());
+                return true;
+            }
 
             IPeakScoringModel scoringModel = new MProphetPeakScoringModel(
                 Path.GetFileNameWithoutExtension(container.DocumentFilePath), null as LinearModelParams,
@@ -596,10 +642,14 @@ namespace pwiz.Skyline.Model
             var targetDecoyGenerator = new TargetDecoyGenerator(docCurrent, scoringModel, this, loadMonitor);
 
             // Get scores for target and decoy groups.
-            List<IList<float[]>> targetTransitionGroups, decoyTransitionGroups;
-            targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
+            targetDecoyGenerator.GetTransitionGroups(out var targetTransitionGroups, out var decoyTransitionGroups);
             if (!decoyTransitionGroups.Any())
-                throw new InvalidDataException();
+            {
+                // user removed the decoys
+                return Error(TextUtil.LineSeparate(
+                    Resources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_mProphet_model_will_not_be_automatically_trained_,
+                    Resources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_an_mProphet_model_manually_));
+            }
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
@@ -612,9 +662,16 @@ namespace pwiz.Skyline.Model
             var initialParams = new LinearModelParams(initialWeights);
 
             // Train the model.
-            scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, targetDecoyGenerator, initialParams, null, null, scoringModel.UsesSecondBest, true, loadMonitor);
+            try
+            {
+                scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, targetDecoyGenerator,
+                    initialParams, null, null, scoringModel.UsesSecondBest, true, loadMonitor);
+            }
+            catch (Exception x)
+            {
+                return Error(string.Format(Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mProphet_model___0_, x.Message));
+            }
 
-            SrmDocument docNew;
             do
             {
                 docCurrent = container.Document;
@@ -625,7 +682,9 @@ namespace pwiz.Skyline.Model
                 var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec) scoringModel, _cachedFeatureScores);
                 resultsHandler.ScoreFeatures(loadMonitor);
                 if (resultsHandler.IsMissingScores())
-                    throw new InvalidDataException(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                {
+                    return Error(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                }
                 docNew = resultsHandler.ChangePeaks(loadMonitor);
             }
             while (!CompleteProcessing(container, docNew, docCurrent));

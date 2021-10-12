@@ -38,7 +38,6 @@ namespace TestPerf
     public class DdaTutorialTest : AbstractFunctionalTest
     {
         [TestMethod]
-        [Timeout(2 * 60 * 60 * 1000)]  // These can take a long time in code coverage mode (2 hours)
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -62,6 +61,7 @@ namespace TestPerf
             };
             RunFunctionalTest();
         }
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
         private const string OXIDATION_M = "Oxidation (M)";
@@ -79,7 +79,14 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestAmandaSearch();
+
+            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
+
+        /// <summary>
+        /// Change to true to write new Assert statements instead of testing them.
+        /// </summary>
+        private bool IsRecordMode { get { return false; } }
 
         private Image _searchLogImage;
 
@@ -230,7 +237,7 @@ namespace TestPerf
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
@@ -250,7 +257,7 @@ namespace TestPerf
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");

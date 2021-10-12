@@ -55,28 +55,60 @@ else if "x86" in $(PLATFORM)
     if ! $(.hasDLLs) && [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
     {
         .hasDLLs = true ;
-        local destination = [ path.native $(API_PATH) ] ;
-        SHELL "mkdir \"$(destination)\\$(PLATFORM)\" >nul 2>&1" ;
+        SHELL "copy /Y \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\"" ;
+        RESCAN ;
+    }
 
+    obj ScanFilter : ScanFilter.cpp ;
+
+    rule make-MSFileReader-manifest ( targets + : sources * : properties * )
+    {
         local version = [ read_version "$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll" ] ;
         local manifestLines = [ SHELL "type \"$(API_PATH)\\MSFileReader.XRawfile2$(MSFILEREADER_SUFFIX).SxS.manifest.real\"" ] ;
         manifestLines = [ regex.replace-list $(manifestLines) : "{VERSION}" : $(version) ] ;
-        
-        local outfile = $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest ;
-        local fileContent = $(manifestLines:J="\r\n") ;
 
-        echo "Copying MSFileReader manifest version $(version) to \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
-        # Write new manifest file to outfile using Generated File Expansion syntax @(file:E=filecontent)
-        outfile = @($(outfile):E=$(fileContent)) ;
+        FILE_CONTENT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
 
-        # HACK: MSFileReader DLLs have embedded manifests referencing an old version of the VC9 CRT (21022),
-        # and the side-by-side loader is apparently incapable of redirecting to the newer VC9 DLLs we bundle (37029.6161)
-        echo "Copying MSFileReader DLLs from \"$(MSFILEREADER_INSTALL_DIR)\" to \"$(destination)\\$(PLATFORM)\" and updating embedded manifests." ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\" & $(MSVC_CURRENT_SETUP_SCRIPT) & mt.exe -nologo -manifest $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest -outputresource:$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll;#2" ] ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fileio$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
-        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
-        RESCAN ;
+        OUTPUT_MANIFEST on $(targets) = MSFileReader.XRawfile2.SxS.manifest ;
+        MANIFEST_CONTENT on $(targets) = $(manifestLines:J="\r\n") ;
     }
+
+    actions make-MSFileReader-manifest
+    {
+        @($(STDOUT):E=$(MANIFEST_CONTENT)) > $(<) ;
+    }
+
+    rule copy-MSFileReader ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+    }
+
+    # HACK: MSFileReader DLLs have embedded manifests referencing an old version of the VC9 CRT (21022),
+    # and the side-by-side loader is apparently incapable of redirecting to the newer VC9 DLLs we bundle (37029.6161)
+    actions copy-MSFileReader
+    {
+        copy /Y "$(MSFILEREADER_INSTALL_DIR)\XRawfile2$(MSFILEREADER_SUFFIX).dll" "$(<)" > nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        mt.exe -nologo -manifest $(>) -outputresource:$(<);#2"
+    }
+
+    rule copy-and-update-manifest ( targets + : sources * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
+    }
+
+    actions copy-and-update-manifest
+    {
+        copy /Y "$(>)" "$(<)" > nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        mt.exe -nologo -manifest "$(API_PATH)\$(PLATFORM)\fileio.manifest" -outputresource:$(<);#2"
+    }
+
+    make MSFileReader.XRawfile2.SxS.manifest : : @make-MSFileReader-manifest ;
+    make MSFileReader.XRawfile2.dll : MSFileReader.XRawfile2.SxS.manifest : @copy-MSFileReader : <dependency>MSFileReader.XRawfile2.SxS.manifest ;
+    make fregistry$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fregistry$(MSFILEREADER_SUFFIX).dll : @copy-and-update-manifest ;
+    make fileio$(MSFILEREADER_SUFFIX).dll : $(MSFILEREADER_INSTALL_DIR)/fileio$(MSFILEREADER_SUFFIX).dll : @copy-and-update-manifest ;
+    explicit MSFileReader.XRawfile2.dll MSFileReader.XRawfile2.SxS.manifest fregistry$(MSFILEREADER_SUFFIX).dll fileio$(MSFILEREADER_SUFFIX).dll ;
 }
 else
 {
@@ -95,7 +127,7 @@ rule vendor-api-requirements ( properties * )
         if ! <address-model>64 in $(properties)
         {
             result += <source>RawFileValues.cpp ;
-            result += <source>ScanFilter.cpp ;
+            result += <source>ScanFilter ;
         }
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
@@ -113,13 +145,16 @@ rule vendor-api-usage-requirements ( properties * )
             result += <define>PWIZ_READER_THERMO ;
             if ! <address-model>64 in $(properties)
             {
-                result += <manifest-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll ;
-                result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll ;
-                result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest ;
-                result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fregistry$(MSFILEREADER_SUFFIX).dll ;
-                result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fileio$(MSFILEREADER_SUFFIX).dll ;
+                result += <dependency>MSFileReader.XRawfile2.dll ;
+                result += <dependency>fregistry$(MSFILEREADER_SUFFIX).dll ;
+                result += <dependency>fileio$(MSFILEREADER_SUFFIX).dll ;
+                result += <manifest-dependency>$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ;
+                result += <assembly-dependency>MSFileReader.XRawfile2.dll ;
+                result += <assembly-dependency>MSFileReader.XRawfile2.SxS.manifest ;
+                result += <assembly-dependency>fregistry$(MSFILEREADER_SUFFIX).dll ;
+                result += <assembly-dependency>fileio$(MSFILEREADER_SUFFIX).dll ;
                 result += <assembly-dependency>$(API_PATH)/EULA.MSFileReader ;
-                result += <library>/ext/boost//regex ;
+                #result += <library>/ext/boost//regex ;
                 #result += <library>shlwapi ;
             }
             else
@@ -150,7 +185,7 @@ lib pwiz_vendor_api_thermo
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-usage-requirements
     ;
-    
+
 if $(.hasDLLs)
 {
     unit-test-if-exists ScanFilterTest
@@ -174,10 +209,10 @@ if $(.hasDLLs)
     if x86 in $(PLATFORM)
     {
         install install_pwiz_vendor_api_thermo
-           : $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll
-             $(API_PATH)/$(PLATFORM)/fregistry$(MSFILEREADER_SUFFIX).dll
-             $(API_PATH)/$(PLATFORM)/fileio$(MSFILEREADER_SUFFIX).dll
-             $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest
+           : MSFileReader.XRawfile2.dll
+             fregistry$(MSFILEREADER_SUFFIX).dll
+             fileio$(MSFILEREADER_SUFFIX).dll
+             MSFileReader.XRawfile2.SxS.manifest
              $(API_PATH)/EULA.MSFileReader
            ;
     }

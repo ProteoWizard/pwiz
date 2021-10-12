@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using SharedBatch.Properties;
 
@@ -19,7 +20,12 @@ namespace SharedBatch
         public const string EXT_R = ".R";
         public const string EXT_CSV = ".csv";
         public const string EXT_LOG = ".log";
+        public const string EXT_TMP = ".tmp";
+        public const string EXT_APPREF = ".appref-ms";
+        public const string EXT_SKYP = ".skyp";
+        public const string EXT_ZIP = ".zip";
 
+        public const char SEPARATOR_CSV = ',';
 
         public static string FILTER_XML
         {
@@ -29,6 +35,11 @@ namespace SharedBatch
         public static string FILTER_SKY
         {
             get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_Skyline_Files, EXT_SKY); }
+        }
+
+        public static string FILTER_SKY_ZIP
+        {
+            get { return FileDialogFilter(Resources.TextUtil_FILTER_SKY_ZIP_Shared_Files, EXT_SKY_ZIP); }
         }
 
         public static string FILTER_SKYR
@@ -62,58 +73,50 @@ namespace SharedBatch
         }
 
 
-
-
-
-        public static bool TryReplaceStart(string oldText, string newText, string originalString, out string replacedString)
+        public static bool SuccessfulReplace(Validator validate, string oldText, string newText, string originalString, bool preferReplace, out string replacedString)
         {
-            replacedString = originalString;
-            if (!originalString.StartsWith(oldText))
+            var oldPath = originalString;
+            var newPath = TryReplaceStart(oldText, newText, originalString);
+            replacedString = oldPath;
+            if (string.IsNullOrEmpty(originalString))
                 return false;
-            replacedString = newText + originalString.Substring(oldText.Length);
-            return true;
-        }
-
-        // Extension of Path.GetDirectoryName that handles null file paths
-        public static string GetDirectory(string path)
-        {
-            if (path == null) throw new ArgumentNullException(nameof(path), Resources.TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_);
-            return Path.GetDirectoryName(path);
-        }
-
-        // Find an existing initial directory to use in a file/folder browser dialog, can be null (dialog will use a default)
-        public static string GetInitialDirectory(string directory, string lastEnteredPath = "")
-        {
-            if (Directory.Exists(directory))
-                return directory;
-
-            string directoryName;
+            var initialValidated = false;
+            var replacedValidated = false;
             try
             {
-                directoryName = Path.GetDirectoryName(directory);
+                validate(oldPath);
+                initialValidated = true;
             }
-            catch (Exception)
+            catch (ArgumentException)
             {
-                directoryName = null;
+                // Pass - expect oldPath to be invalid
             }
-            if (directoryName == null)
+
+            try
             {
-                if (!string.IsNullOrEmpty(lastEnteredPath))
-                    return GetInitialDirectory(lastEnteredPath);
-                return null;
+                validate(newPath);
+                replacedValidated = true;
             }
-            return GetInitialDirectory(directoryName);
+            catch (ArgumentException)
+            {
+                // Pass
+            }
+
+            if (replacedValidated && (!initialValidated || preferReplace))
+            {
+                replacedString = newPath;
+                return true;
+            }
+
+            return false;
         }
 
-        public static string GetSafeName(string name)
+        public static string TryReplaceStart(string oldText, string newText, string originalString)
         {
-            var invalidChars = new List<char>();
-            invalidChars.AddRange(Path.GetInvalidFileNameChars());
-            invalidChars.AddRange(Path.GetInvalidPathChars());
-            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
+            if (!originalString.StartsWith(oldText))
+                return originalString;
+            return newText + originalString.Substring(oldText.Length);
         }
-
 
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
@@ -159,5 +162,116 @@ namespace SharedBatch
         {
             return LineSeparate(lines.AsEnumerable());
         }
+
+        # region Parsing numbers from different cultures
+
+        public static int? GetNullableIntFromUiString(string integer, string inputName)
+        {
+            if (!TryGetNullableIntFromString(integer, CultureInfo.CurrentCulture, out int? result))
+                throw new ArgumentException(string.Format(Resources.TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_, integer, inputName));
+            return result;
+        }
+
+        public static int? GetNullableIntFromInvariantString(string integer)
+        {
+            if (!TryGetNullableIntFromString(integer, CultureInfo.InvariantCulture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
+        }
+
+        public static int? GetNullableIntFromString(string integer, CultureInfo culture)
+        {
+            if (!TryGetNullableIntFromString(integer, culture, out int? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, integer, typeof(int?)));
+            return result;
+        }
+
+        private static bool TryGetNullableIntFromString(string integer, CultureInfo culture, out int? result)
+        {
+            result = null;
+            if (string.IsNullOrEmpty(integer)) return true;
+            var success = int.TryParse(integer, NumberStyles.Integer, culture, out int parsed);
+            result = parsed;
+            return success;
+        }
+
+        public static double? GetNullableDoubleFromString(string doubleString, CultureInfo culture)
+        {
+            if (!TryGetNullableDoubleFromString(doubleString, culture, out double? result))
+                throw new Exception(string.Format(Resources.TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__, doubleString, typeof(double?)));
+            return result;
+        }
+
+        private static bool TryGetNullableDoubleFromString(string doubleString, CultureInfo culture, out double? result)
+        {
+            result = null;
+            if (string.IsNullOrEmpty(doubleString)) return true;
+            var success = Double.TryParse(doubleString, NumberStyles.AllowDecimalPoint, culture, out double parsed);
+            result = parsed;
+            return success;
+        }
+
+        public static string ToInvariantCultureString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToUiString(int integer)
+        {
+            return integer.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public static string ToUiString(int? optionalInt)
+        {
+            if (optionalInt == null) return string.Empty;
+            return ((int)optionalInt).ToString(CultureInfo.CurrentCulture);
+        }
+
+        
+        // Changed DataProtectionScope from LocalMachine to CurrentUser
+        // https://stackoverflow.com/questions/19164926/data-protection-api-scope-localmachine-currentuser
+        public static string EncryptPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var encrypted = ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(password), null,
+                    DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(encrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error encrypting password. ", e);
+
+            }
+            return string.Empty;
+        }
+
+        public static string DecryptPassword(string encryptedPassword)
+        {
+            if (string.IsNullOrEmpty(encryptedPassword))
+            {
+                return string.Empty;
+            }
+            try
+            {
+                byte[] decrypted = ProtectedData.Unprotect(
+                    Convert.FromBase64String(encryptedPassword), null,
+                    DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(decrypted);
+            }
+            catch (Exception e)
+            {
+                ProgramLog.Error("Error decrypting password. ", e);
+            }
+            return string.Empty;
+        }
+        #endregion
     }
 }

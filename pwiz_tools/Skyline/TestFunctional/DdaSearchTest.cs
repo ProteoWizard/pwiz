@@ -49,6 +49,11 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        public bool IsRecordMode
+        {
+            get { return false; }
+        }
+
         private string GetTestPath(string path)
         {
             return TestFilesDir.GetTestPath(path);
@@ -173,6 +178,7 @@ namespace pwiz.SkylineTestFunctional
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
@@ -182,7 +188,10 @@ namespace pwiz.SkylineTestFunctional
 
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
+            });
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+            RunUI(() =>
+            {
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
@@ -245,7 +254,7 @@ namespace pwiz.SkylineTestFunctional
                 if (Environment.Is64BitProcess)
                 {
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine();
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
@@ -264,7 +273,7 @@ namespace pwiz.SkylineTestFunctional
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
-                    if (RecordAuditLogs)
+                    if (IsRecordMode)
                     {
                         Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
                         Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");

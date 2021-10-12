@@ -129,7 +129,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textReportName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>354, 20</value>
+    <value>383, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textReportName.TabIndex" type="System.Int32, mscorlib">
@@ -145,7 +145,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textReportName.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="labelConfigName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -178,52 +178,52 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelConfigName.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelReportPath.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
+  <data name="labelReportPath.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 46</value>
+  <data name="labelReportPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 85</value>
   </data>
-  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="labelReportPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 15</value>
+  <data name="labelReportPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 13</value>
   </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelReportPath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="label1.Text" xml:space="preserve">
+  <data name="labelReportPath.Text" xml:space="preserve">
     <value>R&amp;eport path:</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
+  <data name="&gt;&gt;labelReportPath.Name" xml:space="preserve">
+    <value>labelReportPath</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelReportPath.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelReportPath.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>8</value>
+  <data name="&gt;&gt;labelReportPath.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="textReportPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textReportPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 63</value>
+    <value>31, 100</value>
   </data>
   <data name="textReportPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textReportPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>354, 20</value>
+    <value>363, 20</value>
   </data>
   <data name="textReportPath.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -238,28 +238,28 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textReportPath.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9pt</value>
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 138</value>
+    <value>7, 180</value>
   </data>
   <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>57, 15</value>
+    <value>51, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>R &amp;scripts:</value>
+    <value>&amp;R scripts:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -271,7 +271,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -283,7 +283,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>242, 273</value>
+    <value>271, 317</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -307,7 +307,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="btnReportPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -316,7 +316,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnReportPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>369, 61</value>
+    <value>399, 98</value>
   </data>
   <data name="btnReportPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -340,7 +340,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnReportPath.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -352,7 +352,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>321, 273</value>
+    <value>349, 317</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -376,13 +376,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <metadata name="columnPath.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="columnPath.HeaderText" xml:space="preserve">
     <value>Path</value>
+  </data>
+  <metadata name="columnUrl.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="columnUrl.HeaderText" xml:space="preserve">
+    <value>URL</value>
   </data>
   <metadata name="columnVersion.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -400,7 +406,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="dataGridScripts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>354, 112</value>
+    <value>385, 116</value>
   </data>
   <data name="dataGridScripts.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -417,23 +423,11 @@
   <data name="&gt;&gt;dataGridScripts.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="rVersionsDropDown.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="rVersionsDropDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 26</value>
-  </data>
-  <data name="&gt;&gt;rVersionsDropDown.Name" xml:space="preserve">
-    <value>rVersionsDropDown</value>
-  </data>
-  <data name="&gt;&gt;rVersionsDropDown.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="radioResultsFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="radioResultsFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 101</value>
+    <value>31, 140</value>
   </data>
   <data name="radioResultsFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 17</value>
@@ -442,7 +436,7 @@
     <value>14</value>
   </data>
   <data name="radioResultsFile.Text" xml:space="preserve">
-    <value>Results file</value>
+    <value>Re&amp;sults file</value>
   </data>
   <data name="&gt;&gt;radioResultsFile.Name" xml:space="preserve">
     <value>radioResultsFile</value>
@@ -454,7 +448,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioResultsFile.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="radioRefinedFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -463,7 +457,7 @@
     <value>True</value>
   </data>
   <data name="radioRefinedFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 118</value>
+    <value>31, 158</value>
   </data>
   <data name="radioRefinedFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>78, 17</value>
@@ -472,7 +466,7 @@
     <value>15</value>
   </data>
   <data name="radioRefinedFile.Text" xml:space="preserve">
-    <value>Refined file</value>
+    <value>Refi&amp;ned file</value>
   </data>
   <data name="&gt;&gt;radioRefinedFile.Name" xml:space="preserve">
     <value>radioRefinedFile</value>
@@ -484,13 +478,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioRefinedFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 85</value>
+    <value>8, 124</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 13</value>
@@ -511,7 +505,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 56</value>
@@ -521,30 +515,6 @@
   </data>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
-  </data>
-  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 112</value>
-  </data>
-  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="toolStrip1.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="btnAdd.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -570,11 +540,47 @@
   <data name="btnDelete.ToolTipText" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="btnEdit.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnEdit.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 20</value>
+  </data>
+  <data name="btnEdit.Text" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 116</value>
+  </data>
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="toolStrip1.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="splitContainer1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 156</value>
+    <value>10, 196</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -604,10 +610,10 @@
     <value>10</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 112</value>
+    <value>414, 116</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>354</value>
+    <value>385</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
@@ -622,7 +628,73 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxImport.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxImport.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 67</value>
+  </data>
+  <data name="checkBoxImport.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 17</value>
+  </data>
+  <data name="checkBoxImport.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="checkBoxImport.Text" xml:space="preserve">
+    <value>I&amp;mport report</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>122, 56</value>
+  </metadata>
+  <data name="checkBoxImport.ToolTip" xml:space="preserve">
+    <value>If the report will be imported or it already exists in the Skyline document</value>
+  </data>
+  <data name="&gt;&gt;checkBoxImport.Name" xml:space="preserve">
+    <value>checkBoxImport</value>
+  </data>
+  <data name="&gt;&gt;checkBoxImport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxImport.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxImport.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="checkBoxCultureInvariant.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxCultureInvariant.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxCultureInvariant.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 49</value>
+  </data>
+  <data name="checkBoxCultureInvariant.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 17</value>
+  </data>
+  <data name="checkBoxCultureInvariant.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="checkBoxCultureInvariant.Text" xml:space="preserve">
+    <value>Culture-invariant report</value>
+  </data>
+  <data name="checkBoxCultureInvariant.ToolTip" xml:space="preserve">
+    <value>If the report should use culture-sppecific numbers</value>
+  </data>
+  <data name="&gt;&gt;checkBoxCultureInvariant.Name" xml:space="preserve">
+    <value>checkBoxCultureInvariant</value>
+  </data>
+  <data name="&gt;&gt;checkBoxCultureInvariant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxCultureInvariant.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxCultureInvariant.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -631,7 +703,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>407, 307</value>
+    <value>436, 351</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -1061,6 +1133,12 @@
   <data name="&gt;&gt;columnPath.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;columnUrl.Name" xml:space="preserve">
+    <value>columnUrl</value>
+  </data>
+  <data name="&gt;&gt;columnUrl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnVersion.Name" xml:space="preserve">
     <value>columnVersion</value>
   </data>
@@ -1078,6 +1156,18 @@
   </data>
   <data name="&gt;&gt;btnDelete.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
+    <value>btnEdit</value>
+  </data>
+  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ReportsAddForm</value>

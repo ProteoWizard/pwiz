@@ -435,6 +435,16 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        /// <summary>
+        /// Create a new document and wait for it to load
+        /// </summary>
+        /// <param name="forced"></param>
+        public void LoadNewDocument(bool forced)
+        {
+            RunUI(() => SkylineWindow.NewDocument(forced));
+            WaitForDocumentLoaded();
+        }
+
         public class Tool : IDisposable
         {
             private readonly MovedDirectory _movedDirectory;
@@ -526,8 +536,7 @@ namespace pwiz.SkylineTestUtil
         {
             var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            if (!graphChromatogram.TestFullScanSelection(x, y, paneKey))
-                Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+            Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 
         private static GraphChromatogram GetGraphChrom(string graphName)

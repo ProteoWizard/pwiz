@@ -48,10 +48,10 @@
             // 
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(241, 15);
+            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(244, 16);
             this.linkLabel1.Location = new System.Drawing.Point(12, 31);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(337, 92);
+            this.linkLabel1.Size = new System.Drawing.Size(351, 92);
             this.linkLabel1.TabIndex = 12;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = resources.GetString("linkLabel1.Text");
@@ -62,11 +62,11 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(363, 138);
+            this.ClientSize = new System.Drawing.Size(372, 138);
             this.Controls.Add(this.labelSoftwareVersion);
             this.Controls.Add(this.linkLabel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AboutWindow";
