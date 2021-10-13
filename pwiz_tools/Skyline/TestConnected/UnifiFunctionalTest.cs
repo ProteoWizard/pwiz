@@ -51,17 +51,14 @@ namespace pwiz.SkylineTestConnected
             RunUI(()=>editAccountDlg.SetRemoteAccount(UnifiTestUtil.GetTestAccount()));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
             OpenFile(openDataSourceDialog, "Company");
-            OpenFile(openDataSourceDialog, "Test Data");
+            OpenFile(openDataSourceDialog, "Demo Department");
             OpenFile(openDataSourceDialog, "HDMSe");
             OpenFile(openDataSourceDialog, "250 fmol Hi3 E coli peptides 3-6 min");
             var lockMassDlg = WaitForOpenForm<ImportResultsLockMassDlg>();
             OkDialog(lockMassDlg, lockMassDlg.OkDialog);
-            // It takes a really long time to extract chromatograms, so we let it run for 5 seconds and then open a file where it's already imported
-            WaitForDocumentLoaded(5000);
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("test_imported.sky")));
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse("Molecule:/sp|P0A6A8|ACP_ECOLI/ITTVQAAIDYINGHQA"))));
-            ClickChromatogram(4.0, 100);
+            ClickChromatogram(4.0, 3.25);
             GraphFullScan graphFullScan = FindOpenForm<GraphFullScan>();
             Assert.IsNotNull(graphFullScan);
         }
