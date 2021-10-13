@@ -155,6 +155,7 @@ struct PWIZ_API_DECL UnifiSpectrum
     size_t arrayLength;
     pwiz::util::BinaryData<double> mzArray;
     pwiz::util::BinaryData<double> intensityArray;
+    pwiz::util::BinaryData<double> driftTimeArray;
 };
 
 class PWIZ_API_DECL UnifiData

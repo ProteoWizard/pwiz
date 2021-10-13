@@ -50,7 +50,7 @@ namespace MSConvertGUI
             public string GetUrlWithAuthentication(string url)
             {
                 return url.Replace("://", String.Format("://{0}:{1}@", Username, Password)) +
-                       String.Format("?identity={0}&scope={1}&secret={2}", IdentityServer, ClientScope, ClientSecret) ;
+                       String.Format("?identity={0}&scope={1}&secret={2}", IdentityServer, ClientScope, ClientSecret);
             }
 
             public static Tuple<string, Credentials> ParseUrlWithAuthentication(string url)
@@ -83,7 +83,7 @@ namespace MSConvertGUI
                     ListViewItem lvX = x as ListViewItem;
                     ListViewItem lvY = y as ListViewItem;
                     int compareResult;
-                    
+
                     compareResult = CompareSubItems(lvX, lvY, p.Analysis.Index);
                     if (compareResult == 0)
                     {
@@ -110,7 +110,17 @@ namespace MSConvertGUI
             }
         }
 
-        private string IdentityServerBasePath { get { return SelectedCredentials.IdentityServer + "/identity"; } }
+        private int ApiVersion
+        {
+            get
+            {
+                if (!Uri.TryCreate(SelectedHost, UriKind.Absolute, out var selectedUri))
+                    return 4;
+                return selectedUri.Port == 50034 ? 3 : 4;
+            }
+        }
+
+        private string IdentityServerBasePath { get { return SelectedCredentials.IdentityServer + (ApiVersion == 3 ? "/identity" : ""); } }
         private string AuthorizeEndpoint { get { return IdentityServerBasePath + "/connect/authorize"; } }
         private string LogoutEndpoint { get { return IdentityServerBasePath + "/connect/endsession"; } }
         private string TokenEndpoint { get { return IdentityServerBasePath + "/connect/token"; } }
@@ -118,7 +128,7 @@ namespace MSConvertGUI
         private string IdentityTokenValidationEndpoint { get { return IdentityServerBasePath + "/connect/identitytokenvalidation"; } }
         private string TokenRevocationEndpoint { get { return IdentityServerBasePath + "/connect/revocation"; } }
 
-        private const string DefaultUnifiPort = ":50034";
+        private const string DefaultUnifiPort = ":48444";
         private const string BasePath = "/unifi/v1";
 
         private string _accessToken;
@@ -158,7 +168,7 @@ namespace MSConvertGUI
 
             openButton.Enabled = false;
 
-            serverLocationTextBox.Text = defaultUrl ?? "unifiapi.waters.com:50034";
+            serverLocationTextBox.Text = defaultUrl ?? "demo.unifiapi.com:48444";
             SelectedCredentials = defaultCredentials;
         }
 
@@ -325,7 +335,7 @@ namespace MSConvertGUI
                         }
                     }
 
-                    var loginForm = new LoginForm() { StartPosition = FormStartPosition.CenterParent };
+                    var loginForm = new LoginForm(ApiVersion == 3 ? LoginForm.ApiVersion.Version3 : LoginForm.ApiVersion.Version4) { StartPosition = FormStartPosition.CenterParent };
                     if (SelectedCredentials != null && SelectedCredentials.Username?.Any() == true && SelectedCredentials.Password?.Any() == true)
                     {
                         loginForm.usernameTextBox.Text = SelectedCredentials.Username;

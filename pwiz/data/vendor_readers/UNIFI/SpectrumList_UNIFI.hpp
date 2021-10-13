@@ -69,6 +69,7 @@ class PWIZ_API_DECL SpectrumList_UNIFI : public SpectrumListBase
 
     struct IndexEntry : public SpectrumIdentity
     {
+        int scan;
     };
 
     mutable std::vector<IndexEntry> index_;
