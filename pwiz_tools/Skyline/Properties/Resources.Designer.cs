@@ -16214,6 +16214,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
+        /// </summary>
+        public static string IncompleteStandardException_IncompleteStandardException_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression {
+            get {
+                return ResourceManager.GetString("IncompleteStandardException_IncompleteStandardException_The_calculator__0__requir" +
+                        "es_all_of_its_standard_peptides_in_order_to_determine_a_regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
         ///
         ///{3}.
@@ -28318,16 +28328,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquisition method is set to DIA, but the document does not contain decoys. Do you want to generate decoys before importing results?.
-        /// </summary>
-        public static string SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_does_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_do" +
-                        "es_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Add missing iRT standard peptides to your document or change the retention time predictor..
         /// </summary>
         public static string SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_ {
@@ -28469,6 +28469,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_" +
                         "the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_ {
+            get {
+                return ResourceManager.GetString(@"SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_", resourceCulture);
             }
         }
         

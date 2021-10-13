@@ -11496,12 +11496,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_" xml:space="preserve">
     <value>An error occurred while training the peak scoring model: {0}</value>
   </data>
-  <data name="SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_does_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_" xml:space="preserve">
-    <value>Acquisition method is set to DIA, but the document does not contain decoys. Do you want to generate decoys before importing results?</value>
-  </data>
   <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
     <value>The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
 
 {3}</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
+    <value>This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks.</value>
   </data>
 </root>

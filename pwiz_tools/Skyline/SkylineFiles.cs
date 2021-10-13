@@ -2645,10 +2645,10 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            else if (isDia)
+            else if (isDia && !DocumentUI.Settings.HasResults)
             {
                 using (var dlg = new MultiButtonMsgDlg(
-                    Resources.SkylineWindow_ImportResults_Acquisition_method_is_set_to_DIA__but_the_document_does_not_contain_decoys__Do_you_want_to_generate_decoys_before_importing_results_,
+                    Resources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
                     switch (dlg.ShowDialog(this))
