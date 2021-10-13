@@ -155,7 +155,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
-        public bool OverrideTextId { get; set; }
+        public bool OverrideTextId
+        {
+            get;
+            set;
+        }
 
         public Target ModifiedSequence
         {

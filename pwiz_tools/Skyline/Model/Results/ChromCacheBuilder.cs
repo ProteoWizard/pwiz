@@ -892,8 +892,10 @@ namespace pwiz.Skyline.Model.Results
                         peptidePrecursorMz.NodePeptide,
                         peptidePrecursorMz.NodeGroup,
                         chromDataSet.FullScanAcquisitionMethod, 
-                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
-                    chromDataSet.OverrideTextId = true;
+                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray())
+                    {
+                        OverrideTextId = true
+                    };
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
                 if (groupData != null)
@@ -957,7 +959,10 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide,
-                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, arrayChromData);
+                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, arrayChromData)
+                    {
+                        OverrideTextId = true
+                    };
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }
