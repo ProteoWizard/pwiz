@@ -45,7 +45,10 @@ namespace SkylineBatch
                     error = e.Error;
                     completed = true;
                 });
-                var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => { ProgressHandler(e.ProgressPercentage, null); });
+                var progressChanged = new DownloadProgressChangedEventHandler((sender, e) => {
+                    var percent = new FileInfo(downloadPath).Length * 100 / expectedSize;
+                    ProgressHandler((int)percent, null);
+                });
                 wc.DownloadProgressChanged += progressChanged;
                 while (!completed)
                 {

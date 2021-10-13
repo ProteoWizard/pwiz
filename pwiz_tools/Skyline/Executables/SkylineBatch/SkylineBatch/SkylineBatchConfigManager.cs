@@ -1256,8 +1256,8 @@ namespace SkylineBatch
             {
                 if (!other.ConfigRunners.ContainsKey(config))
                     return false;
-                if (ConfigRunners[config].IsBusy() || other.ConfigRunners[config].IsBusy() &&
-                    !Equals(ConfigRunners[config], other.ConfigRunners[config]))
+                if ((ConfigRunners[config].IsBusy() || other.ConfigRunners[config].IsBusy()) &&
+                    !ReferenceEquals(ConfigRunners[config], other.ConfigRunners[config]))
                     return false;
                 if (!Equals(ConfigRunners[config].GetConfig(), other.ConfigRunners[config].GetConfig()))
                     return false;
