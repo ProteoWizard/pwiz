@@ -163,6 +163,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
@@ -355,6 +356,7 @@
     <Compile Include="SureQuantAcquisitionMethodSettingTest.cs" />
     <Compile Include="SureQuantScanDescriptionTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
+    <Compile Include="SynchronizedIntegrationTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
@@ -436,6 +438,7 @@
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
+    <None Include="AreaNormalizeOptionTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AssociateProteinVariantTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
@@ -562,6 +565,7 @@
     <None Include="SummaryGraphVisibilityTest.zip" />
     <None Include="SureQuantScanDescriptionTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
+    <None Include="SynchronizedIntegrationTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />

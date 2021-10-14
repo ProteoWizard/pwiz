@@ -28,11 +28,9 @@ Core code and libraries are under the Apache open source license; the vendor lib
 Click [here](http://proteowizard.sourceforge.net/downloads.shtml) to visit the official download page.
 
 ### Unofficial toolsets
-| OS      | Toolset   | Status |
-| ------- | -------   | ------ |
-| Windows | VS2017    | ![VS2017 status](https://img.shields.io/appveyor/ci/chambm/pwiz.svg) |
-| Linux   | GCC 7     | ![GCC7 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/1) |
-| Linux   | Clang 3.6 | ![Clang36 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/2) |
-| Linux   | Clang 5   | ![Clang5 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/3) |
-| OS X    | GCC 4.9   | ![OSX status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/4) |
+![Unofficial toolset build status](https://github.com/ProteoWizard/pwiz/actions/workflows/build_and_test.yml/badge.svg)
+| OS      | Toolset    |
+| ------- | -------    |
+| Linux   | GCC 9.3    |
+| OS X    | Clang 12   |
 

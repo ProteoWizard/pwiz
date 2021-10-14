@@ -3165,5 +3165,17 @@ namespace pwiz.Skyline.Properties {
                 this["SyncMZScale"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string FullScanPeakType {
+            get {
+                return ((string)(this["FullScanPeakType"]));
+            }
+            set {
+                this["FullScanPeakType"] = value;
+            }
+        }
     }
 }

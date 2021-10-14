@@ -68,8 +68,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return _foundResultsFiles; }
             set
             {
-                var files = ImportResultsControl.EnsureUniqueNames(value); // May change names to ensure uniqueness
-                _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>(files);
+                _foundResultsFiles = new BindingList<ImportPeptideSearch.FoundResultsFile>(ImportPeptideSearch.EnsureUniqueNames(value).ToList());
                 listResultsFiles.DataSource = _foundResultsFiles;
             }
         }
