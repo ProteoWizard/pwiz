@@ -574,6 +574,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.dda_search_page);
                             _pagesToSkip.Add(Pages.dda_search_settings_page);
                         }
+
+                        // Decoy options enabled only for DIA
+                        ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
+                        ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia && !HasPeakBoundaries;
                     }
                     break;
 
@@ -615,9 +619,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ShowRemovePrefixDialog();
                         ImportFastaControl.IsImportingResults = anyResults;
 
-                        // Decoy options enabled only for DIA
-                        ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
-                        ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia && !HasPeakBoundaries;
                         if (ImportFastaControl.DecoyGenerationEnabled)
                         {
                             if (anyResults)
