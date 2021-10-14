@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -15,6 +16,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class TransitionSettingsControl : UserControl
     {
         private readonly IModifyDocumentContainer _documentContainer;
+        private readonly Dictionary<Control, Point> _originalLocations;
 
         public TransitionSettingsControl(IModifyDocumentContainer documentContainer)
         {
@@ -29,6 +31,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetFields(_documentContainer.Document.Settings.TransitionSettings);
             PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
             InitialPeptideIonTypes = PeptideIonTypes.ToArray();
+
+            _originalLocations = Controls.Cast<Control>().Select(c => new KeyValuePair<Control, Point>(c, c.Location))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
         public TransitionFilterAndLibrariesSettings FilterAndLibrariesSettings
@@ -217,6 +222,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
         {
+            // Reset control locations, in case this isn't the first call to Initialize.
+            foreach (Control control in Controls)
+                control.Location = _originalLocations[control];
+
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
                 var nextTop = Controls.Cast<Control>().Select(c => c.Top).Where(t => t > cbExclusionUseDIAWindow.Top).Min();
