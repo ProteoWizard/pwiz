@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -303,7 +304,8 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         return null;
                     }
-                    getterFunc = precursorResult => RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[precursorResult.ChromInfo.Ratios.Count - 1]);
+
+                    getterFunc = precursorResult => precursorResult.GetNormalizedArea(NormalizationMethod.GLOBAL_STANDARDS);
                     displayName = @"TotalAreaRatioToGlobalStandards";
                     format = Formats.GLOBAL_STANDARD_RATIO;
                 }
@@ -315,29 +317,15 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     format = Formats.STANDARD_RATIO;
                     string labelColumnPart = parts[0];
-                    int ratioIndex = IndexOf(modifications.RatioInternalStandardTypes, labelColumnPart);
+                    var ratioToLabel = NormalizationMethod.FromIsotopeLabelTypeName(labelColumnPart);
                     if (prefix == RATIO_PREFIX)
                     {
-                        getterFunc = precursorResult =>
-                        {
-                            if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
-                            {
-                                return null;
-                            }
-                            return RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]);
-                        };
+                        getterFunc = precursorResult => precursorResult.GetRatioValue(ratioToLabel)?.Ratio;
                         displayName = string.Format(@"TotalAreaRatioTo{0}", labelColumnPart);
                     }
                     else if (prefix == RDOTP_PREFIX)
                     {
-                        getterFunc = precursorResult =>
-                        {
-                            if (ratioIndex < 0 || ratioIndex >= precursorResult.ChromInfo.Ratios.Count)
-                            {
-                                return null;
-                            }
-                            return RatioValue.GetDotProduct(precursorResult.ChromInfo.Ratios[ratioIndex]);
-                        };
+                        getterFunc = precursorResult => precursorResult.GetRatioValue(ratioToLabel)?.DotProduct;
                         displayName = string.Format(@"DotProductTo{0}", labelColumnPart);
                     }
                     else
@@ -359,7 +347,7 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                     }
 
-                    getterFunc = transitionResult => transitionResult.ChromInfo.Ratios[transitionResult.ChromInfo.Ratios.Count - 1];
+                    getterFunc = transitionResult => transitionResult.GetNormalizedArea(NormalizationMethod.GLOBAL_STANDARDS);
                     displayName = @"AreaRatioToGlobalStandards";
                     format = Formats.GLOBAL_STANDARD_RATIO;
                 }
@@ -371,14 +359,10 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     format = Formats.STANDARD_RATIO;
                     string labelColumnPart = parts[0];
-                    int ratioIndex = IndexOf(modifications.RatioInternalStandardTypes, labelColumnPart);
+                    var ratioToLabel = NormalizationMethod.FromIsotopeLabelTypeName(labelColumnPart);
                     getterFunc = transitionResult =>
                     {
-                        if (ratioIndex < 0 || ratioIndex >= transitionResult.ChromInfo.Ratios.Count)
-                        {
-                            return null;
-                        }
-                        return transitionResult.ChromInfo.Ratios[ratioIndex];
+                        return transitionResult.GetNormalizedArea(ratioToLabel);
                     };
                     displayName = string.Format(@"AreaRatioTo{0}", labelColumnPart);
                 }

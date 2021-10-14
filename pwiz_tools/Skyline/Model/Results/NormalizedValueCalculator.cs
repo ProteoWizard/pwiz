@@ -273,6 +273,22 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
+        public NormalizationMethod GetFirstRatioNormalizationMethod()
+        {
+            var firstInternalStandardType = RatioInternalStandardTypes.FirstOrDefault();
+            if (firstInternalStandardType != null)
+            {
+                return new NormalizationMethod.RatioToLabel(firstInternalStandardType);
+            }
+
+            if (Document.Settings.HasGlobalStandardArea)
+            {
+                return NormalizationMethod.GLOBAL_STANDARDS;
+            }
+
+            return null;
+        }
+
         public IDictionary<PeptideDocNode.TransitionKey, TransitionDocNode> GetTransitionMap(
             TransitionGroupDocNode transitionGroupDocNode)
         {
@@ -406,6 +422,11 @@ namespace pwiz.Skyline.Model.Results
 
             denominator = null;
             return false;
+        }
+
+        public NormalizationData GetNormalizationData()
+        {
+            return _normalizationData.Value;
         }
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)

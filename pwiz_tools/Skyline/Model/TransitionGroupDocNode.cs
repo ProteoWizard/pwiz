@@ -1657,9 +1657,8 @@ namespace pwiz.Skyline.Model
         {
             // Use the old ratio for now, and it will be corrected by the peptide,
             // if it is incorrect.
-            IList<float?> ratios = chromInfo != null ? chromInfo.Ratios : TransitionChromInfo.GetEmptyRatios(ratioCount);
             Annotations annotations = chromInfo != null ? chromInfo.Annotations : Annotations.EMPTY;
-            return new TransitionChromInfo(fileId, step, peak, ionMobility, ratios, annotations, userSet);
+            return new TransitionChromInfo(fileId, step, peak, ionMobility, annotations, userSet);
         }
 
         /// <summary>
@@ -2267,7 +2266,6 @@ namespace pwiz.Skyline.Model
                                                                           fileId,
                                                                           step,
                                                                           TransitionCount,
-                                                                          chromInfo.Ratios.Count,
                                                                           chromInfoGroup,
                                                                           ReintegrateResults,
                                                                           GetReintegratePeak(fileId, step), 
@@ -2351,7 +2349,6 @@ namespace pwiz.Skyline.Model
                                                         ChromFileInfoId fileId,
                                                         int optimizationStep,
                                                         int transitionCount,
-                                                        int ratioCount,
                                                         TransitionGroupChromInfo chromInfo,
                                                         MProphetResultsHandler reintegrateResults,
                                                         PeakFeatureStatistics reintegratePeak,
@@ -2370,14 +2367,12 @@ namespace pwiz.Skyline.Model
                     QValue = chromInfo.QValue;
                     ZScore = chromInfo.ZScore;
 
-                    Ratios = chromInfo.Ratios;
                     Annotations = chromInfo.Annotations;
 
                     IonMobilityInfo = chromInfo.IonMobilityInfo;
                 }
                 else
                 {
-                    Ratios = TransitionGroupChromInfo.GetEmptyRatios(ratioCount);
                     Annotations = Annotations.EMPTY;
 
                     IonMobilityInfo = TransitionGroupIonMobilityInfo.EMPTY; 
@@ -2417,7 +2412,6 @@ namespace pwiz.Skyline.Model
             private float? IsotopeDotProduct { get; set; }
             private float? QValue { get; set; }
             private float? ZScore { get; set; }
-            private IList<RatioValue> Ratios { get; set; }
             private Annotations Annotations { get; set; }
             private UserSet UserSet { get; set; }
 
@@ -2558,7 +2552,6 @@ namespace pwiz.Skyline.Model
                                                     Area, AreaMs1, AreaFragment,
                                                     BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
                                                     (float?) BestRetentionTimes?.Height,
-                                                    Ratios,
                                                     MassError,
                                                     Truncated,
                                                     Identified,

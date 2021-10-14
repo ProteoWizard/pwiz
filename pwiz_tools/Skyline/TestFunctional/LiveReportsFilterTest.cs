@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -68,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
                         .Property(RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RATIO_PREFIX, isotopeLabel)), 
                     FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
                     filterValue.ToString(CultureInfo.CurrentCulture));
+            PauseTest();
             RunUI(() =>
             {
                 var colPeptide = documentGrid.FindColumn(PropertyPath.Parse("Peptide"));
@@ -87,7 +89,9 @@ namespace pwiz.SkylineTestFunctional
                             precursor =>
                                 precursor.Results.Values.Any(
                                     precursorResult =>
-                                        RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]) >= filterValue));
+                                        precursorResult
+                                            .GetRatioValue(new NormalizationMethod.RatioToLabel(isotopeLabel))?.Ratio >=
+                                        filterValue));
                     Assert.AreEqual(hasMatchingPrecursorResult, filteredPeptides.Any(filteredPeptide => filteredPeptide.IdentityPath.Equals(peptidePath)));
                 }
             }
