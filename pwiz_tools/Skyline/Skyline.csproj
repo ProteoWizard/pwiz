@@ -594,6 +594,7 @@
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

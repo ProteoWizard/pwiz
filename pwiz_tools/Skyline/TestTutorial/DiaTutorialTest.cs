@@ -244,6 +244,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("pituitary_database.fasta"));
+                    importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = string.Empty;
                 });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Fasta page", 24);
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -449,7 +450,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<GraphFullScan>("Full-Scan MS/MS spectrum y10++ metafile", 38);
 
-                FindNode("K.ELVYETVR.V [72, 79]");
+                FindNode("K.ELVYETVR.V [73, 80]");
                 WaitForGraphs();
                 ClickChromatogram("Pit02", 41.67, 4.076E+07, PaneKey.PRECURSORS);
                 WaitForGraphs();
