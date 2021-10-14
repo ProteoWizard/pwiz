@@ -32,8 +32,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
             InitialPeptideIonTypes = PeptideIonTypes.ToArray();
 
-            _originalLocations = Controls.Cast<Control>().Select(c => new KeyValuePair<Control, Point>(c, c.Location))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            _originalLocations = Controls.Cast<Control>().ToDictionary(c => c, c => c.Location);
         }
 
         public TransitionFilterAndLibrariesSettings FilterAndLibrariesSettings
@@ -223,8 +222,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
         {
             // Reset control locations, in case this isn't the first call to Initialize.
-            foreach (Control control in Controls)
-                control.Location = _originalLocations[control];
+            foreach (var kvp in _originalLocations)
+                kvp.Key.Location = kvp.Value;
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
