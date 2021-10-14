@@ -245,11 +245,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -267,7 +267,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
     
