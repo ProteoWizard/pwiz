@@ -2060,9 +2060,6 @@
   <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
     <value>添加 1 个修饰。</value>
   </data>
-  <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
-    <value>计算器{0}需要所有标准肽段以确定回归。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Collision_Energy" xml:space="preserve">
     <value>最优碰撞能量</value>
   </data>

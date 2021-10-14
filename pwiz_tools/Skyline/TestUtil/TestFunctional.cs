@@ -2129,6 +2129,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
+        {
+            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
+            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            Assert.IsTrue(match.Success);
+            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
+            if (sign == "+") sign = string.Empty;
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()
@@ -2226,7 +2236,17 @@ namespace pwiz.SkylineTestUtil
             LockMassParameters lockMassParameters = null)
         {
             var docBefore = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!Equals(docBefore.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
+                docBefore.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {

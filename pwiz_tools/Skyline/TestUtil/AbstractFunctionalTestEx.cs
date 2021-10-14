@@ -156,14 +156,24 @@ namespace pwiz.SkylineTestUtil
 
         public void ImportResultsAsync(string[] dataFiles, LockMassParameters lockMassParameters, string expectedErrorMessage = null, bool? removeFix = null)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var doc = SkylineWindow.Document;
+            ImportResultsDlg importResultsDlg;
+            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
+                doc.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunUI(() =>
             {
                 var filePaths = dataFiles.Select(dataFile => TestFilesDirs[0].GetTestPath(dataFile)).ToArray();
                 importResultsDlg.NamedPathSets =
                     importResultsDlg.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
             });
-            var doc = SkylineWindow.Document;
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
@@ -536,8 +546,7 @@ namespace pwiz.SkylineTestUtil
         {
             var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            if (!graphChromatogram.TestFullScanSelection(x, y, paneKey))
-                Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+            Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 
         private static GraphChromatogram GetGraphChrom(string graphName)
