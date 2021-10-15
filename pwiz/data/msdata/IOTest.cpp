@@ -581,10 +581,11 @@ void testSpectrum()
     Spectrum c;
     iss.seekg(0);
     IO::read(iss, c); // default = IgnoreBinaryData
-    unit_assert(c.binaryDataArrayPtrs.empty());
+    unit_assert(c.binaryDataArrayPtrs[0]->data.empty());
     unit_assert(c.sourceFilePosition == 0); // not -1
 
-    a.binaryDataArrayPtrs.clear();
+    for (auto& bda : a.binaryDataArrayPtrs)
+        bda->data.clear();
     diff(a, c);
     unit_assert(!diff);
 }
@@ -635,10 +636,11 @@ void testChromatogram()
     Chromatogram c;
     iss.seekg(0);
     IO::read(iss, c); // default = IgnoreBinaryData
-    unit_assert(c.binaryDataArrayPtrs.empty());
+    unit_assert(c.binaryDataArrayPtrs[0]->data.empty());
     unit_assert(c.sourceFilePosition == 0); // not -1
 
-    a.binaryDataArrayPtrs.clear();
+    for (auto& bda : a.binaryDataArrayPtrs)
+        bda->data.clear();
     diff(a, c);
     unit_assert(!diff);
 }

@@ -115,7 +115,7 @@ void test(bool indexed)
     unit_assert(s->id == "scan=19");
     unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
-    unit_assert(s->binaryDataArrayPtrs.empty());
+    unit_assert(s->binaryDataArrayPtrs[0]->data.empty());
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
     unit_assert(sl->spectrumIdentity(0).id == "scan=19");
