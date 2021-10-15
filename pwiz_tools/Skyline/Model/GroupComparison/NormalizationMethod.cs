@@ -208,6 +208,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return Label;
             }
 
+            public IsotopeLabelType IsotopeLabelType { get { return _isotopeLabelType; } }
             public string IsotopeLabelTypeName { get { return _isotopeLabelType.Name; } }
 
             public static bool Matches(NormalizationMethod normalizationMethod, IsotopeLabelType isotopeLabelType)
