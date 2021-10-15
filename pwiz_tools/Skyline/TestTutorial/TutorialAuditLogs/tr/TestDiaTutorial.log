@@ -73,7 +73,6 @@ Import Peptide Search > Configure Transition Settings > Product ion selection st
 Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
 Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
 Import Peptide Search > Import FASTA > FASTA file is "pituitary_database.fasta"
-Import Peptide Search > Import FASTA > Decoys per target is "1"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = Empty,
@@ -93,8 +92,7 @@ Configure Transition Settings =
 },
 Import FASTA = 
 {
-    FASTA file = "pituitary_database.fasta",
-    Decoys per target = "1"
+    FASTA file = "pituitary_database.fasta"
 }
 
 Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++
