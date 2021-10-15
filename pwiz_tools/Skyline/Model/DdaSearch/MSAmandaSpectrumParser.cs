@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             consideredCharges = charges;
             spectrumFileReader = new MsDataFileImpl(file,
                 requireVendorCentroidedMS2: MsDataFileImpl.SupportsVendorPeakPicking(file),
-                ignoreZeroIntensityPoints: true, trimNativeId: false);
+                acceptZeroLengthSpectra: false, ignoreZeroIntensityPoints: true, trimNativeId: false);
             useMonoIsotopicMass = mono;
 
             msdataRunPath = new MSDataRunPath(file);
