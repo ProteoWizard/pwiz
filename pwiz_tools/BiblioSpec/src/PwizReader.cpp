@@ -74,7 +74,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         BiblioSpec::Verbosity::debug("Found %d spectra in %s.",
                                      allSpectra_->size(), filename);
         nativeIdFormat_ = id::getDefaultNativeIDFormat(*fileReader_);
-        if (nativeIdFormat_ == MS_no_nativeID_format)   // This never works
+        if (nativeIdFormat_ == MS_no_nativeID_format || nativeIdFormat_ == CVID_Unknown) // These never work
             nativeIdFormat_ = MS_scan_number_only_nativeID_format;
         
         const auto& nativeIdFormatInfo = cvTermInfo(nativeIdFormat_);

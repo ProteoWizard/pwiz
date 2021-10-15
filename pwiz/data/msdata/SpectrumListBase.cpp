@@ -23,6 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumListBase.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -47,17 +48,27 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
     if (id.empty())
         return size();
 
-    {
-        boost::lock_guard<boost::mutex> g(m);
-
-        // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
-        if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
-            return size();
-    }
-
     try
     {
         const auto& firstId = spectrumIdentity(0).id;
+
+        bool triedToFindScanByIndex = bal::starts_with(firstId, "scan=") && bal::starts_with(id, "index=");
+        bool triedToFindIndexByScan = bal::starts_with(firstId, "index=") && bal::starts_with(id, "scan=");
+
+        // HACK: special behavior if actual ids are scan/index and searched ids are index/scan (respectively)
+        if (triedToFindScanByIndex)
+            return find("scan=" + pwiz::util::toString(lexical_cast<int>(pwiz::msdata::id::value(id, "index")) + 1));
+        else if (triedToFindIndexByScan)
+            return find("index=" + pwiz::util::toString(lexical_cast<int>(pwiz::msdata::id::value(id, "scan")) - 1));
+        else
+        {
+            boost::lock_guard<boost::mutex> g(m);
+
+            // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
+            if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
+                return size();
+        }
+
         auto actualId = pwiz::msdata::id::parse(firstId);
         auto actualIdKeys = actualId | boost::adaptors::map_keys;
         auto actualIdKeySet = std::set<std::string>(actualIdKeys.begin(), actualIdKeys.end());
