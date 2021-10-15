@@ -83,7 +83,8 @@ void test(bool indexed)
 
     unit_assert(sl.get());
     unit_assert(sl->size() == 5);
-    unit_assert(sl->find ("scan=19") == 0);
+    unit_assert(sl->find("scan=19") == 0);
+    unit_assert(sl->find("index=18") == 0);
     IndexList indexList = sl->findNameValue("scan", "19");
     unit_assert(indexList.size()==1 && indexList[0]==0);
     unit_assert(sl->find("scan=20") == 1);
