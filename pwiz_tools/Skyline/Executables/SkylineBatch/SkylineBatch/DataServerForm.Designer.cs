@@ -1,6 +1,6 @@
 ﻿namespace SkylineBatch
 {
-    partial class AddServerForm
+    partial class DataServerForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,16 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddServerForm));
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.textUrl = new System.Windows.Forms.TextBox();
-            this.textPassword = new System.Windows.Forms.TextBox();
-            this.textUserName = new System.Windows.Forms.TextBox();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataServerForm));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
             this.btnRemoveServer = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -47,46 +40,8 @@
             this.labelFileInfo = new System.Windows.Forms.Label();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.listBoxFileNames = new System.Windows.Forms.ListBox();
-            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.panelRemoteFile = new System.Windows.Forms.Panel();
             this.SuspendLayout();
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            // 
-            // textUrl
-            // 
-            resources.ApplyResources(this.textUrl, "textUrl");
-            this.textUrl.Name = "textUrl";
-            this.textUrl.TextChanged += new System.EventHandler(this.text_TextChanged);
-            // 
-            // textPassword
-            // 
-            resources.ApplyResources(this.textPassword, "textPassword");
-            this.textPassword.Name = "textPassword";
-            this.textPassword.TextChanged += new System.EventHandler(this.text_TextChanged);
-            // 
-            // textUserName
-            // 
-            resources.ApplyResources(this.textUserName, "textUserName");
-            this.textUserName.Name = "textUserName";
-            this.textUserName.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // btnCancel
             // 
@@ -101,21 +56,6 @@
             this.btnSave.Name = "btnSave";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnAdd_Click);
-            // 
-            // splitContainer1
-            // 
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.label2);
-            this.splitContainer1.Panel1.Controls.Add(this.textUserName);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.label3);
-            this.splitContainer1.Panel2.Controls.Add(this.textPassword);
             // 
             // textNamingPattern
             // 
@@ -166,59 +106,40 @@
             this.listBoxFileNames.BackColor = System.Drawing.Color.White;
             this.listBoxFileNames.Name = "listBoxFileNames";
             // 
-            // checkBoxNoEncryption
+            // panelRemoteFile
             // 
-            resources.ApplyResources(this.checkBoxNoEncryption, "checkBoxNoEncryption");
-            this.checkBoxNoEncryption.Name = "checkBoxNoEncryption";
-            this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
-            this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
+            resources.ApplyResources(this.panelRemoteFile, "panelRemoteFile");
+            this.panelRemoteFile.Name = "panelRemoteFile";
             // 
-            // AddServerForm
+            // DataServerForm
             // 
             this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.labelFileInfo);
-            this.Controls.Add(this.checkBoxNoEncryption);
             this.Controls.Add(this.listBoxFileNames);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.btnRemoveServer);
             this.Controls.Add(this.textNamingPattern);
-            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.textUrl);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.linkLabelRegex);
+            this.Controls.Add(this.panelRemoteFile);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "AddServerForm";
+            this.Name = "DataServerForm";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddServerForm_FormClosing);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textUrl;
-        private System.Windows.Forms.TextBox textPassword;
-        private System.Windows.Forms.TextBox textUserName;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnSave;
-        private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TextBox textNamingPattern;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnRemoveServer;
@@ -226,7 +147,7 @@
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.ListBox listBoxFileNames;
-        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
         private System.Windows.Forms.Label labelFileInfo;
+        private System.Windows.Forms.Panel panelRemoteFile;
     }
 }
