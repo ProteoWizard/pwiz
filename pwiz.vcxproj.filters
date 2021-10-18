@@ -1014,5 +1014,6 @@
     <None Include="scripts\wix\vendor-dlls.wxs-fragment" />
     <None Include="scripts\wix\pwiz-setup.py" />
     <None Include="scripts\wix\pwiz-setup.wxs.template" />
+    <None Include="libraries\boost-build\src\tools\msvc.jam" />
   </ItemGroup>
 </Project>

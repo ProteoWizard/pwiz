@@ -54,14 +54,12 @@ namespace pwiz.SkylineTestTutorial
     public class TargetedMsmsTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestTargetedMSMSTutorial()
         {
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
@@ -70,7 +68,6 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()

@@ -72,14 +72,16 @@ namespace pwiz.Skyline.Model
             AccessionNumbers = ImmutableSortedList<string, string>.FromValues(nonEmptyKeys, ACCESSION_TYPE_SORTER); 
         }
 
-        public MoleculeAccessionNumbers(string keysTSV, string inChiKey = null)
+        /// <summary>
+        /// Pick apart a string like "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3\tmykey:a:b:c:d"
+        /// </summary>
+        public static Dictionary<string, string> FormatAccessionNumbers(string keysTSV, string inChiKey = null)
         {
             var keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase); // Treat "cas" and "CAS" as identical lookups
             if (!string.IsNullOrEmpty(keysTSV) || !string.IsNullOrEmpty(inChiKey))
             {
                 if (!string.IsNullOrEmpty(keysTSV))
                 {
-                    // Pick apart a string like "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3\tmykey:a:b:c:d"
                     foreach (var kvp in keysTSV.Split(TextUtil.SEPARATOR_TSV))
                     {
                         var pair = kvp.Split(':');
@@ -94,13 +96,20 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                if (!string.IsNullOrEmpty(inChiKey))
-                {
-                    if (keys.ContainsKey(TagInChiKey))
-                        Assume.AreEqual(inChiKey, keys[TagInChiKey]);
-                    else
-                        keys.Add(TagInChiKey, inChiKey);
-                }
+            }
+
+            return keys;
+        }
+
+        public MoleculeAccessionNumbers(string keysTSV, string inChiKey = null)
+        {
+            var keys = FormatAccessionNumbers(keysTSV, inChiKey);
+            if (!string.IsNullOrEmpty(inChiKey))
+            {
+                if (keys.ContainsKey(TagInChiKey))
+                    Assume.AreEqual(inChiKey, keys[TagInChiKey]);
+                else
+                    keys.Add(TagInChiKey, inChiKey);
             }
             AccessionNumbers = ImmutableSortedList<string, string>.FromValues(keys, ACCESSION_TYPE_SORTER); 
         }

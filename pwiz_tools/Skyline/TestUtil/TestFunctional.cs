@@ -298,6 +298,7 @@ namespace pwiz.SkylineTestUtil
             ActivateReplicate(chromName);
 
             WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GetGraphChrom(chromName).ChromGroupInfos != null);
 
             RunUIWithDocumentWait(() => // adjust integration
             {
@@ -1529,33 +1530,42 @@ namespace pwiz.SkylineTestUtil
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            if (Equals(expected, actual))
+            if (AreEquivalentAuditLogs(expected, actual))
                 return;
 
             if (ForceMzml)
             {
                 // If the only difference is in the mention of a raw file extension, ignore that
                 var extMzml = @".mzml";
-                var actualParts = actual.ToLowerInvariant().Split(new[] {extMzml}, StringSplitOptions.None);
+                var actualParts = actual.Split(new[] {extMzml, @".mzML", @".MZML" }, StringSplitOptions.None);
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
                     if (index - actualParts[0].Length > 0)
                     {
-                        var extExpected = expected.Substring(actualParts[0].Length, index - actualParts[0].Length);
-                        if (expected.Replace(extExpected, extMzml).Equals(actual, StringComparison.InvariantCultureIgnoreCase))
-                        {
+                        var extExpected =
+                            expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
+                        var mzmlExpected =
+                            expected.Replace(extExpected, extMzml); // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
+                        var mzmlActual =
+                            string.Join(extMzml, actualParts); // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
+
+                        if (AreEquivalentAuditLogs(mzmlExpected, mzmlActual))
                             return;
-                        }
+
+                        // Make sure to report the difference that causes the failure below
+                        expected = mzmlExpected;
+                        actual = mzmlActual;
                     }
-                    
                 }
             }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)
+            {
                 AssertEx.NoDiff(expected, actual);
+            }
             else
             {
                 // Copy the just recorded file to the project for comparison or commit
@@ -1564,6 +1574,20 @@ namespace pwiz.SkylineTestUtil
                     Console.WriteLine(@"Successfully recorded tutorial audit log");
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
+            }
+        }
+
+        private static bool AreEquivalentAuditLogs(string expected, string actual)
+        {
+            try
+            {
+                // Asserts that the files are the same other than generated GUIDs and timestamps
+                AssertEx.NoDiff(expected, actual);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -1947,12 +1971,15 @@ namespace pwiz.SkylineTestUtil
 
         public void FindNode(string searchText)
         {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true);
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
+            var findDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+            RunUI(() => findDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true));
+            SkylineWindow.BeginInvoke((Action) findDlg.FindNext);
+            WaitForConditionUI(5*1000, () => SkylineWindow.SelectedNode.Text.Contains(searchText) || FindOpenForm<MessageDlg>() != null);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail(TextUtil.LineSeparate("Unexpected message form with the text:", messageDlg.Message));
+            RunUI(() => AssertEx.Contains(SkylineWindow.SelectedNode.Text, searchText));
+            OkDialog(findDlg, findDlg.Close);
         }
 
         protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
@@ -2103,6 +2130,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
+        {
+            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
+            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            Assert.IsTrue(match.Success);
+            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
+            if (sign == "+") sign = string.Empty;
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()
@@ -2200,7 +2237,17 @@ namespace pwiz.SkylineTestUtil
             LockMassParameters lockMassParameters = null)
         {
             var docBefore = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!Equals(docBefore.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
+                docBefore.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {

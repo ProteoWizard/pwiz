@@ -34,7 +34,7 @@ using Array = System.Array;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, isotope_dist }  
+    public enum AreaExpectedValue { none, library, isotope_dist, ratio_to_label }  
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
@@ -109,6 +109,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public TransitionGroupDocNode ParentGroupNode { get; private set; }
 
+        private NormalizedValueCalculator NormalizedValueCalculator { get; set; }
+
         public override void Draw(Graphics g)
         {
             // Make sure changes are not only drawn when the graph is updated.
@@ -146,6 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
+            NormalizedValueCalculator = new NormalizedValueCalculator(document);
             bool resultsAvailable = results != null;
             Clear();
 
@@ -232,7 +235,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var children = ((PeptideDocNode) selectedNode).TransitionGroups
                     .Where(PaneKey.IncludesTransitionGroup)
                     .ToArray();
-                if (children.Length == 1 && displayType != DisplayTypeChrom.total && normalizeOption != NormalizeOption.CALIBRATED)
+                if (children.Length == 1 && normalizeOption != NormalizeOption.CALIBRATED)
                 {
                     selectedNode = parentNode = children[0];
                     identityPath = new IdentityPath(identityPath, parentNode.Id);
@@ -264,16 +267,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarSettings.Type = BarType.Cluster;
             }
 
-            IsotopeLabelType standardType = null;
+            var standardType = (normalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)?.FindIsotopeLabelType(document.Settings);
 
-            if (normalizeOption.IsRatioToLabel)
-            {
-                normalizeOption = GraphSummary.NormalizeOption;
-                if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
-                {
-                    standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
-                }
-            }
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
             DataScalingOption dataScalingOption;
             if (optimizationPresent && displayType == DisplayTypeChrom.single &&
@@ -322,6 +317,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+            if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel && !IsMultiSelect)
+            {
+                var graphLabelType = parentGroupNode?.LabelType ?? PaneKey.IsotopeLabelType;
+                if (graphLabelType != null && !ratioToLabel.IsotopeLabelType.Equals(graphLabelType))
+                    ExpectedVisible = AreaExpectedValue.ratio_to_label;
+            }
+
             var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
@@ -445,7 +447,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null)
+                    if (nodeGroup != null && countNodes > 1)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -488,8 +490,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
 
-                    // Add area for this transition to each area entry
-                    AddAreasToSums(pointPairList, sumAreas);
+                    // Aggregate area of this transition for each area entry
+                    Func<double,double, double> aggregateFunc = (sums, y) => sums + y;
+                    //if bar type is cluster we need to show dotp label above the highest peak, not at the total peak height
+                    if (BarSettings.Type == BarType.Cluster)
+                        aggregateFunc = Math.Max;   
+                    AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
+
                     var lineItem = curveItem as LineItem;
                     if (lineItem != null)
                     {
@@ -522,7 +529,7 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
         }
 
-        private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
+            private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
         {
             double yValue;
             switch (BarSettings.Type)
@@ -657,8 +664,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         normalizationMethod = normalizationMethod ?? normalizeOption.NormalizationMethod;
                         if (normalizationMethod != null)
                         {
-                            yTitle = normalizationMethod.GetAxisTitle(Resources
-                                .AreaReplicateGraphPane_UpdateGraph_Peak_Area);
+                            if (normalizationMethod is NormalizationMethod.RatioToLabel && IsotopeLabelType.heavy.Equals(ParentGroupNode?.LabelType))
+                                yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
+                            else 
+                                yTitle = normalizationMethod.GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
                         }
                         else
                         {
@@ -686,9 +695,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
+            GraphSummary.GraphControl.Refresh();
         }
 
-        private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas)
+        private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas, Func<double, double, double> aggregateFunc)
         {
             for (int i = 0; i < pointPairList.Count; i++)
             {
@@ -706,7 +716,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // offset index by 1, since (n + 1)th bar corresponds to the nth replicate
                     index--;
                 }
-                sumAreas[index] += pointPair.Y;
+                sumAreas[index] = aggregateFunc(sumAreas[index], pointPair.Y);
             }
         }
 
@@ -822,6 +832,26 @@ namespace pwiz.Skyline.Controls.Graphs
                         values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct);
                     }
                     break;
+                case AreaExpectedValue.ratio_to_label:
+                    var document = GraphSummary.DocumentUIContainer.DocumentUI;
+                    var normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
+                    values = new float?[] { };
+                    if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
+                        if (precursorNodePath.Peptide != null && !nodeGroup.LabelType.Equals(ratioToLabel.IsotopeLabelType))
+                        {
+                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
+                                ratioToLabel,
+                                precursorNodePath.Peptide, nodeGroup,
+                                nodeGroup.GetChromInfoEntry(indexResult));
+                            if(ratio?.HasDotProduct ?? false)
+                                return GetDotProductText(ratio.DotProduct);
+                        }
+                        else
+                            return null;
+                    }
+                    break;
                 default:
                     return null;
             }
@@ -846,6 +876,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         return @"dotp";
                     case AreaExpectedValue.isotope_dist:
                         return @"idotp";
+                    case AreaExpectedValue.ratio_to_label:
+                        return @"rdotp";
                     default:
                         return string.Empty; 
                 }
@@ -952,9 +984,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 base.InitData();
          
-                if (_expectedVisible != AreaExpectedValue.none)
+                if (_expectedVisible != AreaExpectedValue.none && _docNode is TransitionGroupDocNode nodeGroup)
                 {
-                    var nodeGroup = (TransitionGroupDocNode) _docNode;
                     var expectedIntensities = from nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, DisplayType)
                                               select GetExpectedValue(nodeTran);
                     var intensityArray = expectedIntensities.ToArray();

@@ -54,6 +54,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -1093,6 +1094,15 @@ namespace pwiz.Skyline.Model
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
                     settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
 
+                if (settingsNew.MeasuredResults != null)
+                {
+                    var updatedImportTimes = settingsNew.MeasuredResults.UpdateImportTimes();
+                    if (!ReferenceEquals(updatedImportTimes, settingsNew.MeasuredResults))
+                    {
+                        settingsNew = settingsNew.ChangeMeasuredResults(updatedImportTimes);
+                    }
+                }
+                
                 // Don't change the children, if the resulting list contains
                 // only reference equal children of the same length and in the
                 // same order.
@@ -1396,13 +1406,14 @@ namespace pwiz.Skyline.Model
             MassListImporter importer, 
             IdentityPath to, 
             out IdentityPath firstAdded,
-            List<string> columnPositions = null)
+            List<string> columnPositions = null,
+            bool hasHeaders = true)
         {
             List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
+            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1427,7 +1438,8 @@ namespace pwiz.Skyline.Model
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups,
                                           List<string> columnPositions = null,
-                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none)
+                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none,
+                                          bool hasHeaders = true)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1443,7 +1455,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     var lines = inputs.ReadLines(progressMonitor);
-                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions);
+                    var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
                 }
                 catch (LineColNumberedIoException x)
@@ -1489,11 +1501,19 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Return a mass list import if the progress monitor is not cancelled and we are able to read the document
         /// </summary>
+        /// <param name="inputs">Input to be imported</param>
+        /// <param name="progressMonitor">Cancellable progress monitor</param>
+        /// <param name="tolerateErrors">Should we tolerate errors when creating a row reader</param>
+        /// <param name="inputType">"None" means "don't know if it's peptides or small molecules, go figure it out".</param>
+        /// <param name="rowReadRequired">Is it necessary to create a row reader to import this mass list</param>
+        /// <param name="defaultDocumentType">The type we should default to if we cannot tell if the transition list is proteomics or small molecule</param>
+        /// <returns></returns>
         public MassListImporter PreImportMassList(MassListInputs inputs, IProgressMonitor progressMonitor, bool tolerateErrors, 
-            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none, bool rowReadRequired = false) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none, // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            bool rowReadRequired = false, DOCUMENT_TYPE defaultDocumentType = DOCUMENT_TYPE.none) 
         {
             var importer = new MassListImporter(this, inputs,  inputType);
-            if (importer.PreImport(progressMonitor, null, tolerateErrors, rowReadRequired))
+            if (importer.PreImport(progressMonitor, null, tolerateErrors, rowReadRequired, defaultDocumentType))
             {
                 return importer;
             }
@@ -1966,6 +1986,23 @@ namespace pwiz.Skyline.Model
                 .ChangeMeasuredResults(Settings.MeasuredResults, progressMonitor);
             doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
             return doc;
+        }
+        public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
+        {
+            if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
+                return MeasuredResults.Chromatograms;
+
+            var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
+            if (targets == null || targets.Count == 0)
+                return Array.Empty<ChromatogramSet>();
+
+            var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
+            if (string.IsNullOrEmpty(groupBy))
+                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+
+            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
+            var annotationCalculator = new AnnotationCalculator(this);
+            return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(replicateValue.GetValue(annotationCalculator, chromSet).ToString()));
         }
 
         private object _referenceId = new object();

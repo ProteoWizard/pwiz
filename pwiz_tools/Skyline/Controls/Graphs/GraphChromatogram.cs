@@ -598,7 +598,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (toolBar.Visible)
                     iSelected = comboFiles.SelectedIndex;
 
-                return _arrayChromInfo[iSelected];
+                return _arrayChromInfo?[iSelected];
             }
         }
 
@@ -636,9 +636,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return GetGraphItems(graphControl.GraphPane).Last(); }
         }
-        public GraphPane GraphItem
+        public GraphPane GraphPane
         {
             get { return graphControl.GraphPane; }
+        }
+
+        public MSGraphControl GraphControl
+        {
+            get { return graphControl; }
         }
 
         public double? BestPeakTime
@@ -3512,18 +3517,18 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 
-        public bool TestFullScanSelection(double x, double y, PaneKey? paneKey)
+        public string TestFullScanSelection(double x, double y, PaneKey? paneKey)
         {
             var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
             var selectionDot = graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
             var mouse = TransformCoordinates(x, y, paneKey);
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
             if (!selectionDot.IsVisible)
-                return false;
+                return @"selection dot is not visible";
             const int pixelTolerance = 10;
             if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
-                return false;
-            return true;
+                return $@"mouse coordinates ({x}->{mouse.X}, {y}->{mouse.Y}) and selection dot coordinates ({selectionDot[0].X}->{dot.X}, {selectionDot[0].Y}->{dot.Y}) are too far apart";
+            return string.Empty;
         }
 
         #endregion Test support
@@ -3754,7 +3759,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           MsDataFileUri filePath,
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
-                                          PeakIdentification identified,
+                                          PeakIdentification? identified,
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
@@ -3768,8 +3773,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public Transition Transition { get; private set; }
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
-        public PeakIdentification Identified { get; private set; }
-        public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
+        public PeakIdentification? Identified { get; private set; }
+        public bool IsIdentified { get { return Identified.HasValue && Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
     }
 

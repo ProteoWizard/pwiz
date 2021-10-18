@@ -936,7 +936,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Show we can import data (response to issue preventing data import on assay libraries)
             // Import the raw data
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
             RunUI(() =>
             {
                 string fileName = TestFilesDir.GetTestPath("OverlapTest.mzML");

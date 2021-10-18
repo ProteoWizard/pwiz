@@ -70,9 +70,19 @@ namespace pwiz.SkylineTest
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 new[] { @"TestFunctional.cs" }, // Only these files should contain this
                 string.Empty, // No file content required for inspection
-                @"^\s*PauseTest\(", // Forbidden pattern (uncommented PauseTest)
-                true, // Pattern is not a regular expression
-                @"This appears to be temporary debugging code that should not be checked in."); // Explanation for prohibition, appears in report
+                @"^\s*PauseTest(UI)?\(", // Forbidden pattern (uncommented PauseTest or PauseTestUI)
+                true, // Pattern is a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
+
+            // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null,  // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"^\s*RunPerfTests\s*\=\s*true", // Forbidden pattern (uncommented enabling of perftests in IDE)
+                true, // Pattern is a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. PerfTests are normally enabled/disabled by the automated test framework."); // Explanation for prohibition, appears in report
 
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
@@ -114,7 +124,7 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
-                13); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+                11); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -203,6 +213,64 @@ namespace pwiz.SkylineTest
             }
 
             return missing;
+        }
+
+        /// <summary>
+        /// Just a quick smoke test to remind devs to add audit log tests where needed, and to catch cases where its obvious that one or
+        /// more languages need updating because line counts don't agree
+        /// </summary>
+        void InspectTutorialAuditLogs(string root, List<string> errors)
+        {
+            var logsDir = Path.Combine(root, @"TestTutorial", @"TutorialAuditLogs");
+            var logs = Directory.GetFiles(logsDir, "*.log", SearchOption.AllDirectories).ToList();
+            var languages = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[1]).Distinct().ToList();
+            var tests = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[2]).Distinct().ToList();
+            foreach (var test in tests)
+            {
+                var results = new List<string>();
+                foreach (var language in languages)
+                {
+                    var lPath = Path.Combine(logsDir, language, test);
+                    if (!logs.Contains(lPath))
+                    {
+                        results.Add(string.Format("Did not find {0} version. This needs to be created and added to source control.", language));
+                    }
+                }
+
+                var english = @"en";
+                var enVersion = Path.Combine(logsDir, english, test);
+                if (File.Exists(enVersion))
+                {
+                    var lines = File.ReadAllLines(enVersion);
+                    var badLang = new List<string>();
+                    foreach (var language in languages.Where(l => l != english))
+                    {
+                        var l10nVersion = Path.Combine(logsDir, language, test);
+                        if (!File.Exists(l10nVersion))
+                        {
+                            continue; // Already noted
+                        }
+
+                        var l10nLines = File.ReadAllLines(l10nVersion);
+                        if (lines.Length != l10nLines.Length)
+                        {
+                            badLang.Add(language);
+                        }
+                    }
+
+                    if (badLang.Any())
+                    {
+                        results.Add(string.Format(
+                            @"Line count for {0} does not match {1}. Tutorial audit logs should be regenerated.",
+                            english, string.Join(@", ", badLang)));
+                    }
+                }
+
+                if (results.Any())
+                {
+                    errors.Add(string.Format(@"{0} Error: {1}", test, string.Join(@", ", results)));
+                }
+            }
         }
 
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
@@ -296,6 +364,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            InspectTutorialAuditLogs(root, results);
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)

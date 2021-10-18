@@ -97,7 +97,7 @@ else if "address-model=32" in [ modules.peek : ARGV ]
     constant PLATFORM : "x86" ;
     if "address-model=64" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
-else
+else if [ modules.peek : NT ] # require address-model to be specified on Windows
 {
     errors.user-error "No address-model specified. Command-line must specify address-model=32 or address-model=64 (because B2 apparently changed the default MSVC address-model, breaking many pwiz assumptions)." ;
 }
@@ -179,7 +179,12 @@ rule without-binary-msdata ( properties * )
    }
 }
 
-if [ modules.peek : NT ]
+local default_build_path = [ MATCH --build-path=(.*) : [ modules.peek : ARGV ] ] ;
+if $(default_build_path)
+{
+    path-constant PWIZ_BUILD_PATH : $(default_build_path) ;
+}
+else if [ modules.peek : NT ]
 {
     path-constant PWIZ_BUILD_PATH : build-nt-x86 ; # force x86 since .NET projects assume that location
 }
@@ -552,6 +557,7 @@ if [ modules.peek : NT ]
             if ! --without-sciex in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_ABI.7z" ; }
             if ! --without-agilent in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Agilent.7z" ; }
             if ! --without-bruker in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ; }
+# Waiting for CCS<->DT support in .mbi reader #            if ! --without-mobilion in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Mobilion.7z" ; }
             if ! --without-shimadzu in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ; }
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
             #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
@@ -706,6 +712,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+# wait for CCS<->DT support in Mobllion #         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Mobilion ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion//install_pwiz_vendor_api_mbi/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
@@ -979,7 +986,11 @@ rule no-express-requirement ( properties * )
 }
 
 # CONSIDER: would be nice to access msvc.jam's setup logic, but that would seem to require significant refactoring
-constant MSVC_CURRENT_SETUP_SCRIPT : "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) >nul" ;
+rule get-current-msvc-setup-script ( properties * )
+{
+    local platformToolsetVersion = [ regex.replace [ feature.get-values <toolset-msvc:version> : $(properties) ] "\\." "" ] ;
+    return "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) $(platformToolsetVersion) >nul" ;
+}
 
 # special support for MSFileReader on Windows
 if [ modules.peek : NT ]
@@ -1026,6 +1037,16 @@ rule unifi-dll-location ( api-path : properties * )
     }
 }
 
+rule mbi-dll-location ( api-path : properties * )
+{
+    local result = $(api-path) ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(api-path)\\MBICore.dll ]
+    {
+        return $(result) ;
+    }
+}
+
 rule bruker-dll-location ( api-path : properties * )
 {
     local result ;
@@ -1062,7 +1083,7 @@ rule shimadzu-dll-location ( api-path : properties * )
 
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        $(result) &&
-       [ path.exists $(result)\\DataReader.dll ]
+       [ path.exists $(result)\\CompressedTLMRawDataReader.dll ]
     {
         return $(result) ;
     }
@@ -1300,6 +1321,11 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x86/ucrtbase.dll 
     Microsoft.VC140.CRT/x86/vcomp140.dll 
     Microsoft.VC140.CRT/x86/vcruntime140.dll 
+    Microsoft.VC140.CRT/x86/msvcp140_1.dll
+    Microsoft.VC140.CRT/x86/msvcp140_2.dll
+    Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
+    Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
+    Microsoft.VC140.CRT/x86/vccorlib140.dll
     Microsoft.VC90.CRT/x86/msvcm90.dll 
     Microsoft.VC90.CRT/x86/msvcp90.dll 
     Microsoft.VC90.CRT/x86/msvcr90.dll 
@@ -1363,6 +1389,12 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x64/ucrtbase.dll
     Microsoft.VC140.CRT/x64/vcomp140.dll
     Microsoft.VC140.CRT/x64/vcruntime140.dll
+    Microsoft.VC140.CRT/x64/msvcp140_1.dll
+    Microsoft.VC140.CRT/x64/msvcp140_2.dll
+    Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
+    Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
+    Microsoft.VC140.CRT/x64/vcruntime140_1.dll
+    Microsoft.VC140.CRT/x64/vccorlib140.dll
     Microsoft.VC90.CRT/x64/msvcm90.dll
     Microsoft.VC90.CRT/x64/msvcp90.dll
     Microsoft.VC90.CRT/x64/msvcr90.dll
@@ -1563,6 +1595,8 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Mobilion/*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Mobilion/*.lib"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
@@ -1666,6 +1700,7 @@ constant .common-sources :
     "exclude:vendor_api/ABI"
     "exclude:vendor_api/Agilent"
     "exclude:vendor_api/Bruker"
+    "exclude:vendor_api/Mobilion"
     "exclude:vendor_api/Shimadzu"
     "exclude:vendor_api/thermo"
     "exclude:vendor_api/UIMF"
