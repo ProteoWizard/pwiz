@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteFileControl));
             this.label2 = new System.Windows.Forms.Label();
             this.textRelativePath = new System.Windows.Forms.TextBox();
             this.comboRemoteFileSource = new System.Windows.Forms.ComboBox();
@@ -36,60 +37,36 @@
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label2.Location = new System.Drawing.Point(-6, 96);
-            this.label2.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(144, 25);
-            this.label2.TabIndex = 25;
-            this.label2.Text = "Relative path:";
             // 
             // textRelativePath
             // 
-            this.textRelativePath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textRelativePath.Location = new System.Drawing.Point(0, 127);
-            this.textRelativePath.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            resources.ApplyResources(this.textRelativePath, "textRelativePath");
             this.textRelativePath.Name = "textRelativePath";
-            this.textRelativePath.Size = new System.Drawing.Size(758, 31);
-            this.textRelativePath.TabIndex = 24;
             // 
             // comboRemoteFileSource
             // 
-            this.comboRemoteFileSource.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.comboRemoteFileSource, "comboRemoteFileSource");
             this.comboRemoteFileSource.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRemoteFileSource.FormattingEnabled = true;
-            this.comboRemoteFileSource.Location = new System.Drawing.Point(0, 29);
-            this.comboRemoteFileSource.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.comboRemoteFileSource.Name = "comboRemoteFileSource";
-            this.comboRemoteFileSource.Size = new System.Drawing.Size(758, 33);
-            this.comboRemoteFileSource.TabIndex = 23;
             this.comboRemoteFileSource.SelectedIndexChanged += new System.EventHandler(this.comboRemoteFileSource_SelectedIndexChanged);
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label1.Location = new System.Drawing.Point(-6, -2);
-            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(163, 25);
-            this.label1.TabIndex = 22;
-            this.label1.Text = "Remote source:";
             // 
             // RemoteFileControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textRelativePath);
             this.Controls.Add(this.comboRemoteFileSource);
             this.Controls.Add(this.label1);
-            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.Name = "RemoteFileControl";
-            this.Size = new System.Drawing.Size(764, 171);
             this.ResumeLayout(false);
             this.PerformLayout();
 
