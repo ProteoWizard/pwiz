@@ -2238,8 +2238,7 @@ namespace pwiz.SkylineTestUtil
         {
             var docBefore = SkylineWindow.Document;
             ImportResultsDlg importResultsDlg;
-            if (!Equals(docBefore.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
-                docBefore.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            if (!SkylineWindow.ShouldPromptForDecoys(docBefore))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
@@ -2309,8 +2308,7 @@ namespace pwiz.SkylineTestUtil
         public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
             ImportResultsDlg importResultsDlg;
-            if (!Equals(SkylineWindow.Document.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
-                SkylineWindow.Document.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
