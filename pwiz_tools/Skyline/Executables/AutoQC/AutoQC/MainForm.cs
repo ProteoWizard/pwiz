@@ -96,7 +96,8 @@ namespace AutoQC
             ProgramLog.Info("Creating a new configuration");
             var initialState = _configManager.State;
             var configForm = new AutoQcConfigForm(this, (AutoQcConfig)initialState.BaseState.GetLastModified(), ConfigAction.Add, initialState.Copy());
-            configForm.ShowDialog();
+            if (DialogResult.OK == configForm.ShowDialog())
+                _configManager.SetState(initialState, configForm.State);
         }
 
         private void HandleEditEvent(object sender, EventArgs e)
@@ -226,6 +227,7 @@ namespace AutoQC
         public void DisableConfig(IConfig iconfig)
         {
             var initialState = _configManager.State;
+
             var state = initialState.Copy()
                 .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
             _configManager.SetState(initialState, state);

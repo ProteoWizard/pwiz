@@ -174,7 +174,7 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (IsStopped())
+                if (runnerStatus == RunnerStatus.Stopped)
                 {
                     ((MainForm)_uiControl)?.DisableConfig(Config);
                 }

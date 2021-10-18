@@ -327,7 +327,7 @@ namespace AutoQC
                 State.ReplaceSelectedConfig(newConfig, _mainControl);
             else
                 State.UserAddConfig(newConfig, _mainControl);
-
+            DialogResult = DialogResult.OK;
             Close();
         }
 

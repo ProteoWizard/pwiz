@@ -285,8 +285,11 @@ namespace AutoQC
             if (doChange == DialogResult.Yes)
             {
                 configRunner.Stop();
-                var state = initialState.Copy().SelectedConfigEnabled(false, _uiControl);
-                SetState(initialState, state);
+                if (configRunner.IsStopped())
+                {
+                    var state = initialState.Copy().SelectedConfigEnabled(false, _uiControl);
+                    SetState(initialState, state);
+                }
                 return true;
             }
 
@@ -491,7 +494,7 @@ namespace AutoQC
         public AutoQcConfigManagerState SetConfigEnabled(int index, bool enabled, IMainUiControl uiControl)
         {
             var config = (AutoQcConfig) BaseState.GetConfig(index);
-            if (GetConfigRunner(config).IsBusy())
+            if (GetConfigRunner(config).IsStarting())
             {
                 ConfigManager.DisplayError(uiControl, "Cannot change config enabled while it is busy.");
                 return this;
@@ -500,6 +503,18 @@ namespace AutoQC
             ProgramaticallyInsertConfig(index,
                 new AutoQcConfig(config.Name, enabled, config.Created, config.Modified, config.MainSettings,
                     config.PanoramaSettings, config.SkylineSettings), uiControl);
+            BaseState.ModelHasChanged();
+            return this;
+        }
+
+        public AutoQcConfigManagerState DisableConfigProgramatically(int index, IMainUiControl uiControl)
+        {
+            var config = (AutoQcConfig)BaseState.GetConfig(index);
+
+            BaseState.ProgramaticallyRemoveAt(index);
+            BaseState.ProgramaticallyInsertConfig(index,
+                 new AutoQcConfig(config.Name, false, config.Created, config.Modified, config.MainSettings,
+                    config.PanoramaSettings, config.SkylineSettings));
             BaseState.ModelHasChanged();
             return this;
         }
