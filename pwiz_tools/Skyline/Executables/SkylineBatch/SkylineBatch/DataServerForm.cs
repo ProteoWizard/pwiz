@@ -9,30 +9,43 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
-    public partial class AddServerForm : Form
+    public partial class DataServerForm : Form
     {
 
         private CancellationTokenSource _cancelValidate;
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
         private bool _updated;
+        private RemoteFileControl _remoteFileControl;
 
-        public AddServerForm(DataServerInfo editingServerInfo, string folder, bool serverRequired = false)
+        public DataServerForm(DataServerInfo editingServerInfo, string folder, SkylineBatchConfigManagerState state, IMainUiControl mainControl, bool serverRequired = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
+            State = state;
             Server = editingServerInfo;
             _dataFolder = folder;
             _serverRequired = serverRequired;
-            UpdateUiServer();
 
-            if (_serverRequired)
+            _remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired);
+            _remoteFileControl.Dock = DockStyle.Fill;
+            _remoteFileControl.Show();
+            panelRemoteFile.Controls.Add(_remoteFileControl);
+
+            _remoteFileControl.AddRemoteFileChangedEventHandler(RemoteFileChangedByUser);
+            _remoteFileControl.AddRelativePathChangedEventHandler(RemoteFileChangedByUser);
+
+
+            textNamingPattern.Text = editingServerInfo != null ? editingServerInfo.DataNamingPattern : string.Empty;
+
+            if (serverRequired)
                 btnRemoveServer.Hide();
         }
 
         public DataServerInfo Server;
         public ServerConnector serverConnector { get; private set; }
+        public SkylineBatchConfigManagerState State;
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -41,7 +54,7 @@ namespace SkylineBatch
             else
             {
                 Server = GetServerFromUi();
-                if (Server == null)
+                if (Server == null && !_serverRequired)
                 {
                     DialogResult = DialogResult.OK;
                     return;
@@ -136,40 +149,32 @@ namespace SkylineBatch
 
         private DataServerInfo GetServerFromUi()
         {
-            if (string.IsNullOrWhiteSpace(textUrl.Text) &&
-                string.IsNullOrWhiteSpace(textUserName.Text) &&
-                string.IsNullOrWhiteSpace(textPassword.Text) &&
-                string.IsNullOrWhiteSpace(textNamingPattern.Text))
+            Server server;
+            try
             {
-                if (_serverRequired)
-                    throw new ArgumentException(Resources.AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_);
+                server = _remoteFileControl.ServerFromUI();
+            }
+            catch (ArgumentException e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
                 return null;
             }
-            return DataServerInfo.ServerFromUi(textUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, textNamingPattern.Text, _dataFolder);
+
+            return new DataServerInfo(server.FileSource, server.RelativePath, textNamingPattern.Text, _dataFolder);
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
+            _remoteFileControl.Clear();
+            textNamingPattern.Text = string.Empty;
             listBoxFileNames.Items.Clear();
             Server = null;
-            UpdateUiServer();
-            _updated = true;
+            textNamingPattern.Text = string.Empty;
+           _updated = true;
             UpdateLabel();
         }
-
-        private void UpdateUiServer()
-        {
-            textUrl.Text = Server != null ? Server.GetUrl() : string.Empty;
-            textUserName.Text = Server != null ? Server.Username : string.Empty;
-            textPassword.Text = Server != null ? Server.Password : string.Empty;
-            checkBoxNoEncryption.Enabled = Server != null && !string.IsNullOrEmpty(Server.Password);
-            checkBoxNoEncryption.Checked = checkBoxNoEncryption.Enabled && Server != null && !Server.Encrypt;
-            textNamingPattern.Text = Server == null || Server.DataNamingPattern.Equals(".*")
-                ? string.Empty
-                : Server.DataNamingPattern;
-        }
-
+        
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://www.regular-expressions.info/reference.html");
@@ -186,17 +191,6 @@ namespace SkylineBatch
             listBoxFileNames.BackColor = _updated ? Color.White : Color.WhiteSmoke;
             btnUpdate.Enabled = !_updated;
             labelFileInfo.Visible = _updated;
-        }
-
-        private void text_TextChanged(object sender, EventArgs e)
-        {
-            _updated = false;
-            serverConnector = null;
-            UpdateLabel();
-
-            checkBoxNoEncryption.Enabled = textPassword.Text.Length > 0;
-            if (textPassword.Text.Length == 0)
-                checkBoxNoEncryption.Checked = false;
         }
 
         private void textNamingPattern_TextChanged(object sender, EventArgs e)
@@ -224,11 +218,6 @@ namespace SkylineBatch
                 labelFileInfo.Text = string.Format(Resources.AddServerForm_UpdateFileList__1_file___0_, GetSizeString(totalSize));
         }
 
-        private void checkBoxNoEncryption_CheckedChanged(object sender, EventArgs e)
-        {
-            textPassword.PasswordChar = checkBoxNoEncryption.Checked ? '\0' : '*';
-        }
-
         private string GetSizeString(long bytes)
         {
             var sizeInGB = Math.Round(bytes / 1000000000.0, 2);
@@ -242,6 +231,12 @@ namespace SkylineBatch
             if (sizeInGB > 0)
                 return string.Format(Resources.AddServerForm_UpdateFileList__0__GB, sizeInGB);
             return string.Format(Resources.AddServerForm_UpdateFileList__0__KB, sizeInKB);
+        }
+
+        private void RemoteFileChangedByUser(object sender, EventArgs e)
+        {
+            _updated = false;
+            UpdateLabel();
         }
     }
 }
