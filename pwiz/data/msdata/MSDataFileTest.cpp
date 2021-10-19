@@ -394,6 +394,54 @@ void testSHA1()
 }
 
 
+void testPathLength()
+{
+    MSData tiny;
+    examples::initializeTiny(tiny);
+
+    string goodFilename = string(244 - bfs::current_path().size(), 't') + ".test";
+    MSDataFile::write(tiny, goodFilename);
+
+    string absoluteGoodFilename = bfs::absolute(string(244 - bfs::current_path().size(), 't') + ".test").string();
+    MSDataFile::write(tiny, absoluteGoodFilename);
+
+    { MSDataFile goodMsd(goodFilename); }
+
+    string badFilename = R"(\\?\)" + bfs::absolute(goodFilename).string(); // bfs::rename fails for paths between 250 and 260 characters long without this prefix
+    string badSuffix = ".bad";
+    for (int i = 0; i < 10; ++i)
+    {
+        if (bfs::current_path().size() + badFilename.length() + 4 >= 264)
+            break;
+        bfs::rename(badFilename, badFilename + badSuffix);
+        badFilename += badSuffix;
+#ifdef _WIN32
+        unit_assert_throws_what(MSDataFile(badFilename), std::invalid_argument, "path is too long (must be 250 characters or less): " + bfs::absolute(badFilename).string());
+#else
+        { MSDataFile msd(badFilename); }
+#endif
+        bfs::remove(badFilename);
+    }
+    
+    badFilename = R"(\\?\)" + bfs::absolute(goodFilename).string();
+    badSuffix = ".\xe9\x9d\x9e\xe5\xb8\xb8\xe9\x94\x99"; // . + 3 Chinese characters in UTF-8
+    for (int i = 0; i < 10; ++i)
+    {
+        if (bfs::current_path().size() + badFilename.length() + 4 >= 264)
+            break;
+        bfs::rename(badFilename, badFilename + badSuffix);
+        badFilename += badSuffix;
+#ifdef _WIN32
+        unit_assert_throws_what(MSDataFile(badFilename), std::invalid_argument, "path is too long (must be 250 characters or less): " + bfs::absolute(badFilename).string());
+#else
+        { MSDataFile msd(badFilename); }
+#endif
+        bfs::remove(badFilename);
+    }
+    bfs::remove(goodFilename);
+}
+
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)
@@ -405,6 +453,7 @@ int main(int argc, char* argv[])
         //demo();
         testReader();
         testSHA1();
+        testPathLength();
     }
     catch (exception& e)
     {

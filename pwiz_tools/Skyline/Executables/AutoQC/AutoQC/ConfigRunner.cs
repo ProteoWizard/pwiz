@@ -174,9 +174,9 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (IsStopped())
+                if (runnerStatus == RunnerStatus.Stopped)
                 {
-                    Config.IsEnabled = false;
+                    ((MainForm)_uiControl)?.DisableConfig(Config);
                 }
             }
             _uiControl?.UpdateUiConfigurations();
@@ -1056,6 +1056,13 @@ namespace AutoQC
             }
             var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
             return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
         }
 
         #region [Implementation of IProcessControl interface]

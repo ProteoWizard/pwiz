@@ -30,11 +30,12 @@ namespace SkylineBatch
         private readonly RDirectorySelector _rDirectorySelector;
         private readonly Dictionary<string, PanoramaFile> _remoteFiles;
 
-        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
+        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, SkylineBatchConfigManagerState state, ReportInfo editingReport = null)
         {
             InitializeComponent();
             Icon = Program.Icon();
             _uiControl = uiControl;
+            State = state;
             _rDirectorySelector = rDirectorySelector;
             _remoteFiles = new Dictionary<string, PanoramaFile>();
             radioResultsFile.Checked = true;
@@ -60,6 +61,7 @@ namespace SkylineBatch
             }
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public ReportInfo NewReportInfo { get; private set; }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -69,7 +71,7 @@ namespace SkylineBatch
 
         private void Add()
         {
-            var rScriptForm = new RScriptForm(null, null, null, _rDirectorySelector);
+            var rScriptForm = new RScriptForm(null, null, null, _rDirectorySelector, _uiControl, State);
             if (DialogResult.OK != rScriptForm.ShowDialog(this))
                 return;
             if (rScriptForm.RemoteFile != null)
@@ -103,9 +105,10 @@ namespace SkylineBatch
             var oldPath = (string)dataGridScripts.SelectedCells[0].Value;
             var rowSelected = dataGridScripts.SelectedRows[0].Index;
             var remoteFile = _remoteFiles.ContainsKey(oldPath) ? _remoteFiles[oldPath] : null;
-            var rScriptForm = new RScriptForm(oldPath, (string)dataGridScripts.SelectedCells[2].Value, remoteFile, _rDirectorySelector);
+            var rScriptForm = new RScriptForm(oldPath, (string)dataGridScripts.SelectedCells[2].Value, remoteFile, _rDirectorySelector, _uiControl, State);
             if (DialogResult.OK != rScriptForm.ShowDialog(this))
                 return;
+            State = rScriptForm.State;
             dataGridScripts.Rows.RemoveAt(rowSelected);
             if (_remoteFiles.ContainsKey(oldPath))
                 _remoteFiles.Remove(oldPath);

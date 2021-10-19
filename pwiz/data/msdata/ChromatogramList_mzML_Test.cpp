@@ -79,7 +79,7 @@ void test(bool indexed)
     ChromatogramPtr s = sl->chromatogram(0); // read without binary data
     unit_assert(s.get());
     unit_assert(s->id == "tic");
-    unit_assert(s->binaryDataArrayPtrs.empty());
+    unit_assert(s->binaryDataArrayPtrs[0]->data.empty());
 
     unit_assert(sl->chromatogramIdentity(0).index == 0);
     unit_assert(sl->chromatogramIdentity(0).id == "tic");
