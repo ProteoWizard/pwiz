@@ -2645,7 +2645,7 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            else if (isDia && !DocumentUI.Settings.HasResults)
+            else if (ShouldPromptForDecoys(DocumentUI))
             {
                 using (var dlg = new MultiButtonMsgDlg(
                     Resources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
@@ -2702,6 +2702,13 @@ namespace pwiz.Skyline
                         ComboResults.SelectedItem = namedResults[0].Key;
                 }
             }
+        }
+
+        public static bool ShouldPromptForDecoys(SrmDocument doc)
+        {
+            return Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) &&
+                   !doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy) &&
+                   !doc.Settings.HasResults;
         }
 
         /// <summary>

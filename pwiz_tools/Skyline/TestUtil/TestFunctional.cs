@@ -2238,8 +2238,7 @@ namespace pwiz.SkylineTestUtil
         {
             var docBefore = SkylineWindow.Document;
             ImportResultsDlg importResultsDlg;
-            if (!Equals(docBefore.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
-                docBefore.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            if (!SkylineWindow.ShouldPromptForDecoys(docBefore))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
@@ -2308,7 +2307,16 @@ namespace pwiz.SkylineTestUtil
 
         public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
             string prefix = fileNames.Select(f => f.GetFileName()).GetCommonPrefix();
