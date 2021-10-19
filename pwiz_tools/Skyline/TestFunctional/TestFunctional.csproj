@@ -167,7 +167,7 @@
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
-    <Compile Include="LoadIonMobilityLibraryTest.cs" />
+    <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -523,6 +523,7 @@
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
