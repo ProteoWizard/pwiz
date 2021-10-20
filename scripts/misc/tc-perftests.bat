@@ -7,13 +7,12 @@ rmdir /s /q build-nt-x86
 REM Remove Skyline test artifacts
 rmdir /s /q pwiz_tools\Skyline\TestResults
 
-pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll loop=1 language=en perftests=on teamcitytestdecoration=on
-rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll,TestPerf.dll listonly > tests.txt
+powershell "Get-Content tests.txt | ForEach-Object { $_.split(\"`t\")[1] }" > testNames.txt
 
-FOR %%I IN (AgilentIMSImportTest,AgilentSpectrumMillRampedIMSImportTest,AgilentSpectrumMillSpectralLibTest,BrukerPasefMascotImportTest,TestDdaTutorial,ElectronIonizationAllIonsPerfTest,ImportResultsHugeTest,MeasuredDriftValuesPerfTest,MeasuredInverseK0ValuesPerfTest,NegativeIonDIATest,PeakSortingTest,TestAreaCVHistogramQValuesAndRatios,TestDiaTtofTutorial,TestDiaQeTutorial,TestDiaPasefTutorial,TestDiaTtofDiaUmpireTutorial,TestDriftTimePredictorSmallMolecules,TestDriftTimePredictorTutorial,TestHiResMetabolomicsTutorial,TestImportMassOnlyMolecules,TestMinimizeResultsPerformance,TestMs3Chromatograms,TestThermoFAIMS,UniquePeptides0PerfTest,UniquePeptides1PerfTest,UniquePeptides2PerfTest,UniquePeptides3PerfTest,UniquePeptides4PerfTest,UniquePeptides5PerfTest,WatersIMSImportTest,WatersLockmassCmdlinePerfTest,WatersLockmassPerfTest,WatersSonarPerfTest) DO (
-
-rmdir /s /q pwiz_tools\Skyline\TestResults
+FOR /F %%I IN (testNames.txt) DO (
 dir z:\ | findstr "free"
-pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on teamcitytestdecoration=on
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on skip=@scripts\misc\tc-perftests-skiplist.txt teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off
+rmdir /s /q pwiz_tools\Skyline\TestResults
 rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
 )
