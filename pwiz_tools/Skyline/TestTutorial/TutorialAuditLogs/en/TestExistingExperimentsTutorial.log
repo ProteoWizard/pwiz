@@ -506,10 +506,10 @@ Summary   : Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 All Info  :
 Applied peak CRP > ESDTSYVSLK > 568.7817++ (heavy) to all
 
-Undo Redo : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
-Summary   : Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Undo Redo : Deleted target CRP > YEVQGEVFTKPQLWP
+Summary   : Deleted target CRP > YEVQGEVFTKPQLWP
 All Info  :
-Deleted target CRP > ESDTSYVSLK > 568.7817++ (heavy)
+Deleted target CRP > YEVQGEVFTKPQLWP
 
 Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
 Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"

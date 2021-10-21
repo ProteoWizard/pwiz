@@ -83,7 +83,8 @@ void test(bool indexed)
 
     unit_assert(sl.get());
     unit_assert(sl->size() == 5);
-    unit_assert(sl->find ("scan=19") == 0);
+    unit_assert(sl->find("scan=19") == 0);
+    unit_assert(sl->find("index=18") == 0);
     IndexList indexList = sl->findNameValue("scan", "19");
     unit_assert(indexList.size()==1 && indexList[0]==0);
     unit_assert(sl->find("scan=20") == 1);
@@ -115,7 +116,7 @@ void test(bool indexed)
     unit_assert(s->id == "scan=19");
     unit_assert(s->spotID.empty());
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 1);
-    unit_assert(s->binaryDataArrayPtrs.empty());
+    unit_assert(s->binaryDataArrayPtrs[0]->data.empty());
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
     unit_assert(sl->spectrumIdentity(0).id == "scan=19");

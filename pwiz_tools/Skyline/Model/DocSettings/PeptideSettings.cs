@@ -2679,25 +2679,18 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public PeptideIntegration(PeakScoringModelSpec peakScoringModel)
         {
+            AutoTrain = AutoTrainType.none;
             PeakScoringModel = peakScoringModel ?? LegacyScoringModel.DEFAULT_UNTRAINED_MODEL;
         }
 
-        public bool AutoTrain { get; private set; }
+        public enum AutoTrainType { none, default_model, mprophet_model }
+
+        public AutoTrainType AutoTrain { get; private set; }
+        public bool IsAutoTrain => !Equals(AutoTrain, AutoTrainType.none);
         [TrackChildren]
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
-        public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
+        public bool IsSerializable { get { return IsAutoTrain || PeakScoringModel.IsTrained; } }
         public MProphetResultsHandler ResultsHandler { get; private set; }
-
-        public static bool AutoTrainCompleted(SrmDocument current, SrmDocument previous)
-        {
-            if (current == null || previous == null)
-                return false;
-                    
-            var curIntegration = current.Settings.PeptideSettings.Integration;
-            var prevIntegration = previous.Settings.PeptideSettings.Integration;
-        
-            return !curIntegration.AutoTrain && !Equals(curIntegration.PeakScoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL) && prevIntegration.AutoTrain;
-        }
 
         #region Property change methods
 
@@ -2706,7 +2699,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.PeakScoringModel = prop);
         }
 
-        public PeptideIntegration ChangeAutoTrain(bool prop)
+        public PeptideIntegration ChangeAutoTrain(AutoTrainType prop)
         {
             return ChangeProp(ImClone(this), im => im.AutoTrain = prop);
         }
@@ -2756,7 +2749,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            AutoTrain = reader.GetBoolAttribute(ATTR.auto_train);
+            if (Enum.TryParse<AutoTrainType>(reader.GetAttribute(ATTR.auto_train), out var autoTrain))
+                AutoTrain = autoTrain;
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -2775,8 +2769,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write child elements
-            writer.WriteAttribute(ATTR.auto_train, AutoTrain);
-            if (IsSerializable)
+            if (IsAutoTrain)
+                writer.WriteAttribute(ATTR.auto_train, AutoTrain);
+            if (PeakScoringModel.IsTrained)
             {
                 var helper = XmlUtil.FindHelper(PeakScoringModel, PEAK_SCORING_MODEL_SPEC_HELPERS);
                 if (helper == null)

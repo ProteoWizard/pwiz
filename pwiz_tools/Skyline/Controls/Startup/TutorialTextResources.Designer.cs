@@ -115,6 +115,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DDA Search for MS1 Filtering.
+        /// </summary>
+        internal static string DDASearch_Caption {
+            get {
+                return ResourceManager.GetString("DDASearch_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience starting DDA mass spectometer files, running a peptide search with MS Amanda, building a spectral library from the search results and finally extracting chromatograms for quantitative analysis from the MS1 spectra in the DDA files. In this tutorial, you will use the Skyline Peptide Search wizard to search 3 DDA data files acquired from a human whole cell lysate with the Sigma Alrich UPS1 standard mix of stable isotope labeled proteins spiked in. You will set up Skyline to extract the [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string DDSearch_Description {
+            get {
+                return ResourceManager.GetString("DDSearch_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Independent Acquisition.
         /// </summary>
         internal static string DIA_Caption {
@@ -129,6 +147,24 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string DIA_Description {
             get {
                 return ResourceManager.GetString("DIA_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analysis of diaPASEF Data.
+        /// </summary>
+        internal static string DIA_PASEF_Caption {
+            get {
+                return ResourceManager.GetString("DIA_PASEF_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience working with a data independent acquisition (DIA) parallel accumulation serial fragmentation (PASEF) data, from a Bruker timsTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from ddaPASEF data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data  [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string DIA_PASEF_Description {
+            get {
+                return ResourceManager.GetString("DIA_PASEF_Description", resourceCulture);
             }
         }
         

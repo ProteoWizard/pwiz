@@ -98,6 +98,11 @@ void test()
     unit_assert(sl->find("index=1") == 1);
     unit_assert(sl->find("index=2") == 2);
 
+    // check that hack works when looking up MGF spectra by scan
+    unit_assert(sl->find("scan=1") == 0);
+    unit_assert(sl->find("scan=2") == 1);
+    unit_assert(sl->find("scan=3") == 2);
+
     // find the second spectrum by TITLE field
     IndexList list = sl->findSpotID("small.pwiz.0004.0004.2");
     unit_assert(list.size() == 1);
