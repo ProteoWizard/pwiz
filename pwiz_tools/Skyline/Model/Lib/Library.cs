@@ -68,8 +68,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                   !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
+            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
                    !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults) ||
                    !ReferenceEquals(document.Id, previous.Id);
         }
