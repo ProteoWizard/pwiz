@@ -10,7 +10,7 @@ All Info  :
 Added spectral library "DIA-PASEF-tutorial"
 Build Spectral Library > Cut-off score is "0,95"
 Build Spectral Library > Search files : contains "interact.pep.xml"
-Build Spectral Library > iRT standard peptides is "CiRT (iRT-C18)"
+Build Spectral Library > iRT standard peptides is Automatic
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
@@ -20,7 +20,7 @@ Search files =
 [
     "interact.pep.xml"
 ],
-iRT standard peptides = "CiRT (iRT-C18)",
+iRT standard peptides = Automatic,
 Include ambiguous matches = False,
 Filter for document peptides = False,
 Workflow = "DIA",

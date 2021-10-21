@@ -1895,7 +1895,7 @@ namespace pwiz.Skyline
                 return false;
 
             // Add iRTs
-            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            if (import.IrtStandard != null && !import.IrtStandard.IsEmpty)
             {
                 ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
                     out var irtProviders, out var autoStandards, out var cirtPeptides);
@@ -1909,7 +1909,7 @@ namespace pwiz.Skyline
                     }
                     numCirt = commandArgs.NumCirts.Value;
                 }
-                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                else if (import.IrtStandard.IsAuto)
                 {
                     switch (autoStandards.Count)
                     {
