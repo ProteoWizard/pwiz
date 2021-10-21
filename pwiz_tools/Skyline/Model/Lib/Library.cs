@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
                     if (iRTCapableBuilder.IrtStandard != null &&
-                        !iRTCapableBuilder.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                        !iRTCapableBuilder.IrtStandard.IsEmpty)
                     {
                         buildState.IrtStandard = iRTCapableBuilder.IrtStandard;
                     }
