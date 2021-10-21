@@ -261,8 +261,9 @@ namespace pwiz.Skyline.Model
                                        {THERMO_LTQ, EXT_THERMO},
                                        {THERMO_QUANTIVA, EXT_THERMO},
                                        {THERMO_ALTIS, EXT_THERMO},
-                                       {THERMO_FUSION, EXT_THERMO},
                                        {THERMO_EXPLORIS, EXT_THERMO},
+                                       {THERMO_ECLIPSE, EXT_THERMO},
+                                       {THERMO_FUSION, EXT_THERMO},
                                        {THERMO_FUSION_LUMOS, EXT_THERMO},
                                        {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}

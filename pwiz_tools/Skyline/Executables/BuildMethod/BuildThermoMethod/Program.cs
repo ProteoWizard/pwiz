@@ -290,7 +290,7 @@ namespace BuildThermoMethod
             }
         }
 
-        public SureQuantInfo(int charge, bool heavy, string seq, bool isPrecursor, string fragmentName)
+        private SureQuantInfo(int charge, bool heavy, string seq, bool isPrecursor, string fragmentName)
         {
             Charge = charge;
             Heavy = heavy;
