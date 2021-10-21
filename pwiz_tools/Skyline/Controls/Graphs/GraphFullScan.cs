@@ -1204,8 +1204,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
         {
-            HeatMapGraphPane.ShowHeatMap = !spectrumBtn.Checked;
-            Settings.Default.SumScansFullScan = spectrumBtn.Checked;
+            ShowMobility(!spectrumBtn.Checked);
+        }
+
+        public void ShowMobility(bool show)
+        {
+            HeatMapGraphPane.ShowHeatMap = show;
+            Settings.Default.SumScansFullScan = spectrumBtn.Checked = !show;
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();
