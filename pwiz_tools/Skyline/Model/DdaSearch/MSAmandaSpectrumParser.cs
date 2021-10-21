@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             if (new MSDataRunPath(spectraFile) != msdataRunPath)
                 return 0;
-            using (var filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, preferOnlyMsLevel: 2))
+            using (var filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, acceptZeroLengthSpectra: false, preferOnlyMsLevel: 2))
             {
                 TotalSpectra = filereader.SpectrumCount;
             }
