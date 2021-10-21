@@ -207,7 +207,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   •	From the File menu, choose Import and click Results.
             using (new WaitDocumentChange(null, true))
             {
-                var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                var importResultsDlg1 = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
                 //   •	Set the Files to import simultaneously field to Many.
                 //   •	Check Show chromatograms during import.
                 //   The Import Results form will appear as follows:

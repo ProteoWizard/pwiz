@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model
             if (!irtProviders.Any())
                 irtProviders = lib.RetentionTimeProviders.ToArray();
 
-            var isAuto = ReferenceEquals(standard, IrtStandard.AUTO);
+            var isAuto = standard.IsAuto;
             autoStandards = isAuto
                 ? IrtStandard.BestMatch(irtProviders.SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => rt.PeptideSequence))
                 : null;

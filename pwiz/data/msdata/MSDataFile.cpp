@@ -77,6 +77,8 @@ void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
 PWIZ_API_DECL MSDataFile::MSDataFile(const string& filename, const Reader* reader,
                                      bool calculateSourceFileChecksum)
 {
+    check_path_length(filename);
+
     // peek at head of file 
     string head = read_file_header(filename, 512);
 
@@ -219,6 +221,8 @@ void MSDataFile::write(const MSData& msd,
                        const WriteConfig& config,
                        const IterationListenerRegistry* iterationListenerRegistry)
 {
+    check_path_length(filename);
+
     switch (config.format)
     {
         case MSDataFile::Format_MZ5:

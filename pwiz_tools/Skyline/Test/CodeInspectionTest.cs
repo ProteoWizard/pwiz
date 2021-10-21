@@ -215,6 +215,64 @@ namespace pwiz.SkylineTest
             return missing;
         }
 
+        /// <summary>
+        /// Just a quick smoke test to remind devs to add audit log tests where needed, and to catch cases where its obvious that one or
+        /// more languages need updating because line counts don't agree
+        /// </summary>
+        void InspectTutorialAuditLogs(string root, List<string> errors)
+        {
+            var logsDir = Path.Combine(root, @"TestTutorial", @"TutorialAuditLogs");
+            var logs = Directory.GetFiles(logsDir, "*.log", SearchOption.AllDirectories).ToList();
+            var languages = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[1]).Distinct().ToList();
+            var tests = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[2]).Distinct().ToList();
+            foreach (var test in tests)
+            {
+                var results = new List<string>();
+                foreach (var language in languages)
+                {
+                    var lPath = Path.Combine(logsDir, language, test);
+                    if (!logs.Contains(lPath))
+                    {
+                        results.Add(string.Format("Did not find {0} version. This needs to be created and added to source control.", language));
+                    }
+                }
+
+                var english = @"en";
+                var enVersion = Path.Combine(logsDir, english, test);
+                if (File.Exists(enVersion))
+                {
+                    var lines = File.ReadAllLines(enVersion);
+                    var badLang = new List<string>();
+                    foreach (var language in languages.Where(l => l != english))
+                    {
+                        var l10nVersion = Path.Combine(logsDir, language, test);
+                        if (!File.Exists(l10nVersion))
+                        {
+                            continue; // Already noted
+                        }
+
+                        var l10nLines = File.ReadAllLines(l10nVersion);
+                        if (lines.Length != l10nLines.Length)
+                        {
+                            badLang.Add(language);
+                        }
+                    }
+
+                    if (badLang.Any())
+                    {
+                        results.Add(string.Format(
+                            @"Line count for {0} does not match {1}. Tutorial audit logs should be regenerated.",
+                            english, string.Join(@", ", badLang)));
+                    }
+                }
+
+                if (results.Any())
+                {
+                    errors.Add(string.Format(@"{0} Error: {1}", test, string.Join(@", ", results)));
+                }
+            }
+        }
+
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
@@ -306,6 +364,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            InspectTutorialAuditLogs(root, results);
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)
