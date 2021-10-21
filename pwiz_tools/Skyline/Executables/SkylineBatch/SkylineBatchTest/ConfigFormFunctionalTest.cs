@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -59,10 +58,11 @@ namespace SkylineBatchTest
             });
 
             RunUI(() => { mainForm.ClickRun(1); });
+            // only not shown after prev test run
             //var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             //WaitForClosedForm(longWaitDialog);
             var tenSeconds = new TimeSpan(0, 0, 10);
-            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 20,
                 "Config did not start");
             RunUI(() => { mainForm.tabMain.SelectedIndex = 0; });
             var oneMinute = new TimeSpan(0, 1, 0);
@@ -100,7 +100,7 @@ namespace SkylineBatchTest
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => mainForm.ClickEdit());
             var configDlg = ShowDialog<SkylineBatchConfigForm>(() => invalidConfigForm.btnSkip.PerformClick());
             var initialFilePath = configDlg.comboTemplateFile.Text;
-            var downloadDlg = ShowDialog<PanoramaFileForm>(() => configDlg.templateControl.btnDownload.PerformClick());
+            var downloadDlg = ShowDialog<RemoteFileForm>(() => configDlg.templateControl.btnDownload.PerformClick());
             RunUI(() => { downloadDlg.btnSave.PerformClick(); });
             var currFilePath = configDlg.comboTemplateFile.Text;
             RunUI(() => { configDlg.CancelButton.PerformClick(); });

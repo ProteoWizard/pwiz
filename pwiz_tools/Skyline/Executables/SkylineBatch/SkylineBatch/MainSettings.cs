@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -208,13 +209,13 @@ namespace SkylineBatch
             var dataReplaced =
                 TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
                     Server != null || preferReplace, out string replacedDataPath);
-            var dataServer = Server != null ? new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, replacedDataPath) : null;
+            var dataServer = Server != null ? new DataServerInfo(Server.FileSource, Server.RelativePath, Server.DataNamingPattern, replacedDataPath) : null;
             var annotationsValidator = AnnotationsDownload != null
                 ? ValidateAnnotationsWithServer
                 : (Validator)ValidateAnnotationsWithoutServer;
             var annotationsReplaced =
                 TextUtil.SuccessfulReplace(annotationsValidator, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
-            var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? new PanoramaFile(AnnotationsDownload, Path.GetDirectoryName(replacedAnnotationsPath), AnnotationsDownload.FileName) : null;
+            var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(replacedAnnotationsPath)) : null;
 
             pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, replacedDataPath,
                 dataServer, replacedAnnotationsPath, annotationsDownload, ReplicateNamingPattern);
@@ -226,7 +227,7 @@ namespace SkylineBatch
             var skylineTemplate = Template.ForcePathReplace(oldRoot, newRoot);
             var analysisFolderPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnalysisFolderPath);
             var dataPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, DataFolderPath);
-            var dataServer = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, dataPath);
+            var dataServer = new DataServerInfo(Server.FileSource, Server.RelativePath, Server.DataNamingPattern, dataPath);
             var annotationsPath = !string.IsNullOrEmpty(AnnotationsFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnnotationsFilePath) : string.Empty;
 
            var annotationsDownload = AnnotationsDownload != null
@@ -234,6 +235,28 @@ namespace SkylineBatch
 
             return new MainSettings(skylineTemplate, analysisFolderPath, dataPath,
                 dataServer, annotationsPath, annotationsDownload, ReplicateNamingPattern);
+        }
+
+        public MainSettings UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newTemplate = Template.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            var newDataServer = Server != null ? Server.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources) : null;
+            var newAnnotationsDownload = AnnotationsDownload != null ? AnnotationsDownload.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources) : null;
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath,
+                newDataServer, AnnotationsFilePath, newAnnotationsDownload, ReplicateNamingPattern);
+        }
+
+        public MainSettings ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newTemplate = Template.ReplacedRemoteFileSource(existingSource, newSource, out bool templateReplaced);
+            var dataReplaced = false;
+            var newDataServer = Server != null ? Server.ReplacedRemoteFileSource(existingSource, newSource, out dataReplaced) : null;
+            var annotationsReplaced = false;
+            var newAnnotationsDownload = AnnotationsDownload != null ? AnnotationsDownload.ReplacedRemoteFileSource(existingSource, newSource, out annotationsReplaced) : null;
+            replaced = templateReplaced || dataReplaced || annotationsReplaced;
+            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath,
+                newDataServer, AnnotationsFilePath, newAnnotationsDownload, ReplicateNamingPattern);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
@@ -275,6 +298,22 @@ namespace SkylineBatch
             reader.ReadToFollowing(XMLElements.ANNOTATIONS_FILE);
             var annotationsFilePath = reader.GetAttribute(XML_TAGS.path);
             var annotationsDownload = PanoramaFile.ReadXml(reader, annotationsFilePath);
+            return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
+                annotationsFilePath, annotationsDownload, replicateNamingPattern);
+        }
+
+        public static MainSettings ReadXmlVersion_21_1(XmlReader reader)
+        {
+            var analysisFolderPath = reader.GetAttribute(XML_TAGS.analysis_folder_path);
+            var replicateNamingPattern = reader.GetAttribute(XML_TAGS.replicate_naming_pattern);
+            reader.ReadToDescendant(XMLElements.TEMPLATE_FILE);
+            var template = SkylineTemplate.ReadXmlVersion_21_1(reader);
+            reader.ReadToFollowing(XMLElements.DATA_FOLDER);
+            var dataFolderPath = reader.GetAttribute(XML_TAGS.path);
+            var server = DataServerInfo.ReadXmlVersion_21_1(reader, dataFolderPath);
+            reader.ReadToFollowing(XMLElements.ANNOTATIONS_FILE);
+            var annotationsFilePath = reader.GetAttribute(XML_TAGS.path);
+            var annotationsDownload = PanoramaFile.ReadXmlVersion_21_1(reader, annotationsFilePath);
             return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
                 annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }

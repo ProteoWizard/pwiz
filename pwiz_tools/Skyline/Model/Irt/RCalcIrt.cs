@@ -849,7 +849,7 @@ namespace pwiz.Skyline.Model.Irt
     public class IncompleteStandardException : CalculatorException
     {
         //This will only be thrown by ChooseRegressionPeptides so it is OK to have an error specific to regressions.
-        private static readonly string ERROR = Resources
+        private static string ERROR => Resources
             .IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__;
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }

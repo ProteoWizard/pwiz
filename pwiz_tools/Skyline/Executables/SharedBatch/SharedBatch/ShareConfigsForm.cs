@@ -9,12 +9,12 @@ namespace SharedBatch
     {
         private readonly IMainUiControl _uiControl;
 
-        public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager, Icon icon)
+        public ShareConfigsForm(IMainUiControl uiControl, ConfigManagerState state, Icon icon)
         {
             InitializeComponent();
             Icon = icon;
             _uiControl = uiControl;
-            checkedSaveConfigs.Items.AddRange(configManager.ConfigNamesAsObjectArray());
+            checkedSaveConfigs.Items.AddRange(state.ConfigNamesAsObjectArray());
         }
 
         public int[] IndiciesToSave { get; private set; }
