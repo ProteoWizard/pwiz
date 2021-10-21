@@ -550,14 +550,14 @@ namespace BuildThermoMethod
 
                         switch (InstrumentType)
                         {
-                            // case InstrumentFusion:
-                            //     mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(InstrumentType, listItems, outMeth));
-                            //     break;
+                            case InstrumentFusion:
+                                mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(InstrumentType, listItems, outMeth));
+                                break;
                             case InstrumentExploris:
                                 mx.ApplyMethodModificationsFromXML(GetExplorisXml(InstrumentType, listItems, outMeth));
                                 break;
                             case InstrumentEclipse:
-                            case InstrumentFusion:
+                            // case InstrumentFusion:
                             case InstrumentFusionLumos:
                                 mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
                                 break;

@@ -654,7 +654,7 @@ namespace pwiz.Skyline.FileUI
             panelSureQuant.Visible =
                 _fileType == ExportFileType.Method &&
                 (InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
-                 InstrumentType == ExportInstrumentType.THERMO_FUSION ||
+                 // InstrumentType == ExportInstrumentType.THERMO_FUSION ||
                  InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS||
                  InstrumentType == ExportInstrumentType.THERMO_ECLIPSE);
             if (cbSureQuant.Checked)
