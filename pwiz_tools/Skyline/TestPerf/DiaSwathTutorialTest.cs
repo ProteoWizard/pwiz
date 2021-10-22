@@ -208,6 +208,8 @@ namespace TestPerf
             RunTest();
         }
 
+        public bool IsTtof => Equals("TTOF", _instrumentValues.InstrumentTypeName);
+
         [TestMethod]
         public void TestDiaQeTutorial()
         {
@@ -313,26 +315,24 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
-
                 TargetCounts = new[] { 14, 75, 83, 498 },
                 FinalTargetCounts = new[] { 12, 75, 83, 498 },
                 ScoringModelCoefficients = "-0.5435|-2.3125|7.5279|6.0311|-0.1596|0.6412|0.8679|-0.3131",
                 MassErrorStats = new[]
                 {
+                    new[] {3.9, 1.9},
                     new[] {3.8, 2.3},
-                    new[] {3.8, 2.1},
-                    new[] {3.6, 2.1},
-                    new[] {3.4, 3.4},
-                    new[] {4.1, 1.8},
-                    new[] {4.1, 2.2},
-                    new[] {3.7, 2.0},
+                    new[] {3.8, 1.8},
+                    new[] {3.6, 2.3},
+                    new[] {4.0, 1.7},
+                    new[] {4.4, 1.7},
+                    new[] {3.7, 1.8},
                 },
                 DiffPeptideCounts = new[] { 42, 7, 8, 12 },
                 UnpolishedProteins = 9,
             };
 
-            if (!IsCoverShotMode)
-                TestPasefSmallData();
+            TestPasefSmallData();
         }
 
         private void TestPasefSmallData()
@@ -355,7 +355,7 @@ namespace TestPerf
                 {
                     "DDA_search\\out\\interact.pep.xml",
                 },
-                IrtStandard = IrtStandard.CIRT_SHORT,
+                IrtStandard = IrtStandard.AUTO,
                 LibraryPeptideCount = 6028,
                 ExpectedIrtPeptideCount = 15,
                 IrtSlope = 8.765,
@@ -390,13 +390,13 @@ namespace TestPerf
                 ScoringModelCoefficients = "-0.3394|-0.8789|4.4756|3.5100|-0.1021|0.7491|0.4295|-0.1219",
                 MassErrorStats = new[]
                 {
-                    new[] {3.4, 3.1},
-                    new[] {3.4, 3.0},
-                    new[] {3.3, 3.2},
-                    new[] {3.5, 3.0},
-                    new[] {3.3, 3.2},
-                    new[] {3.7, 3.0},
-                    new[] {3.4, 3.2},
+                    new[] {3.6, 2.7},
+                    new[] {3.6, 2.6},
+                    new[] {3.5, 2.7},
+                    new[] {3.7, 2.6},
+                    new[] {3.6, 2.7},
+                    new[] {3.9, 2.6},
+                    new[] {3.6, 2.7},
                 },
                 DiffPeptideCounts = new[] { 12594, 8476, 2253, 1850 },
                 UnpolishedProteins = 2307,
@@ -427,7 +427,7 @@ namespace TestPerf
                 {
                     "DDA_search\\out\\interact.pep.xml",
                 },
-                IrtStandard = IrtStandard.CIRT_SHORT,
+                IrtStandard = IrtStandard.AUTO,
                 LibraryPeptideCount = 22111,
                 ExpectedIrtPeptideCount = 15,
                 IrtSlope = 8.621,
@@ -441,6 +441,8 @@ namespace TestPerf
 
             RunTest();
         }
+
+        private bool IsPasef => Equals("PASEF", _instrumentValues.InstrumentTypeName);
 
         private void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
@@ -466,7 +468,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
-            CoverShotName = "DIA-SWATH";
+            CoverShotName = IsTtof ? "DIA-SWATH" : RootName;
 
             RunFunctionalTest();
 
@@ -508,7 +510,7 @@ namespace TestPerf
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
 
-            int screenshotPage = Equals("TTOF", _instrumentValues.InstrumentTypeName) ? 3 : 4;
+            int screenshotPage = IsTtof ? 3 : 4;
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", screenshotPage++);
 
             // We're on the "Build Spectral Library" page of the wizard.
@@ -533,13 +535,14 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
 
             AddIrtPeptidesDlg addIrtPeptidesDlg;
-            if (_instrumentValues.IrtStandard.Equals(IrtStandard.AUTO) ||
+            AddIrtStandardsDlg addIrtStandardsDlg = null;
+            if (_instrumentValues.IrtStandard.IsAuto ||
                 _instrumentValues.IrtStandard.Equals(IrtStandard.CIRT_SHORT) ||
                 _instrumentValues.IrtStandard.Equals(IrtStandard.CIRT))
             {
-                var addIrtStandardsDlg = ShowDialog<AddIrtStandardsDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                addIrtStandardsDlg = ShowDialog<AddIrtStandardsDlg>(() => importPeptideSearchDlg.ClickNextButton());
                 RunUI(() => addIrtStandardsDlg.StandardCount = _instrumentValues.ExpectedIrtPeptideCount);
-                PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select number of CiRT peptides", 5);
+                PauseForScreenShot<AddIrtStandardsDlg>("Add Standard Peptides - Select number of CiRT peptides", screenshotPage);
                 addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addIrtStandardsDlg.OkDialog);
             }
             else
@@ -569,6 +572,8 @@ namespace TestPerf
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
             });
             PauseForScreenShot("Add iRT peptides form", screenshotPage);
+            if (addIrtStandardsDlg != null)
+                screenshotPage++;
 
             var irtGraph = ShowDialog<GraphRegression>(() => addIrtPeptidesDlg.ShowRegression(0));
             PauseForScreenShot("iRT regression graph", screenshotPage++);
@@ -622,6 +627,8 @@ namespace TestPerf
                     Assert.IsTrue(DiaFiles.Contains(Path.GetFileName(resultFileName.Path)));
             });
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Extract chromatograms page with files", screenshotPage++);
+            if (IsPasef)
+                screenshotPage++;   // Because IPS wizard is so tall with IMS added
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
@@ -634,8 +641,7 @@ namespace TestPerf
             {
                 const string modOxidation = "Oxidation (M)";
                 // Define expected matched/unmatched modifications
-                var expectedMatched = !Equals(_instrumentValues.InstrumentTypeName, "PASEF")
-                    ? new[] { modOxidation } : Array.Empty<string>();
+                var expectedMatched = !IsPasef ? new[] { modOxidation } : Array.Empty<string>();
                 // Verify matched/unmatched modifications
                 AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
@@ -901,12 +907,24 @@ namespace TestPerf
 
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);
 
+            if (IsPasef)
+            {
+                RunUI(() => SkylineWindow.GraphFullScan.ShowMobility(true));
+                WaitForGraphs();
+                PauseForScreenShot<GraphFullScan>("Full-Scan graph window - mobility zoomed", screenshotPage++);
+            }
+
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
             WaitForGraphs();
             PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed", screenshotPage++);
 
             RunUI(SkylineWindow.GraphFullScan.Close);
             RunUI(SkylineWindow.ShowMassErrorHistogramGraph);
+            if (IsPasef)
+            {
+                // diaPASEF has an outlier in a poor scoring peak
+                RunUI(() => SkylineWindow.ShowPointsTypeMassError(PointsTypeMassError.targets_1FDR));
+            }
             WaitForGraphs();
             Assert.IsTrue(SkylineWindow.GraphMassError.TryGetGraphPane(out MassErrorHistogramGraphPane massErrorPane));
             int massErrorStatsIndex = 0;
@@ -1122,6 +1140,16 @@ namespace TestPerf
                         fcFloatingWindow.Left = SkylineWindow.Left + 8;
                         fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                     });
+
+                    if (IsPasef)
+                    {
+                        ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
+                            1.2642E+01, 1.0521E+04);
+                        RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
+                        RunUI(() => SkylineWindow.GraphFullScan.SetZoom(true));
+                        WaitForGraphs();
+                    }
+
                     TakeCoverShot();
                 }
             }
@@ -1129,61 +1157,61 @@ namespace TestPerf
 
         private void RunQValueSummaryTest()
         {
-                if (_instrumentValues.InstrumentTypeName == "TTOF" && !_analysisValues.IsWholeProteome)
+            if (!IsTtof || _analysisValues.IsWholeProteome)
+                return;
+
+            var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
+            var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
+            string qValuesReportName = "Q-ValuesTest";
+            string reportFileName = TestFilesDirs[0].GetTestPath(qValuesReportName + ".csv");
+            RunUI(() =>
+            {
+                viewEditor.ViewName = qValuesReportName;
+                var columnsToAdd = new[]
                 {
-                    var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-                    var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
-                    var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
-                    string qValuesReportName = "Q-ValuesTest";
-                    string reportFileName = TestFilesDirs[0].GetTestPath(qValuesReportName + ".csv");
-                    RunUI(() =>
-                    {
-                        viewEditor.ViewName = qValuesReportName;
-                        var columnsToAdd = new[]
-                        {
-                            // Not L10N
-                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.NeutralMass"),
-                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DetectionQValue"),
-                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Min"),
-                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Max"),
-                            PropertyPath.Parse(
-                                "Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Median")
-                        };
-                        foreach (var id in columnsToAdd)
-                        {
-                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                        }
-
-                        viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
-                    });
-
-                    OkDialog(viewEditor, () => viewEditor.OkDialog());
-                    OkDialog(editReportListDlg, () => editReportListDlg.OkDialog());
-
-                    RunUI(() =>
-                    {
-                        exportReportDlg.ReportName = qValuesReportName;
-                        exportReportDlg.OkDialog(reportFileName, TextUtil.SEPARATOR_CSV); // Not L10N
-                    });
-
-                    foreach (var line in File.ReadLines(reportFileName).Skip(1))
-                    {
-                        var values = line.Split(',').Select((strValue) =>
-                            double.TryParse(strValue, out var res) ? res : double.NaN
-                        ).ToArray();
-                        //skip the line if it has any N/As in it
-                        if (!values.Any(double.IsNaN))
-                        {
-                            var stats = new Statistics(values.Skip(4));
-                            //using numeric comparison due to rounding errors
-                            Assert.IsTrue(Math.Abs(values[1] - stats.Min()) <= 0.0001);
-                            Assert.IsTrue(Math.Abs(values[2] - stats.Max()) <= 0.0001);
-                            Assert.IsTrue(Math.Abs(values[3] - stats.Median()) <= 0.0001);
-                        }
-                    }
+                    // Not L10N
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.NeutralMass"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DetectionQValue"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Min"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Max"),
+                    PropertyPath.Parse(
+                        "Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Median")
+                };
+                foreach (var id in columnsToAdd)
+                {
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 }
+
+                viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
+            });
+
+            OkDialog(viewEditor, () => viewEditor.OkDialog());
+            OkDialog(editReportListDlg, () => editReportListDlg.OkDialog());
+
+            RunUI(() =>
+            {
+                exportReportDlg.ReportName = qValuesReportName;
+                exportReportDlg.OkDialog(reportFileName, TextUtil.SEPARATOR_CSV); // Not L10N
+            });
+
+            foreach (var line in File.ReadLines(reportFileName).Skip(1))
+            {
+                var values = line.Split(',').Select((strValue) =>
+                    double.TryParse(strValue, out var res) ? res : double.NaN
+                ).ToArray();
+                //skip the line if it has any N/As in it
+                if (!values.Any(double.IsNaN))
+                {
+                    var stats = new Statistics(values.Skip(4));
+                    //using numeric comparison due to rounding errors
+                    Assert.IsTrue(Math.Abs(values[1] - stats.Min()) <= 0.0001);
+                    Assert.IsTrue(Math.Abs(values[2] - stats.Max()) <= 0.0001);
+                    Assert.IsTrue(Math.Abs(values[3] - stats.Median()) <= 0.0001);
                 }
+            }
+        }
 
         private void FilterIrtProtein(DataboundGridControl fcGridControl)
         {
