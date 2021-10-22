@@ -103,7 +103,7 @@ namespace SkylineBatchTest
                 testConfigManager.StartBatchRun();
                 TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
                 Thread.Sleep(1000);
-                testConfigManager.CancelRunners();
+                testConfigManager.State.CancelRunners();
                 TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 
             }
@@ -135,7 +135,7 @@ namespace SkylineBatchTest
 
         private bool ConfigRunnersStarted()
         {
-            return configManager.ConfigRunning();
+            return configManager.State.ConfigRunning();
         }
     }
 }

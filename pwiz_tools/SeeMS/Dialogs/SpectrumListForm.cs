@@ -244,8 +244,10 @@ namespace seems
 
             if (row.IonMobility > 0)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
-            else if (s.id.Contains("frame=") || s.id.Contains("block="))
+            else if (s.id.Contains("frame=") || s.id.Contains("block=") || s.GetIonMobilityArray() != null)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
+            else
+                row.IonMobilityType = SpectrumDataSet.IonMobilityType_None;
 
             row.SpotId = s.spotID;
             row.SpectrumType = s.cvParamChild( CVID.MS_spectrum_type ).name;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading;
 using System.Xml;
@@ -158,6 +159,24 @@ namespace SkylineBatch
             return new SkylineTemplate(path, zipPath, DependentConfigName, panoramaFile);
         }
 
+        public SkylineTemplate UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            if (PanoramaFile == null)
+                return this;
+            var newPanoramaFile = PanoramaFile.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            return new SkylineTemplate(_path, _zippedPath, DependentConfigName, newPanoramaFile);
+        }
+
+        public SkylineTemplate ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            replaced = false;
+            if (PanoramaFile == null)
+                return this;
+            var newPanoramaFile = PanoramaFile.ReplacedRemoteFileSource(existingSource, newSource, out replaced);
+            return new SkylineTemplate(_path, _zippedPath, DependentConfigName, newPanoramaFile);
+        }
+
         public void ExtractTemplate(Update progressHandler, CancellationToken cancelToken)
         {
             if (!Zipped) return;
@@ -182,6 +201,16 @@ namespace SkylineBatch
             var zippedPath = reader.GetAttribute(XML_TAGS.zip_path);
             var dependentConfigName = reader.GetAttribute(XML_TAGS.dependent_configuration);
             var panoramaFile = PanoramaFile.ReadXml(reader, string.IsNullOrEmpty(path) ? zippedPath : path);
+
+            return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
+        }
+
+        public static SkylineTemplate ReadXmlVersion_21_1(XmlReader reader)
+        {
+            var path = reader.GetAttribute(XML_TAGS.path);
+            var zippedPath = reader.GetAttribute(XML_TAGS.zip_path);
+            var dependentConfigName = reader.GetAttribute(XML_TAGS.dependent_configuration);
+            var panoramaFile = PanoramaFile.ReadXmlVersion_21_1(reader, string.IsNullOrEmpty(path) ? zippedPath : path);
 
             return new SkylineTemplate(path, zippedPath, dependentConfigName, panoramaFile);
         }
@@ -213,21 +242,20 @@ namespace SkylineBatch
     public class PanoramaFile : Server
     {
 
-        private string _inputUrl;
+        public const string XML_EL = "panorama_file";
 
 
-        public static PanoramaFile PanoramaFileFromUI(Server server, string path, CancellationToken cancelToken)
+        public static PanoramaFile PanoramaFileFromUI(RemoteFileSource remoteFileSource, string relativeUrl, string path, CancellationToken cancelToken)
         {
-            ValidateInputs(server.URI.AbsoluteUri, server.Username, server.Password, out _);
+            ValidateInputs(remoteFileSource, relativeUrl);
+            var server = new Server(remoteFileSource, relativeUrl);
             var fileName = ValidatePanoramaServer(server, cancelToken);
             if (cancelToken.IsCancellationRequested) return null;
-            return new PanoramaFile(server, path, fileName);
+            return new PanoramaFile(remoteFileSource, relativeUrl, path, fileName);
         }
 
-        public PanoramaFile(Server server, string downloadFolder, string fileName) : base (server.URI, server.Username, server.Password, server.Encrypt)
+        public PanoramaFile(RemoteFileSource remoteFileSource, string relativeUrl, string downloadFolder, string fileName) : base (remoteFileSource, relativeUrl)
         {
-            _inputUrl = server.URI.AbsoluteUri;
-
             DownloadFolder = downloadFolder;
             FileName = fileName;
             ExpectedSize = -1;
@@ -245,26 +273,28 @@ namespace SkylineBatch
 
         public string DownloadUrl => URI.AbsoluteUri;
 
-        public string UserName => Username?? string.Empty;
-
-        public new string Password => base.Password ?? string.Empty;
-        
-
-        public PanoramaFile ReplacedFolder(string newFolder)
+        public PanoramaFile ReplaceFolder(string newFolder)
         {
-            return new PanoramaFile(new Server(URI, UserName, Password, Encrypt), newFolder, FileName);
+            return new PanoramaFile(FileSource, RelativePath, newFolder, FileName);
+        }
+
+        public new PanoramaFile UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newFileSource = FileSource.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            return new PanoramaFile(newFileSource, RelativePath, DownloadFolder, FileName);
+        }
+
+        public PanoramaFile ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newFileSource = FileSource.ReplacedRemoteFileSource(existingSource, newSource, out replaced);
+            return new PanoramaFile(newFileSource, RelativePath, DownloadFolder, FileName);
         }
 
         public void AddDownloadingFile(ServerFilesManager serverFiles)
         {
             serverFiles.AddServer(this);
         }
-
-        public PanoramaFile ReplaceFolder(string newFolder)
-        {
-            return new PanoramaFile(this, newFolder, FileName);
-        }
-        
 
         public void Validate()
         {
@@ -304,7 +334,7 @@ namespace SkylineBatch
         {
             var replaced = TextUtil.SuccessfulReplace(ValidateDownloadFolder, oldRoot, newRoot, DownloadFolder,
                 Program.FunctionalTest, out string replacedFolderPath);
-            replacedPanoramaFile = new PanoramaFile(new Server(URI, UserName, Password, Encrypt), replacedFolderPath, FileName);
+            replacedPanoramaFile = ReplaceFolder(replacedFolderPath);
             return replaced;
         }
 
@@ -329,16 +359,27 @@ namespace SkylineBatch
             var fileName = Path.GetFileName(filePath);
             var server = Server.ReadXml(reader);
 
-            return new PanoramaFile(server, downloadFolder, fileName);
+            return new PanoramaFile(server.FileSource, server.RelativePath, downloadFolder, fileName);
+        }
+
+        public static PanoramaFile ReadXmlVersion_21_1(XmlReader reader, string filePath)
+        {
+            if (!reader.ReadToDescendant(XMLElements.REMOTE_FILE))
+                return null;
+            var downloadFolder = Path.GetDirectoryName(filePath);
+            var fileName = Path.GetFileName(filePath);
+            var server = Server.ReadXmlVersion_21_1(reader);
+
+            return new PanoramaFile(server.FileSource, server.RelativePath, downloadFolder, fileName);
         }
 
         public new static PanoramaFile ReadXmlVersion_20_2(XmlReader reader)
         {
-            if (!reader.ReadToDescendant("panorama_file")) return null;
+            if (!reader.ReadToDescendant(XML_EL)) return null;
             var downloadFolder = reader.GetAttribute(OLD_XML_TAGS.DownloadFolder);
             var fileName = reader.GetAttribute(OLD_XML_TAGS.FileName);
             var server = Server.ReadXmlVersion_20_2(reader);
-            return new PanoramaFile(server, downloadFolder, fileName);
+            return new PanoramaFile(server.FileSource, server.RelativePath, downloadFolder, fileName);
         }
 
         protected bool Equals(PanoramaFile other)

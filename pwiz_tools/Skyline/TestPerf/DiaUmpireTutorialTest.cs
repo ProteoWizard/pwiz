@@ -372,9 +372,15 @@ namespace TestPerf
             // build the document library.
             string diaDir = GetTestPath("DIA");
 
-            // delete -diaumpire files so they get regenerated instead of reused
-            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                FileEx.SafeDelete(file);
+            // when in regular test mode, delete -diaumpire files so they get regenerated instead of reused
+            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+            if (!IsRecordMode)
+            {
+                var diaumpireFiles = Directory.GetFiles(diaDir, "*-diaumpire.*");
+                var filesToRegenerate = diaumpireFiles.Skip(1); // regenerate all but 1 file in order to test file reusability
+                foreach (var file in filesToRegenerate)
+                    FileEx.SafeDelete(file);
+            }
 
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)
