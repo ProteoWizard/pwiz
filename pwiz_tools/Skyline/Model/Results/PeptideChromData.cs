@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -231,6 +232,14 @@ namespace pwiz.Skyline.Model.Results
             // Sort transition group level peaks by retention time and record the best peak
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.StorePeaks();
+            foreach (var chromDataSet in _dataSets)
+            {
+                var peakCounts = chromDataSet.Chromatograms.Select(chrom => chrom.Peaks.Count).Distinct().ToList();
+                if (peakCounts.Count > 1)
+                {
+                    Assume.Fail("Peak counts are different");
+                }
+            }
         }
 
         private MaxPossibleShift GetMaxPossibleShift(IList<PeptideChromDataPeakList> listPeakSets)

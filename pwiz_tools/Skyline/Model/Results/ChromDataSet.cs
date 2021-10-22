@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results
             _isTimeNormalArea = isTimeNormalArea;
             FullScanAcquisitionMethod = fullScanAcquisitionMethod;
                  
-            _listChromData.AddRange(arrayChromData);
+            AddRange(arrayChromData);
             if (transitionGroupDocNode != null)
             {
                 NodeGroups = ImmutableList.Singleton(Tuple.Create(peptideDocNode, transitionGroupDocNode));
@@ -101,7 +101,20 @@ namespace pwiz.Skyline.Model.Results
 
         public void Add(ChromData chromData)
         {
-            _listChromData.Add(chromData);
+            AddRange(new []{chromData});
+        }
+
+        public void Remove(ChromData chromData)
+        {
+            _listChromData.Remove(chromData);
+        }
+
+        public void AddRange(IEnumerable<ChromData> chromDatas)
+        {
+            foreach (var chromData in chromDatas)
+            {
+                _listChromData.Add(chromData.CloneForWrite());
+            }
         }
 
         public void RemovePeak(ChromDataPeakList peakGroup)
@@ -270,7 +283,9 @@ namespace pwiz.Skyline.Model.Results
             foreach (var chromData in _listChromData.ToArray())
             {
                 if (!chromData.Load(provider, modifiedSequence, peptideColor))
-                    _listChromData.Remove(chromData);
+                {
+                    Remove(chromData);
+                }
             }
             return _listChromData.Count > 0;
         }

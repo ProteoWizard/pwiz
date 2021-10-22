@@ -953,8 +953,6 @@ namespace pwiz.Skyline.Model.Results
                     for (int j = 0; j < arrayChromData.Length; j++)
                     {
                         var chromData = arrayChromData[j];
-                        if (setChromData.Contains(chromData))
-                            arrayChromData[j] = chromData.CloneForWrite();
                         setChromData.Add(chromData);
                     }
 
