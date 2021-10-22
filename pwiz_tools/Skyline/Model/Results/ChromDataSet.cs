@@ -178,7 +178,13 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
-        public bool OverrideTextId { get; private set; }
+        /// <summary>
+        /// Indicates that this ChromDataSet needs a ChromatogramTextId corresponding to
+        /// the PeptideDocNode. If this is false, then ChromDataSet will use whatever TextId
+        /// is in the ChromKey (which will be blank for SRM files, or will be the same as the PeptideDocNode
+        /// TextId if this was full scan extraction.
+        /// </summary>
+        public bool OverrideTextId { get; }
 
         public Target ModifiedSequence
         {
