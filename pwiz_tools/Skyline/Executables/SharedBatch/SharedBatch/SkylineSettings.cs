@@ -22,7 +22,8 @@ namespace SharedBatch
 
         private int[] _version;
 
-        private int[] _savedVersion;
+        // TODO(Ali): implement this later
+        //private int[] _savedVersion;
 
         private List<string> _versionOutput;
 
@@ -36,7 +37,7 @@ namespace SharedBatch
             bool skylineDailyAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath);
             bool skylineDailyWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
 
-            _savedVersion = savedVersion;
+            //_savedVersion = savedVersion;
 
             switch (type)
             {

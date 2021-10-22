@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Model.Results
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
-        CURRENT = Fourteen,
+        Fifteen = 15, // Add import time to CachedFileHeaderStruct
+        CURRENT = Fifteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -175,24 +176,38 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new NotSupportedException();
             }
-            CacheFormatVersion versionRequired;
-            if (formatVersion.CompareTo(CacheHeaderStruct.WithStructSizes) >= 0)
-            {
-                versionRequired = CacheHeaderStruct.WithStructSizes;
-            }
-            else
-            {
-                versionRequired = formatVersion;
-            }
+
             return new CacheFormat
             {
                 FormatVersion = formatVersion,
-                VersionRequired = versionRequired,
+                VersionRequired = GetVersionRequired(formatVersion),
                 ChromPeakSize = ChromPeak.GetStructSize(formatVersion),
                 ChromTransitionSize = ChromTransition.GetStructSize(formatVersion),
                 CachedFileSize = CachedFileHeaderStruct.GetStructSize(formatVersion),
                 ChromGroupHeaderSize = ChromGroupHeaderInfo.GetStructSize(formatVersion)
             };
+        }
+
+        /// <summary>
+        /// Returns the version number required to be able to read a skyd file of the specific CacheFormatVersion.
+        /// Starting with CacheFormatVersion.Twelve, the size of structures were written to the .skyd file so older
+        /// versions of Skyline could skip the data they did not know about.
+        /// However, the required version does need to be updated whenever variable length things are added which older versions
+        /// will not know how to skip.
+        /// </summary>
+        private static CacheFormatVersion GetVersionRequired(CacheFormatVersion formatVersion)
+        {
+            if (formatVersion <= CacheHeaderStruct.WithStructSizes)
+            {
+                return formatVersion;
+            }
+
+            if (formatVersion < CacheFormatVersion.Fourteen)
+            {
+                return CacheHeaderStruct.WithStructSizes;
+            }
+            // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
+            return CacheFormatVersion.Fourteen;
         }
 
 

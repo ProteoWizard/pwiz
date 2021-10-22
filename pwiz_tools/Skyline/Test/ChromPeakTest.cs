@@ -45,5 +45,25 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(8, chromPeak2.Fwhm);
             Assert.AreEqual(true, chromPeak2.IsFwhmDegenerate);
         }
+
+        [TestMethod]
+        public void TestPeakIntegrator()
+        {
+            var times = Enumerable.Range(0, 12).Select(i => i / 7f).ToList();
+            var timeIntensities = new TimeIntensities(times, Enumerable.Range(0, 12).Select(t => 36f - (t - 6) * (t - 6)), null, null);
+            var peakIntegrator = new PeakIntegrator(timeIntensities);
+            var flagValues = ChromPeak.FlagValues.time_normalized;
+            var peakStartTime = times[1];
+            var peakEndTime = times[times.Count - 2];
+            var peakWithBackground = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
+            Assert.AreNotEqual(0, peakWithBackground.BackgroundArea);
+
+            // Set the TimeIntervals so the peakIntegrator will use "IntegratePeakWithoutBackground" 
+            peakIntegrator.TimeIntervals = TimeIntervals.EMPTY;
+            var peakWithoutBackground = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
+            Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
+            var expectedArea = peakWithBackground.Area + peakWithBackground.BackgroundArea;
+            Assert.AreEqual(expectedArea, peakWithoutBackground.Area, .01);
+        }
     }
 }

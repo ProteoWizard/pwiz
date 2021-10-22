@@ -381,7 +381,7 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
                             }
-                            if (buildState.IrtStandard != null && !buildState.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                            if (buildState.IrtStandard != null && !buildState.IrtStandard.IsEmpty)
                             {
                                 // Load library
                                 Library lib = null;
@@ -419,13 +419,13 @@ namespace pwiz.Skyline.SettingsUI
         public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm, out IrtStandard outStandard)
         {
             outStandard = standard;
-            if (lib == null || !lib.IsLoaded || standard == null || standard.Name.Equals(IrtStandard.EMPTY.Name))
+            if (lib == null || !lib.IsLoaded || standard == null || standard.IsEmpty)
                 return false;
 
             Control GetParent() { return useTopMostForm ? FormUtil.FindTopLevelOpenForm(f => f is BuildLibraryNotification) ?? parent : parent; }
 
             IRetentionTimeProvider[] irtProviders = null;
-            var isAuto = ReferenceEquals(standard, IrtStandard.AUTO);
+            var isAuto = standard.IsAuto;
             List<IrtStandard> autoStandards = null;
             var cirtPeptides = new DbIrtPeptide[0];
 

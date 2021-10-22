@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model
             referenceMatchData = referenceMatchDataList.ToArray();
         }
 
-        public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, ref TransitionGroupDocNode nodeTranGroup,
+        public static SrmDocument ApplyPeak(SrmDocument doc, PeptideTreeNode nodePepTree, TransitionGroupDocNode nodeTranGroup,
             int resultsIndex, ChromFileInfoId resultsFile, bool subsequent, ReplicateValue groupBy, object groupByValue, ILongWaitBroker longWaitBroker)
         {
             nodeTranGroup = nodeTranGroup ?? PickTransitionGroup(doc, nodePepTree, resultsIndex);
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
             return doc;
         }
 
-        private static TransitionGroupDocNode PickTransitionGroup(SrmDocument doc, PeptideTreeNode nodePepTree, int resultsIndex)
+        public static TransitionGroupDocNode PickTransitionGroup(SrmDocument doc, PeptideTreeNode nodePepTree, int resultsIndex)
         {
             // Determine which transition group to use
             var nodeTranGroups = nodePepTree.DocNode.TransitionGroups.ToArray();

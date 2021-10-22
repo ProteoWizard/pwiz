@@ -374,6 +374,11 @@ namespace pwiz.ProteowizardWrapper
                    MsDataSpectrum.WatersFunctionNumberFromId(s.Id, s.IonMobilities != null) >= _lockmassFunction.Value;
         }
 
+        public IEnumerable<string> GetFileContentList()
+        {
+            return _msDataFile.fileDescription.fileContent.cvParams.Select(cv => cv.name);
+        }
+
         /// <summary>
         /// Record any instrument info found in the file, along with any Waters lockmass info we have
         /// </summary>
@@ -394,6 +399,13 @@ namespace pwiz.ProteowizardWrapper
                     if (!param.empty() && param.cvid != CVID.MS_instrument_model)
                     {
                         instrumentModel = param.name;
+
+                        // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
+                        UserParam uParam = ic.userParam(@"instrument model");
+                        if (HasInfo(uParam))
+                        {
+                            instrumentModel = uParam.value;
+                        }
                     }
                     if(instrumentModel == null)
                     {
@@ -402,6 +414,14 @@ namespace pwiz.ProteowizardWrapper
                         if (HasInfo(uParam))
                         {
                             instrumentModel = uParam.value;
+                        }
+                        else
+                        {
+                            uParam = ic.userParam(@"instrument model");
+                            if (HasInfo(uParam))
+                            {
+                                instrumentModel = uParam.value;
+                            }
                         }
                     }
 
@@ -466,6 +486,11 @@ namespace pwiz.ProteowizardWrapper
         public bool IsWatersFile
         {
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
+        }
+
+        public bool HasDeclaredMSnSpectra
+        {
+            get { return _msDataFile.fileDescription.fileContent.hasCVParam(CVID.MS_MSn_spectrum); }
         }
 
         public bool IsWatersLockmassCorrectionCandidate
@@ -926,11 +951,15 @@ namespace pwiz.ProteowizardWrapper
                         data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
                         {
-                            data = TryGetIonMobilityData(s, CVID.MS_mean_drift_time_array, ref _cvidIonMobility);
-                            if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                            data = TryGetIonMobilityData(s, CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, ref _cvidIonMobility);
+                            if (data == null)
                             {
-                                _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
-                                return null;
+                                data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                                {
+                                    _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
+                                    return null;
+                                }
                             }
                         }
                         break;
@@ -1186,7 +1215,7 @@ namespace pwiz.ProteowizardWrapper
         private MsDataSpectrum _lastSpectrumInfo;
         private Spectrum GetCachedSpectrum(int scanIndex, DetailLevel detailLevel)
         {
-            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel)
+            if (scanIndex != _lastScanIndex || detailLevel > _lastDetailLevel || _lastSpectrum == null)
             {
                 _lastScanIndex = scanIndex;
                 _lastDetailLevel = detailLevel;

@@ -25,9 +25,10 @@ namespace AutoQC
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl, AutoQcConfigManagerState state)
         {
             InitializeComponent();
+            State = state;
             _invalidConfig = invalidConfig;
             _configManager = configManager;
             _mainControl = mainControl;
@@ -36,7 +37,7 @@ namespace AutoQC
             CreateValidConfig();
         }
 
-        public AutoQcConfig Config { get; private set; }
+        public AutoQcConfigManagerState State { get; private set; }
 
         public IValidatorControl CurrentControl { get; private set; } // for functional testing
 
@@ -48,10 +49,10 @@ namespace AutoQC
             var validPanoramaSettings = await FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
+            var validConfig = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
                 validMainSettings, validPanoramaSettings, validSkylineSettings);
             // replace old configuration
-            _configManager.ReplaceSelectedConfig(Config);
+            State.ReplaceSelectedConfig(validConfig, _mainControl);
             _mainControl.UpdateUiConfigurations();
             CloseSetup();
         }
@@ -81,7 +82,7 @@ namespace AutoQC
 
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
-            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
+            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath, State.GetRunningConfigs(), State.BaseState);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
 
@@ -185,7 +186,6 @@ namespace AutoQC
 
         private void btnSkip_Click(object sender, EventArgs e)
         {
-            Config = _invalidConfig;
             CloseSetup();
         }
 

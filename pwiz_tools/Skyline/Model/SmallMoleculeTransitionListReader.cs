@@ -1885,12 +1885,12 @@ namespace pwiz.Skyline.Model
     {
         private readonly DsvFileReader _csvReader;
 
-        public SmallMoleculeTransitionListCSVReader(IList<string> csvText, List<string> columnPositions = null)
+        public SmallMoleculeTransitionListCSVReader(IList<string> csvText, List<string> columnPositions = null, bool hasHeaders = true)
         {
             // Ask MassListInputs to figure out the column and decimal separators
             var inputs = new MassListInputs(csvText);
             _cultureInfo = inputs.FormatProvider;
-            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms, columnPositions);
+            _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms, columnPositions, hasHeaders);
             // Do we recognize all the headers?
             var badHeaders =
                 _csvReader.FieldNames.Where(
@@ -1919,12 +1919,12 @@ namespace pwiz.Skyline.Model
             get { return Rows.Count; }
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings)
+        public static bool IsPlausibleSmallMoleculeTransitionList(string csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
-            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings);
+            return IsPlausibleSmallMoleculeTransitionList(MassListInputs.ReadLinesFromText(csvText), settings, defaultDocumentType);
         }
 
-        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings)
+        public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             // If it cannot be formatted as a mass list it cannot be a small molecule transition list
             if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
@@ -1959,22 +1959,31 @@ namespace pwiz.Skyline.Model
                 {
                     return false;
                 }
-                return new[]
+                
+                // Look for distinctive small molecule headers
+                if (new[]
                 {
                     // These are pretty basic hints, without much overlap in peptide lists
                     SmallMoleculeTransitionListColumnHeaders.moleculeGroup, // May be seen in Agilent peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct, 
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
-                    SmallMoleculeTransitionListColumnHeaders.idCAS, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
-                    SmallMoleculeTransitionListColumnHeaders.idInChi, 
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.idCAS,
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                    SmallMoleculeTransitionListColumnHeaders.idInChi,
                     SmallMoleculeTransitionListColumnHeaders.idHMDB,
                     SmallMoleculeTransitionListColumnHeaders.idSMILES,
                     SmallMoleculeTransitionListColumnHeaders.idKEGG,
                 }.Count(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
-                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1;
+                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp =>
+                    header.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)) > 1)
+                {
+                    return true;
+                }
+
+                // If we still have not discerned the transition list type then decide based on the UI mode
+                return defaultDocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
         }
 

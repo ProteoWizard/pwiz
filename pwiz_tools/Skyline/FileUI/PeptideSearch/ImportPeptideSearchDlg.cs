@@ -618,6 +618,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         ShowRemovePrefixDialog();
                         ImportFastaControl.IsImportingResults = anyResults;
+
+                        if (ImportFastaControl.DecoyGenerationEnabled)
+                        {
+                            if (anyResults)
+                            {
+                                ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
+                                ImportFastaControl.NumDecoys = 1;
+                            }
+                            else
+                            {
+                                // template document, default to not generating decoys
+                                ImportFastaControl.DecoyGenerationMethod = string.Empty;
+                                ImportFastaControl.NumDecoys = 0;
+                            }
+                        }
                     }
                     break;
 
@@ -1036,10 +1051,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
 
             // Import results only on "finish"
-            var namedResults =
-                ImportResultsControl.FoundResultsFiles.Select(
-                    kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                    .ToList();
+            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
+                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
+                .ToList();
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
             if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))

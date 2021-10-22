@@ -44,6 +44,7 @@ namespace TestPerf
             //IsPauseForScreenShots = true;
             //IsCoverShotMode = true;
             //RunPerfTests = true;
+            CoverShotName = "DDASearch";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-20_2.pdf";
 
@@ -61,6 +62,7 @@ namespace TestPerf
             };
             RunFunctionalTest();
         }
+
         private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
         private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
         private const string OXIDATION_M = "Oxidation (M)";
@@ -218,6 +220,7 @@ namespace TestPerf
             RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             if (IsCoverShotMode)
             {
+                RunUI(() => importPeptideSearchDlg.Width = 404);
                 _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
