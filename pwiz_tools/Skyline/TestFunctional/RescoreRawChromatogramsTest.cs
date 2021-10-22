@@ -62,8 +62,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var originalGroup = originalChromatograms[iChrom];
                 var newChromGroup = newChromatograms[iChrom];
-                Assert.AreEqual(originalGroup.TransitionTimeIntensities.Count,
-                    newChromGroup.TransitionTimeIntensities.Count, "Mismatch on chromatogram #{0}", iChrom);
+                Assert.AreEqual(originalGroup.TransitionTimeIntensities.Count, newChromGroup.TransitionTimeIntensities.Count);
                 for (int iTran = 0; iTran < originalGroup.TransitionTimeIntensities.Count; iTran++)
                 {
                     var originalTimeIntensities = originalGroup.TransitionTimeIntensities[iTran];
