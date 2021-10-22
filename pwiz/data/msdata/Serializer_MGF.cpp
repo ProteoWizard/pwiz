@@ -72,6 +72,8 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const string& thermoFilename = titleIsThermoDTA ? msd.fileDescription.sourceFilePtrs[0]->name : "";
     string thermoBasename = titleIsThermoDTA ? bfs::basename(thermoFilename) : "";
 
+    int scansWritten = 0;
+
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
     SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads);
@@ -144,6 +146,7 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             }
 
             os << "END IONS\n";
+            ++scansWritten;
         }
 
         // update any listeners and handle cancellation
@@ -156,6 +159,11 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
         if (status == IterationListener::Status_Cancel) 
             break;
     }
+
+    if (sl.size() == 0)
+        sl.warn_once("Warning: MGF output is empty because the spectrum list is empty (possibly due to filtering)");
+    else if (scansWritten == 0)
+        sl.warn_once("Warning: MGF output is empty because the spectrum list has no MS2+ spectra (either due to filtering or the acquisition method)");
 }
 
 
