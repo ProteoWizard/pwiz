@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, null, fullScanAcquisitionMethod, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, fullScanAcquisitionMethod, chromData);
                 }
                 lastKey = key;
             }
@@ -892,10 +892,7 @@ namespace pwiz.Skyline.Model.Results
                         peptidePrecursorMz.NodePeptide,
                         peptidePrecursorMz.NodeGroup,
                         chromDataSet.FullScanAcquisitionMethod, 
-                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray())
-                    {
-                        OverrideTextId = true
-                    };
+                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()));
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
                 if (groupData != null)
@@ -945,22 +942,11 @@ namespace pwiz.Skyline.Model.Results
 
                 // Make sure the same chrom data object is not added twice, or two threads
                 // may end up processing it at the same time.
-                var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups.Where(match =>
                     !bestMz.HasValue || bestMz.Value == match.Item1.PrecursorMz))
                 {
-                    var arrayChromData = match.Item3.ToArray();
-                    for (int j = 0; j < arrayChromData.Length; j++)
-                    {
-                        var chromData = arrayChromData[j];
-                        setChromData.Add(chromData);
-                    }
-
                     var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide,
-                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, arrayChromData)
-                    {
-                        OverrideTextId = true
-                    };
+                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, match.Item3);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }

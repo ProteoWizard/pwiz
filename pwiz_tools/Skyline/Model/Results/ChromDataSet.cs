@@ -54,11 +54,19 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
-        public ChromDataSet(bool isTimeNormalArea, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, FullScanAcquisitionMethod fullScanAcquisitionMethod, params ChromData[] arrayChromData)
+        public ChromDataSet(bool isTimeNormalArea, FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromData chromData)
+            :this(isTimeNormalArea, null, null, fullScanAcquisitionMethod, new []{chromData})
+        {
+            OverrideTextId = false;
+        }
+
+        public ChromDataSet(bool isTimeNormalArea, PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode, FullScanAcquisitionMethod fullScanAcquisitionMethod,
+            IEnumerable<ChromData> arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
             FullScanAcquisitionMethod = fullScanAcquisitionMethod;
-                 
+
             AddRange(arrayChromData);
             if (transitionGroupDocNode != null)
             {
@@ -68,6 +76,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 NodeGroups = ImmutableList<Tuple<PeptideDocNode, TransitionGroupDocNode>>.EMPTY;
             }
+
+            OverrideTextId = true;
         }
 
         public void ClearDataDocNodes()
@@ -168,11 +178,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
-        public bool OverrideTextId
-        {
-            get;
-            set;
-        }
+        public bool OverrideTextId { get; private set; }
 
         public Target ModifiedSequence
         {
