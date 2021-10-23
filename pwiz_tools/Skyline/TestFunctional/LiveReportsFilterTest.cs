@@ -69,7 +69,6 @@ namespace pwiz.SkylineTestFunctional
                         .Property(RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RATIO_PREFIX, isotopeLabel)), 
                     FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
                     filterValue.ToString(CultureInfo.CurrentCulture));
-            PauseTest();
             RunUI(() =>
             {
                 var colPeptide = documentGrid.FindColumn(PropertyPath.Parse("Peptide"));

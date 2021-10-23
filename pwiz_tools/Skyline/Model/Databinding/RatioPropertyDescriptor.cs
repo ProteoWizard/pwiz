@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     format = Formats.STANDARD_RATIO;
                     string labelColumnPart = parts[0];
-                    var ratioToLabel = NormalizationMethod.FromIsotopeLabelTypeName(labelColumnPart);
+                    var ratioToLabel = GetRatioToLabel(document, labelColumnPart);
                     if (prefix == RATIO_PREFIX)
                     {
                         getterFunc = precursorResult => precursorResult.GetRatioValue(ratioToLabel)?.Ratio;
@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     format = Formats.STANDARD_RATIO;
                     string labelColumnPart = parts[0];
-                    var ratioToLabel = NormalizationMethod.FromIsotopeLabelTypeName(labelColumnPart);
+                    var ratioToLabel = GetRatioToLabel(document, labelColumnPart);
                     getterFunc = transitionResult =>
                     {
                         return transitionResult.GetNormalizedArea(ratioToLabel);
@@ -423,22 +423,35 @@ namespace pwiz.Skyline.Model.Databinding
             return propertyNames.Distinct().Select(name => GetProperty(document, componentType, name));
         }
 
-        private static IsotopeLabelType FindLabel(IEnumerable<IsotopeLabelType> labelTypes, string name)
+        private static NormalizationMethod.RatioToLabel GetRatioToLabel(SrmDocument document, string name)
         {
-            return labelTypes.FirstOrDefault(labelType => Matches(labelType, name));
+            var isotopeLabelType =
+                FindLabel(document.Settings.PeptideSettings.Modifications.GetModificationTypes(), name);
+            if (isotopeLabelType != null)
+            {
+                return new NormalizationMethod.RatioToLabel(isotopeLabelType);
+            }
+
+            return NormalizationMethod.FromIsotopeLabelTypeName(name);
         }
 
-        private static int IndexOf(IList<IsotopeLabelType> labelTypes, string name)
+        private static IsotopeLabelType FindLabel(IEnumerable<IsotopeLabelType> labelTypes, string name)
         {
-            for (int i = 0; i < labelTypes.Count; i++)
+            IsotopeLabelType backwardsCompatibleMatch = null;
+            foreach (var labelType in labelTypes)
             {
-                var labelType = labelTypes[i];
-                if (Matches(labelType, name))
+                if (name == labelType.Name)
                 {
-                    return i;
+                    return labelType;
+                }
+
+                if (null == backwardsCompatibleMatch && Matches(labelType, name))
+                {
+                    backwardsCompatibleMatch = labelType;
                 }
             }
-            return -1;
+
+            return backwardsCompatibleMatch;
         }
 
         private static bool Matches(IsotopeLabelType labelType, string name)

@@ -743,6 +743,40 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+
+        public bool IsGlobalRatioChange(SrmSettings other)
+        {
+            if (PeptideSettings.Quantification.SimpleRatios != other.PeptideSettings.Quantification.SimpleRatios)
+            {
+                return true;
+            }
+
+            if (_cachedPeptideStandards == null)
+            {
+                return other._cachedPeptideStandards != null;
+            }
+
+            if (other._cachedPeptideStandards == null)
+            {
+                return true;
+            }
+
+            foreach (var entry in _cachedPeptideStandards)
+            {
+                if (!other._cachedPeptideStandards.TryGetValue(entry.Key, out var otherValue))
+                {
+                    return true;
+                }
+
+                if (!Equals(entry.Value, otherValue))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool HasGlobalStandardArea
         {
             get
