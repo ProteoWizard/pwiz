@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestUtil
         public static UnifiAccount GetTestAccount()
         {
             var password = Environment.GetEnvironmentVariable("UNIFI_PASSWORD");
-            if (password == null)
+            if (string.IsNullOrWhiteSpace(password))
             {
                 return null;
             }

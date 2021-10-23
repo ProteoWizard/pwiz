@@ -49,6 +49,7 @@ namespace SkylineBatch
         retention_time,
         culture_specific,
         use_refined_file,
+        relative_path
 
     }
 

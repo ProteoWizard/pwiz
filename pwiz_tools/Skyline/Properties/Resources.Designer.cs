@@ -12813,6 +12813,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Absolute relative intensity threshold value..
+        /// </summary>
+        public static string ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_thresho" +
+                        "ld_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percentage of peak max height to use as intensity threshold..
+        /// </summary>
+        public static string ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_us" +
+                        "e_as_intensity_threshold_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor {0} for {1} has {2} transitions, which exceeds the current maximum {3}..
         /// </summary>
         public static string ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__ {
@@ -15614,22 +15634,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while training the mProphet model: {0}.
+        ///   Looks up a localized string similar to An error occurred while training the peak scoring model: {0}.
         /// </summary>
-        public static string ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mProphet_model___0_ {
+        public static string ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_ {
             get {
-                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_mP" +
-                        "rophet_model___0_", resourceCulture);
+                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_pe" +
+                        "ak_scoring_model___0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you re-add decoys to the document you can add and train an mProphet model manually..
+        ///   Looks up a localized string similar to If you re-add decoys to the document you can add and train a peak scoring model manually..
         /// </summary>
-        public static string ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_an_mProphet_model_manually_ {
+        public static string ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_yo" +
-                        "u_can_add_and_train_an_mProphet_model_manually_", resourceCulture);
+                        "u_can_add_and_train_a_peak_scoring_model_manually_", resourceCulture);
             }
         }
         
@@ -15644,12 +15664,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The decoys have been removed from the document, so the mProphet model will not be automatically trained..
+        ///   Looks up a localized string similar to The decoys have been removed from the document, so the peak scoring model will not be automatically trained..
         /// </summary>
-        public static string ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_mProphet_model_will_not_be_automatically_trained_ {
+        public static string ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_d" +
-                        "ocument__so_the_mProphet_model_will_not_be_automatically_trained_", resourceCulture);
+                        "ocument__so_the_peak_scoring_model_will_not_be_automatically_trained_", resourceCulture);
             }
         }
         
@@ -16216,20 +16236,23 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
         /// </summary>
-        public static string IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_ {
-            get {
-                return ResourceManager.GetString("IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard" +
-                        "_peptides_in_order_to_determine_a_regression_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The calculator {0} requires all of its standard peptides in order to determine a regression..
-        /// </summary>
         public static string IncompleteStandardException_IncompleteStandardException_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression {
             get {
                 return ResourceManager.GetString("IncompleteStandardException_IncompleteStandardException_The_calculator__0__requir" +
                         "es_all_of_its_standard_peptides_in_order_to_determine_a_regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
+        ///
+        ///{3}.
+        /// </summary>
+        public static string IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__ {
+            get {
+                return ResourceManager.GetString("IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_p" +
+                        "eptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_followi" +
+                        "ng__2__peptides_are_missing___3__", resourceCulture);
             }
         }
         
@@ -16272,7 +16295,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -21058,7 +21081,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -28470,6 +28493,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_ {
+            get {
+                return ResourceManager.GetString(@"SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to With {0} standard peptides, {1} are required with a correlation of {2}..
         /// </summary>
         public static string SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__ {
@@ -34064,7 +34096,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by [rest of string was truncated]&quot;;.
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities mea [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError {
             get {
@@ -34081,7 +34113,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by  [rest of string was truncated]&quot;;.
+        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities meas [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {

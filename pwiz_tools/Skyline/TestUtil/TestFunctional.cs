@@ -2130,6 +2130,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
+        {
+            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
+            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            Assert.IsTrue(match.Success);
+            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
+            if (sign == "+") sign = string.Empty;
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()
@@ -2227,7 +2237,16 @@ namespace pwiz.SkylineTestUtil
             LockMassParameters lockMassParameters = null)
         {
             var docBefore = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(docBefore))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {
@@ -2288,7 +2307,16 @@ namespace pwiz.SkylineTestUtil
 
         public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
             string prefix = fileNames.Select(f => f.GetFileName()).GetCommonPrefix();

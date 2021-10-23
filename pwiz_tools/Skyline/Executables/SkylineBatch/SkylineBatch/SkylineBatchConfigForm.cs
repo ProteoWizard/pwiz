@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -51,7 +52,7 @@ namespace SkylineBatch
 
         private string _lastEnteredPath;
 
-        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, SkylineBatchConfigManager configManager)
+        public SkylineBatchConfigForm(IMainUiControl mainControl, RDirectorySelector rDirectorySelector, SkylineBatchConfig config, ConfigAction action, bool isBusy, SkylineBatchConfigManagerState configManagerStartState)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -61,8 +62,9 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _possibleTemplates = configManager.GetRefinedTemplates();
-            var numConfigs = configManager.ConfigNamesAsObjectArray().Length;
+            State = configManagerStartState;
+            _possibleTemplates = State.Templates.ToDictionary(pair => pair.Key, pair => pair.Value);
+            var numConfigs = State.ConfigRunners.Count;
             _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
             if (_action == ConfigAction.Edit && config != null && _possibleTemplates.ContainsKey(config.Name))
                 _possibleTemplates.Remove(config.Name);
@@ -89,6 +91,7 @@ namespace SkylineBatch
             ActiveControl = textConfigName;
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public SkylineTypeControl SkylineTypeControl { get; private set; }
 
         private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
@@ -139,21 +142,21 @@ namespace SkylineBatch
         {
             templateControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Template_File, config?.MainSettings.Template.FilePath, 
-                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama");
+                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl, State);
             templateControl.Dock = DockStyle.Fill;
             templateControl.Show();
             panelTemplate.Controls.Add(templateControl);
 
             dataControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory,
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory, 
-                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data");
+                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data", _mainControl, State);
             dataControl.Dock = DockStyle.Fill;
             dataControl.Show();
             panelData.Controls.Add(dataControl);
 
             annotationsControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File, config?.MainSettings.AnnotationsFilePath, 
-                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama");
+                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama", _mainControl, State);
             annotationsControl.Dock = DockStyle.Fill;
             annotationsControl.Show();
             panelAnnotations.Controls.Add(annotationsControl);
@@ -391,7 +394,7 @@ namespace SkylineBatch
 
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textRefinedFilePath.Text), editingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, _rDirectorySelector, !string.IsNullOrEmpty(textRefinedFilePath.Text), State, editingReport);
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)
@@ -446,7 +449,7 @@ namespace SkylineBatch
             }
 
             if (config != null)
-                SkylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                SkylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath, State.ConfigsBusy(), State.BaseState);
             else
             {
                 // Default to the first existing Skyline installation (Skyline, Skyline-daily, custom path)
@@ -490,7 +493,7 @@ namespace SkylineBatch
             if (changedSkylineSettings != null && !changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
-                var replaced = _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                State.ReplaceSkylineSettings(_currentSkylineSettings, _mainControl, out bool? replaced);
                 // only set this to false if user did not want to change all settings
                 _showChangeAllSkylineSettings = replaced ?? true;
             }
@@ -535,7 +538,7 @@ namespace SkylineBatch
             try
             {
                 newConfig = GetConfigFromUi();
-                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                State.BaseState.AssertUniqueName(newConfig.Name, _action == ConfigAction.Edit);
                 newConfig.Validate();
             }
             catch (ArgumentException e)
@@ -545,9 +548,9 @@ namespace SkylineBatch
             }
 
             if (_action == ConfigAction.Edit)
-                _mainControl.ReplaceSelectedConfig(newConfig);
+                State.UserReplaceSelected(newConfig, _mainControl);
             else
-                _mainControl.AddConfiguration(newConfig);
+                State.UserAddConfig(newConfig, _mainControl);
 
             Close();
         }

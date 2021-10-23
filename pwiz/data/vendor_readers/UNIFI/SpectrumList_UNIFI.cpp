@@ -111,7 +111,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     result->index = index;
     result->id = ie.id;
 
-    //Console::WriteLine("spce: {0}.{1}.{2}.{3}", ie.sample, ie.period, ie.cycle, ie.experiment);
+    int networkScanNumber = ie.scan;
+    if (unifiData_->hasIonMobilityData() && !config_.combineIonMobilitySpectra)
+        networkScanNumber = (int) floor((ie.scan - 1) / 200.0) + 1;
+    bool evenScanNumber = networkScanNumber % 2 == 0;
+    int msLevel = evenScanNumber ? 2 : 1;
+    result->set(MS_ms_level, msLevel);
+    result->set(msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
+
+    if (detailLevel == DetailLevel_InstantMetadata)
+        return result;
+
     UnifiSpectrum spectrum;
     unifiData_->getSpectrum(index, spectrum, detailLevel >= DetailLevel_FullMetadata);
 
@@ -128,10 +138,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
 
     scan.set(MS_preset_scan_configuration, spectrum.energyLevel == EnergyLevel::Low ? 1 : 2);
 
-    int msLevel = spectrum.energyLevel == EnergyLevel::Low ? 1 : 2;//spectrum->getMSLevel();
-    result->set(MS_ms_level, msLevel);
-    result->set(msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
-    //result->set(translateAsSpectrumType(experimentType));
+    if (spectrum.energyLevel == EnergyLevel::Low && msLevel != 1)
+        throw runtime_error("BUG: mismatch between MSe energy level and scan number");
+
     result->set(translate(spectrum.scanPolarity));
 
     scan.scanWindows.push_back(ScanWindow(spectrum.scanRange.first, spectrum.scanRange.second, MS_m_z));
@@ -166,8 +175,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
             result->precursors.push_back(precursor);
         }
 
-        if (detailLevel == DetailLevel_InstantMetadata)
+        if (detailLevel == DetailLevel_FastMetadata)
             return result;
+
+        BinaryDataArrayPtr mobility;
+        if (!spectrum.driftTimeArray.empty())
+        {
+            mobility.reset(new BinaryDataArray);
+            CVParam arrayType(MS_raw_ion_mobility_array);
+            arrayType.units = UO_millisecond;
+            mobility->cvParams.emplace_back(arrayType);
+        }
 
         // Revert to previous behavior for getting binary data or not.
         bool getBinaryData = (detailLevel == DetailLevel_FullData);
@@ -187,11 +205,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
         {
             result->swapMZIntensityArrays(spectrum.mzArray, spectrum.intensityArray, MS_number_of_detector_counts);
 
+            if (!spectrum.driftTimeArray.empty())
+            {
+                result->binaryDataArrayPtrs.emplace_back(mobility);
+                mobility->data.swap(spectrum.driftTimeArray);
+            }
+
             //if (doCentroid)
             //    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
         }
         else
+        {
             result->defaultArrayLength = spectrum.arrayLength;
+            result->binaryDataArrayPtrs.emplace_back(mobility);
+        }
     }
 
     return result;
@@ -202,14 +229,17 @@ PWIZ_API_DECL void SpectrumList_UNIFI::createIndex() const
 {
     using namespace boost::spirit::karma;
 
-    for (size_t i=0; i < unifiData_->numberOfSpectra(); ++i)
+    const char* idKey = unifiData_->hasIonMobilityData() && config_.combineIonMobilitySpectra ? "merged=" : "scan=";
+
+    for (size_t i = 0; i < unifiData_->numberOfSpectra(); ++i)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ie = index_.back();
-        ie.index = index_.size()-1;
+        ie.scan = index_.size();
+        ie.index = index_.size() - 1;
 
         std::back_insert_iterator<std::string> sink(ie.id);
-        generate(sink, "scan=" << int_, ie.index+1);
+        generate(sink, idKey << int_, ie.scan);
         idToIndexMap_[ie.id] = ie.index;
     }
 
