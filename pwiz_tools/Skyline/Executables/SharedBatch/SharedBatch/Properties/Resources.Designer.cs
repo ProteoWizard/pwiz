@@ -339,11 +339,31 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to use this Skyline version for all configurations?.
+        /// </summary>
+        public static string ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_f" +
+                        "or_all_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration at index: {0}.
         /// </summary>
         public static string ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_ {
             get {
                 return ResourceManager.GetString("ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The state of the configuration list has changed since this operation started. Please try again..
+        /// </summary>
+        public static string ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this" +
+                        "_operation_started__Please_try_again_", resourceCulture);
             }
         }
         
@@ -363,6 +383,25 @@ namespace SharedBatch.Properties {
         public static string ConfigManager_TryOperation_Please_choose_a_unique_name_ {
             get {
                 return ResourceManager.GetString("ConfigManager_TryOperation_Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
+        /// </summary>
+        public static string ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_running_and_could_not_be_updated_ {
+            get {
+                return ResourceManager.GetString("ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_run" +
+                        "ning_and_could_not_be_updated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No log at index: .
+        /// </summary>
+        public static string ConfigManagerState_SelectLog_No_log_at_index__ {
+            get {
+                return ResourceManager.GetString("ConfigManagerState_SelectLog_No_log_at_index__", resourceCulture);
             }
         }
         

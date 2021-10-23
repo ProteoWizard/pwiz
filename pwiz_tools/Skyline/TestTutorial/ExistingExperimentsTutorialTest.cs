@@ -19,11 +19,13 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -32,7 +34,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -41,6 +42,8 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -433,7 +436,10 @@ namespace pwiz.SkylineTestTutorial
             });
 
             if (!IsPauseForScreenShots && !IsFullData)
+            {
                 TestApplyToAll();
+                FindNode("YEVQGEVFTKPQLWP");
+            }
 
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 26);
             CheckReportCompatibility.CheckAll(SkylineWindow.Document);
@@ -488,13 +494,17 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 29);
 
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
+            WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 1.00, 1.00, 1.00, 1.00 });
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
+            WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
-
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 });
+            
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
@@ -629,6 +639,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
+            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.11, 0.20, 0.35, 0.66 });
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
@@ -641,6 +652,22 @@ namespace pwiz.SkylineTestTutorial
             SkylineWindow.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
+        }
+
+        private void VerifyRdotPLabels(string[] replicates, double[] rdotps)
+        {
+            if (!Program.SkylineOffscreen)
+            {
+                var rdotpLabels = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.GraphObjList.OfType<TextObj>().ToList()
+                    .FindAll(txt => txt.Text.StartsWith(@"rdotp")).Select((obj) => obj.Text).ToArray();
+
+                for (var i =0; i < replicates.Length; i++)
+                {
+                    var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
+                        .FindIndex(label => replicates[i].Equals(label));
+                    Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, "{0}\n{1:F02}", "rdotp", rdotps[i]), rdotpLabels[repIndex - 1]);
+                }
+            }
         }
 
         private void AdjustModifications(string peptideSeq, bool removeCTerminalMod, char aa13C, double expectedPrecursorMz)

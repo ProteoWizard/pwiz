@@ -1,6 +1,6 @@
 ﻿namespace SkylineBatch
 {
-    partial class PanoramaFileForm
+    partial class RemoteSourceForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,20 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaFileForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteSourceForm));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label2 = new System.Windows.Forms.Label();
             this.textUserName = new System.Windows.Forms.TextBox();
+            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textPassword = new System.Windows.Forms.TextBox();
+            this.textName = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.textFolderUrl = new System.Windows.Forms.TextBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.textUrl = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.btnClear = new System.Windows.Forms.Button();
-            this.checkBoxNoEncryption = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -68,56 +67,11 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
             // textUserName
             // 
             resources.ApplyResources(this.textUserName, "textUserName");
             this.textUserName.Name = "textUserName";
-            // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            this.toolTip1.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
-            // 
-            // textPassword
-            // 
-            resources.ApplyResources(this.textPassword, "textPassword");
-            this.textPassword.Name = "textPassword";
-            this.textPassword.TextChanged += new System.EventHandler(this.textPassword_TextChanged);
-            // 
-            // btnSave
-            // 
-            resources.ApplyResources(this.btnSave, "btnSave");
-            this.btnSave.Name = "btnSave";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnAdd_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // textUrl
-            // 
-            resources.ApplyResources(this.textUrl, "textUrl");
-            this.textUrl.Name = "textUrl";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
-            // 
-            // btnClear
-            // 
-            resources.ApplyResources(this.btnClear, "btnClear");
-            this.btnClear.Name = "btnClear";
-            this.btnClear.UseVisualStyleBackColor = true;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
             // checkBoxNoEncryption
             // 
@@ -126,21 +80,68 @@
             this.checkBoxNoEncryption.UseVisualStyleBackColor = true;
             this.checkBoxNoEncryption.CheckedChanged += new System.EventHandler(this.checkBoxNoEncryption_CheckedChanged);
             // 
-            // PanoramaFileForm
+            // label3
             // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // textPassword
+            // 
+            resources.ApplyResources(this.textPassword, "textPassword");
+            this.textPassword.Name = "textPassword";
+            this.textPassword.TextChanged += new System.EventHandler(this.textPassword_TextChanged);
+            // 
+            // textName
+            // 
+            resources.ApplyResources(this.textName, "textName");
+            this.textName.Name = "textName";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            // 
+            // textFolderUrl
+            // 
+            resources.ApplyResources(this.textFolderUrl, "textFolderUrl");
+            this.textFolderUrl.Name = "textFolderUrl";
+            // 
+            // btnSave
+            // 
+            resources.ApplyResources(this.btnSave, "btnSave");
+            this.btnSave.Name = "btnSave";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
+            // RemoteSourceForm
+            // 
+            this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.btnClear);
-            this.Controls.Add(this.splitContainer1);
+            this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.textUrl);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.textFolderUrl);
             this.Controls.Add(this.label1);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "PanoramaFileForm";
+            this.Controls.Add(this.textName);
+            this.Controls.Add(this.splitContainer1);
+            this.Name = "RemoteSourceForm";
             this.ShowInTaskbar = false;
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddPanoramaTemplate_FormClosing);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RemoteSourceForm_FormClosing);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
@@ -156,15 +157,15 @@
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TextBox textUserName;
+        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textPassword;
+        private System.Windows.Forms.TextBox textName;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textFolderUrl;
         public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.TextBox textUrl;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnClear;
-        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
     }
 }

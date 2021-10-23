@@ -22,13 +22,13 @@ namespace SkylineBatch
 
         private readonly RDirectorySelector _rDirectorySelector;
 
-        public RVersionControl(string scriptName, string oldVersion, RDirectorySelector rDirectorySelector)
+        public RVersionControl(string scriptName, string oldVersion, RDirectorySelector rDirectorySelector, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
             
             var hasRInstalled = Settings.Default.RVersions.Keys.Count > 0;
             _oldVersion = oldVersion;
-
+            State = state;
             _version = hasRInstalled ? oldVersion : null;
             _rDirectorySelector = rDirectorySelector;
 
@@ -47,6 +47,7 @@ namespace SkylineBatch
             }
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public object GetVariable() => _version;
 
         public bool IsValid(out string errorMessage)
@@ -86,8 +87,9 @@ namespace SkylineBatch
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
         {
-            if (_rDirectorySelector.ShowAddDirectoryDialog())
+            if (_rDirectorySelector.ShowAddDirectoryDialog(State))
             {
+                State = _rDirectorySelector.State;
                 UpdateComboRVersions();
                 comboRVersions.Show();
                 if (Settings.Default.RVersions.ContainsKey(_oldVersion))
