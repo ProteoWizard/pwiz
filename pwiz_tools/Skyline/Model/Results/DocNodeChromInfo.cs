@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model.Results
                                    Annotations annotations, UserSet userSet, bool isForcedIntegration)
             : base(fileId)
         {
-            OptimizationStep = optimizationStep;
+            OptimizationStep = Convert.ToInt16(optimizationStep);
             MassError = massError;
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Model.Results
         /// transition attribute which can be optimized or calculated using
         /// a linear regression (e.g. CE, DP, CV)
         /// </summary>
-        public int OptimizationStep { get; private set; }
+        public short OptimizationStep { get; private set; }
 
         private bool _hasMassError;
         private float _massError;
