@@ -426,7 +426,22 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int OptimizationStep { get; private set; }
 
-        public float? MassError { get; private set; }
+        private bool _hasMassError;
+        private float _massError;
+
+        public float? MassError
+        {
+            get
+            {
+                return _hasMassError ? (float?) _massError : null;
+            }
+            private set
+            {
+                _hasMassError = value.HasValue;
+                _massError = value ?? 0;
+            }
+        }
+
         public float RetentionTime { get; private set; }
         public float StartRetentionTime { get; private set; }
         public float EndRetentionTime { get; private set; }
@@ -436,12 +451,48 @@ namespace pwiz.Skyline.Model.Results
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
         public bool IsFwhmDegenerate { get; private set; }
-        public bool? IsTruncated { get; private set; }
+        private byte _isTruncated;
+
+        public bool? IsTruncated
+        {
+            get
+            {
+                switch (_isTruncated)
+                {
+                    case 1:
+                        return false;
+                    case 2:
+                        return true;
+                }
+                return null;
+            }
+            private set
+            {
+                _isTruncated = (byte) (value.HasValue ? value.Value ? 2 : 1 : 0);
+            }
+        }
+
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
         public PeakIdentification Identified { get; private set; }
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
-        public short? PointsAcrossPeak { get; private set; }
+
+        private bool _hasPointsAcrossPeak;
+        private short _pointsAcrossPeak;
+
+        public short? PointsAcrossPeak
+        {
+            get
+            {
+                return _hasPointsAcrossPeak ? _pointsAcrossPeak : (short?) null;
+            }
+            private set
+            {
+                _hasPointsAcrossPeak = value.HasValue;
+                _pointsAcrossPeak = value ?? 0;
+            }
+        }
+
         public bool IsForcedIntegration { get; private set; }
 
         public bool IsGoodPeak(bool integrateAll)
@@ -1145,7 +1196,7 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public enum UserSet
+    public enum UserSet : byte
     {
         TRUE,   // SET by manual integration
         FALSE,  // Best peak picked during results import
