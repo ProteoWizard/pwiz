@@ -273,6 +273,10 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
+        /// <summary>
+        /// Returns the ratio that should be displayed by default in the Targets tree
+        /// if the user has not yet selected a ratio to display.
+        /// </summary>
         public NormalizationMethod GetFirstRatioNormalizationMethod()
         {
             var firstInternalStandardType = RatioInternalStandardTypes.FirstOrDefault();

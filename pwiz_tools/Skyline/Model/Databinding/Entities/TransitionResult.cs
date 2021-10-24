@@ -66,7 +66,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? Background { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.BackgroundArea; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? AreaRatio {
+        public double? AreaRatio 
+        {
             get
             {
                 var firstInternalStandard = DataSchema.NormalizedValueCalculator.RatioInternalStandardTypes.FirstOrDefault();

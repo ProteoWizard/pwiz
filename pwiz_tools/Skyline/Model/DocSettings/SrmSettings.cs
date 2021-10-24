@@ -744,6 +744,10 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
+        /// <summary>
+        /// Returns true if the settings have changed in a way that might require
+        /// all of the results text in the SequenceTree to be updated.
+        /// </summary>
         public bool IsGlobalRatioChange(SrmSettings other)
         {
             if (PeptideSettings.Quantification.SimpleRatios != other.PeptideSettings.Quantification.SimpleRatios)

@@ -285,19 +285,26 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyPrecursorRatio(TransitionGroupTreeNode precursorTreeNode, double ratioExpected)
         {
-            // TODO
-            //Assert.AreEqual(ratioExpected, precursorTreeNode.DocNode.Results[0][0].Ratio.Value, 0.005);
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
+                precursorTreeNode.DocNode, precursorTreeNode.DocNode.Results[0][0]);
+            Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 
         private void VerifyTransitionRatio(TransitionTreeNode transitionTreeNode, string ionName, double? ratioExpected = null)
         {
-            // TODO
-            // Assert.AreEqual(ionName, transitionTreeNode.DocNode.FragmentIonName);
-            // var ratioActual = transitionTreeNode.DocNode.Results[0][0].Ratio;
-            // if (ratioExpected.HasValue)
-            //     Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
-            // else
-            //     Assert.IsFalse(ratioActual.HasValue);
+            Assert.AreEqual(ionName, transitionTreeNode.DocNode.FragmentIonName);
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
+                transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
+                transitionTreeNode.DocNode.Results[0][0]);
+
+            if (ratioExpected.HasValue)
+                Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
+            else
+                Assert.IsFalse(ratioActual.HasValue);
         }
 
         private void DoStudy7Test()
