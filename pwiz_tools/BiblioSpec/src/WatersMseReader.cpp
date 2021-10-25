@@ -29,6 +29,8 @@
 #include "WatersMseReader.h"
 #include "boost/algorithm/string.hpp"
 #include "boost/filesystem.hpp"
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include "pwiz/utility/chemistry/Ion.hpp"
 
 #ifdef USE_WATERS_READER
@@ -619,8 +621,11 @@ void WatersMseReader::parseModString(LineEntry& entry,
                 break;
         }
         if (j == mods_.rend()) {
-            throw BlibException(false, "The modification '%s' on line %d is not recognized.",
-                                i->c_str(), lineNum_);
+            vector<string> knownMods;
+            boost::copy(mods_ | boost::adaptors::map_keys, std::back_inserter(knownMods));
+            string modList = boost::algorithm::join(knownMods, "\", \"");
+            throw BlibException(false, "The modification '%s' on line %d is not recognized. Supported modifications include: \"%s\".",
+                                i->c_str(), lineNum_, modList.c_str());
         }
         // find the position in the sequence
         size_t openBrace = i->rfind('(');
