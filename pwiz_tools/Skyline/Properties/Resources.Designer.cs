@@ -12813,6 +12813,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Absolute relative intensity threshold value..
+        /// </summary>
+        public static string ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_thresho" +
+                        "ld_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percentage of peak max height to use as intensity threshold..
+        /// </summary>
+        public static string ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_us" +
+                        "e_as_intensity_threshold_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor {0} for {1} has {2} transitions, which exceeds the current maximum {3}..
         /// </summary>
         public static string ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__ {
