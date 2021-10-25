@@ -3109,6 +3109,54 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExportSureQuant {
+            get {
+                return ((bool)(this["ExportSureQuant"]));
+            }
+            set {
+                this["ExportSureQuant"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double IntensityThresholdPercent {
+            get {
+                return ((double)(this["IntensityThresholdPercent"]));
+            }
+            set {
+                this["IntensityThresholdPercent"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100000")]
+        public double IntensityThresholdValue {
+            get {
+                return ((double)(this["IntensityThresholdValue"]));
+            }
+            set {
+                this["IntensityThresholdValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double IntensityThresholdMin {
+            get {
+                return ((double)(this["IntensityThresholdMin"]));
+            }
+            set {
+                this["IntensityThresholdMin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SyncMZScale {
             get {
                 return ((bool)(this["SyncMZScale"]));
