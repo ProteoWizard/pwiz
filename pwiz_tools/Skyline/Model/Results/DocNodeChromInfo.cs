@@ -367,6 +367,20 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
+        [Flags]
+        private enum Flags : byte
+        {
+            HasMassError = 1,
+            IsFwhmDegenerate = 2,
+            HasPointsAcrossPeak = 4,
+            TruncatedKnown = 8,
+            Truncated = 16,
+            ForcedIntegration = 32,
+            Identified = 64,
+            IdentifiedByAlignment = 128,
+        }
+
+        private Flags _flags;
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
             : base(null)
         {
@@ -426,19 +440,22 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public short OptimizationStep { get; private set; }
 
-        private bool _hasMassError;
-        private float _massError;
+        private short _massError;
 
         public float? MassError
         {
             get
             {
-                return _hasMassError ? (float?) _massError : null;
+                if (GetFlag(Flags.HasMassError))
+                {
+                    return _massError / 10f;
+                }
+                return null;
             }
             private set
             {
-                _hasMassError = value.HasValue;
-                _massError = value ?? 0;
+                SetFlag(Flags.HasMassError, value.HasValue);
+                _massError = ChromPeak.To10x(value ?? 0);
             }
         }
 
@@ -450,50 +467,84 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get; private set; }
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
-        public bool IsFwhmDegenerate { get; private set; }
-        private byte _isTruncated;
+
+        public bool IsFwhmDegenerate
+        {
+            get
+            {
+                return GetFlag(Flags.IsFwhmDegenerate);
+            }
+            set
+            {
+                SetFlag(Flags.IsFwhmDegenerate, value);
+            }
+        }
 
         public bool? IsTruncated
         {
             get
             {
-                switch (_isTruncated)
+                if (!GetFlag(Flags.TruncatedKnown))
                 {
-                    case 1:
-                        return false;
-                    case 2:
-                        return true;
+                    return null;
                 }
-                return null;
+                return GetFlag(Flags.Truncated);
             }
             private set
             {
-                _isTruncated = (byte) (value.HasValue ? value.Value ? 2 : 1 : 0);
+                SetFlag(Flags.TruncatedKnown, value.HasValue);
+                SetFlag(Flags.Truncated, value ?? false);
             }
         }
 
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
-        public PeakIdentification Identified { get; private set; }
+
+        public PeakIdentification Identified
+        {
+            get
+            {
+                if (!GetFlag(Flags.Identified))
+                {
+                    return PeakIdentification.FALSE;
+                }
+
+                return GetFlag(Flags.IdentifiedByAlignment) ? PeakIdentification.ALIGNED : PeakIdentification.TRUE;
+            }
+            set
+            {
+                SetFlag(Flags.Identified, value != PeakIdentification.FALSE);
+                SetFlag(Flags.IdentifiedByAlignment, value == PeakIdentification.ALIGNED);
+            }
+        }
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
 
-        private bool _hasPointsAcrossPeak;
         private short _pointsAcrossPeak;
 
         public short? PointsAcrossPeak
         {
             get
             {
-                return _hasPointsAcrossPeak ? _pointsAcrossPeak : (short?) null;
+                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : (short?) null;
             }
             private set
             {
-                _hasPointsAcrossPeak = value.HasValue;
+                SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
                 _pointsAcrossPeak = value ?? 0;
             }
         }
 
-        public bool IsForcedIntegration { get; private set; }
+        public bool IsForcedIntegration
+        {
+            get
+            {
+                return GetFlag(Flags.ForcedIntegration);
+            }
+            private set
+            {
+                SetFlag(Flags.ForcedIntegration, value);
+            }
+        }
 
         public bool IsGoodPeak(bool integrateAll)
         {
@@ -784,6 +835,23 @@ namespace pwiz.Skyline.Model.Results
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration
                 );
+        }
+
+        private bool GetFlag(Flags flag)
+        {
+            return 0 != (_flags & flag);
+        }
+
+        private void SetFlag(Flags flag, bool b)
+        {
+            if (b)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags &= ~flag;
+            }
         }
     }
 
