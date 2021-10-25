@@ -66,10 +66,6 @@ namespace pwiz.Skyline.Model.Irt
             {
                 return true;
             }
-            if (!ReferenceEquals(document.Id, previous.Id))
-            {
-                return true;
-            }
             var rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (rtRegression != null && rtRegression.IsAutoCalcRequired(document, previous))
             {

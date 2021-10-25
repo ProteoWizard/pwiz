@@ -489,8 +489,6 @@ namespace pwiz.Skyline.Model.Results
 
         public string BatchName { get; private set; }
 
-        public bool HasConsistentRetentionTimes { get; private set; }
-
         #region Property change methods
 
         public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)

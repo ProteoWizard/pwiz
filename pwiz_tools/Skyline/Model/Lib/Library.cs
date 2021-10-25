@@ -69,8 +69,7 @@ namespace pwiz.Skyline.Model.Lib
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults) ||
-                   !ReferenceEquals(document.Id, previous.Id);
+                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
