@@ -11,13 +11,14 @@ namespace SkylineBatch
     {
         private static string _lastEnteredPath;
         private string _initialFile;
-
+        
         private readonly bool _isDataServer;
         private readonly string _variableDescription;
         private readonly string _filter;
         private EventHandler _addedPathChangedHandler;
+        private IMainUiControl _mainControl;
 
-        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip)
+        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
 
@@ -27,6 +28,8 @@ namespace SkylineBatch
             _isDataServer = isDataServer;
             _variableDescription = variableDescription;
             _filter = filter;
+            _mainControl = mainControl;
+            State = state;
 
             labelPath.Text = string.Format(Resources.DownloadingFileControl_DownloadingFileControl__0__, label);
             ToggleDownload(Server != null);
@@ -39,6 +42,8 @@ namespace SkylineBatch
 
         public string Path { get; private set; }
         public Server Server { get; private set; }
+
+        public SkylineBatchConfigManagerState State { get; private set; }
 
         public void SetPath(string newPath)
         {
@@ -154,12 +159,11 @@ namespace SkylineBatch
                 {
                     if (_isDataServer)
                     {
-                        Server = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt,
-                            ((DataServerInfo) Server).DataNamingPattern, textPath.Text);
+                        Server = new DataServerInfo(Server.FileSource, Server.RelativePath, ((DataServerInfo) Server).DataNamingPattern, textPath.Text);
                     }
                     else
                     {
-                        Server = ((PanoramaFile) Server).ReplacedFolder(System.IO.Path.GetDirectoryName(textPath.Text));
+                        Server = ((PanoramaFile) Server).ReplaceFolder(System.IO.Path.GetDirectoryName(textPath.Text));
                     }
                 }
             }
@@ -170,7 +174,7 @@ namespace SkylineBatch
         {
             if (_isDataServer)
             {
-                var addServerForm = new AddServerForm((DataServerInfo)Server, textPath.Text);
+                var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State, _mainControl);
                 if (DialogResult.OK == addServerForm.ShowDialog(this))
                 {
                     Server = addServerForm.Server;
@@ -179,7 +183,7 @@ namespace SkylineBatch
             }
             else
             {
-                var addPanoramaTemplate = new PanoramaFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription));
+                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
                     Server = addPanoramaTemplate.PanoramaServer;

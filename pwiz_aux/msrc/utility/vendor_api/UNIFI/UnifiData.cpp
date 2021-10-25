@@ -1008,9 +1008,10 @@ class UnifiData::Impl
             auto o = JObject::Parse(json);
             for each (auto spectrumInfo in o->SelectToken("$.value")->Children())
             {
-                // skip non-MS functions
+                // skip non-MS and non-retention-data functions
                 auto detectorType = spectrumInfo->SelectToken("$.detectorType")->ToString();
-                if (detectorType != "MS")
+                bool isRetentionData = (bool)spectrumInfo->SelectToken("$.isRetentionData");
+                if (detectorType != "MS" || !isRetentionData)
                     continue;
 
                 _functionInfo.emplace_back(_functionInfo.size());
@@ -1019,7 +1020,7 @@ class UnifiData::Impl
                 auto id = spectrumInfo->SelectToken("$.id")->ToString();
                 fi.id = ToStdString(id);
                 fi.isCentroidData = (bool)spectrumInfo->SelectToken("$.isCentroidData");
-                fi.isRetentionData = (bool)spectrumInfo->SelectToken("$.isRetentionData");
+                fi.isRetentionData = isRetentionData;
                 fi.isIonMobilityData = (bool)spectrumInfo->SelectToken("$.isIonMobilityData");
                 fi.hasCCSCalibration = (bool)spectrumInfo->SelectToken("$.hasCCSCalibration");
                 fi.lowMass = Convert::ToDouble(spectrumInfo->SelectToken("$.analyticalTechnique.lowMass")->ToString());
@@ -1048,14 +1049,14 @@ class UnifiData::Impl
                     json = response->Content->ReadAsStringAsync()->Result;
                     auto o2 = JObject::Parse(json); // there should only be one spectrum but it's in a JSON array
                     for each (auto spectrum in o2->SelectToken("$.value")->Children())
-                        fi.numSpectra = (int)spectrum->SelectToken("$.totalNumberOfSpectra");
+                        fi.numSpectra = isRetentionData ? (int)spectrum->SelectToken("$.totalNumberOfSpectra") : 1;
 
                     //if (fi.isIonMobilityData)
                     //    fi.numSpectra *= 200;
                 }
                 catch (Exception^ e)
                 {
-                    throw std::runtime_error("error getting data for spectrumInfo " + fi.id + ": " + ToStdString(e->ToString()->Split(L'\n')[0]));
+                    throw gcnew Exception("error getting data for spectrumInfo " + id + ": " + e->ToString()->Split(L'\n')[0]);
                 }
             }
 
@@ -1066,7 +1067,7 @@ class UnifiData::Impl
                     case EnergyLevel::Unknown: return 2;
                     case EnergyLevel::Low: return 0;
                     case EnergyLevel::High: return 1;
-                    default: throw std::runtime_error("unsupported energy level");
+                    default: throw gcnew Exception("unsupported energy level");
                 }
             };
 

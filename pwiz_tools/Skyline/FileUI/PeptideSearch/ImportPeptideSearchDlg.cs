@@ -618,6 +618,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         ShowRemovePrefixDialog();
                         ImportFastaControl.IsImportingResults = anyResults;
+
+                        if (ImportFastaControl.DecoyGenerationEnabled)
+                        {
+                            if (anyResults)
+                            {
+                                ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
+                                ImportFastaControl.NumDecoys = 1;
+                            }
+                            else
+                            {
+                                // template document, default to not generating decoys
+                                ImportFastaControl.DecoyGenerationMethod = string.Empty;
+                                ImportFastaControl.NumDecoys = 0;
+                            }
+                        }
                     }
                     break;
 

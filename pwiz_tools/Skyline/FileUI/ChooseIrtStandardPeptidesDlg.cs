@@ -59,7 +59,7 @@ namespace pwiz.Skyline.FileUI
             _irtAdd = new List<MeasuredRetentionTime>();
             _irtTargets = null;
 
-            comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.Name.Equals(IrtStandard.EMPTY.Name) && !standard.Name.Equals(IrtStandard.AUTO.Name))
+            comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.IsEmpty && !standard.IsAuto)
                 .Cast<object>().ToArray());
             comboExisting.SelectedIndex = 0;
 

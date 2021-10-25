@@ -94,6 +94,8 @@ namespace SkylineBatch
             }
             _panoramaServerConnecter.Reconnect(panoramaServers, doOnProgress, cancelToken);
             _serverConnector.Reconnect(dataServers, doOnProgress, cancelToken);
+            if (cancelToken.IsCancellationRequested)
+                return;
             foreach (var server in servers)
             {
                 if (server is DataServerInfo)

@@ -2598,6 +2598,7 @@ namespace pwiz.Skyline
             }
 
             var decoyGroup = DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy);
+            var isDia = Equals(DocumentUI.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA);
             if (decoyGroup != null)
             {
                 decoyGroup.CheckDecoys(DocumentUI, out var numNoSource, out var numWrongTransitionCount, out var proportionDecoysMatch);
@@ -2644,6 +2645,25 @@ namespace pwiz.Skyline
                     }
                 }
             }
+            else if (ShouldPromptForDecoys(DocumentUI))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    Resources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                {
+                    switch (dlg.ShowDialog(this))
+                    {
+                        case DialogResult.Yes:
+                            if (!ShowGenerateDecoysDlg(dlg))
+                                return;
+                            break;
+                        case DialogResult.No:
+                            break;
+                        case DialogResult.Cancel:
+                            return;
+                    }
+                }
+            }
 
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
@@ -2666,8 +2686,15 @@ namespace pwiz.Skyline
                     if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, DocumentUI, ref namedResults))
                         return; // User cancelled, no change
 
-                    ModifyDocument(description,
-                        doc => ImportResults(doc, namedResults, dlg.OptimizationName),
+                    ModifyDocument(description, doc =>
+                        {
+                            if (isDia && doc.Molecules.Any(m => m.IsDecoy))
+                            {
+                                doc = doc.ChangeSettings(doc.Settings.ChangePeptideIntegration(i =>
+                                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
+                            }
+                            return ImportResults(doc, namedResults, dlg.OptimizationName);
+                        },
                         docPair => dlg.FormSettings.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
 
                     // Select the first replicate to which results were added.
@@ -2675,6 +2702,13 @@ namespace pwiz.Skyline
                         ComboResults.SelectedItem = namedResults[0].Key;
                 }
             }
+        }
+
+        public static bool ShouldPromptForDecoys(SrmDocument doc)
+        {
+            return Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) &&
+                   !doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy) &&
+                   !doc.Settings.HasResults;
         }
 
         /// <summary>
