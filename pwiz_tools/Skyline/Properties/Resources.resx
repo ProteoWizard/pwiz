@@ -11510,4 +11510,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
     <value>This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks.</value>
   </data>
+  <data name="DotpDisplayOption_label" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="DotpDisplayOption_line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="DotpDisplayOption_None" xml:space="preserve">
+    <value>None</value>
+  </data>
 </root>

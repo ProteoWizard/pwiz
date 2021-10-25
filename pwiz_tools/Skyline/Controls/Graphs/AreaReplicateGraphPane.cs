@@ -34,7 +34,58 @@ using Array = System.Array;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, isotope_dist, ratio_to_label }  
+    public enum AreaExpectedValue { none, library, isotope_dist, ratio_to_label }
+
+    public static class AreaExpectedValueExtension
+    {
+        public static bool IsVisible(this AreaExpectedValue expectedValue)
+        {
+            return CanShowExpected(expectedValue) && Settings.Default.ShowLibraryPeakArea;
+        }
+
+        public static bool CanShowExpected(this AreaExpectedValue expectedValue)
+        {
+            return (expectedValue == AreaExpectedValue.isotope_dist ||
+                    expectedValue == AreaExpectedValue.library);
+        }
+    }
+    public enum DotProductDisplayOption { none, label, line }
+
+    public static class DotProductDisplayOptionExtension
+    {
+        public static string GetLocalizedString(this DotProductDisplayOption option)
+        {
+            switch (option)
+            {
+                case DotProductDisplayOption.label:
+                    return Resources.DotpDisplayOption_label;
+                case DotProductDisplayOption.line:
+                    return Resources.DotpDisplayOption_line;
+                case DotProductDisplayOption.none:
+                    return Resources.DotpDisplayOption_None;
+                default:
+                    return "";
+            }
+        }
+
+        public static bool IsSet(this DotProductDisplayOption displayOption, Settings set)
+        {
+            return displayOption.ToString().Equals(set.PeakAreaDotpDisplay);
+        }
+
+        public static DotProductDisplayOption GetFromSettings(Settings set)
+        {
+            if (Enum.TryParse(set.PeakAreaDotpDisplay, out DotProductDisplayOption result))
+                return result;
+            else
+                return DotProductDisplayOption.none;
+        }
+
+        public static IEnumerable<DotProductDisplayOption> ListAll()
+        {
+            return new[] {DotProductDisplayOption.none, DotProductDisplayOption.label, DotProductDisplayOption.line};
+        }
+    }
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
@@ -51,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void InitFromData(GraphData graphData)
         {
             base.InitFromData(graphData);
-            if (IsExpectedVisible)
+            if (ExpectedVisible.IsVisible())
             {
                 // add an XAxis label of "Library" at the left most column
                 string[] labels = OriginalXAxisLabels;
@@ -87,19 +138,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public AreaExpectedValue ExpectedVisible { get; set; }
 
-        public bool IsExpectedVisible
-        {
-            get { return ExpectedVisible != AreaExpectedValue.none && Settings.Default.ShowLibraryPeakArea; }
-        }
-
         protected override int FirstDataIndex
         {
-            get { return IsExpectedVisible ? 1 : 0; }
+            get { return ExpectedVisible.IsVisible() ? 1 : 0; }
         }
 
         public bool CanShowDotProduct { get; private set; }
 
-        public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
+        public bool DotProductLabelsVisible
+        {
+            get{return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default);}
+        }
 
         public bool IsLineGraph { get { return CurveList.Count > 0 && CurveList[0].IsLine; } }
 
@@ -114,7 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void Draw(Graphics g)
         {
             // Make sure changes are not only drawn when the graph is updated.
-            if (IsDotProductVisible)
+            if (DotProductLabelsVisible)
                 AddDotProductLabels(g, ParentGroupNode, SumAreas);
 
             base.Draw(g);
@@ -127,7 +176,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Have to call AddDotProductLabels twice, since the X-scale may not be up
             // to date before calling Draw.  If nothing changes, this will be a no-op
-            if (IsDotProductVisible)
+            if (DotProductLabelsVisible)
             {
                 int dotpLabelsCount = _dotpLabels.Count;
                 AddDotProductLabels(g, ParentGroupNode, SumAreas);
@@ -161,7 +210,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
-            NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
+
+            NormalizeOption normalizeOption = (GraphSummary.Controller as AreaGraphController)?.GetIsotopeLabelAreaNormalizeOption() ?? AreaGraphController.AreaNormalizeOption;
+
             IsMultiSelect = pepCount > 1 ||
                             (pepCount == 1 &&
                              GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
@@ -325,7 +376,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             var graphType = AreaGraphController.GraphDisplayType;
-            var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
+            var expectedValue = !DotProductDisplayOption.none.IsSet(Settings.Default) ? ExpectedVisible : AreaExpectedValue.none;
+            if (ExpectedVisible.CanShowExpected())
+                expectedValue = ExpectedVisible;
+
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
@@ -362,7 +416,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Add data to the graph
             int selectedReplicateIndex = SelectedIndex;
-            if (IsExpectedVisible)
+            if (ExpectedVisible.IsVisible())
             {
                 if (GraphSummary.ActiveLibrary)
                     selectedReplicateIndex = 0;
@@ -526,6 +580,25 @@ namespace pwiz.Skyline.Controls.Graphs
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
+            if (ExpectedVisible != AreaExpectedValue.none &&
+                DotProductDisplayOption.line.IsSet(Settings.Default))
+            {
+                Y2Axis.IsVisible = true;
+                Y2Axis.Scale.Min = 0;
+                Y2Axis.Scale.Max = 1.1;
+                Y2Axis.Title.Text = DotpLabelText;
+                var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
+                {
+                    IsY2Axis = true, Line = new Line() { Style = DashStyle.Dot, Color = Color.DimGray},
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 0.5f, Fill = new Fill(Color.DimGray)}
+                };
+                CurveList.Add(dotpLine);
+            }
+            else
+            {
+                Y2Axis.IsVisible = false;
+            }
+
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
         }
 
@@ -600,7 +673,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (normalizeOption == NormalizeOption.MAXIMUM)
                 {
                     YAxis.Scale.Max = 1;
-                    if (IsDotProductVisible)
+                    if (DotProductLabelsVisible)
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
                     YAxis.Scale.MaxAuto = false;
@@ -664,7 +737,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         normalizationMethod = normalizationMethod ?? normalizeOption.NormalizationMethod;
                         if (normalizationMethod != null)
                         {
-                            if (normalizationMethod is NormalizationMethod.RatioToLabel && IsotopeLabelType.heavy.Equals(ParentGroupNode?.LabelType))
+                            if (normalizationMethod is NormalizationMethod.RatioToLabel && ExpectedVisible == AreaExpectedValue.none)
                                 yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
                             else 
                                 yTitle = normalizationMethod.GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
@@ -688,7 +761,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            if (IsDotProductVisible)
+            if (DotProductLabelsVisible)
             {
                 var extraSpace = _labelHeight*(maxY/(Chart.Rect.Height - _labelHeight*2))*2;
                 maxY += extraSpace;
@@ -707,7 +780,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (pointPair.IsInvalid)
                     continue;
 
-                if (IsExpectedVisible)
+                if (ExpectedVisible.IsVisible())
                 {
                     // Skip finding the sumArea for the first bar if the library is showing
                     if (i == 0)
@@ -726,7 +799,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                 return (_dotpLabels.Count > 0 || !IsDotProductVisible)
+                 return (_dotpLabels.Count > 0 || !DotProductLabelsVisible)
                      ? _dotpLabels.Select(l => ((TextObj)l).Text)
                      : SumAreas.Select((t, i) => GetDotProductResultsText(ParentGroupNode, i));
             }
@@ -760,10 +833,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (visible)
             {
                 // x shift of the dot product labels
-                var xShift = 1;
-                if (IsExpectedVisible)
-                    // shift dot product labels over by 1 more, if library is visible
-                    xShift++;
+                var xShift = 1 + FirstDataIndex;
 
                 for (int i = 0; i < sumAreas.Count; i++)
                 {
@@ -896,7 +966,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 // If library is showing
-                if (IsExpectedVisible)
+                if (ExpectedVisible.IsVisible())
                 {
                     // If the MS/MS Spectrum document is selected, 
                     // the seletion box is currently on library column,
@@ -912,7 +982,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
-            if (IsExpectedVisible)
+            if (ExpectedVisible.IsVisible())
             {
                 if (selectedIndex < 0)
                     return;
@@ -947,6 +1017,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly DataScalingOption _dataScalingOption;
             private readonly AreaExpectedValue _expectedVisible;
             private readonly bool _zeroMissingValues;
+            private PointPairList _dotpData;
 
             public AreaGraphData(SrmDocument document,
                                  IdentityPath identityPath,
@@ -983,22 +1054,40 @@ namespace pwiz.Skyline.Controls.Graphs
             protected override void InitData()
             {
                 base.InitData();
-         
-                if (_expectedVisible != AreaExpectedValue.none && _docNode is TransitionGroupDocNode nodeGroup)
+
+                if (_docNode is TransitionGroupDocNode nodeGroup && _expectedVisible != AreaExpectedValue.none)
                 {
-                    var expectedIntensities = from nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, DisplayType)
-                                              select GetExpectedValue(nodeTran);
-                    var intensityArray = expectedIntensities.ToArray();
-
-                    for (int i = 0; i < PointPairLists.Count; i++)
+                    if (_expectedVisible.IsVisible())
                     {
-                        if (i >= intensityArray.Length)
-                            continue;
+                        var expectedIntensities =
+                            from nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, DisplayType)
+                            select GetExpectedValue(nodeTran);
+                        var intensityArray = expectedIntensities.ToArray();
 
-                        var pointPairLists2 = PointPairLists[i];
-                        foreach (var pointPairList in pointPairLists2)
+                        for (int i = 0; i < PointPairLists.Count; i++)
                         {
-                            pointPairList.Insert(0, 0, intensityArray[i]);
+                            if (i >= intensityArray.Length)
+                                continue;
+
+                            var pointPairLists2 = PointPairLists[i];
+                            foreach (var pointPairList in pointPairLists2)
+                            {
+                                pointPairList.Insert(0, 0, intensityArray[i]);
+                            }
+                        }
+                    }
+
+                    if (_expectedVisible != AreaExpectedValue.none)
+                    {
+                        _dotpData = new PointPairList();
+                        if(_expectedVisible.IsVisible())
+                            _dotpData.Insert(0, 0, double.NaN);
+                        for (var replicateGroupIndex = 0;
+                            replicateGroupIndex < ReplicateGroups.Count;
+                            replicateGroupIndex++)
+                        {
+                            var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
+                            _dotpData.Insert(xValue, xValue, GetDotProductResults(nodeGroup, replicateGroupIndex));
                         }
                     }
                 }
@@ -1007,7 +1096,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     case DataScalingOption.none:
                         // If library column is showing, make library column as tall as the tallest stack
-                        if (_expectedVisible != AreaExpectedValue.none)
+                        if (_expectedVisible.IsVisible())
                             NormalizeMaxStack();
                         break;
                     case DataScalingOption.optimization:
@@ -1025,7 +1114,50 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)
+            {
+                if (_expectedVisible == AreaExpectedValue.none)
+                    return -1;
+                if (_expectedVisible == AreaExpectedValue.ratio_to_label)
+                {
+                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
+                        if (precursorNodePath.Peptide != null && !nodeGroup.LabelType.Equals(ratioToLabel.IsotopeLabelType))
+                        {
+                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
+                                ratioToLabel,
+                                precursorNodePath.Peptide, nodeGroup,
+                                nodeGroup.GetChromInfoEntry(indexResult));
+                            if (ratio?.HasDotProduct ?? false)
+                                return ratio.DotProduct;
+                        }
+                    }
+                }
+                else
+                {
+                    var replicateIndices= ReplicateGroups[indexResult].ReplicateIndexes;
+                    if (replicateIndices.IsEmpty)
+                        replicateIndices = ReplicateIndexSet.OfValues( new[] {-1} );
+                    IList<float?> values = new float?[] { };
+
+                    if(_expectedVisible == AreaExpectedValue.library)
+                        values = replicateIndices.Select(nodeGroup.GetLibraryDotProduct).ToList();
+                    if (_expectedVisible == AreaExpectedValue.isotope_dist)
+                        values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct).ToList();
+                    if (!values.Any())
+                        return -1;
+                    var statistics = new Statistics(values
+                        .Select(value => value.HasValue ? (double?)value : null)
+                        .Where(value => value.HasValue)
+                        .Cast<double>());
+                    return (float)statistics.Mean();
+                }
+                return -1;
+            }
+
             protected NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
+            public PointPairList DotpData => _dotpData;
 
             public override PointPair PointPairMissing(int xValue)
             {
@@ -1123,7 +1255,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 // If library is displayed and the set of data to plot is at
                                 // index 0 (where we store library intensity data)
                                 // calculate the proportion of the denominator for each point
-                                if (_expectedVisible != AreaExpectedValue.none && i == 0 && denominator.HasValue)
+                                if (_expectedVisible.IsVisible() && i == 0 && denominator.HasValue)
                                     pointPairList[i].Y *= (pointDenom/libraryHeight);
                                 if (_dataScalingOption != DataScalingOption.none)
                                 {
@@ -1159,7 +1291,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             if (pointPairList[i].Y != PointPairBase.Missing)
                             {
-                                if (_expectedVisible != AreaExpectedValue.none && i == 0)
+                                if (_expectedVisible.IsVisible() && i == 0)
                                     libraryHeight += pointPairList[i].Y;
                                 else
                                     maxHeight = Math.Max(maxHeight, pointPairList[i].Y);
@@ -1183,12 +1315,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     double firstColumnHeight = listTotals[0];
                     // If the library column is visible, remove it before getting the max height
-                    if (_expectedVisible != AreaExpectedValue.none)
+                    if (_expectedVisible.IsVisible())
                         listTotals.RemoveAt(0);
                     double maxBarHeight = listTotals.Aggregate(Math.Max);
 
                     // Normalizes each non-missing point by max bar height
-                    NormalizeTo(maxBarHeight, _expectedVisible != AreaExpectedValue.none
+                    NormalizeTo(maxBarHeight, _expectedVisible.IsVisible()
                                                   ? firstColumnHeight
                                                   : 0);
                 }

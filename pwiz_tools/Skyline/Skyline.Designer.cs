@@ -1344,7 +1344,7 @@ namespace pwiz.Skyline
             // 
             this.showDotProductToolStripMenuItem.Name = "showDotProductToolStripMenuItem";
             resources.ApplyResources(this.showDotProductToolStripMenuItem, "showDotProductToolStripMenuItem");
-            this.showDotProductToolStripMenuItem.Click += new System.EventHandler(this.showDotProductToolStripMenuItem_Click);
+            //this.showDotProductToolStripMenuItem.Click += new System.EventHandler(this.showDotProductToolStripMenuItem_Click);
             // 
             // peptideLogScaleContextMenuItem
             // 

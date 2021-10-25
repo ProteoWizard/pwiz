@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public RatioToLabel(IsotopeLabelType isotopeLabelType) : base(ratio_prefix + isotopeLabelType.Name, null)
             {
-                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, 0);
+                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, isotopeLabelType.SortOrder);
             }
 
             public override string Label

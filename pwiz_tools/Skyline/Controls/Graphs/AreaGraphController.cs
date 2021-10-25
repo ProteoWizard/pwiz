@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return Settings.Default.AreaNormalizeOption; }
         }
 
+
         public static NormalizeOption AreaCVNormalizeOption
         {
             get
@@ -129,6 +130,19 @@ namespace pwiz.Skyline.Controls.Graphs
         public static int AreaCVTransitionsCount { get; set; }
 
         public GraphSummary GraphSummary { get; set; }
+
+        public NormalizeOption GetIsotopeLabelAreaNormalizeOption()
+        {
+            // we need to preserve isotope label sort order for comparison to work correctly, and the sort order is 
+            // defined in the document. When the  normalize option is retrieved directly from settings the sort order defaults to 0.
+            var document = GraphSummary.DocumentUIContainer.DocumentUI;
+            var docLabel = document.Settings.PeptideSettings.Modifications.InternalStandardTypes.FirstOrDefault(type =>
+                Settings.Default.NormalizeOptionValue.EndsWith(type.Name));
+            if (docLabel != null)
+                return NormalizeOption.FromIsotopeLabelType(docLabel).Constrain(document.Settings);
+            else
+                return null;
+        }
 
         UniqueList<GraphTypeSummary> GraphSummary.IController.GraphTypes
         {
