@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // defined in the document. When the  normalize option is retrieved directly from settings the sort order defaults to 0.
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
             var docLabel = document.Settings.PeptideSettings.Modifications.InternalStandardTypes.FirstOrDefault(type =>
-                Settings.Default.NormalizeOptionValue.EndsWith(type.Name));
+                Settings.Default.NormalizeOptionValue?.EndsWith(type.Name) ?? false);
             if (docLabel != null)
                 return NormalizeOption.FromIsotopeLabelType(docLabel).Constrain(document.Settings);
             else

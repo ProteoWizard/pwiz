@@ -502,7 +502,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
             VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 });
-            
+
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.line.ToString();
+            RunUI(SkylineWindow.UpdatePeakAreaGraph);
+            RunUI(() =>
+                {
+                    Assert.IsTrue(SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.Any(curve =>
+                        curve is LineItem), "Dotp line is not found" );
+                });
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with dotp line", 32);
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
+
+
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
@@ -663,7 +674,9 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
                         .FindIndex(label => replicates[i].Equals(label));
-                    Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, "{0}\n{1:F02}", "rdotp", rdotps[i]), rdotpLabels[repIndex - 1]);
+                    Assert.IsTrue(repIndex >= 0, "Dotp labels of the peak area graph are incorrect.");
+                    var expectedLabel = string.Format(CultureInfo.CurrentCulture, "{0}\n{1:F02}", "rdotp", rdotps[i]);
+                    Assert.AreEqual(expectedLabel, rdotpLabels[repIndex], "Dotp labels of the peak area graph are incorrect.");
                 }
             }
         }

@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     return false;
                 }
                 RatioToLabel ratioToLabel = normalizationMethod as RatioToLabel;
-                return ratioToLabel != null && Equals(ratioToLabel.Name, isotopeLabelType.Name);
+                return ratioToLabel != null && Equals(ratioToLabel.IsotopeLabelTypeName, isotopeLabelType.Name);
             }
 
             public IsotopeLabelType FindIsotopeLabelType(SrmSettings settings)
