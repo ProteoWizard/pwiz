@@ -807,6 +807,9 @@ namespace BuildThermoMethod
 
                 if (surequant)
                 {
+                    if (!massTrigger.Any())
+                        throw new Exception("Targeted mass trigger list empty (only precursors?)");
+
                     modifications.Add(new XmlExploris.Modification
                     {
                         Order = modIndex++,
@@ -949,6 +952,9 @@ namespace BuildThermoMethod
 
                 if (surequant)
                 {
+                    if (!massTrigger.Any())
+                        throw new Exception("Targeted mass trigger list empty (only precursors?)");
+
                     modifications.Add(new XmlCalcium.Modification
                     {
                         Order = modIndex++,
