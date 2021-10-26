@@ -20,7 +20,7 @@
       <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/TOFsulfasMS4GHzDualMode+DADSpectra+UVSignal272-NoProfile.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="27b80e4895e155055337162d495042865c1d605b"/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6c89ea7b043bf943c50adce455bc1859e27f6acd"/>
       </sourceFile>
       <sourceFile id="DAD1.cd" name="DAD1.cd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/TOFsulfasMS4GHzDualMode+DADSpectra+UVSignal272-NoProfile.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
@@ -142,7 +142,7 @@
       </processingMethod>
     </dataProcessing>
   </dataProcessingList>
-  <run id="TOFsulfasMS4GHzDualMode_x002b_DADSpectra_x002b_UVSignal272-NoProfile" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2007-10-20T16:12:18Z" defaultSourceFileRef="MSScan.bin">
+  <run id="TOFsulfasMS4GHzDualMode_x002b_DADSpectra_x002b_UVSignal272-NoProfile" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2007-10-20T20:12:18Z" defaultSourceFileRef="MSScan.bin">
     <spectrumList count="212" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
       <spectrum index="0" id="scanId=639" defaultArrayLength="115">
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
