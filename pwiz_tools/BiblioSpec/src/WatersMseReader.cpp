@@ -621,9 +621,9 @@ void WatersMseReader::parseModString(LineEntry& entry,
                 break;
         }
         if (j == mods_.rend()) {
-            vector<string> knownMods;
-            boost::copy(mods_ | boost::adaptors::map_keys, std::back_inserter(knownMods));
-            string modList = boost::algorithm::join(knownMods, "\", \"");
+            // We support a very limited hardcoded list of understood modifications, go ahead and list them in the error message.
+            // If we ever expand this we may want to stop listing them all, but for now this is reasonably helpful.
+            string modList = boost::algorithm::join(mods_ | boost::adaptors::map_keys, "\", \"");
             throw BlibException(false, "The modification '%s' on line %d is not recognized. Supported modifications include: \"%s\".",
                                 i->c_str(), lineNum_, modList.c_str());
         }
