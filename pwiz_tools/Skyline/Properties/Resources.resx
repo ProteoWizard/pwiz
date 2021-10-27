@@ -11430,6 +11430,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Collision Cross Section (sq A)</value>
   </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
+    <value>Percentage of peak max height to use as intensity threshold.</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_" xml:space="preserve">
+    <value>Absolute relative intensity threshold value.</value>
+  </data>
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
   </data>
