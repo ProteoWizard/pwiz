@@ -145,13 +145,34 @@ namespace pwiz.Skyline.EditUI
                 if (ReplicateValue == null)
                     return doc.Settings.MeasuredResults.Chromatograms.Select(c => c.Name).ToArray();
 
-                var values = new SortedSet<string>();
+                var values = new HashSet<object>();
+                var hasNull = false;
                 foreach (var chromSet in doc.Settings.MeasuredResults.Chromatograms)
-                    values.Add(ReplicateValue.GetValue(annotationCalc, chromSet).ToString());
-                return values.ToArray();
+                {
+                    var value = ReplicateValue.GetValue(annotationCalc, chromSet);
+                    if (value == null)
+                    {
+                        hasNull = true;
+                        continue;
+                    }
+                    values.Add(value);
+                }
+
+                // If values don't implement IComparable, convert to strings so that they can be sorted.
+                if (!values.All(o => o is IComparable))
+                    values = new HashSet<object>(values.Select(o => o.ToString()));
+
+                // Turn values into sorted array of strings.
+                var valuesArr = Array.ConvertAll(values.OrderBy(o => o).ToArray(), o => o.ToString());
+
+                // Add empty string if there was a null value.
+                if (hasNull)
+                    valuesArr = valuesArr.Concat(new[] { string.Empty }).ToArray();
+
+                return valuesArr;
             }
 
-            public string PersistedString => ReplicateValue != null ? ReplicateValue.ToPersistedString() : null;
+            public string PersistedString => ReplicateValue?.ToPersistedString();
 
             public override string ToString()
             {

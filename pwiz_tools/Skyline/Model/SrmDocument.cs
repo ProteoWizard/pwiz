@@ -1990,19 +1990,38 @@ namespace pwiz.Skyline.Model
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
-                return MeasuredResults.Chromatograms;
+            {
+                // Synchronize all
+                foreach (var chromSet in MeasuredResults.Chromatograms)
+                    yield return chromSet;
+                yield break;
+            }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
-                return Array.Empty<ChromatogramSet>();
+            {
+                // Synchronize none
+                yield break;
+            }
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))
-                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+            {
+                // Synchronize individual replicates
+                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
+                    yield return chromSet;
+                yield break;
+            }
 
+            // Synchronize by annotation
             var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
             var annotationCalculator = new AnnotationCalculator(this);
-            return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(replicateValue.GetValue(annotationCalculator, chromSet).ToString()));
+            foreach (var chromSet in MeasuredResults.Chromatograms)
+            {
+                var value = replicateValue.GetValue(annotationCalculator, chromSet);
+                if (targets.Contains(value?.ToString() ?? string.Empty))
+                    yield return chromSet;
+            }
         }
 
         private object _referenceId = new object();
