@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -2019,7 +2020,7 @@ namespace pwiz.Skyline.Model
             foreach (var chromSet in MeasuredResults.Chromatograms)
             {
                 var value = replicateValue.GetValue(annotationCalculator, chromSet);
-                if (targets.Contains(value?.ToString() ?? string.Empty))
+                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
                     yield return chromSet;
             }
         }
