@@ -169,8 +169,7 @@ namespace pwiz.Skyline.EditUI
                         .Select(chromSet => ReplicateValue.GetValue(annotationCalc, chromSet))
                         .Distinct()
                         .OrderBy(o => o, CollectionUtil.ColumnValueComparer)
-                        .Select(o => o ?? string.Empty) // replace nulls with empty strings so they can go into the listbox
-                        .ToArray();
+                        .Select(o => o ?? string.Empty); // replace nulls with empty strings so they can go into the listbox
             }
 
             public string PersistedString => ReplicateValue?.ToPersistedString();
