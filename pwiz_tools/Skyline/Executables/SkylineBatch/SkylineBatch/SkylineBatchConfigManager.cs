@@ -1363,7 +1363,7 @@ namespace SkylineBatch
                 ProgramaticallyRemoveAt(index);
                 ProgramaticallyInsertConfig(index, config, uiControl);
             }
-            //FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
+            FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
             return this;
         }
 

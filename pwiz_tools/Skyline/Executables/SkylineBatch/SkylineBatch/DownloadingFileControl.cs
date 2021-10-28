@@ -177,6 +177,7 @@ namespace SkylineBatch
                 var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State, _mainControl);
                 if (DialogResult.OK == addServerForm.ShowDialog(this))
                 {
+                    State = addServerForm.State;
                     Server = addServerForm.Server;
                     ToggleDownload(Server != null);
                 }

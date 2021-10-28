@@ -77,13 +77,6 @@ namespace SkylineBatch
             _remoteFileControl.Clear();
         }
 
-        /*private PanoramaFile PanoramaFileFromUI(RemoteFileSource remoteFileSource, CancellationToken cancelToken)
-        {
-            if (remoteFileSource == null && string.IsNullOrEmpty(textRelativePath.Text))
-                return null;
-            return PanoramaFile.PanoramaFileFromUI(remoteFileSource, textRelativePath.Text, _folderPath, cancelToken);
-        }*/
-
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
         {
             CancelValidate();
