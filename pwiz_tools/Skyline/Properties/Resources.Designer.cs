@@ -14317,12 +14317,57 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_DDA_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_DDA_TOOLTIP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_DIA_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_DIA_TOOLTIP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a valid Full Scan Acquisition Method.
         /// </summary>
         public static string FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method {
             get {
                 return ResourceManager.GetString("FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Metho" +
                         "d", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the &quot;method match tolerance&quot; value of the selected ion.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_PRM_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_PRM_TOOLTIP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to similar to &quot;PRM&quot;, but using &quot;triggered acquisition&quot; and &quot;method match tolerance&quot; settings appropriate for Thermo SureQuant methods.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_SureQuant_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_SureQuant_TOOLTIP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_Targeted_TOOLTIP {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_Targeted_TOOLTIP", resourceCulture);
             }
         }
         

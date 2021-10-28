@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -523,7 +524,21 @@ namespace pwiz.Skyline.SettingsUI
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
 
-            comboAcquisitionMethod.Items.AddRange(FullScanAcquisitionMethod.ALL.Cast<object>().ToArray());
+            comboAcquisitionMethod.Items.AddRange(FullScanAcquisitionMethod.AVAILABLE.Cast<object>().ToArray());
+            if (FullScanAcquisitionMethod.AVAILABLE.IndexOf(FullScan.AcquisitionMethod) < 0)
+            {
+                // If the current value is an obsolete method which has been removed from FullScanAcquisitionMethod.AVAILABLE
+                // then add it now
+                comboAcquisitionMethod.Items.Add(FullScan.AcquisitionMethod);
+            }
+
+            // Set the tooltip on comboAcquisitionMethod based on the available options
+            var acquisitionMethodTooltip = TextUtil.LineSeparate(
+                comboAcquisitionMethod.Items.OfType<FullScanAcquisitionMethod>()
+                    .Where(option => !string.IsNullOrEmpty(option.Tooltip))
+                    .Select(option => option.Label + @": " + option.Tooltip));
+            toolTip.SetToolTip(comboAcquisitionMethod, acquisitionMethodTooltip);
+
             comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
             comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod;
 
@@ -959,7 +974,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 AcquisitionMethod = (workflow == ImportPeptideSearchDlg.Workflow.dia)
                     ? FullScanAcquisitionMethod.DIA
-                    : FullScanAcquisitionMethod.Targeted;
+                    : FullScanAcquisitionMethod.PRM;
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 

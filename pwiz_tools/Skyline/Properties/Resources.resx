@@ -11487,6 +11487,24 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
     <value>Replicates</value>
   </data>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP">
+    <value xml:space="preserve">Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
+    <value xml:space="preserve">Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
+    <value xml:space="preserve">Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP">
+    <value xml:space="preserve">Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP">
+    <value xml:space="preserve">similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP">
+    <value xml:space="preserve">MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion</value>
+  </data>
   <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
     <value>Change synchronized integration to {0}</value>
   </data>
