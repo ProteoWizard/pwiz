@@ -164,7 +164,7 @@ namespace pwiz.Skyline.EditUI
             public IEnumerable<object> GetItems(SrmDocument doc, AnnotationCalculator annotationCalc)
             {
                 return ReplicateValue == null
-                    ? doc.Settings.MeasuredResults.Chromatograms.Select(c => c.Name).Cast<object>()
+                    ? doc.Settings.MeasuredResults.Chromatograms.Select(c => c.Name)
                     : doc.Settings.MeasuredResults.Chromatograms
                         .Select(chromSet => ReplicateValue.GetValue(annotationCalc, chromSet))
                         .Distinct()
