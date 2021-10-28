@@ -51,7 +51,7 @@ namespace pwiz.Skyline.EditUI
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
             cbShowMultiplePeptides.Checked = Settings.Default.AllowMultiplePeptideSelection;
-            numericUpDownRTDigits.Value = Settings.Default.ChromatogramDisplayRTDigits;
+            numericUpDownRTDigits.Value = Math.Min(Math.Max(numericUpDownRTDigits.Minimum, Settings.Default.ChromatogramDisplayRTDigits), numericUpDownRTDigits.Maximum);
         }
 
         public void OkDialog()
