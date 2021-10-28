@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.EditUI
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
             cbShowMultiplePeptides.Checked = Settings.Default.AllowMultiplePeptideSelection;
+            numericUpDownRTDigits.Value = Settings.Default.ChromatogramDisplayRTDigits;
         }
 
         public void OkDialog()
@@ -91,6 +93,7 @@ namespace pwiz.Skyline.EditUI
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
             Settings.Default.AllowMultiplePeptideSelection = cbShowMultiplePeptides.Checked;
+            Settings.Default.ChromatogramDisplayRTDigits = (int)numericUpDownRTDigits.Value;
             DialogResult = DialogResult.OK;
         }
 
@@ -105,7 +108,12 @@ namespace pwiz.Skyline.EditUI
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_widths : 
                 Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes);
         }
-       
+
+        private void numericUpDownRTDigits_ValueChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ChromatogramDisplayRTDigits = (int)numericUpDownRTDigits.Value;
+        }
+
         #region Functional test support
 
         public int LineWidth
@@ -130,6 +138,12 @@ namespace pwiz.Skyline.EditUI
         {
             get { return double.Parse(textTimeRange.Text); }
             set { textTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int DisplayRTDigits
+        {
+            get { return (int)numericUpDownRTDigits.Value; }
+            set { numericUpDownRTDigits.Value = value; }
         }
 
         #endregion
