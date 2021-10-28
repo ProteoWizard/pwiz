@@ -14354,7 +14354,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to similar to &quot;PRM&quot;, but using &quot;triggered acquisition&quot; and &quot;method match tolerance&quot; settings appropriate for Thermo SureQuant methods.
+        ///   Looks up a localized string similar to Similar to &quot;PRM&quot;, but using &quot;triggered acquisition&quot; and &quot;method match tolerance&quot; settings appropriate for Thermo SureQuant methods.
         /// </summary>
         public static string FullScanAcquisitionMethod_SureQuant_TOOLTIP {
             get {

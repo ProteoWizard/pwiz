@@ -11493,14 +11493,11 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
     <value xml:space="preserve">Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
   </data>
-  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
-    <value xml:space="preserve">Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
-  </data>
   <data name="FullScanAcquisitionMethod_DDA_TOOLTIP">
     <value xml:space="preserve">Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification</value>
   </data>
   <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP">
-    <value xml:space="preserve">similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods</value>
+    <value xml:space="preserve">Similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP">
     <value xml:space="preserve">MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion</value>
