@@ -531,6 +531,7 @@ namespace pwiz.Skyline.SettingsUI
                 // then add it now
                 comboAcquisitionMethod.Items.Add(FullScan.AcquisitionMethod);
             }
+            ComboHelper.AutoSizeDropDown(comboAcquisitionMethod);
 
             // Set the tooltip on comboAcquisitionMethod based on the available options
             var acquisitionMethodTooltip = TextUtil.LineSeparate(
