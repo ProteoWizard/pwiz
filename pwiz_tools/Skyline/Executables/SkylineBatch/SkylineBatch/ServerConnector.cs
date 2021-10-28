@@ -130,7 +130,7 @@ namespace SkylineBatch
                             var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
                                  cancelToken);
                             fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
-                                new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), server.RelativePath), size,
+                                new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty), size,
                                 folder));
                             i++;
                         }

@@ -186,6 +186,7 @@ namespace SkylineBatch
                 var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
+                    State = addPanoramaTemplate.State;
                     Server = addPanoramaTemplate.PanoramaServer;
                     ToggleDownload(Server != null);
                 }
