@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
