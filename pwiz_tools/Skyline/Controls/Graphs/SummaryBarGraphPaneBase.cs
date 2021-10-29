@@ -17,18 +17,177 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class SummaryBarGraphPaneBase : SummaryGraphPane
     {
+        public class ToolTipImplementation : ITipProvider
+        {
+
+            private SummaryBarGraphPaneBase _parent;
+            // ReSharper disable once RedundantDefaultMemberInitializer
+            private bool _isVisible = false;
+            private NodeTip _tip;
+            private TableDesc _table;
+            internal RenderTools RenderTools = new RenderTools();
+
+            //Location is in user coordinates. 
+            public int ReplicateIndex { get; private set; }
+            public bool IsVisible => _isVisible;
+            public CurveItem TargetCurve {  get; set; }
+
+            public ToolTipImplementation(DetectionsPlotPane parent)
+            {
+                _parent = parent;
+            }
+
+            public ITipProvider TipProvider { get { return this; } }
+
+            bool ITipProvider.HasTip => true;
+
+            Size ITipProvider.RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                var size = _table.CalcDimensions(g);
+                if (draw)
+                    _table.Draw(g);
+                return new Size((int)size.Width + 2, (int)size.Height + 2);
+            }
+
+            public void AddLine(string description, string data)
+            {
+                if (_table == null) _table = new TableDesc();
+                _table.AddDetailRow(description, data, RenderTools);
+            }
+
+            public void ClearData()
+            {
+                _table?.Clear();
+            }
+
+            public void Draw(int dataIndex, Point cursorPos)
+            {
+                if (_isVisible && ReplicateIndex != dataIndex) Hide();
+                if (_isVisible && ReplicateIndex == dataIndex) return;
+                if (_table == null || _table.Count == 0) return;
+
+                ReplicateIndex = dataIndex;
+                var basePoint = new UserPoint(dataIndex + 1,
+                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent);
+
+                using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
+                {
+                    var size = _table.CalcDimensions(g);
+                    var offset = new Size(0, -(int)(size.Height + size.Height / _table.Count));
+                    if (_tip == null)
+                        _tip = new NodeTip(_parent);
+                    _tip.SetTipProvider(TipProvider, new Rectangle(basePoint.Screen(offset), new Size()), cursorPos);
+                }
+                _isVisible = true;
+            }
+
+            public void Hide()
+            {
+                if (_isVisible)
+                {
+                    _tip?.HideTip();
+                    _isVisible = false;
+                }
+            }
+
+            //used for testing only
+            public List<string> TipLines
+            {
+                get
+                {
+                    return _table.Select((rowDesc) =>
+                        string.Join(TextUtil.SEPARATOR_TSV_STR, rowDesc.Select(cell => cell.Text))
+                    ).ToList();
+                }
+            }
+
+            private class UserPoint
+            {
+                private GraphPane _graph;
+                public int X { get; private set; }
+                public float Y { get; private set; }
+
+                public UserPoint(int x, float y, GraphPane graph)
+                {
+                    X = x;
+                    Y = y;
+                    _graph = graph;
+                }
+
+                public PointF User()
+                {
+                    return new PointF(X, Y);
+                }
+
+                public Point Screen()
+                {
+                    return new Point(
+                        (int)_graph.XAxis.Scale.Transform(X),
+                        (int)_graph.YAxis.Scale.Transform(Y));
+                }
+                public Point Screen(Size OffsetScreen)
+                {
+                    return new Point(
+                        (int)(_graph.XAxis.Scale.Transform(X) + OffsetScreen.Width),
+                        (int)(_graph.YAxis.Scale.Transform(Y) + OffsetScreen.Height));
+                }
+
+                public PointF PF()
+                {
+                    return new PointF(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width,
+                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height);
+                }
+                public PointD PF(SizeF OffsetPF)
+                {
+                    return new PointD(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width + OffsetPF.Width,
+                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height + OffsetPF.Height);
+                }
+            }
+        }
+
+        public virtual void PopulateTooltip(int index){}
+
+        /// <summary>
+        /// Override if you need to implement tooltips in your graph.
+        /// </summary>
+        /// <returns>A list of y-coordinates where tooltips should be displayed.
+        /// List index is the replicate index.</returns>
+        public virtual ImmutableList<float> GetToolTipDataSeries()
+        {
+            throw new NotImplementedException(@"Method GetToolTipDataSeries is not implemented.");
+        }
+        /// <summary>
+        /// Additional scaling factor for tooltip's vertical position.
+        /// </summary>
+        public virtual float YScale
+        {
+            get { return 1.0f; }
+        }
+        /// <summary>
+        /// Create a new tooltip instance in the child class constructor if you
+        /// want to show thw tooltips.
+        /// </summary>
+        public ToolTipImplementation ToolTip { get; protected set; }
+
         protected static bool ShowSelection
         {
             get
@@ -90,6 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int iNearest;
             if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
             {
+                ToolTip?.Hide();
                 var axis = GetNearestXAxis(sender, mouseEventArgs);
                 if (axis != null)
                 {
@@ -98,6 +258,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 return false;
             }
+
+            if (ToolTip != null && ReferenceEquals(ToolTip.TargetCurve, nearestCurve))
+            {
+                PopulateTooltip(iNearest);
+                ToolTip.Draw(iNearest, mouseEventArgs.Location);
+                sender.Cursor = Cursors.Hand;
+                return true;
+            }
+            else
+                ToolTip?.Hide();
+
             IdentityPath identityPath = GetIdentityPath(nearestCurve, iNearest);
             if (identityPath == null)
             {
@@ -149,6 +320,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             ChangeSelection(iNearest, identityPath);
             return true;
+        }
+
+        public override void OnClose(EventArgs e)
+        {
+            if(ToolTip != null)
+                ToolTip.RenderTools.Dispose();
         }
 
         public override void Draw(Graphics g)
