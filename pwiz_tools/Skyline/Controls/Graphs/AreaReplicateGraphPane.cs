@@ -592,8 +592,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point=> (float)point.Y));
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
-                    IsY2Axis = true, Line = new Line() { Style = DashStyle.Dot, Color = Color.DimGray},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 2.5f, Fill = new Fill(Color.DimGray)}
+                    IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 3.5f, Fill = new Fill(Color.DimGray)}
                 };
                 CurveList.Add(dotpLine);
                 ToolTip.TargetCurve = dotpLine;
