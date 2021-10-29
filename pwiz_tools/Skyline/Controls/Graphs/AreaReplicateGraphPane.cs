@@ -318,8 +318,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarSettings.Type = BarType.Cluster;
             }
 
-            var standardType = (normalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)?.FindIsotopeLabelType(document.Settings);
-
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
             DataScalingOption dataScalingOption;
             if (optimizationPresent && displayType == DisplayTypeChrom.single &&
@@ -504,7 +502,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (nodeGroup != null && countNodes > 1)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
-                        if (ReferenceEquals(labelType, standardType))
+                        if (NormalizationMethod.RatioToLabel.Matches(normalizeOption.NormalizationMethod, labelType))
                             continue;
                     }
 
@@ -737,7 +735,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         normalizationMethod = normalizationMethod ?? normalizeOption.NormalizationMethod;
                         if (normalizationMethod != null)
                         {
-                            if (normalizationMethod is NormalizationMethod.RatioToLabel && ExpectedVisible == AreaExpectedValue.none)
+                            if (normalizationMethod is NormalizationMethod.RatioToLabel && NormalizationMethod.RatioToLabel.Matches(normalizationMethod, PaneKey.IsotopeLabelType))
                                 yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
                             else 
                                 yTitle = normalizationMethod.GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
