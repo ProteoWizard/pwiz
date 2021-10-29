@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AcqMethod>
+  <Version>1.0</Version>
+  <!--Method Properties-->
+  <MethodName>SulfaQuantMSonly.m</MethodName>
+  <MethodPath>D:\MassHunter\data\071020a_TOFSulfaQuant\TOFsulfasMScal1000-r001.d\AcqData\SulfaQuantMSonly.m</MethodPath>
+  <MethodDescription>Default Method</MethodDescription>
+  <!--List of Devices-->
+  <DeviceList>WPS</DeviceList>
+  <DeviceList>Bin Pump</DeviceList>
+  <DeviceList>Column</DeviceList>
+  <DeviceList>DAD</DeviceList>
+  <DeviceList>MS TOF</DeviceList>
+  <!--Device Specific Setpoints-->
+  <WPS>
+    <ComponentModelName>WPS</ComponentModelName>
+    <ComponentModel>G1367A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>THM</ComponentOptions>
+    <Version>1, 0, 0, 1; Base: 0.2.065.0</Version>
+    <Stoptime>As Pump</Stoptime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Signals>
+      <SignalDesc>Temperature</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <EnableRinse>No</EnableRinse>
+    <RinseDrawSpeed>1000</RinseDrawSpeed>
+    <RinseEjectSpeed>1000</RinseEjectSpeed>
+    <RinseVolume>1.3</RinseVolume>
+    <RinseVolume2>2</RinseVolume2>
+    <ValveSwitchTime1>0</ValveSwitchTime1>
+    <ValveSwitchTime2>0</ValveSwitchTime2>
+    <ValveSwitchTime3>0</ValveSwitchTime3>
+    <ValveSwitchTime4>0</ValveSwitchTime4>
+    <ValveMovements>0</ValveMovements>
+    <NRdyTemperatureRange />
+    <ThermostatTemperature />
+    <DrawPositionDetection>0</DrawPositionDetection>
+    <DrawSpeed>200</DrawSpeed>
+    <EjectSpeed>200</EjectSpeed>
+    <InjVolume>1</InjVolume>
+    <DrawPosition>0</DrawPosition>
+    <InjectMode>Needle Wash</InjectMode>
+    <WashVessel>N/A</WashVessel>
+    <OverlapTime>Disable Overlapped Injection</OverlapTime>
+    <FlushOutFactor>5</FlushOutFactor>
+    <EnableBypass>No</EnableBypass>
+    <WaitAfterDraw>0</WaitAfterDraw>
+    <WashLocation>FlushPort</WashLocation>
+    <WashTime>2</WashTime>
+    <WashCycles>N/A</WashCycles>
+    <InjProgram />
+  </WPS>
+  <BinPump>
+    <ComponentModelName>Bin Pump</ComponentModelName>
+    <ComponentModel>G1312A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>SSV</ComponentOptions>
+    <Version>0.2.041.0; Base: 0.2.064.0</Version>
+    <Stoptime>3.5</Stoptime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Signals>
+      <SignalDesc>Pressure</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Flow</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Solvent% A</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Solvent% B</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Direction of piston A</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Direction of piston B</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <UseSolvCalibration>1</UseSolvCalibration>
+    <SolvCalibrationNameA />
+    <SolvCalibrationNameB />
+    <SolvCalibrationNameC />
+    <SolvCalibrationNameD />
+    <SolvCalibrationIndexA>-2</SolvCalibrationIndexA>
+    <SolvCalibrationIndexB>-2</SolvCalibrationIndexB>
+    <SolvCalibrationIndexC>-2</SolvCalibrationIndexC>
+    <SolvCalibrationIndexD>-2</SolvCalibrationIndexD>
+    <PressureOperatingLimit>0</PressureOperatingLimit>
+    <StrokeA>Auto</StrokeA>
+    <Flow>0.4</Flow>
+    <SolvRatioA>85</SolvRatioA>
+    <SolvNameA>5 mM NH4OAc</SolvNameA>
+    <PressureMin>0</PressureMin>
+    <PressureMax>400</PressureMax>
+    <FRamp>100</FRamp>
+    <FPTimetable />
+    <StrokeB>Auto</StrokeB>
+    <CompressA>100</CompressA>
+    <CompressB>115</CompressB>
+    <SolvRatioB>15</SolvRatioB>
+    <SolvNameB>5 mM NH4OAc</SolvNameB>
+    <SolvNameC>.1% FA 10mM NH4OFm</SolvNameC>
+    <SolvNameD>.1% FA 10mM NH4OFm</SolvNameD>
+    <SSVA>0</SSVA>
+    <SSVB>0</SSVB>
+  </BinPump>
+  <TCC>
+    <ComponentModelName>Column</ComponentModelName>
+    <ComponentModel>G1316A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>CSV</ComponentOptions>
+    <Version>0.2.040.0; Base: 0.2.064.0</Version>
+    <Stoptime>As Pump</Stoptime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Signals>
+      <SignalDesc>Temperature of left heat exchanger</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Temperature of right heat exchanger</SignalDesc>
+      <Store>1</Store>
+    </Signals>
+    <LeftRemoteTemp>0</LeftRemoteTemp>
+    <RightRemoteTemp>0</RightRemoteTemp>
+    <ColumnPlumbing>0</ColumnPlumbing>
+    <LeftTemp>Not Controlled</LeftTemp>
+    <RightTemp>60</RightTemp>
+    <RightTempValue>60</RightTempValue>
+    <LeftReady>With Any Temp</LeftReady>
+    <RightReady>0.8</RightReady>
+    <TwoTemperatures />
+    <ColumnValve>0</ColumnValve>
+    <TemperatureTimetable />
+  </TCC>
+  <DAD>
+    <ComponentModelName>DAD</ComponentModelName>
+    <ComponentModel>G1315A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions />
+    <Version>0.2.035.0; Base: 0.2.064.0</Version>
+    <Stoptime>As Pump</Stoptime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Signals>
+      <SignalDesc>Absorbance A</SignalDesc>
+      <Store>1</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance B</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance C</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance D</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance E</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance F</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance G</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <Signals>
+      <SignalDesc>Absorbance H</SignalDesc>
+      <Store>0</Store>
+    </Signals>
+    <SampleWlF>280</SampleWlF>
+    <SampleWlG>280</SampleWlG>
+    <SampleWlH>280</SampleWlH>
+    <SampleBwF>16</SampleBwF>
+    <SampleBwG>16</SampleBwG>
+    <SampleBwH>16</SampleBwH>
+    <ReferenceWlF>360</ReferenceWlF>
+    <ReferenceWlG>360</ReferenceWlG>
+    <ReferenceWlH>360</ReferenceWlH>
+    <ReferenceBwF>100</ReferenceBwF>
+    <ReferenceBwG>100</ReferenceBwG>
+    <ReferenceBwH>100</ReferenceBwH>
+    <ReferenceOnF>Off</ReferenceOnF>
+    <ReferenceWlF>N/A</ReferenceWlF>
+    <ReferenceOnG>Off</ReferenceOnG>
+    <ReferenceWlG>N/A</ReferenceWlG>
+    <ReferenceOnH>Off</ReferenceOnH>
+    <ReferenceWlH>N/A</ReferenceWlH>
+    <AnalogZero_1>5</AnalogZero_1>
+    <AnalogAtt_1>1000</AnalogAtt_1>
+    <AnalogZero_2>5</AnalogZero_2>
+    <AnalogAtt_2>1000</AnalogAtt_2>
+    <SampleWlA>272</SampleWlA>
+    <SampleWlB>254</SampleWlB>
+    <SampleWlC>210</SampleWlC>
+    <SampleWlD>230</SampleWlD>
+    <SampleWlE>280</SampleWlE>
+    <SampleBwA>16</SampleBwA>
+    <SampleBwB>16</SampleBwB>
+    <SampleBwC>8</SampleBwC>
+    <SampleBwD>16</SampleBwD>
+    <SampleBwE>16</SampleBwE>
+    <ReferenceWlA>360</ReferenceWlA>
+    <ReferenceWlB>0</ReferenceWlB>
+    <ReferenceWlC>0</ReferenceWlC>
+    <ReferenceWlD>0</ReferenceWlD>
+    <ReferenceWlE>0</ReferenceWlE>
+    <ReferenceBwA>100</ReferenceBwA>
+    <ReferenceBwB>0</ReferenceBwB>
+    <ReferenceBwC>0</ReferenceBwC>
+    <ReferenceBwD>0</ReferenceBwD>
+    <ReferenceBwE>0</ReferenceBwE>
+    <ReferenceOnA>On</ReferenceOnA>
+    <ReferenceOnB>Off</ReferenceOnB>
+    <ReferenceWlB>N/A</ReferenceWlB>
+    <ReferenceOnC>Off</ReferenceOnC>
+    <ReferenceWlC>N/A</ReferenceWlC>
+    <ReferenceOnD>Off</ReferenceOnD>
+    <ReferenceWlD>N/A</ReferenceWlD>
+    <ReferenceOnE>Off</ReferenceOnE>
+    <ReferenceWlE>N/A</ReferenceWlE>
+    <Peakwidth>GT 0.1 min (2.0s)</Peakwidth>
+    <Slit>4</Slit>
+    <UVLampRequired>Yes</UVLampRequired>
+    <VisLampRequired>No</VisLampRequired>
+    <PrerunBalance>Yes</PrerunBalance>
+    <PostrunBalance>No</PostrunBalance>
+    <BalanceMode>1</BalanceMode>
+    <Headroom>100</Headroom>
+    <StoreSpectra>Spectrum Data</StoreSpectra>
+    <RangeFrom>210</RangeFrom>
+    <RangeTo>400</RangeTo>
+    <RangeStep>2</RangeStep>
+    <Threshold>10</Threshold>
+    <SignalTimetable />
+  </DAD>
+  <QTOF>
+    <ComponentModel>G6210A</ComponentModel>
+    <ComponentName>MS TOF</ComponentName>
+    <IonSource>ESI</IonSource>
+    <TuneFile>AutoTune.tun</TuneFile>
+    <StopMode>NoLimit</StopMode>
+    <StopTime>30.00</StopTime>
+    <NoWaitForTemp>Enable</NoWaitForTemp>
+    <FastPolarityEnabled>False</FastPolarityEnabled>
+    <MS1CentroidDataAbsThreshold>200</MS1CentroidDataAbsThreshold>
+    <MS1CentroidDataRELThreshold>0.010</MS1CentroidDataRELThreshold>
+    <MS2CentroidDataAbsThreshold>5</MS2CentroidDataAbsThreshold>
+    <MS2CentroidDataRELThreshold>0.010</MS2CentroidDataRELThreshold>
+    <TimeSegment>
+      <Index>1</Index>
+      <StartTime>0.0</StartTime>
+      <DivertValveState>MS</DivertValveState>
+      <StorageMode>Both</StorageMode>
+      <IonMode>ESI</IonMode>
+      <TimeSourceParameter>
+        <Id>DGasHeater</Id>
+        <Value>350</Value>
+      </TimeSourceParameter>
+      <TimeSourceParameter>
+        <Id>DGasFlow</Id>
+        <Value>10.0</Value>
+      </TimeSourceParameter>
+      <TimeSourceParameter>
+        <Id>NebulizerPressure</Id>
+        <Value>45</Value>
+      </TimeSourceParameter>
+      <ScanSegment>
+        <Index>1</Index>
+        <ionPolarity>Positive</ionPolarity>
+        <ScanSourceParameter>
+          <Id>VCap</Id>
+          <Value>1500</Value>
+        </ScanSourceParameter>
+        <ScanInstParameter>
+          <Id>Fragmentor</Id>
+          <Value>175</Value>
+        </ScanInstParameter>
+        <ScanInstParameter>
+          <Id>Skimmer1</Id>
+          <Value>65</Value>
+        </ScanInstParameter>
+        <ScanInstParameter>
+          <Id>OctopoleRFPeak</Id>
+          <Value>250</Value>
+        </ScanInstParameter>
+      </ScanSegment>
+      <Acquisition>
+        <AcqMode>MS1</AcqMode>
+        <AcqMS1>
+          <MinRange>100</MinRange>
+          <MaxRange>1000</MaxRange>
+          <ScanRate>1.0</ScanRate>
+        </AcqMS1>
+      </Acquisition>
+    </TimeSegment>
+    <RefMassParameters>
+      <EnableRefMassCorrection>Enabled</EnableRefMassCorrection>
+      <UseBottleA>True</UseBottleA>
+      <RefNebulizer>0</RefNebulizer>
+      <AutoRecalibration>
+        <AverageScans>5</AverageScans>
+        <DetectionWindow>100</DetectionWindow>
+        <MinHeight>1000</MinHeight>
+      </AutoRecalibration>
+      <RefMass>121.05087300</RefMass>
+      <RefMass>922.00979800</RefMass>
+    </RefMassParameters>
+  </QTOF>
+</AcqMethod>

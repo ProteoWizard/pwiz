@@ -76,7 +76,10 @@ class MidacDataImpl : public MassHunterData
     virtual double ccsToDriftTime(double ccs, double mz, int charge) const;
 
     virtual const std::set<Transition>& getTransitions() const;
-    virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
+    virtual MassChromatogramPtr getChromatogram(const Transition& transition) const;
+
+    virtual const vector<Signal>& getSignals() const { return signals_; }
+    virtual SignalChromatogramPtr getSignal(const Signal& signal) const { return nullptr; }
 
     virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
     virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
@@ -98,6 +101,7 @@ class MidacDataImpl : public MassHunterData
     BinaryData<float> ticIntensities_, ticIntensitiesMs1_, bpcIntensities_, bpcIntensitiesMs1_;
     set<Transition> transitions_;
     map<Transition, int> transitionToChromatogramIndexMap_;
+    vector<Signal> signals_;
 
     bool hasProfileData_;
 };

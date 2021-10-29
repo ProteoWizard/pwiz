@@ -307,9 +307,9 @@ const BinaryData<float>& MidacDataImpl::getBpcIntensities(bool ms1Only) const
     return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }
 
-ChromatogramPtr MidacDataImpl::getChromatogram(const Transition& transition) const
+MassChromatogramPtr MidacDataImpl::getChromatogram(const Transition& transition) const
 {
-    return ChromatogramPtr();
+    return nullptr;
 }
 
 SpectrumPtr MidacDataImpl::getProfileSpectrumByRow(int rowNumber) const
