@@ -1993,8 +1993,9 @@ namespace pwiz.Skyline.Model
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
                 // Synchronize all
-                foreach (var chromSet in MeasuredResults.Chromatograms)
-                    yield return chromSet;
+                if (Settings.HasResults)
+                    foreach (var chromSet in MeasuredResults.Chromatograms)
+                        yield return chromSet;
                 yield break;
             }
 
