@@ -195,8 +195,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 catch (Exception x)
                 {
-                    // do not commit this to master: throw the exception to make tracking down intermittent failure easier
-                    throw;
+                    Console.WriteLine(x.Message);
                     progress.UpdateProgress(status.ChangeErrorException(
                         new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
                                                     redundantLibrary), x)));
@@ -207,7 +206,6 @@ namespace pwiz.Skyline.Model.Lib
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);
             progress.UpdateProgress(status);
-            
             // Write the non-redundant library to a temporary file first
             try
             {
