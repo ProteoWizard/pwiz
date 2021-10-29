@@ -22,7 +22,6 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
