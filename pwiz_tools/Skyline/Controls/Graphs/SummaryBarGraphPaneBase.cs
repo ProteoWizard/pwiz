@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public bool IsVisible => _isVisible;
             public CurveItem TargetCurve {  get; set; }
 
-            public ToolTipImplementation(DetectionsPlotPane parent)
+            public ToolTipImplementation(SummaryBarGraphPaneBase parent)
             {
                 _parent = parent;
             }
@@ -84,8 +84,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_table == null || _table.Count == 0) return;
 
                 ReplicateIndex = dataIndex;
+                var targetAxis = TargetCurve.IsY2Axis ? (Axis)_parent.Y2Axis : _parent.YAxis;
                 var basePoint = new UserPoint(dataIndex + 1,
-                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent);
+                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent, targetAxis);
 
                 using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
                 {
@@ -121,6 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private class UserPoint
             {
                 private GraphPane _graph;
+                private Axis _yAxis;
                 public int X { get; private set; }
                 public float Y { get; private set; }
 
@@ -129,6 +131,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     X = x;
                     Y = y;
                     _graph = graph;
+                    _yAxis = graph.YAxis;
+                }
+                public UserPoint(int x, float y, GraphPane graph, Axis yAxis) : this(x, y, graph)
+                {
+                    if(yAxis is Y2Axis)
+                        _yAxis = yAxis;
                 }
 
                 public PointF User()
@@ -140,26 +148,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return new Point(
                         (int)_graph.XAxis.Scale.Transform(X),
-                        (int)_graph.YAxis.Scale.Transform(Y));
+                        (int)_yAxis.Scale.Transform(Y));
                 }
                 public Point Screen(Size OffsetScreen)
                 {
                     return new Point(
                         (int)(_graph.XAxis.Scale.Transform(X) + OffsetScreen.Width),
-                        (int)(_graph.YAxis.Scale.Transform(Y) + OffsetScreen.Height));
+                        (int)(_yAxis.Scale.Transform(Y) + OffsetScreen.Height));
                 }
 
                 public PointF PF()
                 {
                     return new PointF(
                         _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width,
-                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height);
+                        _yAxis.Scale.Transform(Y) / _graph.Rect.Height);
                 }
                 public PointD PF(SizeF OffsetPF)
                 {
                     return new PointD(
                         _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width + OffsetPF.Width,
-                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height + OffsetPF.Height);
+                        _yAxis.Scale.Transform(Y) / _graph.Rect.Height + OffsetPF.Height);
                 }
             }
         }

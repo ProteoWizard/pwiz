@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -93,10 +95,12 @@ namespace pwiz.Skyline.Controls.Graphs
     public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
         private int _labelHeight;
+        private ImmutableList<float> _dotpData;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
+            ToolTip = new ToolTipImplementation(this);
         }
 
         protected override void InitFromData(GraphData graphData)
@@ -585,22 +589,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.Scale.Min = 0;
                 Y2Axis.Scale.Max = 1.1;
                 Y2Axis.Title.Text = DotpLabelText;
+                _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point=> (float)point.Y));
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dot, Color = Color.DimGray},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 0.5f, Fill = new Fill(Color.DimGray)}
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 2.5f, Fill = new Fill(Color.DimGray)}
                 };
                 CurveList.Add(dotpLine);
+                ToolTip.TargetCurve = dotpLine;
             }
             else
             {
                 Y2Axis.IsVisible = false;
+                _dotpData = null;
             }
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
         }
 
-            private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
+        public override ImmutableList<float> GetToolTipDataSeries()
+        {
+            return _dotpData;
+        }
+        public override void PopulateTooltip(int index)
+        {
+            ToolTip.ClearData();
+
+            ToolTip.AddLine(DotpLabelText,_dotpData[index].ToString(CultureInfo.CurrentCulture));
+        }
+
+        private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
         {
             double yValue;
             switch (BarSettings.Type)
