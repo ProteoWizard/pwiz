@@ -863,7 +863,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var imString = ionMobilityFilter.IonMobility.HasValue
                 ? string.Format(@"{0:F02} {1}",
-                    ionMobilityFilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits))
+                    ionMobilityFilter.IonMobility.Mobility, 
+                    IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits).Replace(@"^2", @"²")) // Make "Vs/cm^2" into "Vs/cm²" to agree with CCS "Å²"
                 : @"IM unknown"; // Should never happen
             return imString;
         }

@@ -1295,8 +1295,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        var validPoints = points.Where(p => !double.IsNaN(p.Y)).ToArray();
-                        if (validPoints.Length == 0)
+                        var validPoints = new List<PointPair>();
+                        for (var i = 0; i < points.Count; i++)
+                        {
+                            var isStandard = NormalizationMethod.RatioToLabel.Matches(normalizationMethod,
+                                (nodePep.Children[i] as TransitionGroupDocNode)?.LabelType);
+                            if (!double.IsNaN(points[i].Y) && !isStandard)
+                                validPoints.Add(points[i]);
+                        }
+
+                        if (validPoints.Count == 0)
                         {
                             y = double.NaN;
                         }

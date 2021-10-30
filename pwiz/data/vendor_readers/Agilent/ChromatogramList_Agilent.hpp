@@ -66,6 +66,7 @@ public:
     {
         CVID chromatogramType;
         Transition transition;
+        Signal signal;
     };
 
     mutable vector<IndexEntry> index_;

@@ -73,7 +73,14 @@ namespace pwiz.Common.SystemUtil
             var proc = Process.Start(psi);
             if (proc == null)
                 throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
-            proc.PriorityClass = priorityClass;
+            try
+            {
+                proc.PriorityClass = priorityClass;
+            }
+            catch
+            {
+                // Ignore
+            }
             if (stdin != null)
             {
                 try
