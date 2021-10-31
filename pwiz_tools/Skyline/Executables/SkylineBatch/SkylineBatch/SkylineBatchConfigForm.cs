@@ -45,6 +45,7 @@ namespace SkylineBatch
         private readonly Dictionary<string, string> _possibleTemplates;
         private SkylineSettings _currentSkylineSettings;
         private bool _showChangeAllSkylineSettings;
+        private SkylineBatchConfigManagerState _state;
 
         public DownloadingFileControl templateControl;
         public DownloadingFileControl dataControl;
@@ -62,7 +63,7 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            State = configManagerStartState;
+            _state = configManagerStartState;
             _possibleTemplates = State.Templates.ToDictionary(pair => pair.Key, pair => pair.Value);
             var numConfigs = State.ConfigRunners.Count;
             _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
@@ -91,7 +92,19 @@ namespace SkylineBatch
             ActiveControl = textConfigName;
         }
 
-        public SkylineBatchConfigManagerState State { get; private set; }
+        public SkylineBatchConfigManagerState State {
+            get
+            {
+                return _state;
+            }
+            private set
+            {
+                _state = value;
+                templateControl.State = value;
+                dataControl.State = value;
+                annotationsControl.State = value;
+            }
+        }
         public SkylineTypeControl SkylineTypeControl { get; private set; }
 
         private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;

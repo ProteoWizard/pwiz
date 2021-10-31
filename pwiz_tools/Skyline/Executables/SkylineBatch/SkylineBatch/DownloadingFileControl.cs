@@ -43,7 +43,7 @@ namespace SkylineBatch
         public string Path { get; private set; }
         public Server Server { get; private set; }
 
-        public SkylineBatchConfigManagerState State { get; private set; }
+        public SkylineBatchConfigManagerState State { get; set; }
 
         public void SetPath(string newPath)
         {
