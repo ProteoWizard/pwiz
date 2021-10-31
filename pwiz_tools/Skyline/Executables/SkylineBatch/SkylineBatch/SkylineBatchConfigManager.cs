@@ -948,6 +948,8 @@ namespace SkylineBatch
                 if (!string.IsNullOrEmpty(dependentName))
                 {
                     var index = BaseState.GetConfigIndex(config.Name);
+                    var oldConfigRunner = ConfigRunners[config.Name];
+                    var oldTemplatePath = config.MainSettings.Template.FilePath;
                     ProgramaticallyRemoveAt(index);
                     string templatePath;
                     try
@@ -961,6 +963,8 @@ namespace SkylineBatch
                         continue;
                     }
                     ProgramaticallyInsertConfig(index, config.DependentChanged(dependentName, templatePath), uiControl);
+                    if (oldTemplatePath.Equals(templatePath))
+                        ConfigRunners = ConfigRunners.Remove(config.Name).Add(config.Name, oldConfigRunner);
                 }
             }
 
