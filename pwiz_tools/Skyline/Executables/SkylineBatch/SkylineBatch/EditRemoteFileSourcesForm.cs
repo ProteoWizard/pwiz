@@ -48,7 +48,7 @@ namespace SkylineBatch
             if (DialogResult.OK == dialogResult)
             {
                 LastEditedName = remoteSourceForm.RemoteFileSource.Name;
-                var index = listSources.Items.Count - 2;
+                var index = listSources.Items.Count;
                 listSources.Items.Insert(index, LastEditedName);
                 listSources.SelectedIndex = index;
             }
