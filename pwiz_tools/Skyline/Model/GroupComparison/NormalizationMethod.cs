@@ -208,24 +208,22 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return Label;
             }
 
-            public IsotopeLabelType IsotopeLabelType { get { return _isotopeLabelType; } }
             public string IsotopeLabelTypeName { get { return _isotopeLabelType.Name; } }
+
+            public bool Matches(IsotopeLabelType labelType)
+            {
+                return Equals(_isotopeLabelType.Name, labelType?.Name);
+            }
 
             public static bool Matches(NormalizationMethod normalizationMethod, IsotopeLabelType isotopeLabelType)
             {
-                if (isotopeLabelType == null)
-                {
-                    return false;
-                }
-                RatioToLabel ratioToLabel = normalizationMethod as RatioToLabel;
-                return ratioToLabel != null && Equals(ratioToLabel.IsotopeLabelTypeName, isotopeLabelType.Name);
+                return (normalizationMethod as RatioToLabel)?.Matches(isotopeLabelType) ?? false;
             }
 
             public IsotopeLabelType FindIsotopeLabelType(SrmSettings settings)
             {
                 return settings.PeptideSettings.Modifications.HeavyModifications
-                           .FirstOrDefault(mods => mods.LabelType.Name == IsotopeLabelTypeName)?.LabelType ??
-                       _isotopeLabelType;
+                    .FirstOrDefault(mods => Matches(mods.LabelType))?.LabelType ?? _isotopeLabelType;
             }
         }
 
