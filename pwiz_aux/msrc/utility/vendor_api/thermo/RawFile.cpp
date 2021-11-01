@@ -1685,8 +1685,9 @@ const vector<PrecursorInfo>& ScanInfoImpl::precursorInfo() const
 long ScanInfoImpl::precursorCharge() const
 {
     // "Charge State" header item for SPS spectra refers to MS2's precursor charge;
+    // however, I have seen spectra with a single SPS mass that have real MS3 precursor charge states
     // CONSIDER: real charge states might be available in the instrument method
-    if (!spsMasses_.empty())
+    if (spsMasses_.size() > 1)
         return 0;
 
     try
