@@ -504,6 +504,13 @@ namespace pwiz.Skyline.Model
                 var line = lines.FirstOrDefault();
                 if (string.IsNullOrEmpty(line))
                     throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+
+                // If no numeric columns in the first row
+                if (rowReadRequired)
+                {
+                    SetRowReader(progressMonitor, tolerateErrors, lines.ToList(), status);
+                }
+
                 indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
                 if (indices.Headers != null)
                 {
@@ -511,17 +518,6 @@ namespace pwiz.Skyline.Model
                     _linesSeen++;
                 }
 
-                // If no numeric columns in the first row
-                if (rowReadRequired)
-                {
-                    RowReader = ExPeptideRowReader.Create(FormatProvider, Separator, indices, Settings, lines, progressMonitor, status);
-                    if (RowReader == null)
-                    {
-                        RowReader = GeneralRowReader.Create(FormatProvider, Separator, indices, Settings, lines, tolerateErrors, progressMonitor, status);
-                        if (RowReader == null)
-                            throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1, -1);
-                    }
-                }
                 return true;
             }
 
@@ -538,24 +534,33 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
-                {
-                    RowReader = rowReader;
-                }
-                else
-                {
-                    if (mzException != null)
-                    {
-                        throw mzException;
-                    }
-                    else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
-                    {
-                        throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
-                            -1);
-                    }
-                }
+                SetRowReader(progressMonitor, tolerateErrors, lines, status);
             }
             return true;
+        }
+
+        /// <summary>
+        /// Attempt to create a row reader and throw an exception upon failure
+        /// </summary>
+        private void SetRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+            IProgressStatus status)
+        {
+            if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
+            {
+                RowReader = rowReader;
+            }
+            else
+            {
+                if (mzException != null)
+                {
+                    throw mzException;
+                }
+                else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                {
+                    throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                        -1);
+                }
+            }
         }
 
         /// <summary>
@@ -576,6 +581,14 @@ namespace pwiz.Skyline.Model
             {
                 lines.RemoveAt(0);
                 _linesSeen++;
+
+            }
+
+            // If there are no rows left after we remove the headers, we cannot create a row reader
+            if (lines.Count < 1)
+            {
+                rowReader = null;
+                return false;
             }
 
             // If no numeric columns in the first row
