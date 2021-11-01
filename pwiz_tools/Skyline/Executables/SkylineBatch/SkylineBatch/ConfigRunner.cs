@@ -49,6 +49,8 @@ namespace SkylineBatch
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
             _uiControl = uiControl;
+            if (uiControl == null)
+                _uiControl = null;
             _logger = logger;
 
             _processRunner = new ProcessRunner()
