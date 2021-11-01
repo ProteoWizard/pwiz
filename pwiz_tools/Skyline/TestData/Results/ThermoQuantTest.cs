@@ -450,18 +450,18 @@ namespace pwiz.SkylineTestData.Results
                                                                              })
                                         };
             var docResults = docMixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            SrmDocument docMixedUnmixed;
             using (var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath))
             {
                 Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
                 docContainerMixed.AssertComplete();
                 docMixed = docContainerMixed.Document;
+                docMixedUnmixed = (SrmDocument)docMixed.ChangeChildren(new DocNode[0]);
+                docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
+                    out _, out _);
+                docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             }
-            SrmDocument docMixedUnmixed = (SrmDocument) docMixed.ChangeChildren(new DocNode[0]);
-            IdentityPath tempPath;
-            docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
-                out tempPath, out tempPath);
 
-            docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             using (var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath))
             {
                 Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));

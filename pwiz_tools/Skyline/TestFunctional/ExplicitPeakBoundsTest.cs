@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
                     ChromatogramGroupInfo[] chromatograms;
                     doc.Settings.MeasuredResults.TryLoadChromatogram(
                         doc.Settings.MeasuredResults.Chromatograms.First(), peptideDocNode, transitionGroupDocNode, 0,
-                        true, out chromatograms);
+                        out chromatograms);
                     Assert.AreEqual(1, chromatograms.Length);
                     if (peakBounds == null)
                     {
