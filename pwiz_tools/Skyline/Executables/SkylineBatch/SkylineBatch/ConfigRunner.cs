@@ -49,6 +49,8 @@ namespace SkylineBatch
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
             _uiControl = uiControl;
+            if (uiControl == null)
+                _uiControl = null;
             _logger = logger;
 
             _processRunner = new ProcessRunner()
@@ -210,6 +212,13 @@ namespace SkylineBatch
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
+                // Delete existing .sky and .skyd results files
+                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
+                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
+                    TextUtil.EXT_SKYD));
+                foreach (var file in filesToDelete)
+                    File.Delete(file);
+
                 // Unzip zipped template
                 if (Config.MainSettings.Template.Zipped)
                 {
@@ -226,13 +235,6 @@ namespace SkylineBatch
                     _logger.StopLogPercent(true);
                     _logger.Log(string.Format("{0} extracted.", Config.MainSettings.Template.FileName()));
                 }
-                
-                // Delete existing .sky and .skyd results files
-                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
-                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
-                    TextUtil.EXT_SKYD));
-                foreach (var file in filesToDelete) 
-                    File.Delete(file);
 
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
