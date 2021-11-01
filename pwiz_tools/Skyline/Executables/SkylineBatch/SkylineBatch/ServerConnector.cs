@@ -181,7 +181,7 @@ namespace SkylineBatch
                         _serverExceptions[server] = new ArgumentException(string.Format(
                             Resources
                                 .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                            server));
+                            server.URI));
                     }
                     else
                     {
