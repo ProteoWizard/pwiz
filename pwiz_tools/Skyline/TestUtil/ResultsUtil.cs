@@ -481,11 +481,11 @@ namespace pwiz.SkylineTestUtil
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo1));
+                    tolerance, out chromGroupInfo1));
                 Assert.AreEqual(1, chromGroupInfo1.Length);
                 ChromatogramGroupInfo[] chromGroupInfo2;
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom2, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo2));
+                    tolerance, out chromGroupInfo2));
                 Assert.AreEqual(1, chromGroupInfo2.Length);
                 if (delta != -1)
                 {

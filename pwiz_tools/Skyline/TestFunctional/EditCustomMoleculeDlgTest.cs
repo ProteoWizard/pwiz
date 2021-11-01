@@ -965,7 +965,7 @@ namespace pwiz.SkylineTestFunctional
                 fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                 fullScanDlg.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 fullScanDlg.Peaks = 3;
-                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));

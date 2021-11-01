@@ -320,7 +320,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel && !IsMultiSelect)
             {
                 var graphLabelType = parentGroupNode?.LabelType ?? PaneKey.IsotopeLabelType;
-                if (graphLabelType != null && !ratioToLabel.IsotopeLabelType.Equals(graphLabelType))
+                if (graphLabelType != null && !ratioToLabel.Matches(graphLabelType))
                     ExpectedVisible = AreaExpectedValue.ratio_to_label;
             }
 
@@ -839,7 +839,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                     {
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
-                        if (precursorNodePath.Peptide != null && !nodeGroup.LabelType.Equals(ratioToLabel.IsotopeLabelType))
+                        if (precursorNodePath.Peptide != null && !ratioToLabel.Matches(nodeGroup.LabelType))
                         {
                             var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
                                 ratioToLabel,
@@ -1295,8 +1295,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        var validPoints = points.Where(p => !double.IsNaN(p.Y)).ToArray();
-                        if (validPoints.Length == 0)
+                        var validPoints = new List<PointPair>();
+                        for (var i = 0; i < points.Count; i++)
+                        {
+                            var isStandard = NormalizationMethod.RatioToLabel.Matches(normalizationMethod,
+                                (nodePep.Children[i] as TransitionGroupDocNode)?.LabelType);
+                            if (!double.IsNaN(points[i].Y) && !isStandard)
+                                validPoints.Add(points[i]);
+                        }
+
+                        if (validPoints.Count == 0)
                         {
                             y = double.NaN;
                         }
