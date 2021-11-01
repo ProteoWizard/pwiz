@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
-            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, true, out var chromGroupInfos))
+            if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeTranGroup, mzMatchTolerance, out var chromGroupInfos))
                 return;
 
             var chromGroupInfo = chromGroupInfos.FirstOrDefault(info => Equals(chromSet.GetFileInfo(tranGroupChromInfo.FileId).FilePath, info.FilePath));
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model
             {
                 ChromatogramSet chromSet = doc.Settings.MeasuredResults.Chromatograms[resultsIndex];
                 ChromatogramGroupInfo[] chromGroupInfos;
-                if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePepTree.DocNode, tranGroup, mzMatchTolerance, false, out chromGroupInfos))
+                if (!doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePepTree.DocNode, tranGroup, mzMatchTolerance, out chromGroupInfos))
                     continue;
 
                 float areaSum = chromGroupInfos.Where(info => info != null && info.TransitionPointSets != null)
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model
             var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
 
             ChromatogramGroupInfo[] loadInfos;
-            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, true, out loadInfos))
+            if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out loadInfos))
                 return null;
 
             var chromGroupInfo = loadInfos.FirstOrDefault(info => Equals(info.FilePath, fileInfo.FilePath));

@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -97,6 +98,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(26, countPeaksNegPolarity, "countPeaksNegPolarity"); // Should probably be 93, see CONSIDER note above
             // 26 are negative, so will not match chromatograms artificially marked positive in the mzML
             Assert.AreEqual(74, countPeaksNoPolarity, "countPeaksNoPolarity");
+            RunUI(()=>SkylineWindow.SwitchDocument(new SrmDocument(SrmSettingsList.GetDefault()), null));
             // Note that 26+74 != 98 : as it happens there is a negative transition 136,136 that matches when it's faked up as positive
             testFilesDir.Dispose();
         }
