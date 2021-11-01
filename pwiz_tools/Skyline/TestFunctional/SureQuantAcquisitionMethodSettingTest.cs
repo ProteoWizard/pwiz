@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Make sure that the combo box is displaying the localized text for the acquisition methods.
                 var comboAcquisitionMethod = transitionSettingsUi.ComboAcquisitionMethod;
-                CollectionAssert.AreEqual(comboAcquisitionMethod.Items.Cast<FullScanAcquisitionMethod>().ToList(), FullScanAcquisitionMethod.ALL.ToList());
+                CollectionAssert.AreEqual(comboAcquisitionMethod.Items.Cast<FullScanAcquisitionMethod>().ToList(), FullScanAcquisitionMethod.AVAILABLE.ToList());
                 foreach (var item in comboAcquisitionMethod.Items)
                 {
                     Assert.IsInstanceOfType(item, typeof(FullScanAcquisitionMethod));

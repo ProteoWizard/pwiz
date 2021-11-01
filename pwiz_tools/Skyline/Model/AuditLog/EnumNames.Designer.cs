@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Targeted.
+        ///   Looks up a localized string similar to Targeted (obsolete).
         /// </summary>
         public static string FullScanAcquisitionMethod_Targeted {
             get {
