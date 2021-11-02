@@ -1314,6 +1314,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Return the strongest relativeRT from a list. Returns any RelativeRT in the list
+        /// is "Matching", then returns "Matching". Returns "Unknown" only if all RelativeRTs
+        /// in the list are "Unknown".
+        /// </summary>
         public static RelativeRT MergeRelativeRTs(IEnumerable<RelativeRT> relativeRts)
         {
             var result = RelativeRT.Unknown;
