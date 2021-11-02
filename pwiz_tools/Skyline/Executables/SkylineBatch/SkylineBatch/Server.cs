@@ -378,7 +378,7 @@ namespace SkylineBatch
 
         public static RemoteFileSource ReadXml(XmlReader reader)
         {
-            reader.Read();
+            reader.ReadToDescendant("remote_file_source");
             // Read tag attributes
             var name = reader.GetAttribute(XML_TAGS.name);
             var username = reader.GetAttribute(XML_TAGS.username) ?? string.Empty;

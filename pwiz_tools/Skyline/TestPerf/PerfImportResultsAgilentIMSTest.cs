@@ -82,8 +82,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc0.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results0.TryLoadChromatogram(chromIndex, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                Assert.IsTrue(results0.TryLoadChromatogram(chromIndex, pair.NodePep, pair.NodeGroup, tolerance,
+                    out chromGroupInfo));
                 foreach (var chromGroup in chromGroupInfo)
                 {
                     foreach (var tranInfo in chromGroup.TransitionPointSets)
@@ -124,7 +124,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results1.TryLoadChromatogram(chromIndex, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
                 foreach (var chromGroup in chromGroupInfo)
                 {
                     foreach (var tranInfo in chromGroup.TransitionPointSets)
