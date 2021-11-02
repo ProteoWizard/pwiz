@@ -1005,7 +1005,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer, true);
                 usercontrolIonMobilityFiltering.ShowOnlyResolvingPowerControls(groupBoxMS1.Width);
-                var extraHeight = usercontrolIonMobilityFiltering.Height + label1.Height; // Add control height plus a margin
+                var extraHeight = usercontrolIonMobilityFiltering.Height + sepMS1FromMS2; // Add control height plus a margin
 
                 // Move the IM filter control above the RT control
                 var usercontrolIonMobilityFilteringTop = groupBoxRetentionTimeToKeep.Top;
@@ -1014,6 +1014,12 @@ namespace pwiz.Skyline.SettingsUI
                     ctl.Top += extraHeight;
                 }
                 usercontrolIonMobilityFiltering.Top = usercontrolIonMobilityFilteringTop;
+                // And now enforce consistent vertical spacing
+                var controls = Controls.OfType<Control>().Where(c => c.Enabled).OrderBy(c => c.Top).ToArray();
+                for (var i = 1; i < controls.Length; i++)
+                {
+                    controls[i].Top = controls[i - 1].Bottom + sepMS1FromMS2;
+                }
             }
             else
             {
