@@ -3177,5 +3177,17 @@ namespace pwiz.Skyline.Properties {
                 this["FullScanPeakType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int ChromatogramDisplayRTDigits {
+            get {
+                return ((int)(this["ChromatogramDisplayRTDigits"]));
+            }
+            set {
+                this["ChromatogramDisplayRTDigits"] = value;
+            }
+        }
     }
 }
