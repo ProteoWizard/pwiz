@@ -1992,12 +1992,14 @@ namespace pwiz.Skyline.Model
         }
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
+            if (!Settings.HasResults)
+                yield break;
+
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
                 // Synchronize all
-                if (Settings.HasResults)
-                    foreach (var chromSet in MeasuredResults.Chromatograms)
-                        yield return chromSet;
+                foreach (var chromSet in MeasuredResults.Chromatograms)
+                    yield return chromSet;
                 yield break;
             }
 
