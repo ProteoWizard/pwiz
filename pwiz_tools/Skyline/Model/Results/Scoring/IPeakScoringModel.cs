@@ -381,6 +381,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// A calculator name that does not get localized
         /// </summary>
         string HeaderName { get; }
+
+        string Tooltip { get; }
         
         /// <summary>
         /// True if low scores are better for this calculator, false if high scores are better
@@ -412,6 +414,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public string HeaderName { get; private set; }
 
+        public string Tooltip
+        {
+            get { return FeatureTooltips.ResourceManager.GetString(HeaderName); }
+        }
+
         public abstract bool IsReversedScore { get; }
 
         public float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData)
@@ -442,6 +449,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract string Name { get; }
 
         public string HeaderName { get; private set; }
+
+        public string Tooltip
+        {
+            get { return FeatureTooltips.ResourceManager.GetString(HeaderName); }
+        }
 
         public abstract bool IsReversedScore { get; }
 

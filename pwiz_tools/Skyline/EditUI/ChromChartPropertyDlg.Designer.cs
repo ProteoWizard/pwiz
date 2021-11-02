@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChromChartPropertyDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
@@ -45,7 +46,11 @@
             this.label5 = new System.Windows.Forms.Label();
             this.cbShowMultiplePeptides = new System.Windows.Forms.CheckBox();
             this.textSizeComboBox = new System.Windows.Forms.ComboBox();
+            this.numericUpDownRTDigits = new System.Windows.Forms.NumericUpDown();
+            this.labelRTDigits = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRTDigits)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -154,12 +159,41 @@
             resources.ApplyResources(this.textSizeComboBox, "textSizeComboBox");
             this.textSizeComboBox.Name = "textSizeComboBox";
             // 
+            // numericUpDownRTDigits
+            // 
+            resources.ApplyResources(this.numericUpDownRTDigits, "numericUpDownRTDigits");
+            this.numericUpDownRTDigits.Maximum = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numericUpDownRTDigits.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownRTDigits.Name = "numericUpDownRTDigits";
+            this.toolTip1.SetToolTip(this.numericUpDownRTDigits, resources.GetString("numericUpDownRTDigits.ToolTip"));
+            this.numericUpDownRTDigits.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownRTDigits.ValueChanged += new System.EventHandler(this.numericUpDownRTDigits_ValueChanged);
+            // 
+            // labelRTDigits
+            // 
+            resources.ApplyResources(this.labelRTDigits, "labelRTDigits");
+            this.labelRTDigits.Name = "labelRTDigits";
+            // 
             // ChromChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.numericUpDownRTDigits);
+            this.Controls.Add(this.labelRTDigits);
             this.Controls.Add(this.textSizeComboBox);
             this.Controls.Add(this.cbShowMultiplePeptides);
             this.Controls.Add(this.groupBox1);
@@ -175,6 +209,7 @@
             this.ShowInTaskbar = false;
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRTDigits)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -198,5 +233,8 @@
         private System.Windows.Forms.TextBox textMinIntensity;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox textSizeComboBox;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Label labelRTDigits;
+        protected System.Windows.Forms.NumericUpDown numericUpDownRTDigits;
     }
 }

@@ -86,6 +86,21 @@ namespace pwiz.SkylineTestFunctional
                 VerifyRawTimesCount("4", nodeTran, showing);
                 VerifyRawTimesCount("5", nodeTran, showing);
             }
+
+            // Now verify that the RT display digits control works properly
+            var values = new [] {36.5, 36.49, 36.489};
+            for (var n = 0; n < 3 ; n++)
+            {
+                RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
+                {
+                    dlg.DisplayRTDigits = n+1;
+                    dlg.OkDialog();
+                });
+                WaitForGraphs();
+                var graphChrom = SkylineWindow.GraphChromatograms.First();
+                var result = graphChrom.GetAnnotationLabelStrings().First();
+                AssertEx.AreEqual(values[n], double.Parse(result, NumberStyles.Float));
+            }
         }
 
         private void VerifyRawTimesCount(string chromName, TransitionDocNode transition, bool showing)

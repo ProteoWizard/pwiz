@@ -970,8 +970,12 @@ namespace pwiz.Skyline.SettingsUI
                     var cell = gridPeakCalculators.Rows[row].Cells[i];
                     cell.Style = new DataGridViewCellStyle();
                     cell.ReadOnly = false;
-                    cell.ToolTipText = string.Empty;
+                    cell.ToolTipText = null;
                 }
+
+                var calculator = PeakScoringModel.PeakFeatureCalculators[unsortedIndex];
+                gridPeakCalculators.Rows[row].Cells[PeakCalculatorName.Index].ToolTipText =
+                    FeatureTooltips.ResourceManager.GetString(calculator.HeaderName);
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))
                 {
@@ -979,7 +983,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
-                        cell.ToolTipText = Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                        cell.ToolTipText = cell.ToolTipText ?? Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
                 // Show row in disabled style if the score is not eligible
