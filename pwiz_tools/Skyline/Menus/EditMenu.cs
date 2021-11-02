@@ -1061,7 +1061,7 @@ namespace pwiz.Skyline.Menus
                 {
                     var groupBy = dlg.GroupByPersistedString;
                     var all = dlg.IsAll;
-                    var targets = dlg.Targets.ToArray();
+                    var targets = dlg.TargetsInvariant.ToArray();
 
                     var existing = DocumentUI.Settings.TransitionSettings.Integration;
                     if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
