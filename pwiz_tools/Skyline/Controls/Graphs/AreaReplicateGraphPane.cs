@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 using Array = System.Array;
 
@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel && !IsMultiSelect)
             {
                 var graphLabelType = parentGroupNode?.LabelType ?? PaneKey.IsotopeLabelType;
-                if (graphLabelType != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, graphLabelType))
+                if (!NormalizationMethod.RatioToLabel.Matches(ratioToLabel, graphLabelType))
                     ExpectedVisible = AreaExpectedValue.ratio_to_label;
             }
 
@@ -505,8 +505,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // correspond with the other graphs.
                     if (nodeGroup != null && countNodes > 1)
                     {
-                        var labelType = nodeGroup.TransitionGroup.LabelType;
-                        if (NormalizationMethod.RatioToLabel.Matches(normalizeOption.NormalizationMethod, labelType))
+                        if (NormalizationMethod.RatioToLabel.Matches(normalizeOption.NormalizationMethod, nodeGroup.TransitionGroup.LabelType))
                             continue;
                     }
 
@@ -582,6 +581,10 @@ namespace pwiz.Skyline.Controls.Graphs
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
+            _dotpData = null;
+            if (graphData.DotpData != null) 
+                _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
+
             if (ExpectedVisible != AreaExpectedValue.none &&
                 DotProductDisplayOption.line.IsSet(Settings.Default))
             {
@@ -589,7 +592,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.Scale.Min = 0;
                 Y2Axis.Scale.Max = 1.1;
                 Y2Axis.Title.Text = DotpLabelText;
-                _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point=> (float)point.Y));
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
@@ -601,7 +603,6 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 Y2Axis.IsVisible = false;
-                _dotpData = null;
             }
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
@@ -614,8 +615,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-
-            ToolTip.AddLine(DotpLabelText,_dotpData[index].ToString(CultureInfo.CurrentCulture));
+            ToolTip.AddLine("",GetDotProductResultsText(index));
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -753,7 +753,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         normalizationMethod = normalizationMethod ?? normalizeOption.NormalizationMethod;
                         if (normalizationMethod != null)
                         {
-                            if (normalizationMethod is NormalizationMethod.RatioToLabel && NormalizationMethod.RatioToLabel.Matches(normalizationMethod, PaneKey.IsotopeLabelType))
+                            if (NormalizationMethod.RatioToLabel.Matches(normalizationMethod, PaneKey.IsotopeLabelType))
                                 yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
                             else 
                                 yTitle = normalizationMethod.GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
@@ -817,7 +817,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                  return (_dotpLabels.Count > 0 || !DotProductLabelsVisible)
                      ? _dotpLabels.Select(l => ((TextObj)l).Text)
-                     : SumAreas.Select((t, i) => GetDotProductResultsText(ParentGroupNode, i));
+                     : SumAreas.Select((t, i) => GetDotProductResultsText(i));
             }
         }
 
@@ -848,17 +848,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (visible)
             {
-                // x shift of the dot product labels
-                var xShift = 1 + FirstDataIndex;
-
                 for (int i = 0; i < sumAreas.Count; i++)
                 {
-                    string text = GetDotProductResultsText(nodeGroup, i);
+                    string text = GetDotProductResultsText(i + FirstDataIndex);
                     if (string.IsNullOrEmpty(text))
                         continue;
 
                     TextObj textObj = new TextObj(text,
-                                                  i + xShift, sumAreas[i],
+                                                  i + FirstDataIndex + 1, sumAreas[i],
                                                   CoordType.AxisXYScale,
                                                   AlignH.Center,
                                                   AlignV.Bottom)
@@ -892,64 +889,18 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        private string GetDotProductResultsText(TransitionGroupDocNode nodeGroup, int indexResult)
+        private string GetDotProductResultsText(int indexResult)
         {
-            var replicateIndices = IndexOfReplicate(indexResult);
-            IEnumerable<float?> values;
-            switch (ExpectedVisible)
+            // ReSharper disable LocalizableElement
+            if (_dotpData?.Count > 0 && indexResult < _dotpData.Count)
             {
-                case AreaExpectedValue.library:
-                    if (replicateIndices.IsEmpty)
-                    {
-                        values = new[] {nodeGroup.GetLibraryDotProduct(-1)};
-                    }
-                    else
-                    {
-                        values = replicateIndices.Select(nodeGroup.GetLibraryDotProduct);
-                    }
-                    break;
-                case AreaExpectedValue.isotope_dist:
-                    if (replicateIndices.IsEmpty)
-                    {
-                        values = new[] {nodeGroup.GetIsotopeDotProduct(-1)};
-                    }
-                    else
-                    {
-                        values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct);
-                    }
-                    break;
-                case AreaExpectedValue.ratio_to_label:
-                    var document = GraphSummary.DocumentUIContainer.DocumentUI;
-                    var normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
-                    values = new float?[] { };
-                    if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
-                    {
-                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, document);
-                        if (precursorNodePath.Peptide != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType))
-                        {
-                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
-                                ratioToLabel,
-                                precursorNodePath.Peptide, nodeGroup,
-                                nodeGroup.GetChromInfoEntry(indexResult));
-                            if(ratio?.HasDotProduct ?? false)
-                                return GetDotProductText(ratio.DotProduct);
-                        }
-                        else
-                            return null;
-                    }
-                    break;
-                default:
-                    return null;
+                var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
+                return separator(new [] { DotpLabelText , string.Format("{0:F02}", _dotpData[indexResult]) } ) ;
+
             }
-            var statistics = new Statistics(values
-                .Select(value => value.HasValue ? (double?) value : null)
-                .Where(value=>value.HasValue)
-                .Cast<double>());
-            if (statistics.Length == 0)
-            {
+            else
                 return null;
-            }
-            return GetDotProductText((float) statistics.Mean());
+            // ReSharper restore LocalizableElement
         }
 
         private string DotpLabelText
@@ -968,13 +919,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Empty; 
                 }
             }
-        }
-
-        private string GetDotProductText(float? dotpValue)
-        {
-            // ReSharper disable LocalizableElement
-            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null;
-            // ReSharper restore LocalizableElement
         }
 
         protected override int SelectedIndex
