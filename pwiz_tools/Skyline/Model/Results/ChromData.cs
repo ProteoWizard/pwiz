@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Clone the object, and create a new list of peaks, since the peaks are
-        /// calculated on the write thread, and may be calulated differently for multiple
+        /// calculated on the write thread, and may be calculated differently for multiple
         /// transition groups.
         /// </summary>
         public ChromData CloneForWrite()
