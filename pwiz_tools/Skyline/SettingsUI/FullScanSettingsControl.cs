@@ -1009,16 +1009,20 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Move the IM filter control above the RT control
                 var usercontrolIonMobilityFilteringTop = groupBoxRetentionTimeToKeep.Top;
-                foreach (var ctl in Controls.OfType<Control>().Where(c => c.Enabled && c.Top >= usercontrolIonMobilityFilteringTop))
+                var lowerControls = Controls.OfType<Control>().Where(c => c.Enabled && c.Top >= usercontrolIonMobilityFilteringTop).ToArray();
+                foreach (var ctl in lowerControls)
                 {
                     ctl.Top += extraHeight;
                 }
                 usercontrolIonMobilityFiltering.Top = usercontrolIonMobilityFilteringTop;
                 // And now enforce consistent vertical spacing
-                var controls = Controls.OfType<Control>().Where(c => c.Enabled).OrderBy(c => c.Top).ToArray();
+                var controls = Controls.OfType<Control>().OrderBy(c => c.Top).ToArray();
                 for (var i = 1; i < controls.Length; i++)
                 {
-                    controls[i].Top = controls[i - 1].Bottom + sepMS1FromMS2;
+                    if (lowerControls.Contains(controls[i]))
+                    {
+                        controls[i].Top = controls[i - 1].Bottom + sepMS1FromMS2;
+                    }
                 }
             }
             else
