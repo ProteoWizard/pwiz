@@ -1,7 +1,27 @@
-﻿using System;
+﻿/*
+ * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2021 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,12 +53,13 @@ namespace pwiz.Skyline.EditUI
 
         public IEnumerable<string> Targets
         {
-            get => listSync.CheckedItems.Cast<string>();
+            get => listSync.CheckedItems.Cast<object>().Select(o => o.ToString());
             set => SetCheckedItems(value.ToHashSet());
         }
+        public IEnumerable<string> TargetsInvariant => listSync.CheckedItems.Cast<object>().Select(o => Convert.ToString(o, CultureInfo.InvariantCulture));
 
         public IEnumerable<string> GroupByOptions => comboGroupBy.Items.Cast<GroupByItem>().Select(item => item.ToString());
-        public IEnumerable<string> TargetOptions => listSync.Items.Cast<string>();
+        public IEnumerable<string> TargetOptions => listSync.Items.Cast<object>().Select(o => o.ToString());
 
         public SynchronizedIntegrationDlg(SrmDocument document)
         {
@@ -82,16 +103,16 @@ namespace pwiz.Skyline.EditUI
             return null;
         }
 
-        private void SetCheckedItems(HashSet<string> items)
+        private void SetCheckedItems(ICollection<string> items)
         {
             for (var i = 0; i < listSync.Items.Count; i++)
-                listSync.SetItemChecked(i, items != null && items.Contains(listSync.Items[i]));
+                listSync.SetItemChecked(i, items != null && items.Contains(listSync.Items[i].ToString()));
         }
 
         private void comboGroupBy_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var newItems = SelectedGroupBy.GetItems(_document, _annotationCalculator);
-            if (!ArrayUtil.EqualsDeep(listSync.Items.Cast<string>().ToArray(), newItems))
+            var newItems = SelectedGroupBy.GetItems(_document, _annotationCalculator).ToArray();
+            if (!ArrayUtil.EqualsDeep(listSync.Items.Cast<object>().ToArray(), newItems))
             {
                 var allChecked = IsAll;
                 listSync.Items.Clear();
@@ -140,18 +161,18 @@ namespace pwiz.Skyline.EditUI
                 ReplicateValue = replicateValue;
             }
 
-            public string[] GetItems(SrmDocument doc, AnnotationCalculator annotationCalc)
+            public IEnumerable<object> GetItems(SrmDocument doc, AnnotationCalculator annotationCalc)
             {
-                if (ReplicateValue == null)
-                    return doc.Settings.MeasuredResults.Chromatograms.Select(c => c.Name).ToArray();
-
-                var values = new SortedSet<string>();
-                foreach (var chromSet in doc.Settings.MeasuredResults.Chromatograms)
-                    values.Add(ReplicateValue.GetValue(annotationCalc, chromSet).ToString());
-                return values.ToArray();
+                return ReplicateValue == null
+                    ? doc.Settings.MeasuredResults.Chromatograms.Select(c => c.Name)
+                    : doc.Settings.MeasuredResults.Chromatograms
+                        .Select(chromSet => ReplicateValue.GetValue(annotationCalc, chromSet))
+                        .Distinct()
+                        .OrderBy(o => o, CollectionUtil.ColumnValueComparer)
+                        .Select(o => o ?? string.Empty); // replace nulls with empty strings so they can go into the listbox
             }
 
-            public string PersistedString => ReplicateValue != null ? ReplicateValue.ToPersistedString() : null;
+            public string PersistedString => ReplicateValue?.ToPersistedString();
 
             public override string ToString()
             {
