@@ -457,7 +457,7 @@
     <value>4</value>
   </data>
   <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 106</value>
+    <value>15, 119</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
     <value>310, 153</value>
@@ -546,8 +546,11 @@
   <data name="&gt;&gt;textSizeComboBox.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="numericUpDownRTDigits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="numericUpDownRTDigits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>176, 76</value>
+    <value>15, 90</value>
   </data>
   <data name="numericUpDownRTDigits.Size" type="System.Drawing.Size, System.Drawing">
     <value>41, 20</value>
@@ -580,7 +583,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelRTDigits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 78</value>
+    <value>12, 74</value>
   </data>
   <data name="labelRTDigits.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 13</value>
@@ -610,7 +613,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>337, 272</value>
+    <value>337, 285</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
