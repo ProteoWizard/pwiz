@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var otherChromatogramGroupInfo = Document.Settings.LoadChromatogramGroup(
-                    ChromatogramSet, ChromFileInfo.FilePath, PeptideDocNode, otherTransitionGroup, false);
+                    ChromatogramSet, ChromFileInfo.FilePath, PeptideDocNode, otherTransitionGroup);
                 if (otherChromatogramGroupInfo != null)
                 {
                     transitionGroups.Add(otherTransitionGroup);
@@ -126,17 +126,9 @@ namespace pwiz.Skyline.Model.Results
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
             var context = new PeakScoringContext(Document);
-            var chromatogramSet = Document.Settings.MeasuredResults.Chromatograms[ReplicateIndex];
-            var tgPeakDatas = new List<PeakFeatureEnumerator.SummaryTransitionGroupPeakData>();
-            for (int i = 0; i < transitionGroups.Count; i++)
-            {
-                var tgPeakData = new PeakFeatureEnumerator.SummaryTransitionGroupPeakData(Document, PeptideDocNode,
-                    transitionGroups[i], chromatogramSet, chromatogramGroupInfos[i]);
-                tgPeakDatas.Add(tgPeakData);
-            }
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(
-                Document, PeptideDocNode, Document.MeasuredResults.Chromatograms[ReplicateIndex],
-                chromatogramGroupInfos[0], tgPeakDatas);
+                Document, PeptideDocNode, transitionGroups, Document.MeasuredResults.Chromatograms[ReplicateIndex],
+                ChromFileInfo, chromatogramGroupInfos);
             while (summaryData.NextPeakIndex())
             {
                 var scores = new List<float>();
@@ -221,11 +213,8 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var chromDataSet = new ChromDataSet(true, PeptideDocNode.ModifiedTarget,
-                    Document.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromDatas.ToArray())
-                {
-                    NodeGroup = transitionGroup
-                };
+                var chromDataSet = new ChromDataSet(true, PeptideDocNode, transitionGroup,
+                    Document.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromDatas.ToArray());
                 peptideChromDataSets.Add(PeptideDocNode, chromDataSet);
             }
 
@@ -236,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var measuredResults = Document.Settings.MeasuredResults;
             if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[ReplicateIndex], PeptideDocNode, transitionGroup,
-                MzMatchTolerance, true, out var infos))
+                MzMatchTolerance, out var infos))
             {
                 return null;
             }

@@ -281,7 +281,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.DocNode);
         }
 
-<<<<<<< HEAD
         [OneToMany(ItemDisplayName = nameof(CandidatePeakGroup))]
         public IList<PrecursorCandidatePeakGroup> CandidatePeakGroups
         {

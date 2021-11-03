@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 TransitionGroupDocNode nodeGroup,
                 ChromatogramSet chromatogramSet,
                 MsDataFileUri filePath) : this(document, nodePep, nodeGroup, chromatogramSet,
-                document.Settings.LoadChromatogramGroup(chromatogramSet, filePath, nodePep, nodeGroup, false))
+                document.Settings.LoadChromatogramGroup(chromatogramSet, filePath, nodePep, nodeGroup))
             {
 
             }

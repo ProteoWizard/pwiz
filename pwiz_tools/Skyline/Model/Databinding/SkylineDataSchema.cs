@@ -51,11 +51,8 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
-<<<<<<< HEAD
         private readonly CachedValue<PeakScoreCache> _detailScores;
-=======
         private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
->>>>>>> remotes/origin/master
 
         private SrmDocument _batchChangesOriginalDocument;
         private List<EditDescription> _batchEditDescriptions;
@@ -71,11 +68,8 @@ namespace pwiz.Skyline.Model.Databinding
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
-<<<<<<< HEAD
             _detailScores = CachedValue.Create(this, () => new PeakScoreCache(Document));
-=======
             _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
->>>>>>> remotes/origin/master
         }
 
         public override string DefaultUiMode
@@ -290,15 +284,13 @@ namespace pwiz.Skyline.Model.Databinding
             get { return _annotationCalculator.Value; }
         }
 
-<<<<<<< HEAD
         public PeakScoreCache PeakScoreCache
         {
             get { return _detailScores.Value; }
-=======
+        }
         public NormalizedValueCalculator NormalizedValueCalculator
         {
             get { return _normalizedValueCalculator.Value; }
->>>>>>> remotes/origin/master
         }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)

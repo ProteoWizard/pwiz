@@ -2037,7 +2037,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public ChromatogramGroupInfo LoadChromatogramGroup(ChromatogramSet chromatogramSet, MsDataFileUri dataFilePath, PeptideDocNode peptide,
-            TransitionGroupDocNode transitionGroup, bool loadPoints)
+            TransitionGroupDocNode transitionGroup)
         {
             if (!HasResults)
             {
@@ -2045,7 +2045,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
-                (float) TransitionSettings.Instrument.MzMatchTolerance, loadPoints, out var infoSet))
+                (float) TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
             {
                 return null;
             }

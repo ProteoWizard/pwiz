@@ -61,6 +61,8 @@ namespace pwiz.Skyline.Model.Databinding
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
             ChromatogramGroupInfo[] chromatogramGroupInfos;
+            var measuredResults = document.Settings.MeasuredResults;
+            var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, out chromatogramGroupInfos))
             {
                 return null;

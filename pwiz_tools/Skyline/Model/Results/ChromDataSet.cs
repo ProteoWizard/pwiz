@@ -1483,9 +1483,9 @@ namespace pwiz.Skyline.Model.Results
             var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
-            var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToList();
-            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, scoreTypeIndices, null,
-                ImmutableList.Singleton(chromCachedFile), chromTransitions, chromPeaks, scores);
+            var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
+            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
+                chromPeaks, timeIntensitiesGroup, scoreTypeIndices, scores);
             return chromatogramGroupInfo;
         }
     }

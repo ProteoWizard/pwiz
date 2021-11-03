@@ -2254,7 +2254,14 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
-            TimeIntensitiesGroup timeIntensitiesGroup)
+            TimeIntensitiesGroup timeIntensitiesGroup) 
+            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, new Dictionary<Type, int>(), Array.Empty<float>())
+        {
+        }
+
+        public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
+            TimeIntensitiesGroup timeIntensitiesGroup, IDictionary<Type, int> scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();
@@ -2262,9 +2269,10 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
             _timeIntensitiesGroup = timeIntensitiesGroup;
-            _scoreTypeIndices = new Dictionary<Type, int>();
-            _scores = Array.Empty<float>();
+            _scoreTypeIndices = scoreTypeIndices;
+            _scores = scores;
         }
+
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
@@ -2355,8 +2363,9 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> GetPeakGroup(int peakIndex)
         {
-            return ReadOnlyList.Create(_groupHeaderInfo.NumTransitions, transitionIndex =>
-                _allPeaks[_groupHeaderInfo.StartPeakIndex + transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
+            var peaks = ReadPeaks();
+            return ReadOnlyList.Create(_groupHeaderInfo.NumTransitions,
+                transitionIndex => peaks[transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
         }
 
         public ChromatogramInfo GetTransitionInfo(int index)
