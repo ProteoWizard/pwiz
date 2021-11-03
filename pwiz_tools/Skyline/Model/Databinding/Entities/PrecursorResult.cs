@@ -31,7 +31,6 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
-        private readonly CachedValue<IList<CandidatePeakGroup>> _candidatePeaks;
+        private readonly CachedValue<IList<PrecursorCandidatePeakGroup>> _candidatePeaks;
         private readonly CachedValue<PeakGroupScore> _peakScores;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
@@ -260,7 +259,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ItemDisplayName = nameof(CandidatePeakGroup))]
-        public IList<CandidatePeakGroup> CandidatePeakGroups
+        public IList<PrecursorCandidatePeakGroup> CandidatePeakGroups
         {
             get
             {
@@ -281,16 +280,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new ChromatogramGroup(this).ChromatogramGroupInfo?.NumPeaks ?? 0;
         }
 
-        private IList<CandidatePeakGroup> GetCandidatePeakGroups()
+        private IList<PrecursorCandidatePeakGroup> GetCandidatePeakGroups()
         {
             var chromatogramGroup = new ChromatogramGroup(this);
-            var peakGroups = new List<CandidatePeakGroup>();
+            var peakGroups = new List<PrecursorCandidatePeakGroup>();
             var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
                 Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
             foreach (var peakScores in onDemandScoreCalculator.CalculateCandidatePeakScores(Precursor.DocNode,
                 chromatogramGroup.ChromatogramGroupInfo))
             {
-                var peakGroup = new CandidatePeakGroup(chromatogramGroup, peakGroups.Count, GetPeakScores(peakScores));
+                var peakGroup = new PrecursorCandidatePeakGroup(chromatogramGroup, peakGroups.Count, GetPeakScores(peakScores));
                 peakGroup.UpdateChosen(this);
                 peakGroups.Add(peakGroup);
 
@@ -298,7 +297,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return ImmutableList.ValueOf(peakGroups);
         }
 
-        public PeakGroupScore GetPeakScores(FeatureValues featureValues)
+        public PrecursorCandidatePeakScores GetPeakScores(FeatureValues featureValues)
         {
             var model = SrmDocument.Settings.PeptideSettings.Integration.PeakScoringModel;
             if (model == null || !model.IsTrained)

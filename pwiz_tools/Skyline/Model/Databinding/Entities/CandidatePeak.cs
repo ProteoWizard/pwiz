@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -103,6 +105,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PeakGroupScore PeakScores
         {
             get;
+        }
+    }
+
+    public class PrecursorCandidatePeakGroup : CandidatePeakGroup
+    {
+        public PrecursorCandidatePeakGroup(ChromatogramGroup chromatogramGroup, int peakIndex,
+            PrecursorCandidatePeakScores defaultPeakScores) : base(chromatogramGroup, peakIndex, defaultPeakScores)
+        {
+        }
+
+        public new PrecursorCandidatePeakScores PeakScores
+        {
+            get { return (PrecursorCandidatePeakScores) base.PeakScores; }
+        }
+
+    }
+
+    public class PrecursorCandidatePeakScores : PeakGroupScore
+    {
+        public PrecursorCandidatePeakScores(FeatureValues scores, double? modelScore, IDictionary<string, WeightedFeature> weightedFeatures) : base(scores, modelScore, weightedFeatures)
+        {
+        }
+
+        [ChildDisplayName("Candidate{0}")]
+        public new Features Features
+        {
+            get { return base.Features; }
         }
     }
 }

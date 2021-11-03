@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? ModelScore { get; } 
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
-        public static PeakGroupScore MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
+        public static PrecursorCandidatePeakScores MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
         {
             var weightedFeatures = new Dictionary<string, WeightedFeature>();
             double? modelScore = 0;
@@ -38,6 +38,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 for (int i = 0; i < model.Parameters.Weights.Count; i++)
                 {
                     var weight = model.Parameters.Weights[i];
+                    if (double.IsNaN(weight) || weight == 0)
+                    {
+                        continue;
+                    }
                     var featureCalc = model.PeakFeatureCalculators[i];
                     float? score = featureValues.GetValue(featureCalc);
                     if (!score.HasValue && model is LegacyScoringModel)
@@ -51,7 +55,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
             }
 
-            return new PeakGroupScore(featureValues, modelScore, weightedFeatures);
+            return new PrecursorCandidatePeakScores(featureValues, modelScore, weightedFeatures);
         }
 
         public override string ToString()
