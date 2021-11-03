@@ -943,6 +943,11 @@ namespace pwiz.Skyline.SettingsUI
                 // Reposition MS1 filtering groupbox
                 groupBoxMS1.Top = textPrecursorCharges.Bottom + sepMS1FromMS2;
             }
+            else
+            {
+                textPrecursorCharges.Enabled = false; // So these don't show up in height calculation
+                lblPrecursorCharges.Enabled = false;
+            }
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
@@ -998,17 +1003,37 @@ namespace pwiz.Skyline.SettingsUI
             // Ask about ion mobility filtering if any IM values in library
             if (libIonMobilities)
             {
-                usercontrolIonMobilityFiltering.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
                 usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer, true);
                 usercontrolIonMobilityFiltering.ShowOnlyResolvingPowerControls(groupBoxMS1.Width);
-                var adjustedHeight = usercontrolIonMobilityFiltering.Bottom + label1.Height; // Add control height plus a margin
-                MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
-                Height = adjustedHeight;
+                var extraHeight = usercontrolIonMobilityFiltering.Height + sepMS1FromMS2; // Add control height plus a margin
+
+                // Move the IM filter control above the RT control
+                var usercontrolIonMobilityFilteringTop = groupBoxRetentionTimeToKeep.Top;
+                var lowerControls = Controls.OfType<Control>().Where(c => c.Enabled && c.Top >= usercontrolIonMobilityFilteringTop).ToArray();
+                foreach (var ctl in lowerControls)
+                {
+                    ctl.Top += extraHeight;
+                }
+                usercontrolIonMobilityFiltering.Top = usercontrolIonMobilityFilteringTop;
+                // And now enforce consistent vertical spacing
+                var controls = Controls.OfType<Control>().OrderBy(c => c.Top).ToArray();
+                for (var i = 1; i < controls.Length; i++)
+                {
+                    if (lowerControls.Contains(controls[i]))
+                    {
+                        controls[i].Top = controls[i - 1].Bottom + sepMS1FromMS2;
+                    }
+                }
             }
             else
             {
                 usercontrolIonMobilityFiltering.Visible = false;
+                usercontrolIonMobilityFiltering.Enabled = false;
             }
+            // Note actual in-use  height
+            var bottom = Controls.OfType<Control>().Where(c => c.Enabled).Select(c => c.Bottom).Max();
+            Height = bottom;
+            MinimumSize = new Size(MinimumSize.Width, Height);
         }
 
         private void radioTimeAroundMs2Ids_CheckedChanged(object sender, EventArgs e)

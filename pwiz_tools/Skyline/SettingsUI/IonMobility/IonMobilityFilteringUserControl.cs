@@ -39,7 +39,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         private SettingsListComboDriver<IonMobilityLibrary> _driverIonMobilityLib;
         private TransitionIonMobilityFiltering _ionMobilityFiltering { get; set; }
         private bool ShowPeakWidthTypeControl { get; set; } // False when offering only resolving power settings, as in peptide import wizard
-        private bool AllowZeroWidth { get { return ShowPeakWidthTypeControl; } } // Most users don't care if IM width is zero since most users don't use IM
 
         public IonMobilityFilteringUserControl()
         {
@@ -92,48 +91,38 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         // For use in import search wizard, where we want to show a very simple interface
         public void ShowOnlyResolvingPowerControls(int groupBoxWidth)
         {
+            // Assume that we want to use IM information in spectral libraries
+            cbUseSpectralLibraryIonMobilities.Checked = true;
             // Assume that resolving power is the proper choice of window width calculation
             comboBoxWindowType.SelectedIndex = (int)IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
             ShowPeakWidthTypeControl = false;
-            // Hide other width calculator types, hide ion mobility library chooser
+            // Hide everything but resolving power setting
             var retainedControls = new Control[]
             {
-                cbUseSpectralLibraryIonMobilities,
                 labelResolvingPower,
                 textIonMobilityFilterResolvingPower
             };
-
-            // Hide any controls not needed, rearrange the rest to close the gaps
             var controls = groupBoxIonMobilityFiltering.Controls.Cast<Control>().
                 OrderBy(c => c.Top).ToArray();
-            var overlappingControls = controls.Where(c => retainedControls.Any(r => Math.Abs(r.Top-c.Top) < 5)).ToArray();
-            var margin = controls[0].Top;
-
-            Control lastVisible = controls[0];
+            var margin = controls[0].Top /2 ;
+            var shiftVert = labelResolvingPower.Top - controls[0].Top;
+            var shiftHoriz = labelResolvingPower.Left - controls[0].Left;
             for (var i = 0; i < controls.Length; i++)
             {
                 var control = controls[i];
                 if (retainedControls.Contains(control))
                 {
                     control.Visible = control.Enabled = true;
-                    lastVisible = control;
+                    control.Top -= shiftVert;
+                    control.Left -= shiftHoriz;
                 }
                 else
                 {
                     control.Visible = control.Enabled = false;
-                    if (!overlappingControls.Contains(control))
-                    {
-                        var gap = (i < controls.Length - 1) ? controls[i + 1].Top - control.Top : control.Height;
-                        for (var j = i + 1; j < controls.Length; j++)
-                        {
-                            var controlNext = controls[j];
-                            controlNext.Location = new Point(controlNext.Location.X, controlNext.Location.Y - gap);
-                        }
-                    }
                 }
             }
 
-            groupBoxIonMobilityFiltering.Height = lastVisible.Bottom + margin;
+            groupBoxIonMobilityFiltering.Height = textIonMobilityFilterResolvingPower.Bottom + margin;
             Height = groupBoxIonMobilityFiltering.Height;
             groupBoxIonMobilityFiltering.Width = groupBoxWidth;
         }
@@ -397,11 +386,19 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power:
                     if (!helper.ValidateDecimalTextBox(textIonMobilityFilterResolvingPower, out resolvingPower))
                         return null;
-                    errmsg = ValidateResolvingPower(resolvingPower);
-                    if (errmsg != null)
+                    if (!ShowPeakWidthTypeControl && resolvingPower == 0)
                     {
-                        helper.ShowTextBoxError(textIonMobilityFilterResolvingPower, errmsg);
-                        return null;
+                        // As in peptide search import wizard, resolving power is only option and we will accept 0 as meaning "no IMS filtering"
+                        peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
+                    }
+                    else
+                    {
+                        errmsg = ValidateResolvingPower(resolvingPower);
+                        if (errmsg != null)
+                        {
+                            helper.ShowTextBoxError(textIonMobilityFilterResolvingPower, errmsg);
+                            return null;
+                        }
                     }
                     break;
                 case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width: // Fixed width
@@ -434,20 +431,20 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public string ValidateWidth(double width)
         {
-            if (width < 0 || (!AllowZeroWidth && width == 0))
+            if (width < 0)
                 return Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_;
             return null;
         }
 
         public string ValidateResolvingPower(double resolvingPower)
         {
-            if (resolvingPower < 0 || (!AllowZeroWidth && resolvingPower == 0))
+            if (resolvingPower < 0)
                 return Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_;
             return null;
         }
         public string ValidateFixedWindow(double fixedWindow)
         {
-            if (fixedWindow < 0 || (!AllowZeroWidth && fixedWindow == 0))
+            if (fixedWindow < 0)
                 return Resources.IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_;
             return null;
         }
