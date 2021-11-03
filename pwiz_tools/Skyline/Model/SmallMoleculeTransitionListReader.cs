@@ -1860,7 +1860,8 @@ namespace pwiz.Skyline.Model
             }
             var mass = customMolecule.GetMass(massType);
 
-            var transition = new Transition(group, ion.Adduct, null, customMolecule, ionType);
+            var adduct = ionType == IonType.precursor ? group.PrecursorAdduct : ion.Adduct;
+            var transition = new Transition(group, adduct, null, customMolecule, ionType);
             var annotations = document.Annotations;
             if (!String.IsNullOrEmpty(ion.Note))
             {
