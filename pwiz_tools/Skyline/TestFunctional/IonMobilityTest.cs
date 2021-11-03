@@ -621,7 +621,7 @@ namespace pwiz.SkylineTestFunctional
                         .ShowOnlyResolvingPowerControls(300); // In this mode, insist on non-negative width parameters
                     AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1),
                         Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(0),
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(-1), // Negative values are nonsense, but we allow zero as meaning "no filtering"
                         Resources
                             .EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
                 }

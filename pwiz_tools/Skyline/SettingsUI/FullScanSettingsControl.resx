@@ -748,7 +748,7 @@
     <value>326, 192</value>
   </data>
   <data name="groupBoxMS1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="groupBoxMS1.Text" xml:space="preserve">
     <value>&amp;MS1 filtering</value>
@@ -1333,7 +1333,7 @@
     <value>326, 135</value>
   </data>
   <data name="groupBoxMS2.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="groupBoxMS2.Text" xml:space="preserve">
     <value>M&amp;S/MS filtering</value>
@@ -1693,7 +1693,7 @@
     <value>96, 13</value>
   </data>
   <data name="lblPrecursorCharges.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>5</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
     <value>Precursor charges:</value>
@@ -1720,7 +1720,7 @@
     <value>76, 20</value>
   </data>
   <data name="textPrecursorCharges.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="textPrecursorCharges.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1753,7 +1753,7 @@
     <value>166, 17</value>
   </data>
   <data name="cbHighSelectivity.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="cbHighSelectivity.Text" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
@@ -1781,7 +1781,7 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>365, 140</value>
   </data>
   <data name="usercontrolIonMobilityFiltering.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Name" xml:space="preserve">
     <value>usercontrolIonMobilityFiltering</value>

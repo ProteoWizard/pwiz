@@ -344,12 +344,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
             if (workflowType == Workflow.dda)
             {
-                AdjustHeight(-FullScanSettingsControl.GroupBoxMS2Height); // No MS2 control
+                AdjustHeightForFullScanSettings(); // No MS2 control
             }
         }
 
-        public void AdjustHeight(int change)
+        public void AdjustHeightForFullScanSettings()
         {
+            var tab = Controls.OfType<WizardPages>().First().TabPages[(int) Pages.full_scan_settings_page];
+            var panel = tab.Controls.OfType<Control>().OrderBy(c => c.Top).First(); // Location of panel containing the FullScan control
+            var tabHeight = tab.Height;
+            var marginBottom = FullScanSettingsControl.Top - panel.Bottom;
+            var neededHeight = FullScanSettingsControl.Bottom + marginBottom;
+            var change = neededHeight - tabHeight; // May need more real estate to ask about using ion mobility data, or less if no MS2 settings
+
             MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height + change);
             if (change < 0)
             {
@@ -560,10 +567,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var lib = BuildPepSearchLibControl.ImportPeptideSearch.DocLib;
                         var libIonMobilities = lib != null && PeptideLibraries.HasIonMobilities(lib, null);
                         FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, libIonMobilities);
-                        if (libIonMobilities)
-                        {
-                            AdjustHeight(FullScanSettingsControl.IonMobilityFiltering.Height + 2 * label1.Height); // Need real estate to ask about using ion mobility data found in imported spectral libraries
-                        }
+                        AdjustHeightForFullScanSettings();
 
                         bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
