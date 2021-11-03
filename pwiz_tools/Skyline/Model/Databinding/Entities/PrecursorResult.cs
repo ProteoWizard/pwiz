@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -79,10 +80,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? TotalBackgroundMs1 { get { return ChromInfo.BackgroundAreaMs1; } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalBackgroundFragment { get { return ChromInfo.BackgroundAreaFragment; } }
+
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? TotalAreaRatio { get { return ChromInfo.Ratio; } }
+        public double? TotalAreaRatio
+        {
+            get
+            {
+                var firstInternalStandard = DataSchema.NormalizedValueCalculator.RatioInternalStandardTypes.FirstOrDefault();
+                if (firstInternalStandard != null)
+                {
+                    return GetNormalizedArea(new NormalizationMethod.RatioToLabel(firstInternalStandard));
+                }
+                return GetNormalizedArea(NormalizationMethod.GLOBAL_STANDARDS);
+            }
+        }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? RatioDotProduct { get { return RatioValue.GetDotProduct(ChromInfo.Ratios.FirstOrDefault()); } }
+        public double? RatioDotProduct {
+            get
+            {
+                var firstInternalStandard = DataSchema.NormalizedValueCalculator.RatioInternalStandardTypes.FirstOrDefault();
+                if (firstInternalStandard != null)
+                {
+                    return GetRatioValue(new NormalizationMethod.RatioToLabel(firstInternalStandard))?.DotProduct;
+                }
+                return null;
+            }
+        }
         [Format(Formats.PEAK_AREA_NORMALIZED, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalAreaNormalized { get { return TotalArea / GetResultFile().GetTotalArea(Precursor.IsotopeLabelType); } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
@@ -249,6 +272,23 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
             return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
                 Precursor.DocNode);
+        }
+
+        public double? GetNormalizedArea(NormalizationMethod normalizationMethod)
+        {
+            if (normalizationMethod == null)
+            {
+                return null;
+            }
+
+            return DataSchema.NormalizedValueCalculator.GetTransitionGroupValue(normalizationMethod,
+                Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
+        }
+
+        public RatioValue GetRatioValue(NormalizationMethod.RatioToLabel ratioToLabel)
+        {
+            return DataSchema.NormalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
+                Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
         }
     }
 }
