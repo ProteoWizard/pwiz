@@ -1780,8 +1780,7 @@ namespace pwiz.SkylineTestFunctional
                 "Molecule List Name,Precursor Name, Precursor m/z,Precursor Charge, Product m/z,Product Charge, Label Type,Explicit Retention Time,Explicit Retention Time Window\n" +
                 "molecules1,2′deoxycitidine,330.1095,-1,330.1095,-1,light,7.7,2\n" +
                 "molecules1,2′deoxycitidine,336.12963,-1,336.12963,-1,heavy,7.7,2\n";
-            var asFile = false;
-            for (var pass = 0; pass < 2; pass++)
+            foreach (var asFile in new[] {true, false})
             {
                 var docOrig = NewDocument();
                 var tempFile = TestFilesDir.GetTestPath(@"transitions_heavy_tmp.csv");
@@ -1802,7 +1801,7 @@ namespace pwiz.SkylineTestFunctional
                     // Before the fix, we'd come up with the second set as 336.12963/330.1095 instead of 336.12963/336.12963
                     AssertEx.AreEqual(pair.NodeGroup.PrecursorMz, pair.NodeGroup.Transitions.First().Mz);
                 }
-                asFile = !asFile;
+                AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
             }
         }
 
