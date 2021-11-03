@@ -1398,7 +1398,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(chromData.IonMobility,null, chromGroup.CCS);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
                 ionMobilityFilter,
-                new float?[0], Annotations.EMPTY,
+                Annotations.EMPTY,
                 UserSet.FALSE);
             var peaks = new[] {chromPeak};
             var header = new ChromGroupHeaderInfo(precursorMz,

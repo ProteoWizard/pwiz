@@ -362,7 +362,6 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
             // Make sure to serialize the document the other way, and make sure it's still the same.
             bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
@@ -416,7 +415,6 @@ namespace pwiz.SkylineTestUtil
             var actual = RoundTrip(target, skylineVersion, ref asXML);
             DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
             VerifyModifiedSequences(target);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(target);
             // Validate document against indicated schema
             if (checkAgainstSkylineSchema)
                 ValidatesAgainstSchema(actual, skylineVersion.SrmDocumentVersion, nameof(SrmDocument), asXML);
