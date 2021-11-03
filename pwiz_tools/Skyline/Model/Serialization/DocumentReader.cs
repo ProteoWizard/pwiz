@@ -163,7 +163,6 @@ namespace pwiz.Skyline.Model.Serialization
                 area, null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,
-                TransitionGroupChromInfo.GetEmptyRatios(countRatios),
                 massError,
                 truncated,
                 identified,
@@ -497,7 +496,6 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadStartElement();
                     annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
-                int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
@@ -515,7 +513,6 @@ namespace pwiz.Skyline.Model.Serialization
                     identified,
                     rank,
                     rankByLevel,
-                    TransitionChromInfo.GetEmptyRatios(countRatios),
                     annotations,
                     userSet,
                     forcedIntegration);

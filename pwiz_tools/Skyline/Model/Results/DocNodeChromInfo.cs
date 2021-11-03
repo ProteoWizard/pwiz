@@ -169,24 +169,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
-        private static readonly IList<RatioValue>[] EMPTY_RATIOS  = new ImmutableList<RatioValue>[4];
-
-        static TransitionGroupChromInfo()
-        {
-            for (int i = 0; i < EMPTY_RATIOS.Length; i++)
-            {
-                EMPTY_RATIOS[i] = ImmutableList<RatioValue>.ValueOf(new RatioValue[i + 1]);
-            }
-        }
-
-        public static IList<RatioValue> GetEmptyRatios(int countRatios)
-        {
-            int i = countRatios - 1;
-            return i < EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new RatioValue[countRatios];
-        }
-
-        private ImmutableList<RatioValue> _ratios;
-
         public TransitionGroupChromInfo(ChromFileInfoId fileId,
                                         int optimizationStep,
                                         float peakCountRatio,
@@ -202,7 +184,6 @@ namespace pwiz.Skyline.Model.Results
                                         float? backgroundAreaMs1,
                                         float? backgroundAreaFragment,
                                         float? height,
-                                        IList<RatioValue> ratios,
                                         float? massError,
                                         int? truncated,
                                         PeakIdentification identified,
@@ -228,7 +209,6 @@ namespace pwiz.Skyline.Model.Results
             BackgroundAreaMs1 = backgroundAreaMs1;
             BackgroundAreaFragment = backgroundAreaFragment;
             Height = height;
-            Ratios = ratios;
             MassError = massError;
             Truncated = truncated;
             Identified = identified;
@@ -255,12 +235,6 @@ namespace pwiz.Skyline.Model.Results
         public float? BackgroundAreaMs1 { get; private set; }
         public float? BackgroundAreaFragment { get; private set; }
         public float? Height { get; private set; }
-        public float? Ratio { get { return _ratios[0] == null ? (float?) null : _ratios[0].Ratio; } }
-        public IList<RatioValue> Ratios
-        {
-            get { return _ratios; }
-            private set { _ratios = value as ImmutableList<RatioValue> ?? MakeReadOnly(value); }
-        }
         public float? MassError { get; private set; }
         public int? Truncated { get; private set; }
         public PeakIdentification Identified { get; private set; }
@@ -285,11 +259,6 @@ namespace pwiz.Skyline.Model.Results
         public bool IsUserModified { get { return IsUserSetManual || !Annotations.IsEmpty; } }
 
         #region Property change methods
-
-        public TransitionGroupChromInfo ChangeRatios(IList<RatioValue> prop)
-        {
-            return ChangeProp(ImClone(this), im => im.Ratios = prop);
-        }
 
         public TransitionGroupChromInfo ChangeAnnotations(Annotations annotations)
         {
@@ -338,7 +307,6 @@ namespace pwiz.Skyline.Model.Results
                    other.BackgroundAreaMs1.Equals(BackgroundAreaMs1) &&
                    other.BackgroundAreaFragment.Equals(BackgroundAreaFragment) &&
                    other.Height.Equals(Height) &&
-                   ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.Truncated.Equals(Truncated) &&
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
@@ -377,7 +345,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (BackgroundAreaMs1.HasValue ? BackgroundAreaMs1.Value.GetHashCode() : 0);
                 result = (result*397) ^ (BackgroundAreaFragment.HasValue ? BackgroundAreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
-                result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
@@ -400,24 +367,20 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        private static readonly IList<float?>[] EMPTY_RATIOS  = new ImmutableList<float?>[4];
-
-        static TransitionChromInfo()
+        [Flags]
+        private enum Flags : byte
         {
-            for (int i = 0; i < EMPTY_RATIOS.Length; i++)
-            {
-                EMPTY_RATIOS[i] = ImmutableList<float?>.ValueOf(new float?[i + 1]);
-            }
+            HasMassError = 1,
+            IsFwhmDegenerate = 2,
+            HasPointsAcrossPeak = 4,
+            TruncatedKnown = 8,
+            Truncated = 16,
+            ForcedIntegration = 32,
+            Identified = 64,
+            IdentifiedByAlignment = 128,
         }
 
-        public static IList<float?> GetEmptyRatios(int countRatios)
-        {
-            int i = countRatios - 1;
-            return i < EMPTY_RATIOS.Length ? EMPTY_RATIOS[i] : new float?[countRatios];
-        }
-
-        private ImmutableList<float?> _ratios;
-
+        private Flags _flags;
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
             : base(null)
         {
@@ -426,15 +389,14 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
-            IonMobilityFilter ionMobility,
-            IList<float?> ratios, Annotations annotations, UserSet userSet)
+            IonMobilityFilter ionMobility, Annotations annotations, UserSet userSet)
             : this(fileId, optimizationStep, peak.MassError, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    ionMobility,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, 
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   ratios, annotations, userSet, peak.IsForcedIntegration)
+                   annotations, userSet, peak.IsForcedIntegration)
         {
         }
 
@@ -444,10 +406,10 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
-                                   IList<float?> ratios, Annotations annotations, UserSet userSet, bool isForcedIntegration)
+                                   Annotations annotations, UserSet userSet, bool isForcedIntegration)
             : base(fileId)
         {
-            OptimizationStep = optimizationStep;
+            OptimizationStep = Convert.ToInt16(optimizationStep);
             MassError = massError;
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
@@ -465,7 +427,6 @@ namespace pwiz.Skyline.Model.Results
             Identified = identified;
             Rank = rank;
             RankByLevel = rankByLevel;
-            Ratios = ratios;
             Annotations = annotations;
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
@@ -477,9 +438,27 @@ namespace pwiz.Skyline.Model.Results
         /// transition attribute which can be optimized or calculated using
         /// a linear regression (e.g. CE, DP, CV)
         /// </summary>
-        public int OptimizationStep { get; private set; }
+        public short OptimizationStep { get; private set; }
 
-        public float? MassError { get; private set; }
+        private short _massError;
+
+        public float? MassError
+        {
+            get
+            {
+                if (GetFlag(Flags.HasMassError))
+                {
+                    return _massError / 10f;
+                }
+                return null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasMassError, value.HasValue);
+                _massError = ChromPeak.To10x(value ?? 0);
+            }
+        }
+
         public float RetentionTime { get; private set; }
         public float StartRetentionTime { get; private set; }
         public float EndRetentionTime { get; private set; }
@@ -488,14 +467,84 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get; private set; }
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
-        public bool IsFwhmDegenerate { get; private set; }
-        public bool? IsTruncated { get; private set; }
+
+        public bool IsFwhmDegenerate
+        {
+            get
+            {
+                return GetFlag(Flags.IsFwhmDegenerate);
+            }
+            set
+            {
+                SetFlag(Flags.IsFwhmDegenerate, value);
+            }
+        }
+
+        public bool? IsTruncated
+        {
+            get
+            {
+                if (!GetFlag(Flags.TruncatedKnown))
+                {
+                    return null;
+                }
+                return GetFlag(Flags.Truncated);
+            }
+            private set
+            {
+                SetFlag(Flags.TruncatedKnown, value.HasValue);
+                SetFlag(Flags.Truncated, value ?? false);
+            }
+        }
+
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
-        public PeakIdentification Identified { get; private set; }
+
+        public PeakIdentification Identified
+        {
+            get
+            {
+                if (!GetFlag(Flags.Identified))
+                {
+                    return PeakIdentification.FALSE;
+                }
+
+                return GetFlag(Flags.IdentifiedByAlignment) ? PeakIdentification.ALIGNED : PeakIdentification.TRUE;
+            }
+            set
+            {
+                SetFlag(Flags.Identified, value != PeakIdentification.FALSE);
+                SetFlag(Flags.IdentifiedByAlignment, value == PeakIdentification.ALIGNED);
+            }
+        }
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
-        public short? PointsAcrossPeak { get; private set; }
-        public bool IsForcedIntegration { get; private set; }
+
+        private short _pointsAcrossPeak;
+
+        public short? PointsAcrossPeak
+        {
+            get
+            {
+                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : (short?) null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
+                _pointsAcrossPeak = value ?? 0;
+            }
+        }
+
+        public bool IsForcedIntegration
+        {
+            get
+            {
+                return GetFlag(Flags.ForcedIntegration);
+            }
+            private set
+            {
+                SetFlag(Flags.ForcedIntegration, value);
+            }
+        }
 
         public bool IsGoodPeak(bool integrateAll)
         {
@@ -504,24 +553,6 @@ namespace pwiz.Skyline.Model.Results
                 return Area > 0;
             }
             return Area > 0 && !IsForcedIntegration;
-        }
-
-        /// <summary>
-        /// Set after creation at the peptide results calculation level
-        /// </summary>
-        public IList<float?> Ratios
-        {
-            get { return _ratios; }
-            private set { _ratios = value as ImmutableList<float?> ?? MakeReadOnly(value); }
-        }
-        public float? Ratio { get { return _ratios[0]; } }
-
-        private const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
-        public float? GetRatio(int index)
-        {
-            return index != RATIO_INDEX_GLOBAL_STANDARDS
-                ? _ratios[index]
-                : _ratios[_ratios.Count - 1];
         }
 
         public Annotations Annotations { get; private set; }
@@ -627,11 +658,6 @@ namespace pwiz.Skyline.Model.Results
             return chromInfo;
         }
 
-        public TransitionChromInfo ChangeRatios(IList<float?> prop)
-        {
-            return ChangeProp(ImClone(this), im => im.Ratios = prop);
-        }
-
         /// <summary>
         /// Because creating a copy shows up in a profiler, and this is currently only used
         /// during calculation of this object, a copy flag was added to allow modified
@@ -691,7 +717,6 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.Identified, Identified) &&
                    other.Rank == Rank &&
                    other.RankByLevel == RankByLevel &&
-                   ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet) &&
@@ -726,7 +751,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (IsTruncated.HasValue ? IsTruncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ RankByLevel;
-                result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
@@ -807,11 +831,27 @@ namespace pwiz.Skyline.Model.Results
                 peakIdentification,
                 (short) transitionPeak.Rank,
                 (short) transitionPeak.RankByLevel,
-                GetEmptyRatios(settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count),
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration
                 );
+        }
+
+        private bool GetFlag(Flags flag)
+        {
+            return 0 != (_flags & flag);
+        }
+
+        private void SetFlag(Flags flag, bool b)
+        {
+            if (b)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags &= ~flag;
+            }
         }
     }
 
@@ -1224,7 +1264,7 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public enum UserSet
+    public enum UserSet : byte
     {
         TRUE,   // SET by manual integration
         FALSE,  // Best peak picked during results import
