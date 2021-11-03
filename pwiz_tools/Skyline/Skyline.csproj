@@ -33,7 +33,7 @@
     <!-- Make the assembly name configurable -->
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>105</ApplicationRevision>
-    <ApplicationVersion>21.0.9.105</ApplicationVersion>
+    <ApplicationRevision>298</ApplicationRevision>
+    <ApplicationVersion>21.1.1.298</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -148,12 +148,6 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodConverter">
-      <HintPath>Method\Shimadzu\x86\MethodConverter.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
-      <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
@@ -162,12 +156,6 @@
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodWriter">
-      <HintPath>Method\Shimadzu\x86\MethodWriter.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
-      <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
@@ -432,6 +420,12 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.Designer.cs">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -620,6 +614,17 @@
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\Scoring\CandidatePeakScoreCalculator.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Results\Scoring\DetailScores.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -718,11 +723,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
@@ -2560,6 +2560,9 @@
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3187,6 +3190,11 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FeatureTooltips.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -3290,6 +3298,19 @@
     <Content Include="Instruments.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.pdb" />
+    <Content Include="Method\Shimadzu\MethodConverter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\MethodWriter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Thermo\BuildThermoMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3334,6 +3355,9 @@
     </Content>
     <Content Include="..\..\pwiz\data\common\unimod.obo">
       <Link>unimod.obo</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config">

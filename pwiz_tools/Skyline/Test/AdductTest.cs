@@ -425,6 +425,7 @@ namespace pwiz.SkylineTest
             mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
+            TestException("", "+M"); // Meaningless, used to cause an exception in our parser
             TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
             TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
             TestException(PENTANE, "M+foo+H"); // Unknown adduct

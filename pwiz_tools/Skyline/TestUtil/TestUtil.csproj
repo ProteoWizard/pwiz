@@ -161,7 +161,6 @@
     <Compile Include="PeakMatcherTestUtil.cs" />
     <Compile Include="ProcessKiller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NormalizedValueCalculatorVerifier.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
@@ -436,7 +435,13 @@
     <EmbeddedResource Include="Schemas\Skyline_20.21.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Schemas\Skyline_21_1.xsd">
+    <EmbeddedResource Include="Schemas\Skyline_21.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_21.11.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Skyline_21.12.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

@@ -110,6 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestHeavyPrecursorNoFormulas();
             TestImportAllData(true);
             TestImportAllData(false);
             TestInconsistentMoleculeDescriptions();
@@ -993,6 +994,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
+            var exception = new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                -1);
+
+            // Inserting the header row by itself should produce an error message
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+                {
+                    SkylineWindow.Paste(header);
+                })),
+                exception.Message);
+
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
@@ -1140,6 +1151,35 @@ namespace pwiz.SkylineTestFunctional
             // We should realize the lack of a matching precursor m/z column, rely on the headers to make the decision,
             // and classify it as a small molecule transition list
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV10, SkylineWindow.Document.Settings));
+
+            // Test how we categorize lists without peptide sequence columns or small molecule headers as proteomic or small molecule
+            // If we cannot recognize the format of a transition list either way, we should rely on the mode set in the UI
+            LoadNewDocument(true);
+            var textCSV11 =
+                "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\n" +
+                "DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\n";
+            SetClipboardText(textCSV11);
+            // Set the UI mode to small molecule
+            RunUI(() =>
+            {
+                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
+            });
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // Since this we are in small molecule mode the column selection page should be set to small molecule when it opens
+            Assert.IsTrue(columnSelectDlg.radioMolecule.Checked);
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelButton.PerformClick);
+
+            // If we set the UI mode to proteomics and paste the same transition list it should be categorized as a proteomics transition list
+            LoadNewDocument(true);
+            // Set the UI mode to proteomic
+            RunUI(() =>
+            {
+                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
+            });
+            // Because we recognize it as a peptide list, the column select mode should be set to proteomic
+            var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
+            OkDialog(columnSelectDlg1, columnSelectDlg1.CancelButton.PerformClick);
         }
 
         private void TestLabelsNoFormulas()
@@ -1731,6 +1771,38 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(badDlg, badDlg.OkDialog);
             //var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
             //OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+        }
+
+        // Test for an issue where a mass-only description of a labeled precursor would come up with the unlabeled mass for the precursor transition
+        void TestHeavyPrecursorNoFormulas()
+        {
+            var input = 
+                "Molecule List Name,Precursor Name, Precursor m/z,Precursor Charge, Product m/z,Product Charge, Label Type,Explicit Retention Time,Explicit Retention Time Window\n" +
+                "molecules1,2′deoxycitidine,330.1095,-1,330.1095,-1,light,7.7,2\n" +
+                "molecules1,2′deoxycitidine,336.12963,-1,336.12963,-1,heavy,7.7,2\n";
+            foreach (var asFile in new[] {true, false})
+            {
+                var docOrig = NewDocument();
+                var tempFile = TestFilesDir.GetTestPath(@"transitions_heavy_tmp.csv");
+                if (asFile)
+                {
+                    File.WriteAllText(tempFile, input);
+                    RunUI(() => SkylineWindow.ImportMassList(tempFile));
+                }
+                else
+                {
+                    SetClipboardText(input);
+                    RunUI(() => SkylineWindow.Paste());
+                }
+                var pastedDoc = WaitForDocumentChange(docOrig);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 2);
+                foreach (var pair in pastedDoc.MoleculePrecursorPairs)
+                {
+                    // Before the fix, we'd come up with the second set as 336.12963/330.1095 instead of 336.12963/336.12963
+                    AssertEx.AreEqual(pair.NodeGroup.PrecursorMz, pair.NodeGroup.Transitions.First().Mz);
+                }
+                AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
+            }
         }
 
         void TestImportAllData(bool asFile)

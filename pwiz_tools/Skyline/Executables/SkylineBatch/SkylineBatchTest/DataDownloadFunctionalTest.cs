@@ -62,8 +62,8 @@ namespace SkylineBatchTest
             });
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
-            var tenSeconds = new TimeSpan(0,0,10);
-            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+            var thirtySeconds = new TimeSpan(0,0,30);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, thirtySeconds, 200,
                 "Config did not start");
             var oneMinute = new TimeSpan(0, 1, 0);
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,

@@ -36,7 +36,7 @@ namespace SkylineBatch.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("21.1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("21.11")]
         public decimal XmlVersion {
             get {
                 return ((decimal)(this["XmlVersion"]));

@@ -79,6 +79,9 @@ namespace SkylineBatch
         {
             var downloadingFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
             Uri webdavUri = null;
+            var panoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
+            var webClient = new WebPanoramaClient(panoramaServerUri);
+            var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
             if (downloadingFileName == null) // this is not a zipped Skyline file 
             {
                 downloadingFileName = Path.GetFileName(server.URI.LocalPath);
@@ -86,15 +89,10 @@ namespace SkylineBatch
             }
             else
             {
-                var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
-                var panoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
+               
                 var idQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", panoramaFolder,
                 "selectRows", "schemaName=targetedms&query.queryName=runs&query.Deleted~eq=false&query.Status~isblank&query.columns=Id,FileName", true);
-
-
-
-                var webClient = new WebPanoramaClient(panoramaServerUri);
-                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.Username, server.Password, cancelToken);
+                var jsonAsString = webClient.DownloadStringAsync(idQuery, server.FileSource.Username, server.FileSource.Password, cancelToken);
                 if (cancelToken.IsCancellationRequested) return null;
 
                 var id = -1;
@@ -113,9 +111,9 @@ namespace SkylineBatch
 
                 using (var wc = new UTF8WebClient())
                 {
-                    if (!string.IsNullOrEmpty(server.Username) && !string.IsNullOrEmpty(server.Password))
+                    if (!string.IsNullOrEmpty(server.FileSource.Username) && !string.IsNullOrEmpty(server.FileSource.Password))
                     {
-                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.Username, server.Password));
+                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.FileSource.Username, server.FileSource.Password));
                     }
 
                     wc.DownloadFile(downloadSkypUri, tmpFile);
@@ -139,11 +137,39 @@ namespace SkylineBatch
                     throw new Exception("Could not parse skyp file.");
             }
 
-            var downloadServer = new Server(webdavUri, server.Username, server.Password, server.Encrypt);
+            var downloadServer = new Server(new RemoteFileSource(server.FileSource.Name + " TEST", webdavUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty);
             var fileName = downloadingFileName;
-            var size = WebDownloadClient.GetSize(downloadServer.URI, server.Username, server.Password, cancelToken);
+            var size = GetSize(downloadServer.URI, panoramaServerUri, webClient, server.FileSource.Username, server.FileSource.Password, cancelToken);
             return new ConnectedFileInfo(fileName, downloadServer, size, string.Empty);
         }
+
+        public static long GetSize(Uri remoteUri, Uri panoramaServerUri, WebPanoramaClient webClient, string username, string password, CancellationToken cancelToken)
+        {
+            var folderUrl = Path.GetDirectoryName(remoteUri.LocalPath);
+            var folderUri = new Uri(panoramaServerUri.AbsoluteUri + folderUrl);
+            var filesJsonAsString = webClient.DownloadStringAsync(new Uri(folderUri, "?method=json"), username, password, cancelToken);
+            dynamic jsonObject = JsonConvert.DeserializeObject(filesJsonAsString);
+            long size = 0;
+            try
+            {
+                dynamic files = jsonObject.files;
+                foreach (var file in files)
+                {
+                    if (((string)(file.id)).Equals(remoteUri.LocalPath))
+                    {
+                        size = (long)file.size;
+                        break;
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Could not parse json response: " + e.Message);
+            }
+            return size;
+        }
+
 
         public void Combine(PanoramaServerConnector other)
         {

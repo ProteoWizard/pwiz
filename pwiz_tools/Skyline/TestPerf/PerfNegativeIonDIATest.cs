@@ -59,7 +59,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var index = pair.NodeGroup.PrecursorCharge < 0 ? negIndex : posIndex;
                 var message = "expected a chromatogram for precursor and for product in replicate \"" + results.Chromatograms[index].Name +"\"";
                 ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results.TryLoadChromatogram(index, pair.NodePep, pair.NodeGroup,tolerance, true, out chromGroupInfo), message) ;
+                Assert.IsTrue(results.TryLoadChromatogram(index, pair.NodePep, pair.NodeGroup, tolerance, out chromGroupInfo), message);
                 foreach (var chromGroup in chromGroupInfo)
                 {
                     Assert.AreEqual(2, chromGroup.TransitionPointSets.Count(), message);

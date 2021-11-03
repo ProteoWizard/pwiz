@@ -828,7 +828,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public string FormatTimeLabel(double time, float? massError, double dotProduct, IonMobilityFilter ionMobilityfilter)
         {
             // ReSharper disable LocalizableElement
-            var lines = new List<string> {string.Format("{0:F01}", time)};
+            var lines = new List<string> {string.Format($"{{0:F0{Settings.Default.ChromatogramDisplayRTDigits}}}", time)};
             if (massError.HasValue && !_isSummary)
                 lines.Add(string.Format("{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value));
             if (dotProduct != 0)
@@ -863,7 +863,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var imString = ionMobilityFilter.IonMobility.HasValue
                 ? string.Format(@"{0:F02} {1}",
-                    ionMobilityFilter.IonMobility.Mobility, IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits))
+                    ionMobilityFilter.IonMobility.Mobility, 
+                    IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits).Replace(@"^2", @"²")) // Make "Vs/cm^2" into "Vs/cm²" to agree with CCS "Å²"
                 : @"IM unknown"; // Should never happen
             return imString;
         }

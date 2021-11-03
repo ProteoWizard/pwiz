@@ -38,8 +38,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return cacheSlot.Item2;
             }
-            var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath,
-                loadPoints);
+            var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath);
+            if (!loadPoints)
+            {
+                chromatogramGroupInfo.DiscardData();
+            }
             cacheSlot = Tuple.Create(key, chromatogramGroupInfo);
             if (loadPoints)
             {
@@ -53,12 +56,23 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         private ChromatogramGroupInfo LoadChromatogramInfo(SrmDocument document, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
-            IdentityPath precursorIdentityPath, bool loadPoints)
+            IdentityPath precursorIdentityPath)
         {
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
-            return document.Settings.LoadChromatogramGroup(
-                chromatogramSet, filePath, peptideDocNode, precursorDocNode, loadPoints);
+            ChromatogramGroupInfo[] chromatogramGroupInfos;
+            if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, out chromatogramGroupInfos))
+            {
+                return null;
+            }
+            foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
+            {
+                if (Equals(chromatogramGroupInfo.FilePath, filePath))
+                {
+                    return chromatogramGroupInfo;
+                }
+            }
+            return null;
         }
 
         private class Key

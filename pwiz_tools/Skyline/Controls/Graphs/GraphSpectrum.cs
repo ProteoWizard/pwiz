@@ -58,13 +58,15 @@ namespace pwiz.Skyline.Controls.Graphs
     }
 
     public enum SpectrumControlType { LibraryMatch, FullScanViewer }
-    public interface IMzScaleCopyable
+
+    public interface IMzScalePlot
     {
         void SetMzScale(MzRange range);
         MzRange Range { get; }
         void ApplyMZZoomState(ZoomState scaleState);
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
+        bool IsAnnotated { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
         MzRange GetMzRange(SpectrumControlType controlType);
     }
     
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScaleCopyable
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -1315,6 +1317,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public SpectrumControlType ControlType { get { return SpectrumControlType.LibraryMatch;} }
+        public bool IsAnnotated => true;
 
         public double MzMax
         {
@@ -1395,8 +1398,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(chromData.IonMobility,null, chromGroup.CCS);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
                 ionMobilityFilter,
-                new float?[0], Annotations.EMPTY,
-                                                            UserSet.FALSE);
+                Annotations.EMPTY,
+                UserSet.FALSE);
             var peaks = new[] {chromPeak};
             var header = new ChromGroupHeaderInfo(precursorMz,
                 0,  // file index
@@ -1410,15 +1413,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits); 
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
             var groupInfo = new ChromatogramGroupInfo(header,
-                    new Dictionary<Type, int>(),
-                    new byte[0],
-                    new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(ionMobilityFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
-                    peaks,
-                    null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
-
+                new[]
+                {
+                    new ChromTransition(chromData.Mz, 0,
+                        (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
+                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0), ChromSource.unknown),
+                }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
     }
