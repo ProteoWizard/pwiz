@@ -161,7 +161,7 @@ namespace DiaUmpire {
         const pwiz::util::IterationListenerRegistry* ilr_;
         mutable boost::mutex ilrMutex_;
         mutable std::atomic<bool> canceled_;
-        mutable std::atomic<size_t> windowsProcessed = 0;
+        mutable std::atomic<size_t> windowsProcessed;
 
         boost::asio::thread_pool pool_;
         boost::asio::thread_pool nestedPool_;
@@ -223,7 +223,7 @@ namespace DiaUmpire {
 
 
     DiaUmpire::Impl::Impl(const MSData& msd, const SpectrumListPtr& spectrumList, const Config& config, const IterationListenerRegistry* ilr)
-        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr), canceled_(false),
+        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr), canceled_(false), windowsProcessed(0),
           pool_(config_ .multithreadOverWindows ? config_.maxThreads : 1),
           nestedPool_(config_.multithreadOverWindows ? config_.maxNestedThreads : config_.maxThreads)
     {
