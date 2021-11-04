@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineBatchConfigForm));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
@@ -85,6 +85,9 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.btnOkConfig = new System.Windows.Forms.Button();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.textAnalysisFileName = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.checkBoxUseFolderName = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -247,6 +250,9 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.checkBoxUseFolderName);
+            this.tabFiles.Controls.Add(this.textAnalysisFileName);
+            this.tabFiles.Controls.Add(this.label1);
             this.tabFiles.Controls.Add(this.comboTemplateFile);
             this.tabFiles.Controls.Add(this.textReplicateNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
@@ -420,37 +426,37 @@
             this.gridReportSettings.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridReportSettings.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.gridReportSettings.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.Raised;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             this.gridReportSettings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridReportSettings.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnName,
             this.columnScripts,
             this.columnFile});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridReportSettings.DefaultCellStyle = dataGridViewCellStyle8;
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Name = "gridReportSettings";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridReportSettings.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.gridReportSettings.RowHeadersVisible = false;
             this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridReportSettings.TabStop = false;
@@ -527,6 +533,25 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
+            // 
+            // textAnalysisFileName
+            // 
+            resources.ApplyResources(this.textAnalysisFileName, "textAnalysisFileName");
+            this.textAnalysisFileName.Name = "textAnalysisFileName";
+            this.textAnalysisFileName.ReadOnly = true;
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
+            // 
+            // checkBoxUseFolderName
+            // 
+            resources.ApplyResources(this.checkBoxUseFolderName, "checkBoxUseFolderName");
+            this.checkBoxUseFolderName.Name = "checkBoxUseFolderName";
+            this.checkBoxUseFolderName.UseVisualStyleBackColor = true;
+            this.checkBoxUseFolderName.CheckedChanged += new System.EventHandler(this.checkBoxUseFolderName_CheckedChanged);
             // 
             // SkylineBatchConfigForm
             // 
@@ -622,5 +647,8 @@
         private System.Windows.Forms.Panel panelTemplate;
         private System.Windows.Forms.Panel panelData;
         private System.Windows.Forms.CheckBox checkBoxLogTestFormat;
+        private System.Windows.Forms.CheckBox checkBoxUseFolderName;
+        public System.Windows.Forms.TextBox textAnalysisFileName;
+        private System.Windows.Forms.Label label1;
     }
 }

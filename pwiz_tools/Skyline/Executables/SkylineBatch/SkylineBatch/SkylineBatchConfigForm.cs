@@ -199,11 +199,13 @@ namespace SkylineBatch
                 else
                 {
                     textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+                    checkBoxUseFolderName.Checked = mainSettings.UseAnalysisFolderName;
                     textReplicateNamingPattern.Text = mainSettings.ReplicateNamingPattern;
                 }
                 comboTemplateFile.Text = mainSettings.Template.FilePath;
                 comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
             }
+            UpdateAnalysisFolderName();
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -218,13 +220,14 @@ namespace SkylineBatch
             var template = SkylineTemplate.FromUi(templateFilePath, dependentConfig, (PanoramaFile)templateControl.Server);
 
             var analysisFolderPath = textAnalysisPath.Text;
+            var useAnalysisFolderName = checkBoxUseFolderName.Checked;
             var dataFolderPath = dataControl.Path;
             var server = (DataServerInfo)dataControl.Server;
             var annotationsFilePath = annotationsControl.Path;
             var annotationsDownload = (PanoramaFile)annotationsControl.Server;
             var replicateNamingPattern = textReplicateNamingPattern.Text;
             
-            return new MainSettings(template, analysisFolderPath, dataFolderPath, server, annotationsFilePath, annotationsDownload, replicateNamingPattern);
+            return new MainSettings(template, analysisFolderPath, useAnalysisFolderName, dataFolderPath, server, annotationsFilePath, annotationsDownload, replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -241,6 +244,7 @@ namespace SkylineBatch
         {
             if (!comboTemplateFile.Text.Equals(templateControl.Path))
                 comboTemplateFile.Text = templateControl.Path;
+            UpdateAnalysisFolderName();
         }
         
 
@@ -259,6 +263,7 @@ namespace SkylineBatch
                     comboTemplateFile.Text = newPath;
                     comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
                     templateControl.SetPath(newPath);
+                    UpdateAnalysisFolderName();
                 };
                 timer.Start();
             }
@@ -570,5 +575,24 @@ namespace SkylineBatch
 
         #endregion
 
+        private void UpdateAnalysisFolderName()
+        {
+            try
+            {
+                var fileName = checkBoxUseFolderName.Checked ?
+                     Path.GetFileName(textAnalysisPath.Text) + TextUtil.EXT_SKY : Path.GetFileName(templateControl.Path);
+                textAnalysisFileName.Text = fileName.EndsWith(TextUtil.EXT_SKY_ZIP) ? fileName.Replace(TextUtil.EXT_SKY_ZIP, TextUtil.EXT_SKY) : fileName;
+
+            }
+            catch (Exception)
+            {
+                textAnalysisFileName.Text = string.Empty;
+            }
+        }
+
+        private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFolderName();
+        }
     }
 }
