@@ -131,16 +131,13 @@ class PeakCurve
     //Detect peak region using CWT based on smoothed peak signals
     void DetectPeakRegion()
     {
-        std::vector<XYData> PeakArrayList;
         std::vector<PeakRidge> PeakRidgeList;
         PeakRegionList.clear();
         NoRidgeRegion.clear();
         if (RTWidth() * parameter.NoPeakPerMin < 1) {
             return;
         }
-        for (int i = 0; i < SmoothData.PointCount(); i++) {
-            PeakArrayList.emplace_back(SmoothData.Data.at(i).getX(), SmoothData.Data.at(i).getY());
-        }
+        std::vector<XYData> PeakArrayList = SmoothData.Data;
         //Start CWT process
         WaveletMassDetector waveletMassDetector(parameter, PeakArrayList, (int)(RTWidth() * parameter.NoPeakPerMin));
         waveletMassDetector.Run();
@@ -567,6 +564,7 @@ class PeakCurve
     XYPointCollection GetPeakCollection() const
     {
         XYPointCollection PtCollection;
+        PtCollection.Data.reserve(SmoothData.Data.size());
 
         for (size_t i = 0; i < SmoothData.Data.size(); i++) {
             PtCollection.AddPoint(SmoothData.Data.at(i).getX(), SmoothData.Data.at(i).getY());
@@ -577,6 +575,7 @@ class PeakCurve
     XYPointCollection GetSmoothPeakCollection(float startRT, float endRT) const
     {
         XYPointCollection PtCollection;
+        PtCollection.Data.reserve(SmoothData.Data.size());
 
         for (int i = 0; i < SmoothData.PointCount(); i++) {
             const XYData& pt = SmoothData.Data.at(i);

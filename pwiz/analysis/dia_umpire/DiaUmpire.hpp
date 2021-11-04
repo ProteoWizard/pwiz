@@ -65,7 +65,8 @@ struct PWIZ_API_DECL Config
     bool exportMs2ClusterTable = false;
     bool exportSeparateQualityMGFs = false;
 
-    int maxThreads = 0; // 0 = # of cores, which will be set to the actual count in the ctor
+    int maxThreads = 0; // 0 = # of cores/2, which will be set to the actual count in the ctor
+    int maxNestedThreads = 0; // 0 = # of cores; when multithreading over windows, each window uses a pool of this many threads
     bool multithreadOverWindows = true;
 
     pwiz::msdata::MSDataFile::Format spillFileFormat = pwiz::msdata::MSDataFile::Format_MZ5;
