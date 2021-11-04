@@ -312,8 +312,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var peakGroups = new List<PrecursorCandidatePeakGroup>();
             var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
                 Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
-            foreach (var peakScores in onDemandScoreCalculator.CalculateCandidatePeakScores(Precursor.DocNode,
-                cg))
+            foreach (var peakScores in onDemandScoreCalculator.CalculateCandidatePeakScores(Precursor.DocNode, cg))
             {
                 var peakGroup = new PrecursorCandidatePeakGroup(this, cg, peakGroups.Count, GetPeakScores(peakScores));
                 peakGroup.UpdateChosen(this);

@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private ChromExtractor? _extractor;
         private TransitionGroupDocNode[] _nodeGroups;
         private IdentityPath[] _groupPaths;
+        private MeasuredResults _measuredResults;
         private ChromatogramGroupInfo[][] _arrayChromInfo;
         private bool _hasMergedChromInfo;
         private int _chromIndex;
@@ -232,6 +233,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             NameSet = name;
             _arrayChromInfo = null;
+            _measuredResults = null;
             UpdateUI();
         }
 
@@ -2506,7 +2508,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
                 _extractor == extractor &&
-                qcTraceNameMatches)
+                qcTraceNameMatches &&
+                ReferenceEquals(results, _measuredResults))
                 return true;
 
             _extractor = extractor;
@@ -2537,6 +2540,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 _hasMergedChromInfo = false;
                 _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
+                _measuredResults = results;
                 for (int i = 0; i < _arrayChromInfo.Length; i++)
                 {
                     var arrayNew = new ChromatogramGroupInfo[listArrayChromInfo.Count];
@@ -2561,7 +2565,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Make sure the info array is set to null on failure.
                 if (!success)
+                {
                     _arrayChromInfo = null;
+                    _measuredResults = null;
+                }
             }
 
             return true;
@@ -2576,7 +2583,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroups,
                                      out bool changedGroupIds)
         {
-            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) && !_extractor.HasValue)
+            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) 
+                && !_extractor.HasValue 
+                && ReferenceEquals(results, _measuredResults))
                 return true;
 
             _extractor = null;
@@ -2617,6 +2626,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Make a list of chromatogram info by unique file path corresponding
                 // to the groups passed in.
                 _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
+                _measuredResults = results;
                 for (int i = 0; i < _arrayChromInfo.Length; i++)
                 {
                     var arrayNew = new ChromatogramGroupInfo[listArrayChromInfo.Count];
@@ -2652,7 +2662,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Make sure the info array is set to null on failure.
                 if (!success)
+                {
                     _arrayChromInfo = null;
+                    _measuredResults = null;
+                }
             }
 
             return true;
@@ -3772,7 +3785,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
                                           PeakIdentification? identified,
-                                          PeakBoundsChangeType changeType)
+                                          PeakBoundsChangeType changeType,
+                                          bool syncGeneratedChange = false)
             : base(groupPath, nameSet, filePath)
         {
             Transition = transition;
@@ -3780,6 +3794,7 @@ namespace pwiz.Skyline.Controls.Graphs
             EndTime = endTime;
             Identified = identified;
             ChangeType = changeType;
+            SyncGeneratedChange = syncGeneratedChange;
         }
 
         public Transition Transition { get; private set; }
@@ -3788,6 +3803,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public PeakIdentification? Identified { get; private set; }
         public bool IsIdentified { get { return Identified.HasValue && Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
+        public bool SyncGeneratedChange { get; }
     }
 
     public sealed class ChangedMultiPeakBoundsEventArgs : EventArgs
