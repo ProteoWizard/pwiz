@@ -305,14 +305,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IList<PrecursorCandidatePeakGroup> GetCandidatePeakGroups()
         {
-            var chromatogramGroup = new ChromatogramGroup(this);
+            var cg = DataSchema.ChromDataCache.GetChromatogramGroupInfo(DataSchema.Document,
+                GetResultFile().Replicate.ChromatogramSet,
+                GetResultFile().ChromFileInfo.FilePath, Precursor.IdentityPath,
+                true);
             var peakGroups = new List<PrecursorCandidatePeakGroup>();
             var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
                 Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
             foreach (var peakScores in onDemandScoreCalculator.CalculateCandidatePeakScores(Precursor.DocNode,
-                chromatogramGroup.ChromatogramGroupInfo))
+                cg))
             {
-                var peakGroup = new PrecursorCandidatePeakGroup(chromatogramGroup, peakGroups.Count, GetPeakScores(peakScores));
+                var peakGroup = new PrecursorCandidatePeakGroup(this, cg, peakGroups.Count, GetPeakScores(peakScores));
                 peakGroup.UpdateChosen(this);
                 peakGroups.Add(peakGroup);
 

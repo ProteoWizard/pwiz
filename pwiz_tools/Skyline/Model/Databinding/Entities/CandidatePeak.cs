@@ -14,18 +14,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName(nameof(CandidatePeakGroup))]
     public class CandidatePeakGroup : SkylineObject, ILinkValue
     {
-        private ChromatogramGroup _chromatogramGroup;
+        private PrecursorResult _precursorResult;
+        private ChromatogramGroupInfo _chromatogramGroupInfo;
         private int _peakIndex;
-        public CandidatePeakGroup(ChromatogramGroup chromatogramGroup, int peakIndex, PeakGroupScore defaultPeakScores) : base(chromatogramGroup.DataSchema)
+        public CandidatePeakGroup(PrecursorResult precursorResult, ChromatogramGroupInfo chromatogramGroupInfo, int peakIndex, PeakGroupScore defaultPeakScores) : base(precursorResult.DataSchema)
         {
-            _chromatogramGroup = chromatogramGroup;
+            _precursorResult = precursorResult;
+            _chromatogramGroupInfo = chromatogramGroupInfo;
             _peakIndex = peakIndex;
             PeakScores = defaultPeakScores;
         }
 
         private PrecursorResult GetPrecursorResult()
         {
-            return _chromatogramGroup.PrecursorResult;
+            return _precursorResult;
         }
 
         [Format(Formats.RETENTION_TIME)]
@@ -66,7 +68,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IEnumerable<ChromPeak> GetTransitionPeaks()
         {
-            return _chromatogramGroup.ChromatogramGroupInfo.GetPeakGroup(_peakIndex);
+            return _chromatogramGroupInfo.GetPeakGroup(_peakIndex);
         }
 
         public override string ToString()
@@ -110,8 +112,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
     public class PrecursorCandidatePeakGroup : CandidatePeakGroup
     {
-        public PrecursorCandidatePeakGroup(ChromatogramGroup chromatogramGroup, int peakIndex,
-            PrecursorCandidatePeakScores defaultPeakScores) : base(chromatogramGroup, peakIndex, defaultPeakScores)
+        public PrecursorCandidatePeakGroup(PrecursorResult precusrorResult, ChromatogramGroupInfo chromatogramGroup, int peakIndex,
+            PrecursorCandidatePeakScores defaultPeakScores) : base(precusrorResult, chromatogramGroup, peakIndex, defaultPeakScores)
         {
         }
 
