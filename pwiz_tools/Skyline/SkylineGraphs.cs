@@ -1104,21 +1104,14 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
 
-            if (isProteomic)
+            // Need to test small mol
+            if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                if (control?.ControlType == SpectrumControlType.LibraryMatch)
-                {
-                    prositLibMatchItem.Checked = Settings.Default.Prosit;
-                    menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
-                    mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
-                    menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
-                }
-            }
-            else
-            {
-                prositLibMatchItem.Checked = _graphSpectrumSettings.Prosit = false;
-                mirrorMenuItem.Checked = _graphSpectrumSettings.Mirror = false;
+                prositLibMatchItem.Checked = Settings.Default.Prosit;
+                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
+                menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
             }
 
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
