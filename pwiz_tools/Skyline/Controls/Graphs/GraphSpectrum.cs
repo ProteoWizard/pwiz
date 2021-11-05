@@ -929,7 +929,7 @@ namespace pwiz.Skyline.Controls.Graphs
             try
             {
                 Exception prositEx = null;
-                var usingProsit = selection.Peptide.IsProteomic && Settings.Default.Prosit;
+                var usingProsit = (selection.Peptide == null || selection.Peptide.IsProteomic) && Settings.Default.Prosit;
 
                 if (usingProsit && !PrositHelpers.PrositSettingsValid)
                 {
