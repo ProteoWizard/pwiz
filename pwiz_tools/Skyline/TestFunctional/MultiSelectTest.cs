@@ -54,7 +54,10 @@ namespace pwiz.SkylineTestFunctional
             // Three main multi-select tests. Testing for delete/undo occurs within these tests.
             TestRangeSelect();
             TestInsertNode();
-            TestDisjointSelect();            
+            TestDisjointSelect();
+            // Wait for the document to be fully loaded before ending the test.
+            // This prevents a background thread that might be doing "SrmDocument.UpdateSettings" from having a lock on the .skyd file.
+            WaitForDocumentLoaded();
         }
 
         private void TestRangeSelect()
