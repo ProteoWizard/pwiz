@@ -425,6 +425,7 @@ namespace SkylineBatch
         {
             return Equals(Template, other.Template)
                    && Equals(AnalysisFolderPath, other.AnalysisFolderPath)
+                   && Equals(UseAnalysisFolderName, other.UseAnalysisFolderName)
                    && Equals(DataFolderPath, other.DataFolderPath)
                    && Equals(ReplicateNamingPattern, other.ReplicateNamingPattern)
                    && Equals(AnnotationsFilePath, other.AnnotationsFilePath);
