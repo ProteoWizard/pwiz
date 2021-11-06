@@ -156,6 +156,7 @@ namespace SkylineBatch
             templateControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Template_File, config?.MainSettings.Template.FilePath, 
                 TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl, State);
+            templateControl.AddPathChangedHandler(templateControl_PathChanged);
             templateControl.Dock = DockStyle.Fill;
             templateControl.Show();
             panelTemplate.Controls.Add(templateControl);
@@ -184,7 +185,7 @@ namespace SkylineBatch
                 comboTemplateFile.Visible = true;
                 foreach (var possibleTemplate in _possibleTemplates.Values)
                     comboTemplateFile.Items.Add(possibleTemplate);
-                templateControl.AddPathChangedHandler(templateControl_PathChanged);
+                templateControl.AddPathChangedHandler(templateControl_PathChangedCombo);
             }
 
             if (config != null)
@@ -240,13 +241,17 @@ namespace SkylineBatch
 
         }
 
-        private void templateControl_PathChanged(object sender, EventArgs e)
+        private void templateControl_PathChangedCombo(object sender, EventArgs e)
         {
             if (!comboTemplateFile.Text.Equals(templateControl.Path))
                 comboTemplateFile.Text = templateControl.Path;
             UpdateAnalysisFolderName();
         }
-        
+
+        private void templateControl_PathChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFolderName();
+        }
 
         private void comboTemplateFile_TextChanged(object sender, EventArgs e)
         {
@@ -591,6 +596,11 @@ namespace SkylineBatch
         }
 
         private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFolderName();
+        }
+
+        private void textAnalysisPath_TextChanged(object sender, EventArgs e)
         {
             UpdateAnalysisFolderName();
         }
