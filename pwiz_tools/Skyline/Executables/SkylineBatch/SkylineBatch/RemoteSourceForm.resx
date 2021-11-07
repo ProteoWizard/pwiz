@@ -139,10 +139,10 @@
     <value>104, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Username (optional):</value>
+    <value>&amp;Username (optional):</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -166,7 +166,7 @@
     <value>215, 20</value>
   </data>
   <data name="textUserName.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;textUserName.Name" xml:space="preserve">
     <value>textUserName</value>
@@ -208,10 +208,10 @@
     <value>102, 17</value>
   </data>
   <data name="checkBoxNoEncryption.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>9</value>
   </data>
   <data name="checkBoxNoEncryption.Text" xml:space="preserve">
-    <value>Share password</value>
+    <value>&amp;Share password</value>
   </data>
   <data name="&gt;&gt;checkBoxNoEncryption.Name" xml:space="preserve">
     <value>checkBoxNoEncryption</value>
@@ -238,10 +238,10 @@
     <value>102, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Password (optional):</value>
+    <value>&amp;Password (optional):</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -268,7 +268,7 @@
     <value>214, 20</value>
   </data>
   <data name="textPassword.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
@@ -301,7 +301,7 @@
     <value>216</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
@@ -325,7 +325,7 @@
     <value>435, 20</value>
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -352,10 +352,10 @@
     <value>38, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Name:</value>
+    <value>&amp;Name:</value>
   </data>
   <data name="label1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopCenter</value>
@@ -385,10 +385,10 @@
     <value>64, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
+    <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>Folder URL:</value>
+    <value>&amp;Folder URL:</value>
   </data>
   <data name="label4.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopCenter</value>
@@ -415,7 +415,7 @@
     <value>435, 20</value>
   </data>
   <data name="textFolderUrl.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;textFolderUrl.Name" xml:space="preserve">
     <value>textFolderUrl</value>
@@ -445,7 +445,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnSave.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+    <value>10</value>
   </data>
   <data name="btnSave.Text" xml:space="preserve">
     <value>Save</value>
@@ -475,7 +475,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>11</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
