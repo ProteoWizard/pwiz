@@ -2151,37 +2151,21 @@ namespace pwiz.Skyline
         /// </summary>
         public SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
-            var changesArr = changes.ToArray();
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
-
-            var document1 = document;
-            using (var longWait = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ChangePeakBounds_Changing_peak_bounds })
+            foreach (var change in changes)
             {
-                longWait.PerformWork(this, 1000, monitor =>
-                {
-                    var progress = new ProgressStatus();
-                    for (var i = 0; i < changesArr.Length; i++)
+                document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
+                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
+                changedGroupIds.Add(change.GroupPath);
+                if (!peptideChanges.ContainsKey(change.GroupPath.Parent)) {
+                    var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
+                    if (transitionGroup.RelativeRT == RelativeRT.Matching)
                     {
-                        var change = changesArr[i];
-                        monitor.UpdateProgress(progress = (ProgressStatus)progress.ChangeMessage(string.Format(Resources.SkylineWindow_ChangePeakBounds_Changing_peak_bounds_for__0_, change.NameSet)));
-                        document1 = document1.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                            change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
-                        changedGroupIds.Add(change.GroupPath);
-                        if (!peptideChanges.ContainsKey(change.GroupPath.Parent))
-                        {
-                            var transitionGroup = (TransitionGroupDocNode)document1.FindNode(change.GroupPath);
-                            if (transitionGroup.RelativeRT == RelativeRT.Matching)
-                            {
-                                peptideChanges.Add(change.GroupPath.Parent, change);
-                            }
-                        }
-                        monitor.UpdateProgress(progress = (ProgressStatus)progress.ChangePercentComplete((int)Math.Round((double)i / changesArr.Length * 100)));
+                        peptideChanges.Add(change.GroupPath.Parent, change);
                     }
-                    document = document1;
-                });
+                }
             }
-
             // See if there are any other TransitionGroups that also have RelativeRT matching,
             // and set their peak boundaries to the same.
             foreach (var entry in peptideChanges)

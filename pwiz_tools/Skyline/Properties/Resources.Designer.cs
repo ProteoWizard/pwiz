@@ -27329,24 +27329,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changing peak bounds.
-        /// </summary>
-        public static string SkylineWindow_ChangePeakBounds_Changing_peak_bounds {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ChangePeakBounds_Changing_peak_bounds", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing peak bounds for {0}.
-        /// </summary>
-        public static string SkylineWindow_ChangePeakBounds_Changing_peak_bounds_for__0_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ChangePeakBounds_Changing_peak_bounds_for__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Change settings.
         /// </summary>
         public static string SkylineWindow_ChangeSettings_Change_settings {
