@@ -896,7 +896,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
                 return separator(new [] { DotpLabelText , string.Format("{0:F02}", _dotpData[indexResult]) } ) ;
-
             }
             else
                 return null;

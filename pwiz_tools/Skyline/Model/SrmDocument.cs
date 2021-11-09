@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -1826,10 +1827,12 @@ namespace pwiz.Skyline.Model
             double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
             ChromatogramGroupInfo[] arrayChromInfo;
             if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodePep, nodeGroup,
-                                                              (float) mzMatchTolerance, loadPoints, out arrayChromInfo))
+                (float) mzMatchTolerance, out arrayChromInfo))
             {
-                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty), nameSet));
+                throw new ArgumentOutOfRangeException(string.Format(
+                    Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
+                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
+                    nameSet));
             }
             // Get the chromatograms for only the file of interest
             int indexInfo = arrayChromInfo.IndexOf(info => Equals(filePath, info.FilePath));
@@ -1989,20 +1992,42 @@ namespace pwiz.Skyline.Model
         }
         public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
         {
+            if (!Settings.HasResults)
+                yield break;
+
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
-                return MeasuredResults.Chromatograms;
+            {
+                // Synchronize all
+                foreach (var chromSet in MeasuredResults.Chromatograms)
+                    yield return chromSet;
+                yield break;
+            }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
             if (targets == null || targets.Count == 0)
-                return Array.Empty<ChromatogramSet>();
+            {
+                // Synchronize none
+                yield break;
+            }
 
             var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
             if (string.IsNullOrEmpty(groupBy))
-                return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
+            {
+                // Synchronize individual replicates
+                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
+                    yield return chromSet;
+                yield break;
+            }
 
+            // Synchronize by annotation
             var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
             var annotationCalculator = new AnnotationCalculator(this);
-            return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(replicateValue.GetValue(annotationCalculator, chromSet).ToString()));
+            foreach (var chromSet in MeasuredResults.Chromatograms)
+            {
+                var value = replicateValue.GetValue(annotationCalculator, chromSet);
+                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
+                    yield return chromSet;
+            }
         }
 
         private object _referenceId = new object();

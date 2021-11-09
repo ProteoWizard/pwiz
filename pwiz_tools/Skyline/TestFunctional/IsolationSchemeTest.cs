@@ -987,10 +987,10 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNull(transitionSettings.ExclusionWindow);
                 });
 
-                // Switching to Targeted should turn off the settting
+                // Switching to PRM should turn off the setting
                 RunUI(() =>
                 {
-                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                     Assert.AreEqual(false, transitionSettings.SetDIAExclusionWindow);
                     Assert.IsNull(transitionSettings.ExclusionWindow);
                 });

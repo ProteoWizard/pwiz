@@ -110,6 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestHeavyPrecursorNoFormulas();
             TestImportAllData(true);
             TestImportAllData(false);
             TestInconsistentMoleculeDescriptions();
@@ -993,6 +994,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
+            var exception = new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
+                -1);
+
+            // Inserting the header row by itself should produce an error message
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+                {
+                    SkylineWindow.Paste(header);
+                })),
+                exception.Message);
+
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
@@ -1760,6 +1771,38 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(badDlg, badDlg.OkDialog);
             //var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(filename));
             //OkDialog(messageDlg, messageDlg.AcceptButton.PerformClick); // Acknowledge the error
+        }
+
+        // Test for an issue where a mass-only description of a labeled precursor would come up with the unlabeled mass for the precursor transition
+        void TestHeavyPrecursorNoFormulas()
+        {
+            var input = 
+                "Molecule List Name,Precursor Name, Precursor m/z,Precursor Charge, Product m/z,Product Charge, Label Type,Explicit Retention Time,Explicit Retention Time Window\n" +
+                "molecules1,2′deoxycitidine,330.1095,-1,330.1095,-1,light,7.7,2\n" +
+                "molecules1,2′deoxycitidine,336.12963,-1,336.12963,-1,heavy,7.7,2\n";
+            foreach (var asFile in new[] {true, false})
+            {
+                var docOrig = NewDocument();
+                var tempFile = TestFilesDir.GetTestPath(@"transitions_heavy_tmp.csv");
+                if (asFile)
+                {
+                    File.WriteAllText(tempFile, input);
+                    RunUI(() => SkylineWindow.ImportMassList(tempFile));
+                }
+                else
+                {
+                    SetClipboardText(input);
+                    RunUI(() => SkylineWindow.Paste());
+                }
+                var pastedDoc = WaitForDocumentChange(docOrig);
+                AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 2);
+                foreach (var pair in pastedDoc.MoleculePrecursorPairs)
+                {
+                    // Before the fix, we'd come up with the second set as 336.12963/330.1095 instead of 336.12963/336.12963
+                    AssertEx.AreEqual(pair.NodeGroup.PrecursorMz, pair.NodeGroup.Transitions.First().Mz);
+                }
+                AssertEx.Serializable(pastedDoc); // Original error report was in terms of not being able to reload the inconsistent document, so check that
+            }
         }
 
         void TestImportAllData(bool asFile)

@@ -879,7 +879,7 @@ namespace pwiz.SkylineTestFunctional
             SrmDocument docCurrent = SkylineWindow.Document;
             int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
-                Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
+                AssertEx.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphRetentionTime.CurveCount);
 

@@ -2156,7 +2156,7 @@ namespace pwiz.Skyline
             foreach (var change in changes)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, false);
+                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
                 changedGroupIds.Add(change.GroupPath);
                 if (!peptideChanges.ContainsKey(change.GroupPath.Parent)) {
                     var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
@@ -2237,7 +2237,7 @@ namespace pwiz.Skyline
                     }
 
                     yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
-                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), change.Identified, change.ChangeType);
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), null, change.ChangeType, true);
                 }
             }
         }

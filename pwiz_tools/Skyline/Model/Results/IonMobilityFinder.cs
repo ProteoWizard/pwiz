@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.Results
                         return false;
 
                     ChromatogramGroupInfo[] chromGroupInfos;
-                    results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromGroupInfos);
+                    results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, out chromGroupInfos);
                     foreach (var chromInfo in chromGroupInfos.Where(c => Equals(filePath, c.FilePath)))
                     {
                         if (!ProcessChromInfo(fileInfo, chromInfo, pair, nodeGroup, tolerance, libKey)) 

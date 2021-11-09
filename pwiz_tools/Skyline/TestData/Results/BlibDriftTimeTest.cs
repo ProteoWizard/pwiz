@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestData.Results
                 var pair = document.PeptidePrecursorPairs.ToArray()[1];
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
                 Assert.AreEqual(1, chromGroupInfo.Length);
                 var chromGroup = chromGroupInfo[0];
                 Assert.AreEqual(2, chromGroup.NumPeaks); // This will be higher if we don't filter on DT

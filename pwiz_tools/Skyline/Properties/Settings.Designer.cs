@@ -3177,5 +3177,14 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaDotpDisplay"] = value;
             }
         }
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int ChromatogramDisplayRTDigits {
+            get {
+                return ((int)(this["ChromatogramDisplayRTDigits"]));
+            }
+            set {
+                this["ChromatogramDisplayRTDigits"] = value;
+            }
+        }
     }
 }
