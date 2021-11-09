@@ -2151,6 +2151,14 @@ namespace pwiz.Skyline
         /// </summary>
         public SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
+            SrmDocument beforeDefer = null;
+            var changesArr = changes.ToArray();
+            if (changesArr.Length > 1 && !document.DeferSettingsChanges)
+            {
+                beforeDefer = document;
+                document = document.BeginDeferSettingsChanges();
+            }
+
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
             foreach (var change in changes)
@@ -2191,7 +2199,7 @@ namespace pwiz.Skyline
                         change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                 }
             }
-            return document;
+            return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
         }
 
         public IEnumerable<ChangedPeakBoundsEventArgs> GetSynchronizedPeakBoundChanges(SrmDocument document, ChangedPeakBoundsEventArgs change, bool includeSelf)
