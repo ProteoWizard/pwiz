@@ -2161,7 +2161,7 @@ namespace pwiz.Skyline
 
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
-            foreach (var change in changes)
+            foreach (var change in changesArr)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
