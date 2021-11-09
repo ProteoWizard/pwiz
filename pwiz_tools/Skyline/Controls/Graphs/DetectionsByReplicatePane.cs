@@ -92,8 +92,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var counts = TargetData.TargetsCount;
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i]/ YScale)).ToList());
-            CurveList.Insert(0, MakeBarItem(countPoints, Color.FromArgb(180, 220, 255)));
-            ToolTip.TargetCurve = CurveList[0];
+            ToolTip.TargetCurve = MakeBarItem(countPoints, Color.FromArgb(180, 220, 255));
+            CurveList.Insert(0, ToolTip.TargetCurve);
             //draw cumulative curve
             counts = TargetData.TargetsCumulative;
             var cumulativePoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)

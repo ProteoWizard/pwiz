@@ -75,14 +75,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return displayOption.ToString().Equals(set.PeakAreaDotpDisplay);
         }
 
-        public static DotProductDisplayOption GetFromSettings(Settings set)
-        {
-            if (Enum.TryParse(set.PeakAreaDotpDisplay, out DotProductDisplayOption result))
-                return result;
-            else
-                return DotProductDisplayOption.none;
-        }
-
         public static IEnumerable<DotProductDisplayOption> ListAll()
         {
             return new[] {DotProductDisplayOption.none, DotProductDisplayOption.label, DotProductDisplayOption.line};
@@ -215,7 +207,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
 
-            NormalizeOption normalizeOption = (GraphSummary.Controller as AreaGraphController)?.GetIsotopeLabelAreaNormalizeOption() ?? AreaGraphController.AreaNormalizeOption;
+            NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
 
             IsMultiSelect = pepCount > 1 ||
                             (pepCount == 1 &&
@@ -891,15 +883,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductResultsText(int indexResult)
         {
-            // ReSharper disable LocalizableElement
             if (_dotpData?.Count > 0 && indexResult < _dotpData.Count)
             {
                 var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
-                return separator(new [] { DotpLabelText , string.Format("{0:F02}", _dotpData[indexResult]) } ) ;
+                return separator(new [] { DotpLabelText , string.Format(@"{0:F02}", _dotpData[indexResult]) } ) ;
             }
             else
                 return null;
-            // ReSharper restore LocalizableElement
         }
 
         private string DotpLabelText

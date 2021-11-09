@@ -61,8 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
             //draw bars
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, TargetData.Histogram[i] / YScale)).ToList());
-            CurveList.Insert(0, MakeBarItem(countPoints, Color.FromArgb(180, 220, 255)));
-            ToolTip.TargetCurve = CurveList[0];
+            ToolTip.TargetCurve = MakeBarItem(countPoints, Color.FromArgb(180, 220, 255));
+            CurveList.Insert(0, ToolTip.TargetCurve);
 
             //axes formatting
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;

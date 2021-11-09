@@ -131,14 +131,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public GraphSummary GraphSummary { get; set; }
 
-        public NormalizeOption GetIsotopeLabelAreaNormalizeOption()
-        {
-            // we need to preserve isotope label sort order for comparison to work correctly, and the sort order is 
-            // defined in the document. When the  normalize option is retrieved directly from settings the sort order defaults to 0.
-            var document = GraphSummary.DocumentUIContainer.DocumentUI;
-            return Settings.Default.AreaNormalizeOption.Constrain(document.Settings);
-        }
-
         UniqueList<GraphTypeSummary> GraphSummary.IController.GraphTypes
         {
             get { return Settings.Default.AreaGraphTypes; }
