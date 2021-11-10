@@ -2914,7 +2914,7 @@ namespace pwiz.Skyline.Model
                     writer.Write(FieldSeparator);
                     // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
                     var trigger = false;
-                    if (MethodType == ExportMethodType.Triggered && IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
+                    if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
                     {
                         int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
                         if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
