@@ -40,6 +40,9 @@
             this.label5 = new System.Windows.Forms.Label();
             this.textSizeComboBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cbShowDotpCutoff = new System.Windows.Forms.CheckBox();
+            this.textDotpCutoffValue = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -119,13 +122,33 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // cbShowDotpCutoff
+            // 
+            resources.ApplyResources(this.cbShowDotpCutoff, "cbShowDotpCutoff");
+            this.cbShowDotpCutoff.Name = "cbShowDotpCutoff";
+            this.cbShowDotpCutoff.UseVisualStyleBackColor = true;
+            this.cbShowDotpCutoff.CheckedChanged += new System.EventHandler(this.cbShowDotpCutoff_CheckedChanged);
+            // 
+            // textDotpCutoffValue
+            // 
+            resources.ApplyResources(this.textDotpCutoffValue, "textDotpCutoffValue");
+            this.textDotpCutoffValue.Name = "textDotpCutoffValue";
+            // 
             // AreaChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textDotpCutoffValue);
             this.Controls.Add(this.textSizeComboBox);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.cbShowDotpCutoff);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
@@ -155,5 +178,8 @@
         private System.Windows.Forms.CheckBox cbDecimalCvs;
         private System.Windows.Forms.ComboBox textSizeComboBox;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox cbShowDotpCutoff;
+        private System.Windows.Forms.TextBox textDotpCutoffValue;
     }
 }
