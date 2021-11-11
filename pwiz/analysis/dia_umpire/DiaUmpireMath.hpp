@@ -4,6 +4,8 @@
 #include <vector>
 #include <fstream>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <boost/algorithm/clamp.hpp>
+#include <boost/range/numeric.hpp>
 #include "ScanData.hpp"
 
 namespace {
@@ -119,10 +121,10 @@ class BSpline
             bsplineCollection.AddPoint(pt);
         }
         if (isDefinitelyLessThan(bsplineCollection.Data.back().getX(), data.Data.back().getX(), 1e-8f)) {
-            bsplineCollection.AddPoint(data.Data.at(data.PointCount() - 1));
+            bsplineCollection.AddPoint(data.Data[data.PointCount() - 1]);
         }
-        if (isDefinitelyGreaterThan(bsplineCollection.Data.at(0).getX(), data.Data.at(0).getX(), 1e-8f)) {
-            bsplineCollection.AddPoint(data.Data.at(0));
+        if (isDefinitelyGreaterThan(bsplineCollection.Data[0].getX(), data.Data[0].getX(), 1e-8f)) {
+            bsplineCollection.AddPoint(data.Data[0]);
         }
 
 #ifdef DIAUMPIRE_DEBUG
@@ -152,8 +154,8 @@ class BSpline
 
         int itp = 0;
         for (int i = 0; i <= n; i++) {
-            pt.x = (pt.getX() + data.Data.at(itp).getX() * bspline_base(i, p, t));
-            pt.y = (pt.getY() + data.Data.at(itp).getY() * bspline_base(i, p, t));
+            pt.x = (pt.getX() + data.Data[itp].getX() * bspline_base(i, p, t));
+            pt.y = (pt.getY() + data.Data[itp].getY() * bspline_base(i, p, t));
             itp++;
         }
         return pt;
@@ -200,8 +202,8 @@ class LinearInterpolation
     XYPointCollection Run(const XYPointCollection& data, int PtNum)
     {
         std::vector<XYData> Smoothdata(PtNum);
-        float intv = (data.Data.at(data.PointCount() - 1).getX() - data.Data.at(0).getX()) / (float)PtNum;
-        float rt = data.Data.at(0).getX();
+        float intv = (data.Data[data.PointCount() - 1].getX() - data.Data[0].getX()) / (float)PtNum;
+        float rt = data.Data[0].getX();
         for (int i = 0; i < PtNum; i++) {
             Smoothdata[i] = XYData{ intv * i + rt, -1 };
         }
@@ -274,7 +276,7 @@ class WaveletMassDetector
     const InstrumentParameter& parameter;
     std::vector<XYData>& DataPoint;
     double waveletWindow = (double) 0.3;
-    std::vector<double> MEXHAT;
+    std::vector<float> MEXHAT;
     double NPOINTS_half;
 
     public:
@@ -310,7 +312,7 @@ class WaveletMassDetector
         //"Number of wavelet'scale (coeficients) to use in m/z peak detection"
         //"Wavelet window size (%)",
         //"Size in % of wavelet window to apply in m/z peak detection");        
-        int maxscale = (int) (std::max(std::min((DataPoint.at(DataPoint.size() - 1).getX() - DataPoint.at(0).getX()), parameter.MaxCurveRTRange), 0.5f) * parameter.NoPeakPerMin / (WAVELET_ESR + WAVELET_ESR));
+        int maxscale = (int) (std::max(std::min((DataPoint[DataPoint.size() - 1].getX() - DataPoint[0].getX()), parameter.MaxCurveRTRange), 0.5f) * parameter.NoPeakPerMin / (WAVELET_ESR + WAVELET_ESR));
 
         //waveletCWT = new ArrayList[15];
         PeakRidge.resize(maxscale);
@@ -320,9 +322,9 @@ class WaveletMassDetector
             std::vector<XYData> wavelet = performCWT(scaleLevel * 2 + 5);
             PeakRidge[scaleLevel] = std::make_unique<std::vector<XYData>>();
             //waveletCWT[scaleLevel] = wavelet;
-            XYData lastpt = wavelet.at(0);
+            XYData lastpt = wavelet[0];
             XYData localmax { 0, 0 };
-            XYData startpt = wavelet.at(0);
+            XYData startpt = wavelet[0];
 
             bool increasing = false;
             bool decreasing = false;
@@ -330,7 +332,7 @@ class WaveletMassDetector
 
             for (size_t cwtidx = 1; cwtidx < wavelet.size(); cwtidx++)
             {
-                XYData& CurrentPoint = wavelet.at(cwtidx);
+                XYData& CurrentPoint = wavelet[cwtidx];
                 if (CurrentPoint.getY() > lastpt.getY()) {//the peak is increasing
                     if (decreasing) {//first increasing point, last point was a possible local minimum
                         //check if the peak was symetric
@@ -379,11 +381,18 @@ class WaveletMassDetector
     std::vector<XYData> performCWT(int scaleLevel)
     {
         int length = DataPoint.size();
-        std::vector<XYData> cwtDataPoints;
+        std::vector<XYData> cwtDataPoints(length);
 
         int a_esl = scaleLevel * WAVELET_ESL;
         int a_esr = scaleLevel * WAVELET_ESR;
+        int NPOINTS_half = (int) this->NPOINTS_half;
+        int NPOINTS = (int) this->NPOINTS;
         double sqrtScaleLevel = sqrt(scaleLevel);
+        /*std::vector<float> intensities(length + a_esr);
+        std::vector<float> yValues(DataPoint.size());
+        for(size_t i=0 ;i < yValues.size(); ++i)
+            yValues[i] = DataPoint[i].y;*/
+
         for (int dx = 0; dx < length; dx++)
         {
             /*
@@ -402,25 +411,25 @@ class WaveletMassDetector
              * Perform convolution
              */
             float intensity = 0;
-            for (int i = t1; i <= t2; i++) {
-                int ind = (int) (NPOINTS_half) + ((int) d * (i - dx) / scaleLevel);
-                if (ind < 0) {
-                    ind = 0;
-                }
-                if (ind >= NPOINTS) {
-                    ind = (int) NPOINTS - 1;
-                }
-//                if(i<0 || ind<0){
-//                    System.out.print("");
-//                }
-                intensity += DataPoint.at(i).getY() * MEXHAT[ind];
+            int ind;
+            //float* intensityPtr = &intensities[0];
+            //float* yValuesPtr = &yValues[t1];
+            //float* MEXHATPtr = &MEXHAT[0];
+            for (int i = t1; i <= t2; ++i/*, ++yValuesPtr*/) {
+                ind = NPOINTS_half + (d * (i - dx) / scaleLevel);
+                ind = boost::algorithm::clamp(ind, 0, NPOINTS - 1);
+                intensity += DataPoint[i].y * MEXHAT[ind];
+                //intensity += *yValuesPtr * MEXHATPtr[ind];
+                //intensityPtr[i] = yValuesPtr[i] * MEXHATPtr[ind];
             }
+            //intensity = std::accumulate(intensities.begin() + t1, intensities.begin() + t2 + 1, 0.f);
             intensity /= sqrtScaleLevel;
             // Eliminate the negative part of the wavelet map
             if (intensity < 0) {
                 intensity = 0;
             }
-            cwtDataPoints.emplace_back(DataPoint.at(dx).getX(), intensity);
+            cwtDataPoints[dx].x = DataPoint[dx].getX();
+            cwtDataPoints[dx].y = intensity;
         }
         return cwtDataPoints;
     }
@@ -547,7 +556,7 @@ struct Regression
     void FindEquation()
     {
         for (int i = 0; i < pointset.PointCount(); i++) {
-            XYData point = pointset.Data.at(i);
+            const XYData& point = pointset.Data[i];
             SigXY += point.getX() * point.getY();
             SigX += point.getX();
             SigY += point.getY();
@@ -587,7 +596,7 @@ struct Regression
     {
         SXY = 0;
         for (int i = 0; i < pointset.PointCount(); i++) {
-            SXY += (pointset.Data.at(i).getX() - MeanX) * (pointset.Data.at(i).getY() - MeanY);
+            SXY += (pointset.Data[i].getX() - MeanX) * (pointset.Data[i].getY() - MeanY);
         }
     }
 
@@ -595,7 +604,7 @@ struct Regression
     {
         SXX = 0;
         for (int i = 0; i < pointset.PointCount(); i++) {
-            SXX += (pointset.Data.at(i).getX() - MeanX) * (pointset.Data.at(i).getX() - MeanX);
+            SXX += (pointset.Data[i].getX() - MeanX) * (pointset.Data[i].getX() - MeanX);
         }
     }
 
@@ -603,7 +612,7 @@ struct Regression
     {
         SYY = 0;
         for (int i = 0; i < pointset.PointCount(); i++) {
-            SYY += (pointset.Data.at(i).getY() - MeanY) * (pointset.Data.at(i).getY() - MeanY);
+            SYY += (pointset.Data[i].getY() - MeanY) * (pointset.Data[i].getY() - MeanY);
         }
     }
 
@@ -623,7 +632,7 @@ struct Regression
     {
         SST = 0;
         for (int i = 0; i < pointset.PointCount(); i++) {
-            SST += (pointset.Data.at(i).getY() - MeanY) * (pointset.Data.at(i).getY() - MeanY);
+            SST += (pointset.Data[i].getY() - MeanY) * (pointset.Data[i].getY() - MeanY);
         }
     }
 
@@ -631,7 +640,7 @@ struct Regression
     {
         SSR = 0;
         for (int i = 0; i < pointset.PointCount(); i++) {
-            SSR += (pointset.Data.at(i).getY() - (GetY(pointset.Data.at(i).getX()))) * (pointset.Data.at(i).getY() - (GetY(pointset.Data.at(i).getX())));
+            SSR += (pointset.Data[i].getY() - (GetY(pointset.Data[i].getX()))) * (pointset.Data[i].getY() - (GetY(pointset.Data[i].getX())));
         }
     }
 };
@@ -654,9 +663,9 @@ struct PearsonCorr
             float up = start + (i + 1) * timeinterval;
 
             for (int j = 0; j < CollectionA.PointCount(); j++) {
-                if (CollectionA.Data.at(j).getX() >= low && CollectionA.Data.at(j).getX() < up) {
-                    float intenlow = CollectionA.Data.at(j).getY() * (1 - (CollectionA.Data.at(j).getX() - low) / timeinterval);
-                    float intenup = CollectionA.Data.at(j).getY() * (1 - (up - CollectionA.Data.at(j).getX()) / timeinterval);
+                if (CollectionA.Data[j].getX() >= low && CollectionA.Data[j].getX() < up) {
+                    float intenlow = CollectionA.Data[j].getY() * (1 - (CollectionA.Data[j].getX() - low) / timeinterval);
+                    float intenup = CollectionA.Data[j].getY() * (1 - (up - CollectionA.Data[j].getX()) / timeinterval);
                     if (intenlow > arrayA[i]) {
                         arrayA[i] = intenlow;
                     }
@@ -664,15 +673,15 @@ struct PearsonCorr
                         arrayA[i + 1] = intenup;
                     }
                 }
-                else if (CollectionA.Data.at(j).getX() > up) {
+                else if (CollectionA.Data[j].getX() > up) {
                     break;
                 }
             }
 
             for (int j = 0; j < CollectionB.PointCount(); j++) {
-                if (CollectionB.Data.at(j).getX() >= low && CollectionB.Data.at(j).getX() < up) {
-                    float intenlow = CollectionB.Data.at(j).getY() * (1 - (CollectionB.Data.at(j).getX() - low) / timeinterval);
-                    float intenup = CollectionB.Data.at(j).getY() * (1 - (up - CollectionB.Data.at(j).getX()) / timeinterval);
+                if (CollectionB.Data[j].getX() >= low && CollectionB.Data[j].getX() < up) {
+                    float intenlow = CollectionB.Data[j].getY() * (1 - (CollectionB.Data[j].getX() - low) / timeinterval);
+                    float intenup = CollectionB.Data[j].getY() * (1 - (up - CollectionB.Data[j].getX()) / timeinterval);
                     if (intenlow > arrayB[i]) {
                         arrayB[i] = intenlow;
                     }
@@ -680,7 +689,7 @@ struct PearsonCorr
                         arrayB[i + 1] = intenup;
                     }
                 }
-                else if (CollectionB.Data.at(j).getX() > up) {
+                else if (CollectionB.Data[j].getX() > up) {
                     break;
                 }
             }
@@ -705,7 +714,7 @@ struct PearsonCorr
         return R2;
     }
 
-    static float CalcCorr(XYPointCollection CollectionA, XYPointCollection CollectionB, int NoPointPerInterval)
+    static float CalcCorr(const XYPointCollection& CollectionA, const XYPointCollection& CollectionB, int NoPointPerInterval)
     {
         int num = std::max(CollectionA.PointCount(), CollectionB.PointCount()) / 2;
         float timeinterval = 2 / (float)NoPointPerInterval;
@@ -715,6 +724,7 @@ struct PearsonCorr
 
         vector<float> arrayA(num);
         vector<float> arrayB(num);
+        int size = 0;
 
         float start = std::max(CollectionA.Data.at(0).getX(), CollectionB.Data.at(0).getX());
 
@@ -723,7 +733,7 @@ struct PearsonCorr
         float up = start + timeinterval;
 
         for (int j = 0; j < CollectionA.PointCount(); j++) {
-            while (CollectionA.Data.at(j).getX() > up) {
+            while (CollectionA.Data[j].getX() > up) {
                 i++;
                 low = up;
                 up = low + timeinterval;
@@ -731,9 +741,9 @@ struct PearsonCorr
             if (i >= num) {
                 break;
             }
-            if (CollectionA.Data.at(j).getX() >= low && CollectionA.Data.at(j).getX() < up) {
-                if (CollectionA.Data.at(j).getY() > arrayA[i]) {
-                    arrayA[i] = CollectionA.Data.at(j).getY();
+            if (CollectionA.Data[j].getX() >= low && CollectionA.Data[j].getX() < up) {
+                if (CollectionA.Data[j].getY() > arrayA[i]) {
+                    arrayA[i] = CollectionA.Data[j].getY();
                 }
             }
         }
@@ -741,7 +751,7 @@ struct PearsonCorr
         low = start;
         up = start + timeinterval;
         for (int j = 0; j < CollectionB.PointCount(); j++) {
-            while (CollectionB.Data.at(j).getX() > up) {
+            while (CollectionB.Data[j].getX() > up) {
                 i++;
                 low = up;
                 up = low + timeinterval;
@@ -749,9 +759,11 @@ struct PearsonCorr
             if (i >= num) {
                 break;
             }
-            if (CollectionB.Data.at(j).getX() >= low && CollectionB.Data.at(j).getX() < up) {
-                if (CollectionB.Data.at(j).getY() > arrayB[i]) {
-                    arrayB[i] = CollectionB.Data.at(j).getY();
+            if (CollectionB.Data[j].getX() >= low && CollectionB.Data[j].getX() < up) {
+                if (CollectionB.Data[j].getY() > arrayB[i]) {
+                    arrayB[i] = CollectionB.Data[j].getY();
+                    if (arrayA[i] > 0 && arrayB[i] > 0)
+                        ++size;
                 }
             }
         }
@@ -766,6 +778,7 @@ struct PearsonCorr
         }
 
         XYPointCollection pointset;
+        pointset.Data.reserve(size);
         for (int idx = 0; idx < num; idx++) {
             if (arrayA[idx] > 0 && arrayB[idx] > 0) {
                 pointset.AddPoint(arrayA[idx], arrayB[idx]);
