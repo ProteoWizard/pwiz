@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                  return (_dotpLabels.Count > 0 || !DotProductLabelsVisible)
                      ? _dotpLabels.Select(l => ((TextObj)l).Text)
-                     : SumAreas.Select((t, i) => GetDotProductResultsText(i));
+                     : SumAreas.Select((t, i) => GetDotProductResultsText(i + FirstDataIndex));
             }
         }
 
