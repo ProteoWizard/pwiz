@@ -146,7 +146,10 @@ namespace pwiz.Skyline.Controls.Graphs
             get{return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default);}
         }
 
-        public bool IsLineGraph { get { return CurveList.Count > 0 && CurveList[0].IsLine; } }
+        public bool IsLineGraph
+        {
+            get { return CurveList.Count > 0 && CurveList.All(curve => curve.IsLine); }
+        }
 
         public bool CanShowPeakAreaLegend { get; private set; }
         
@@ -402,8 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
-            CanShowDotProduct = ExpectedVisible != AreaExpectedValue.none &&
-                                normalizeOption != NormalizeOption.TOTAL;
+            CanShowDotProduct = graphData.DotpData != null;
             CanShowPeakAreaLegend = countNodes != 0;
 
             InitFromData(graphData);
