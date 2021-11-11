@@ -112,7 +112,7 @@ namespace SkylineBatch
                     ? mainSettings.AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(validAnnotationsFilePath))
                     : null;
 
-            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,
+            return new MainSettings(validTemplate, validAnalysisFolderPath, mainSettings.UseAnalysisFolderName, validDataFolderPath, mainSettings.Server,
                 validAnnotationsFilePath, validAnnotationsDownload, mainSettings.ReplicateNamingPattern);
         }
 
