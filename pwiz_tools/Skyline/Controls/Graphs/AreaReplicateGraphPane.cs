@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
-            CanShowDotProduct = graphData.DotpData != null;
+            CanShowDotProduct = ExpectedVisible != AreaExpectedValue.none;
             CanShowPeakAreaLegend = countNodes != 0;
 
             InitFromData(graphData);
@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 3.5f, Fill = new Fill(Color.DimGray)}
                 };
-                CurveList.Add(dotpLine);
+                CurveList.Insert(0, dotpLine);
                 ToolTip.TargetCurve = dotpLine;
             }
             else
