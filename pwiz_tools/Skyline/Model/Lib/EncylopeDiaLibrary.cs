@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -187,7 +188,14 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (LoadLibraryFromDatabase(loader))
                 {
-                    WriteCache(loader);
+                    try
+                    {
+                        WriteCache(loader);
+                    }
+                    catch
+                    {
+                        // Ignore any error writing the cache
+                    }
                     return true;
                 }
             }
@@ -334,7 +342,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private static string GetLibraryCachePath(string filepath)
+        public static string GetLibraryCachePath(string filepath)
         {
             return Path.ChangeExtension(filepath, @".elibc");
         }
