@@ -2151,9 +2151,17 @@ namespace pwiz.Skyline
         /// </summary>
         public SrmDocument ChangePeakBounds(SrmDocument document, IEnumerable<ChangedPeakBoundsEventArgs> changes)
         {
+            SrmDocument beforeDefer = null;
+            var changesArr = changes.ToArray();
+            if (changesArr.Length > 1 && !document.DeferSettingsChanges)
+            {
+                beforeDefer = document;
+                document = document.BeginDeferSettingsChanges();
+            }
+
             var changedGroupIds = new HashSet<IdentityPath>();
             var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
-            foreach (var change in changes)
+            foreach (var change in changesArr)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
@@ -2191,7 +2199,7 @@ namespace pwiz.Skyline
                         change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                 }
             }
-            return document;
+            return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
         }
 
         public IEnumerable<ChangedPeakBoundsEventArgs> GetSynchronizedPeakBoundChanges(SrmDocument document, ChangedPeakBoundsEventArgs change, bool includeSelf)
@@ -3593,7 +3601,10 @@ namespace pwiz.Skyline
                     if (areaReplicateGraphPane.CanShowDotProduct)
                     {
                         showDotProductToolStripMenuItem.DropDownItems.Clear();
-                        showDotProductToolStripMenuItem.DropDownItems.AddRange(DotProductDisplayOptionExtension.ListAll().Select(MakeShowDotpMenuItem).ToArray());
+                        var optionsList = DotProductDisplayOptionExtension.ListAll();
+                        if(areaReplicateGraphPane.IsLineGraph)
+                            optionsList = new DotProductDisplayOption[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
+                        showDotProductToolStripMenuItem.DropDownItems.AddRange(optionsList.Select(MakeShowDotpMenuItem).ToArray());
                         menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
                     }
                 } 
