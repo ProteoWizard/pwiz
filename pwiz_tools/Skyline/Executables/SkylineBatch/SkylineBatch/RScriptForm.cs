@@ -37,7 +37,9 @@ namespace SkylineBatch
 
             _fileControl = new DownloadingFileControl(Resources.RScriptForm_RScriptForm_R_script_file_path,
                 Resources.RScriptForm_RScriptForm_R_Script, currentPath,
-                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama", mainControl, state);
+                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama", mainControl, 
+                new Action<SkylineBatchConfigManagerState>((newState) => State = newState),
+                new Func<SkylineBatchConfigManagerState>(() => State));
             _fileControl.Dock = DockStyle.Fill;
             _fileControl.Show();
             panelPath.Controls.Add(_fileControl);

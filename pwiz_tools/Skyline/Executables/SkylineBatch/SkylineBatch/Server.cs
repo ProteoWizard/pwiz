@@ -324,12 +324,11 @@ namespace SkylineBatch
                 var duplicateIndexRegex = new Regex("\\(([1-9][0-9]*)\\)$");
                 var regexMatches = duplicateIndexRegex.Match(Name).Groups;
                 string newName;
-                if (regexMatches.Count > 0)
+                try
                 {
                     var lastIndex = int.Parse(regexMatches[0].Value);
                     newName = duplicateIndexRegex.Replace(Name, $"({lastIndex + 1})");
-                }
-                else
+                } catch (FormatException)
                 {
                     newName = Name + "(2)";
                 }
@@ -487,6 +486,12 @@ namespace SkylineBatch
 
         private bool Equals(RemoteFileSource other)
         {
+            var a = string.Equals(Name, other.Name);
+            a = string.Equals(Username, other.Username);
+            a = string.Equals(Password, other.Password);
+            a = Equals(URI, other.URI);
+            a = Equals(Encrypt, other.Encrypt);
+            a = Equals(FtpSource, other.FtpSource);
             return string.Equals(Name, other.Name) && 
                    string.Equals(Username, other.Username) &&
                    string.Equals(Password, other.Password) &&

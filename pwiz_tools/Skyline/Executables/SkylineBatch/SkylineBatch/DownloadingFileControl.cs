@@ -18,7 +18,11 @@ namespace SkylineBatch
         private EventHandler _addedPathChangedHandler;
         private IMainUiControl _mainControl;
 
-        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
+        private Action<SkylineBatchConfigManagerState> _setMainState;
+        private Func<SkylineBatchConfigManagerState> _getMainState;
+
+        public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip, IMainUiControl mainControl, 
+            Action<SkylineBatchConfigManagerState> setMainState, Func<SkylineBatchConfigManagerState> getMainState)
         {
             InitializeComponent();
 
@@ -29,7 +33,8 @@ namespace SkylineBatch
             _variableDescription = variableDescription;
             _filter = filter;
             _mainControl = mainControl;
-            State = state;
+            _setMainState = setMainState;
+            _getMainState = getMainState;
 
             labelPath.Text = string.Format(Resources.DownloadingFileControl_DownloadingFileControl__0__, label);
             ToggleDownload(Server != null);
@@ -42,8 +47,6 @@ namespace SkylineBatch
 
         public string Path { get; private set; }
         public Server Server { get; private set; }
-
-        public SkylineBatchConfigManagerState State { get; set; }
 
         public void SetPath(string newPath)
         {
@@ -174,20 +177,20 @@ namespace SkylineBatch
         {
             if (_isDataServer)
             {
-                var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State, _mainControl);
+                var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, _getMainState(), _mainControl);
                 if (DialogResult.OK == addServerForm.ShowDialog(this))
                 {
-                    State = addServerForm.State;
+                    _setMainState(addServerForm.State);
                     Server = addServerForm.Server;
                     ToggleDownload(Server != null);
                 }
             }
             else
             {
-                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
+                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, _getMainState());
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
-                    State = addPanoramaTemplate.State;
+                    _setMainState(addPanoramaTemplate.State);
                     Server = addPanoramaTemplate.PanoramaServer;
                     ToggleDownload(Server != null);
                 }

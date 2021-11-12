@@ -328,7 +328,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textError.ScrollBars" type="System.Windows.Forms.RichTextBoxScrollBars, System.Windows.Forms">
-    <value>None</value>
+    <value>Vertical</value>
   </data>
   <data name="textError.Size" type="System.Drawing.Size, System.Drawing">
     <value>314, 52</value>
