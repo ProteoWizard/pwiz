@@ -486,12 +486,6 @@ namespace SkylineBatch
 
         private bool Equals(RemoteFileSource other)
         {
-            var a = string.Equals(Name, other.Name);
-            a = string.Equals(Username, other.Username);
-            a = string.Equals(Password, other.Password);
-            a = Equals(URI, other.URI);
-            a = Equals(Encrypt, other.Encrypt);
-            a = Equals(FtpSource, other.FtpSource);
             return string.Equals(Name, other.Name) && 
                    string.Equals(Username, other.Username) &&
                    string.Equals(Password, other.Password) &&

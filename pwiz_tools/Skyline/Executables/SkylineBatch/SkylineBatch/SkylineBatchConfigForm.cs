@@ -138,11 +138,6 @@ namespace SkylineBatch
 
         #region Edit main settings
 
-  //      private void DownloadControlChangingState(SkylineBatchConfigManagerState newState)
-  //      {
-  //          State = newState;
-  //      }
-
         private void InitMainSettingsTab(SkylineBatchConfig config)
         {
             var setMainState = new Action<SkylineBatchConfigManagerState> ((state) => State = state);
