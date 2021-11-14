@@ -28,13 +28,26 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Management;
 using System.Windows.Forms;
+using EnvDTE;
+using MSAmanda.Utils;
+using NHibernate.Mapping;
+using NHibernate.Mapping.ByCode;
+using pwiz.Common.Collections;
+using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model.Proteome;
+using SkylineTool;
+using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx
+    public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx, ITipDisplayer
     {
         public MassListImporter Importer { get; set; }
         public List<ComboBox> ComboBoxes { get; private set; }
@@ -48,6 +61,14 @@ namespace pwiz.Skyline.FileUI
         private readonly MassListInputs _inputs;
         private readonly IdentityPath _insertPath;
 
+        // For associating proteins
+        private string[] _originalLines;
+        private readonly NodeTip _proteinTip;
+        private int _originalProteinIndex;
+        private string[] _originalHeaders;
+
+        private Dictionary<string, FastaSequence> _dictNameSeq;
+        private List<ProteomeDatabase.API.Protein> _proteinList;
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
         private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
             new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
@@ -102,22 +123,224 @@ namespace pwiz.Skyline.FileUI
             _docCurrent = docCurrent;
             _inputs = inputs;
             _insertPath = insertPath;
-
+            _originalLines = Importer.RowReader.Lines.ToArray();
             showIgnoredCols = true;
 
+            _proteinTip = new NodeTip(this) { Parent = this };
+            previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
             InitializeComponent();
 
             fileLabel.Text = Importer.Inputs.InputFilename;
-
             InitializeComboBoxes();
             DisplayData();
             PopulateComboBoxes();
             InitializeRadioButtons();
+            checkBoxAssociateProteins.Visible = CheckboxVisible();
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
         }
 
+        public Rectangle ScreenRect
+        {
+            get { return Screen.GetBounds(dataGrid); }
+        }
+        public bool AllowDisplayTip
+        {
+            get { return true; }
+        }
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return dataGrid.RectangleToScreen(r);
+        }
+
+        /// <summary>
+        /// Checks whether the associate proteins checkbox should be visible
+        /// </summary>
+        /// <returns>True if the checkbox should be visible</returns>
+        private bool CheckboxVisible()
+        {
+            return radioPeptide.Checked && !_docCurrent.Settings.PeptideSettings.BackgroundProteome.IsNone;
+        }
+
+        /// <summary>
+        /// In the event where there are multiple matches for a single peptide, or no matches
+        /// for a peptide, let the user decide how to proceed
+        /// </summary>
+        private string[] ResolveMatchedProteins(int numWithDuplicates, int numUnmatched, int numFiltered, out bool canceled)
+        {
+            // Show a dialog asking the user how to proceed
+            using (var filterDlg = new FilterMatchedPeptidesDlg( numWithDuplicates, numUnmatched, numFiltered, Importer.RowReader.Lines.Count == 1,  
+                false)) // We do not support mixed transition lists, so there will never be small molecules
+            {
+                canceled = false;
+                if (filterDlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    // If they cancel do not change the document or the transition list
+                    canceled = true;
+                } else
+                {
+                    // Redo the association with the new filter settings, but do not show this dialog again
+                    return AssociateProteins(false);
+                }
+            }
+            return null;
+
+        }
+
+        /// <summary>
+        /// Match all peptides to proteins in the background proteome
+        /// </summary>
+        /// <param name="triggerDialog">trigger a dialog if there are peptides with multiple matches,
+        /// peptides without matches, or peptides not meeting filter settings</param>
+        /// <returns>The transition list edited to include the protein names</returns>
+        private string[] AssociateProteins(bool triggerDialog)
+        {
+            int numUnmatched = 0;
+            int numFiltered = 0;
+            int numMultipleMatches = 0;
+
+            _dictNameSeq = new Dictionary<string, FastaSequence>();
+            _proteinList = new List<Protein>();
+            // Find the columns we need to add information for the proteins
+            var sequenceIndex = Importer.RowReader.Indices.PeptideColumn;
+
+            Importer.RowReader.Indices.ProteinColumn =
+                Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+
+            // If there is no protein column present, add one
+            if (Importer.RowReader.Indices.Headers != null)
+            {
+                // Add a header we should recognize
+                var newHeaders = new string[_originalHeaders.Length + 1];
+                newHeaders[0] = @"Protein Name"; //Localize this?
+                for (int i = 0; i < _originalHeaders.Length; i++)
+                {
+                    newHeaders[i + 1] = _originalHeaders[i];
+                }
+
+                Importer.RowReader.Indices.Headers = newHeaders;
+            }
+
+            var lines = new List<string>();
+            // Go through each line of the import
+            foreach(var line in Importer.RowReader.Lines)
+            {
+                // First find the sequence and the protein name
+                var fields = line.ParseDsvFields(Importer.Separator);
+                var peptideSequence = FastaSequence.StripModifications(fields[sequenceIndex]);
+
+                var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
+
+                if (peptideSequence != null)
+                {
+                    // Find proteins that match the sequence
+                    var proteinNames = PasteDlg.GetProteinNamesForPeptideSequence(peptideSequence, _docCurrent, out var proteins);
+
+                    bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
+                    bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
+                    bool isFiltered = !_docCurrent.Settings.Accept(peptideSequence);
+
+                    var newSequence = !seenPepSeq.Contains(peptideSequence);
+
+                    if (newSequence)
+                    {
+                        numUnmatched += isUnmatched ? 1 : 0;
+                        numMultipleMatches += hasMultipleMatches ? 1 : 0;
+                        numFiltered += isFiltered ? 1 : 0;
+                        seenPepSeq.Add(peptideSequence);
+                    }
+
+                    var FilterMultipleProteinMatches = Helpers.ParseEnum(Settings.Default.LibraryPeptidesAddDuplicatesEnum,
+                        BackgroundProteome.DuplicateProteinsFilter.AddToAll);
+
+                    // If this transition either has multiple matches or is filtered and the user has
+                    // indicated to remove such transitions, do not add it to our new list
+                    if ((hasMultipleMatches && FilterMultipleProteinMatches ==
+                            BackgroundProteome.DuplicateProteinsFilter.NoDuplicates)
+                        || (isFiltered && !Settings.Default.LibraryPeptidesKeepFiltered))
+                    {
+                        continue;
+                    }
+                    
+                    // If this transition has multiple matches and the user wants to add it to every match
+                    if (
+                        (hasMultipleMatches && FilterMultipleProteinMatches ==
+                            BackgroundProteome.DuplicateProteinsFilter.AddToAll))
+                    {
+                        // Now add a separate transition for each protein on our list of matches
+                        for (var j = 0; j < proteinNames.Count; j++)
+                        {
+                            lines.Add(editLine(fields, proteinNames[j]));
+                            _proteinList.Add(proteins[j]);
+                            addToSeqDict(proteinNames[j]);
+                        }
+                        continue;
+                    }
+
+                    if (!proteinNames.IsNullOrEmpty())
+                    {
+                        // If we found at least one match, edit the line to include the name
+                        lines.Add(editLine(fields, proteinNames[0]));
+                        _proteinList.Add(proteins[0]);
+                        addToSeqDict(proteinNames[0]);
+                    }
+                    else
+                    {
+                        // If there are no matches add an empty string in place of the protein name
+                        // so that spacing is consistent
+                        lines.Add(editLine(fields, string.Empty));
+                        _proteinList.Add(null);
+                    }
+                }
+
+
+            }
+
+            // If there are any peptides that don't meet the filter setting, have multiple matches or no matches,
+            // show the user a dialog to resolve it. 
+            if (numFiltered + numUnmatched + numMultipleMatches > 0 && triggerDialog)
+            {
+                var resolved = ResolveMatchedProteins(numMultipleMatches, numUnmatched, numFiltered, out var canceled);
+                if (canceled)
+                {
+                    checkBoxAssociateProteins.Checked = false;
+                    return Importer.RowReader.Lines.ToArray();
+                }
+
+                if (resolved != null)
+                {
+                    lines = resolved.ToList();
+                }
+            }
+
+            return lines.ToArray();
+        }
+
+        // Add the protein name and matching sequence to a dictionary so that we import it to the correct node
+        private void addToSeqDict(string proteinName)
+        {
+            if (!_dictNameSeq.ContainsKey(proteinName))
+            {
+                var fastaSeq = _docCurrent.Settings.PeptideSettings.BackgroundProteome.GetFastaSequence(proteinName);
+                if (fastaSeq != null)
+                {
+                    _dictNameSeq.Add(proteinName, fastaSeq);
+                }
+            }
+        }
+
+        private string editLine(string[] fields, string proteinName)
+        {
+            var lineWithName = new string[fields.Length + 1];
+            lineWithName[0] = proteinName;
+            for (var j = 0; j < fields.Length; j++)
+            {
+                lineWithName[j + 1] = fields[j];
+            }
+
+            return String.Join(Importer.Separator.ToString(), lineWithName);
+        }
         private void DisplayData()
         {
             // The pasted data will be stored as a data table
@@ -432,7 +655,8 @@ namespace pwiz.Skyline.FileUI
         }
 
         private bool comboBoxChanged;
-        
+        private int[] previousIndices;
+
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
         {
@@ -488,6 +712,19 @@ namespace pwiz.Skyline.FileUI
             }
             else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
             {
+                // When the user associates proteins and then tries to reassign the protein name column,
+                // display a warning and the option to cancel.
+                if (checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0)
+                {
+                    var dlgResult = MessageDlg.Show(this,
+                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_column_will_cause_the_peptides_to_be_added_to_peptide_lists,
+                        true, MessageBoxButtons.OKCancel);
+                    if (dlgResult == DialogResult.Cancel)
+                    {
+                        comboBox.SelectedIndex = previousIndices[comboBoxIndex];
+                        return;
+                    }
+                }
                 CheckForComboBoxOverlap(columns.ProteinColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ProteinColumn = comboBoxIndex;
@@ -686,6 +923,8 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
             }
+
+            previousIndices[comboBoxIndex] = comboBox.SelectedIndex;
         }
 
         // Saves column positions between transition lists
@@ -933,9 +1172,11 @@ namespace pwiz.Skyline.FileUI
                     {
                         CheckMoleculeColumns();
                     }
+
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders);
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders, 
+                        checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0 ? _dictNameSeq : new Dictionary<string, FastaSequence>());
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
@@ -987,6 +1228,71 @@ namespace pwiz.Skyline.FileUI
             return false; // No errors
         }
 
+        /// <summary>
+        /// A tip for displaying information about the protein
+        /// </summary>
+        private class ProteinTipProvider : ITipProvider
+        {
+            private Protein _protein;
+
+            public ProteinTipProvider(ProteomeDatabase.API.Protein protein)
+            {
+                _protein = protein;
+            }
+            public bool HasTip
+            {
+                get { return true; }
+            }
+
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                var table = new TableDesc();
+
+                using (var rt = new RenderTools())
+                {
+                    PeptideGroupTreeNode.GetX80Dimensions(g, rt, sizeMax, out var widthLine, out var heightLine, out var heightMax);
+                    table.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Name, _protein.Name, rt); // Draw the name
+                    PeptideGroupTreeNode.AddProteinMetadata(table, _protein.ProteinMetadata, rt, g); // Draw any metadata that we have
+                    var tableSize = table.CalcDimensions(g);
+                    widthLine = Math.Max(widthLine, tableSize.Width);
+                    tableSize.Height += TableDesc.TABLE_SPACING;    // Spacing between details and sequence
+                    var y = PeptideGroupTreeNode.RenderFastaSeq(g, draw, _protein.Sequence, tableSize.Height, heightLine, heightMax, new List<DocNode>(), new HashSet<DocNode>(), new Model.Peptide(_protein.Sequence), rt, widthLine);
+                    table.Draw(g);
+                    return new Size((int)Math.Round(widthLine), (int)Math.Round(y + 2));
+                }
+            }
+        }
+
+        private void dataGrid_MouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            var colPositions = CurrentColumnPositions();
+            var proteinColumn =
+                colPositions.IndexOf(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+
+            // If the mouse is inside a protein name cell, display information about that protein
+            if (e.RowIndex >= 0 && e.ColumnIndex == 0 && checkBoxAssociateProteins.Checked)
+            {
+                // The row index is one off from the row in the transition list because the first row of the datagrid is covered by combo boxes
+                var protein = _proteinList[e.RowIndex - 1];
+                if (protein != null)
+                {
+                    var tipProvider = new ProteinTipProvider(protein);
+                    var rect = dataGrid.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
+                    _proteinTip.SetTipProvider(tipProvider, rect, e.Location);
+                }
+            }
+            else
+            {
+                _proteinTip.HideTip();
+            }
+        }
+
+        private void dataGrid_MouseLeave(object sender, EventArgs e)
+        {
+            _proteinTip.HideTip();
+        }
+
         private void dataGrid_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
@@ -1020,6 +1326,13 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
+                // If the user has associated proteins and wants to switch to molecule mode,
+                // undo the association as it will not be useful in molecule mode
+                if (checkBoxAssociateProteins.Checked)
+                {
+                    checkBoxAssociateProteins.Checked = false;
+                }
+
                 peptideColPositions = CurrentColumnPositions();
             }
             foreach (var comboBox in ComboBoxes)
@@ -1027,8 +1340,84 @@ namespace pwiz.Skyline.FileUI
                 comboBox.Items.Clear();
                 UpdateCombo(comboBox);
             }
+            checkBoxAssociateProteins.Visible = CheckboxVisible();
             RefreshComboText();
             IgnoreAllEmptyCols();
+        }
+
+        private void ReverseAssociateProteins()
+        {
+            var oldPositions = CurrentColumnPositions();
+            dataGrid.Columns[0].HeaderText = null;
+            // Show the original transition list without the protein names we have added
+            Importer.RowReader.Lines = _originalLines;
+            Importer.RowReader.Indices.Headers = _originalHeaders;
+            UpdateForm();
+            oldPositions.RemoveAt(0);
+            dataGrid.Columns[0].DefaultCellStyle.Font = new Font(dataGrid.DefaultCellStyle.Font, FontStyle.Regular);
+            SetColumnPositions(oldPositions);
+            // Make sure we set the "Protein Name" column back to it's original index
+            if (_originalProteinIndex != -1 && _originalProteinIndex != 0)
+            {
+                ComboBoxes[_originalProteinIndex].SelectedIndex = headerList.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
+                    (Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, SrmDocument.DOCUMENT_TYPE.proteomic));
+            }
+        }
+
+        private void UpdateForm()
+        {
+            InitializeComboBoxes();
+            DisplayData();
+            PopulateComboBoxes();
+            ResizeComboBoxes();
+        }
+
+        private void checkBoxAssociateProteins_CheckedChanged(object sender, EventArgs e)
+        {
+            var oldPositions = CurrentColumnPositions();
+            var proteinName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
+            if (checkBoxAssociateProteins.Checked)
+            {
+                _originalHeaders = Importer.RowReader.Indices.Headers;
+                if (_originalProteinIndex == 0)
+                {
+                    _originalProteinIndex = Importer.RowReader.Indices.ProteinColumn;
+                }
+
+                // Create a new column with all the protein matches and update the form to display it
+                Importer.RowReader.Lines = AssociateProteins(true);
+                UpdateForm();
+
+                // Remove all options besides "Protein Name" from the new combo box
+                var proteinNameBox = ComboBoxes.First();
+                var removeList = proteinNameBox.Items.Cast<object>().Where(item => item.ToString() != 
+                    proteinName && item.ToString() != Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column).ToList();
+                foreach (var item in removeList)
+                {
+                    proteinNameBox.Items.Remove(item);
+                }
+
+                // Change the text of the new column to italic
+                proteinNameBox.SelectedIndex = 0;
+                var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Displayed,
+                    DataGridViewElementStates.None);
+                firstColumn.DefaultCellStyle.Font = new Font(dataGrid.DefaultCellStyle.Font, FontStyle.Italic);
+                firstColumn.HeaderText = proteinName;
+                // If there was an existing protein name box, set its value to "Ignore Column"
+                if (_originalProteinIndex != -1)
+                {
+                    oldPositions[_originalProteinIndex] =
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+                }
+
+                oldPositions.Insert(0, proteinName);
+                SetColumnPositions(oldPositions);
+
+            }
+            else
+            {
+                ReverseAssociateProteins();
+            }
         }
     }
 }  

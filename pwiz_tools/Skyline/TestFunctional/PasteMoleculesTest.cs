@@ -30,7 +30,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -55,32 +54,49 @@ namespace pwiz.SkylineTestFunctional
 
 
         private void TestError(string clipText, string errText,
-            string[] columnOrder)
+            string[] columnOrder, int cols = 20)
         {
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            // TODO: use columnOrder to set the headers for windowDlg
+            string allErrorText = "";
+            clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = clipText);
+
+            int colIndex = 0;
             RunUI(() =>
             {
-                pasteDlg.IsMolecule = true;
-                if (columnOrder != null)
+                windowDlg.radioMolecule.PerformClick();
+                var comboBoxes = windowDlg.ComboBoxes;
+                foreach (var col in columnOrder)
                 {
-                    pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
-                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);                    
-                }
-                else
-                {
-                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == Settings.Default.CustomMoleculeTransitionInsertColumnsList.Count);                    
+                    comboBoxes[colIndex].SelectedIndex = comboBoxes[1].FindStringExact(col);
+                    colIndex++;
+                    if (colIndex >= cols)
+                    {
+                        break;
+                    }
                 }
             });
-            SetClipboardTextUI(clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
-            RunUI(pasteDlg.PasteTransitions);
-            RunUI(pasteDlg.ValidateCells);
-            WaitForConditionUI(() => pasteDlg.ErrorText != null);
-            RunUI(() => Assert.IsTrue(pasteDlg.ErrorText.Contains(errText), string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg.ErrorText)));
+
             if (string.IsNullOrEmpty(errText))
-                RunUI(pasteDlg.OkDialog);  // We expect this to work, go ahead and load it
+                RunUI(windowDlg.OkDialog);  // We expect this to work, go ahead and load it
             else
-                RunUI(pasteDlg.CancelDialog);
-            WaitForClosedForm(pasteDlg);
+            {
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
+                RunUI(() =>
+                {
+                    foreach (var err in errDlg.ErrorList)
+                    {
+                        allErrorText += err.ErrorMessage;
+                    }
+                    Assert.IsTrue(allErrorText.Contains(errText),
+                        string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                            errText, errDlg.ErrorList));
+                    errDlg.Close();
+                });
+                RunUI(windowDlg.CancelDialog);
+            }
+            WaitForClosedForm(transitionDlg);
         }
 
         const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
@@ -130,39 +146,39 @@ namespace pwiz.SkylineTestFunctional
 
             var fullColumnOrder = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.note,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductProduct,
-                    SmallMoleculeTransitionListColumnHeaders.dtPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset,
-                    SmallMoleculeTransitionListColumnHeaders.ccsPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.slens,
-                    SmallMoleculeTransitionListColumnHeaders.coneVoltage,
-                    SmallMoleculeTransitionListColumnHeaders.compensationVoltage,
-                    SmallMoleculeTransitionListColumnHeaders.declusteringPotential,
-                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
-                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                    SmallMoleculeTransitionListColumnHeaders.idInChi,
-                    SmallMoleculeTransitionListColumnHeaders.idCAS,
-                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                    SmallMoleculeTransitionListColumnHeaders.idKEGG,
-                    SmallMoleculeTransitionListColumnHeaders.imPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
-                    SmallMoleculeTransitionListColumnHeaders.imUnits,
-                    SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                    Resources.PasteDlg_UpdateMoleculeType_Note,
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
+                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                    Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                    Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
+                    @"InChiKey",
+                    @"HMDB",
+                    @"InChi",
+                    @"CAS",
+                    @"SMILES",
+                    @"KEGG",
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
@@ -175,21 +191,26 @@ namespace pwiz.SkylineTestFunctional
 
             // Provoke some errors
             TestError(line1.Replace("\t-2\t-2", "\t-2\t2").Replace(productMzAtZNeg2.ToString(CultureInfo.CurrentCulture),""), // precursor and charge polarities disagree
-                Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
+                Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder, 32);
+            var errMsg = String.Format(
+                Resources
+                    .PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                1, (float)precursorMzAtZNeg2, 499.0295, 402.9966,
+                docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance);
             TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
-                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                1, (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                String.Format(errMsg),
+                fullColumnOrder, 32);
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
-                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                1, (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                String.Format("Error on line 1, column7: Error on line 1: Product m/z 59.51282 does not agree with value 456.5045 as calculated from ion formula and charge state (delta = 396.9916, Transition Settings | Instrument | Method match tolerance m/z = 0.055).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you."),
+                fullColumnOrder, 32);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
-            TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
+            TestError(line1 + line2start + "\t\t1\t" + badcharge+ "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t4", // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
-                badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE), fullColumnOrder);
+                badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE), fullColumnOrder, 32);
             badcharge = 120;
             TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
                 String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
-                badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder);
+                badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder, 32);
             TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2), fullColumnOrder);
             TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
@@ -353,17 +374,19 @@ namespace pwiz.SkylineTestFunctional
             var docOrig = NewDocument();
 
             // Now a proper user data set
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            PasteDlg dlg = pasteDlg;
-            RunUI(() =>
-            {
-                dlg.IsMolecule = true;
-                dlg.SetSmallMoleculeColumns(null); // Reset column headers to default selection and order
-            });
+            var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            SetCsvFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")); 
-            RunUI(pasteDlg.PasteTransitions);
-            OkDialog(pasteDlg,pasteDlg.OkDialog);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = GetCsvFileText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")));
+
+            RunUI(() => {
+                var comboBoxes = windowDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
+            });
+            OkDialog(windowDlg,windowDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.Serializable(pastedDoc);
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("PasteMolecules.Sky")));
@@ -429,7 +452,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(transitionSettingsUIa, transitionSettingsUIa.OkDialog);
             WaitForDocumentChange(docA);
 
-            TestError(pasteText, String.Empty, columnOrderB);
+            TestError(pasteText, String.Empty, columnOrderB, 4);
             var docB = SkylineWindow.Document;
             Assert.AreEqual(4, docB.MoleculeTransitionCount); // Initial import is faithful to what's pasted
 
@@ -462,7 +485,7 @@ namespace pwiz.SkylineTestFunctional
                 "A,27-HC,C36H51H'6N2O3,181,1,1,heavy\r\n" + // H' should translate to H2 in adduct isotope description
                 "A,27-HC,C36H51D6N2O3,215,1,1,heavy\r\n"; // D should translate to H2 in adduct isotope description
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, 7);
             var docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
@@ -489,7 +512,7 @@ namespace pwiz.SkylineTestFunctional
                 "A,27-HC,C36H57N2O3,MH,,181,1,light\r\n" + // Note the implicit postive ion mode "MH"
                 "A,27-HC,C36H57N2O3[M+H],,,367,1,light\r\n" ;
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, 8);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
@@ -512,7 +535,7 @@ namespace pwiz.SkylineTestFunctional
                 "C36H56N2O3,M+H,,181,1,light\r\n" +
                 "C36H56N2O3[M+H],,,367,1,light\r\n";
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, 6);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(2, docC.MoleculeCount);
@@ -525,7 +548,7 @@ namespace pwiz.SkylineTestFunctional
                 "C36H56N2O3,M+2H,,81,2,light\r\n" +
                 "C36H56N2O3[M+2H],,,167,2,light\r\n";
             NewDocument();
-            TestError(pasteText, String.Empty, columnOrderC);
+            TestError(pasteText, String.Empty, columnOrderC, 6);
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
@@ -536,13 +559,13 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             TestError(pasteText,
                 string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_, "[M+S]"),
-                columnOrderC);
+                columnOrderC, 6);
             pasteText =
                 "C36H56N2O3,M+S,1,181,1,light\r\n"; // Adduct with unknown charge, but charge provided seperately
             NewDocument();
             TestError(pasteText,
                 string.Empty,
-                columnOrderC);
+                columnOrderC, 6);
         }
 
         private static string BuildTestLine(bool asDriftTime)
@@ -579,7 +602,7 @@ namespace pwiz.SkylineTestFunctional
             // Now test that we arrange the Targets tree as expected. 
             // (tests fix for Issue 373: Small molecules: Insert Transition list doesn't construct the tree properly)
             var docOrig = NewDocument();
-            var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            // var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // small_molecule_paste_test.csv has non-standard column order (mz and formula swapped)
             var columnOrder = new[]
             {
@@ -600,52 +623,68 @@ namespace pwiz.SkylineTestFunctional
                 SmallMoleculeTransitionListColumnHeaders.idSMILES,
                 SmallMoleculeTransitionListColumnHeaders.idKEGG,
             };
-            RunUI(() =>
-            {
-                pasteDlg2.IsMolecule = true;
-                pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount()==columnOrder.ToList().Count);
+            
 
             // Bad charge states mid-list were handled ungracefully due to lookahead in figuring out transition groups
             const int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
-            SetClipboardText(GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(
+            var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(
                 ",4,4".Replace(',', TextUtil.CsvSeparator), (",4," + badcharge).Replace(',', TextUtil.CsvSeparator)));
-            RunUI(pasteDlg2.PasteTransitions);
-            RunUI(pasteDlg2.OkDialog);  // Don't expect this to work, form stays open
-            WaitForConditionUI(() => pasteDlg2.ErrorText != null);
+            RunUI(() => {
+                windowDlg.radioMolecule.PerformClick();
+                var comboBoxes = windowDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
             var errText =
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
                     badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-            RunUI(() => Assert.IsTrue(pasteDlg2.ErrorText.Contains(errText),
-                string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg2.ErrorText)));
-            OkDialog(pasteDlg2, pasteDlg2.CancelDialog);
-
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            string allErrorList = "";
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
             RunUI(() =>
             {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
+                foreach (var err in errDlg.ErrorList)
+                {
+                    allErrorList += err.ErrorMessage;
+                }
+                Assert.IsTrue(allErrorList.Contains(errText),
+                    string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                        errText, errDlg.ErrorList));
+                errDlg.Close();
             });
-            WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
-
-            var text = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
-            // Now that we support charge-only adducts, "1" means "[M+]" rather than "[M+H]" in a numbers-only transition list
-            // But these mz values were calculated with protonation in mind
-            for (var c = 1; c <= 4; c++)
-            {
-                var pattern = string.Format("{0}{0}{1}{0}{1}{0}", TextUtil.CsvSeparator, c);
-                var subst = string.Format("{0}{0}M+{1}H{0}M+{1}H{0}", TextUtil.CsvSeparator, c);
-                text = text.Replace(pattern, subst);
-            }
-            // Tack on some molecule IDs so we can test reports (NB these don't match formula, so may fail in future)
-            var rows = text.Replace("\r","").Split('\n').Select(line => line.Contains("lager") ?
-                line + TextUtil.CsvSeparator + string.Join(TextUtil.CsvSeparator.ToString(), caffeineCAS, caffeineHMDB, "\"" + caffeineInChi + "\"", caffeineInChiKey, caffeineSMILES, caffeineKEGG) : 
-                line);
-            text = TextUtil.LineSeparate(rows);
-            SetClipboardText(text); 
-            RunUI(pasteDlg.PasteTransitions);
-            OkDialog(pasteDlg, pasteDlg.OkDialog);
+            OkDialog(windowDlg, windowDlg.CancelDialog);
+            WaitForClosedForm(showDialog);
+            var text = GetCsvFileText(TestFilesDir.GetTestPath("SmallMolDataFix.csv"));
+            var text1Dialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var col0Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => text1Dialog.textBox1.Text = text);
+            RunUI(() => {
+                col0Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col0Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(@"CAS");
+                comboBoxes[11].SelectedIndex = comboBoxes[1].FindStringExact(@"HMDB");
+                comboBoxes[12].SelectedIndex = comboBoxes[1].FindStringExact(@"InChi");
+                comboBoxes[13].SelectedIndex = comboBoxes[1].FindStringExact(@"InChiKey");
+                comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(@"SMILES");
+                comboBoxes[15].SelectedIndex = comboBoxes[1].FindStringExact(@"KEGG");
+            });
+            OkDialog(col0Dlg, col0Dlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
             // We expect four molecule groups
             var moleculeGroupNames = new [] {"Vitamin R", "Weinhards", "Oly", "Schmidt"};
@@ -817,79 +856,88 @@ namespace pwiz.SkylineTestFunctional
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
 
             var docOrig = NewDocument();
-            var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            //non-standard column order
-            var columnOrder = new[]
-            {
-                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                SmallMoleculeTransitionListColumnHeaders.note,
-                SmallMoleculeTransitionListColumnHeaders.labelType,
-           };
-            // If user omits some product info but not others, complain
-            RunUI(() =>
-            {
-                pasteDlg2.IsMolecule = true;
-                pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount() == columnOrder.ToList().Count);
+            
+            var textDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string inconsistent =
-                "Oly\tlager\tbubbles\t452\t\t\t\t1\t" + "\n" +
+                "Oly\tlager\tbubbles\t452\t\t\t\t1\t\t" + "\n" +
                 "Oly\tlager\tfoam\t234\t163\t\t\t1\t1\tduly noted?";
-            SetClipboardText(inconsistent);
-            RunUI(pasteDlg2.PasteTransitions);
-            RunUI(pasteDlg2.OkDialog);  // Don't expect this to work, form stays open
-            WaitForConditionUI(() => pasteDlg2.ErrorText != null);
-            var errText = String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
-            RunUI(() => Assert.IsTrue(pasteDlg2.ErrorText.Contains(errText),
-                string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"", errText, pasteDlg2.ErrorText)));
-            OkDialog(pasteDlg2, pasteDlg2.CancelDialog);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => textDialog.textBox1.Text = inconsistent);
 
-            // If user omits product info altogether, that implies precursor transitions
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
+            RunUI(() => {
+                colDlg.radioMolecule.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
             });
-            WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
+
+            //This no longer creates an error, we don't see this list as a problem
+            OkDialog(colDlg, colDlg.CancelDialog);
+            WaitForClosedForm(textDialog);
+            // If user omits product info altogether, that implies precursor transitions
+            docOrig = NewDocument();
+            WaitForDocumentLoaded();
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string implied =
                 "Oly\tlager\tlager\t452\t\t\t\t1\t\tmacrobrew" + "\n" +
                 "Oly\tlager\tlager\t234\t\t\t\t1\t\tmacrobrew";
-            SetClipboardText(implied);
-            RunUI(pasteDlg.PasteTransitions);
-            OkDialog(pasteDlg, pasteDlg.OkDialog);
+            var col2Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = implied);
+
+            RunUI(() => {
+                col2Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col2Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
+            });
+            OkDialog(col2Dlg, col2Dlg.OkDialog);
+            WaitForClosedForm(importDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
             // We expect precursor transitions, but since both are light, in two different groups
             Assert.AreEqual(2, pastedDoc.MoleculeTransitionGroupCount);
             foreach (var trans in pastedDoc.MoleculeTransitions)
             {
                 Assert.IsTrue(trans.Transition.IsPrecursor());
-                Assert.AreEqual(trans.Annotations.Note,"macrobrew");
+                Assert.AreEqual(trans.Annotations.Note, "macrobrew");
             }
 
             // If product mass matches precursor, that implies precursor transitions
-            docOrig = pastedDoc;
-            var pasteDlg3 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() =>
-            {
-                pasteDlg3.IsMolecule = true;
-                pasteDlg3.SetSmallMoleculeColumns(columnOrder.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg3.GetUsableColumnCount() == columnOrder.ToList().Count);
+            var importDialog2 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string matching =
                 "Schmidt\tlager\t\t150\t150\t\t\t2\t2\tnotated!" + "\n" +
                 "Schmidt\tlager\t\t159\t159\t\t\t3\t3\tnote!";
-            SetClipboardText(matching);
-            RunUI(pasteDlg3.PasteTransitions);
-            OkDialog(pasteDlg3, pasteDlg3.OkDialog);
+            var col3Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog2.textBox1.Text = matching);
+            RunUI(() => {
+                col3Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col3Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
+            });
+
+            OkDialog(col3Dlg, col3Dlg.OkDialog);
+
             pastedDoc = WaitForDocumentChange(docOrig);
             // We expect precursor transitions
             foreach (var trans in pastedDoc.MoleculeTransitions)
@@ -899,19 +947,31 @@ namespace pwiz.SkylineTestFunctional
             }
 
             docOrig = NewDocument();
-            var pasteDlg4 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() =>
-            {
-                pasteDlg4.IsMolecule = true;
-                pasteDlg4.SetSmallMoleculeColumns(columnOrder.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg4.GetUsableColumnCount() == columnOrder.ToList().Count);
+
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string impliedLabeled =
                 "Oly\tlager\t\t452.1\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
                 "Oly\tlager\t\t234.5\t\t\t\t1\t\tmacrobrew\tlight";
-            SetClipboardText(impliedLabeled.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
-            RunUI(pasteDlg4.PasteTransitions);
-            OkDialog(pasteDlg4, pasteDlg4.OkDialog);
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
+
+            RunUI(() => {
+                col4Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col4Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Note);
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+            });
+
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
+
             pastedDoc = WaitForDocumentChange(docOrig);
             // We expect a single heavy/light pair
             Assert.AreEqual(1, pastedDoc.MoleculeCount);
@@ -924,23 +984,27 @@ namespace pwiz.SkylineTestFunctional
             // Load a document whose settings call for different mass type for precursors and fragments
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mixed_mass_types.sky")));
             docOrig = SkylineWindow.Document;
-            var pasteDlg5 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var columnOrder5 = new[]
             {
                 SmallMoleculeTransitionListColumnHeaders.namePrecursor,
                 SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                 SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
             };
-            RunUI(() =>
-            {
-                pasteDlg5.IsMolecule = true;
-                pasteDlg5.SetSmallMoleculeColumns(columnOrder5.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg5.GetUsableColumnCount() == columnOrder5.ToList().Count);
+
+            var importDialog4 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string precursorOnly = "15xT\tC150H197N30O103P14\t-3";
-            SetClipboardText(precursorOnly);
-            RunUI(pasteDlg5.PasteTransitions);
-            OkDialog(pasteDlg5, pasteDlg5.OkDialog);
+            var col5Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog4.textBox1.Text = precursorOnly);
+
+            RunUI(() => {
+                col5Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col5Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+            });
+
+            OkDialog(col5Dlg, col5Dlg.OkDialog);
+
             pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(pastedDoc.MoleculePrecursorPairs.First().NodeGroup.PrecursorMz,
                 pastedDoc.MoleculeTransitions.First().Mz);
@@ -1189,30 +1253,8 @@ namespace pwiz.SkylineTestFunctional
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
 
             var docOrig = NewDocument();
-            var pasteDlg2 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            //non-standard column order
-            var columnOrder = new[]
-            {
-                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-            };
-            // If user omits some product info but not others, complain
-            RunUI(() =>
-            {
-                pasteDlg2.IsMolecule = true;
-                pasteDlg2.SetSmallMoleculeColumns(columnOrder.ToList());
-            });
-            WaitForConditionUI(() => pasteDlg2.GetUsableColumnCount() == columnOrder.ToList().Count);
-
+           
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             const string transistionList =
                 "Amino Acids B\tAlaB\t\tlight\t\t\t225\t44\t-1\t-1\t3\n" +
                 "Amino Acids B\tArgB\t\tlight\t\t\t310\t217\t-1\t-1\t19\n" +
@@ -1227,12 +1269,28 @@ namespace pwiz.SkylineTestFunctional
                 "Amino Acids B\tArgB\t\tlight\t\t\t310\t218\t-1\t-1\t19\n" +
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t219\t-1\t-1\t19\n" +
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t220\t-1\t-1\t19\n";
-
-
-            SetClipboardText(transistionList.Replace(".",
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = transistionList.Replace(".",
                 CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
-            RunUI(pasteDlg2.PasteTransitions);
-            OkDialog(pasteDlg2, pasteDlg2.OkDialog);
+
+            RunUI(() => {
+                col4Dlg.radioMolecule.PerformClick();
+                var comboBoxes = col4Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                comboBoxes[10].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+            });
+
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
+            WaitForClosedForm(importDialog3);
+
             var pastedDoc = WaitForDocumentChange(docOrig);
             Assume.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(4, pastedDoc.MoleculeCount);
@@ -1251,21 +1309,22 @@ namespace pwiz.SkylineTestFunctional
 
             var columns = new[]
             {
-                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
-                SmallMoleculeTransitionListColumnHeaders.adductProduct,
-                SmallMoleculeTransitionListColumnHeaders.note,
-                SmallMoleculeTransitionListColumnHeaders.cePrecursor
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
+                Resources.PasteDlg_UpdateMoleculeType_Note,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy
             };
-            TestError("12-HETE\t12-HETE\t\t[M-H]1-\t319.227868554909\t-1\tfrag1\tC20H32O3\t[M-H]1-\tblah\t21", Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula, columns);
-            TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tgreebles\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "greebles"), columns);
-            TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\t77\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "77"), columns);
+            // No longer recognized as an error after switching from pasteDlg
+            //TestError("12-HETE\t12-HETE\t\t[M-H]1-\t319.227868554909\t-1\tfrag1\tC20H32O3\t[M-H]1-\tblah\t21", Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula, columns);
+            //TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tgreebles\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "greebles"), columns);
+            //TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\t77\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "77"), columns);
 
             var docOrig = NewDocument();
             var precursorsTransitionList =

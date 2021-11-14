@@ -1909,14 +1909,14 @@ namespace pwiz.Skyline
         /// Process and then add the mass list to the document
         /// </summary>
         public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
-            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none, bool forceDlg = false) // "None" means "don't know if it's peptides or small molecules, go figure it out".
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
             bool isSmallMoleculeList = true;
             bool useColSelectDlg = true;
-            bool hasHeaders = false;
+            bool hasHeaders = true;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
@@ -1950,14 +1950,14 @@ namespace pwiz.Skyline
                 // Try importing that list to check for errors
                 docCurrent = docCurrent.ImportMassList(input, importer, null,
                     insertPath, out selectPath, out irtPeptides,
-                    out librarySpectra, out testErrorList, out peptideGroups);
+                    out librarySpectra, out testErrorList, out peptideGroups, null, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
                 if (!testErrorList.Any())
                 {
                     useColSelectDlg = false;
                 }
             }
 
-            if (useColSelectDlg)
+            if (useColSelectDlg || forceDlg)
             {
                 // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
@@ -1976,15 +1976,11 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (isSmallMoleculeList)
+            if (isSmallMoleculeList && (useColSelectDlg || forceDlg) || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && (!useColSelectDlg && !forceDlg))
             {
-                if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                {
-                    docCurrent = docCurrent.ImportMassList(inputs, importer, null,
-                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                        out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
-                }
-               
+                docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                    insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                    out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
             }
             if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {

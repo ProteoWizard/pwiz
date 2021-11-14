@@ -16077,7 +16077,19 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reassinging the Protein Name column will cause the peptides to be added to peptide lists.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_column_will_cause_the_peptides_to_be_added_to_peptide_lists
+        {
+            get
+            {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_col" +
+                                                 "umn_will_cause_the_peptides_to_be_added_to_peptide_lists", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Column {0}.
         /// </summary>

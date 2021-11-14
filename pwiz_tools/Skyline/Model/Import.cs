@@ -895,7 +895,7 @@ namespace pwiz.Skyline.Model
 
             protected SrmSettings Settings { get; private set; }
             protected string[] Fields { get; private set; }
-            public IList<string> Lines { get; private set; }
+            public IList<string> Lines { get; set; }
             private IFormatProvider FormatProvider { get; set; }
             private char Separator { get; set; }
             private ModificationMatcher ModMatcher { get; set; }
@@ -2192,7 +2192,7 @@ namespace pwiz.Skyline.Model
             PrecursorChargeColumn = precursorChargeColumn;
         }
 
-        public string[] Headers { get; private set; }
+        public string[] Headers { get; set; }
         // All of these column variables must end with the string "Column" so that the reflection code in 
         // ColumnSelectDlg works
         public int ProteinColumn { get; set; }

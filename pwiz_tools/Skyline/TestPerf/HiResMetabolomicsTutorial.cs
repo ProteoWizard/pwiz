@@ -91,36 +91,14 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 for (var retry = 0; retry < 2; retry++)
                 {
-                    var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                    
-                    RunUI(() =>
-                    {
-                        pasteDlg.IsMolecule = true;
-                        pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                        pasteDlg.Height = 290;
-                    });
+                    var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+
                     if (retry == 0)
                         PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
-
-
-                    var columnsOrdered = new[]
-                    {
-                        // Prepare transition list insert window to match tutorial
-                        // Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Label Type,Precursor m/z,Precursor Charge,Explicit Retention Time
-                        SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                        SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.labelType,
-                        SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    }.ToList();
-                    RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                    TryWaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                    RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
+                    
+                    // RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
                     if (retry == 0)
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
+                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with selected and ordered columns", 4);
 
                     var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"), true);
                     if (retry > 0)
@@ -130,19 +108,32 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         var zneg = string.Format("{0}-1{0}", TextUtil.CsvSeparator);
                         text = text.Replace(z, zneg);
                     }
-                    SetClipboardText(text);
-                    RunUI(pasteDlg.PasteTransitions);
-                    RunUI(pasteDlg.ValidateCells);
-                    RunUI(() => pasteDlg.Height = 428);
+                    var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+
+                    RunUI(() => {
+                        col4Dlg.radioMolecule.PerformClick();
+                        var comboBoxes = col4Dlg.ComboBoxes;
+                        comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                        comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                        comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                        comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                        comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                        comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                        comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                        comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                    });
+
+                    
+
                     if (retry == 0)
                     {
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents showing charge problem", 5);
-                        OkDialog(pasteDlg, pasteDlg.CancelDialog);
+                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with validated contents showing charge problem", 5);
+                        OkDialog(col4Dlg, col4Dlg.CancelDialog);
                     }
                     else
                     {
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
-                        OkDialog(pasteDlg, pasteDlg.OkDialog);
+                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with validated contents", 6);
+                        OkDialog(col4Dlg, col4Dlg.OkDialog);
                     }
                 }
                 var docTargets = WaitForDocumentChange(doc);

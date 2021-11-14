@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -1136,19 +1137,32 @@ namespace pwiz.Skyline.Menus
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPasteTransitionListDlg();
+            ShowInsertTransitionListDlg();
         }
 
-        public void ShowPasteTransitionListDlg()
+        public void ShowInsertTransitionListDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var transitionDlg = new InsertTransitionListDlg())
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.transition_list
-            })
-            {
-                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
+                if (transitionDlg.ShowDialog(SkylineWindow) != DialogResult.OK)
+                    return;
+
+                IFormatProvider formatProvider;
+                char separator;
+                Type[] columnTypes;
+                var text = transitionDlg.TransitionListText.Trim();
+                // As long as it has columns we want to parse the input as a transition list in this case
+                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+                {
+                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                }
+                else
+                {
+                    // throw an exception alerting the user that their list is not columnar
+                    MessageDlg.Show(this, Resources
+                        .SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                }
             }
         }
         #endregion

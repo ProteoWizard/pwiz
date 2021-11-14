@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -66,7 +64,6 @@ namespace pwiz.Skyline.EditUI
             _statementCompletionEditBox.SelectionMade += statementCompletionEditBox_SelectionMade;
             gridViewProteins.DataGridViewKey += OnDataGridViewKey;
             gridViewPeptides.DataGridViewKey += OnDataGridViewKey;
-            gridViewTransitionList.DataGridViewKey += OnDataGridViewKey;
         }
 
         void OnDataGridViewKey(object sender, KeyEventArgs e)
@@ -90,16 +87,6 @@ namespace pwiz.Skyline.EditUI
                         = statementCompletionItem.ProteinInfo.Name;
                 }
                 gridViewPeptides.EndEdit();    
-            }
-            else if (tabControl1.SelectedTab == tabPageTransitionList)
-            {
-                _statementCompletionEditBox.TextBox.Text = statementCompletionItem.Peptide;
-                if (gridViewTransitionList.CurrentRow != null)
-                {
-                    gridViewTransitionList.CurrentRow.Cells[colTransitionProteinName.Index].Value =
-                        statementCompletionItem.ProteinInfo.Name;
-                }
-                gridViewTransitionList.EndEdit();
             }
         }
 
@@ -164,9 +151,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return gridViewProteins.Visible
                    ? gridViewProteins
-                   : (gridViewPeptides.Visible
-                          ? gridViewPeptides
-                          : gridViewTransitionList);
+                   : gridViewPeptides;
             }
         }
 
@@ -246,10 +231,6 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            if ((document = AddTransitionList(document, ref selectedPath)) == null)
-            {
-                return null;
-            }
             return document;
         }
 
@@ -285,12 +266,6 @@ namespace pwiz.Skyline.EditUI
         {
             tabControl1.SelectedTab = tabPagePeptideList;
             SetCurrentCellForPasteError(gridViewPeptides, pasteError);
-        }
-
-        private void ShowTransitionError(PasteError pasteError)
-        {
-            tabControl1.SelectedTab = tabPageTransitionList;
-            SetCurrentCellForPasteError(gridViewTransitionList, pasteError);
         }
 
         private SrmDocument AddPeptides(SrmDocument document, bool validating, ref IdentityPath selectedPath)
@@ -601,13 +576,7 @@ namespace pwiz.Skyline.EditUI
         private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
             0, 1, 2, 3);
 
-        private int ColumnIndex(string name)
-        {
-            var col = gridViewTransitionList.Columns[name];
-            return col == null ? -1: gridViewTransitionList.Columns.IndexOf(col);
-        }
-        
-        private SrmDocument AddTransitionList(SrmDocument document, ref IdentityPath selectedPath)
+        /*private SrmDocument AddTransitionList(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageTransitionList)
                 return document;
@@ -814,7 +783,7 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             return document;
-        }
+        }*/
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, PeptideGroupDocNode nodePepGroup)
         {
@@ -844,62 +813,6 @@ namespace pwiz.Skyline.EditUI
             return lastPeptideGroupDocuNode;
         }
 
-        // Select transition list column visibility
-        // Inspired by http://www.codeproject.com/Articles/31987/A-DataGridView-Column-Show-Hide-Popup
-        private void CheckedListBox_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            gridViewTransitionList.Columns[e.Index].Visible = (e.NewValue == CheckState.Checked);
-        }
-
-        private void btnCustomMoleculeColumns_Click(object sender, EventArgs e)
-        {
-            var checkedListBox = new CheckedListBox {CheckOnClick = true};
-            checkedListBox.ItemCheck += CheckedListBox_ItemCheck;
-            checkedListBox.Items.Clear();
-            foreach (DataGridViewColumn c in gridViewTransitionList.Columns)
-            {
-                checkedListBox.Items.Add(c.HeaderText, c.Visible);
-            }
-            checkedListBox.Height = checkedListBox.Items.Count * radioMolecule.Height * 12 / 10;
-            checkedListBox.Width = radioMolecule.Width * 3;
-            var controlHost = new ToolStripControlHost(checkedListBox)
-            {
-                Padding = Padding.Empty,
-                Margin = Padding.Empty,
-                AutoSize = false
-            };
-
-            var popup = new ToolStripDropDown {Padding = Padding.Empty};
-            popup.Items.Add(controlHost);
-
-            popup.Show(btnCustomMoleculeColumns.PointToScreen(new Point(0, -checkedListBox.Height)));
-        }
-
-        private void btnTransitionListHelp_Click(object sender, EventArgs e)
-        {
-            // ReSharper disable LocalizableElement
-            var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_;
-            if (btnCustomMoleculeColumns.Visible)
-            {
-                helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_SmallMol_,
-                    string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders),
-                    string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(eIonMobilityUnits))))+
-                    string.Empty,
-                    Resources.PasteDlg_btnTransitionListHelp_Click_2_,
-                    string.Empty,
-                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
-                    string.Empty,
-                    Adduct.Tips);
-            }
-
-            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
-            helpText = TextUtil.LineSeparate(Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help,
-                string.Empty,
-                helpText);
-            // ReSharper restore LocalizableElement
-            MessageDlg.Show(this, helpText);
-        }
-
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
@@ -920,25 +833,6 @@ namespace pwiz.Skyline.EditUI
             set
             {
                 var tab = GetTabPage(value);
-                btnTransitionListHelp.Visible = 
-                btnCustomMoleculeColumns.Visible = radioMolecule.Visible = radioPeptide.Visible = (value == PasteFormat.transition_list);
-                if (value == PasteFormat.transition_list)
-                {
-                    if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
-                    {
-                        radioPeptide.Checked = true;
-                    }
-                    else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                    {
-                        radioPeptide.Checked = false;
-                    }
-                    else
-                    {
-                        radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
-                    }
-                    IsMolecule = !radioPeptide.Checked;
-                    UpdateMoleculeType();
-                }
                 for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)
                 {
                     if (tabControl1.Controls[i] != tab)
@@ -991,10 +885,6 @@ namespace pwiz.Skyline.EditUI
             {
                 return PasteFormat.peptide_list;
             }
-            if (tabPage == tabPageTransitionList)
-            {
-                return PasteFormat.transition_list;
-            }
             return PasteFormat.none;
         }
 
@@ -1008,8 +898,6 @@ namespace pwiz.Skyline.EditUI
                     return tabPageProteinList;
                 case PasteFormat.peptide_list:
                     return tabPagePeptideList;
-                case PasteFormat.transition_list:
-                    return tabPageTransitionList;
             }
             return null;
         }
@@ -1089,11 +977,9 @@ namespace pwiz.Skyline.EditUI
             HideNoErrors();      
             var row = dataGridView.Rows[rowIndex];
             int sequenceIndex = Equals(dataGridView, gridViewPeptides)
-                                ? colPeptideSequence.Index
-                                : (Equals(dataGridView, gridViewTransitionList) ? colTransitionPeptide.Index : -1);
+                                ? colPeptideSequence.Index : -1;
             int proteinIndex = Equals(dataGridView, gridViewPeptides)
-                                ? colPeptideProtein.Index
-                                : (Equals(dataGridView, gridViewTransitionList) ? colTransitionProteinName.Index : -1);
+                                ? colPeptideProtein.Index : -1;
             
             var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
             var pepModSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
@@ -1126,13 +1012,13 @@ namespace pwiz.Skyline.EditUI
                 seenPepSeq.Add(peptideSequence);
             }
 
-            var proteinNames = GetProteinNamesForPeptideSequence(peptideSequence);
+            var proteinNames = GetProteinNamesForPeptideSequence(peptideSequence, DocumentUiContainer.Document, out _);
 
             bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
             bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
             bool isFiltered = !DocumentUiContainer.Document.Settings.Accept(peptideSequence);
 
-            if(newSequence)
+            if (newSequence)
             {
                 numUnmatched += isUnmatched ? 1 : 0;
                 numMultipleMatches += hasMultipleMatches ? 1 : 0;
@@ -1177,29 +1063,6 @@ namespace pwiz.Skyline.EditUI
                     else
                         newRow.Cells[x].Value = row.Cells[x].Value;
                 }
-            }
-        }
-
-        private void gridViewTransitionList_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            HideNoErrors();
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-            {
-                return;
-            }
-            var row = gridViewTransitionList.Rows[e.RowIndex];
-            var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
-            var column = gridViewTransitionList.Columns[e.ColumnIndex];
-            if (column != colTransitionProteinName)
-            {
-                return;
-            }
-            ProteinMetadata metadata;
-            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out metadata);
-            if (fastaSequence != null)
-            {
-                row.Cells[colTransitionProteinDescription.Index].Value = fastaSequence.Description;
-                // CONSIDER (bspratt) show other parts of protein metadata here as well - gene, accession etc
             }
         }
 
@@ -1308,12 +1171,6 @@ namespace pwiz.Skyline.EditUI
                             grid = gridViewPeptides;
                             col = colPeptideSequence;
                             break;
-                        case PasteFormat.transition_list:
-                            singular = MessageType.inserted_transition;
-                            plural = MessageType.inserted_transitions;
-                            grid = gridViewTransitionList;
-                            col = colTransitionPeptide;
-                            break;
                         default:
                             return null;
                     }
@@ -1362,13 +1219,7 @@ namespace pwiz.Skyline.EditUI
             _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colProteinName.Index
                 ? ProteinMatchTypes.ALL.Except(ProteinMatchType.sequence) : ProteinMatchTypes.EMPTY;  // name, description, accession, etc
         }
-
-        private void gridViewTransitionList_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colTransitionPeptide.Index
-                ? ProteinMatchTypes.Singleton(ProteinMatchType.sequence) : ProteinMatchTypes.EMPTY;
-        }
-
+        
         private void gridViewProteins_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
@@ -1390,15 +1241,7 @@ namespace pwiz.Skyline.EditUI
         {
             Paste(gridViewProteins, false);
         }
-
-        public void PasteTransitions()
-        {
-            var document = DocumentUiContainer.Document;
-            var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
-            bool enumerateProteins = !IsMolecule && !backgroundProteome.IsNone;
-            Paste(gridViewTransitionList, enumerateProteins);
-        }
-
+        
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
@@ -1571,9 +1414,9 @@ namespace pwiz.Skyline.EditUI
         }
 
 
-        private List<String> GetProteinNamesForPeptideSequence(String peptideSequence)
+        public static List<String> GetProteinNamesForPeptideSequence(String peptideSequence, SrmDocument document, out List<Protein> proteinList)
         {
-            var document = DocumentUiContainer.Document;
+            proteinList = new List<Protein>();
             var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
             if (backgroundProteome.IsNone)
             {
@@ -1586,8 +1429,8 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
-                var proteins = digestion.GetProteinsWithSequence(peptideSequence);
-                return proteins.ConvertAll(protein => protein.Name);
+                proteinList = digestion.GetProteinsWithSequence(peptideSequence);
+                return proteinList.ConvertAll(protein => protein.Name);
             }
         }
 
@@ -1596,25 +1439,12 @@ namespace pwiz.Skyline.EditUI
             _statementCompletionEditBox.HideStatementCompletionForm();
         }
 
-        private void gridViewTransitionList_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
-            {
-                if (!gridViewTransitionList.IsCurrentCellInEditMode)
-                {
-                    PasteTransitions();
-                    e.Handled = true;
-                }
-            }
-        }
-
         private void OnLoad(object sender, EventArgs e)
         {
             // If you set this in the Designer, DataGridView has a defect that causes it to throw an
             // exception if the the cursor is positioned over the record selector column during loading.
             gridViewPeptides.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridViewProteins.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            gridViewTransitionList.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
         #region Testing
@@ -1622,11 +1452,10 @@ namespace pwiz.Skyline.EditUI
         public class FastaTab : IFormView {}
         public class ProteinListTab : IFormView { }
         public class PeptideListTab : IFormView { }
-        public class TransitionListTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new FastaTab(), new ProteinListTab(), new PeptideListTab(), new TransitionListTab()
+            new FastaTab(), new ProteinListTab(), new PeptideListTab()
         };
 
         public IFormView ShowingFormView
@@ -1654,12 +1483,7 @@ namespace pwiz.Skyline.EditUI
         {
             get { return gridViewPeptides.RowCount; }
         }
-
-        public int TransitionRowCount
-        {
-            get { return gridViewTransitionList.RowCount; }
-        }
-
+        
         public bool PeptideRowsContainProtein(Predicate<string> found)
         {
             var peptideRows = new DataGridViewRow[gridViewPeptides.RowCount];
@@ -1681,237 +1505,15 @@ namespace pwiz.Skyline.EditUI
                 return found(peptide != null ? peptide.ToString() : null);
             });
         }
-
-        public bool TransitionListRowsContainProtein(Predicate<string> found)
-        {
-            var transitionListRows = new DataGridViewRow[gridViewTransitionList.RowCount];
-            gridViewPeptides.Rows.CopyTo(transitionListRows, 0);
-            return transitionListRows.Take(gridViewTransitionList.RowCount-1).Contains(row =>
-            {
-                var protein = row.Cells[colTransitionProteinName.Index].Value;
-                return found(protein != null ? protein.ToString() : null);
-            });
-        }
-
+        
         public void ClearRows()
         {
            if(PasteFormat == PasteFormat.peptide_list)
                gridViewPeptides.Rows.Clear();
-            if(PasteFormat == PasteFormat.transition_list)
-                gridViewTransitionList.Rows.Clear();
         }
 
         #endregion
-
-        private void radioPeptide_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateMoleculeType();
-        }
-
-        private void UpdateMoleculeType()
-        {
-            bool isPeptide = radioPeptide.Checked;
-            btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
-            Settings.Default.TransitionListInsertPeptides = isPeptide; // Remember for next time
-
-            //Skip updating if nothing needs to be changed
-            if ((isPeptide && gridViewTransitionList.ColumnCount == 5) || (!isPeptide && gridViewTransitionList.ColumnCount == 6))
-                return;
-
-            int rowCount = gridViewTransitionList.RowCount - 1;
-
-            if (rowCount > 0)
-            {
-                if (
-                    MultiButtonMsgDlg.Show(this,
-                        string.Format(
-                            Resources.PasteDlg_UpdateMoleculeType_Possible_loss_of_data_could_occur_if_you_switch_to__0___Do_you_want_to_continue_,
-                            isPeptide ? radioPeptide.Text : radioMolecule.Text), MultiButtonMsgDlg.BUTTON_YES) ==
-                    DialogResult.Cancel)
-                {
-                    radioPeptide.Checked = !isPeptide;
-                    btnCustomMoleculeColumns.Enabled = radioMolecule.Checked;
-                    return;
-                }
-            }
-
-            // Items that peptide and small molecules have in common, for swapping back and forth
-            var peptideGroupNames = new string[rowCount];
-            var peptideNames = new string[rowCount];
-            var productNames = new string[rowCount];
-            var precursorMzs = new string[rowCount];
-            var productMzs = new string[rowCount];
-
-            for (int i = 0; i < rowCount; i ++)
-            {
-                peptideGroupNames[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 0 : 3)].Value);
-                peptideNames[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 1 : 0)].Value);
-                precursorMzs[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 4 : 1)].Value);
-                productMzs[i] = Convert.ToString(gridViewTransitionList.Rows[i].Cells[(isPeptide ? 5 : 2)].Value);
-            }
-
-            gridViewTransitionList.Columns.Clear();
-                        
-            if (isPeptide)
-            {
-                gridViewTransitionList.Columns.Add(@"Peptide", Resources.PasteDlg_UpdateMoleculeType_Peptide);
-                gridViewTransitionList.Columns.Add(@"Precursor", Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
-                gridViewTransitionList.Columns.Add(@"Product", Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
-                gridViewTransitionList.Columns.Add(@"Protein", Resources.PasteDlg_UpdateMoleculeType_Protein_name);
-                gridViewTransitionList.Columns.Add(@"Description", Resources.PasteDlg_UpdateMoleculeType_Protein_description);
-            }
-            else
-            {
-                var defaultColumns = new List<string>(); // List of headers which will initially appear if no settings found
-                void AddColumn(string name, string headerLocalized, bool isDefaultColumn = false)
-                {
-                    gridViewTransitionList.Columns.Add(name, headerLocalized);
-                    if (isDefaultColumn)
-                        defaultColumns.Add(name);
-                }
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, true);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.note, Resources.PasteDlg_UpdateMoleculeType_Note);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idInChiKey, SmallMoleculeTransitionListColumnHeaders.idInChiKey); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idCAS, SmallMoleculeTransitionListColumnHeaders.idCAS); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idHMDB, SmallMoleculeTransitionListColumnHeaders.idHMDB); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idInChi, SmallMoleculeTransitionListColumnHeaders.idInChi); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idSMILES, SmallMoleculeTransitionListColumnHeaders.idSMILES); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.idKEGG, SmallMoleculeTransitionListColumnHeaders.idKEGG); // No need to localize
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-                AddColumn(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);
-
-                // Now set order and visibility based on settings, if any
-                SetSmallMoleculeColumns(Settings.Default.CustomMoleculeTransitionInsertColumnsList.Any()
-                   ? Settings.Default.CustomMoleculeTransitionInsertColumnsList
-                   : defaultColumns);
-            }
-
-            for (int i = 0; i < rowCount; i ++)
-            {
-                if (isPeptide)
-                {
-                    gridViewTransitionList.Rows.Add(peptideNames[i], precursorMzs[i], productMzs[i],
-                        peptideGroupNames[i], string.Empty);
-                }
-                else
-                {
-                    gridViewTransitionList.Rows.Add(peptideGroupNames[i], peptideNames[i], productNames[i], string.Empty,
-                        string.Empty, precursorMzs[i], productMzs[i]);
-                }
-            }
-        }
-
-        public bool IsMolecule
-        {
-            get { return radioMolecule.Checked; }
-            set
-            {
-                radioMolecule.Checked = value;
-                radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides = !value;  // Preserve for user convenience next time
-            }
-        }
-
-        public void SetSmallMoleculeColumns(List<string> columns)
-        {
-            Settings.Default.CustomMoleculeTransitionInsertColumnsList = columns;
-            if (Settings.Default.CustomMoleculeTransitionInsertColumnsList.Any())
-            {
-                for (int gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
-                {
-                    gridViewTransitionList.Columns[gridcol].Visible = false;
-                }
-                var order = 0;
-                foreach (var colName in Settings.Default.CustomMoleculeTransitionInsertColumnsList)
-                {
-                    // Make corresponding column visible, and next in column order               
-                    for (var gridcol = 0; gridcol < gridViewTransitionList.Columns.Count; gridcol++)
-                    {
-                        var dataGridViewColumn = gridViewTransitionList.Columns[gridcol];
-                        if (dataGridViewColumn.Name.Equals(colName))
-                        {
-                            dataGridViewColumn.Visible = true;
-                            dataGridViewColumn.DisplayIndex = order++;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // For test support
-        public List<string> GetColumnNames()
-        {
-            return
-                gridViewTransitionList.Columns.OfType<DataGridViewColumn>()
-                    .Where(c => c.Visible)
-                    .OrderBy(c => c.DisplayIndex)
-                    .Select(c => c.Name)
-                    .ToList();
-        }
-
-        public int GetUsableColumnCount()
-        {
-            return gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.Visible) -
-                   gridViewTransitionList.Columns.GetColumnCount(DataGridViewElementStates.ReadOnly);
-        }
-
-        class SmallMoleculeTransitionListPasteHandler : SmallMoleculeTransitionListReader
-        {
-            private readonly PasteDlg _pasteDlg;
-
-            public SmallMoleculeTransitionListPasteHandler(PasteDlg pasteDlg)
-            {
-                _pasteDlg = pasteDlg;
-                for (var i = 0; i < _pasteDlg.gridViewTransitionList.RowCount - 1; i++)
-                {
-                    var cells = new List<string>();
-                    for (var col = 0; col < _pasteDlg.gridViewTransitionList.Rows[i].Cells.Count; col++)
-                    {
-                        cells.Add(Convert.ToString(_pasteDlg.gridViewTransitionList.Rows[i].Cells[col].Value));
-                    }
-                    Rows.Add(new Row(this, i, cells));
-                }
-            }
-
-            public override void UpdateCellBackingStore(int row, int col, object value)
-            {
-                _pasteDlg.gridViewTransitionList.Rows[row].Cells[col].Value = value;
-            }
-
-            public override int ColumnIndex(string name)
-            {
-                return _pasteDlg.ColumnIndex(name);
-            }
-
-            public override void ShowTransitionError(PasteError error)
-            {
-                _pasteDlg.ShowTransitionError(error);
-            }
-        }
-
+        
         private void PasteDlg_KeyDown(object sender, KeyEventArgs e)
         {
             // This keyboard handling is necessary to get Escape and Enter keys to work correctly in this form
