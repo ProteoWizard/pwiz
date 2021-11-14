@@ -17,10 +17,15 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -28,21 +33,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Management;
 using System.Windows.Forms;
-using EnvDTE;
-using MSAmanda.Utils;
-using NHibernate.Mapping;
-using NHibernate.Mapping.ByCode;
-using pwiz.Common.Collections;
-using pwiz.ProteomeDatabase.Fasta;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model.Proteome;
-using SkylineTool;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI

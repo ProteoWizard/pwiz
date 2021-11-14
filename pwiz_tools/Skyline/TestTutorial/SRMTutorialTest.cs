@@ -50,8 +50,7 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
             {
                 @"https://skyline.gs.washington.edu/tutorials/SrmTutorialTest.zip",
-                @"TestTutorial\SRMViews.zip",
-                @"TestTutorial\SRMTransitionLists.zip"
+                @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();
         }

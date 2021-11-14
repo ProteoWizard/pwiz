@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -259,7 +260,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
                 AddProteinMetadata(tableDetails, DocNode.ProteinMetadata, rt, g);
-                if (DocNode.PeptideGroup.Description != null &&
+                if (!DocNode.PeptideGroup.Description.IsNullOrEmpty() &&
                     !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
                 {
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description,
