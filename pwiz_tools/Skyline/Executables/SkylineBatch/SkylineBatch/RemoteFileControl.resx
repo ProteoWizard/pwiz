@@ -136,10 +136,10 @@
     <value>73, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Relative path:</value>
+    <value>R&amp;elative path:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -166,7 +166,7 @@
     <value>348, 20</value>
   </data>
   <data name="textRelativePath.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;textRelativePath.Name" xml:space="preserve">
     <value>textRelativePath</value>
@@ -193,7 +193,7 @@
     <value>348, 21</value>
   </data>
   <data name="comboRemoteFileSource.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboRemoteFileSource.Name" xml:space="preserve">
     <value>comboRemoteFileSource</value>
@@ -223,10 +223,10 @@
     <value>82, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
+    <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Remote source:</value>
+    <value>&amp;Remote source:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

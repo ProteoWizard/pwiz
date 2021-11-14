@@ -89,7 +89,7 @@ namespace SkylineBatchTest
                 else if ("ReplicateNamingPattern".Equals(variable))
                     namingPattern = (string)changedVariables[variable];
             }
-            return new MainSettings(template, analysisFolder, dataFolder, null, annotationsFile, null, namingPattern);
+            return new MainSettings(template, analysisFolder, false, dataFolder, null, annotationsFile, null, namingPattern);
         }
 
         public static FileSettings GetChangedFileSettings(FileSettings baseSettings,
@@ -174,7 +174,7 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty);
+            return new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), false, GetTestFilePath("emptyData"), null, string.Empty, null, string.Empty);
         }
 
         public static FileSettings GetTestFileSettings()
@@ -224,7 +224,7 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetFullyPopulatedConfig(string name = "TestConfig")
         {
-            var main = new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"),
+            var main = new MainSettings(SkylineTemplate.ExistingTemplate(GetTestFilePath("emptyTemplate.sky")), GetTestFilePath("analysis"), false,
                 GetTestFilePath("emptyData"), null, GetTestFilePath("fakeAnnotations.csv"), null, "testNamingPattern");
             var file = FileSettings.FromUi("5", "4", "3", true, true, true);
             var refine = new RefineSettings(new RefineInputObject() 

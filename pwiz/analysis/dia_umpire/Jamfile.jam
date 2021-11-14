@@ -34,6 +34,8 @@ lib pwiz_analysis_diaumpire
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+        # auto-vectorization
+        #<toolset>msvc:<cxxflags>"/arch:AVX2" # /Qvec-report:2"
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
