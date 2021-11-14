@@ -60,7 +60,7 @@ namespace pwiz.Skyline.FileUI
         private string[] _originalHeaders;
 
         private Dictionary<string, FastaSequence> _dictNameSeq;
-        private List<ProteomeDatabase.API.Protein> _proteinList;
+        private List<Protein> _proteinList;
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
         private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
             new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline.FileUI
         {
             private Protein _protein;
 
-            public ProteinTipProvider(ProteomeDatabase.API.Protein protein)
+            public ProteinTipProvider(Protein protein)
             {
                 _protein = protein;
             }
@@ -1249,7 +1249,8 @@ namespace pwiz.Skyline.FileUI
                     var tableSize = table.CalcDimensions(g);
                     widthLine = Math.Max(widthLine, tableSize.Width);
                     tableSize.Height += TableDesc.TABLE_SPACING;    // Spacing between details and sequence
-                    var y = PeptideGroupTreeNode.RenderFastaSeq(g, draw, _protein.Sequence, tableSize.Height, heightLine, heightMax, new List<DocNode>(), new HashSet<DocNode>(), new Model.Peptide(_protein.Sequence), rt, widthLine);
+                    var y = PeptideGroupTreeNode.RenderFastaSeq(g, draw, _protein.Sequence, tableSize.Height, heightLine, heightMax, 
+                        new List<DocNode>(), new HashSet<DocNode>(), new Peptide(_protein.Sequence), rt, widthLine);
                     table.Draw(g);
                     return new Size((int)Math.Round(widthLine), (int)Math.Round(y + 2));
                 }
@@ -1393,8 +1394,12 @@ namespace pwiz.Skyline.FileUI
                 proteinNameBox.SelectedIndex = 0;
                 var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Displayed,
                     DataGridViewElementStates.None);
-                firstColumn.DefaultCellStyle.Font = new Font(dataGrid.DefaultCellStyle.Font, FontStyle.Italic);
-                firstColumn.HeaderText = proteinName;
+                if (firstColumn != null)
+                {
+                    firstColumn.DefaultCellStyle.Font = new Font(dataGrid.DefaultCellStyle.Font, FontStyle.Italic);
+                    firstColumn.HeaderText = proteinName;
+                }
+
                 // If there was an existing protein name box, set its value to "Ignore Column"
                 if (_originalProteinIndex != -1)
                 {
