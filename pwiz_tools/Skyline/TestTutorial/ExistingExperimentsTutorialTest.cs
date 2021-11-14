@@ -153,6 +153,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Inserting a Transition List With Associated Proteins, p. 6
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
             var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
             string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
             var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
@@ -167,7 +168,6 @@ namespace pwiz.SkylineTestTutorial
                 colDlg.checkBoxAssociateProteins.Checked = true;
             });
 
-            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
             OkDialog(colDlg, colDlg.OkDialog);
 
             RunUI(() =>
