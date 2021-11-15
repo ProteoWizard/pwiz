@@ -217,14 +217,14 @@ namespace pwiz.Skyline.FileUI
                 var action = associateHelper.determineAssociateAction(null, 
                     fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false);
 
-                if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurences)
+                if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
                     // Add a separate transition for each protein on our list of matches
                     for (var j = 0; j < associateHelper.proteinNames.Count; j++)
                     {
                         AddAssociatedProtein(fields, lines, associateHelper.proteinNames[j], associateHelper.proteins[j], true);
                     }
-                } else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurence) {
+                } else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurrence) {
                     // If we found at least one match, edit the line to include the name
                     AddAssociatedProtein(fields, lines, associateHelper.proteinNames[0], associateHelper.proteins[0], true);
                 }
@@ -1178,7 +1178,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         /// <summary>
-        /// A tip for displaying information about the protein
+        /// A tip for displaying information about proteins that have been associated with peptides
         /// </summary>
         private class ProteinTipProvider : ITipProvider
         {
@@ -1295,6 +1295,9 @@ namespace pwiz.Skyline.FileUI
             IgnoreAllEmptyCols();
         }
 
+        /// <summary>
+        /// Undo the association of peptides to proteins in the background proteome
+        /// </summary>
         private void ReverseAssociateProteins()
         {
             var oldPositions = CurrentColumnPositions();

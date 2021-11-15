@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI).ShowAndDispose(parent);
         }
 
-
+        // For displaying a MessageDlg with a specific set of buttons
         public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons)
         {
             return new MessageDlg(message, IgnoreModeUI, buttons).ShowAndDispose(parent);

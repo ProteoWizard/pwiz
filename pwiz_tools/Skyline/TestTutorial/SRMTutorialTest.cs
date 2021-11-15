@@ -481,6 +481,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void TestAssociateProteins()
         {
+            PauseTest();
             // Try importing a transition list with a peptide matching multiple proteins
             var multipleMatches = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
                                      "VTTSTGASYSYD, 709.327105, 1116.483162\n" +

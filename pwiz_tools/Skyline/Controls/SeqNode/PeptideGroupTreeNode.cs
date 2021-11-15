@@ -259,6 +259,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
+                // Add information about accession, preferred name, gene, etc.
                 AddProteinMetadata(tableDetails, DocNode.ProteinMetadata, rt, g);
                 if (!DocNode.PeptideGroup.Description.IsNullOrEmpty() &&
                     !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
@@ -300,6 +301,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        /// <summary>
+        /// Measure the dimensions of a string of 80 X characters
+        /// </summary>
         internal static void GetX80Dimensions(Graphics g, RenderTools rt, SizeF sizeMax, out float widthLine, out float heightLine, out float heightMax)
         {
             SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
@@ -308,6 +312,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             heightMax = sizeMax.Height;
         }
 
+        /// <summary>
+        /// Draw the FASTA sequence of a protein
+        /// </summary>
         internal static float RenderFastaSeq(Graphics g, bool draw, string aa, float heightTotal, float heightLine,
             float heightMax, IList<DocNode> peptidesChoices, HashSet<DocNode> peptidesChosen, Peptide peptideSelected, RenderTools rt,
             float widthLine)
@@ -349,6 +356,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             return heightTotal;
         }
 
+        /// <summary>
+        /// Add information we store about a protein to a TableDesc
+        /// </summary>
         internal static void AddProteinMetadata(TableDesc tableDetails, ProteinMetadata metadata, RenderTools rt, Graphics g)
         {
             if (!String.IsNullOrEmpty(metadata.Accession))
