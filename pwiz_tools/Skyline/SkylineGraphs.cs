@@ -2237,14 +2237,14 @@ namespace pwiz.Skyline
 
             foreach (var chromSet in syncTargets)
             {
-                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
-                {
-                    if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeGroup,
-                        (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
-                        continue;
-                    if (chromInfos.IndexOf(info2 => Equals(info.FilePath, info2.FilePath)) == -1)
-                        continue;
+                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeGroup,
+                    (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
+                    continue;
 
+                foreach (var info in chromSet.MSDataFileInfos.Where(info =>
+                    !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId)) &&
+                    chromInfos.IndexOf(info2 => Equals(info.FilePath, info2.FilePath)) != -1))
+                {
                     var start = thisStart;
                     var end = thisEnd;
 
