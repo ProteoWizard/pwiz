@@ -58,9 +58,11 @@ namespace pwiz.Skyline.FileUI
         private readonly NodeTip _proteinTip;
         private int _originalProteinIndex;
         private string[] _originalHeaders;
-
+        // Protein name, FASTA sequence pairs for importing peptides into protein groups
         private Dictionary<string, FastaSequence> _dictNameSeq;
+        // Stores the position of proteins for _proteinTip
         private List<Protein> _proteinList;
+
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
         private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
             new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
@@ -183,30 +185,25 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Match peptides to proteins in the background proteome
         /// </summary>
-        /// <param name="triggerDialog">trigger a dialog if there are peptides with multiple matches,
+        /// <param name="triggerDialog">Trigger a dialog if there are peptides with multiple matches,
         /// peptides without matches, or peptides not meeting filter settings</param>
         /// <returns>The transition list edited to include the protein names</returns>
         private string[] AssociateProteins(bool triggerDialog)
         {
+            // Initialize variables that are only used when associating proteins
             _dictNameSeq = new Dictionary<string, FastaSequence>();
             _proteinList = new List<Protein>();
-            // Find the columns we need to add information for the proteins
-            var sequenceIndex = Importer.RowReader.Indices.PeptideColumn;
 
-            Importer.RowReader.Indices.ProteinColumn =
-                Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-
-            // If there is no protein column present, add one
+            // If there are headers, add one describing the protein name column we will add
             if (Importer.RowReader.Indices.Headers != null)
             {
                 // Add a header we should recognize
                 var newHeaders = new string[_originalHeaders.Length + 1];
-                newHeaders[0] = @"Protein Name";
+                newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
                 for (int i = 0; i < _originalHeaders.Length; i++)
                 {
                     newHeaders[i + 1] = _originalHeaders[i];
                 }
-
                 Importer.RowReader.Indices.Headers = newHeaders;
             }
 
@@ -215,33 +212,28 @@ namespace pwiz.Skyline.FileUI
             // Go through each line of the import
             foreach(var line in Importer.RowReader.Lines)
             {
-                // First find the sequence and the protein name
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
                 var action = associateHelper.determineAssociateAction(null, 
-                    fields[sequenceIndex], seenPepSeq, false);
+                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurences)
                 {
                     // Add a separate transition for each protein on our list of matches
                     for (var j = 0; j < associateHelper.proteinNames.Count; j++)
                     {
-                        lines.Add(editLine(fields, associateHelper.proteinNames[j]));
-                        _proteinList.Add(associateHelper.proteins[j]);
-                        addToSeqDict(associateHelper.proteinNames[j]);
+                        AddAssociatedProtein(fields, lines, associateHelper.proteinNames[j], associateHelper.proteins[j], true);
                     }
                 } else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurence) {
                     // If we found at least one match, edit the line to include the name
-                    lines.Add(editLine(fields, associateHelper.proteinNames[0]));
-                    _proteinList.Add(associateHelper.proteins[0]);
-                    addToSeqDict(associateHelper.proteinNames[0]);
+                    AddAssociatedProtein(fields, lines, associateHelper.proteinNames[0], associateHelper.proteins[0], true);
                 }
-                else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.do_not_associate)
+                else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.do_not_associate || 
+                         action == PasteDlg.AssociateProteinsHelper.AssociateAction.throw_exception) 
                 {
-                    // If there are no matches add an empty string in place of the protein name
+                    // If there are no matches or the sequence is invalid, add an empty string in place of the protein name
                     // so that spacing is consistent
-                    lines.Add(editLine(fields, string.Empty));
-                    _proteinList.Add(null);
+                    AddAssociatedProtein(fields, lines, string.Empty, null, true);
                 }
             }
 
@@ -256,30 +248,25 @@ namespace pwiz.Skyline.FileUI
                     checkBoxAssociateProteins.Checked = false;
                     return Importer.RowReader.Lines.ToArray();
                 }
-
                 if (resolved != null)
                 {
-                    lines = resolved.ToList();
+                    return resolved;
                 }
             }
 
             return lines.ToArray();
         }
 
-        // Add the protein name and matching sequence to a dictionary so that we import it to the correct node
-        private void addToSeqDict(string proteinName)
-        {
-            if (!_dictNameSeq.ContainsKey(proteinName))
-            {
-                var fastaSeq = _docCurrent.Settings.PeptideSettings.BackgroundProteome.GetFastaSequence(proteinName);
-                if (fastaSeq != null)
-                {
-                    _dictNameSeq.Add(proteinName, fastaSeq);
-                }
-            }
-        }
-
-        private string editLine(string[] fields, string proteinName)
+        /// <summary>
+        /// Edit the transition list to include the new protein. Also update variables for displaying the
+        /// protein tip and importing the transition list.
+        /// </summary>
+        /// <param name="fields">The fields of the transition</param>
+        /// <param name="lines">The new list we are creating</param>
+        /// <param name="proteinName">Name of the protein to associate the peptide with</param>
+        /// <param name="protein">Protein to associate the peptide with</param>
+        /// <param name="updateSeqDict">Should we update our </param>
+        private void AddAssociatedProtein(string[] fields, List<string> lines, string proteinName, Protein protein, bool updateSeqDict)
         {
             var lineWithName = new string[fields.Length + 1];
             lineWithName[0] = proteinName;
@@ -287,9 +274,22 @@ namespace pwiz.Skyline.FileUI
             {
                 lineWithName[j + 1] = fields[j];
             }
-
-            return String.Join(Importer.Separator.ToString(), lineWithName);
+            lines.Add(string.Join(Importer.Separator.ToString(), lineWithName));
+            _proteinList.Add(protein);
+            if (updateSeqDict)
+            {
+                // Add the protein name and matching sequence to a dictionary so that we import it to the correct node
+                if (!_dictNameSeq.ContainsKey(proteinName))
+                {
+                    var fastaSeq = _docCurrent.Settings.PeptideSettings.BackgroundProteome.GetFastaSequence(proteinName);
+                    if (fastaSeq != null)
+                    {
+                        _dictNameSeq.Add(proteinName, fastaSeq);
+                    }
+                }
+            }
         }
+
         private void DisplayData()
         {
             // The pasted data will be stored as a data table
