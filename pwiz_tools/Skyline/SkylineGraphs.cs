@@ -2227,10 +2227,24 @@ namespace pwiz.Skyline
                 }
             }
 
+            var groupId = change.GroupPath.Child;
+            var nodePep = (PeptideDocNode)document.FindNode(change.GroupPath.Parent);
+            if (nodePep == null)
+                throw new IdentityNotFoundException(groupId);
+            var nodeGroup = (TransitionGroupDocNode)nodePep.FindNode(groupId);
+            if (nodeGroup == null)
+                throw new IdentityNotFoundException(groupId);
+
             foreach (var chromSet in syncTargets)
             {
                 foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
                 {
+                    if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeGroup,
+                        (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
+                        continue;
+                    if (chromInfos.IndexOf(info2 => Equals(info.FilePath, info2.FilePath)) == -1)
+                        continue;
+
                     var start = thisStart;
                     var end = thisEnd;
 
