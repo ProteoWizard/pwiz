@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -971,7 +972,7 @@ namespace pwiz.Skyline.EditUI
         /// This can't be done on gridViewPeptides_CellValueChanged because we are creating new cells.
         /// </summary>
         private void EnumerateProteins(DataGridView dataGridView, int rowIndex, bool keepAllPeptides, 
-            ref int numUnmatched, ref int numMultipleMatches, ref int numFiltered, HashSet<string> seenPepSeq)
+            ref int numUnmatched, ref int numMultipleMatches, ref int numFiltered, HashSet<string> seenPepSeq, AssociateProteinsHelper associateHelper)
         {
 
             HideNoErrors();      
@@ -984,70 +985,31 @@ namespace pwiz.Skyline.EditUI
             var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
             var pepModSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
 
-            // Only enumerate the proteins if the user has not specified a protein.
-            if (!string.IsNullOrEmpty(proteinName))
+            var associateAction = associateHelper.determineAssociateAction(proteinName, pepModSequence, seenPepSeq, keepAllPeptides);
+            numUnmatched = associateHelper.numUnmatched;
+            numMultipleMatches = associateHelper.numMultipleMatches;
+            numFiltered = associateHelper.numFiltered;
+            if (associateAction == AssociateProteinsHelper.AssociateAction.do_not_associate)
+            {
                 return;
-            
-            // If there is no peptide sequence and no protein, remove this entry.
-            if (string.IsNullOrEmpty(pepModSequence))
+            }
+            else if (associateAction == AssociateProteinsHelper.AssociateAction.remove)
             {
                 dataGridView.Rows.Remove(row);
                 return;
-            }
-
-            string peptideSequence = FastaSequence.StripModifications(pepModSequence);
-
-            // Check to see if this is a new sequence because we don't want to count peptides more than once for
-            // the FilterMatchedPeptidesDlg.
-            bool newSequence = !seenPepSeq.Contains(peptideSequence);
-            if(newSequence)
+            } else if (associateAction == AssociateProteinsHelper.AssociateAction.throw_exception)
             {
-                // If we are not keeping filtered peptides, and this peptide does not match current filter
-                // settings, remove this peptide.
-                if (!FastaSequence.IsExSequence(peptideSequence))
-                {
-                    dataGridView.CurrentCell = row.Cells[sequenceIndex];
-                    throw new InvalidDataException(Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters);
-                }
-                seenPepSeq.Add(peptideSequence);
+                dataGridView.CurrentCell = row.Cells[sequenceIndex];
+                throw new InvalidDataException(Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters);
             }
 
-            var proteinNames = GetProteinNamesForPeptideSequence(peptideSequence, DocumentUiContainer.Document, out _);
-
-            bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
-            bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
-            bool isFiltered = !DocumentUiContainer.Document.Settings.Accept(peptideSequence);
-
-            if (newSequence)
-            {
-                numUnmatched += isUnmatched ? 1 : 0;
-                numMultipleMatches += hasMultipleMatches ? 1 : 0;
-                numFiltered += isFiltered ? 1 : 0;
-            }
-          
-            // No protein matches found, so we do not need to enumerate this peptide. 
-            if (isUnmatched)
-            {
-                // If we are not keeping unmatched peptides, then remove this peptide.
-                if (!keepAllPeptides && !Settings.Default.LibraryPeptidesAddUnmatched)
-                    dataGridView.Rows.Remove(row);
-                // Even if we are keeping this peptide, it has no matches so we don't enumerate it.
-                return;
-            }
-
-            // If there are multiple protein matches, and we are filtering such peptides, remove this peptide.
-            if (!keepAllPeptides &&
-                (hasMultipleMatches && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates)
-                || (isFiltered && !Settings.Default.LibraryPeptidesKeepFiltered))
-            {
-                dataGridView.Rows.Remove(row);
-                return;
-            }
-            
+            var proteinNames = associateHelper.proteinNames;
             row.Cells[proteinIndex].Value = proteinNames[0];
             // Only using the first occurence.
-            if(!keepAllPeptides && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
+            if (associateAction == AssociateProteinsHelper.AssociateAction.first_occurence)
+            {
                 return;
+            }
             // Finally, enumerate all proteins for this peptide.
             for (int i = 1; i < proteinNames.Count; i ++)
             {
@@ -1065,6 +1027,119 @@ namespace pwiz.Skyline.EditUI
                 }
             }
         }
+
+        /// <summary>
+        /// A helper class for associating peptides to proteins in the background proteome. Used across multiple forms.
+        /// </summary>
+        public class AssociateProteinsHelper
+        {
+            private SrmDocument _docCurrent;
+            public List<string> proteinNames { get; private set;}
+            public List<Protein> proteins { get; private set; }
+            public int numUnmatched { get; private set;}
+            public int numMultipleMatches { get; private set; }
+            public int numFiltered{ get; private set; }
+
+            public AssociateProteinsHelper(SrmDocument document)
+            {
+                proteinNames = new List<string>();
+                _docCurrent = document;
+                numUnmatched = 0;
+                numFiltered = 0;
+                numMultipleMatches = 0;
+            }
+
+            /// <summary>
+            /// Determine the correct action to associate a peptide and update our count of filtered peptides,
+            /// unmatched peptides, and peptides with multiple matches
+            /// </summary>
+            /// <param name="proteinName">The protein name listed in the data</param>
+            /// <param name="pepModSequence">Modified sequence of the peptide to be associated</param>
+            /// <param name="seenPepSeq">Peptide sequences we have already seen in the data</param>
+            /// <param name="keepAllPeptides">Keep peptides that have multiple matches or no matches</param>
+            /// <returns></returns>
+            public AssociateAction determineAssociateAction(string proteinName, string pepModSequence, HashSet<string> seenPepSeq, 
+                bool keepAllPeptides)
+            {
+
+                // Only enumerate the proteins if the user has not specified a protein.
+                if (!string.IsNullOrEmpty(proteinName))
+                    return AssociateAction.do_not_associate;
+
+                // If there is no peptide sequence and no protein, remove this entry.
+                if (string.IsNullOrEmpty(pepModSequence))
+                {
+                    return AssociateAction.remove;
+                }
+
+                string peptideSequence = FastaSequence.StripModifications(pepModSequence);
+
+                // Check to see if this is a new sequence because we don't want to count peptides more than once for
+                // the FilterMatchedPeptidesDlg.
+                bool newSequence = !seenPepSeq.Contains(peptideSequence);
+                if (newSequence)
+                {
+                    // If we are not keeping filtered peptides, and this peptide does not match current filter
+                    // settings, remove this peptide.
+                    if (!FastaSequence.IsExSequence(peptideSequence))
+                    {
+                        return AssociateAction.throw_exception;
+                    }
+                    seenPepSeq.Add(peptideSequence);
+                }
+
+                proteinNames = GetProteinNamesForPeptideSequence(peptideSequence, _docCurrent, out var proteinList);
+                proteins = proteinList;
+
+                bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
+                bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
+                bool isFiltered = !_docCurrent.Settings.Accept(peptideSequence);
+
+                if (newSequence)
+                {
+                    numUnmatched += isUnmatched ? 1 : 0;
+                    numMultipleMatches += hasMultipleMatches ? 1 : 0;
+                    numFiltered += isFiltered ? 1 : 0;
+                }
+
+                // No protein matches found, so we do not need to enumerate this peptide. 
+                if (isUnmatched)
+                {
+                    // If we are not keeping unmatched peptides, then remove this peptide.
+                    if (!keepAllPeptides && !Settings.Default.LibraryPeptidesAddUnmatched)
+                        return AssociateAction.remove;
+                    // Even if we are keeping this peptide, it has no matches so we don't enumerate it.
+                    return AssociateAction.do_not_associate;
+                }
+
+                // If there are multiple protein matches, and we are filtering such peptides, remove this peptide.
+                if (!keepAllPeptides &&
+                    (hasMultipleMatches && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates)
+                    || (isFiltered && !Settings.Default.LibraryPeptidesKeepFiltered))
+                {
+                    return AssociateAction.remove;
+                }
+
+                // Only using the first occurence.
+                if (!keepAllPeptides && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
+                    return AssociateAction.first_occurence;
+                // Finally, enumerate all proteins for this peptide.
+                return AssociateAction.all_occurences;
+            }
+
+
+            public enum AssociateAction
+            {
+                remove,
+                do_not_associate,
+                first_occurence,
+                all_occurences,
+                throw_exception
+            }
+        }
+
+        // We associate peptides to proteins in the background proteome in multiple places.
+        
 
         private FastaSequence GetFastaSequence(DataGridViewRow row, string proteinName, out ProteinMetadata metadata)
         {
@@ -1349,7 +1424,11 @@ namespace pwiz.Skyline.EditUI
             dataGridView.Columns.CopyTo(columns, 0);
             Array.Sort(columns, (a,b)=>a.DisplayIndex - b.DisplayIndex);
             HashSet<string> listPepSeqs = new HashSet<string>();
-
+            AssociateProteinsHelper associateHelper = null;
+            if (enumerateProteins)
+            {
+                associateHelper = new AssociateProteinsHelper(DocumentUiContainer.Document);
+            }
             foreach (var values in ParseColumnarData(text))
             {
                 var row = dataGridView.Rows[dataGridView.Rows.Add()];
@@ -1371,7 +1450,7 @@ namespace pwiz.Skyline.EditUI
 				if (enumerateProteins)
 				{
 					EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches,
-						ref numFiltered, listPepSeqs);
+						ref numFiltered, listPepSeqs, associateHelper);
 				}
             }
         }

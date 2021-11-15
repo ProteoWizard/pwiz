@@ -181,17 +181,13 @@ namespace pwiz.Skyline.FileUI
         }
 
         /// <summary>
-        /// Match all peptides to proteins in the background proteome
+        /// Match peptides to proteins in the background proteome
         /// </summary>
         /// <param name="triggerDialog">trigger a dialog if there are peptides with multiple matches,
         /// peptides without matches, or peptides not meeting filter settings</param>
         /// <returns>The transition list edited to include the protein names</returns>
         private string[] AssociateProteins(bool triggerDialog)
         {
-            int numUnmatched = 0;
-            int numFiltered = 0;
-            int numMultipleMatches = 0;
-
             _dictNameSeq = new Dictionary<string, FastaSequence>();
             _proteinList = new List<Protein>();
             // Find the columns we need to add information for the proteins
@@ -205,7 +201,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // Add a header we should recognize
                 var newHeaders = new string[_originalHeaders.Length + 1];
-                newHeaders[0] = @"Protein Name"; //Localize this?
+                newHeaders[0] = @"Protein Name";
                 for (int i = 0; i < _originalHeaders.Length; i++)
                 {
                     newHeaders[i + 1] = _originalHeaders[i];
@@ -215,85 +211,46 @@ namespace pwiz.Skyline.FileUI
             }
 
             var lines = new List<string>();
+            var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
             // Go through each line of the import
             foreach(var line in Importer.RowReader.Lines)
             {
                 // First find the sequence and the protein name
                 var fields = line.ParseDsvFields(Importer.Separator);
-                var peptideSequence = FastaSequence.StripModifications(fields[sequenceIndex]);
-
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
+                var action = associateHelper.determineAssociateAction(null, 
+                    fields[sequenceIndex], seenPepSeq, false);
 
-                if (peptideSequence != null)
+                if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurences)
                 {
-                    // Find proteins that match the sequence
-                    var proteinNames = PasteDlg.GetProteinNamesForPeptideSequence(peptideSequence, _docCurrent, out var proteins);
-
-                    bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
-                    bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
-                    bool isFiltered = !_docCurrent.Settings.Accept(peptideSequence);
-
-                    var newSequence = !seenPepSeq.Contains(peptideSequence);
-
-                    if (newSequence)
+                    // Add a separate transition for each protein on our list of matches
+                    for (var j = 0; j < associateHelper.proteinNames.Count; j++)
                     {
-                        numUnmatched += isUnmatched ? 1 : 0;
-                        numMultipleMatches += hasMultipleMatches ? 1 : 0;
-                        numFiltered += isFiltered ? 1 : 0;
-                        seenPepSeq.Add(peptideSequence);
+                        lines.Add(editLine(fields, associateHelper.proteinNames[j]));
+                        _proteinList.Add(associateHelper.proteins[j]);
+                        addToSeqDict(associateHelper.proteinNames[j]);
                     }
-
-                    var FilterMultipleProteinMatches = Helpers.ParseEnum(Settings.Default.LibraryPeptidesAddDuplicatesEnum,
-                        BackgroundProteome.DuplicateProteinsFilter.AddToAll);
-
-                    // If this transition either has multiple matches or is filtered and the user has
-                    // indicated to remove such transitions, do not add it to our new list
-                    if ((hasMultipleMatches && FilterMultipleProteinMatches ==
-                            BackgroundProteome.DuplicateProteinsFilter.NoDuplicates)
-                        || (isFiltered && !Settings.Default.LibraryPeptidesKeepFiltered))
-                    {
-                        continue;
-                    }
-                    
-                    // If this transition has multiple matches and the user wants to add it to every match
-                    if (
-                        (hasMultipleMatches && FilterMultipleProteinMatches ==
-                            BackgroundProteome.DuplicateProteinsFilter.AddToAll))
-                    {
-                        // Now add a separate transition for each protein on our list of matches
-                        for (var j = 0; j < proteinNames.Count; j++)
-                        {
-                            lines.Add(editLine(fields, proteinNames[j]));
-                            _proteinList.Add(proteins[j]);
-                            addToSeqDict(proteinNames[j]);
-                        }
-                        continue;
-                    }
-
-                    if (!proteinNames.IsNullOrEmpty())
-                    {
-                        // If we found at least one match, edit the line to include the name
-                        lines.Add(editLine(fields, proteinNames[0]));
-                        _proteinList.Add(proteins[0]);
-                        addToSeqDict(proteinNames[0]);
-                    }
-                    else
-                    {
-                        // If there are no matches add an empty string in place of the protein name
-                        // so that spacing is consistent
-                        lines.Add(editLine(fields, string.Empty));
-                        _proteinList.Add(null);
-                    }
+                } else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurence) {
+                    // If we found at least one match, edit the line to include the name
+                    lines.Add(editLine(fields, associateHelper.proteinNames[0]));
+                    _proteinList.Add(associateHelper.proteins[0]);
+                    addToSeqDict(associateHelper.proteinNames[0]);
                 }
-
-
+                else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.do_not_associate)
+                {
+                    // If there are no matches add an empty string in place of the protein name
+                    // so that spacing is consistent
+                    lines.Add(editLine(fields, string.Empty));
+                    _proteinList.Add(null);
+                }
             }
 
             // If there are any peptides that don't meet the filter setting, have multiple matches or no matches,
             // show the user a dialog to resolve it. 
-            if (numFiltered + numUnmatched + numMultipleMatches > 0 && triggerDialog)
+            if (associateHelper.numFiltered + associateHelper.numUnmatched + associateHelper.numMultipleMatches > 0 && triggerDialog)
             {
-                var resolved = ResolveMatchedProteins(numMultipleMatches, numUnmatched, numFiltered, out var canceled);
+                var resolved = ResolveMatchedProteins(associateHelper.numMultipleMatches, 
+                    associateHelper.numUnmatched, associateHelper.numFiltered, out var canceled);
                 if (canceled)
                 {
                     checkBoxAssociateProteins.Checked = false;
