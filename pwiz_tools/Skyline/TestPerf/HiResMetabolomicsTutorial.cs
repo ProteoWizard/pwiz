@@ -100,7 +100,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     if (retry == 0)
                         PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with selected and ordered columns", 4);
 
-                    var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"), true);
+                    var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
                     if (retry > 0)
                     {
                         // Fix bad charge declaration

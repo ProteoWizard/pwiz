@@ -28094,6 +28094,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Columns identified as {0}.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Columns_identified_as__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Columns_identified_as__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file.  Peptide {0} matches an existing iRT standard peptide..
         /// </summary>
         public static string SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_ {

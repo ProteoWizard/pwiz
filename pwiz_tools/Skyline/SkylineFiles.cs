@@ -2096,17 +2096,23 @@ namespace pwiz.Skyline
                 object[] args;
                 string extraInfo = null;
 
+                // Log the column assignments
+                var columnsUsed = (columnPositions == null || columnPositions.Count == 0)
+                    ? null
+                    : string.Format(Resources.SkylineWindow_ImportMassList_Columns_identified_as__0_, TextUtil.ToCsvLine(columnPositions.Select(s => $@"'{s}'")));
+
                 // Imported from file
                 if (inputs.InputFilename != null)
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
                     args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
+                    extraInfo = columnsUsed;
                 }
                 else
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
                     args = new object[0];
-                    extraInfo = inputs.InputText;
+                    extraInfo =  columnsUsed == null ? inputs.InputText : columnsUsed + Environment.NewLine + inputs.InputText;
                 }
 
                 return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);

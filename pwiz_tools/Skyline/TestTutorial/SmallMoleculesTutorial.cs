@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"), true);
+                string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
 
@@ -127,7 +127,6 @@ namespace pwiz.SkylineTestTutorial
                     }
                     
                 });
-
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with chosen column headers", 6);
 
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
@@ -223,7 +222,7 @@ namespace pwiz.SkylineTestTutorial
                     RestoreCoverViewOnScreen();
 
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                    string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"), true);
+                    string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = impliedLabeled2);
 
                     RunUI(() => {
