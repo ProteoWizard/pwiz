@@ -1908,8 +1908,13 @@ namespace pwiz.Skyline
         /// <summary>
         /// Process and then add the mass list to the document
         /// </summary>
+        /// <param name="inputs">Inputs to import</param>
+        /// <param name="description">Description of action</param>
+        /// <param name="assayLibrary">True if input is an assay library</param>
+        /// <param name="inputType">"None" means "don't know if it's peptides or small molecules, go figure it out".</param>
+        /// <param name="forceDlg">True if we want to display a column select form, even if we think we know all the columns we need</param>
         public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
-            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none, bool forceDlg = false) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none, bool forceDlg = false)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;

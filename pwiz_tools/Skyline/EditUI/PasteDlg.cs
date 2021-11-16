@@ -929,8 +929,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        // We associate peptides to proteins in the background proteome in multiple places.
-        
 
         private FastaSequence GetFastaSequence(DataGridViewRow row, string proteinName, out ProteinMetadata metadata)
         {
