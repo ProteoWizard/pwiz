@@ -1916,6 +1916,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to None of the decoys in the document have any chromatograms..
+        /// </summary>
+        public static string AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_ {
+            get {
+                return ResourceManager.GetString("AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chrom" +
+                        "atograms_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Examining background proteome for uniqueness constraints.
         /// </summary>
         public static string BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints {
