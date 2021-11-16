@@ -1948,23 +1948,25 @@ namespace pwiz.Skyline
                 }
             }
             hasHeaders = importer.RowReader.Indices.Headers != null;
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules 
+                && !forceDlg) // We can skip this check if we will use the dialog regardless
             {
                 List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
                 var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
                 // Try importing that list to check for errors
-                docCurrent = docCurrent.ImportMassList(input, importer, null,
+                docCurrent.ImportMassList(input, importer, null,
                     insertPath, out selectPath, out irtPeptides,
                     out librarySpectra, out testErrorList, out peptideGroups, null, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
                 if (!testErrorList.Any())
                 {
-                    useColSelectDlg = false;
+                    useColSelectDlg = false; // We should be able to import without consulting the user for column identities
                 }
             }
 
-            if (useColSelectDlg || forceDlg)
+            useColSelectDlg |= forceDlg;
+            if (useColSelectDlg)
             {
-                // Allow the user to assign column types if it is a proteomics transition list
+                // Allow the user to assign column types
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
@@ -1981,8 +1983,9 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (isSmallMoleculeList && (useColSelectDlg || forceDlg) || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && (!useColSelectDlg && !forceDlg))
+            if (isSmallMoleculeList && useColSelectDlg || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && !useColSelectDlg)
             {
+                // We should have all the column header info we need, proceed with the import
                 docCurrent = docCurrent.ImportMassList(inputs, importer, null,
                     insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
                     out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
