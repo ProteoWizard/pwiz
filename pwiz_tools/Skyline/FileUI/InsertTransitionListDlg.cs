@@ -48,7 +48,6 @@ namespace pwiz.Skyline.FileUI
 
         private bool inputIsCommand;
 
-        // Look for a paste
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
             inputIsCommand = e.Control && (e.KeyCode == Keys.V || e.KeyCode == Keys.C);

@@ -1948,7 +1948,8 @@ namespace pwiz.Skyline
                 }
             }
             hasHeaders = importer.RowReader.Indices.Headers != null;
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules 
+                && !forceDlg) // We can skip this check if we will use the dialog regardless
             {
                 List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
                 var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
@@ -1962,7 +1963,8 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (useColSelectDlg || forceDlg)
+            useColSelectDlg = forceDlg || useColSelectDlg;
+            if (useColSelectDlg)
             {
                 // Allow the user to assign column types if it is a proteomics transition list
                 using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
@@ -1981,7 +1983,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (isSmallMoleculeList && (useColSelectDlg || forceDlg) || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && (!useColSelectDlg && !forceDlg))
+            if (isSmallMoleculeList && useColSelectDlg || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && (!useColSelectDlg && !forceDlg))
             {
                 docCurrent = docCurrent.ImportMassList(inputs, importer, null,
                     insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
