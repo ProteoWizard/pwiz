@@ -21,7 +21,8 @@ Undo Redo : Imported a transition list from the clipboard
 Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
-Extra Info: TANDVLTIR	501,778	830,474
+Extra Info: Columns identified as 'Protein Name';'Peptide Modified Sequence';'Precursor m/z';'Product m/z'
+TANDVLTIR	501,778	830,474
 TANDVLTIR	506,7821345	840,482269
 TANDVLTIR	501,778	601,4072
 TANDVLTIR	506,7821345	611,415469
@@ -370,7 +371,8 @@ Undo Redo : Imported a transition list from the clipboard
 Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
-Extra Info: 744,8	858,39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
+Extra Info: Columns identified as 'Precursor m/z';'Product m/z';'Ignore Column';'Peptide Modified Sequence';'Ignore Column';'Ignore Column'
+744,8	858,39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744,8	959,44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744,8	1087,5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
 467,2	586,8	16	LEP.INDISHTQSVSAK.y11.light	65	22

@@ -21,7 +21,8 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: TANDVLTIR	501.778	830.474
+Extra Info: Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+TANDVLTIR	501.778	830.474
 TANDVLTIR	506.7821345	840.482269
 TANDVLTIR	501.778	601.4072
 TANDVLTIR	506.7821345	611.415469
@@ -370,7 +371,8 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
+Extra Info: Columns identified as '母离子质荷比','子离子质荷比','忽略列','肽段修饰序列','忽略列','忽略列'
+744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744.8	1087.5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
 467.2	586.8	16	LEP.INDISHTQSVSAK.y11.light	65	22
