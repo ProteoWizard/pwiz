@@ -187,7 +187,14 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (LoadLibraryFromDatabase(loader))
                 {
-                    WriteCache(loader);
+                    try
+                    {
+                        WriteCache(loader);
+                    }
+                    catch
+                    {
+                        // Ignore any error writing the cache
+                    }
                     return true;
                 }
             }
@@ -334,7 +341,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private static string GetLibraryCachePath(string filepath)
+        public static string GetLibraryCachePath(string filepath)
         {
             return Path.ChangeExtension(filepath, @".elibc");
         }
