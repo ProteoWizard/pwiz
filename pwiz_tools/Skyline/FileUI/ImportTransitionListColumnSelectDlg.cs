@@ -174,7 +174,7 @@ namespace pwiz.Skyline.FileUI
                 } else
                 {
                     // Redo the association with the new filter settings, but do not show this dialog again
-                    return AssociateProteins(false, out _);
+                    return AssociateProteins(false, out canceled);
                 }
             }
             return null;
