@@ -11528,4 +11528,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_" xml:space="preserve">
     <value>None of the decoys in the document have any chromatograms.</value>
   </data>
+  <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
+    <value>None of the targets in the document have any chromatograms.</value>
+  </data>
 </root>

@@ -106,7 +106,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Get scores for target and decoy groups.
             targetDecoyGenerator.GetTransitionGroups(out var targetTransitionGroups, out var decoyTransitionGroups);
-            if (!decoyTransitionGroups.Any())
+            if (!targetTransitionGroups.Any())
+                return End(string.Format(
+                    Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
+                    Resources.AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_));
+            else if (!decoyTransitionGroups.Any())
                 return End(string.Format(
                     Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
                     Resources.AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_));
