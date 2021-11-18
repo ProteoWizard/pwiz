@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
@@ -600,6 +601,52 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+
+            if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
+            {
+                var cutoff = Settings.Default.PeakAreaDotpCutoffValue;
+                var color1 = GraphHelper.Blend(Color.Red, Color.White, 0.5);
+                var color2 = GraphHelper.Blend(Color.Red, Color.White, 0.85);
+                var maxY = GraphHelper.GetMaxY(CurveList, this);
+                for (var i = 0; i < _dotpData.Count; i++)
+                {
+                    if(_dotpData[i] <= cutoff)
+                        GraphObjList.Add(new BoxObj(i + FirstDataIndex + .5, maxY, 1,
+                                -maxY, Color.Transparent, Color.Red, Color.White)
+                            {
+                                IsClippedToChartRect = true,
+                                ZOrder = ZOrder.F_BehindGrid,
+                                Fill = new Fill(color1, color2, 0)
+                            });
+                }
+
+                var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
+                var labelText = string.Format(Resources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
+                    _dotpData.Count - belowCutoffCount, belowCutoffCount);
+                var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                };
+                labelObject.FontSpec.Fill = new Fill(Color.Transparent);
+                GraphObjList.Add(labelObject);
+                var cutoffLine = new LineObj()
+                {
+                    IsClippedToChartRect = true,
+                    Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale){Rect = new RectangleF(0, cutoff, 1, 0)},
+                    Line = new LineBase(Color.Red)
+                    };
+                GraphObjList.Add(cutoffLine);
+                //This is a placeholder to make sure the line shows in the legend.
+                CurveList.Insert(3,
+                    new LineItem(String.Format(CultureInfo.CurrentCulture,
+                        Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText))
+                    {
+                        Points = new PointPairList(new[] { new PointPair(0, 0) }),
+                        Symbol = new Symbol(SymbolType.None, Color.Transparent)
+                    });
+            }
         }
 
         public override ImmutableList<float> GetToolTipDataSeries()
@@ -855,12 +902,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                                   AlignV.Bottom)
                                           {
                                               IsClippedToChartRect = true,
-                                              ZOrder = ZOrder.F_BehindGrid,
+                                              ZOrder = ZOrder.E_BehindCurves
                                           };
 
 
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
+                    textObj.FontSpec.Fill = new Fill(Color.Transparent);
                     _labelHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);

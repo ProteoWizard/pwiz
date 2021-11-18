@@ -1743,6 +1743,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} cutoff.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Dotp_Cutoff_Line_Label {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Dotp_Cutoff_Line_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected.
         /// </summary>
         public static string AreaReplicateGraphPane_InitFromData_Expected {
@@ -1757,6 +1766,15 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_InitFromData_Library {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_InitFromData_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates above cutoff: {0}, below cutoff: {1}.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff", resourceCulture);
             }
         }
         

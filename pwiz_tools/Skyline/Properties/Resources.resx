@@ -11534,4 +11534,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="DotpDisplayOption_None" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff" xml:space="preserve">
+    <value>Replicates above cutoff: {0}, below cutoff: {1}</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Dotp_Cutoff_Line_Label" xml:space="preserve">
+    <value>{0} cutoff</value>
+  </data>
 </root>

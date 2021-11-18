@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -598,6 +599,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 maxY = Math.Max(maxY, tMaxY);
             }
             return maxY;
+        }
+        public static Color Blend(Color baseColor, Color blendColor, double blendAmount)
+        {
+            return Color.FromArgb(
+                (int)(baseColor.R * (1 - blendAmount) + blendColor.R * blendAmount),
+                (int)(baseColor.G * (1 - blendAmount) + blendColor.G * blendAmount),
+                (int)(baseColor.B * (1 - blendAmount) + blendColor.B * blendAmount));
         }
     }
 
