@@ -5,11 +5,17 @@ Peptide Settings -- Modifications > Isotope modifications > "heavy" changed
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Chemical formula is "C'6N'2 - C6N2"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Monoisotopic mass is "8.014199"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Average mass is "7.941847"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Chemical formula is "C'6N'4 - C6N4"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Monoisotopic mass is "10.008269"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Average mass is "9.928665"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
 
@@ -563,33 +569,33 @@ Undo Redo : Imported results from 11 files
 Summary   : Imported results from 11 files
 All Info  :
 Imported results from 11 files
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A01.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A03.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A04.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A05.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A06.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A07.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A08.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A09.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A10.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A11.wiff"
-Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A12.wiff"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A01.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A03.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A04.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A05.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A06.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A07.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A08.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A09.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A10.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A11.mzML"
+Import results settings > File names : contains "ruthhu_R201217_plasma_revision_A12.mzML"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "ruthhu_R201217_plasma_revision_A"
 Extra Info: File names = 
 [
-    "ruthhu_R201217_plasma_revision_A01.wiff",
-    "ruthhu_R201217_plasma_revision_A03.wiff",
-    "ruthhu_R201217_plasma_revision_A04.wiff",
-    "ruthhu_R201217_plasma_revision_A05.wiff",
-    "ruthhu_R201217_plasma_revision_A06.wiff",
-    "ruthhu_R201217_plasma_revision_A07.wiff",
-    "ruthhu_R201217_plasma_revision_A08.wiff",
-    "ruthhu_R201217_plasma_revision_A09.wiff",
-    "ruthhu_R201217_plasma_revision_A10.wiff",
-    "ruthhu_R201217_plasma_revision_A11.wiff",
-    "ruthhu_R201217_plasma_revision_A12.wiff"
+    "ruthhu_R201217_plasma_revision_A01.mzML",
+    "ruthhu_R201217_plasma_revision_A03.mzML",
+    "ruthhu_R201217_plasma_revision_A04.mzML",
+    "ruthhu_R201217_plasma_revision_A05.mzML",
+    "ruthhu_R201217_plasma_revision_A06.mzML",
+    "ruthhu_R201217_plasma_revision_A07.mzML",
+    "ruthhu_R201217_plasma_revision_A08.mzML",
+    "ruthhu_R201217_plasma_revision_A09.mzML",
+    "ruthhu_R201217_plasma_revision_A10.mzML",
+    "ruthhu_R201217_plasma_revision_A11.mzML",
+    "ruthhu_R201217_plasma_revision_A12.mzML"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many",
@@ -599,27 +605,27 @@ Undo Redo : Imported results from 8 files
 Summary   : Imported results from 8 files
 All Info  :
 Imported results from 8 files
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F05.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F06.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F07.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F08.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F09.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F10.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F11.wiff"
-Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F12.wiff"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F05.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F06.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F07.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F08.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F09.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F10.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F11.mzML"
+Import results settings > File names : contains "ruthhu_R201203_plasma_revision_F12.mzML"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Import results settings > Removed prefix is "ruthhu_R201203_plasma_revision_F"
 Extra Info: File names = 
 [
-    "ruthhu_R201203_plasma_revision_F05.wiff",
-    "ruthhu_R201203_plasma_revision_F06.wiff",
-    "ruthhu_R201203_plasma_revision_F07.wiff",
-    "ruthhu_R201203_plasma_revision_F08.wiff",
-    "ruthhu_R201203_plasma_revision_F09.wiff",
-    "ruthhu_R201203_plasma_revision_F10.wiff",
-    "ruthhu_R201203_plasma_revision_F11.wiff",
-    "ruthhu_R201203_plasma_revision_F12.wiff"
+    "ruthhu_R201203_plasma_revision_F05.mzML",
+    "ruthhu_R201203_plasma_revision_F06.mzML",
+    "ruthhu_R201203_plasma_revision_F07.mzML",
+    "ruthhu_R201203_plasma_revision_F08.mzML",
+    "ruthhu_R201203_plasma_revision_F09.mzML",
+    "ruthhu_R201203_plasma_revision_F10.mzML",
+    "ruthhu_R201203_plasma_revision_F11.mzML",
+    "ruthhu_R201203_plasma_revision_F12.mzML"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many",

@@ -6399,13 +6399,13 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Label:13C(3) (A)", 
-                 AAs = "A", LabelAtoms = LabelAtoms.C13, ID = 1296, 
+                 AAs = "A", LabelAtoms = LabelAtoms.C13, Formula = "C'3 - C3", ID = 1296, 
                  Structural = false, ShortName = "+3a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(3)15N(1) (A)", 
-                 AAs = "A", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 1297, 
+                 AAs = "A", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'3N' - C3N", ID = 1297, 
                  Structural = false, ShortName = "+4a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
@@ -6417,211 +6417,211 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Label:13C(4)15N(1) (D)", 
-                 AAs = "D", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 1298, 
+                 AAs = "D", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'4N' - C4N", ID = 1298, 
                  Structural = false, ShortName = "+05", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(5) (P)", 
-                 AAs = "P", LabelAtoms = LabelAtoms.C13, ID = 772, 
+                 AAs = "P", LabelAtoms = LabelAtoms.C13, Formula = "C'5 - C5", ID = 772, 
                  Structural = false, Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:13C(5)15N(1) (E)", 
-                 AAs = "E", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 268, 
+                 AAs = "E", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'5N' - C5N", ID = 268, 
                  Structural = false, ShortName = "+6a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(5)15N(1) (M)", 
-                 AAs = "M", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 268, 
+                 AAs = "M", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'5N' - C5N", ID = 268, 
                  Structural = false, ShortName = "+6a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(5)15N(1) (P)", 
-                 AAs = "P", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 268, 
+                 AAs = "P", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'5N' - C5N", ID = 268, 
                  Structural = false, ShortName = "+6a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(5)15N(1) (V)", 
-                 AAs = "V", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 268, 
+                 AAs = "V", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'5N' - C5N", ID = 268, 
                  Structural = false, ShortName = "+6a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6) (I)", 
-                 AAs = "I", LabelAtoms = LabelAtoms.C13, ID = 188, 
+                 AAs = "I", LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6", ID = 188, 
                  Structural = false, ShortName = "+06", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6) (K)", 
-                 AAs = "K", LabelAtoms = LabelAtoms.C13, ID = 188, 
+                 AAs = "K", LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6", ID = 188, 
                  Structural = false, ShortName = "+06", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6) (L)", 
-                 AAs = "L", LabelAtoms = LabelAtoms.C13, ID = 188, 
+                 AAs = "L", LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6", ID = 188, 
                  Structural = false, ShortName = "+06", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6) (R)", 
-                 AAs = "R", LabelAtoms = LabelAtoms.C13, ID = 188, 
+                 AAs = "R", LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6", ID = 188, 
                  Structural = false, ShortName = "+06", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6)15N(1) (I)", 
-                 AAs = "I", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 695, 
+                 AAs = "I", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'6N' - C6N", ID = 695, 
                  Structural = false, ShortName = "+07", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6)15N(1) (L)", 
-                 AAs = "L", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 695, 
+                 AAs = "L", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'6N' - C6N", ID = 695, 
                  Structural = false, ShortName = "+07", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6)15N(2) (K)", 
-                 AAs = "K", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 259, 
+                 AAs = "K", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'6N'2 - C6N2", ID = 259, 
                  Structural = false, ShortName = "+08", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(6)15N(4) (R)", 
-                 AAs = "R", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 267, 
+                 AAs = "R", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'6N'4 - C6N4", ID = 267, 
                  Structural = false, ShortName = "+10", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(9) (F)", 
-                 AAs = "F", LabelAtoms = LabelAtoms.C13, ID = 184, 
+                 AAs = "F", LabelAtoms = LabelAtoms.C13, Formula = "C'9 - C9", ID = 184, 
                  Structural = false, Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:13C(9) (Y)", 
-                 AAs = "Y", LabelAtoms = LabelAtoms.C13, ID = 184, 
+                 AAs = "Y", LabelAtoms = LabelAtoms.C13, Formula = "C'9 - C9", ID = 184, 
                  Structural = false, Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:13C(9)15N(1) (F)", 
-                 AAs = "F", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 269, 
+                 AAs = "F", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, Formula = "C'9N' - C9N", ID = 269, 
                  Structural = false, ShortName = "10a", Hidden = true, PrecisionRequired = 1
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (A)", 
-                 AAs = "A", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "A", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (C)", 
-                 AAs = "C", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "C", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (D)", 
-                 AAs = "D", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "D", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (E)", 
-                 AAs = "E", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "E", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (F)", 
-                 AAs = "F", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "F", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (G)", 
-                 AAs = "G", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "G", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (I)", 
-                 AAs = "I", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "I", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (L)", 
-                 AAs = "L", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "L", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (M)", 
-                 AAs = "M", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "M", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (P)", 
-                 AAs = "P", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "P", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (S)", 
-                 AAs = "S", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "S", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (T)", 
-                 AAs = "T", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "T", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (V)", 
-                 AAs = "V", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "V", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(1) (Y)", 
-                 AAs = "Y", LabelAtoms = LabelAtoms.N15, ID = 994, 
+                 AAs = "Y", LabelAtoms = LabelAtoms.N15, Formula = "N' - N", ID = 994, 
                  Structural = false, ShortName = "+01", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(2) (K)", 
-                 AAs = "K", LabelAtoms = LabelAtoms.N15, ID = 995, 
+                 AAs = "K", LabelAtoms = LabelAtoms.N15, Formula = "N'2 - N2", ID = 995, 
                  Structural = false, ShortName = "+02", Hidden = true, PrecisionRequired = 3
             },
             new UniModModificationData
             {
                  Name = "Label:15N(2) (N)", 
-                 AAs = "N", LabelAtoms = LabelAtoms.N15, ID = 995, 
+                 AAs = "N", LabelAtoms = LabelAtoms.N15, Formula = "N'2 - N2", ID = 995, 
                  Structural = false, ShortName = "+02", Hidden = true, PrecisionRequired = 3
             },
             new UniModModificationData
             {
                  Name = "Label:15N(2) (Q)", 
-                 AAs = "Q", LabelAtoms = LabelAtoms.N15, ID = 995, 
+                 AAs = "Q", LabelAtoms = LabelAtoms.N15, Formula = "N'2 - N2", ID = 995, 
                  Structural = false, ShortName = "+02", Hidden = true, PrecisionRequired = 3
             },
             new UniModModificationData
             {
                  Name = "Label:15N(2) (W)", 
-                 AAs = "W", LabelAtoms = LabelAtoms.N15, ID = 995, 
+                 AAs = "W", LabelAtoms = LabelAtoms.N15, Formula = "N'2 - N2", ID = 995, 
                  Structural = false, ShortName = "+02", Hidden = true, PrecisionRequired = 3
             },
             new UniModModificationData
@@ -6633,13 +6633,13 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Label:15N(3) (H)", 
-                 AAs = "H", LabelAtoms = LabelAtoms.N15, ID = 996, 
+                 AAs = "H", LabelAtoms = LabelAtoms.N15, Formula = "N'3 - N3", ID = 996, 
                  Structural = false, ShortName = "+03", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
             {
                  Name = "Label:15N(4) (R)", 
-                 AAs = "R", LabelAtoms = LabelAtoms.N15, ID = 897, 
+                 AAs = "R", LabelAtoms = LabelAtoms.N15, Formula = "N'4 - N4", ID = 897, 
                  Structural = false, ShortName = "+04", Hidden = true, PrecisionRequired = 2
             },
             new UniModModificationData
@@ -6869,45 +6869,45 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Label:15N", 
-                 LabelAtoms = LabelAtoms.N15,  
+                 LabelAtoms = LabelAtoms.N15,
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
                  Name = "Label:13C", 
-                 LabelAtoms = LabelAtoms.C13,  
+                 LabelAtoms = LabelAtoms.C13,
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
                  Name = "Label:13C15N", 
-                 LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13,  
+                 LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13,
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
-                 Name = "Label:13C(6)15N(2) (C-term K)", 
-                 AAs = "K", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13,  
+                 Name = "Label:13C(6)15N(2) (C-term K)", ID = 259,
+                 AAs = "K", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13, Formula = "C'6N'2 - C6N2",
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
-                 Name = "Label:13C(6)15N(4) (C-term R)", 
-                 AAs = "R", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13,  
+                 Name = "Label:13C(6)15N(4) (C-term R)", ID = 267,
+                 AAs = "R", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.N15 | LabelAtoms.C13, Formula = "C'6N'4 - C6N4",
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
-                 Name = "Label:13C(6) (C-term K)", 
-                 AAs = "K", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.C13,  
+                 Name = "Label:13C(6) (C-term K)", ID = 188,
+                 AAs = "K", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6",
                  Structural = false, Hidden = false, 
             },
             new UniModModificationData
             {
-                 Name = "Label:13C(6) (C-term R)", 
-                 AAs = "R", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.C13,  
+                 Name = "Label:13C(6) (C-term R)", ID = 188,
+                 AAs = "R", Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.C13, Formula = "C'6 - C6",
                  Structural = false, Hidden = false, 
-            }
+}
         };
     }
 }

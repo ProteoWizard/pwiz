@@ -527,7 +527,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (string.IsNullOrEmpty(Formula))
                         throw new InvalidDataException(Resources.StaticMod_Validate_Modification_formula_may_not_be_empty);
-                    if (LabelAtoms != LabelAtoms.None)
+                    if (UnimodId == null && LabelAtoms != LabelAtoms.None)
                         throw new InvalidDataException(Resources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
                     // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
@@ -684,6 +684,20 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
+        /// Compares mono and avg masses unless it's a label-only mod and one of the masses is null 
+        /// </summary>
+        private bool EquivalentMasses(StaticMod obj)
+        {
+            bool monoEquiv = obj.MonoisotopicMass == null && obj.LabelAtoms != LabelAtoms.None ||
+                             MonoisotopicMass == null && LabelAtoms != LabelAtoms.None ||
+                             obj.MonoisotopicMass != null && obj.MonoisotopicMass.Equals(MonoisotopicMass);
+            bool avgEquiv = obj.AverageMass == null && obj.LabelAtoms != LabelAtoms.None ||
+                            AverageMass == null && LabelAtoms != LabelAtoms.None ||
+                            obj.AverageMass != null && obj.AverageMass.Equals(AverageMass);
+            return monoEquiv && avgEquiv;
+        }
+
+        /// <summary>
         /// Equality minus <see cref="IsExplicit"/>, <see cref="UnimodId"/>, <see cref="IsVariable"/> and <see cref="XmlNamedElement.Equals(object)"/>.
         /// Used checking for matches between user defined modifications and UniMod modifications.
         /// </summary>
@@ -691,8 +705,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!Equals(obj.AAs, AAs) ||
                 !obj.Terminus.Equals(Terminus) ||
-                !obj.AverageMass.Equals(AverageMass) ||
-                !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
+                !EquivalentMasses(obj) ||
                 !Equals(obj.RelativeRT, RelativeRT) ||
                 !Equals(obj.CrosslinkerSettings, CrosslinkerSettings))
             {
