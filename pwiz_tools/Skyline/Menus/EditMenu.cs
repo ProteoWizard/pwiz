@@ -1055,7 +1055,7 @@ namespace pwiz.Skyline.Menus
 
         public void ShowSynchronizedIntegrationDialog()
         {
-            using (var dlg = new SynchronizedIntegrationDlg(DocumentUI))
+            using (var dlg = new SynchronizedIntegrationDlg(SkylineWindow))
             {
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
@@ -1063,7 +1063,7 @@ namespace pwiz.Skyline.Menus
                     var all = dlg.IsAll;
                     var targets = dlg.TargetsInvariant.ToArray();
 
-                    var existing = DocumentUI.Settings.TransitionSettings.Integration;
+                    var existing = Document.Settings.TransitionSettings.Integration;
                     if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
                     {
                         ModifyDocument(
