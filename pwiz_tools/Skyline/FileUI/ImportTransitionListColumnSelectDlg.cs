@@ -129,6 +129,7 @@ namespace pwiz.Skyline.FileUI
             PopulateComboBoxes();
             InitializeRadioButtons();
             checkBoxAssociateProteins.Visible = CheckboxVisible();
+            UpdateAssociateProteinsState();
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
@@ -147,6 +148,14 @@ namespace pwiz.Skyline.FileUI
             return dataGrid.RectangleToScreen(r);
         }
 
+        private void UpdateAssociateProteinsState()
+        {
+            var isValid = Importer.RowReader.Indices.PeptideColumn != -1;
+            checkBoxAssociateProteins.ForeColor =
+                isValid ? Color.Black : Color.Gray;
+            checkBoxAssociateProteins.Enabled = isValid;
+
+        }
         /// <summary>
         /// Checks whether the associate proteins checkbox should be visible
         /// </summary>
@@ -212,6 +221,7 @@ namespace pwiz.Skyline.FileUI
             // Go through each line of the import
             foreach(var line in Importer.RowReader.Lines)
             {
+         //       uint oh no pep col
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
                 var action = associateHelper.determineAssociateAction(null, 
@@ -878,7 +888,7 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
             }
-
+            UpdateAssociateProteinsState();
             previousIndices[comboBoxIndex] = comboBox.SelectedIndex;
         }
 
@@ -1227,7 +1237,7 @@ namespace pwiz.Skyline.FileUI
                 colPositions.IndexOf(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
 
             // If the mouse is inside a protein name cell, display information about that protein
-            if (e.RowIndex >= 0 && e.ColumnIndex == 0 && checkBoxAssociateProteins.Checked)
+            if (e.RowIndex >= 0 && e.ColumnIndex == 0 && isAssociated)
             {
                 // The row index is one off from the row in the transition list because the first row of the datagrid is covered by combo boxes
                 var protein = _proteinList[e.RowIndex - 1];
@@ -1339,6 +1349,11 @@ namespace pwiz.Skyline.FileUI
             var proteinName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
             if (checkBoxAssociateProteins.Checked)
             {
+                if (Importer.RowReader.Indices.PeptideColumn == -1)
+                {
+                    checkBoxAssociateProteins.Checked = false;
+                    return;
+                }
                 _originalHeaders = Importer.RowReader.Indices.Headers;
                 if (_originalProteinIndex == 0)
                 {

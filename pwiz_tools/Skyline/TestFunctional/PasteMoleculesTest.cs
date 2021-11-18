@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
 
 
         private void TestError(string clipText, string errText,
-            string[] columnOrder, int cols = 20)
+            string[] columnOrder, int cols = 20, bool expectNoError = false)
         {
             // TODO: use columnOrder to set the headers for windowDlg
             string allErrorText = "";
@@ -202,7 +202,7 @@ namespace pwiz.SkylineTestFunctional
                 fullColumnOrder, 32);
             var line2End = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tunknown";
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
-                String.Format("Error on line 1, column7: Error on line 1: Product m/z 59.51282 does not agree with value 456.5045 as calculated from ion formula and charge state (delta = 396.9916, Transition Settings | Instrument | Method match tolerance m/z = 0.055).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you."),
+                "Error on line 1, column7: Error on line 1: Product m/z 59.51282 does not agree with value 456.5045 as calculated from ion formula and charge state (delta = 396.9916, Transition Settings | Instrument | Method match tolerance m/z = 0.055).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.",
                 fullColumnOrder, 32);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge+ line2End, // Excessively large charge for product
@@ -263,17 +263,17 @@ namespace pwiz.SkylineTestFunctional
                  };
                 if (withSpecials > 0)
                 {
-                     var s = expectedErrors.Count;
-                     expectedErrors.Add(
-                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,badfields[s++]));
-                     expectedErrors.Add(
-                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, badfields[s++]));
-                     expectedErrors.Add(
-                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, badfields[s++]));
-                     expectedErrors.Add(
-                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, badfields[s++]));
-                     expectedErrors.Add(
-                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, badfields[s++]));
+                    var s = expectedErrors.Count;
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, badfields[s++]));
                     expectedErrors.Add(
                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, badfields[s++]));
                     expectedErrors.Add(
@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
                     for (var f = 0; f < expectedErrors.Count-1; f++)
                         line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                     if (!string.IsNullOrEmpty(expectedErrors[bad]))
-                        TestError(line, expectedErrors[bad], columnOrder);
+                        TestError(line, expectedErrors[bad], columnOrder, 20, expectedErrors[bad].Equals(Resources.PasteDlg_ShowNoErrors_No_errors));
                 }
             }
             TestError(line1.Replace(caffeineFormula, caffeineFormula + "[M-H]").Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1", 
