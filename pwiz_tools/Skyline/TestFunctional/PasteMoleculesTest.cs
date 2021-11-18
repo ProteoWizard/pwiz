@@ -200,30 +200,32 @@ namespace pwiz.SkylineTestFunctional
             TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
                 String.Format(errMsg),
                 fullColumnOrder, 32);
+            var line2End = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tunknown";
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
                 String.Format("Error on line 1, column7: Error on line 1: Product m/z 59.51282 does not agree with value 456.5045 as calculated from ion formula and charge state (delta = 396.9916, Transition Settings | Instrument | Method match tolerance m/z = 0.055).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you."),
                 fullColumnOrder, 32);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
-            TestError(line1 + line2start + "\t\t1\t" + badcharge+ "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t4", // Excessively large charge for product
+            TestError(line1 + line2start + "\t\t1\t" + badcharge+ line2End, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
                 badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE), fullColumnOrder, 32);
             badcharge = 120;
-            TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
+            TestError(line1 + line2start + "\t\t" + badcharge + "\t1" + line2End, // Insanely large charge for precursor
                 String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
                 badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder, 32);
-            TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
+            TestError(line1 + line2start + "\t\t1\t" + line2End, // No mz or charge for product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2), fullColumnOrder);
-            TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
+            TestError(line1 + line2start + "19\t5\t\t" + line2End
+                , // Precursor Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2), fullColumnOrder);
-            TestError(line1 + line2start + "\t7\t1", // Product Formula and m/z don't make sense together
+            TestError(line1 + line2start + "\t7\t1\t" + line2End, // Product Formula and m/z don't make sense together
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2), fullColumnOrder);
-            TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
+            TestError(line1 + line2start + "\t\t\t" + line2End, // No mz or charge for precursor or product
                 String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2), fullColumnOrder);
-            TestError(line1 + line3, // Insanely large molecule
+            TestError(line1 + line3 + line2End, // Insanely large molecule
                 string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 503970013.01879, CustomMolecule.MAX_MASS), fullColumnOrder);
-            TestError(line1 + line4, // Insanely small molecule
+            TestError(line1 + line4 + line2End, // Insanely small molecule
                 string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__, 2.01588, CustomMolecule.MIN_MASS), fullColumnOrder);
-            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset, // Explicit retention time window without retention time
+            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t1", // Explicit retention time window without retention time
                 Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_, fullColumnOrder);
             TestError(line5.Replace("[M-2H]", "[M+H]"), string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "[M+H]", 1, -2), fullColumnOrder);
             TestError(line6, string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "M-3H", -3, -2), fullColumnOrder);

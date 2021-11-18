@@ -127,9 +127,6 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(windowDlg.CancelDialog);
 
-            // Pasting in an empty string should produce some sort of error
-            var transitionDlg1 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            transitionDlg1.textBox1.Text = string.Empty;
             // Test modification matching
             IList<TypedModifications> heavyMod = new[]
             {
