@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -82,18 +83,24 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(windowDlg.OkDialog);  // We expect this to work, go ahead and load it
             else
             {
-                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
-                RunUI(() =>
+                if (!expectNoError)
                 {
-                    foreach (var err in errDlg.ErrorList)
+                    var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
+                    RunUI(() =>
                     {
-                        allErrorText += err.ErrorMessage;
-                    }
-                    Assert.IsTrue(allErrorText.Contains(errText),
-                        string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                            errText, errDlg.ErrorList));
-                    errDlg.Close();
-                });
+                        foreach (var err in errDlg.ErrorList)
+                        {
+                            allErrorText += err.ErrorMessage;
+                        }
+                        Assert.IsTrue(allErrorText.Contains(errText),
+                            string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                                errText, errDlg.ErrorList));
+                        errDlg.Close();
+                    });
+                } else {
+                    // If we are expecting no errors, we will get a MessageDlg instead of an ImportTransitionListErrorDlg
+                    RunDlg<MessageDlg>(windowDlg.buttonCheckForErrors.PerformClick, messageDlg => { messageDlg.OkDialog(); });
+                }
                 RunUI(windowDlg.CancelDialog);
             }
             WaitForClosedForm(transitionDlg);
@@ -240,7 +247,7 @@ namespace pwiz.SkylineTestFunctional
                                 caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234", "Vsec/cm2", "C6H5O2"  };
                 string[] badfields =
                 {
-                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
+                    "MyMol", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
                     "shamble-raft4-inchi", "bags34cas","flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit", "C6H15O5"};
                 Assert.AreEqual(fields.Length, badfields.Length);
 
@@ -265,9 +272,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var s = expectedErrors.Count;
                     expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_,badfields[s++]));
+                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors)); s++; // Drift time columns are now obsolete
                     expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, badfields[s++]));
+                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors)); s++; // Drift time columns are now obsolete
                     expectedErrors.Add(
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, badfields[s++]));
                     expectedErrors.Add(
@@ -306,10 +313,12 @@ namespace pwiz.SkylineTestFunctional
                     for (var f = 0; f < expectedErrors.Count-1; f++)
                         line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                     if (!string.IsNullOrEmpty(expectedErrors[bad]))
-                        TestError(line, expectedErrors[bad], columnOrder, 20, expectedErrors[bad].Equals(Resources.PasteDlg_ShowNoErrors_No_errors));
+                    {
+                        TestError(line, expectedErrors[bad], columnOrder, columnOrder.Length, expectedErrors[bad].Equals(Resources.PasteDlg_ShowNoErrors_No_errors));
+                    }
                 }
             }
-            TestError(line1.Replace(caffeineFormula, caffeineFormula + "[M-H]").Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1", 
+            TestError(line1.Replace(caffeineFormula, caffeineFormula + "[M-H]").Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1" + line2End, 
                 string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,"[M-H]",-1,-2), fullColumnOrder);
 
             // Now load the document with a legit paste
@@ -320,7 +329,7 @@ namespace pwiz.SkylineTestFunctional
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
                 var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
-                TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
+                TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H" + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tunknown", String.Empty, fullColumnOrder, fullColumnOrder.Length - 1);
                 var docTest = WaitForDocumentChange(docEmpty);
                 var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
                 Assert.AreEqual(2, testTransitionGroups.Length);
@@ -382,11 +391,12 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             });
             OkDialog(windowDlg,windowDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -435,10 +445,10 @@ namespace pwiz.SkylineTestFunctional
 
             var columnOrderB = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
                 };
 
             // Doc is set for MS1 filtering, fragment transitions, charge=1, two peaks, should show M and M+1, M+2 after filter is invoked by changing to 3 peaks
@@ -471,13 +481,13 @@ namespace pwiz.SkylineTestFunctional
             // Verify that we can import heavy/light pairs
             var columnOrderC = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
                 };
             pasteText =
                 "A,27-HC,C36H57N2O3,135,1,1,light\r\n" +
@@ -499,14 +509,14 @@ namespace pwiz.SkylineTestFunctional
             // Verify adduct usage - none, or in own column, or as part of formula
             columnOrderC = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
                 };
             pasteText =
                 "A,27-HC,C36H57N2O3,,1,135,1,light\r\n" + // No adduct, just charge
@@ -524,12 +534,12 @@ namespace pwiz.SkylineTestFunctional
             // Verify adduct usage - none, or in own column, or as part of formula, when no name hints are given
             columnOrderC = new[]
                 {
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
                 };
             pasteText =
                 "C36H57N2O3,,1,135,1,light\r\n" + // No adduct
@@ -1771,9 +1781,9 @@ namespace pwiz.SkylineTestFunctional
         void TestFileImportTransitionList(string knownGood)
         {
             var filename = TestFilesDir.GetTestPath("known_good.csv");
-            var headers = Settings.Default.CustomMoleculeTransitionInsertColumnsList.Select(header => header.ToString()).ToArray();
+            var headers = Settings.Default.CustomImportTransitionListColumnTypesList.Select(header => header.ToString()).ToArray();
             var contents = string.Join("\t", 
-                               headers.Take(headers.Length-1)) + // Leave off the product neutral loss column
+                               headers.Take(headers.Length)) + // Leave off the product neutral loss column
                            Environment.NewLine + knownGood;
             File.WriteAllText(filename, contents);
             RunUI(() =>
