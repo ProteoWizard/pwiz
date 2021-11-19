@@ -26822,6 +26822,35 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading required files....
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_Downloading_required_files___ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_Downloading_required_files___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following file is required. Do you want to download it?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_downl" +
+                        "oad_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following files are required. Do you want to download them?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_dow" +
+                        "nload_them_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Index is out of range.
         /// </summary>
         public static string SizedSet_Add_SizedSet_index_value_is_out_of_range {

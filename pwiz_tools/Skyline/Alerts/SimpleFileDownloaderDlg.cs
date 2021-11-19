@@ -51,8 +51,8 @@ namespace pwiz.Skyline.Alerts
             }
 
             bool multiple = requiredFilesList.Count > 1;
-            string downloadMessage = multiple ? "The following files are required. Do you want to download them?" :
-                "The following file is required. Do you want to download it?";
+            string downloadMessage = multiple ? Resources.SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ :
+                Resources.SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_;
 
             var downloadMessageLabel = new Label
             {
@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Alerts
                     return result;
             }
 
-            using (var dlg = new LongWaitDlg { Message = "Downloading required files...", ProgressValue = 0 })
+            using (var dlg = new LongWaitDlg { Message = Resources.SimpleFileDownloaderDlg_Show_Downloading_required_files___, ProgressValue = 0 })
             {
                 dlg.PerformWork(parent, 50, () => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, dlg));
             }

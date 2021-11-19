@@ -11579,4 +11579,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EnsureFastaHasDecoys_Using_decoy_database_at__0___1_" xml:space="preserve">
     <value>Using decoy database at {0}.{1}</value>
   </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_" xml:space="preserve">
+    <value>The following files are required. Do you want to download them?</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
+    <value>The following file is required. Do you want to download it?</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
+    <value>Downloading required files...</value>
+  </data>
 </root>
