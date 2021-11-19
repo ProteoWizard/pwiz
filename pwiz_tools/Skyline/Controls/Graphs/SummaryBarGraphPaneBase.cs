@@ -38,15 +38,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
 
             private SummaryBarGraphPaneBase _parent;
-            // ReSharper disable once RedundantDefaultMemberInitializer
-            private bool _isVisible = false;
+            private bool _isVisible;
             private NodeTip _tip;
             private TableDesc _table;
             internal RenderTools RenderTools = new RenderTools();
 
-            //Location is in user coordinates. 
             public int ReplicateIndex { get; private set; }
-            public bool IsVisible => _isVisible;
             public CurveItem TargetCurve {  get; set; }
 
             public ToolTipImplementation(SummaryBarGraphPaneBase parent)
@@ -68,7 +65,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void AddLine(string description, string data)
             {
-                if (_table == null) _table = new TableDesc();
+                if (_table == null)
+                    _table = new TableDesc();
                 _table.AddDetailRow(description, data, RenderTools);
             }
 
@@ -79,8 +77,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Draw(int dataIndex, Point cursorPos)
             {
-                if (_isVisible && ReplicateIndex != dataIndex) Hide();
-                if (_isVisible && ReplicateIndex == dataIndex) return;
+                if (_isVisible)
+                {
+                    if (ReplicateIndex == dataIndex)
+                        return;
+                    Hide();
+                }
                 if (_table == null || _table.Count == 0) return;
 
                 ReplicateIndex = dataIndex;
@@ -108,7 +110,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            //used for testing only
+            #region Test Methods
+
             public List<string> TipLines
             {
                 get
@@ -118,6 +121,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ).ToList();
                 }
             }
+
+            #endregion
 
             private class UserPoint
             {
@@ -222,6 +227,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             CurveList.Clear();
             GraphObjList.Clear();
+            ToolTip?.Hide();
         }
 
         protected virtual int FirstDataIndex { get { return 0; } }
@@ -332,8 +338,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
-            if(ToolTip != null)
+            if (ToolTip != null)
+            {
+                ToolTip.Hide();
                 ToolTip.RenderTools.Dispose();
+            }
         }
 
         public override void Draw(Graphics g)

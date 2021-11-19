@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!GraphSummary.GraphControl.IsDisposed)
                 return GraphSummary.GraphControl.RectangleToScreen(r);
-            else return new Rectangle();
+            return new Rectangle();
         }
 
         Rectangle ITipDisplayer.ScreenRect
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!GraphSummary.GraphControl.IsDisposed)
                     return Screen.GetBounds(GraphSummary.GraphControl);
-                else return new Rectangle();
+                return new Rectangle();
             }
         }
 
