@@ -106,6 +106,13 @@ namespace pwiz.SkylineTestTutorial
                 
                 var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
+                if (_inferredLabels)
+                {
+                    // Remove the explicit ",heavy" and ",label" from the text
+                    var lines = impliedLabeled.Split('\n').Where(l => ! string.IsNullOrEmpty(l));
+                    var altered = lines.Select(l => l.Substring(0,l.LastIndexOf(TextUtil.CsvSeparator))).ToArray();
+                    impliedLabeled = TextUtil.LineSeparate(altered);
+                }
                 PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
 
