@@ -17,19 +17,12 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -41,6 +34,12 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -93,10 +92,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
 
-                    if (retry == 0)
-                        PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
-                    
-                    // RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
+                    // TODO (henrytsanford): update the tutorial to use ColumnSelectDlg instead of PasteDlg
                     if (retry == 0)
                         PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with selected and ordered columns", 4);
 
@@ -127,12 +123,12 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                     if (retry == 0)
                     {
-                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with validated contents showing charge problem", 5);
+                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents showing charge problem", 5);
                         OkDialog(col4Dlg, col4Dlg.CancelDialog);
                     }
                     else
                     {
-                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with validated contents", 6);
+                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 6);
                         OkDialog(col4Dlg, col4Dlg.OkDialog);
                     }
                 }
