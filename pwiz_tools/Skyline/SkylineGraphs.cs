@@ -3603,7 +3603,7 @@ namespace pwiz.Skyline
                         showDotProductToolStripMenuItem.DropDownItems.Clear();
                         var optionsList = DotProductDisplayOptionExtension.ListAll();
                         if(areaReplicateGraphPane.IsLineGraph)
-                            optionsList = new DotProductDisplayOption[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
+                            optionsList = new[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
                         showDotProductToolStripMenuItem.DropDownItems.AddRange(optionsList.Select(MakeShowDotpMenuItem).ToArray());
                         menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
                     }
