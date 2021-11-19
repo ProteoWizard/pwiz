@@ -89,7 +89,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             if (docCurrent.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained)
-                return End(null); // already have a trained model
+                // already have a trained model
+                return End(null);
+            else if (!docCurrent.Molecules.Any(molecule => molecule.IsDecoy))
+                // user removed the decoys
+                return End(TextUtil.LineSeparate(
+                    Resources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_,
+                    Resources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_));
 
             var modelName = Path.GetFileNameWithoutExtension(container.DocumentFilePath);
             var scoringModel = Equals(document.Settings.PeptideSettings.Integration.AutoTrain, PeptideIntegration.AutoTrainType.mprophet_model)
@@ -100,13 +106,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Get scores for target and decoy groups.
             targetDecoyGenerator.GetTransitionGroups(out var targetTransitionGroups, out var decoyTransitionGroups);
-            if (!decoyTransitionGroups.Any())
-            {
-                // user removed the decoys
-                return End(TextUtil.LineSeparate(
-                    Resources.ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_,
-                    Resources.ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_));
-            }
+            if (!targetTransitionGroups.Any())
+                return End(string.Format(
+                    Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
+                    Resources.AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_));
+            else if (!decoyTransitionGroups.Any())
+                return End(string.Format(
+                    Resources.ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_,
+                    Resources.AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_));
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
