@@ -536,6 +536,7 @@ namespace pwiz.Skyline.Menus
             // Check to see if any of the peptides would be filtered
             // by the current settings.
             string[] pepSequences = text.Split('\n');
+            // ReSharper disable once CollectionNeverQueried.Local
             var setAdded = new HashSet<string>();
             var listAllPeptides = new List<string>();
             var listAcceptPeptides = new List<string>();

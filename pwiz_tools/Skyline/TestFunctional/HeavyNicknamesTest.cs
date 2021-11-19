@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
             const string nameTritium = "Tritium";
 
             // Add a molecule which has H' in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHPrime;
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has D in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameDeuterium;
@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has H" in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHDoublePrime;
