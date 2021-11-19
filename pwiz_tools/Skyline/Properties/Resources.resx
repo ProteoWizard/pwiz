@@ -11531,4 +11531,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
     <value>Columns identified as {0}</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>Associate Proteins enabled</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0} transitions added</value>
+  </data>
 </root>

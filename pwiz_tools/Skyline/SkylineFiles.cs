@@ -1922,6 +1922,7 @@ namespace pwiz.Skyline
             bool isSmallMoleculeList = true;
             bool useColSelectDlg = true;
             bool hasHeaders = true;
+            bool isAssociateProteins = false;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
@@ -1964,6 +1965,7 @@ namespace pwiz.Skyline
             }
 
             useColSelectDlg |= forceDlg;
+            string gridValues = null;
             if (useColSelectDlg)
             {
                 // Allow the user to assign column types
@@ -1980,6 +1982,22 @@ namespace pwiz.Skyline
                     peptideGroups = insParams.PeptideGroups;
                     columnPositions = insParams.ColumnHeaderList;
                     isSmallMoleculeList = insParams.IsSmallMoleculeList;
+                    isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
+
+                    // Grab the final grid contents (may have been altered by Associate Proteins, or user additions/deletions
+                    var sb = new StringBuilder();
+                    if (columnDlg.Importer.RowReader.Indices.Headers != null &&
+                        columnDlg.Importer.RowReader.Indices.Headers.Any())
+                    {
+                        // Show the headers as the user sees them
+                        sb.AppendLine(string.Join(columnDlg.Importer.RowReader.Separator.ToString(), columnDlg.Importer.RowReader.Indices.Headers));
+                    }
+                    foreach (var line in columnDlg.Importer.RowReader.Lines.Where(l => !string.IsNullOrEmpty(l)))
+                    {
+                        // Show the input lines as the user sees them
+                        sb.AppendLine(line);
+                    }
+                    gridValues = sb.ToString();
                 }
             }
 
@@ -2097,28 +2115,39 @@ namespace pwiz.Skyline
             {
                 MessageType msgType;
                 object[] args;
-                string extraInfo = null;
 
                 // Log the column assignments
                 var columnsUsed = (columnPositions == null || columnPositions.Count == 0)
                     ? null
                     : string.Format(Resources.SkylineWindow_ImportMassList_Columns_identified_as__0_, TextUtil.ToCsvLine(columnPositions.Select(s => $@"'{s}'")));
 
+                var extraInfo = new List<string>
+                {
+                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_added,
+                        docPair.NewDoc.MoleculeTransitionCount - docPair.OldDoc.MoleculeTransitionCount)
+                };
+                if (isAssociateProteins)
+                {
+                    extraInfo.Add(Resources.SkylineWindow_ImportMassList_Associate_Proteins_enabled);
+                }
+                extraInfo.Add(columnsUsed);
+
                 // Imported from file
                 if (inputs.InputFilename != null)
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
                     args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
-                    extraInfo = columnsUsed;
+                    extraInfo.Add(gridValues);
                 }
                 else
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
                     args = new object[0];
-                    extraInfo =  columnsUsed == null ? inputs.InputText : columnsUsed + Environment.NewLine + inputs.InputText;
+                    extraInfo.Add(gridValues ?? inputs.InputText);
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), 
+                    TextUtil.LineSeparate(extraInfo.Where(s => !string.IsNullOrEmpty(s)))).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)

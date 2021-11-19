@@ -897,7 +897,7 @@ namespace pwiz.Skyline.Model
             protected string[] Fields { get; private set; }
             public IList<string> Lines { get; set; }
             private IFormatProvider FormatProvider { get; set; }
-            private char Separator { get; set; }
+            public char Separator { get; private set; }
             private ModificationMatcher ModMatcher { get; set; }
             private Dictionary<string, PeptideDocNode> NodeDictionary { get; set; } 
             public ColumnIndices Indices { get; private set; }

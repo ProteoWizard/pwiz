@@ -28012,6 +28012,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} transitions added.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList__0__transitions_added {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList__0__transitions_added", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} transitions contained errors..
         /// </summary>
         public static string SkylineWindow_ImportMassList__0__transitions_contained_errors_ {
@@ -28090,6 +28099,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportMassList_Analyzing_input__0_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_Analyzing_input__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins enabled.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Associate_Proteins_enabled {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Associate_Proteins_enabled", resourceCulture);
             }
         }
         
