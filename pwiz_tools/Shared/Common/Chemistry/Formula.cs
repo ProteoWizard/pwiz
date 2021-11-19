@@ -52,7 +52,8 @@ namespace pwiz.Common.Chemistry
         public TValue GetElementCount(String element)
         {
             TValue atomCount;
-            TryGetValue(element, out atomCount);
+            if (!TryGetValue(element, out atomCount))
+                atomCount = default(TValue);
             return atomCount;
         }
 

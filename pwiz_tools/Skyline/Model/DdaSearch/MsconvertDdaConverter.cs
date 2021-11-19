@@ -46,17 +46,17 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
         }
 
-        public override bool Run(IProgressMonitor progressMonitor, IProgressStatus status)
+        public override bool Run(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             _parentProgressMonitor = progressMonitor;
-            _progressStatus = status;
+            _progressStatus = progressStatus;
 
             try
             {
                 OriginalSpectrumSources = SearchEngine.SpectrumFileNames;
                 ConvertedSpectrumSources = new MsDataFileUri[OriginalSpectrumSources.Length];
 
-                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
+                UpdateProgress(status => status.ChangeMessage(Resources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     // if the same settings were used, we can re-use the file, else regenerate
                     if (MsDataFileImpl.IsValidFile(outputFilepath))
                     {
-                        progressMonitor?.UpdateProgress(status.ChangeMessage(string.Format(Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
+                        UpdateProgress(status => status.ChangeMessage(string.Format(Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
                         continue;
                     }
 
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                     catch (IOException e)
                     {
-                        progressMonitor?.UpdateProgress(status.ChangeMessage(e.Message));
+                        UpdateProgress(status => status.ChangeMessage(e.Message));
                         return false;
                     }
 
@@ -124,9 +124,16 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (Exception e)
             {
-                progressMonitor?.UpdateProgress(status.ChangeErrorException(e));
+                UpdateProgress(status => status.ChangeErrorException(e));
                 return false;
             }
+        }
+
+        private void UpdateProgress(Func<IProgressStatus, IProgressStatus> updater)
+        {
+            if (_parentProgressMonitor == null || _progressStatus == null)
+                return;
+            _progressStatus = updater(_progressStatus);
         }
 
         public bool IsCanceled => _parentProgressMonitor?.IsCanceled == true;

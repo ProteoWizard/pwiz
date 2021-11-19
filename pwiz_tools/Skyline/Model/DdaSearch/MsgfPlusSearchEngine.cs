@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Common.Chemistry;
@@ -142,9 +143,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 try
                 {
+                    long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                        @"-Xmx16G -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
+                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
                         $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
@@ -227,34 +230,39 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
 
                     // can't use mod with no formula or mass; CONSIDER throwing exception
-                    if (mod.Formula == null && mod.MonoisotopicMass == null)
+                    if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                        mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                         continue;
 
-                    string composition;
-                    if (mod.LabelAtoms != LabelAtoms.None)
-                        composition = mod.MonoisotopicMass.ToString();
-                    else
-                        composition = mod.Formula ?? mod.MonoisotopicMass.ToString();
-
-                    string residues = mod.AAs ?? @"*";
-                    string modType = mod.IsVariable ? @"opt" : @"fix";
-                    string position = @"any";
-                    switch (mod.Terminus)
+                    Action<string, string> addMod = (string composition, string residues) =>
                     {
-                        case ModTerminus.N:
-                            position = @"N-term";
-                            break;
-                        case ModTerminus.C:
-                            position = @"C-term";
-                            break;
+                        string modType = mod.IsVariable ? @"opt" : @"fix";
+                        string position = @"any";
+                        switch (mod.Terminus)
+                        {
+                            case ModTerminus.N:
+                                position = @"N-term";
+                                break;
+                            case ModTerminus.C:
+                                position = @"C-term";
+                                break;
+                        }
+
+
+                        string name = mod.ShortName;
+                        if (name.IsNullOrEmpty())
+                            name = $@"Mod{++modCounter}";
+
+                        modsFileStream.WriteLine($@"{composition}, {residues}, {modType}, {position}, {name}");
+                    };
+
+                    if (mod.LabelAtoms != LabelAtoms.None)
+                    {
+                        foreach (var aa in mod.AminoAcids)
+                            addMod(mod.GetAminoAcidLabelMassDiff(aa).ToString(CultureInfo.InvariantCulture), aa.ToString());
                     }
-
-
-                    string name = mod.ShortName;
-                    if (name.IsNullOrEmpty())
-                        name = $@"Mod{++modCounter}";
-
-                    modsFileStream.WriteLine($@"{composition}, {residues}, {modType}, {position}, {name}");
+                    else
+                        addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
                 }
             }
         }

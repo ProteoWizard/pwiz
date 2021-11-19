@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class MsFraggerDownloadDlg : Form
+    public partial class MsFraggerDownloadDlg : FormEx
     {
         private const string LICENSE_URL = @"https://msfragger.arsci.com/upgrader/MSFragger-LICENSE.pdf";
         private const string DOWNLOAD_URL = @"http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php";
@@ -146,7 +146,6 @@ namespace pwiz.Skyline.Alerts
             Download();
 
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         public bool CheckCursorWithinRange(MouseEventArgs e, Tuple<int, int> range)

@@ -138,12 +138,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             string paramsFile = Path.GetTempFileName();
             File.WriteAllText(paramsFile, paramsFileText.ToString());
 
+            long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+
             try
             {
                 // Run MSFragger
                 var pr = new ProcessRunner();
                 var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                    @"-Xmx16G -jar """ + MsFraggerBinary + $@""" ""{paramsFile}""")// ""{spectrumFilename}""")
+                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsFraggerBinary + $@""" ""{paramsFile}""")// ""{spectrumFilename}""")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -516,10 +518,9 @@ add_Nterm_protein = 0.000000
             foreach (var mod in fixedAndVariableModifs)
             {
                 // can't use mod with no formula or mass; CONSIDER throwing exception
-                if (mod.Formula == null && mod.MonoisotopicMass == null)
+                if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                    mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                     continue;
-
-                double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision).Value;
 
                 string position = string.Empty;
                 switch (mod.Terminus)
@@ -531,46 +532,71 @@ add_Nterm_protein = 0.000000
                         position = @"c";
                         break;
                 }
-                string residues = string.Empty;
-                if (position.IsNullOrEmpty() || mod.AAs == null)
-                    residues = mod.AAs ?? (position.IsNullOrEmpty() ? @"*" : $@"{position}^");
-                else
-                    foreach (char aa in mod.AAs)
-                        residues += $@"{position}{aa}";
 
-                /*variable_mod_01 = 15.994900 M 3
-                # variable_mod_02 = 42.010600 [^ 1
-                # variable_mod_03 = 79.966330 STY 3
-                # variable_mod_04 = -17.026500 nQnC 1
-                # variable_mod_05 = -18.010600 nE 1
-                # variable_mod_06 = 229.162930 n^ 1
-                # variable_mod_07 = 229.162930 S 1
-                */
-                // MSFragger static mods must have an AA and cannot be terminal-specific, so in those cases, treat it as a variable mod
-                if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty())
+                Action<double, string> addMod = (mass, residues) =>
                 {
-                    ++modCounter;
-                    modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
+                    /*variable_mod_01 = 15.994900 M 3
+                    # variable_mod_02 = 42.010600 [^ 1
+                    # variable_mod_03 = 79.966330 STY 3
+                    # variable_mod_04 = -17.026500 nQnC 1
+                    # variable_mod_05 = -18.010600 nE 1
+                    # variable_mod_06 = 229.162930 n^ 1
+                    # variable_mod_07 = 229.162930 S 1
+                    */
+                    // MSFragger static mods must have an AA and cannot be terminal-specific, so in those cases, treat it as a variable mod
+                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty())
+                    {
+                        ++modCounter;
+                        modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
+                    }
+                    else
+                    {
+                        // accumulate masses from static mods on each AA
+                        foreach (char aa in mod.AAs)
+                        {
+                            if (staticModsByAA.ContainsKey(aa))
+                                staticModsByAA[aa] += mass;
+                            else
+                                staticModsByAA[aa] = mass;
+                        }
+                    }
+                };
+
+                if (mod.LabelAtoms == LabelAtoms.None)
+                {
+                    double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision).Value;
+
+                    string residues = string.Empty;
+                    if (position.IsNullOrEmpty() || mod.AAs == null)
+                        residues = mod.AAs ?? (position.IsNullOrEmpty() ? @"*" : $@"{position}^");
+                    else
+                        foreach (char aa in mod.AAs)
+                            residues += $@"{position}{aa}";
+
+                    addMod(mass, residues);
                 }
                 else
                 {
-                    // accumulate masses from static mods on each AA
-                    foreach (char aa in mod.AAs)
+                    foreach(char aa in mod.AAs)
                     {
-                        if (staticModsByAA.ContainsKey(aa))
-                            staticModsByAA[aa] += mass;
+                        string residue = string.Empty;
+                        if (position.IsNullOrEmpty())
+                            residue = aa.ToString();
                         else
-                            staticModsByAA[aa] = mass;
+                            residue = $@"{position}{aa}";
+
+                        addMod(mod.GetAminoAcidLabelMassDiff(aa), residue);
                     }
                 }
             }
+
 
             /*add_G_glycine = 0.000000
               add_A_alanine = 0.000000
               add_S_serine = 0.000000
             */
             if (!staticModsByAA.ContainsKey('C'))
-                modParamLines.Add(@"add_C_cysteine = 0");
+                modParamLines.Add(@"add_C_cysteine = 0"); // disable default cysteine static mod
 
             foreach (var kvp in staticModsByAA)
                 if (AminoAcidFormulas.FullNames.ContainsKey(kvp.Key))
