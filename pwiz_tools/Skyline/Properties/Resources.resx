@@ -11475,8 +11475,11 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>Precursor Adduct and/or Precursor Charge</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_column_will_cause_the_peptides_to_be_added_to_peptide_lists" xml:space="preserve">
-    <value>Reassinging the Protein Name column will cause the peptides to be added to peptide lists.</value>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
+    <value>Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
+    <value>These filters cannot be applied as they would result in an empty transition list.</value>
   </data>
     <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
     <value>Skyline 21.1</value>

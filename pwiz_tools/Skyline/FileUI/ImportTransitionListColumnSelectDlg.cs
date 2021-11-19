@@ -268,7 +268,7 @@ namespace pwiz.Skyline.FileUI
             {
                 canceled = true;
                 checkBoxAssociateProteins.Checked = false;
-                MessageDlg.Show(this, Resources.MassListImporter_Import_Empty_transition_list);
+                MessageDlg.Show(this, Resources.ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list_);
             }
             return lines.ToArray();
         }
@@ -682,7 +682,7 @@ namespace pwiz.Skyline.FileUI
                 if (checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0)
                 {
                     var dlgResult = MessageDlg.Show(this,
-                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_column_will_cause_the_peptides_to_be_added_to_peptide_lists,
+                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome_,
                         true, MessageBoxButtons.OKCancel);
                     if (dlgResult == DialogResult.Cancel)
                     {
@@ -1232,9 +1232,6 @@ namespace pwiz.Skyline.FileUI
 
         private void dataGrid_MouseMove(object sender, DataGridViewCellMouseEventArgs e)
         {
-            var colPositions = CurrentColumnPositions();
-            var proteinColumn =
-                colPositions.IndexOf(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
 
             // If the mouse is inside a protein name cell, display information about that protein
             if (e.RowIndex >= 0 && e.ColumnIndex == 0 && isAssociated)

@@ -61,6 +61,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to These filters cannot be applied as they would result in an empty transition list..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_ap" +
+                        "plied_as_they_would_result_in_an_empty_transition_list.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid Analyst installation.
         /// </summary>
         public static string AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation {
@@ -16077,19 +16087,18 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to Reassinging the Protein Name column will cause the peptides to be added to peptide lists.
+        ///   Looks up a localized string similar to Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome..
         /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_column_will_cause_the_peptides_to_be_added_to_peptide_lists
-        {
-            get
-            {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Reassinging_the_Protein_Name_col" +
-                                                 "umn_will_cause_the_peptides_to_be_added_to_peptide_lists", resourceCulture);
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_col" +
+                        "umn_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_backg" +
+                        "round_proteome.", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Column {0}.
         /// </summary>
