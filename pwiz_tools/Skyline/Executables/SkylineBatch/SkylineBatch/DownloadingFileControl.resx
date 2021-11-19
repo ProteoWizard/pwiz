@@ -130,7 +130,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
-    <value>41</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
@@ -157,7 +157,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDownload.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 20</value>
+    <value>22, 20</value>
   </data>
   <data name="btnDownload.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -172,7 +172,7 @@
     <value>32, 44</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>39</value>
+    <value>2</value>
   </data>
   <data name="toolStrip1.Text" xml:space="preserve">
     <value>toolStrip1</value>
@@ -208,7 +208,7 @@
     <value>38, 13</value>
   </data>
   <data name="labelPath.TabIndex" type="System.Int32, mscorlib">
-    <value>37</value>
+    <value>0</value>
   </data>
   <data name="labelPath.Text" xml:space="preserve">
     <value>(label):</value>
@@ -241,7 +241,7 @@
     <value>32, 23</value>
   </data>
   <data name="btnSelectFile.TabIndex" type="System.Int32, mscorlib">
-    <value>38</value>
+    <value>3</value>
   </data>
   <data name="btnSelectFile.Text" xml:space="preserve">
     <value>...</value>
