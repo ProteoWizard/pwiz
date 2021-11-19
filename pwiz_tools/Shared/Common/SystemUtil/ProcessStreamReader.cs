@@ -91,7 +91,11 @@ namespace pwiz.Common.SystemUtil
             return ReadLine(null);
         }
 
-        public string ErrorLines => _errorLines?.ToString() ?? string.Empty;
+        public string GetErrorLines()
+        {
+            lock (_readLines)
+                return _errorLines?.ToString() ?? string.Empty;
+        }
 
         /// <summary>
         /// Handles reading from a single stream, and noting its completion

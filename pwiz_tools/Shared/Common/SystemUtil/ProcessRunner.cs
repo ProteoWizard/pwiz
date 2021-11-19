@@ -156,7 +156,7 @@ namespace pwiz.Common.SystemUtil
                     if (sbError.Length == 0)
                     {
                         sbError.AppendLine(@"Error occurred running process.");
-                        sbError.Append(reader.ErrorLines);
+                        sbError.Append(reader.GetErrorLines());
                     }
                     string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)

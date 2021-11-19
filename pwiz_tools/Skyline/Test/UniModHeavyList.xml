@@ -14,10 +14,10 @@
   <static_modification name="Label:15N" label_15N="true" />
   <static_modification name="Label:13C" label_13C="true" />
   <static_modification name="Label:13C15N" label_13C="true" label_15N="true" />
-  <static_modification name="Label:13C(6)15N(2) (C-term K)" aminoacid="K" terminus="C" formula="C'6N'2 - C6N2" label_13C="true" label_15N="true" unimod_id="259" />
-  <static_modification name="Label:13C(6)15N(4) (C-term R)" aminoacid="R" terminus="C" formula="C'6N'4 - C6N4" label_13C="true" label_15N="true" unimod_id="267" />
-  <static_modification name="Label:13C(6) (C-term K)" aminoacid="K" terminus="C" formula="C'6 - C6" label_13C="true" unimod_id="188" />
-  <static_modification name="Label:13C(6) (C-term R)" aminoacid="R" terminus="C" formula="C'6 - C6" label_13C="true" unimod_id="188" />
+  <static_modification name="Label:13C(6)15N(2) (C-term K)" aminoacid="K" terminus="C" label_13C="true" label_15N="true" />
+  <static_modification name="Label:13C(6)15N(4) (C-term R)" aminoacid="R" terminus="C" label_13C="true" label_15N="true" />
+  <static_modification name="Label:13C(6) (C-term K)" aminoacid="K" terminus="C" label_13C="true" />
+  <static_modification name="Label:13C(6) (C-term R)" aminoacid="R" terminus="C" label_13C="true" />
   <static_modification name="Acetyl:2H(3) (H)" aminoacid="H" formula="H'3 - H3" unimod_id="56" short_name="DAc" />
   <static_modification name="Acetyl:2H(3) (K)" aminoacid="K" formula="H'3 - H3" unimod_id="56" short_name="DAc" />
   <static_modification name="Acetyl:2H(3) (N-term)" terminus="N" formula="H'3 - H3" unimod_id="56" short_name="DAc" />
@@ -51,47 +51,47 @@
   <static_modification name="IGBP:13C(2) (C)" aminoacid="C" formula="C'2 - C2" unimod_id="499" />
   <static_modification name="IMID:2H(4) (K)" aminoacid="K" formula="H'4 - H4" unimod_id="95" />
   <static_modification name="Label:13C(1)2H(3) (M)" aminoacid="M" formula="H'3C' - H3C" unimod_id="862" />
-  <static_modification name="Label:13C(3) (A)" aminoacid="A" formula="C'3 - C3" label_13C="true" unimod_id="1296" short_name="+3a" />
-  <static_modification name="Label:13C(3)15N(1) (A)" aminoacid="A" formula="C'3N' - C3N" label_13C="true" label_15N="true" unimod_id="1297" short_name="+4a" />
+  <static_modification name="Label:13C(3) (A)" aminoacid="A" label_13C="true" unimod_id="1296" short_name="+3a" />
+  <static_modification name="Label:13C(3)15N(1) (A)" aminoacid="A" label_13C="true" label_15N="true" unimod_id="1297" short_name="+4a" />
   <static_modification name="Label:13C(4) (M)" aminoacid="M" formula="C'4 - C4" unimod_id="1266" short_name="+4b" />
-  <static_modification name="Label:13C(4)15N(1) (D)" aminoacid="D" formula="C'4N' - C4N" label_13C="true" label_15N="true" unimod_id="1298" short_name="+05" />
-  <static_modification name="Label:13C(5) (P)" aminoacid="P" formula="C'5 - C5" label_13C="true" unimod_id="772" />
-  <static_modification name="Label:13C(5)15N(1) (E)" aminoacid="E" formula="C'5N' - C5N" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
-  <static_modification name="Label:13C(5)15N(1) (M)" aminoacid="M" formula="C'5N' - C5N" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
-  <static_modification name="Label:13C(5)15N(1) (P)" aminoacid="P" formula="C'5N' - C5N" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
-  <static_modification name="Label:13C(5)15N(1) (V)" aminoacid="V" formula="C'5N' - C5N" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
-  <static_modification name="Label:13C(6) (I)" aminoacid="I" formula="C'6 - C6" label_13C="true" unimod_id="188" short_name="+06" />
-  <static_modification name="Label:13C(6) (K)" aminoacid="K" formula="C'6 - C6" label_13C="true" unimod_id="188" short_name="+06" />
-  <static_modification name="Label:13C(6) (L)" aminoacid="L" formula="C'6 - C6" label_13C="true" unimod_id="188" short_name="+06" />
-  <static_modification name="Label:13C(6) (R)" aminoacid="R" formula="C'6 - C6" label_13C="true" unimod_id="188" short_name="+06" />
-  <static_modification name="Label:13C(6)15N(1) (I)" aminoacid="I" formula="C'6N' - C6N" label_13C="true" label_15N="true" unimod_id="695" short_name="+07" />
-  <static_modification name="Label:13C(6)15N(1) (L)" aminoacid="L" formula="C'6N' - C6N" label_13C="true" label_15N="true" unimod_id="695" short_name="+07" />
-  <static_modification name="Label:13C(6)15N(2) (K)" aminoacid="K" formula="C'6N'2 - C6N2" label_13C="true" label_15N="true" unimod_id="259" short_name="+08" />
-  <static_modification name="Label:13C(6)15N(4) (R)" aminoacid="R" formula="C'6N'4 - C6N4" label_13C="true" label_15N="true" unimod_id="267" short_name="+10" />
-  <static_modification name="Label:13C(9) (F)" aminoacid="F" formula="C'9 - C9" label_13C="true" unimod_id="184" />
-  <static_modification name="Label:13C(9) (Y)" aminoacid="Y" formula="C'9 - C9" label_13C="true" unimod_id="184" />
-  <static_modification name="Label:13C(9)15N(1) (F)" aminoacid="F" formula="C'9N' - C9N" label_13C="true" label_15N="true" unimod_id="269" short_name="10a" />
-  <static_modification name="Label:15N(1) (A)" aminoacid="A" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (C)" aminoacid="C" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (D)" aminoacid="D" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (E)" aminoacid="E" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (F)" aminoacid="F" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (G)" aminoacid="G" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (I)" aminoacid="I" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (L)" aminoacid="L" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (M)" aminoacid="M" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (P)" aminoacid="P" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (S)" aminoacid="S" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (T)" aminoacid="T" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (V)" aminoacid="V" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(1) (Y)" aminoacid="Y" formula="N' - N" label_15N="true" unimod_id="994" short_name="+01" />
-  <static_modification name="Label:15N(2) (K)" aminoacid="K" formula="N'2 - N2" label_15N="true" unimod_id="995" short_name="+02" />
-  <static_modification name="Label:15N(2) (N)" aminoacid="N" formula="N'2 - N2" label_15N="true" unimod_id="995" short_name="+02" />
-  <static_modification name="Label:15N(2) (Q)" aminoacid="Q" formula="N'2 - N2" label_15N="true" unimod_id="995" short_name="+02" />
-  <static_modification name="Label:15N(2) (W)" aminoacid="W" formula="N'2 - N2" label_15N="true" unimod_id="995" short_name="+02" />
+  <static_modification name="Label:13C(4)15N(1) (D)" aminoacid="D" label_13C="true" label_15N="true" unimod_id="1298" short_name="+05" />
+  <static_modification name="Label:13C(5) (P)" aminoacid="P" label_13C="true" unimod_id="772" />
+  <static_modification name="Label:13C(5)15N(1) (E)" aminoacid="E" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
+  <static_modification name="Label:13C(5)15N(1) (M)" aminoacid="M" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
+  <static_modification name="Label:13C(5)15N(1) (P)" aminoacid="P" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
+  <static_modification name="Label:13C(5)15N(1) (V)" aminoacid="V" label_13C="true" label_15N="true" unimod_id="268" short_name="+6a" />
+  <static_modification name="Label:13C(6) (I)" aminoacid="I" label_13C="true" unimod_id="188" short_name="+06" />
+  <static_modification name="Label:13C(6) (K)" aminoacid="K" label_13C="true" unimod_id="188" short_name="+06" />
+  <static_modification name="Label:13C(6) (L)" aminoacid="L" label_13C="true" unimod_id="188" short_name="+06" />
+  <static_modification name="Label:13C(6) (R)" aminoacid="R" label_13C="true" unimod_id="188" short_name="+06" />
+  <static_modification name="Label:13C(6)15N(1) (I)" aminoacid="I" label_13C="true" label_15N="true" unimod_id="695" short_name="+07" />
+  <static_modification name="Label:13C(6)15N(1) (L)" aminoacid="L" label_13C="true" label_15N="true" unimod_id="695" short_name="+07" />
+  <static_modification name="Label:13C(6)15N(2) (K)" aminoacid="K" label_13C="true" label_15N="true" unimod_id="259" short_name="+08" />
+  <static_modification name="Label:13C(6)15N(4) (R)" aminoacid="R" label_13C="true" label_15N="true" unimod_id="267" short_name="+10" />
+  <static_modification name="Label:13C(9) (F)" aminoacid="F" label_13C="true" unimod_id="184" />
+  <static_modification name="Label:13C(9) (Y)" aminoacid="Y" label_13C="true" unimod_id="184" />
+  <static_modification name="Label:13C(9)15N(1) (F)" aminoacid="F" label_13C="true" label_15N="true" unimod_id="269" short_name="10a" />
+  <static_modification name="Label:15N(1) (A)" aminoacid="A" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (C)" aminoacid="C" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (D)" aminoacid="D" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (E)" aminoacid="E" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (F)" aminoacid="F" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (G)" aminoacid="G" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (I)" aminoacid="I" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (L)" aminoacid="L" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (M)" aminoacid="M" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (P)" aminoacid="P" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (S)" aminoacid="S" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (T)" aminoacid="T" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (V)" aminoacid="V" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(1) (Y)" aminoacid="Y" label_15N="true" unimod_id="994" short_name="+01" />
+  <static_modification name="Label:15N(2) (K)" aminoacid="K" label_15N="true" unimod_id="995" short_name="+02" />
+  <static_modification name="Label:15N(2) (N)" aminoacid="N" label_15N="true" unimod_id="995" short_name="+02" />
+  <static_modification name="Label:15N(2) (Q)" aminoacid="Q" label_15N="true" unimod_id="995" short_name="+02" />
+  <static_modification name="Label:15N(2) (W)" aminoacid="W" label_15N="true" unimod_id="995" short_name="+02" />
   <static_modification name="Label:15N(2)2H(9) (K)" aminoacid="K" formula="H'9N'2 - H9N2" unimod_id="944" />
-  <static_modification name="Label:15N(3) (H)" aminoacid="H" formula="N'3 - N3" label_15N="true" unimod_id="996" short_name="+03" />
-  <static_modification name="Label:15N(4) (R)" aminoacid="R" formula="N'4 - N4" label_15N="true" unimod_id="897" short_name="+04" />
+  <static_modification name="Label:15N(3) (H)" aminoacid="H" label_15N="true" unimod_id="996" short_name="+03" />
+  <static_modification name="Label:15N(4) (R)" aminoacid="R" label_15N="true" unimod_id="897" short_name="+04" />
   <static_modification name="Label:18O(1) (S)" aminoacid="S" formula="O' - O" unimod_id="258" short_name="Ob1" />
   <static_modification name="Label:18O(1) (T)" aminoacid="T" formula="O' - O" unimod_id="258" short_name="Ob1" />
   <static_modification name="Label:18O(1) (Y)" aminoacid="Y" formula="O' - O" unimod_id="258" short_name="Ob1" />

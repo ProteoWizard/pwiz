@@ -114,6 +114,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private AbstractDdaSearchEngine InitSelectedSearchEngine()
         {
+            pBLogo.Image = null;
             switch (SelectedSearchEngine)
             {
                 case SearchEngine.MSAmanda:

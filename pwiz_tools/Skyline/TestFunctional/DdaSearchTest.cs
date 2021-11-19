@@ -295,11 +295,8 @@ namespace pwiz.SkylineTestFunctional
                 var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                 if (msfraggerDownloaderDlg != null)
                 {
-                    RunUI(() =>
-                    {
-                        msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW");
-                        msfraggerDownloaderDlg.ClickAccept();
-                    });
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                 }
             }
 

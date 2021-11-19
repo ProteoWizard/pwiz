@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Alerts
         public MsFraggerDownloadDlg()
         {
             InitializeComponent();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
 
             const string BOLD_PATTERN = "<b>(.*?)</b>";
             var academicBoldMatch = Regex.Match(rtbAgreeToLicense.Text, BOLD_PATTERN);
@@ -59,7 +64,7 @@ namespace pwiz.Skyline.Alerts
             rtbAgreeToLicense.SelectedText = Regex.Replace(rtbAgreeToLicense.SelectedText, LINK_PATTERN, "$1");
             licenseLinkStartEnd = new Tuple<int, int>(licenseLinkMatch.Index, licenseLinkMatch.Index + licenseLinkMatch.Length - 13);
 
-            rtbAgreeToLicense.Select(0,0);
+            rtbAgreeToLicense.Select(0, 0);
             tbUsageConditions.Select(0, 0);
 
             rtbAgreeToLicense.MouseMove += RtbAgreeToLicense_MouseMove;
