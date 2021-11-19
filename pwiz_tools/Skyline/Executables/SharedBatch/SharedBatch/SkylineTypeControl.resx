@@ -136,7 +136,7 @@
     <value>310, 20</value>
   </data>
   <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>3</value>
   </data>
   <data name="textSkylineInstallationPath.Text" xml:space="preserve">
     <value>C:\Program Files\Skyline</value>
@@ -172,7 +172,7 @@
     <value>105, 17</value>
   </data>
   <data name="radioButtonSkylineDaily.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>1</value>
   </data>
   <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
     <value>Use Skyline-&amp;daily</value>
@@ -208,7 +208,7 @@
     <value>192, 17</value>
   </data>
   <data name="radioButtonSpecifySkylinePath.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>2</value>
   </data>
   <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
     <value>&amp;Specify Skyline installation directory</value>
@@ -244,7 +244,7 @@
     <value>81, 17</value>
   </data>
   <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>0</value>
   </data>
   <data name="radioButtonSkyline.Text" xml:space="preserve">
     <value>&amp;Use Skyline</value>
@@ -280,7 +280,7 @@
     <value>32, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>4</value>
   </data>
   <data name="btnBrowse.Text" xml:space="preserve">
     <value>...</value>

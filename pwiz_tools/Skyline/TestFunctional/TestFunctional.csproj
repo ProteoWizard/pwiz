@@ -167,6 +167,7 @@
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
@@ -507,6 +508,7 @@
     <None Include="LegacyCrosslinkTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryCacheTest.zip" />
     <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
