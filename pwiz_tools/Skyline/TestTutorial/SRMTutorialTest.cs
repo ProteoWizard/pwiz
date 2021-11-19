@@ -55,6 +55,16 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        // This isn't a real tutorial test - just exploiting a convenient framework for testing Associate Proteins
+        public void TestSrmTutorialLegacyWithAssociateProteins()
+        {
+            _exerciseAssociateProteins = true;
+            TestSrmTutorialLegacy();
+        }
+
+        private bool _exerciseAssociateProteins;
+
         private string GetTestPath(string relativePath)
         {
             const string folder = "USB";
@@ -340,7 +350,10 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
             // This is a convenient place to test associating proteins
-            TestAssociateProteins();
+            if (_exerciseAssociateProteins)
+            {
+                TestAssociateProteins();
+            }
 
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
