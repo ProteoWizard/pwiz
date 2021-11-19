@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// List index is the replicate index.</returns>
         public virtual ImmutableList<float> GetToolTipDataSeries()
         {
+            //This provides a clear error message if this method is invoked by mistake in a class that doesn't implement tooltips.
             throw new NotImplementedException(@"Method GetToolTipDataSeries is not implemented.");
         }
         /// <summary>
