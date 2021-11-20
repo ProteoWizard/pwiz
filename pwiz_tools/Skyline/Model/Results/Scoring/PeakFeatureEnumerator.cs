@@ -498,6 +498,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 IsStandard = document.Settings.PeptideSettings.Modifications.InternalStandardTypes
                     .Contains(nodeGroup.TransitionGroup.LabelType);
                 TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData = EMPTY_DATA;
+                bool isDda = document.Settings.TransitionSettings.FullScan.AcquisitionMethod ==
+                             FullScanAcquisitionMethod.DDA;
 
                 _chromGroupInfo = chromGroupInfo;
                 if (_chromGroupInfo != null)
@@ -508,6 +510,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
+                        if (isDda && !nodeTran.IsMs1)
+                            continue;
                         var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
                         if (tranInfo == null)
                             continue;
