@@ -30,6 +30,10 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Verifies that when the FullScanAcquisitionMethod is DDA, the peak scoring is only based on the MS1 chromatograms, and therefore the MS2 chromatograms
+    /// do not affect the mProphet feature scores.
+    /// </summary>
     [TestClass]
     public class DdaScoringTest : AbstractFunctionalTest
     {
@@ -53,6 +57,8 @@ namespace pwiz.SkylineTestFunctional
         {
 
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("DdaScoringTest.sky")));
+
+            // Import the result file with the acquisition method set to "DDA"
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi=>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.DDA;
@@ -62,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
             var ddaScores = CalculateMProphetFeatureScores(SkylineWindow.Document);
             VerifyScoreValues(SkylineWindow.Document, ddaScores);
 
+            // Reimport the result file with the acquisition method set to "None"
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.None;
@@ -71,8 +78,11 @@ namespace pwiz.SkylineTestFunctional
             ImportResultsFile(TestFilesDir.GetTestPath("ddascoring.mzml"));
             var noMs2Scores = CalculateMProphetFeatureScores(SkylineWindow.Document);
             VerifyScoreValues(SkylineWindow.Document, noMs2Scores);
+
+            // The DDA scores and the None scores should be identical
             Assert.IsTrue(AreEqualPeakTransitionGroupFeatureSet(ddaScores, noMs2Scores));
 
+            // Reimport the results with the acquisition method set to "PRM"
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
@@ -159,6 +169,10 @@ namespace pwiz.SkylineTestFunctional
                    pf1.Features.SequenceEqual(pf2.Features);
         }
 
+        /// <summary>
+        /// Verify that the mProphet feature scores are what we expect them to be.
+        /// The only score that we currently verify is <see cref="MQuestDefaultIntensityCalc"/>.
+        /// </summary>
         private void VerifyScoreValues(SrmDocument document, PeakTransitionGroupFeatureSet featureSet)
         {
             foreach (var moleculeGroup in document.MoleculeGroups)

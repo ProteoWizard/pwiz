@@ -87,67 +87,56 @@ namespace pwiz.Skyline.FileUI
                 }
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
-                if (!WriteFeaturesToPath(dlg.FileName))
-                    return;
+
+                var displayCalcs = new List<IPeakFeatureCalculator>();
+                displayCalcs.AddRange(from object calcName in checkedListVars.CheckedItems select GetCalcFromName(calcName.ToString()));
+
+                IPeakScoringModel currentPeakScoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = currentPeakScoringModel as MProphetPeakScoringModel;
+//                if (mProphetScoringModel == null)
+//                {
+//                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
+//                    return;
+//                }
+                var resultsHandler = new MProphetResultsHandler(Document, mProphetScoringModel);
+
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = Resources.SkylineWindow_OpenSharedFile_Extracting_Files,
+                })
+                {
+                    try
+                    {
+                        longWaitDlg.PerformWork(this, 1000, b =>
+                                                            WriteFeatures(dlg.FileName,
+                                                                          resultsHandler,
+                                                                          displayCalcs,
+                                                                          LocalizationHelper.CurrentCulture,
+                                                                          checkBoxBestOnly.Checked,
+                                                                          !checkBoxTargetsOnly.Checked,
+                                                                          b));
+                        if (longWaitDlg.IsCanceled)
+                            return;
+                    }
+                    catch (Exception x)
+                    {
+                        var message = TextUtil.LineSeparate(string.Format(Resources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__, dlg.FileName),
+                                                                          x.Message);
+                        MessageDlg.ShowWithException(this, message, x);
+                    }
+                }
             }
 
             DialogResult = DialogResult.OK;
         }
 
-        /// <summary>
-        /// Writes the features to a filename.
-        /// Returns true unless canceled.
-        /// </summary>
-        public bool WriteFeaturesToPath(string path)
-        {
-            var displayCalcs = new List<IPeakFeatureCalculator>();
-            displayCalcs.AddRange(from object calcName in checkedListVars.CheckedItems select GetCalcFromName(calcName.ToString()));
-
-            IPeakScoringModel currentPeakScoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
-            var mProphetScoringModel = currentPeakScoringModel as MProphetPeakScoringModel;
-            //                if (mProphetScoringModel == null)
-            //                {
-            //                    MessageDlg.Show(this, Resources.MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_);
-            //                    return;
-            //                }
-            var resultsHandler = new MProphetResultsHandler(Document, mProphetScoringModel);
-
-            using (var longWaitDlg = new LongWaitDlg())
-            {
-                try
-                {
-                    longWaitDlg.PerformWork(this, 1000, b =>
-                        WriteFeatures(path,
-                            resultsHandler,
-                            displayCalcs,
-                            LocalizationHelper.CurrentCulture,
-                            checkBoxBestOnly.Checked,
-                            !checkBoxTargetsOnly.Checked,
-                            b));
-                    if (longWaitDlg.IsCanceled)
-                        return false;
-                }
-                catch (Exception x)
-                {
-                    var message = TextUtil.LineSeparate(
-                        string.Format(
-                            Resources.MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__,
-                            path),
-                        x.Message);
-                    MessageDlg.ShowWithException(this, message, x);
-                }
-            }
-
-            return true;
-        }
-
         public static void WriteFeatures(string filePath, 
-                                     MProphetResultsHandler resultsHandler,
-                                     IList<IPeakFeatureCalculator> calcs,
-                                     CultureInfo cultureInfo,
-                                     bool bestOnly,
-                                     bool includeDecoys,
-                                     IProgressMonitor progressMonitor)
+                                         MProphetResultsHandler resultsHandler,
+                                         IList<IPeakFeatureCalculator> calcs,
+                                         CultureInfo cultureInfo,
+                                         bool bestOnly,
+                                         bool includeDecoys,
+                                         IProgressMonitor progressMonitor)
         {
             using (var fs = new FileSaver(filePath))
             using (var writer = new StreamWriter(fs.SafeName))
