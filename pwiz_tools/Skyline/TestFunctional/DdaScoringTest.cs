@@ -1,9 +1,24 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Skyline.FileUI;
@@ -11,7 +26,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -19,6 +33,15 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DdaScoringTest : AbstractFunctionalTest
     {
+        private IList<IPeakFeatureCalculator> _calculators;
+        private IDictionary<Type, int> _calculatorIndexes; 
+
+        public DdaScoringTest()
+        {
+            _calculators = ImmutableList.ValueOf(PeakFeatureCalculator.Calculators);
+            _calculatorIndexes = Enumerable.Range(0, _calculators.Count).ToDictionary(i => _calculators[i].GetType(), i=>i);
+        }
+
         [TestMethod]
         public void TestDdaScoring()
         {
@@ -36,9 +59,8 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUi.OkDialog();
             });
             ImportResultsFile(TestFilesDir.GetTestPath("ddascoring.mzml"));
-            var ddaScoresPath = TestFilesDir.GetTestPath("ddaScores.csv");
-            WriteMprophetFeatures(ddaScoresPath);
-            var strDdaScores = File.ReadAllText(ddaScoresPath);
+            var ddaScores = CalculateMProphetFeatureScores(SkylineWindow.Document);
+            VerifyScoreValues(SkylineWindow.Document, ddaScores);
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
@@ -47,10 +69,10 @@ namespace pwiz.SkylineTestFunctional
             });
             RemoveAllResults();
             ImportResultsFile(TestFilesDir.GetTestPath("ddascoring.mzml"));
-            var noMs2ScoresPath = TestFilesDir.GetTestPath("noMs2Scores.csv");
-            WriteMprophetFeatures(noMs2ScoresPath);
+            var noMs2Scores = CalculateMProphetFeatureScores(SkylineWindow.Document);
+            VerifyScoreValues(SkylineWindow.Document, noMs2Scores);
+            Assert.IsTrue(AreEqualPeakTransitionGroupFeatureSet(ddaScores, noMs2Scores));
 
-            AssertEx.FileEquals(noMs2ScoresPath, ddaScoresPath);
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
@@ -58,20 +80,9 @@ namespace pwiz.SkylineTestFunctional
             });
             RemoveAllResults();
             ImportResultsFile(TestFilesDir.GetTestPath("ddascoring.mzml"));
-            var prmScoresPath = TestFilesDir.GetTestPath("prmScores.csv");
-            WriteMprophetFeatures(prmScoresPath);
-
-            var strPrmScores = File.ReadAllText(prmScoresPath);
-            Assert.AreNotEqual(strDdaScores, strPrmScores);
-        }
-
-        private void WriteMprophetFeatures(string path)
-        {
-            var dlg = ShowDialog<MProphetFeaturesDlg>(SkylineWindow.ShowMProphetFeaturesDialog);
-            dlg.BestScoresOnly = false;
-            Assert.IsTrue(dlg.WriteFeaturesToPath(path));
-            OkDialog(dlg, dlg.Close);
-
+            var prmScores = CalculateMProphetFeatureScores(SkylineWindow.Document);
+            Assert.IsFalse(AreEqualPeakTransitionGroupFeatureSet(ddaScores, prmScores));
+            VerifyScoreValues(SkylineWindow.Document, prmScores);
         }
 
         private void RemoveAllResults()
@@ -84,68 +95,138 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
-        private void VerifyScoreValues(IList<ScoreRow> scoreRows, SrmDocument document)
+        public PeakTransitionGroupFeatureSet CalculateMProphetFeatureScores(SrmDocument document)
         {
-            foreach (var peptide in document.Molecules)
-            {
-                for (int replicateIndex = 0;
-                    replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count;
-                    replicateIndex++)
-                {
-                    foreach (var )
-                }
-            }
+            return PeakFeatureEnumerator.GetPeakFeatures(document, _calculators, null, true);
         }
 
-        public IEnumerable<ScoreRow> ReadScores(TextReader reader)
+        public bool AreEqualPeakTransitionGroupFeatureSet(PeakTransitionGroupFeatureSet ptgfs1,
+            PeakTransitionGroupFeatureSet ptgfs2)
         {
-            var csvReader = new CsvFileReader(reader);
-            while (null != csvReader.ReadLine())
+            if (ptgfs1.TargetCount != ptgfs2.TargetCount || ptgfs1.DecoyCount != ptgfs2.DecoyCount)
             {
-                var fileName = csvReader.GetFieldByName("FileName");
-                var peptideModifiedSequence = csvReader.GetFieldByName("PeptideModifiedSequence");
-                var minStartTime = Convert.ToDouble(csvReader.GetFieldByName("MinStartTime"));
-                var maxEndTime = Convert.ToDouble(csvReader.GetFieldByName("MaxEndTime"));
-                var scores = new List<Tuple<Type, double?>>();
-                foreach (var calculator in PeakFeatureCalculator.Calculators)
+                return false;
+            }
+
+            if (ptgfs1.Features.Length != ptgfs2.Features.Length)
+            {
+                return false;
+            }
+
+            for (int iTransitionGroup = 0; iTransitionGroup < ptgfs1.Features.Length; iTransitionGroup++)
+            {
+                var tgFeatures1 = ptgfs1.Features[iTransitionGroup];
+                var tgFeatures2 = ptgfs2.Features[iTransitionGroup];
+                var id1 = tgFeatures1.Id;
+                var id2 = tgFeatures2.Id;
+                if (id1.RawTextId != id2.RawTextId)
                 {
-                    var headerName = calculator.HeaderName.Replace(' ', '_');
-                    var value = csvReader.GetFieldByName("main_var_" + headerName) ??
-                                csvReader.GetFieldByName("var_" + headerName);
-                    if (value == null)
+                    return false;
+                }
+
+                if (!Equals(id1.FilePath, id2.FilePath))
+                {
+                    return false;
+                }
+
+                if (!ReferenceEquals(id1.NodePepGroup.Id, id2.NodePepGroup.Id))
+                {
+                    return false;
+                }
+
+                if (tgFeatures1.PeakGroupFeatures.Count != tgFeatures2.PeakGroupFeatures.Count)
+                {
+                    return false;
+                }
+
+                for (int iPeakGroup = 0; iPeakGroup < tgFeatures1.PeakGroupFeatures.Count; iPeakGroup++)
+                {
+                    if (!AreEqualPeakGroupFeatures(tgFeatures1.PeakGroupFeatures[iPeakGroup],
+                        tgFeatures2.PeakGroupFeatures[iPeakGroup]))
                     {
-                        continue;
+                        return false;
                     }
-
-                    double? score = value == TextUtil.EXCEL_NA ? default(double?) : Convert.ToDouble(value);
-                    scores.Add(Tuple.Create(calculator.GetType(), score));
                 }
+            }
 
-                yield return new ScoreRow(fileName, peptideModifiedSequence, minStartTime, maxEndTime, scores);
+            return true;
+        }
+
+        public bool AreEqualPeakGroupFeatures(PeakGroupFeatures pf1, PeakGroupFeatures pf2)
+        {
+            return Equals(pf1.StartTime, pf2.StartTime) &&
+                   Equals(pf1.EndTime, pf2.EndTime) &&
+                   pf1.Features.SequenceEqual(pf2.Features);
+        }
+
+        private void VerifyScoreValues(SrmDocument document, PeakTransitionGroupFeatureSet featureSet)
+        {
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                foreach (var molecule in document.Molecules)
+                {
+                    var transitionGroup = molecule.TransitionGroups.Single();
+                    for (int replicateIndex = 0;
+                        replicateIndex < document.MeasuredResults.Chromatograms.Count;
+                        replicateIndex++)
+                    {
+                        var chromatogramSet = document.MeasuredResults.Chromatograms[replicateIndex];
+                        var filePath = chromatogramSet.MSDataFilePaths.Single();
+                        var tgFeatures = featureSet.Features.Single(tgf =>
+                        {
+                            var id = tgf.Id;
+                            return Equals(id.FilePath, filePath) && ReferenceEquals(id.NodePepGroup.Id,
+                                                                     moleculeGroup.Id)
+                                                                 && Equals(id.RawTextId,
+                                                                     molecule.ModifiedTarget.ToString());
+                        });
+                        var transitionGroupChromInfo = transitionGroup.Results[replicateIndex].Single();
+                        Assert.IsNotNull(transitionGroupChromInfo.RetentionTime);
+                        var peakGroup = tgFeatures.PeakGroupFeatures.Single(pg =>
+                            pg.StartTime <= transitionGroupChromInfo.RetentionTime &&
+                            pg.EndTime >= transitionGroupChromInfo.RetentionTime);
+                        var expectedIntensityScore = CalculateIntensityScore(transitionGroup, replicateIndex,
+                            document.Settings.TransitionSettings.FullScan.AcquisitionMethod);
+                        var actualIntensityScore = GetScore<MQuestDefaultIntensityCalc>(peakGroup);
+                        AssertEx.AreEqual(expectedIntensityScore, actualIntensityScore);
+                    }
+                }
             }
         }
 
-        public class ScoreRow
+        /// <summary>
+        /// Implementation of <see cref="AbstractMQuestIntensityCalc.Calculate(PeakScoringContext,IPeptidePeakData{ISummaryPeakData})"/>
+        /// </summary>
+        private double CalculateIntensityScore(TransitionGroupDocNode transitionGroupDocNode, int replicateIndex,
+            FullScanAcquisitionMethod fullScanAcquisitionMethod)
         {
-            public ScoreRow(string fileName, string peptideModifiedSequence, double minStartTime, double maxEndTime,
-                IEnumerable<Tuple<Type, double?>> featureScores)
+            IList<TransitionDocNode> transitions;
+            if (fullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA || fullScanAcquisitionMethod == FullScanAcquisitionMethod.None)
             {
-                FileName = fileName;
-                PeptideModifiedSequence = peptideModifiedSequence;
-                MinStartTime = minStartTime;
-                MaxEndTime = maxEndTime;
-                FeatureScores = ImmutableList.ValueOf(featureScores);
+                transitions = transitionGroupDocNode.Transitions.Where(t => t.IsMs1).ToList();
             }
-            public string FileName { get; }
-            public string PeptideModifiedSequence { get; }
-            public double MinStartTime { get; }
-            public double MaxEndTime { get; }
-            public ImmutableList<Tuple<Type, double?>> FeatureScores { get; }
+            else
+            {
+                transitions = transitionGroupDocNode.Transitions.Where(t => !t.IsMs1).ToList();
+            }
 
-            public double? GetScore(Type type)
+            double totalArea = 0;
+            foreach (var transition in transitions)
             {
-                return FeatureScores.First(tuple => tuple.Item1 == type).Item2;
+                var chromInfo = transition.Results[replicateIndex].FirstOrDefault();
+                if (chromInfo != null && !chromInfo.IsEmpty)
+                {
+                    totalArea += chromInfo.Area;
+                }
             }
+
+            return (float) Math.Max(0, Math.Log10(totalArea));
+        }
+
+        private float GetScore<T>(PeakGroupFeatures peakGroupFeatures) where T : IPeakFeatureCalculator
+        {
+            int index = _calculatorIndexes[typeof(T)];
+            return peakGroupFeatures.Features[index];
         }
     }
 }
