@@ -2463,7 +2463,7 @@ namespace pwiz.Skyline.Model.Results
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
                     for (int j = startOptTran; j <= endOptTran; j++)
-                        listChromInfo.Add(GetTransitionInfo(j - startTran));
+                        listChromInfo.Add(GetTransitionInfo(j - startTran, transform));
                     i = Math.Max(i, endOptTran);
                 }
             }
