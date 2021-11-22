@@ -8392,6 +8392,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS2 analyzer must be selected..
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS2 Tolerance incorrect.
         /// </summary>
         public static string DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect {
@@ -12018,6 +12027,110 @@ namespace pwiz.Skyline.Properties {
         public static string EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library {
             get {
                 return ResourceManager.GetString("EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detecting decoy prefix in {0}..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No common prefixes were found..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_common_prefixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_common_prefixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No common suffixes were found..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_common_suffixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_common_suffixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No decoy prefix detected. A new FASTA will be generated using reverse sequences as decoys (with prefix &apos;{0}&apos;)..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_usin" +
+                        "g_reverse_sequences_as_decoys__with_prefix___0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No decoy prefix detected, but an existing decoy database seems to exist at {0}. Retrying the decoy prefix calculation on that..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_see" +
+                        "ms_to_exist_at__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No prefixes were frequent enough to be a decoy prefix (present in at least 40% of entries)..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__prese" +
+                        "nt_in_at_least_40__of_entries__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some common prefixes were found:.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Some_common_prefixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Some_common_prefixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some common suffixes were found but these are not supported:.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The suffix {0} was likely intended as a decoy suffix, but Skyline&apos;s DDA search tools do not support decoy suffixes. We suggest rerunning with the original FASTA without decoys..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Sk" +
+                        "yline_s_DDA_search_tools_do_not_support_decoy_suffixes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using {0} as the most likely decoy prefix..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using decoy database at {0}.{1}.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Using_decoy_database_at__0___1_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Using_decoy_database_at__0___1_", resourceCulture);
             }
         }
         
@@ -19987,6 +20100,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Re-using existing converted {0} file for {1}..
+        /// </summary>
+        public static string MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__ {
+            get {
+                return ResourceManager.GetString("MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting msconvert conversion..
+        /// </summary>
+        public static string MsconvertDdaConverter_Run_Starting_msconvert_conversion_ {
+            get {
+                return ResourceManager.GetString("MsconvertDdaConverter_Run_Starting_msconvert_conversion_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading MSFragger {0}.
+        /// </summary>
+        public static string MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_ {
+            get {
+                return ResourceManager.GetString("MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS scan index {0} not found.
         /// </summary>
         public static string MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found {
@@ -26423,6 +26563,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download {0}.
+        /// </summary>
+        public static string SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_ {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>
         public static string SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching {
@@ -26714,6 +26863,35 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_" +
                         "writer_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading required files....
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_Downloading_required_files___ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_Downloading_required_files___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following file is required. Do you want to download it?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_downl" +
+                        "oad_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following files are required. Do you want to download them?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_dow" +
+                        "nload_them_", resourceCulture);
             }
         }
         

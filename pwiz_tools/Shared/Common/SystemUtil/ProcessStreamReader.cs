@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace pwiz.Common.SystemUtil
@@ -42,11 +43,15 @@ namespace pwiz.Common.SystemUtil
         private Exception _readException;
 
         private readonly List<string> _readLines = new List<string>();
+        private StringBuilder _errorLines;
 
-        public ProcessStreamReader(Process process)
+        public ProcessStreamReader(Process process, bool keepErrorLines = false)
         {
-            Thread threadOut = new Thread(() => ReadStream(process.StandardOutput, ref _isOutComplete));
-            Thread threadErr = new Thread(() => ReadStream(process.StandardError, ref _isErrComplete));
+            if (keepErrorLines)
+                _errorLines = new StringBuilder();
+
+            Thread threadOut = new Thread(() => ReadStream(process.StandardOutput, ref _isOutComplete, null));
+            Thread threadErr = new Thread(() => ReadStream(process.StandardError, ref _isErrComplete, _errorLines));
             threadOut.Start();
             threadErr.Start();
         }
@@ -86,11 +91,17 @@ namespace pwiz.Common.SystemUtil
             return ReadLine(null);
         }
 
+        public string GetErrorLines()
+        {
+            lock (_readLines)
+                return _errorLines?.ToString() ?? string.Empty;
+        }
+
         /// <summary>
         /// Handles reading from a single stream, and noting its completion
         /// on a background thread.
         /// </summary>
-        private void ReadStream(TextReader reader, ref bool isComplete)
+        private void ReadStream(TextReader reader, ref bool isComplete, StringBuilder linesToKeep)
         {
             try
             {
@@ -99,6 +110,8 @@ namespace pwiz.Common.SystemUtil
                 {
                     lock (_readLines)
                     {
+                        if (linesToKeep != null)
+                            linesToKeep.AppendLine(line);
                         _readLines.Add(line);
                         Monitor.Pulse(_readLines);
                     }

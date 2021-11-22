@@ -38,16 +38,16 @@
             this.lblFragmentIons = new System.Windows.Forms.Label();
             this.cbFragmentIons = new System.Windows.Forms.ComboBox();
             this.btnAdditionalSettings = new System.Windows.Forms.Button();
-            this.lblSearchEngineName = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.pBLogo = new System.Windows.Forms.PictureBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lblMaxVariableMods = new System.Windows.Forms.Label();
             this.cbMaxVariableMods = new System.Windows.Forms.ComboBox();
+            this.searchEngineComboBox = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cbMs2Analyzer = new System.Windows.Forms.ComboBox();
+            this.lblMs2Analyzer = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
-            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // cbMS1TolUnit
@@ -103,28 +103,11 @@
             this.btnAdditionalSettings.UseVisualStyleBackColor = true;
             this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
             // 
-            // lblSearchEngineName
-            // 
-            resources.ApplyResources(this.lblSearchEngineName, "lblSearchEngineName");
-            this.lblSearchEngineName.Name = "lblSearchEngineName";
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
             // pBLogo
             // 
             resources.ApplyResources(this.pBLogo, "pBLogo");
             this.pBLogo.Name = "pBLogo";
             this.pBLogo.TabStop = false;
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Controls.Add(this.lblSearchEngineName);
-            this.flowLayoutPanel1.Controls.Add(this.label2);
-            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             // 
             // label1
             // 
@@ -159,15 +142,46 @@
             resources.ApplyResources(this.cbMaxVariableMods, "cbMaxVariableMods");
             this.cbMaxVariableMods.Name = "cbMaxVariableMods";
             // 
+            // searchEngineComboBox
+            // 
+            this.searchEngineComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.searchEngineComboBox.FormattingEnabled = true;
+            this.searchEngineComboBox.Items.AddRange(new object[] {
+            resources.GetString("searchEngineComboBox.Items"),
+            resources.GetString("searchEngineComboBox.Items1"),
+            resources.GetString("searchEngineComboBox.Items2")});
+            resources.ApplyResources(this.searchEngineComboBox, "searchEngineComboBox");
+            this.searchEngineComboBox.Name = "searchEngineComboBox";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // cbMs2Analyzer
+            // 
+            this.cbMs2Analyzer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbMs2Analyzer.FormattingEnabled = true;
+            resources.ApplyResources(this.cbMs2Analyzer, "cbMs2Analyzer");
+            this.cbMs2Analyzer.Name = "cbMs2Analyzer";
+            // 
+            // lblMs2Analyzer
+            // 
+            resources.ApplyResources(this.lblMs2Analyzer, "lblMs2Analyzer");
+            this.lblMs2Analyzer.Name = "lblMs2Analyzer";
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.cbMs2Analyzer);
+            this.Controls.Add(this.lblMs2Analyzer);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.searchEngineComboBox);
             this.Controls.Add(this.cbMaxVariableMods);
             this.Controls.Add(this.lblMaxVariableMods);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.pBLogo);
             this.Controls.Add(this.btnAdditionalSettings);
             this.Controls.Add(this.cbFragmentIons);
@@ -180,8 +194,6 @@
             this.Controls.Add(this.cbMS1TolUnit);
             this.Name = "SearchSettingsControl";
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).EndInit();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -197,13 +209,14 @@
         private System.Windows.Forms.Label lblFragmentIons;
         private System.Windows.Forms.ComboBox cbFragmentIons;
         private System.Windows.Forms.Button btnAdditionalSettings;
-        private System.Windows.Forms.Label lblSearchEngineName;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox pBLogo;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lblMaxVariableMods;
         private System.Windows.Forms.ComboBox cbMaxVariableMods;
+        private System.Windows.Forms.ComboBox searchEngineComboBox;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox cbMs2Analyzer;
+        private System.Windows.Forms.Label lblMs2Analyzer;
     }
 }
