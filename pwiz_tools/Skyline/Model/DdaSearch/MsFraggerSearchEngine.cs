@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     var cruxParamsFileText = new StringBuilder();
                     foreach (var line in modParams.Split('\n'))
                     {
-                        string cruxLine = line.Replace("variable_mod_", "variable_mod");
+                        string cruxLine = line.Replace(@"variable_mod_", @"variable_mod");
                         cruxLine = Regex.Replace(cruxLine, "add_([A-Z])_(\\S+)\\s*=\\s*(.*)", $"add_$1_$2 = $3{Environment.NewLine}$1 = $3");
                         cruxParamsFileText.AppendLine(cruxLine);
                     }
@@ -288,8 +288,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                             var chargeColumnNames = new string[maxCharge];
                             for (int i = 1; i <= maxCharge; ++i)
                                 chargeColumnNames[i - 1] = $@"Charge{i}";
-                            string chargeColumns = string.Join("\t", chargeColumnNames);
                             // ReSharper disable LocalizableElement
+                            string chargeColumns = string.Join("\t", chargeColumnNames);
                             line = line.Replace("nmc\tPeptide", "nmc\t" + chargeColumns + "\tPeptide");
                             // ReSharper restore LocalizableElement
                         }
@@ -585,7 +585,8 @@ add_Nterm_protein = 0.000000
                         else
                             residue = $@"{position}{aa}";
 
-                        addMod(mod.GetAminoAcidLabelMassDiff(aa), residue);
+                        double mass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, SequenceMassCalc.GetHeavyFormula(aa, mod.LabelAtoms), SequenceMassCalc.MassPrecision).Value;
+                        addMod(mass, residue);
                     }
                 }
             }

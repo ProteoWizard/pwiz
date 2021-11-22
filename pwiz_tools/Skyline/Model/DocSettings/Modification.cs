@@ -244,43 +244,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public double? AminoAcidLabelMassDiff
-        {
-            get
-            {
-                var aminoAcids = AminoAcids.ToList();
-                if (aminoAcids.Count != 1)
-                    return null;
-
-                char aa = aminoAcids[0];
-                return GetAminoAcidLabelMassDiff(aa);
-            }
-        }
-
-        public double GetAminoAcidLabelMassDiff(char aa)
-        {
-            var formula = Formula<Molecule>.Parse(AminoAcidFormulas.DefaultFormulas[aa]);
-
-            var massdiff = 0.0;
-            if (Label13C)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C)) * formula.GetElementCount(BioMassCalc.C);
-            if (Label15N)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N)) * formula.GetElementCount(BioMassCalc.N);
-            if (Label18O)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O18) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O)) * formula.GetElementCount(BioMassCalc.O);
-            if (Label2H)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H)) * formula.GetElementCount(BioMassCalc.H);
-            if (Label37Cl)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl37) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl)) * formula.GetElementCount(BioMassCalc.Cl);
-            if (Label81Br)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br81) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br)) * formula.GetElementCount(BioMassCalc.Br);
-            if (Label32P)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P32) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.P)) * formula.GetElementCount(BioMassCalc.P);
-            if (Label34S)
-                massdiff += (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S34) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.S)) * formula.GetElementCount(BioMassCalc.S);
-            return massdiff;
-        }
-
         public RelativeRT RelativeRT { get; private set; }
 
         [TrackChildren]

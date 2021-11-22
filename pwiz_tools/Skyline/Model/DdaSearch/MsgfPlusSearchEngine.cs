@@ -259,7 +259,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (mod.LabelAtoms != LabelAtoms.None)
                     {
                         foreach (var aa in mod.AminoAcids)
-                            addMod(mod.GetAminoAcidLabelMassDiff(aa).ToString(CultureInfo.InvariantCulture), aa.ToString());
+                        {
+                            double mass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, SequenceMassCalc.GetHeavyFormula(aa, mod.LabelAtoms), SequenceMassCalc.MassPrecision).Value;
+                            addMod(mass.ToString(CultureInfo.InvariantCulture), aa.ToString());
+                        }
                     }
                     else
                         addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
