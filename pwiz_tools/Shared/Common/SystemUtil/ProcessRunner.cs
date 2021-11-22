@@ -95,7 +95,7 @@ namespace pwiz.Common.SystemUtil
 
             try
             {
-                var reader = new ProcessStreamReader(proc);
+                var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
@@ -154,7 +154,10 @@ namespace pwiz.Common.SystemUtil
                     if (line != null)
                         sbError.AppendLine(line);
                     if (sbError.Length == 0)
+                    {
                         sbError.AppendLine(@"Error occurred running process.");
+                        sbError.Append(reader.GetErrorLines());
+                    }
                     string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;
