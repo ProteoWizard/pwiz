@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private MzTolerance precursorMzTolerance;
         private Tuple<double, double> isotopeErrorRange = new Tuple<double, double>(0, 0);
         private int fragmentationMethod;
-        private int instrumentType = 0;
+        private int instrumentType;
         private int enzyme;
         //private int protocol;
         private int ntt, maxMissedCleavages;
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                         continue;
 
-                    Action<string, string> addMod = (string composition, string residues) =>
+                    Action<string, string> addMod = (composition, residues) =>
                     {
                         string modType = mod.IsVariable ? @"opt" : @"fix";
                         string position = @"any";

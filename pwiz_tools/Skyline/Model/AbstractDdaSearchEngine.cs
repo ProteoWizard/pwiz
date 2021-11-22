@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Threading;
-using Google.Protobuf.WellKnownTypes;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
