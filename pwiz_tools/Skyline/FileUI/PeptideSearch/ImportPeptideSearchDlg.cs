@@ -32,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -342,14 +341,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : this(skylineWindow, libraryManager)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
-            if (workflowType == Workflow.dda)
-            {
-                AdjustHeightForFullScanSettings(); // No MS2 control
-            }
         }
 
         public void AdjustHeightForFullScanSettings()
         {
+            if (WorkflowType == Workflow.dda)
+                return;
+
             var tab = Controls.OfType<WizardPages>().First().TabPages[(int) Pages.full_scan_settings_page];
             var panel = tab.Controls.OfType<Control>().OrderBy(c => c.Top).First(); // Location of panel containing the FullScan control
             var tabHeight = tab.Height;
@@ -672,15 +670,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
+                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore;
+
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
                             MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                             return;
                         }
 
-                        ImportPeptideSearch.SearchEngine?.Dispose();
-                        ImportPeptideSearch.SearchEngine = new MSAmandaSearchWrapper();
-                        SearchSettingsControl.InitializeEngine();
                         if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
                             ConverterSettingsControl.InitializeProtocol(ConverterSettingsControl.Protocol.dia_umpire);
                         break;
@@ -709,6 +706,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_settings_page:
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
+                    ImportFastaControl.UpdateDigestSettings();
                     ImportPeptideSearch.SearchEngine.SetEnzyme(Document.Settings.PeptideSettings.Enzyme, Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
                     ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
@@ -718,6 +716,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnBack.Enabled = false;
                     ControlBox = false;
 
+                    if (ImportPeptideSearch.DdaConverter == null &&
+                        BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out var r)))
+                    {
+                        ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetMsconvertConverter();
+                    }
+                    
                     if (!_expandedDdaSearchLog)
                     {
                         Width = Math.Min(Screen.FromControl(this).WorkingArea.Width, Width * 2); // give more space for search log

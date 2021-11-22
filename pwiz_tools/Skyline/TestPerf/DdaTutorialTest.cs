@@ -24,12 +24,15 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -79,7 +82,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            TestAmandaSearch();
+            TestMsFraggerSearch();
 
             Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
@@ -87,7 +90,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write new Assert statements instead of testing them.
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        private bool IsRecordMode => false;
 
         private Image _searchLogImage;
 
@@ -100,9 +103,17 @@ namespace TestPerf
         /// <summary>
         /// Test that the "Match Modifications" page of the Import Peptide Search wizard gets skipped.
         /// </summary>
-        private void TestAmandaSearch()
+        private void TestMsFraggerSearch()
         {
             PrepareDocument("TestDdaTutorial.sky");
+
+            // delete downloaded tools if not recording new counts or audit logs
+            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+                foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
 
             int tutorialPage = 3;
 
@@ -176,7 +187,6 @@ namespace TestPerf
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
 
             RunUI(() => importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true));
-
             PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - After adding modifications page", tutorialPage++);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
@@ -191,33 +201,62 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("DdaSearchMs1Filtering\\2014_01_HUMAN_UPS.fasta"));
+                //importPeptideSearchDlg.ImportFastaControl.SetFastaContent(@"D:\test\Skyline\downloads\Tutorials\DdaSearchMs1Filtering\DdaSearchMS1Filtering\2021-11-09-decoys-2014_01_HUMAN_UPS.fasta");
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", tutorialPage++);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
+
+            // switch SearchEngine and handle download dialogs if necessary
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
+            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+            {
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download MSFragger", tutorialPage++);
+                RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download Java and Crux", tutorialPage++);
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
+
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
+                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
 
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
 
+
             // Run the search
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+            try
+            {
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", tutorialPage++);
+                WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
+                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", tutorialPage++);
 
-            // Wait for search to finish
-            WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
-            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+                // Wait for search to finish
+                WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
+                RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+            }
+            finally
+            {
+                File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
+            }
+
             if (IsCoverShotMode)
             {
                 RunUI(() => importPeptideSearchDlg.Width = 404);
@@ -226,12 +265,21 @@ namespace TestPerf
             }
 
             // clicking 'Finish' (Next) will run ImportFasta
-            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()), 60000 * 10);
-            PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
-            RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
-                Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
+            PeptidesPerProteinDlg emptyProteinsDlg;
+            if (importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+            {
+                emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            }
+            else
+            {
+                var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
+                RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
+                    Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
+                OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
+                emptyProteinsDlg = WaitForOpenForm<PeptidesPerProteinDlg>(600000);
+            }
 
-            var emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(() => ambiguousDlg.OkDialog());
             RunUI(() =>
             {
                 emptyProteinsDlg.RemoveRepeatedPeptides = true;
@@ -249,10 +297,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(12590, proteinCount);
-                        Assert.AreEqual(28251, peptideCount);
-                        Assert.AreEqual(56111, precursorCount);
-                        Assert.AreEqual(168333, transitionCount);
+                        Assert.AreEqual(11050, proteinCount);
+                        Assert.AreEqual(25784, peptideCount);
+                        Assert.AreEqual(51162, precursorCount);
+                        Assert.AreEqual(153486, transitionCount);
                     }
                 }
 
@@ -269,10 +317,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(3772, proteinCount);
-                        Assert.AreEqual(7173, peptideCount);
-                        Assert.AreEqual(14203, precursorCount);
-                        Assert.AreEqual(42609, transitionCount);
+                        Assert.AreEqual(3258, proteinCount);
+                        Assert.AreEqual(6438, peptideCount);
+                        Assert.AreEqual(12732, precursorCount);
+                        Assert.AreEqual(38196, transitionCount);
                     }
                 }
             });
