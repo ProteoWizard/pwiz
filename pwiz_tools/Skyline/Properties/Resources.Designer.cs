@@ -9299,6 +9299,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Labels.
+        /// </summary>
+        public static string DotpDisplayOption_label {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line.
+        /// </summary>
+        public static string DotpDisplayOption_line {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string DotpDisplayOption_None {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap down_pro32 {

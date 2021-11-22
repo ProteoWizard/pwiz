@@ -83,6 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return Settings.Default.AreaNormalizeOption; }
         }
 
+
         public static NormalizeOption AreaCVNormalizeOption
         {
             get

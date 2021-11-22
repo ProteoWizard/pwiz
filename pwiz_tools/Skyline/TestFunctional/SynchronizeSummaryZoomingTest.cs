@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
         private bool GetExpectedVisible(GraphSummary g)
         {
             var pane = g.GraphControl.GraphPane as AreaReplicateGraphPane;
-            return pane != null && pane.IsExpectedVisible;
+            return pane != null && pane.ExpectedVisible.IsVisible();
         }
     }
 }
