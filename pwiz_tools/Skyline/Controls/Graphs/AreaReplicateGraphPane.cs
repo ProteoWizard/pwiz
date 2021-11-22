@@ -639,7 +639,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     };
                 GraphObjList.Add(cutoffLine);
                 //This is a placeholder to make sure the line shows in the legend.
-                CurveList.Insert(3,
+                CurveList.Insert(CurveList.Count - 1,
                     new LineItem(String.Format(CultureInfo.CurrentCulture,
                         Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText))
                     {
