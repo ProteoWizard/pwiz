@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbUsageConditions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -162,7 +165,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>15, 14</value>
   </data>
   <data name="cbAgreeToLicense.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;cbAgreeToLicense.Name" xml:space="preserve">
     <value>cbAgreeToLicense</value>
@@ -186,7 +189,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>293, 60</value>
   </data>
   <data name="rtbAgreeToLicense.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>7</value>
   </data>
   <data name="rtbAgreeToLicense.Text" xml:space="preserve">
     <value>I have read the &lt;b&gt;academic&lt;/b&gt; &lt;link&gt;license&lt;/link&gt;. I understand that this license provides a non-exclusive, non-transferable right to use MSFragger solely for academic research, non-commercial or educational purposes within the licensee’s department.</value>
@@ -210,7 +213,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>216, 20</value>
   </data>
   <data name="tbName.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;tbName.Name" xml:space="preserve">
     <value>tbName</value>
@@ -234,7 +237,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>38, 13</value>
   </data>
   <data name="lblName.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>1</value>
   </data>
   <data name="lblName.Text" xml:space="preserve">
     <value>&amp;Name:</value>
@@ -267,7 +270,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>35, 13</value>
   </data>
   <data name="lblEmail.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>3</value>
   </data>
   <data name="lblEmail.Text" xml:space="preserve">
     <value>&amp;Email:</value>
@@ -294,7 +297,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>216, 20</value>
   </data>
   <data name="tbEmail.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;tbEmail.Name" xml:space="preserve">
     <value>tbEmail</value>
@@ -321,7 +324,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>55, 13</value>
   </data>
   <data name="lblInstitution.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>5</value>
   </data>
   <data name="lblInstitution.Text" xml:space="preserve">
     <value>&amp;Institution:</value>
@@ -348,7 +351,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>216, 20</value>
   </data>
   <data name="tbInstitution.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;tbInstitution.Name" xml:space="preserve">
     <value>tbInstitution</value>
@@ -372,7 +375,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>286, 17</value>
   </data>
   <data name="cbReceiveUpdateEmails.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="cbReceiveUpdateEmails.Text" xml:space="preserve">
     <value>I would like to receive emails with updates in the future.</value>
@@ -402,7 +405,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>125, 23</value>
   </data>
   <data name="btnAccept.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="btnAccept.Text" xml:space="preserve">
     <value>&amp;Accept and Download</value>
@@ -429,7 +432,7 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>&amp;Cancel</value>
@@ -455,13 +458,22 @@ For questions, please contact Prof. Alexey Nesvizhskii (nesvi@med.umich.edu).</v
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>399, 360</value>
   </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Agree to MSFragger license</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.312, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MsFraggerDownloadDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.1.1.312, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

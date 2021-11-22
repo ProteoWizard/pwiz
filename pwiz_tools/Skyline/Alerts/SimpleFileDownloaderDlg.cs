@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Alerts
             }
 
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle);
-            int defaultWidth = layout.GetColumnWidths().Sum() + 50;
+            int defaultWidth = layout.GetColumnWidths().Sum() + 100;
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
             foreach (var label in gridLabels)
@@ -106,7 +106,8 @@ namespace pwiz.Skyline.Alerts
             using (var dlg = new MultiButtonMsgDlg(layout, Resources.AlertDlg_GetDefaultButtonText__Yes, Resources.AlertDlg_GetDefaultButtonText__No, false)
             {
                 Text = title,
-                ClientSize = new Size(defaultWidth, defaultHeight)
+                ClientSize = new Size(defaultWidth, defaultHeight),
+                StartPosition = FormStartPosition.CenterParent
             })
             {
                 dlg.MinimumSize = dlg.Size;

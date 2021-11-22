@@ -84,7 +84,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             using (var downloadDlg = new MsFraggerDownloadDlg())
             {
-                if (downloadDlg.ShowDialog(this) == DialogResult.Cancel)
+                if (downloadDlg.ShowDialog(TopLevelControl) == DialogResult.Cancel)
                     return false;
             }
 
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
 
-            SimpleFileDownloaderDlg.Show(this, string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_, searchEngineComboBox.SelectedItem),  filesNotAlreadyDownloaded);
+            SimpleFileDownloaderDlg.Show(TopLevelControl, string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_, searchEngineComboBox.SelectedItem),  filesNotAlreadyDownloaded);
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
