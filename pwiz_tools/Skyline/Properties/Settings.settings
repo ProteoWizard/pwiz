@@ -794,6 +794,12 @@
     <Setting Name="PeakAreaDotpDisplay" Type="System.String" Scope="User">
       <Value Profile="(Default)">label</Value>
     </Setting>
+    <Setting Name="PeakAreaDotpCutoffValue" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">0.9</Value>
+    </Setting>
+    <Setting Name="PeakAreaDotpCutoffShow" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ChromatogramDisplayRTDigits" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>
     </Setting>

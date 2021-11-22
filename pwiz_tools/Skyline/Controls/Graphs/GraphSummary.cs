@@ -388,6 +388,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return graphPane.HandleMouseMoveEvent(sender, e);
         }
 
+        private void graphControl_MouseOutEvent(object sender, EventArgs e)
+        {
+            foreach(var pane in graphControl.MasterPane.PaneList)
+                (pane as SummaryGraphPane)?.HandleMouseOutEvent(sender, e);
+        }
+
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             var graphPane = GraphPaneFromPoint(e.Location);

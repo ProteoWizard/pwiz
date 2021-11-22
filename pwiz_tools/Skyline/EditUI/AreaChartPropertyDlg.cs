@@ -38,6 +38,8 @@ namespace pwiz.Skyline.EditUI
             if (Settings.Default.PeakAreaMaxCv != 0)
                 textMaxCv.Text = Settings.Default.PeakAreaMaxCv.ToString(LocalizationHelper.CurrentCulture);
             GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.AreaFontSize);
+            cbShowDotpCutoff.Checked = textDotpCutoffValue.Enabled = Settings.Default.PeakAreaDotpCutoffShow;
+            textDotpCutoffValue.Text = Settings.Default.PeakAreaDotpCutoffValue.ToString(LocalizationHelper.CurrentCulture);
         }
 
         public void OkDialog()
@@ -63,6 +65,14 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
+            Settings.Default.PeakAreaDotpCutoffShow = cbShowDotpCutoff.Checked;
+            if (cbShowDotpCutoff.Checked)
+            {
+                if (!helper.ValidateDecimalTextBox(textDotpCutoffValue, 0, 1, out var dotpCutoff, false))
+                    return;
+                Settings.Default.PeakAreaDotpCutoffValue = (float)dotpCutoff;
+            }
+
             Settings.Default.PeakAreaMaxArea = maxArea;
             Settings.Default.PeakAreaMaxCv = maxCv;
             Settings.Default.PeakDecimalCv = decimalCv;
@@ -83,6 +93,10 @@ namespace pwiz.Skyline.EditUI
             double maxCv;
             if (double.TryParse(textMaxCv.Text, out maxCv))
                 textMaxCv.Text = (maxCv*factor).ToString(LocalizationHelper.CurrentCulture);
+        }
+        private void cbShowDotpCutoff_CheckedChanged(object sender, EventArgs e)
+        {
+            textDotpCutoffValue.Enabled = cbShowDotpCutoff.Checked;
         }
     }
 }

@@ -111,7 +111,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             #region Test Methods
-
             public List<string> TipLines
             {
                 get
@@ -123,7 +122,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             #endregion
-
             private class UserPoint
             {
                 private GraphPane _graph;
@@ -291,6 +289,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             GraphSummary.Cursor = Cursors.Hand;
             return true;
+        }
+
+        public override void HandleMouseOutEvent(object sender, EventArgs e)
+        {
+            ToolTip?.Hide();
         }
 
         private XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
