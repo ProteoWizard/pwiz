@@ -39,6 +39,7 @@
             this.CheckShowUnusedColumns = new System.Windows.Forms.CheckBox();
             this.radioPeptide = new System.Windows.Forms.RadioButton();
             this.radioMolecule = new System.Windows.Forms.RadioButton();
+            this.checkBoxAssociateProteins = new System.Windows.Forms.CheckBox();
             this.comboPanelOuter.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.SuspendLayout();
@@ -96,6 +97,8 @@
             this.dataGrid.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnAdded);
             this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.DataGrid_ColumnWidthChanged);
             this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.DataGrid_Scroll);
+            this.dataGrid.CellMouseMove += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGrid_MouseMove);
+            this.dataGrid.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGrid_MouseLeave);
             // 
             // CheckShowUnusedColumns
             // 
@@ -123,12 +126,20 @@
             this.modeUIHandler.SetUIMode(this.radioMolecule, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.radioMolecule.UseVisualStyleBackColor = true;
             // 
+            // checkBoxAssociateProteins
+            // 
+            resources.ApplyResources(this.checkBoxAssociateProteins, "checkBoxAssociateProteins");
+            this.checkBoxAssociateProteins.Name = "checkBoxAssociateProteins";
+            this.checkBoxAssociateProteins.UseVisualStyleBackColor = true;
+            this.checkBoxAssociateProteins.CheckedChanged += new System.EventHandler(this.checkBoxAssociateProteins_CheckedChanged);
+            // 
             // ImportTransitionListColumnSelectDlg
             // 
             this.AcceptButton = this.buttonOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
+            this.Controls.Add(this.checkBoxAssociateProteins);
             this.Controls.Add(this.radioMolecule);
             this.Controls.Add(this.radioPeptide);
             this.Controls.Add(this.CheckShowUnusedColumns);
@@ -164,5 +175,6 @@
         private System.Windows.Forms.CheckBox CheckShowUnusedColumns;
         public System.Windows.Forms.RadioButton radioPeptide; // Public for testing only
         public System.Windows.Forms.RadioButton radioMolecule; // Public for testing only
+        public System.Windows.Forms.CheckBox checkBoxAssociateProteins; // Public for testing only
     }
 }

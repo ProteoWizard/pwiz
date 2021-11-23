@@ -153,23 +153,24 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            RunUI(() =>
-            {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+            var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+            string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
+
+            RunUI(() => {
+                colDlg.radioPeptide.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+
+                colDlg.checkBoxAssociateProteins.Checked = true;
             });
-            using (new CheckDocumentState(24, 44, 88, 296))
-            {
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.Height = 465;
-                    pasteDlg.IsMolecule = false;
-                    pasteDlg.PasteTransitions();  // Make sure it's ready to accept peptides rather than small molecules
-                });
-                PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
-            }
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];

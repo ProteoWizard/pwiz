@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model
                     if (!tranGroupFound)
                     {
                         var node =
-                            GetMoleculeTransitionGroup(document, row, pep.Peptide);
+                            GetMoleculeTransitionGroup(document, precursor, row, pep.Peptide);
                         if (node == null)
                             return true;
                         document = (SrmDocument) document.Add(pepPath, node);
@@ -372,19 +372,13 @@ namespace pwiz.Skyline.Model
                 var precursor = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Get precursor values
                 if (precursor != null)
                 {
-                    try
+
+                    var product =
+                        ReadPrecursorOrProductColumns(document, row, precursor, out hasError); // Get product values, if available
+                    if ((product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance)) || hasError)
                     {
-                        var product =
-                            ReadPrecursorOrProductColumns(document, row, precursor, out hasError); // Get product values, if available
-                        if ((product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance)) || hasError)
-                        {
-                            requireProductInfo = true; // Product list is not completely empty, or not just precursors
-                            break;
-                        }
-                    }
-                    catch (LineColNumberedIoException)
-                    {
-                        // No product info to be had in this line (so this is a precursor) but there may be others, keep looking
+                        requireProductInfo = true; // Product list is not completely empty, or not just precursors
+                        break;
                     }
                 }
             }
@@ -1729,7 +1723,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 var pep = new Peptide(molecule);
-                var tranGroup = GetMoleculeTransitionGroup(document, row, pep);
+                var tranGroup = GetMoleculeTransitionGroup(document, parsedIonInfo, row, pep);
                 if (tranGroup == null)
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
@@ -1746,13 +1740,8 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, Row row, Peptide pep)
+        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, ParsedIonInfo moleculeInfo, Row row, Peptide pep)
         {
-            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Re-read the precursor columns
-            if (moleculeInfo == null)
-            {
-                return null; // Some parsing error, user has already been notified
-            }
             if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
             {
                 ShowTransitionError(new PasteError
@@ -1928,16 +1917,18 @@ namespace pwiz.Skyline.Model
         public static bool IsPlausibleSmallMoleculeTransitionList(IList<string> csvText, SrmSettings settings, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             // If it cannot be formatted as a mass list it cannot be a small molecule transition list
-            if (!MassListInputs.TryInitFormat(csvText, out var provider, out var sep))
+            var testLineCount = 100;
+            var testText = TextUtil.LineSeparate(csvText.Take(testLineCount));
+            if (!MassListInputs.TryInitFormat(testText, out var provider, out var sep))
             {
                 return false;
             }
 
             // Use the first 100 lines and the document to create an importer
-            var inputs = new MassListInputs(csvText.Take(100).ToString(), provider, sep);
+            var inputs = new MassListInputs(testText, provider, sep);
             var importer = new MassListImporter(settings, inputs);
             // See if creating a peptide row reader with the first 100 lines is possible
-            if (importer.TryCreateRowReader(null, false, csvText.Take(100).ToList(), null, out _, out _))
+            if (importer.TryCreateRowReader(null, false, csvText.Take(testLineCount).ToList(), null, out _, out _))
             {
                 // If the row reader is able to find a peptide column then it must be a protein transition list
                 return false;
@@ -2001,7 +1992,7 @@ namespace pwiz.Skyline.Model
                     string.Format(
                         Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
                         error.Line + 1, error.Column + 1, error.Message),
-                    error.Line + 1, error.Column + 1);
+                    error.Line + 1, error.Column);
             }
             else
             {

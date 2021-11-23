@@ -19,6 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -69,34 +70,35 @@ namespace pwiz.SkylineTestFunctional
             // Insert a molecule group with one molecule in it.
             RunUI(()=>SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
             const string moleculeGroupName = "MyMoleculeGroup";
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(new[]
-                {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct
-                }.ToList());
-                SetClipboardText(moleculeGroupName + "\tMyMolecule\tMyTransition\tH10O10\tH10O10\t1\t1");
-                pasteDlg.PasteTransitions();
-                pasteDlg.OkDialog();
+            
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = moleculeGroupName + @",MyMolecule,MyTransition,H10O10,H10O10,1,1");
+
+            RunUI(() => {
+                colDlg.radioMolecule.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             var myMoleculeGroup =
                 SkylineWindow.Document.MoleculeGroups.FirstOrDefault(group => group.Name == moleculeGroupName);
-            Assert.IsNotNull(myMoleculeGroup);
-
+            //Assert.IsNotNull(myMoleculeGroup);
             const string nameHPrime = "H-prime";
             const string nameDeuterium = "Deuterium";
             const string nameHDoublePrime = "H-double-prime";
             const string nameTritium = "Tritium";
 
             // Add a molecule which has H' in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHPrime;
@@ -105,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has D in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameDeuterium;
@@ -114,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has H" in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHDoublePrime;

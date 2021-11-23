@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -44,28 +45,28 @@ namespace pwiz.SkylineTestFunctional
             // Need to be in mixed UI mode to see both options for paste dialog
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
 
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(new[]
-                {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct
-                }.ToList());
-                string text = TextUtil.LineSeparate(
-                    "Drugs\tCaffeine\tLoss of CHO\tC8H10N4O2\tC7H9N4O\t1\t1",
-                    "Drugs\tCaffeine\tLoss of CH3NCO\tC8H10N4O2\tC6H7N3O\t1\t1",
-                    "Drugs\tAmphetamine\tLoss of Ammonia\tC9H13N\tC9H11\t1\t1"
-                );
-                SetClipboardText(text);
-                pasteDlg.PasteTransitions();
-                pasteDlg.OkDialog();
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            string text1 = TextUtil.LineSeparate(
+                "Drugs\tCaffeine\tLoss of CHO\tC8H10N4O2\tC7H9N4O\t1\t1",
+                "Drugs\tCaffeine\tLoss of CH3NCO\tC8H10N4O2\tC6H7N3O\t1\t1",
+                "Drugs\tAmphetamine\tLoss of Ammonia\tC9H13N\tC9H11\t1\t1"
+            );
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = text1);
+
+            RunUI(() => {
+                colDlg.radioMolecule.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             RunUI(() => SkylineWindow.SequenceTree.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID)));
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {

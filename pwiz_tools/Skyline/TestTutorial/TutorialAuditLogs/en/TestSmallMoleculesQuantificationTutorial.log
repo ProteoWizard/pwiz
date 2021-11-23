@@ -1,11 +1,12 @@
-Undo Redo : Inserted 2 transitions
-Summary   : Inserted 2 transitions
+Undo Redo : Imported a transition list from the clipboard
+Summary   : Imported a transition list from the clipboard
 All Info  :
-Inserted 2 transitions
-Extra Info: Molecule List Name	Precursor Name	Precursor m/z	Precursor Charge	Product m/z	Product Charge	Label Type	Explicit Retention Time	Explicit Collision Energy	Cone Voltage
-DrugX	Drug	283.04	1	129.96	1	light	2.7	16	26
-DrugX	Drug	286.04	1	133.00	1	heavy	2.7	16	26
-									
+Imported a transition list from the clipboard
+Extra Info: 2 transitions added
+Columns identified as 'Molecule List Name','Molecule Name','Label Type','Precursor m/z','Precursor Charge','Product m/z','Product Charge','Cone Voltage','Explicit Collision Energy','Explicit Retention Time'
+DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7
+DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7
+
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
