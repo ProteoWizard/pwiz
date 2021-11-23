@@ -2159,44 +2159,57 @@ namespace pwiz.Skyline
                 document = document.BeginDeferSettingsChanges();
             }
 
-            var changedGroupIds = new HashSet<IdentityPath>();
-            var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
+            var changedGroupIds = new HashSet<Tuple<IdentityPath, string>>();
+            var peptideChanges = new Dictionary<IdentityPath, Dictionary<string, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
-                changedGroupIds.Add(change.GroupPath);
-                if (!peptideChanges.ContainsKey(change.GroupPath.Parent)) {
+
+                var changeFile = change.FilePath.ToString();
+                changedGroupIds.Add(Tuple.Create(change.GroupPath, changeFile));
+
+                var peptidePath = change.GroupPath.Parent;
+                if (!peptideChanges.TryGetValue(peptidePath, out var changesByFile))
+                {
+                    changesByFile = new Dictionary<string, ChangedPeakBoundsEventArgs>();
+                    peptideChanges[peptidePath] = changesByFile;
+                }
+                if (!changesByFile.ContainsKey(changeFile))
+                {
                     var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
                     if (transitionGroup.RelativeRT == RelativeRT.Matching)
                     {
-                        peptideChanges.Add(change.GroupPath.Parent, change);
+                        changesByFile.Add(changeFile, change);
                     }
                 }
             }
+
             // See if there are any other TransitionGroups that also have RelativeRT matching,
             // and set their peak boundaries to the same.
             foreach (var entry in peptideChanges)
             {
-                var peptide = (PeptideDocNode) document.FindNode(entry.Key);
-                var change = entry.Value;
-                foreach (var transitionGroup in peptide.TransitionGroups)
+                var peptide = (PeptideDocNode)document.FindNode(entry.Key);
+                foreach (var change in entry.Value.Select(v => v.Value))
                 {
-                    if (transitionGroup.RelativeRT != RelativeRT.Matching)
+                    foreach (var transitionGroup in peptide.TransitionGroups)
                     {
-                        continue;
+                        if (transitionGroup.RelativeRT != RelativeRT.Matching)
+                        {
+                            continue;
+                        }
+                        var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
+                        if (changedGroupIds.Contains(Tuple.Create(groupId, change.FilePath.ToString())))
+                        {
+                            continue;
+                        }
+                        if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
+                        {
+                            continue;
+                        }
+                        document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
+                            change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                     }
-                    var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
-                    if (changedGroupIds.Contains(groupId))
-                    {
-                        continue;
-                    }
-                    if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
-                    {
-                        continue;
-                    }
-                    document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
-                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                 }
             }
             return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
