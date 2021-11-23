@@ -2159,28 +2159,27 @@ namespace pwiz.Skyline
                 document = document.BeginDeferSettingsChanges();
             }
 
-            var changedGroupIds = new HashSet<Tuple<IdentityPath, string>>();
-            var peptideChanges = new Dictionary<IdentityPath, Dictionary<string, ChangedPeakBoundsEventArgs>>();
+            var changedGroupIds = new HashSet<Tuple<IdentityPath, MsDataFileUri>>();
+            var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
 
-                var changeFile = change.FilePath.ToString();
-                changedGroupIds.Add(Tuple.Create(change.GroupPath, changeFile));
+                changedGroupIds.Add(Tuple.Create(change.GroupPath, change.FilePath));
 
                 var peptidePath = change.GroupPath.Parent;
                 if (!peptideChanges.TryGetValue(peptidePath, out var changesByFile))
                 {
-                    changesByFile = new Dictionary<string, ChangedPeakBoundsEventArgs>();
+                    changesByFile = new Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>();
                     peptideChanges[peptidePath] = changesByFile;
                 }
-                if (!changesByFile.ContainsKey(changeFile))
+                if (!changesByFile.ContainsKey(change.FilePath))
                 {
                     var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
                     if (transitionGroup.RelativeRT == RelativeRT.Matching)
                     {
-                        changesByFile.Add(changeFile, change);
+                        changesByFile.Add(change.FilePath, change);
                     }
                 }
             }
@@ -2199,7 +2198,7 @@ namespace pwiz.Skyline
                             continue;
                         }
                         var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
-                        if (changedGroupIds.Contains(Tuple.Create(groupId, change.FilePath.ToString())))
+                        if (changedGroupIds.Contains(Tuple.Create(groupId, change.FilePath)))
                         {
                             continue;
                         }
