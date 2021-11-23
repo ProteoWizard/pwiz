@@ -31,7 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
@@ -221,7 +220,6 @@ namespace pwiz.Skyline.FileUI
             // Go through each line of the import
             foreach(var line in Importer.RowReader.Lines)
             {
-         //       uint oh no pep col
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
                 var action = associateHelper.determineAssociateAction(null, 
