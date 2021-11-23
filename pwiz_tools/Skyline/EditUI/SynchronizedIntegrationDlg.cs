@@ -345,7 +345,7 @@ namespace pwiz.Skyline.EditUI
 
             private static string FileDisplayName(IPathContainer chromFileInfo)
             {
-                return Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
+                return chromFileInfo.FilePath.GetFileNameWithoutExtension();
             }
         }
     }
