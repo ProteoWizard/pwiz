@@ -1236,6 +1236,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string AlignItem_ToString_None {
+            get {
+                return ResourceManager.GetString("AlignItem_ToString_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time calculator....
+        /// </summary>
+        public static string AlignItem_ToString_Retention_time_calculator___ {
+            get {
+                return ResourceManager.GetString("AlignItem_ToString_Retention_time_calculator___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention time calculator ({0}).
+        /// </summary>
+        public static string AlignItem_ToString_Retention_time_calculator___0__ {
+            get {
+                return ResourceManager.GetString("AlignItem_ToString_Retention_time_calculator___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Aligned Time.
         /// </summary>
         public static string AlignmentForm_UpdateGraph_Aligned_Time {
@@ -31411,6 +31438,17 @@ namespace pwiz.Skyline.Properties {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To align to retention time prediction, you must first set up a retention time predictor in Peptide Settings / Prediction..
+        /// </summary>
+        public static string SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_ {
+            get {
+                return ResourceManager.GetString("SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_" +
+                        "time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Set" +
+                        "tings___Prediction_", resourceCulture);
             }
         }
         

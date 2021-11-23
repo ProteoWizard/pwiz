@@ -22,9 +22,11 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -32,8 +34,11 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class SynchronizedIntegrationDlg : Form
     {
-        private readonly SrmDocument _document;
-        private readonly AnnotationCalculator _annotationCalculator;
+        private readonly SkylineWindow _skylineWindow;
+        private readonly bool _originalAlignRtPrediction;
+        private readonly ChromFileInfoId _originalAlignFile;
+
+        private SrmDocument Document => _skylineWindow.Document;
         private GroupByItem SelectedGroupBy => (GroupByItem) comboGroupBy.SelectedItem;
 
         public string GroupByPersistedString => SelectedGroupBy.PersistedString;
@@ -61,18 +66,19 @@ namespace pwiz.Skyline.EditUI
         public IEnumerable<string> GroupByOptions => comboGroupBy.Items.Cast<GroupByItem>().Select(item => item.ToString());
         public IEnumerable<string> TargetOptions => listSync.Items.Cast<object>().Select(o => o.ToString());
 
-        public SynchronizedIntegrationDlg(SrmDocument document)
+        public SynchronizedIntegrationDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
 
-            _document = document;
-            _annotationCalculator = new AnnotationCalculator(_document);
+            _skylineWindow = skylineWindow;
+            _originalAlignRtPrediction = skylineWindow.AlignToRtPrediction;
+            _originalAlignFile = skylineWindow.AlignToFile;
 
             var groupByReplicates = new GroupByItem(null);
             comboGroupBy.Items.Add(groupByReplicates);
-            comboGroupBy.Items.AddRange(ReplicateValue.GetGroupableReplicateValues(_document).Select(v => new GroupByItem(v)).ToArray());
+            comboGroupBy.Items.AddRange(ReplicateValue.GetGroupableReplicateValues(Document).Select(v => new GroupByItem(v)).ToArray());
 
-            if (!_document.GetSynchronizeIntegrationChromatogramSets().Any())
+            if (!Document.GetSynchronizeIntegrationChromatogramSets().Any())
             {
                 // Synchronized integration is off, select everything
                 comboGroupBy.SelectedIndex = 0;
@@ -80,10 +86,15 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                var settingsIntegration = _document.Settings.TransitionSettings.Integration;
+                var settingsIntegration = Document.Settings.TransitionSettings.Integration;
                 comboGroupBy.SelectedIndex = GetItemIndex(settingsIntegration.SynchronizedIntegrationGroupBy, true) ?? 0;
                 SetCheckedItems((settingsIntegration.SynchronizedIntegrationAll ? TargetOptions : settingsIntegration.SynchronizedIntegrationTargets).ToHashSet());
             }
+
+            comboAlign.Items.Add(new AlignItem());
+            comboAlign.Items.Add(new AlignItem(Document.Settings.PeptideSettings.Prediction));
+            comboAlign.Items.AddRange(AlignItem.GetAlignChromFileInfos(Document.Settings).Select(info => new AlignItem(info)).ToArray());
+            SelectAlignOption();
         }
 
         private int? GetItemIndex(string s, bool persistedString)
@@ -109,9 +120,21 @@ namespace pwiz.Skyline.EditUI
                 listSync.SetItemChecked(i, items != null && items.Contains(listSync.Items[i].ToString()));
         }
 
+        private void SelectAlignOption()
+        {
+            foreach (AlignItem item in comboAlign.Items)
+            {
+                if (item.IsMatch(_skylineWindow))
+                {
+                    comboAlign.SelectedItem = item;
+                    return;
+                }
+            }
+        }
+
         private void comboGroupBy_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var newItems = SelectedGroupBy.GetItems(_document, _annotationCalculator).ToArray();
+            var newItems = SelectedGroupBy.GetItems(Document, new AnnotationCalculator(Document)).ToArray();
             if (!ArrayUtil.EqualsDeep(listSync.Items.Cast<object>().ToArray(), newItems))
             {
                 var allChecked = IsAll;
@@ -142,6 +165,20 @@ namespace pwiz.Skyline.EditUI
             cbSelectAll.CheckedChanged += cbSelectAll_CheckedChanged;
         }
 
+        private void comboAlign_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (((AlignItem)comboAlign.SelectedItem).Select(_skylineWindow))
+                return;
+
+            // RT prediction selected, but document does not have predictor
+            if (!_originalAlignRtPrediction)
+            {
+                SelectAlignOption();
+                MessageDlg.Show(this,
+                    Resources.SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_);
+            }
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -151,6 +188,57 @@ namespace pwiz.Skyline.EditUI
         {
             DialogResult = DialogResult.OK;
         }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            _skylineWindow.AlignToRtPrediction = _originalAlignRtPrediction;
+            _skylineWindow.AlignToFile = _originalAlignFile;
+        }
+
+        #region Functional test support
+        public AlignItem SelectedAlignItem => (AlignItem)comboAlign.SelectedItem;
+
+        public bool SelectNone()
+        {
+            foreach (AlignItem item in comboAlign.Items)
+            {
+                if (item.IsNone)
+                {
+                    comboAlign.SelectedItem = item;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool SelectAlignRt()
+        {
+            foreach (AlignItem item in comboAlign.Items)
+            {
+                if (item.IsRTRegression)
+                {
+                    if (item.CalcName == null)
+                        return false;
+                    comboAlign.SelectedItem = item;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool SelectAlignFile(ChromFileInfoId file)
+        {
+            foreach (AlignItem item in comboAlign.Items)
+            {
+                if (item.IsFile && ReferenceEquals(item.ChromFileInfoId, file))
+                {
+                    comboAlign.SelectedItem = item;
+                    return true;
+                }
+            }
+            return false;
+        }
+        #endregion
 
         private class GroupByItem
         {
@@ -177,6 +265,86 @@ namespace pwiz.Skyline.EditUI
             public override string ToString()
             {
                 return ReplicateValue != null ? ReplicateValue.Title : Resources.GroupByItem_ToString_Replicates;
+            }
+        }
+
+        public class AlignItem
+        {
+            private readonly PeptidePrediction _prediction;
+            private readonly ChromFileInfo _chromFileInfo;
+
+            public bool IsNone => !IsRTRegression && !IsFile;
+            public bool IsRTRegression => _prediction != null;
+            public bool IsFile => _chromFileInfo != null;
+
+            public string CalcName =>
+                IsRTRegression && _prediction.RetentionTime != null && _prediction.RetentionTime.IsAutoCalculated
+                    ? _prediction.RetentionTime.Calculator?.Name
+                    : null;
+            public ChromFileInfoId ChromFileInfoId => _chromFileInfo.FileId;
+
+            public AlignItem()
+            {
+            }
+
+            public AlignItem(PeptidePrediction prediction)
+            {
+                _prediction = prediction;
+            }
+
+            public AlignItem(ChromFileInfo chromFileInfo)
+            {
+                _chromFileInfo = chromFileInfo;
+            }
+
+            public bool Select(SkylineWindow skylineWindow)
+            {
+                skylineWindow.AlignToRtPrediction = IsRTRegression;
+                skylineWindow.AlignToFile = IsFile ? _chromFileInfo.FileId : null;
+                return !(IsRTRegression && CalcName == null);
+            }
+
+            public bool IsMatch(SkylineWindow skylineWindow)
+            {
+                if (skylineWindow.AlignToRtPrediction)
+                    return IsRTRegression;
+                else if (skylineWindow.AlignToFile != null)
+                    return IsFile && ReferenceEquals(skylineWindow.AlignToFile, _chromFileInfo.FileId);
+                return IsNone;
+            }
+
+            public override string ToString()
+            {
+                if (IsRTRegression)
+                {
+                    return CalcName != null
+                        ? string.Format(Resources.AlignItem_ToString_Retention_time_calculator___0__, CalcName)
+                        : Resources.AlignItem_ToString_Retention_time_calculator___;
+                }
+                else if (IsFile)
+                {
+                    return FileDisplayName(_chromFileInfo);
+                }
+                return Resources.AlignItem_ToString_None;
+            }
+
+            public static IEnumerable<ChromFileInfo> GetAlignChromFileInfos(SrmSettings settings)
+            {
+                if (!settings.HasResults || settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+                    yield break;
+
+                var chromFileInfos = settings.MeasuredResults.Chromatograms.SelectMany(chromSet => chromSet.MSDataFileInfos).ToArray();
+                foreach (var name in settings.DocumentRetentionTimes.FileAlignments.Select(alignment => alignment.Key))
+                {
+                    var chromFileInfo = chromFileInfos.FirstOrDefault(info => name.Equals(FileDisplayName(info)));
+                    if (chromFileInfo != null)
+                        yield return chromFileInfo;
+                }
+            }
+
+            private static string FileDisplayName(IPathContainer chromFileInfo)
+            {
+                return chromFileInfo.FilePath.GetFileNameWithoutExtension();
             }
         }
     }
