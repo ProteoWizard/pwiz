@@ -566,33 +566,33 @@ Undo Redo : 11個のファイルから結果がインポートされました
 Summary   : 11個のファイルから結果がインポートされました
 All Info  :
 11個のファイルから結果がインポートされました
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A01.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A03.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A04.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A05.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A06.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A07.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A08.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A09.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A10.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A11.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A12.mzML"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A01.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A03.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A04.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A05.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A06.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A07.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A08.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A09.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A10.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A11.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201217_plasma_revision_A12.wiff"が含まれています
 結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
 結果設定をインポート>同時にインポートするファイルは"多く"です
 結果設定をインポート>削除したプリフィックスは"ruthhu_R201217_plasma_revision_A"です
 Extra Info: ファイル名 = 
 [
-    "ruthhu_R201217_plasma_revision_A01.mzML",
-    "ruthhu_R201217_plasma_revision_A03.mzML",
-    "ruthhu_R201217_plasma_revision_A04.mzML",
-    "ruthhu_R201217_plasma_revision_A05.mzML",
-    "ruthhu_R201217_plasma_revision_A06.mzML",
-    "ruthhu_R201217_plasma_revision_A07.mzML",
-    "ruthhu_R201217_plasma_revision_A08.mzML",
-    "ruthhu_R201217_plasma_revision_A09.mzML",
-    "ruthhu_R201217_plasma_revision_A10.mzML",
-    "ruthhu_R201217_plasma_revision_A11.mzML",
-    "ruthhu_R201217_plasma_revision_A12.mzML"
+    "ruthhu_R201217_plasma_revision_A01.wiff",
+    "ruthhu_R201217_plasma_revision_A03.wiff",
+    "ruthhu_R201217_plasma_revision_A04.wiff",
+    "ruthhu_R201217_plasma_revision_A05.wiff",
+    "ruthhu_R201217_plasma_revision_A06.wiff",
+    "ruthhu_R201217_plasma_revision_A07.wiff",
+    "ruthhu_R201217_plasma_revision_A08.wiff",
+    "ruthhu_R201217_plasma_revision_A09.wiff",
+    "ruthhu_R201217_plasma_revision_A10.wiff",
+    "ruthhu_R201217_plasma_revision_A11.wiff",
+    "ruthhu_R201217_plasma_revision_A12.wiff"
 ],
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く",
@@ -602,27 +602,27 @@ Undo Redo : 8個のファイルから結果がインポートされました
 Summary   : 8個のファイルから結果がインポートされました
 All Info  :
 8個のファイルから結果がインポートされました
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F05.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F06.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F07.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F08.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F09.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F10.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F11.mzML"が含まれています
-結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F12.mzML"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F05.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F06.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F07.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F08.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F09.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F10.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F11.wiff"が含まれています
+結果設定をインポート>ファイル名："ruthhu_R201203_plasma_revision_F12.wiff"が含まれています
 結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
 結果設定をインポート>同時にインポートするファイルは"多く"です
 結果設定をインポート>削除したプリフィックスは"ruthhu_R201203_plasma_revision_F"です
 Extra Info: ファイル名 = 
 [
-    "ruthhu_R201203_plasma_revision_F05.mzML",
-    "ruthhu_R201203_plasma_revision_F06.mzML",
-    "ruthhu_R201203_plasma_revision_F07.mzML",
-    "ruthhu_R201203_plasma_revision_F08.mzML",
-    "ruthhu_R201203_plasma_revision_F09.mzML",
-    "ruthhu_R201203_plasma_revision_F10.mzML",
-    "ruthhu_R201203_plasma_revision_F11.mzML",
-    "ruthhu_R201203_plasma_revision_F12.mzML"
+    "ruthhu_R201203_plasma_revision_F05.wiff",
+    "ruthhu_R201203_plasma_revision_F06.wiff",
+    "ruthhu_R201203_plasma_revision_F07.wiff",
+    "ruthhu_R201203_plasma_revision_F08.wiff",
+    "ruthhu_R201203_plasma_revision_F09.wiff",
+    "ruthhu_R201203_plasma_revision_F10.wiff",
+    "ruthhu_R201203_plasma_revision_F11.wiff",
+    "ruthhu_R201203_plasma_revision_F12.wiff"
 ],
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く",
