@@ -443,7 +443,6 @@
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
-    </Compile>
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
