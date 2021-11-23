@@ -8565,7 +8565,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Insert Molecule Transition List</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>Error on line {0}, column{1}: {2}</value>
+    <value>Error on line {0}, column {1}: {2}</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
     <value>Error on line {0}: {1}</value>

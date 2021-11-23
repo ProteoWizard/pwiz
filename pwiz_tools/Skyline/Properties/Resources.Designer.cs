@@ -16343,7 +16343,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}, column{1}: {2}.
+        ///   Looks up a localized string similar to Error on line {0}, column {1}: {2}.
         /// </summary>
         public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_ {
             get {
