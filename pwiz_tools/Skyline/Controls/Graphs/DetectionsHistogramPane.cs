@@ -37,9 +37,9 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Title.Text = Resources.DetectionHistogramPane_XAxis_Name;
         }
 
-        public override ImmutableList<int> GetDataSeries()
+        public override ImmutableList<float> GetToolTipDataSeries()
         {
-            return TargetData.Histogram;
+            return ImmutableList.ValueOf(TargetData.Histogram.Select(n => (float)n));
         }
 
 
@@ -61,7 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
             //draw bars
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, TargetData.Histogram[i] / YScale)).ToList());
-            CurveList.Insert(0, MakeBarItem(countPoints, Color.FromArgb(180, 220, 255)));
+            ToolTip.TargetCurve = MakeBarItem(countPoints, Color.FromArgb(180, 220, 255));
+            CurveList.Insert(0, ToolTip.TargetCurve);
 
             //axes formatting
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;

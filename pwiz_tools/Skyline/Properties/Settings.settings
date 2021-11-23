@@ -353,9 +353,6 @@
     <Setting Name="ReplicateOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
-    <Setting Name="ShowDotProductPeakArea" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="ShowPeakAreaLegend" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -793,6 +790,9 @@
     </Setting>
     <Setting Name="FullScanPeakType" Type="System.String" Scope="User">
       <Value Profile="(Default)">Default</Value>
+    </Setting>
+    <Setting Name="PeakAreaDotpDisplay" Type="System.String" Scope="User">
+      <Value Profile="(Default)">label</Value>
     </Setting>
     <Setting Name="ChromatogramDisplayRTDigits" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>

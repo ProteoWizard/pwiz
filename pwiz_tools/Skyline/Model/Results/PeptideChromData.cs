@@ -1023,7 +1023,14 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                    {
+                        Ms2TranstionPeakData = ChromDataPeakList.EMPTY;
+                    }
+                    else
+                    {
+                        Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    }
                 }
             }
         }

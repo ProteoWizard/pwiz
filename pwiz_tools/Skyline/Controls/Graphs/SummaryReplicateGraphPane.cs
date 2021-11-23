@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PointPair(xValue, 0);
             }
 
-            private readonly SrmDocument _document;
+            protected readonly SrmDocument _document;
             private readonly ImmutableList<IdentityPath> _selectedDocNodePaths;
             private readonly DisplayTypeChrom _displayType;
             private PaneKey _paneKey;

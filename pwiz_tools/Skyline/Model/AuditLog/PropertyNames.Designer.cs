@@ -655,11 +655,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS2 analyzer.
+        /// </summary>
+        public static string DdaSearchSettings_Ms2Analyzer {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_Ms2Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor tolerance.
         /// </summary>
         public static string DdaSearchSettings_PrecursorTolerance {
             get {
                 return ResourceManager.GetString("DdaSearchSettings_PrecursorTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search Engine.
+        /// </summary>
+        public static string DdaSearchSettings_SearchEngine {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_SearchEngine", resourceCulture);
             }
         }
         

@@ -403,7 +403,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
-                Settings.Default.ShowDotProductPeakArea = true;
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 Settings.Default.ShowLibraryPeakArea = true;
             });
             RunUI(() =>
