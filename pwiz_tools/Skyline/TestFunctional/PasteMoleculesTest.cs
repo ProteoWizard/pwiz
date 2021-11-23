@@ -160,11 +160,11 @@ namespace pwiz.SkylineTestFunctional
                     Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
-                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,
                     Resources.PasteDlg_UpdateMoleculeType_S_Lens,
                     Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,
                     @"InChiKey",
                     @"HMDB",
                     @"InChi",
@@ -1689,7 +1689,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
                     @"InChiKey",
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
             });
 
             // This should produce an inconsistent molecule description error
@@ -1747,11 +1747,11 @@ namespace pwiz.SkylineTestFunctional
                     Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
                     null, // No useful info this column
                     null, // No useful info this column
-                    Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,
                     Resources.PasteDlg_UpdateMoleculeType_S_Lens,
                     Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,
                     @"InChiKey",
                     @"HMDB",
                     @"InChi",
