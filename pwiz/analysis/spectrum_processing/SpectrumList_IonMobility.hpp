@@ -67,7 +67,7 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     virtual double sonarBinToPrecursorMz(int bin) const;
 
 private:
-    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift };
+    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift, MobilIonDrift };
     IonMobilityEquipment equipment_;
     IonMobilityUnits units_;
     bool has_mzML_combined_ion_mobility_;

@@ -51,14 +51,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private int _testCase;
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillSpectralLibTest()
         {
             AgilentSpectrumMillTest(2);
         }
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillRampedIMSImportTest()
         {
             AgilentSpectrumMillTest(1);
@@ -371,8 +369,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
-                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
+                    out chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

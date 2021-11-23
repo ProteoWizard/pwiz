@@ -158,6 +158,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
         case InstrumentSource_ESI:
         case InstrumentSource_MULTI_MODE:
         case InstrumentSource_Ultraspray:
+        case InstrumentSource_VIP_HESI:  // TODO: MattC says "From what I can tell VIP-HESI is heated ESI + APCI ("The Vacuum Insulated Probe Heated ESI source is a dual source with an integrated APCI probe."). So I'm not sure it's accurate to just group it with ESI. Not that it matters much to our workflows. To handle this properly though probably requires a new CV term, or confirmation with the mzML group that multi-type sources should just have a CV param for each type (the same as we do for activation types e.g. CID+ETD)."
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_ESI, 1));
             configurations.back().componentList.back().set(MS_electrospray_inlet);

@@ -32,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -342,14 +341,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : this(skylineWindow, libraryManager)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
-            if (workflowType == Workflow.dda)
-            {
-                AdjustHeight(-FullScanSettingsControl.GroupBoxMS2Height); // No MS2 control
-            }
         }
 
-        public void AdjustHeight(int change)
+        public void AdjustHeightForFullScanSettings()
         {
+            if (WorkflowType == Workflow.dda)
+                return;
+
+            var tab = Controls.OfType<WizardPages>().First().TabPages[(int) Pages.full_scan_settings_page];
+            var panel = tab.Controls.OfType<Control>().OrderBy(c => c.Top).First(); // Location of panel containing the FullScan control
+            var tabHeight = tab.Height;
+            var marginBottom = FullScanSettingsControl.Top - panel.Bottom;
+            var neededHeight = FullScanSettingsControl.Bottom + marginBottom;
+            var change = neededHeight - tabHeight; // May need more real estate to ask about using ion mobility data, or less if no MS2 settings
+
             MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height + change);
             if (change < 0)
             {
@@ -560,10 +565,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var lib = BuildPepSearchLibControl.ImportPeptideSearch.DocLib;
                         var libIonMobilities = lib != null && PeptideLibraries.HasIonMobilities(lib, null);
                         FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, libIonMobilities);
-                        if (libIonMobilities)
-                        {
-                            AdjustHeight(FullScanSettingsControl.IonMobilityFiltering.Height + 2 * label1.Height); // Need real estate to ask about using ion mobility data found in imported spectral libraries
-                        }
+                        AdjustHeightForFullScanSettings();
 
                         bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
@@ -618,6 +620,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         ShowRemovePrefixDialog();
                         ImportFastaControl.IsImportingResults = anyResults;
+
+                        if (ImportFastaControl.DecoyGenerationEnabled)
+                        {
+                            if (anyResults)
+                            {
+                                ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
+                                ImportFastaControl.NumDecoys = 1;
+                            }
+                            else
+                            {
+                                // template document, default to not generating decoys
+                                ImportFastaControl.DecoyGenerationMethod = string.Empty;
+                                ImportFastaControl.NumDecoys = 0;
+                            }
+                        }
                     }
                     break;
 
@@ -653,15 +670,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
+                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore;
+
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
                             MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                             return;
                         }
 
-                        ImportPeptideSearch.SearchEngine?.Dispose();
-                        ImportPeptideSearch.SearchEngine = new MSAmandaSearchWrapper();
-                        SearchSettingsControl.InitializeEngine();
                         if (WorkflowType == Workflow.dia && BuildPepSearchLibControl.DIAConversionNeeded)
                             ConverterSettingsControl.InitializeProtocol(ConverterSettingsControl.Protocol.dia_umpire);
                         break;
@@ -690,6 +706,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_settings_page:
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
+                    ImportFastaControl.UpdateDigestSettings();
                     ImportPeptideSearch.SearchEngine.SetEnzyme(Document.Settings.PeptideSettings.Enzyme, Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
                     ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
@@ -699,6 +716,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnBack.Enabled = false;
                     ControlBox = false;
 
+                    if (ImportPeptideSearch.DdaConverter == null &&
+                        BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out var r)))
+                    {
+                        ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetMsconvertConverter();
+                    }
+                    
                     if (!_expandedDdaSearchLog)
                     {
                         Width = Math.Min(Screen.FromControl(this).WorkingArea.Width, Width * 2); // give more space for search log
@@ -1036,10 +1059,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
 
             // Import results only on "finish"
-            var namedResults =
-                ImportResultsControl.FoundResultsFiles.Select(
-                    kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                    .ToList();
+            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
+                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
+                .ToList();
 
             // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
             if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))

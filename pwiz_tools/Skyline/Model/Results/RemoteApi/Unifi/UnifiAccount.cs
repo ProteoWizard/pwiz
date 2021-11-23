@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             ServerUrl = serverUrl;
             Username = username;
             Password = password;
+            ApiVersion = ServerUrl.Contains(@":50034") ? 3 : 4;
+
             string strPort = @":50333";
             int ichLastColon = ServerUrl.LastIndexOf(':');
             if (ichLastColon == ServerUrl.IndexOf(':'))
@@ -52,9 +54,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             {
                 IdentityServer = ServerUrl.Substring(0, ichLastColon) + strPort;
             }
-            ClientScope = @"unifi";
+            ClientScope = ApiVersion == 3 ? @"unifi" : @"webapi";
             ClientSecret = @"secret";
         }
+
+        private int ApiVersion { get; set; }
 
         public string IdentityServer { get; private set; }
 
@@ -110,9 +114,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             return ServerUrl + @"/unifi/v1/folders";
         }
 
+        private string IdentityConnectEndpoint => ApiVersion == 3 ? @"/identity/connect/token" : @"/connect/token";
+
         public TokenResponse Authenticate()
         {
-            var tokenClient = new TokenClient(IdentityServer + @"/identity/connect/token", @"resourceownerclient",
+            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, @"resourceownerclient",
                 ClientSecret, new HttpClientHandler());
             return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
         }

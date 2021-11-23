@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using SkylineTool;
@@ -49,6 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
+        private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
 
         private SrmDocument _batchChangesOriginalDocument;
         private List<EditDescription> _batchEditDescriptions;
@@ -64,6 +66,7 @@ namespace pwiz.Skyline.Model.Databinding
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
+            _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
         }
 
         public override string DefaultUiMode
@@ -270,6 +273,11 @@ namespace pwiz.Skyline.Model.Databinding
         public AnnotationCalculator AnnotationCalculator
         {
             get { return _annotationCalculator.Value; }
+        }
+
+        public NormalizedValueCalculator NormalizedValueCalculator
+        {
+            get { return _normalizedValueCalculator.Value; }
         }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)

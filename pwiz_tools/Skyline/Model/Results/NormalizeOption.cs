@@ -173,6 +173,9 @@ namespace pwiz.Skyline.Model.Results
                 return RatioToFirstStandard(settings);
             }
 
+            if (Equals(normalizationMethod, NormalizationMethod.TIC) && !settings.HasTicArea)
+                return FromNormalizationMethod(NormalizationMethod.NONE);
+
             return this;
         }
 

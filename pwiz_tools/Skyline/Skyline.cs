@@ -70,6 +70,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
-        private readonly ImportPeptideSearchManager _importPeptideSearchManager;
+        private readonly AutoTrainManager _autoTrainManager;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -181,14 +182,14 @@ namespace pwiz.Skyline
             _proteinMetadataManager = new ProteinMetadataManager();
             _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
             _proteinMetadataManager.Register(this);
-            _importPeptideSearchManager = new ImportPeptideSearchManager();
-            _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
-            _importPeptideSearchManager.Register(this);
+            _autoTrainManager = new AutoTrainManager();
+            _autoTrainManager.ProgressUpdateEvent += UpdateProgress;
+            _autoTrainManager.Register(this);
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
 
-            DocumentUIChangedEvent += ShowAutoTrainResults;
+            DocumentUIChangedEvent += AutoTrainCompleted;
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
@@ -434,9 +435,9 @@ namespace pwiz.Skyline
             get { return _ionMobilityLibraryManager; }
         }
 
-        public ImportPeptideSearchManager ImportPeptideSearchManager
+        public AutoTrainManager AutoTrainManager
         {
-            get { return _importPeptideSearchManager; }
+            get { return _autoTrainManager; }
         }
 
         private bool _useKeysOverride;
@@ -608,13 +609,18 @@ namespace pwiz.Skyline
             ViewMenu.DocumentUiChanged();
         }
 
-        public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
+        public void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)
         {
-            if (!PeptideIntegration.AutoTrainCompleted(DocumentUI, e.DocumentPrevious))
+            var trainedType = AutoTrainManager.CompletedType(DocumentUI, e.DocumentPrevious);
+            if (Equals(trainedType, PeptideIntegration.AutoTrainType.none))
                 return;
 
             var model = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel;
             Settings.Default.PeakScoringModelList.Add(model);
+
+            if (Equals(trainedType, PeptideIntegration.AutoTrainType.default_model))
+                return; // don't show dialog when auto trained model is the default model
+
             var modelIndex = Settings.Default.PeakScoringModelList.IndexOf(model);
             var newModel = Settings.Default.PeakScoringModelList.EditItem(this, model, Settings.Default.PeakScoringModelList, null);
             if (newModel == null || model.Equals(newModel))
@@ -1082,7 +1088,7 @@ namespace pwiz.Skyline
             _retentionTimeManager.ProgressUpdateEvent -= UpdateProgress;
             _ionMobilityLibraryManager.ProgressUpdateEvent -= UpdateProgress;
             _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
-            _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
+            _autoTrainManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
@@ -1645,7 +1651,7 @@ namespace pwiz.Skyline
 
         public void ShowPasteTransitionListDlg()
         {
-            EditMenu.ShowPasteTransitionListDlg();
+            EditMenu.ShowInsertTransitionListDlg();
         }
 
         public void ShowRefineDlg()
@@ -3403,15 +3409,14 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
+                _skyline.AreaNormalizeOption = _ratioIndex;
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
+                    { Checked = skylineWindow.SequenceTree.NormalizeOption == i };
                 menu.DropDownItems.Add(item);
             }
         }

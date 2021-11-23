@@ -188,7 +188,7 @@ namespace pwiz.CLI.msdata
         {
             if (!s.id.StartsWith("merged="))
                 return null;
-            return s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array)?.data.Storage() ??
+            return s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_drift_time_array)?.data.Storage() ??
                    s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_inverse_reduced_ion_mobility_array)?.data.Storage() ??
                    s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_ion_mobility_array)?.data.Storage() ??
                    s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_raw_inverse_reduced_ion_mobility_array)?.data.Storage();

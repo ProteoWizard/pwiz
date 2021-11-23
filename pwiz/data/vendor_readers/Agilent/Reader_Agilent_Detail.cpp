@@ -228,6 +228,93 @@ PWIZ_API_DECL CVID translateAsInletType(IonizationMode ionizationMode)
     }
 }
 
+PWIZ_API_DECL CVID translateAsChromatogramType(const Signal & signal)
+{
+    switch (signal.deviceType)
+    {
+        // samplers
+        case DeviceType_ALS: // automatic liquid sampler
+        case DeviceType_WellPlateSampler:
+        case DeviceType_MicroWellPlateSampler:
+        case DeviceType_CompactLCSampler:
+        case DeviceType_CompactLC1220Sampler:
+        case DeviceType_CTC: // CTC Analytics
+            // handle the same as pumps
+
+        // pumps
+        case DeviceType_IsocraticPump:
+        case DeviceType_BinaryPump:
+        case DeviceType_QuaternaryPump:
+        case DeviceType_CapillaryPump:
+        case DeviceType_NanoPump:
+        case DeviceType_LowFlowPump:
+        case DeviceType_CompactLCIsoPump:
+        case DeviceType_CompactLCGradPump:
+        case DeviceType_CompactLC1220IsoPump:
+        case DeviceType_CompactLC1220GradPump:
+        case DeviceType_PumpValveCluster:
+        case DeviceType_CANValves:
+            if (bal::icontains(signal.signalDescription, "flow"))
+                return MS_flow_rate_chromatogram;
+            else if (bal::icontains(signal.signalDescription, "pressure"))
+                return MS_pressure_chromatogram;
+            else if (bal::icontains(signal.signalDescription, "pressure"))
+                return MS_chromatogram;
+            else
+                return CVID_Unknown;
+
+        case DeviceType_FlameIonizationDetector:
+        case DeviceType_ThermalConductivityDetector:
+        case DeviceType_RefractiveIndexDetector:
+        case DeviceType_MultiWavelengthDetector:
+        case DeviceType_DiodeArrayDetector:
+        case DeviceType_VariableWavelengthDetector:
+        case DeviceType_AnalogDigitalConverter:
+        case DeviceType_ElectronCaptureDetector:
+        case DeviceType_FluorescenceDetector:
+        case DeviceType_EvaporativeLightScatteringDetector:
+        case DeviceType_CompactLCVWD:
+        case DeviceType_CompactLC1220VWD:
+        case DeviceType_CompactLC1220DAD:
+        case DeviceType_NitrogenPhosphorousDetector:
+        case DeviceType_FlamePhotometricDetector:
+        case DeviceType_GCDetector:
+            return signal.isInstrumentCurve ? CVID_Unknown : MS_absorption_chromatogram;
+
+        default:
+            cerr << "BUG: unhandled Agilent DeviceType: " << signal.deviceType << endl;
+            return CVID_Unknown;
+
+        case DeviceType_Unknown:
+            cerr << "Warning: unknown device for Agilent chromatogram signal" << endl;
+            return CVID_Unknown;
+
+        case DeviceType_Mixed:
+            cerr << "Warning: don't know how to handle an Agilent chromatogram signal from a 'mixed' device: " << endl;
+            return CVID_Unknown;
+
+        case DeviceType_Quadrupole:
+        case DeviceType_IonTrap:
+        case DeviceType_TimeOfFlight:
+        case DeviceType_TandemQuadrupole:
+        case DeviceType_QuadrupoleTimeOfFlight:
+            cerr << "Warning: don't know how to handle an Agilent chromatogram signal from an MS device: " << signal.deviceType << endl;
+            return CVID_Unknown;
+
+        case DeviceType_ThermostattedColumnCompartment:
+        case DeviceType_ChipCube:
+        case DeviceType_CE:
+        case DeviceType_UIB2:
+        case DeviceType_FlexCube:
+        case DeviceType_SFC:
+        case DeviceType_ColumnCompCluster:
+        case DeviceType_CompactLCColumnOven:
+        case DeviceType_HDR:
+        case DeviceType_MultiColumnCluster:
+            return CVID_Unknown;
+    }
+}
+
 
 } // Agilent
 } // detail

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using TestRunnerLib;
@@ -152,10 +151,10 @@ namespace SkylineTester
             var skylinePath = Path.Combine(MainWindow.ExeDir, "Skyline.exe");
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe"); // Keep -daily
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
-            var assembly = Assembly.LoadFrom(skylinePath);
+            var assembly = LoadFromAssembly.Try(skylinePath);
             var types = assembly.GetTypes().ToList();
             var commonPath = Path.Combine(MainWindow.ExeDir, "pwiz.Common.dll");
-            var dll = Assembly.LoadFrom(commonPath);
+            var dll = LoadFromAssembly.Try(commonPath);
             types.AddRange(dll.GetTypes());
             var formLookup = new FormLookup();
 

@@ -647,7 +647,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var matchedFragmentIon = MakeMatchedFragmentIon(type, 0, PrecursorAdduct, null, out double matchMz);
 
-                        if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, 0, 0, 0, ref rankedMI))
+                        if (!MatchNext(rankingState, matchMz, matchedFragmentIon, false, 0, 0, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
                             if (rankingState.matched)
@@ -663,7 +663,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             var fragment = knownFragments[i];
                             double matchMz = MoleculeMassesObj.PredictIonMasses.KnownFragments[i].PredictedMz;
-                            if (!MatchNext(rankingState, matchMz, fragment, filter, 0, 0, fragment.PredictedMz, ref rankedMI))
+                            if (!MatchNext(rankingState, matchMz, fragment, false, 0, 0, fragment.PredictedMz, ref rankedMI))
                             {
                                 // If matched return.  Otherwise look for other ion types.
                                 if (rankingState.matched)

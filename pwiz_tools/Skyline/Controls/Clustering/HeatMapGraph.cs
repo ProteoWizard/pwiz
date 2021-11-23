@@ -212,6 +212,10 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public override void UpdateSelection()
         {
+            if (GraphResults == null)
+            {
+                return;
+            }
             if (!ShowSelection)
             {
                 if (!zedGraphControl1.GraphPane.GraphObjList.Any())

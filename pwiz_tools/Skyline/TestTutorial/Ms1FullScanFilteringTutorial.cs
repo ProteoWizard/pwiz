@@ -54,7 +54,6 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -404,7 +403,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
-                Settings.Default.ShowDotProductPeakArea = true;
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 Settings.Default.ShowLibraryPeakArea = true;
             });
             RunUI(() =>
@@ -517,6 +516,23 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("MS1 spectrum graph 37.32 minutes", 28);
             ClickChromatogram(TIP_NAME, 33.2, 328.1);
             PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
+
+            if (PreferWiff)
+            {
+                RunUI(() =>
+                {
+                    Assert.AreEqual(726, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
+                });
+                WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
+
+                RunUI(() =>
+                {
+                    Assert.AreEqual(36, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
+                });
+            }
+
             RunUI(() => SkylineWindow.HideFullScanGraph());
 
             RunUI(() =>

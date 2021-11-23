@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -9,20 +10,13 @@ namespace SkylineBatch
 {
     public class DataServerInfo : Server, IEquatable<Object>
     {
-        
-        public static DataServerInfo ServerFromUi(string url, string userName, string password, bool encrypt, string namingPattern, string folder)
-        {
-            ValidateInputs(url, userName, password, out Uri uri);
-
-            return new DataServerInfo(uri, userName, password, encrypt, namingPattern, folder);
-        }
 
         public static DataServerInfo ReplaceFolder(DataServerInfo other, string newFolder)
         {
-            return new DataServerInfo(other.URI, other.Username, other.Password, other.Encrypt, other.DataNamingPattern, newFolder);
+            return new DataServerInfo(other.FileSource, other.RelativePath, other.DataNamingPattern, newFolder);
         }
 
-        public DataServerInfo(Uri server, string userName, string password, bool encrypt, string namingPattern, string folder) : base(server, userName, password, encrypt)
+        public DataServerInfo(RemoteFileSource remoteFileSource, string relativePath, string namingPattern, string folder) : base(remoteFileSource, relativePath)
         {
             DataNamingPattern = namingPattern ?? ".*";
             Folder = folder;
@@ -40,15 +34,8 @@ namespace SkylineBatch
         public FtpClient GetFtpClient()
         {
             var client = new FtpClient(URI.Host);
-
-            if (!string.IsNullOrEmpty(Password))
-            {
-                if (!string.IsNullOrEmpty(Username))
-                    client.Credentials = new NetworkCredential(Username, Password);
-                else
-                    client.Credentials = new NetworkCredential("anonymous", Password);
-            }
-
+            if (!string.IsNullOrEmpty(FileSource.Password))
+                client.Credentials = new NetworkCredential(FileSource.Username, FileSource.Password);
             return client;
         }
 
@@ -60,15 +47,28 @@ namespace SkylineBatch
 
         public DataServerInfo Copy()
         {
-            return new DataServerInfo(URI, Username, Password, Encrypt, DataNamingPattern, Folder);
+            return new DataServerInfo(FileSource, RelativePath, DataNamingPattern, Folder);
+        }
+
+        public new DataServerInfo UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newFileSource = FileSource.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            return new DataServerInfo(newFileSource, RelativePath, DataNamingPattern, Folder);
+        }
+
+        public DataServerInfo ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newFileSource = FileSource.ReplacedRemoteFileSource(existingSource, newSource, out replaced);
+            return new DataServerInfo(newFileSource, RelativePath, DataNamingPattern, Folder);
         }
 
         public new void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement(XMLElements.REMOTE_FILE_SET);
-            base.WriteXml(writer);
             if (!DataNamingPattern.Equals(".*"))
                 writer.WriteAttributeIfString(XML_TAGS.data_naming_pattern, DataNamingPattern);
+            base.WriteXml(writer);
             writer.WriteEndElement();
         }
 
@@ -78,7 +78,16 @@ namespace SkylineBatch
                 return null;
             var dataNamingPattern = reader.GetAttribute(XML_TAGS.data_naming_pattern);
             var server = Server.ReadXml(reader);
-            return new DataServerInfo(server.URI, server.Username, server.Password, server.Encrypt, dataNamingPattern, folder);
+            return new DataServerInfo(server.FileSource, server.RelativePath, dataNamingPattern, folder);
+        }
+
+        public static DataServerInfo ReadXmlVersion_21_1(XmlReader reader, string folder)
+        {
+            if (!reader.ReadToDescendant(XMLElements.REMOTE_FILE_SET))
+                return null;
+            var dataNamingPattern = reader.GetAttribute(XML_TAGS.data_naming_pattern);
+            var server = Server.ReadXmlVersion_21_1(reader);
+            return new DataServerInfo(server.FileSource, server.RelativePath, dataNamingPattern, folder);
         }
 
         public static DataServerInfo ReadXmlVersion_20_2(XmlReader reader, string folder)
@@ -92,7 +101,8 @@ namespace SkylineBatch
             var username = reader.GetAttribute(OLD_XML_TAGS.ServerUserName);
             var password = reader.GetAttribute(OLD_XML_TAGS.ServerPassword);
             var dataNamingPattern = reader.GetAttribute(OLD_XML_TAGS.DataNamingPattern);
-            return new DataServerInfo(uri, username, password, false, dataNamingPattern, folder);
+            var remoteFileSource = new RemoteFileSource(RemoteFileSource.CreateNameFromUrl(uri.AbsoluteUri), uri, username, password, false);
+            return new DataServerInfo(remoteFileSource, string.Empty, dataNamingPattern, folder);
         }
 
         /*protected bool Equals(DataServerInfo other)

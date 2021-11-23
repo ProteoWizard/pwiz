@@ -1224,8 +1224,28 @@ namespace pwiz.Skyline.Model
             // No retention time prediction for small molecules (yet?)
             newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
                 newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
+            newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
+        }
+
+        /// <summary>
+        /// Force TransitionGroupDocNode.UpdateResults to look at all of the chromatogram data again,
+        /// and make sure that it matches what is in the document.
+        /// This is accomplished by changing "mzMatchTolerance" to a slightly different value and
+        /// changing it back again.
+        /// </summary>
+        private SrmDocument ForceReloadChromatograms(SrmDocument document)
+        {
+            double mzMatchToleranceOld = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            // Find the double value which is the smallest step away from the current value
+            double mzMatchToleranceNew =
+                BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(mzMatchToleranceOld) - 1);
+            document = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(instrument =>
+                instrument.ChangeMzMatchTolerance(mzMatchToleranceNew)));
+            return document.ChangeSettings(document.Settings.ChangeTransitionInstrument(instrument =>
+                instrument.ChangeMzMatchTolerance(mzMatchToleranceOld)));
+
         }
 
         /// <summary>

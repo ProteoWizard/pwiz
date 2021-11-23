@@ -34,7 +34,7 @@ namespace AutoQC
 
         public readonly string Name;
 
-        public bool IsEnabled;
+        public readonly bool IsEnabled;
 
         public readonly DateTime Created;
 

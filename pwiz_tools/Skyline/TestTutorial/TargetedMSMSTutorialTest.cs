@@ -54,14 +54,12 @@ namespace pwiz.SkylineTestTutorial
     public class TargetedMsmsTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestTargetedMSMSTutorial()
         {
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
@@ -70,7 +68,6 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
-        [Timeout(60 * 60 * 1000)]  // These can take a long time in code coverage mode (1 hour)
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()
@@ -167,7 +164,7 @@ namespace pwiz.SkylineTestTutorial
 
                     transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
-                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                 });
                 PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab low res", 6);
 
@@ -196,7 +193,7 @@ namespace pwiz.SkylineTestTutorial
                 var tranSettingsFullScan = SkylineWindow.Document.Settings.TransitionSettings;
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
-                Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
+                Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsFullScan.FullScan.AcquisitionMethod);
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
@@ -725,7 +722,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                     transitionSettingsUI.PrecursorRes = 20;
                     transitionSettingsUI.Peaks = 3;
-                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                     transitionSettingsUI.ProductMassAnalyzer = FullScanMassAnalyzerType.centroided;
                     transitionSettingsUI.ProductRes = 20;
                 });
@@ -750,7 +747,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsHighRes.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, tranSettingsHighRes.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(20, tranSettingsHighRes.FullScan.PrecursorRes);
-            Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsHighRes.FullScan.AcquisitionMethod);
+            Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsHighRes.FullScan.AcquisitionMethod);
             Assert.AreEqual(20, tranSettingsHighRes.FullScan.ProductRes);
             Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
                                                tranSettingsHighRes.Filter.PeptideIonTypes));

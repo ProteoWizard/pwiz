@@ -117,8 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
+  </metadata>
+  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="applyPeakAllGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -151,6 +154,15 @@
   <data name="removePeakGraphMenuItem.Text" xml:space="preserve">
     <value>Remove Peak</value>
   </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="synchronizeIntegrationContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="synchronizeIntegrationContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Integration...</value>
+  </data>
   <data name="toolStripSeparator33.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
   </data>
@@ -177,6 +189,90 @@
   </data>
   <data name="massErrorContextMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
+  </data>
+  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Times</value>
+  </data>
+  <data name="retentionTimePredContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="retentionTimePredContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Time Prediction</value>
+  </data>
+  <data name="peptideIDTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Peptide ID Times</value>
+  </data>
+  <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="transitionsContextMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="transformChromContextMenuItem.Text" xml:space="preserve">
+    <value>Transform</value>
+  </data>
+  <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="autoZoomContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
+    <value>Auto-zoom X-axis</value>
+  </data>
+  <data name="lockYChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="lockYChromContextMenuItem.Text" xml:space="preserve">
+    <value>Auto-scale Y-axis</value>
+  </data>
+  <data name="synchronizeZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="synchronizeZoomingContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Zooming</value>
+  </data>
+  <data name="toolStripSeparator18.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="chromPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="chromPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
+  <data name="toolStripSeparator19.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="zoomChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="zoomChromContextMenuItem.Text" xml:space="preserve">
+    <value>Zoom Out</value>
+  </data>
+  <data name="toolStripSeparator26.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 6</value>
+  </data>
+  <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>213, 508</value>
+  </data>
+  <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
+    <value>contextMenuChromatogram</value>
+  </data>
+  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>172, 22</value>
@@ -211,18 +307,6 @@
   <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
     <value>Show Raw Times</value>
   </data>
-  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Times</value>
-  </data>
-  <data name="retentionTimePredContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="retentionTimePredContextMenuItem.Text" xml:space="preserve">
-    <value>Retention Time Prediction</value>
-  </data>
   <data name="idTimesNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>164, 22</value>
   </data>
@@ -246,15 +330,6 @@
   </data>
   <data name="idTimesOtherContextMenuItem.Text" xml:space="preserve">
     <value>From Other Runs</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
-    <value>Peptide ID Times</value>
-  </data>
-  <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
   </data>
   <data name="allTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 22</value>
@@ -325,12 +400,6 @@
   <data name="splitGraphContextMenuItem.Text" xml:space="preserve">
     <value>Split Graph</value>
   </data>
-  <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="transitionsContextMenuItem.Text" xml:space="preserve">
-    <value>Transitions</value>
-  </data>
   <data name="transformChromNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>213, 22</value>
   </data>
@@ -361,15 +430,6 @@
   <data name="smoothSGChromContextMenuItem.Text" xml:space="preserve">
     <value>Savitzky-Golay Smoothing</value>
   </data>
-  <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-    <value>Transform</value>
-  </data>
-  <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
   <data name="autoZoomNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
@@ -394,59 +454,17 @@
   <data name="autoZoomBothContextMenuItem.Text" xml:space="preserve">
     <value>Both</value>
   </data>
-  <data name="autoZoomContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
-    <value>Auto-zoom X-axis</value>
-  </data>
-  <data name="lockYChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="lockYChromContextMenuItem.Text" xml:space="preserve">
-    <value>Auto-scale Y-axis</value>
-  </data>
-  <data name="synchronizeZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="synchronizeZoomingContextMenuItem.Text" xml:space="preserve">
-    <value>Synchronize Zooming</value>
-  </data>
-  <data name="toolStripSeparator18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="chromPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="chromPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
-  </data>
-  <data name="toolStripSeparator19.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="zoomChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>212, 22</value>
-  </data>
-  <data name="zoomChromContextMenuItem.Text" xml:space="preserve">
-    <value>Zoom Out</value>
-  </data>
-  <data name="toolStripSeparator26.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 6</value>
-  </data>
-  <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 458</value>
-  </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
-    <value>contextMenuChromatogram</value>
-  </data>
-  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.210, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakAllGraphMenuItem</value>
@@ -476,6 +494,18 @@
     <value>removePeakGraphMenuItem</value>
   </data>
   <data name="&gt;&gt;removePeakGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;synchronizeIntegrationContextMenuItem.Name" xml:space="preserve">
+    <value>synchronizeIntegrationContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchronizeIntegrationContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator33.Name" xml:space="preserve">
@@ -794,6 +824,6 @@
     <value>ChromatogramContextMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=21.1.1.210, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

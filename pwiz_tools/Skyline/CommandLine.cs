@@ -1919,7 +1919,7 @@ namespace pwiz.Skyline
                 return false;
 
             // Add iRTs
-            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            if (import.IrtStandard != null && !import.IrtStandard.IsEmpty)
             {
                 ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
                     out var irtProviders, out var autoStandards, out var cirtPeptides);
@@ -1933,7 +1933,7 @@ namespace pwiz.Skyline
                     }
                     numCirt = commandArgs.NumCirts.Value;
                 }
-                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                else if (import.IrtStandard.IsAuto)
                 {
                     switch (autoStandards.Count)
                     {
@@ -2029,7 +2029,7 @@ namespace pwiz.Skyline
                 try
                 {
                     IdentityPath firstAdded, nextAdd;
-                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, progressMonitor, null,
+                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, import.IrtStandard, progressMonitor, null,
                         out firstAdded, out nextAdd, out peptideGroupsNew);
                 }
                 catch (Exception x)
@@ -2375,7 +2375,7 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
             var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 

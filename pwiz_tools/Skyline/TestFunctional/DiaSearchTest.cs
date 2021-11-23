@@ -369,6 +369,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
 
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on transition settings
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.ION_1.Label;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on full scan settings
 
                 // re-select isolation scheme after FullScanSettingsControl reset
