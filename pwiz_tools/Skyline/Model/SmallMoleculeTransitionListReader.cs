@@ -18,12 +18,6 @@
  */
 
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -31,6 +25,12 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace pwiz.Skyline.Model
 {
@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model
     {
         protected IFormatProvider _cultureInfo;
         protected List<Row> Rows { get; set; }
+        private bool UseNewAdduct;
+        private int newAdduct;
         public abstract void UpdateCellBackingStore(int row, int col, object value);
         public abstract void ShowTransitionError(PasteError error);
         public abstract int ColumnIndex(string columnName);
@@ -53,12 +55,36 @@ namespace pwiz.Skyline.Model
             Rows = new List<Row>();
         }
 
+        /// <summary>
+        /// Add a blank column to record adducts
+        /// </summary>
+        /// <returns>Index of the new adduct column</returns>
+        private int AddAdductColumn()
+        {
+            for (int i = 0; i < Rows.Count; i++)
+            {
+                Rows[i].Add(string.Empty);
+            }
+
+            UseNewAdduct = true;
+            newAdduct = Rows[0].Size() - 1;
+            return newAdduct;
+        }
         public class Row
         {
             public int Index { get; private set; }
             private SmallMoleculeTransitionListReader _parent;
             protected List<string> _cells { get; set; }
 
+            public void Add(String element)
+            {
+                _cells.Add(element);
+            }
+
+            public int Size()
+            {
+                return _cells.Count;
+            }
             public Row(SmallMoleculeTransitionListReader parent, int index, List<string> cells)
             {
                 _parent = parent;
@@ -458,7 +484,10 @@ namespace pwiz.Skyline.Model
 
         private int INDEX_PRECURSOR_ADDUCT
         {
-            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.adductPrecursor); }
+            get
+            {
+                return UseNewAdduct ? newAdduct : ColumnIndex(SmallMoleculeTransitionListColumnHeaders.adductPrecursor);
+            }
         }
 
         private int INDEX_PRODUCT_FORMULA
@@ -1348,6 +1377,10 @@ namespace pwiz.Skyline.Model
                                 adduct = adduct.ChangeIsotopeLabels(labels);
                                 formula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(formula);
                                 row.SetCell(indexFormula, formula);
+                                if (indexAdduct == -1)
+                                {
+                                    indexAdduct = AddAdductColumn();
+                                }
                                 row.SetCell(indexAdduct, adduct.AsFormulaOrSignedInt());
                             }
                         }
