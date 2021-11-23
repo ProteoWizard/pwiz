@@ -180,6 +180,7 @@ namespace pwiz.Skyline.Controls
             _pickTimer.Tick += tick_ShowPickList;
 
             _nodeTip = new NodeTip(this) {Parent = TopLevelControl};
+            _normalizeOption = Settings.Default.AreaNormalizeOption;
 
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));

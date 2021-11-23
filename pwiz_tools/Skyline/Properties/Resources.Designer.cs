@@ -61,6 +61,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to These filters cannot be applied as they would result in an empty transition list..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_ap" +
+                        "plied_as_they_would_result_in_an_empty_transition_list.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid Analyst installation.
         /// </summary>
         public static string AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation {
@@ -8401,6 +8411,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS2 analyzer must be selected..
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS2 Tolerance incorrect.
         /// </summary>
         public static string DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect {
@@ -9313,6 +9332,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_fo" +
                         "rmat__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Labels.
+        /// </summary>
+        public static string DotpDisplayOption_label {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line.
+        /// </summary>
+        public static string DotpDisplayOption_line {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string DotpDisplayOption_None {
+            get {
+                return ResourceManager.GetString("DotpDisplayOption_None", resourceCulture);
             }
         }
         
@@ -12000,6 +12046,110 @@ namespace pwiz.Skyline.Properties {
         public static string EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library {
             get {
                 return ResourceManager.GetString("EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detecting decoy prefix in {0}..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No common prefixes were found..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_common_prefixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_common_prefixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No common suffixes were found..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_common_suffixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_common_suffixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No decoy prefix detected. A new FASTA will be generated using reverse sequences as decoys (with prefix &apos;{0}&apos;)..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_usin" +
+                        "g_reverse_sequences_as_decoys__with_prefix___0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No decoy prefix detected, but an existing decoy database seems to exist at {0}. Retrying the decoy prefix calculation on that..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_see" +
+                        "ms_to_exist_at__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No prefixes were frequent enough to be a decoy prefix (present in at least 40% of entries)..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__prese" +
+                        "nt_in_at_least_40__of_entries__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some common prefixes were found:.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Some_common_prefixes_were_found_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Some_common_prefixes_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some common suffixes were found but these are not supported:.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The suffix {0} was likely intended as a decoy suffix, but Skyline&apos;s DDA search tools do not support decoy suffixes. We suggest rerunning with the original FASTA without decoys..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Sk" +
+                        "yline_s_DDA_search_tools_do_not_support_decoy_suffixes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using {0} as the most likely decoy prefix..
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using decoy database at {0}.{1}.
+        /// </summary>
+        public static string EnsureFastaHasDecoys_Using_decoy_database_at__0___1_ {
+            get {
+                return ResourceManager.GetString("EnsureFastaHasDecoys_Using_decoy_database_at__0___1_", resourceCulture);
             }
         }
         
@@ -16126,6 +16276,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_col" +
+                        "umn_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_backg" +
+                        "round_proteome.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column {0}.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_DisplayData_Column__0_ {
@@ -16349,7 +16510,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}, column{1}: {2}.
+        ///   Looks up a localized string similar to Error on line {0}, column {1}: {2}.
         /// </summary>
         public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_ {
             get {
@@ -16387,7 +16548,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -19969,6 +20130,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Re-using existing converted {0} file for {1}..
+        /// </summary>
+        public static string MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__ {
+            get {
+                return ResourceManager.GetString("MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting msconvert conversion..
+        /// </summary>
+        public static string MsconvertDdaConverter_Run_Starting_msconvert_conversion_ {
+            get {
+                return ResourceManager.GetString("MsconvertDdaConverter_Run_Starting_msconvert_conversion_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading MSFragger {0}.
+        /// </summary>
+        public static string MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_ {
+            get {
+                return ResourceManager.GetString("MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS scan index {0} not found.
         /// </summary>
         public static string MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found {
@@ -21173,7 +21361,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -26405,6 +26593,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download {0}.
+        /// </summary>
+        public static string SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_ {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>
         public static string SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching {
@@ -26696,6 +26893,35 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ShimadzuMethodExporter_ExportMethod_Unexpected_response__0__from_Shimadzu_method_" +
                         "writer_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading required files....
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_Downloading_required_files___ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_Downloading_required_files___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following file is required. Do you want to download it?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_downl" +
+                        "oad_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following files are required. Do you want to download them?.
+        /// </summary>
+        public static string SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ {
+            get {
+                return ResourceManager.GetString("SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_dow" +
+                        "nload_them_", resourceCulture);
             }
         }
         
@@ -28047,6 +28273,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} transitions added.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList__0__transitions_added {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList__0__transitions_added", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} transitions contained errors..
         /// </summary>
         public static string SkylineWindow_ImportMassList__0__transitions_contained_errors_ {
@@ -28125,6 +28360,24 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportMassList_Analyzing_input__0_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_Analyzing_input__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins enabled.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Associate_Proteins_enabled {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Associate_Proteins_enabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Columns identified as {0}.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Columns_identified_as__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Columns_identified_as__0_", resourceCulture);
             }
         }
         
@@ -34199,7 +34452,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities mea [rest of string was truncated]&quot;;.
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError {
             get {
@@ -34216,7 +34469,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities meas [rest of string was truncated]&quot;;.
+        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {

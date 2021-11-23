@@ -3584,7 +3584,12 @@ namespace pwiz.Skyline
                 areaNormalizeContextMenuItem.DropDownItems.Clear();
                 areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
-                var areaReplicateGraphPane = graphSummary.GraphPanes.FirstOrDefault() as AreaReplicateGraphPane;
+                AreaReplicateGraphPane areaReplicateGraphPane;
+                if (graphSummary.GraphControl.MasterPane.PaneList.Count == 1)
+                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.PaneList[0];
+                else
+                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.FindPane(mousePt);
+
                 if (areaReplicateGraphPane != null)
                 {
                     // If the area replicate graph is being displayed and it shows a legend, 
@@ -3598,7 +3603,7 @@ namespace pwiz.Skyline
                     // If the area replicate graph is being displayed and it can show a library,
                     // display the "Show Library" option
                     var expectedVisible = areaReplicateGraphPane.ExpectedVisible;
-                    if (expectedVisible != AreaExpectedValue.none)
+                    if (expectedVisible.CanShowExpected())
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
                         showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
@@ -3611,7 +3616,11 @@ namespace pwiz.Skyline
                     // display the "Show Dot Product" option
                     if (areaReplicateGraphPane.CanShowDotProduct)
                     {
-                        showDotProductToolStripMenuItem.Checked = set.ShowDotProductPeakArea;
+                        showDotProductToolStripMenuItem.DropDownItems.Clear();
+                        var optionsList = DotProductDisplayOptionExtension.ListAll();
+                        if(areaReplicateGraphPane.IsLineGraph)
+                            optionsList = new[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
+                        showDotProductToolStripMenuItem.DropDownItems.AddRange(optionsList.Select(MakeShowDotpMenuItem).ToArray());
                         menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
                     }
                 } 
@@ -3774,6 +3783,20 @@ namespace pwiz.Skyline
             };
         }
 
+        private ToolStripItem MakeShowDotpMenuItem(DotProductDisplayOption displayOption)
+        {
+            return new ToolStripMenuItem(displayOption.GetLocalizedString(), null, DotpDisplayOptionMenuItemOnClick)
+            {
+                Checked = displayOption.IsSet(Settings.Default), Tag = displayOption
+            };
+        }
+        public void DotpDisplayOptionMenuItemOnClick(object sender, EventArgs eventArgs)
+        {
+            var displayOption = (DotProductDisplayOption)((ToolStripMenuItem)sender).Tag;
+            Settings.Default.PeakAreaDotpDisplay = displayOption.ToString();
+            UpdateSummaryGraphs();
+        }
+
         private IEnumerable<ToolStripItem> MakeNormalizeToMenuItems(IEnumerable<NormalizeOption> normalizeOptions,
             NormalizeOption selectedOption)
         {
@@ -3899,7 +3922,7 @@ namespace pwiz.Skyline
             double add = 0.0;
 
             // If the expected value (library) is visible the zoom has to be shifted
-            if (activePane is AreaReplicateGraphPane && (activePane as AreaReplicateGraphPane).IsExpectedVisible)
+            if (activePane is AreaReplicateGraphPane && (activePane as AreaReplicateGraphPane).ExpectedVisible.IsVisible())
                 add = -1.0;
        
             for (int i = 0; i < graphSummaries.Length; ++i)
@@ -3907,7 +3930,7 @@ namespace pwiz.Skyline
                 // Make sure we are not syncing the same graph or graphs of different types
                 if (i != index && graphSummaries[i] != null && graphSummaries[i].Type == graphSummaries[index].Type && graphSummaries[i].Visible)
                 {
-                    bool isExpectedVisible = graphSummaries[i].GraphControl.GraphPane is AreaReplicateGraphPane && ((AreaReplicateGraphPane)graphSummaries[i].GraphControl.GraphPane).IsExpectedVisible;
+                    bool isExpectedVisible = graphSummaries[i].GraphControl.GraphPane is AreaReplicateGraphPane && ((AreaReplicateGraphPane)graphSummaries[i].GraphControl.GraphPane).ExpectedVisible.IsVisible();
                     
                     if (isExpectedVisible)
                         ++add;
@@ -4444,12 +4467,6 @@ namespace pwiz.Skyline
         {
             // Show/hide the library column in the peak area view.
             Settings.Default.ShowLibraryPeakArea = !Settings.Default.ShowLibraryPeakArea;
-            UpdateSummaryGraphs();
-        }
-
-        private void showDotProductToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowDotProductPeakArea = !Settings.Default.ShowDotProductPeakArea;
             UpdateSummaryGraphs();
         }
 

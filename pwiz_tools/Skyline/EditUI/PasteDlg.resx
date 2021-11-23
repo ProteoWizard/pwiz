@@ -178,7 +178,7 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnInsert.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -205,7 +205,7 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>2</value>
   </data>
   <data name="btnValidate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -232,7 +232,7 @@
     <value>panelButtons</value>
   </data>
   <data name="&gt;&gt;btnValidate.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -349,7 +349,7 @@
     <value>gridViewProteins</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.211, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
     <value>tabPageProteinList</value>
@@ -418,7 +418,7 @@
     <value>gridViewPeptides</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.1.1.211, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
     <value>tabPagePeptideList</value>
@@ -453,87 +453,6 @@
   <data name="&gt;&gt;tabPagePeptideList.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="colTransitionPeptide.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTransitionPeptide.HeaderText" xml:space="preserve">
-    <value>Peptide</value>
-  </data>
-  <metadata name="colTransitionPrecursorMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTransitionPrecursorMz.HeaderText" xml:space="preserve">
-    <value>Precursor m/z</value>
-  </data>
-  <metadata name="colTransitionProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTransitionProductMz.HeaderText" xml:space="preserve">
-    <value>Product m/z</value>
-  </data>
-  <metadata name="colTransitionProteinName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTransitionProteinName.HeaderText" xml:space="preserve">
-    <value>Protein Name</value>
-  </data>
-  <metadata name="colTransitionProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTransitionProteinDescription.HeaderText" xml:space="preserve">
-    <value>Protein Description</value>
-  </data>
-  <data name="gridViewTransitionList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="gridViewTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="gridViewTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
-  </data>
-  <data name="gridViewTransitionList.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;gridViewTransitionList.Name" xml:space="preserve">
-    <value>gridViewTransitionList</value>
-  </data>
-  <data name="&gt;&gt;gridViewTransitionList.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;gridViewTransitionList.Parent" xml:space="preserve">
-    <value>tabPageTransitionList</value>
-  </data>
-  <data name="&gt;&gt;gridViewTransitionList.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabPageTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPageTransitionList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPageTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
-  </data>
-  <data name="tabPageTransitionList.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tabPageTransitionList.Text" xml:space="preserve">
-    <value>Transition List</value>
-  </data>
-  <data name="&gt;&gt;tabPageTransitionList.Name" xml:space="preserve">
-    <value>tabPageTransitionList</value>
-  </data>
-  <data name="&gt;&gt;tabPageTransitionList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPageTransitionList.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPageTransitionList.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="tabControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -557,36 +476,6 @@
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="radioPeptide.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 12</value>
-  </data>
-  <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 17</value>
-  </data>
-  <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioPeptide.Text" xml:space="preserve">
-    <value>&amp;Peptides</value>
-  </data>
-  <data name="radioPeptide.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.Name" xml:space="preserve">
-    <value>radioPeptide</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="tbxError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -642,105 +531,6 @@
   <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="btnTransitionListHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnTransitionListHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>277, 9</value>
-  </data>
-  <data name="btnTransitionListHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnTransitionListHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 23</value>
-  </data>
-  <data name="btnTransitionListHelp.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="btnTransitionListHelp.Text" xml:space="preserve">
-    <value>&amp;Help</value>
-  </data>
-  <data name="&gt;&gt;btnTransitionListHelp.Name" xml:space="preserve">
-    <value>btnTransitionListHelp</value>
-  </data>
-  <data name="&gt;&gt;btnTransitionListHelp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnTransitionListHelp.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnTransitionListHelp.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 9</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 23</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="btnCustomMoleculeColumns.Text" xml:space="preserve">
-    <value>Col&amp;umns...</value>
-  </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="btnCustomMoleculeColumns.ToolTip" xml:space="preserve">
-    <value>Selects columns for display.  Columns can be reordered by dragging.</value>
-  </data>
-  <data name="&gt;&gt;btnCustomMoleculeColumns.Name" xml:space="preserve">
-    <value>btnCustomMoleculeColumns</value>
-  </data>
-  <data name="&gt;&gt;btnCustomMoleculeColumns.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCustomMoleculeColumns.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnCustomMoleculeColumns.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="radioMolecule.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioMolecule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioMolecule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>100, 12</value>
-  </data>
-  <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
-  </data>
-  <data name="radioMolecule.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="radioMolecule.Text" xml:space="preserve">
-    <value>&amp;Molecules</value>
-  </data>
-  <data name="radioMolecule.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.Name" xml:space="preserve">
-    <value>radioMolecule</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>
   </data>
@@ -765,6 +555,9 @@
   <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>200, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -787,7 +580,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.211, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;colProteinName.Name" xml:space="preserve">
     <value>colProteinName</value>
@@ -849,36 +642,6 @@
   <data name="&gt;&gt;colPeptideProteinDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colTransitionPeptide.Name" xml:space="preserve">
-    <value>colTransitionPeptide</value>
-  </data>
-  <data name="&gt;&gt;colTransitionPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colTransitionPrecursorMz.Name" xml:space="preserve">
-    <value>colTransitionPrecursorMz</value>
-  </data>
-  <data name="&gt;&gt;colTransitionPrecursorMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProductMz.Name" xml:space="preserve">
-    <value>colTransitionProductMz</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProductMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProteinName.Name" xml:space="preserve">
-    <value>colTransitionProteinName</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProteinName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProteinDescription.Name" xml:space="preserve">
-    <value>colTransitionProteinDescription</value>
-  </data>
-  <data name="&gt;&gt;colTransitionProteinDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
   </data>
@@ -889,6 +652,6 @@
     <value>PasteDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.1.1.211, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

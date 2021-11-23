@@ -390,12 +390,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void SetCsvFileClipboardText(string filePath, bool hasHeader = false)
+        protected static void SetCsvFileClipboardText(string filePath)
         {
-            SetClipboardText(GetCsvFileText(filePath, hasHeader));
+            SetClipboardText(GetCsvFileText(filePath));
         }
 
-        protected static string GetCsvFileText(string filePath, bool hasHeader = false)
+        protected static string GetCsvFileText(string filePath)
         {
             string resultStr;
             if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
@@ -419,10 +419,6 @@ namespace pwiz.SkylineTestUtil
                     sb.AppendLine(fields.ToCsvLine());
                 }
                 resultStr = sb.ToString();
-            }
-            if (hasHeader)
-            {
-                resultStr = resultStr.Substring(resultStr.IndexOf('\n') + 1);
             }
             return resultStr;
         }

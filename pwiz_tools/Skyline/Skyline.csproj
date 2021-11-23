@@ -210,6 +210,12 @@
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
+    <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MsFraggerDownloadDlg.Designer.cs">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\NoModeUIDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -303,6 +309,7 @@
     <Compile Include="Alerts\DetailedReportErrorDlg.Designer.cs">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\SimpleFileDownloaderDlg.cs" />
     <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -429,6 +436,13 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\InsertTransitionListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
@@ -543,6 +557,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
@@ -2056,6 +2071,9 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2574,6 +2592,9 @@
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.ja.resx">
       <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
