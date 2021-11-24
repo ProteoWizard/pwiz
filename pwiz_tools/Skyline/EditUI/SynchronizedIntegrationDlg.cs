@@ -28,7 +28,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -40,7 +39,7 @@ namespace pwiz.Skyline.EditUI
 
         private int _idxLastSelected = -1;
 
-        private Tuple<string, HashSet<string>> _memory = Tuple.Create((string)null, new HashSet<string>());
+        private Tuple<ReplicateValue, HashSet<object>> _memory = Tuple.Create((ReplicateValue)null, new HashSet<object>());
 
         private SrmDocument Document => _skylineWindow.Document;
         private GroupByItem SelectedGroupBy => (GroupByItem) comboGroupBy.SelectedItem;
@@ -140,7 +139,7 @@ namespace pwiz.Skyline.EditUI
         {
             var annotationCalc = new AnnotationCalculator(Document);
             var newItems = SelectedGroupBy.GetItems(Document, annotationCalc).ToArray();
-            if (ArrayUtil.EqualsDeep(listSync.Items.Cast<object>().ToArray(), newItems))
+            if (Enumerable.SequenceEqual(listSync.Items.Cast<object>(), newItems))
                 return;
 
             _idxLastSelected = -1;
@@ -148,20 +147,9 @@ namespace pwiz.Skyline.EditUI
             listSync.Items.Clear();
             listSync.Items.AddRange(newItems);
 
-            HashSet<ChromatogramSet> selectedChroms;
-            if (string.IsNullOrEmpty(_memory.Item1))
-            {
-                // replicates
-                selectedChroms = Document.MeasuredResults.Chromatograms
-                    .Where(chromSet => _memory.Item2.Contains(chromSet.Name)).ToHashSet();
-            }
-            else
-            {
-                // annotation
-                var replicateValue = ReplicateValue.FromPersistedString(Document.Settings, _memory.Item1);
-                selectedChroms = Document.MeasuredResults.Chromatograms
-                    .Where(chromSet => _memory.Item2.Contains(replicateValue.GetValue(annotationCalc, chromSet))).ToHashSet();
-            }
+            var selectedChroms = _memory.Item1 == null
+                ? Document.MeasuredResults.Chromatograms.Where(chromSet => _memory.Item2.Contains(chromSet.Name)).ToHashSet()
+                : Document.MeasuredResults.Chromatograms.Where(chromSet => _memory.Item2.Contains(_memory.Item1.GetValue(annotationCalc, chromSet) ?? string.Empty)).ToHashSet();
 
             var toCheck = new HashSet<string>();
             if (string.IsNullOrEmpty(SelectedGroupBy.PersistedString))
@@ -175,7 +163,7 @@ namespace pwiz.Skyline.EditUI
                 foreach (var item in newItems)
                 {
                     var thisChroms = Document.MeasuredResults.Chromatograms.Where(chromSet =>
-                        Equals(item, SelectedGroupBy.ReplicateValue.GetValue(annotationCalc, chromSet))).ToArray();
+                        Equals(item, SelectedGroupBy.ReplicateValue.GetValue(annotationCalc, chromSet) ?? string.Empty)).ToArray();
                     var selectCount = thisChroms.Count(chromSet => selectedChroms.Contains(chromSet));
                     if (selectCount == thisChroms.Length)
                     {
@@ -190,7 +178,6 @@ namespace pwiz.Skyline.EditUI
             }
 
             listSync.ItemCheck -= listSync_ItemCheck;
-
             cbSelectAll.CheckedChanged -= cbSelectAll_CheckedChanged;
             SetCheckedItems(toCheck);
             cbSelectAll.Checked = listSync.CheckedItems.Count > 0;
@@ -205,7 +192,7 @@ namespace pwiz.Skyline.EditUI
                 listSync.SetItemChecked(i, cbSelectAll.Checked);
             listSync.ItemCheck += listSync_ItemCheck;
 
-            _memory = Tuple.Create(GroupByPersistedString, Targets.ToHashSet());
+            _memory = Tuple.Create(SelectedGroupBy.ReplicateValue, listSync.CheckedItems.Cast<object>().ToHashSet());
         }
 
         private void listSync_SelectedIndexChanged(object sender, EventArgs e)
@@ -222,11 +209,11 @@ namespace pwiz.Skyline.EditUI
 
         private void listSync_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            var checkedItems = Targets.ToHashSet();
+            var checkedItems = listSync.CheckedItems.Cast<object>().ToHashSet();
             if (e.NewValue == CheckState.Checked)
-                checkedItems.Add(listSync.Items[e.Index].ToString());
+                checkedItems.Add(listSync.Items[e.Index]);
             else
-                checkedItems.Remove(listSync.Items[e.Index].ToString());
+                checkedItems.Remove(listSync.Items[e.Index]);
 
             cbSelectAll.CheckedChanged -= cbSelectAll_CheckedChanged;
             var anyChecked = checkedItems.Count > 0;
@@ -236,7 +223,7 @@ namespace pwiz.Skyline.EditUI
                 cbSelectAll.Checked = false;
             cbSelectAll.CheckedChanged += cbSelectAll_CheckedChanged;
 
-            _memory = Tuple.Create(GroupByPersistedString, checkedItems);
+            _memory = Tuple.Create(SelectedGroupBy.ReplicateValue, checkedItems);
         }
 
         private void comboAlign_SelectedIndexChanged(object sender, EventArgs e)
