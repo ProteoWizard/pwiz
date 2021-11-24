@@ -16267,11 +16267,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Explicit Delustering Potential.
+        ///   Looks up a localized string similar to Explicit Declustering Potential.
         /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential {
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential {
             get {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential", resourceCulture);
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential", resourceCulture);
             }
         }
         
@@ -21644,15 +21644,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collision Cross Section (sq A).
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section (sq A).
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_ {
@@ -21676,6 +21667,15 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Decoy {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Decoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Collision Cross Section (sq A).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_", resourceCulture);
             }
         }
         

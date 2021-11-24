@@ -140,6 +140,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public DdaSearchSettings(SearchSettingsControl control) : this(control.SelectedSearchEngine, control.PrecursorTolerance,
                 control.FragmentTolerance, control.MaxVariableMods, control.FragmentIons, control.Ms2Analyzer)
             {
+                if (control.cbFragmentIons.Items.Count == 1)
+                    FragmentIons = null;
+                if (control.cbMs2Analyzer.Items.Count == 1)
+                    Ms2Analyzer = null;
             }
 
             public static DdaSearchSettings GetDefault()
@@ -161,7 +165,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Ms2Analyzer = ms2Analyzer;
             }
 
-            [Track]
+            private class SearchEngineDefault : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    return ((DdaSearchSettings)parentObject).SearchEngine == SearchEngine.MSAmanda;
+                }
+            }
+
+            [Track(defaultValues:typeof(SearchEngineDefault))]
             public SearchEngine SearchEngine { get; private set; }
             [Track]
             public MzTolerance PrecursorTolerance { get; private set; }
@@ -169,9 +181,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public MzTolerance FragmentTolerance { get; private set; }
             [Track]
             public int MaxVariableMods { get; private set; }
-            [Track]
+            [Track(defaultValues:typeof(DefaultValuesNull))]
             public string FragmentIons { get; private set; }
-            [Track]
+            [Track(defaultValues:typeof(DefaultValuesNull))]
             public string Ms2Analyzer { get; private set; }
         }
 

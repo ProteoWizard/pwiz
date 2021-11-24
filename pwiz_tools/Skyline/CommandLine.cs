@@ -366,7 +366,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (string.IsNullOrEmpty(commandArgs.ImportPeakBoundariesPath) && !ImportPeakBoundaries(commandArgs))
+            if (!string.IsNullOrEmpty(commandArgs.ImportPeakBoundariesPath) && !ImportPeakBoundaries(commandArgs))
             {
                 return false;
             }

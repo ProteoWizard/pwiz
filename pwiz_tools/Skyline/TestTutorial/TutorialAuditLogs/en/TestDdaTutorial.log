@@ -42,7 +42,6 @@ Import Peptide Search > DDA search settings > Precursor tolerance is 5ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is 10ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
-Import Peptide Search > DDA search settings > MS2 analyzer is "Default"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -71,7 +70,6 @@ DDA search settings =
     Precursor tolerance = 5ppm,
     Fragment tolerance = 10ppm,
     Max variable mods per peptide = "3",
-    Fragment ion types = "b,y",
-    MS2 analyzer = "Default"
+    Fragment ion types = "b,y"
 }
 

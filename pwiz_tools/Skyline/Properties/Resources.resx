@@ -11427,8 +11427,8 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>  
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Collision Cross Section (sq A)</value>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Explicit Collision Cross Section (sq A)</value>
   </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
     <value>Percentage of peak max height to use as intensity threshold.</value>
@@ -11457,8 +11457,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
     <value>Protein Description</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
-    <value>Explicit Delustering Potential</value>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
