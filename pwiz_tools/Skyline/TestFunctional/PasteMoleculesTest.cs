@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 windowDlg.radioMolecule.PerformClick();
-                SetComboBoxes(windowDlg, columnOrder);
+                windowDlg.SetComboBoxes(columnOrder);
             });
 
             if (string.IsNullOrEmpty(errText))
@@ -371,7 +371,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 // Example line from that file: "PC,PC aa C24:0,,C32H64N1O8P1,C5H14N1O4P1,622.445,184.074"
-                SetComboBoxes(windowDlg,
+                windowDlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     null, // Ignored empty column
@@ -534,20 +534,6 @@ namespace pwiz.SkylineTestFunctional
                 columnOrderC);
         }
 
-        private void SetComboBoxes(ImportTransitionListColumnSelectDlg dlg, params string[] headers)
-        {
-            var comboBoxes = dlg.ComboBoxes;
-            var index = 0;
-            foreach (var header in headers)
-            {
-                if (!string.IsNullOrEmpty(header) && comboBoxes.Count > index)
-                {
-                    comboBoxes[index].SelectedIndex = comboBoxes[1].FindStringExact(header);
-                }
-                index++;
-            }
-        }
-
         private void TestHeavyLightPairs()
         {
             // Verify that we can import heavy/light pairs
@@ -643,7 +629,7 @@ namespace pwiz.SkylineTestFunctional
                 ",4,4".Replace(',', TextUtil.CsvSeparator), (",4," + badcharge).Replace(',', TextUtil.CsvSeparator)));
             RunUI(() => {
                 windowDlg.radioMolecule.PerformClick();
-                SetComboBoxes(windowDlg,
+                windowDlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -677,7 +663,7 @@ namespace pwiz.SkylineTestFunctional
             var col0Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => text1Dialog.textBox1.Text = text);
             RunUI(() => {
                 col0Dlg.radioMolecule.PerformClick();
-                SetComboBoxes(col0Dlg,
+                col0Dlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1210,7 +1196,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 col4Dlg.radioMolecule.PerformClick();
-                SetComboBoxes(col4Dlg,
+                col4Dlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1678,7 +1664,7 @@ namespace pwiz.SkylineTestFunctional
             // Correct the header assignments
             RunUI(() => {
                 errDlg.radioMolecule.PerformClick();
-                SetComboBoxes(errDlg,
+                errDlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
@@ -1728,7 +1714,7 @@ namespace pwiz.SkylineTestFunctional
             var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
             RunUI(() => {
                 badDlg.radioMolecule.PerformClick();
-                SetComboBoxes(badDlg,
+                badDlg.SetComboBoxes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1873,7 +1859,7 @@ namespace pwiz.SkylineTestFunctional
                     // Correct the header assignments
                     RunUI(() => {
                         testImportDlg.radioMolecule.PerformClick();
-                        SetComboBoxes(testImportDlg,
+                        testImportDlg.SetComboBoxes(
                             Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                             Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                             Resources.PasteDlg_UpdateMoleculeType_Product_Name,

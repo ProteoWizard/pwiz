@@ -362,12 +362,9 @@ namespace pwiz.SkylineTestTutorial
             string impliedLabeled = GetExcelFileText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
             var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
-            
+            col4Dlg.SetComboBoxes(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence, 
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             RunUI(() => {
-                var comboBoxes = col4Dlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
                 col4Dlg.checkBoxAssociateProteins.Checked = true;
             });
 
@@ -577,15 +574,12 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 colDlg.checkBoxAssociateProteins.Checked = true;
-                var boxes = colDlg.ComboBoxes;
-                var oldProtBox = boxes[4];
                 var messageDlg = ShowDialog<MessageDlg>(() =>
                 {
                     RunUI(() =>
                     {
-                        oldProtBox.SelectedIndex =
-                            oldProtBox.FindStringExact(Resources
-                                .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                        colDlg.SetComboBoxes(null, null, null, null, Resources
+                            .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
                     });
                 });
                 Assert.IsNotNull(messageDlg);

@@ -40,7 +40,7 @@ namespace pwiz.Skyline.FileUI
     public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx, ITipDisplayer
     {
         public MassListImporter Importer { get; set; }
-        public List<ComboBox> ComboBoxes { get; private set; }
+        private List<ComboBox> ComboBoxes { get; set; }
 
         public bool WindowShown { get; private set; }
 
@@ -479,6 +479,22 @@ namespace pwiz.Skyline.FileUI
         private List<string> CurrentColumnPositions()
         {
             return ComboBoxes.Select(combo => combo.Text).ToList();
+        }
+
+        /// <summary>
+        /// For testing purposes only
+        /// </summary>
+        public void SetComboBoxes(params string[] headers)
+        {
+            var index = 0;
+            foreach (var header in headers)
+            {
+                if (!string.IsNullOrEmpty(header) && ComboBoxes.Count > index)
+                {
+                    ComboBoxes[index].SelectedIndex = ComboBoxes[1].FindStringExact(header);
+                }
+                index++;
+            }
         }
 
         /// <summary>
