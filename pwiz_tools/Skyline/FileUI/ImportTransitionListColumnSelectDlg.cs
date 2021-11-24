@@ -89,13 +89,13 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_S_Lens,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Note,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(@"InChiKey",SrmDocument.DOCUMENT_TYPE.small_molecules),
@@ -415,9 +415,9 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
             SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
             SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
-            SetComboBoxText(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+            SetComboBoxText(columns.ExplicitCollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_);
             SetComboBoxText(columns.MolecularFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-            SetComboBoxText(columns.ExplicitDelusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
+            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
             SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
             SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
             SetComboBoxText(columns.ProductNameColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
@@ -774,17 +774,17 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.ExplicitCompensationVoltageColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential)
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential)
             {
-                CheckForComboBoxOverlap(columns.ExplicitDelusteringPotentialColumn, 0, comboBoxIndex);
+                CheckForComboBoxOverlap(columns.ExplicitDeclusteringPotentialColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitDelusteringPotentialColumn = comboBoxIndex;
+                columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_)
+            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_)
             {
-                CheckForComboBoxOverlap(columns.CollisionCrossSectionColumn, 0, comboBoxIndex);
+                CheckForComboBoxOverlap(columns.ExplicitCollisionCrossSectionColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.CollisionCrossSectionColumn = comboBoxIndex;
+                columns.ExplicitCollisionCrossSectionColumn = comboBoxIndex;
             }
             else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description)
             {
@@ -1062,8 +1062,8 @@ namespace pwiz.Skyline.FileUI
             SetBoxesForMode(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
             SetBoxesForMode(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
             SetBoxesForMode(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-            SetBoxesForMode(columns.ExplicitDelusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential);
-            SetBoxesForMode(columns.CollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_);
+            SetBoxesForMode(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
+            SetBoxesForMode(columns.ExplicitCollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_);
             SetBoxesForMode(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
             if (radioPeptide.Checked)
             {

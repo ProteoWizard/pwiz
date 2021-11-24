@@ -11427,8 +11427,8 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>  
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Collision Cross Section (sq A)</value>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Explicit Collision Cross Section (sq A)</value>
   </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
     <value>Percentage of peak max height to use as intensity threshold.</value>
@@ -11457,8 +11457,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
     <value>Protein Description</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
-    <value>Explicit Delustering Potential</value>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
@@ -11554,6 +11554,18 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
     <value>None of the targets in the document have any chromatograms.</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>Retention time calculator ({0})</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>Retention time calculator...</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>To align to retention time prediction, you must first set up a retention time predictor in Peptide Settings / Prediction.</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected" xml:space="preserve">
     <value>MS2 analyzer must be selected.</value>

@@ -938,7 +938,7 @@ namespace pwiz.Skyline.Model
                         ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
                         explicitIonMobility,
                         imUnits,
-                        ColumnDouble(Fields, Indices.CollisionCrossSectionColumn, FormatProvider));
+                        ColumnDouble(Fields, Indices.ExplicitCollisionCrossSectionColumn, FormatProvider));
                 }
             }
             
@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Model
                             ColumnDouble(Fields, Indices.ExplicitIonMobilityHighEnergyOffsetColumn, FormatProvider),
                             ColumnDouble(Fields, Indices.SLensColumn, FormatProvider),
                             ColumnDouble(Fields, Indices.ConeVoltageColumn, FormatProvider),
-                            ColumnDouble(Fields, Indices.ExplicitDelusteringPotentialColumn, FormatProvider));
+                            ColumnDouble(Fields, Indices.ExplicitDeclusteringPotentialColumn, FormatProvider));
                 }
             }
 
@@ -2264,9 +2264,9 @@ namespace pwiz.Skyline.Model
 
         public int ExplicitCompensationVoltageColumn { get; set; }
 
-        public int ExplicitDelusteringPotentialColumn { get; set; }
+        public int ExplicitDeclusteringPotentialColumn { get; set; }
 
-        public int CollisionCrossSectionColumn { get; set; }
+        public int ExplicitCollisionCrossSectionColumn { get; set; }
 
         public int ProteinDescriptionColumn { get; set; }
 
@@ -2389,7 +2389,7 @@ namespace pwiz.Skyline.Model
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.imUnits, header))
                     ExplicitIonMobilityUnitsColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, header))
-                    CollisionCrossSectionColumn = index;
+                    ExplicitCollisionCrossSectionColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.slens, header))
                     SLensColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.coneVoltage, header))
@@ -2397,7 +2397,7 @@ namespace pwiz.Skyline.Model
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, header))
                     ExplicitCompensationVoltageColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, header))
-                    ExplicitDelusteringPotentialColumn = index;
+                    ExplicitDeclusteringPotentialColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.note, header))
                     NoteColumn = index;
                 if (FindValueMatch(SmallMoleculeTransitionListColumnHeaders.labelType, header))
@@ -2477,7 +2477,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> NoteNames { get { return new[] { @"note" }; } }
         public static IEnumerable<string> SLensNames { get { return new[] { @"slens", @"s-lens" }; } }
         public static IEnumerable<string> ConeVoltageNames { get { return new[] { @"conevoltage" }; } }
-        public static IEnumerable<string> ExplicitDelusteringPotentialNames { get { return new[] { @"explicitdelusteringpotential" }; } }
+        public static IEnumerable<string> ExplicitDeclusteringPotentialNames { get { return new[] { @"explicitdeclusteringpotential" }; } }
         public static IEnumerable<string> ExplicitCompensationVoltageNames { get { return new[] { @"explicitcompensationvoltage" }; } }
         public static IEnumerable<string> MoleculeListNameNames { get { return new[] { @"moleculelistname", @"moleculegroup" }; } }
         public static IEnumerable<string> ProteinDescriptionNames { get { return new[] { @"proteindescription" }; } }
