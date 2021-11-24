@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -112,17 +114,23 @@ namespace pwiz.SkylineTestFunctional
             // Check error and grid cell selection for a bad product m/z
             VerifyTransitionListError(insertListText, 757.420279, 888.8888, 8, 2);
             // Non-numeric product m/z
-            VerifyTransitionListError(insertListText, 908.447222, "x", "no matching product ion", 1, 2);
+            VerifyTransitionListError(insertListText, 908.447222, "x", 
+                string.Format(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion, 0, @"ELKEQQDSPGNKDFLQSLK"),
+                1, 2);
             // Check error and grid cell selection for a bad precursor m/z
             VerifyTransitionListError(insertListText, 648.352161, 777.7777, 6, 1);
             // Non-numeric precursor m/z
-            VerifyTransitionListError(insertListText, 762.033412, "x", "Precursor m/z 0 does not match", 0, 1);
+            VerifyTransitionListError(insertListText, 762.033412, "x",
+                string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_, 0, 28.5462, 28.5462, "ELKEQQDSPGNKDFLQSLK"),
+                0, 1);
             // Empty peptide
-            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "", "Invalid peptide sequence", 9, 0);
+            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "", string.Format(Resources.MassListRowReader_NextRow_Invalid_peptide_sequence__0__found, ""), 9, 0);
             // Bad peptide
-            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", "Invalid peptide sequence", 9, 0);
+            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", string.Format(Resources.MassListRowReader_NextRow_Invalid_peptide_sequence__0__found, "BBBbBBBR"), 9, 0);
             // No mods explain all transitions
-            VerifyTransitionListError(insertPart1 + insertPart2, null, null, "Failed to explain all transitions", 3, 0, 2);
+            VerifyTransitionListError(insertPart1 + insertPart2, null, null,
+                String.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications, "CDSSPDSAEDVR", 709.2505),
+                3, 0, 2);
             // Finally a working set of transitions
             SetClipboardText(insertPart1 + insertSep + insertPart2);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
