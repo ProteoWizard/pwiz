@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 colDlg.radioMolecule.PerformClick();
-                colDlg.SetComboBoxes(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name, 
+                colDlg.SetSelectedColumnTypes(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name, 
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
                     Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,

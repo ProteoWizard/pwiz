@@ -540,7 +540,7 @@ namespace pwiz.Skyline.Properties
 
         [UserScopedSettingAttribute]
         // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
-        // on to the next transition list
+        // on to the next transition list. Normally these are saved in invariant language (en) but we can read localized for backward compatibility
         public List<string> CustomImportTransitionListColumnTypesList
         {
             get

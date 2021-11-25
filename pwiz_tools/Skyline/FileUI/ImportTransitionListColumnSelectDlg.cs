@@ -31,7 +31,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
@@ -62,8 +64,11 @@ namespace pwiz.Skyline.FileUI
         private List<Protein> _proteinList;
 
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
-        private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
-            new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
+        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes = GetKnownHeaderTypes();
+
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes()
+        {
+            return new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
             {
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
@@ -105,6 +110,28 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(@"SMILES",SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(@"KEGG",SrmDocument.DOCUMENT_TYPE.small_molecules),
             };
+        }
+
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant()
+        {
+            List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> result = GetKnownHeaderTypes();
+            var currentCulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                var tryCulture = new CultureInfo(@"en");
+                if (!Equals(currentCulture, tryCulture))
+                {
+                    Thread.CurrentThread.CurrentUICulture = tryCulture;
+                    result = GetKnownHeaderTypes();
+                }
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentUICulture = currentCulture;
+            }
+            return result;
+        }
+
         // When we switch modes we want to keep the column positions that were set in the mode not being used
         private List<string> smallMolColPositions;
         private List<string> peptideColPositions;
@@ -454,8 +481,21 @@ namespace pwiz.Skyline.FileUI
             // Save the detected columns so if the saved columns are invalid we can revert back
             var detectedColumns = CurrentColumnPositions();
 
+            // Accept invariant column names from settings as well as localized
+            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
+            var settingsColumns = new List<string>();
+            foreach (var col in Settings.Default.CustomImportTransitionListColumnTypesList)
+            {
+                var index = KnownHeaderTypes.IndexOf(s => s.Item1.Equals(col));
+                if (index < 0)
+                {
+                    index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(col));
+                }
+                settingsColumns.Add(KnownHeaderTypes[Math.Max(0, index)].Item1);
+            }
+
             // Change the column positions to the saved columns so we can check if they produce valid transitions
-            SetColumnPositions(Settings.Default.CustomImportTransitionListColumnTypesList);
+            SetColumnPositions(settingsColumns);
 
             // Make a copy of the current transition list with 100 rows or the length of the current transition list (whichever is smaller)
             var input = new MassListInputs(Importer.RowReader.Lines.Take(100).ToArray());
@@ -473,18 +513,33 @@ namespace pwiz.Skyline.FileUI
                 SetColumnPositions(detectedColumns);
             }
         }
+
         /// <summary>
         /// Returns the current column positions as a list of strings
         /// </summary>
-        private List<string> CurrentColumnPositions()
+        public List<string> CurrentColumnPositions()
         {
             return ComboBoxes.Select(combo => combo.Text).ToList();
         }
 
         /// <summary>
-        /// For testing purposes only
+        /// Returns the current column positions as a list of strings in invariant language
         /// </summary>
-        public void SetComboBoxes(params string[] headers)
+        public List<string> CurrentColumnPositionsInvariant()
+        {
+            return ColumnNamesInvariant(CurrentColumnPositions());
+        }
+        public static List<string> ColumnNamesInvariant(IEnumerable<string> local)
+        {
+            return local.Select(ColumnNameInvariant).ToList();
+        }
+
+        #region testing support
+
+        /// <summary>
+        /// For testing purposes only - normally this is done one at a time in UI rather than programatically
+        /// </summary>
+        public void SetSelectedColumnTypes(params string[] headers)
         {
             var index = 0;
             foreach (var header in headers)
@@ -496,6 +551,23 @@ namespace pwiz.Skyline.FileUI
                 index++;
             }
         }
+
+        public static string ColumnNameInvariant(string local)
+        {
+            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
+            var headerTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes();
+            var index = headerTypes.IndexOf(s => s.Item1.Equals(local));
+            if (index < 0)
+            {
+                index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(local));
+            }
+            return headerTypesInvariant[Math.Max(0, index)].Item1;
+        }
+        
+        public string[] SupportedColumnTypes => Enumerable.Range(0, ComboBoxes[1].Items.Count - 1).Select(i => ComboBoxes[1].Items[i].ToString()).ToArray();
+        public int[] ColumnTypeControlWidths => Enumerable.Range(0, ComboBoxes.Count - 1).Select(i => ComboBoxes[i].Width).ToArray();
+
+        #endregion
 
         /// <summary>
         /// Set the combo boxes and column indices given a list of column positions
@@ -548,7 +620,7 @@ namespace pwiz.Skyline.FileUI
         /// <param name="text"></param>
         private void SetBoxesForMode(int comboBoxIndex, string text)
         {
-            foreach (var item in headerList)
+            foreach (var item in KnownHeaderTypes)
             {
                 string name = item.Item1;
                 SrmDocument.DOCUMENT_TYPE type = item.Item2;
@@ -909,7 +981,7 @@ namespace pwiz.Skyline.FileUI
         // Saves column positions between transition lists
         private void UpdateColumnsList()
         {
-            Settings.Default.CustomImportTransitionListColumnTypesList = CurrentColumnPositions();
+            Settings.Default.CustomImportTransitionListColumnTypesList = CurrentColumnPositionsInvariant(); // Save the strings in invariant language for best portability
         }
 
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
@@ -1005,7 +1077,7 @@ namespace pwiz.Skyline.FileUI
         private void UpdateCombo(ComboBox comboBox)
         {
             // Add appropriate headers to the comboBox range based on the user selected mode
-            foreach (var item in headerList)
+            foreach (var item in KnownHeaderTypes)
             {
                 string name = item.Item1;
                 SrmDocument.DOCUMENT_TYPE type = item.Item2;
@@ -1339,7 +1411,7 @@ namespace pwiz.Skyline.FileUI
             // Make sure we set the "Protein Name" column back to it's original index
             if (_originalProteinIndex != -1 && _originalProteinIndex != 0)
             {
-                ComboBoxes[_originalProteinIndex].SelectedIndex = headerList.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
+                ComboBoxes[_originalProteinIndex].SelectedIndex = KnownHeaderTypes.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
                     (Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, SrmDocument.DOCUMENT_TYPE.proteomic));
             }
         }
