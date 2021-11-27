@@ -2,7 +2,8 @@ Undo Redo : Imported a transition list from the clipboard
 Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
-Extra Info: Molecule List Name;Precursor Name;Label Type;Precursor m/z;Precursor Charge;Product m/z;Product Charge;Cone Voltage;Explicit Collision Energy;Explicit Retention Time
+Extra Info: 36 transitions added
+Molecule List Name;Precursor Name;Label Type;Precursor m/z;Precursor Charge;Product m/z;Product Charge;Cone Voltage;Explicit Collision Energy;Explicit Retention Time
 Central Metabolism;Acetyl-CoA;light;808;-1;408;-1;25;37;
 Central Metabolism;Acetyl-CoA;heavy;831;-1;418;-1;25;37;
 Central Metabolism;a-Ketoglutaric acid;light;145;-1;101;-1;25;5;
