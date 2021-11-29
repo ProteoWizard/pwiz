@@ -505,18 +505,18 @@ namespace pwiz.SkylineTestTutorial
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 1.00, 1.00, 1.00, 1.00 });
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.98, 0.97, 0.99, 0.99 });
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 });
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 });
 
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.line.ToString();
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
-            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 }); });
+            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 }); });
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with dotp line", 32);
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
 
@@ -655,7 +655,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
-            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.11, 0.20, 0.35, 0.66 });
+            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.29, 0.39, 0.50, 0.64 });
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
