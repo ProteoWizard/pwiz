@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results
             return new RatioValue
             {
                 Ratio = meanRatioFloat,
-                DotProduct = (float) statsNumerators.Angle(statsDenominators),
+                DotProduct = (float) statsNumerators.NormalizedContrastAngleSqrt(statsDenominators),
                 HasDotProduct = true
             };
         }
