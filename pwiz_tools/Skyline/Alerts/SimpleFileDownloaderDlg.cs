@@ -107,7 +107,8 @@ namespace pwiz.Skyline.Alerts
             {
                 Text = title,
                 ClientSize = new Size(defaultWidth, defaultHeight),
-                StartPosition = FormStartPosition.CenterParent
+                StartPosition = FormStartPosition.CenterParent,
+                ShowInTaskbar = false
             })
             {
                 dlg.MinimumSize = dlg.Size;

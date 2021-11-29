@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             if (string.IsNullOrEmpty(errText))
-                RunUI(windowDlg.OkDialog);  // We expect this to work, go ahead and load it
+                OkDialog(windowDlg, windowDlg.OkDialog);  // We expect this to work, go ahead and load it
             else
             {
                 if (!Equals(errText, Resources.PasteDlg_ShowNoErrors_No_errors))
@@ -83,13 +83,13 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsTrue(allErrorText.Contains(errText),
                             string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
                                 errText, errDlg.ErrorList));
-                        errDlg.Close();
                     });
+                    OkDialog(errDlg, errDlg.Close);
                 } else {
                     // If we are expecting no errors, we will get a MessageDlg instead of an ImportTransitionListErrorDlg
                     RunDlg<MessageDlg>(windowDlg.buttonCheckForErrors.PerformClick, messageDlg => { messageDlg.OkDialog(); });
                 }
-                RunUI(windowDlg.CancelDialog);
+                OkDialog(windowDlg, windowDlg.CancelDialog);
             }
             WaitForClosedForm(transitionDlg);
         }
@@ -380,7 +380,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             });
-            OkDialog(windowDlg,windowDlg.OkDialog);
+            OkDialog(windowDlg, windowDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.Serializable(pastedDoc);
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("PasteMolecules.Sky")));
@@ -654,8 +654,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(allErrorList.Contains(errText),
                     string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
                         errText, errDlg.ErrorList));
-                errDlg.Close();
             });
+            OkDialog(errDlg, errDlg.Close);
             OkDialog(windowDlg, windowDlg.CancelDialog);
             WaitForClosedForm(showDialog);
             var text = GetCsvFileText(TestFilesDir.GetTestPath("SmallMolDataFix.csv"));
@@ -1166,7 +1166,7 @@ namespace pwiz.SkylineTestFunctional
             // Because we recognize it as a peptide list, the column select mode should be set to proteomic
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
-            OkDialog(columnSelectDlg1, columnSelectDlg1.CancelButton.PerformClick);
+            OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
         }
 
         private void TestLabelsNoFormulas()
@@ -1881,7 +1881,6 @@ namespace pwiz.SkylineTestFunctional
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);
             }
-           
         }
     }
 }

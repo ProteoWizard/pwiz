@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Alerts
         {
             using (var downloadProgressDlg = new LongWaitDlg { Message = string.Format(Resources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION) })
             {
-                if (Program.FunctionalTest)
+                if (Program.FunctionalTest && !Program.UseOriginalURLs)
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
