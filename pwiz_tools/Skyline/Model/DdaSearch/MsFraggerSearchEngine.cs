@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string msfraggerPepXmlFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pepXML");
                     string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                     string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
-                    FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath);
+                    FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, out var nativeIdByScanNumber);
 
                     string cruxParamsFile = Path.GetTempFileName();
                     var cruxParamsFileText = new StringBuilder();
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     string cruxOutputFilepath = Path.Combine(cruxOutputDir, @"percolator.target.pep.xml");
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
-                    FixPercolatorPepXml(cruxOutputFilepath, finalOutputFilepath, spectrumFilename);
+                    FixPercolatorPepXml(cruxOutputFilepath, finalOutputFilepath, spectrumFilename, nativeIdByScanNumber);
 
                     FileEx.SafeDelete(cruxInputFilepath);
                     FileEx.SafeDelete(cruxFixedInputFilepath);
@@ -226,23 +226,24 @@ namespace pwiz.Skyline.Model.DdaSearch
         // Fix bugs in Crux pepXML output:
         // - base_name attributes not populated (BiblioSpec needs that to associate with spectrum source file)
         // - search database not set
-        private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename)
+        private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<int, string> nativeIdByScanNumber)
         {
             using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
             using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
             {
                 string line;
-                bool done = false;
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
-                    if (!done)
-                    {
+                    if (line.Contains(@"base_name"))
                         line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{spectrumFilename.GetFileNameWithoutExtension()}\"");
-                        if (line.Contains(@"search_database"))
-                        {
-                            line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{fastaFilepath}\"");
-                            done = true;
-                        }
+                    if (line.Contains(@"search_database"))
+                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{fastaFilepath}\"");
+
+                    if (line.Contains(@"<spectrum_query") &&
+                        int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber) &&
+                        nativeIdByScanNumber.TryGetValue(scanNumber, out string nativeId))
+                    {
+                        line = line.Replace(@"start_scan=", $@"spectrumNativeID=""{nativeId}"" start_scan=");
                     }
                     fixedPepXmlFile.WriteLine(line);
                 }
@@ -254,16 +255,26 @@ namespace pwiz.Skyline.Model.DdaSearch
         // - bug in Crux pepXML writer where it doesn't ignore the N-terminal mod annotation (n[123]); the writer doesn't handle terminal mods anyway, so just remove the n and move the mod over to be an AA mod
         // - change in MSFragger 3.4 PIN output: it no longer has charge features which Crux Percolator requires for putting charge in pepXML
         // - bug in MSFragger output where scan numbers always start from 1 instead of matching the native_id
-        private void FixMSFraggerPin(string cruxInputFilepath, string cruxFixedInputFilepath, string msfraggerPepxmlFilepath)
+        private void FixMSFraggerPin(string cruxInputFilepath, string cruxFixedInputFilepath, string msfraggerPepxmlFilepath, out Dictionary<int, string> nativeIdByScanNumber)
         {
+            nativeIdByScanNumber = new Dictionary<int, string>();
             var scanNumbers = new List<int>();
             using (var pepXmlFile = new StreamReader(msfraggerPepxmlFilepath))
             {
                 string line;
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
-                    if (line.Contains(@"spectrum_query") && int.TryParse(Regex.Replace(line, ".* native_id=\"controllerType=0 controllerNumber=1 scan=(\\d+)\" .*", "$1"), out int scanNumber))
+                    if (line.Contains(@"<spectrum_query"))
+                    {
+                        if (!int.TryParse(Regex.Replace(line, ".* native_id=\"controllerType=0 controllerNumber=1 scan=(\\d+)\" .*", "$1"), out int scanNumber))
+                            scanNumber = int.Parse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"));
+
                         scanNumbers.Add(scanNumber);
+
+                        string nativeId = Regex.Replace(line, ".* native_id=\"([^\"]+)\" .*", "$1");
+                        if (nativeId.Length < line.Length)
+                            nativeIdByScanNumber[scanNumber] = nativeId;
+                    }
                 }
             }
 
@@ -640,14 +651,11 @@ add_Nterm_protein = 0.000000
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw", @".d" };
-        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out string requiredFormat)
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
             if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
-            {
-                requiredFormat = @"mzML";
                 return true;
-            }
-            requiredFormat = null;
             return false;
         }
 
