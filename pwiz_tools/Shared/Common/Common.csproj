@@ -548,6 +548,10 @@
     <Content Include="Resources\MatchCase.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CommonStandard\CommonStandard.csproj">
+      <Project>{21245801-04b4-4b44-bfc0-e25f765bf737}</Project>
+      <Name>CommonStandard</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>

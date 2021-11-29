@@ -92,13 +92,13 @@
     <Compile Include="TestRunnerContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
+    <EmbeddedResource Include="TestRunnerFormLookup.csv" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="TestRunnerFormLookup.csv" />
+    <ProjectReference Include="..\..\Shared\CommonStandard\CommonStandard.csproj">
+      <Project>{21245801-04b4-4b44-bfc0-e25f765bf737}</Project>
+      <Name>CommonStandard</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

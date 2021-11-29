@@ -239,6 +239,10 @@
     <Compile Include="WebEnabledFastaImporterTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonStandard\CommonStandard.csproj">
+      <Project>{21245801-04b4-4b44-bfc0-e25f765bf737}</Project>
+      <Name>CommonStandard</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
