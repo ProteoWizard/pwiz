@@ -826,6 +826,10 @@
     <Compile Include="Util\GridUtil.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonStandard\CommonStandard.csproj">
+      <Project>{dd93aff6-9c72-48de-9e34-cd23c2494d79}</Project>
+      <Name>CommonStandard</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>

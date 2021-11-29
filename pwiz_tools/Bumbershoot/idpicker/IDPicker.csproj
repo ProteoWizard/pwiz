@@ -485,6 +485,10 @@
       <Project>{2399f68b-d886-4d94-ab4b-700fe3e46849}</Project>
       <Name>seems</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonStandard\CommonStandard.csproj">
+      <Project>{213997c0-0b75-4551-93b3-0d06e69e70a9}</Project>
+      <Name>CommonStandard</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
