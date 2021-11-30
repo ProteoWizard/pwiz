@@ -590,10 +590,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 3.5f, Fill = new Fill(Color.DimGray)}
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
                 };
                 CurveList.Insert(0, dotpLine);
-                ToolTip.TargetCurve = dotpLine;
+                ToolTip.TargetCurves.ClearAndAdd(dotpLine);
             }
             else
             {
@@ -605,20 +605,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
             {
                 var cutoff = Settings.Default.PeakAreaDotpCutoffValue;
-                var color1 = GraphHelper.Blend(Color.Red, Color.White, 0.5);
-                var color2 = GraphHelper.Blend(Color.Red, Color.White, 0.85);
-                var maxY = GraphHelper.GetMaxY(CurveList, this);
-                for (var i = 0; i < _dotpData.Count; i++)
+                var highlightValues = new PointPairList(graphData.DotpData.Select(point => point.Y < cutoff ? point : new PointPair(){X = point.X, Y = float.NaN}).ToList());
+                var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
                 {
-                    if(_dotpData[i] <= cutoff)
-                        GraphObjList.Add(new BoxObj(i + FirstDataIndex + .5, maxY, 1,
-                                -maxY, Color.Transparent, Color.Red, Color.White)
-                            {
-                                IsClippedToChartRect = true,
-                                ZOrder = ZOrder.F_BehindGrid,
-                                Fill = new Fill(color1, color2, 0)
-                            });
-                }
+                    IsY2Axis = true,
+                    Line = new Line() { Color = Color.Transparent},
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
+                };
+                CurveList.Insert(0, cutoffHighlightLine);
+                ToolTip.TargetCurves.Add(cutoffHighlightLine);
+
 
                 var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
                 var labelText = string.Format(Resources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,

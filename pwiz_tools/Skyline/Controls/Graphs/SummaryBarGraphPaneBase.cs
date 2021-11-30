@@ -36,6 +36,41 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public class ToolTipImplementation : ITipProvider
         {
+            public class TargetCurveList : List<CurveItem>
+            {
+                private SummaryBarGraphPaneBase _parent;
+
+                public TargetCurveList(SummaryBarGraphPaneBase parent)
+                {
+                    _parent = parent;
+                }
+                public new void Add(CurveItem curve)
+                {
+                    //all targets must be on the same axis
+                    if (Count > 0)
+                        Assume.AreEqual(base[0].GetYAxis(_parent), curve.GetYAxis(_parent), @"All target curves for a tooltip must be on the same axis.");
+                    base.Add(curve);
+                }
+
+                public CurveItem ClearAndAdd(CurveItem curve)
+                {
+                    Clear();
+                    Add(curve);
+                    return curve;
+                }
+
+                public Axis GetYAxis()
+                {
+                    if (Count == 0)
+                        return null;
+                    return base[0].GetYAxis(_parent);
+                }
+
+                public bool IsTarget(CurveItem curve)
+                {
+                    return this.Any(c => ReferenceEquals(c, curve));
+                }
+            }
 
             private SummaryBarGraphPaneBase _parent;
             private bool _isVisible;
@@ -44,11 +79,12 @@ namespace pwiz.Skyline.Controls.Graphs
             internal RenderTools RenderTools = new RenderTools();
 
             public int ReplicateIndex { get; private set; }
-            public CurveItem TargetCurve {  get; set; }
+            public TargetCurveList TargetCurves {  get; private set; }
 
             public ToolTipImplementation(SummaryBarGraphPaneBase parent)
             {
                 _parent = parent;
+                TargetCurves = new TargetCurveList(parent);
             }
 
             public ITipProvider TipProvider { get { return this; } }
@@ -83,12 +119,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         return;
                     Hide();
                 }
-                if (_table == null || _table.Count == 0) return;
+                if (_table == null || _table.Count == 0 || !TargetCurves.Any()) return;
 
                 ReplicateIndex = dataIndex;
-                var targetAxis = TargetCurve.IsY2Axis ? (Axis)_parent.Y2Axis : _parent.YAxis;
                 var basePoint = new UserPoint(dataIndex + 1,
-                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent, targetAxis);
+                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent, TargetCurves.GetYAxis() ?? _parent.YAxis);
 
                 using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
                 {
@@ -272,7 +307,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
             }
 
-            if (ToolTip != null && ReferenceEquals(ToolTip.TargetCurve, nearestCurve))
+            if (ToolTip != null && ToolTip.TargetCurves.IsTarget(nearestCurve))
             {
                 PopulateTooltip(iNearest);
                 ToolTip.Draw(iNearest, mouseEventArgs.Location);

@@ -689,14 +689,17 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyDotpLine(string[] replicates, double[] dotps)
         {
-            var dotpLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().ToList();
-            Assert.AreEqual(1, dotpLine.Count, "Dotp line is not found");
+            var dotpLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().FirstOrDefault(curve => curve.Line.Color == Color.DimGray);
+            var cutoffHighlightLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().FirstOrDefault(curve => curve.Symbol.Fill.Color == Color.Red);
+            Assert.IsNotNull(dotpLine, "Dotp line is not found");
+            Assert.IsNotNull(cutoffHighlightLine, "Dotp cutoff highlight line is not found");
+            Assert.AreEqual(3, (cutoffHighlightLine.Points as PointPairList)?.Count(pt => !double.IsNaN(pt.Y)));
             for (var i = 0; i < replicates.Length; i++)
             {
                 var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
                     .FindIndex(label => replicates[i].Equals(label));
                 Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
-                Assert.AreEqual(dotps[i], Math.Round(dotpLine[0].Points[repIndex].Y, 2));
+                Assert.AreEqual(dotps[i], Math.Round(dotpLine.Points[repIndex].Y, 2));
             }
         }
 
