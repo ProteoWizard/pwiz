@@ -153,23 +153,24 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            RunUI(() =>
-            {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+            var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+            string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
+
+            RunUI(() => {
+                colDlg.radioPeptide.PerformClick();
+                var comboBoxes = colDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+
+                colDlg.checkBoxAssociateProteins.Checked = true;
             });
-            using (new CheckDocumentState(24, 44, 88, 296))
-            {
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.Height = 465;
-                    pasteDlg.IsMolecule = false;
-                    pasteDlg.PasteTransitions();  // Make sure it's ready to accept peptides rather than small molecules
-                });
-                PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
-            }
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
@@ -504,18 +505,18 @@ namespace pwiz.SkylineTestTutorial
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 1.00, 1.00, 1.00, 1.00 });
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.98, 0.97, 0.99, 0.99 });
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 });
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 });
 
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.line.ToString();
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
-            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 }); });
+            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 }); });
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with dotp line", 32);
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
 
@@ -654,7 +655,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
-            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.11, 0.20, 0.35, 0.66 });
+            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.29, 0.39, 0.50, 0.64 });
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
