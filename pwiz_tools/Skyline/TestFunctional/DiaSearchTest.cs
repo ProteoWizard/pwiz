@@ -152,6 +152,8 @@ namespace pwiz.SkylineTestFunctional
                 },
 
                 FastaPath = Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH.fasta"),
+                PrecursorMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
+                FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
                 Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
