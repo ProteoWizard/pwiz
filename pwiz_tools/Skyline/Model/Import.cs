@@ -3347,7 +3347,7 @@ namespace pwiz.Skyline.Model
             sequence.Append(seq);
         }
 
-        public static IEnumerable<FastaData> ParseFastaFile(TextReader reader)
+        public static IEnumerable<FastaData> ParseFastaFile(TextReader reader, bool readNamesOnly = false)
         {
             string line;
             string name = string.Empty;
@@ -3367,7 +3367,7 @@ namespace pwiz.Skyline.Model
                     // Remove the '>'
                     name = split[0].Remove(0, 1).Trim();
                 }
-                else
+                else if (!readNamesOnly)
                 {
                     AppendSequence(sequence, line);
                 }
