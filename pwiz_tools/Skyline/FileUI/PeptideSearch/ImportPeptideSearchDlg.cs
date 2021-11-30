@@ -722,6 +722,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
                     {
                         ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetMsconvertConverter();
+                        ImportPeptideSearch.DdaConverter.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                         ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
                     }
                     else if (ImportPeptideSearch.DdaConverter != null &&
