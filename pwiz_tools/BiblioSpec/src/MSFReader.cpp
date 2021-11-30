@@ -326,7 +326,17 @@ namespace BiblioSpec
         // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
         PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
         bool peptideGroups = false;
-        const bool useConfidence = false;
+        int useConfidence = 0;
+        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence")) {
+            // Confidence levels correspond to whatever the user selected.
+            // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
+            double threshold = getScoreThreshold(SQT);
+            if (abs(threshold - 0.01) < 0.001) {
+                useConfidence = 3;
+            } else if (abs(threshold - 0.05) < 0.001) {
+                useConfidence = 2;
+            }
+        }
         if (!filtered_ && versionLess(2, 2)) {
             if (!hasQValues()) {
                 statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
@@ -348,7 +358,7 @@ namespace BiblioSpec
             if (!hasQValues()) {
                 qValueCol = "'0'";
             } else {
-                if (useConfidence && columnExists(msfFile_, "TargetPeptideGroups", "Confidence")) {
+                if (useConfidence > 0) {
                     peptideGroups = true;
                     qValueCol = "peps.Confidence";
                 } else if (columnExists(msfFile_, "TargetPeptideGroups", "Qvalityqvalue")) {
@@ -362,9 +372,9 @@ namespace BiblioSpec
                     qValueCol = "psms.ExpectationValue";
                     scoreType = MASCOT_IONS_SCORE;
                 }
-                qValueWhere = !useConfidence
+                qValueWhere = (useConfidence <= 0)
                     ? " WHERE " + qValueCol + " <= " + lexical_cast<string>(getScoreThreshold(SQT))
-                    : " WHERE " + qValueCol + " = 3";
+                    : " WHERE " + qValueCol + " >= " + lexical_cast<string>(useConfidence);
             }
             string stmtStr =
                 "SELECT psms.PeptideID, psm_spec.MSnSpectrumInfoSpectrumID, psms.Sequence, " + qValueCol + ", psms.WorkflowID, psms.SpectrumFileName"
