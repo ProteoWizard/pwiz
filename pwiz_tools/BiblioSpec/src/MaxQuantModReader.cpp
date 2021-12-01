@@ -48,7 +48,7 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
     elementMasses_["C"] = 12;
     elementMasses_["Cx"] = elementMasses_["13C"] = 13.0033548378;
     elementMasses_["N"] = 14.0030740052;
-    elementMasses_["Nx"] = 15.0001088984;
+    elementMasses_["Nx"] = elementMasses_["15N"] = 15.0001088984;
     elementMasses_["O"] = 15.9949146221;
     elementMasses_["Ox"] = 17.9991604;
     elementMasses_["Oy"] = 16.9991315;
