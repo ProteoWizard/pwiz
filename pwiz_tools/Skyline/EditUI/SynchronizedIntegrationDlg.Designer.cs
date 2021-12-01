@@ -54,6 +54,7 @@
             this.listSync.FormattingEnabled = true;
             this.listSync.Name = "listSync";
             this.listSync.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listSync_ItemCheck);
+            this.listSync.SelectedIndexChanged += new System.EventHandler(this.listSync_SelectedIndexChanged);
             // 
             // btnOk
             // 
