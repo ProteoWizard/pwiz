@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -8,6 +7,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using Process = System.Diagnostics.Process;
 
 namespace pwiz.Skyline.Util
 {
@@ -363,6 +363,7 @@ EndSelection:<<<<<<<3
             comboBox.DropDownWidth = widestWidth;
         }        
     }
+
 
     public static class ClipboardHelper
     {

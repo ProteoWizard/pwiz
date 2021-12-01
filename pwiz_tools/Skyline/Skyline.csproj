@@ -768,6 +768,9 @@
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\LazyComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
@@ -3492,6 +3495,7 @@
     </Content>
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
+    <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
