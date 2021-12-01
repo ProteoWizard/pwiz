@@ -14,7 +14,8 @@ jobs:
     - name: checkout
       uses: actions/checkout@v1
     - name: Cherry pick PR to release
-      uses: Nathanmalnoury/gh-backport-action@master
+      uses: chambm/gh-backport-action@customizable-text
       with:
         pr_branch: 'Skyline/skyline_21_2'
+        pr_title: 'Automatic cherry pick of #{pr_number} from {base_branch} to {pr_branch}'
         github_token: ${{ secrets.GITHUB_TOKEN }}
