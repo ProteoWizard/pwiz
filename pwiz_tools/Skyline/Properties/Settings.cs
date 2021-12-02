@@ -127,6 +127,18 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// Clears internal cache of original serialized settings values and resets all settings to their default value.
+        /// </summary>
+        public new void Reset()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reset();
+            }
+        }
+
+        /// <summary>
         /// Reload settings that may have been changed by other instances of Skyline, but preserve
         /// the values of any settings that have been modified by this instance.
         /// </summary>

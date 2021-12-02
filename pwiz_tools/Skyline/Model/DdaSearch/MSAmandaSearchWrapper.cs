@@ -345,9 +345,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
         }
 
-        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out string requiredFormat)
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
-            requiredFormat = null;
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
             return false;
         }
 

@@ -298,14 +298,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".mgf", @".ms2" };
-        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out string requiredFormat)
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
             if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
-            {
-                requiredFormat = @"mzML";
                 return true;
-            }
-            requiredFormat = null;
             return false;
         }
 
