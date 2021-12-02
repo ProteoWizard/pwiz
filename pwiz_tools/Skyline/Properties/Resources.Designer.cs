@@ -9410,16 +9410,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap DropImageNoBackground {
-            get {
-                object obj = ResourceManager.GetObject("DropImageNoBackground", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Line {0} has {1} fields when {2} expected..
         /// </summary>
         public static string DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_ {
