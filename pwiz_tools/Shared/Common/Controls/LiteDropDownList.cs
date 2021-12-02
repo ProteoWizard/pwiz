@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
 
@@ -30,14 +29,11 @@ namespace pwiz.Common.Controls
     /// Substitute for ComboBox which avoids performance issues by only
     /// creating its dropdown list when user action demands it.
     ///
-    /// We'd call it DropDownList but there's one of those in the .net
+    /// We'd call it DropDownList but there's one of those in the .net WebUI space, which might be confusing
     /// </summary>
     public class LiteDropDownList : Button
     {
-        private NonClippingListBox _listbox;
         private int _selectedIndex;
-        private Control _listboxLostFocusToControl;
-        private bool _listboxClosedByUnknownKeystroke;
         private Color _backColorInactive;
         private Color _backColorActive;
         private Font _normalFont;
@@ -97,8 +93,18 @@ namespace pwiz.Common.Controls
             FlatAppearance.MouseOverBackColor = _backColorActive = SystemColors.GradientInactiveCaption; // Very light system color
             FlatAppearance.BorderColor = SystemColors.ControlDark;
             FlatAppearance.BorderSize = 1;
-            // Show a dropdown hint
-            Image = Resources.DropImageNoBackground;
+            // Show a dropdown hint down arrow in the same color as the text
+            var scrBitmap = Resources.DropImageNoBackground;
+            var newBitmap = new Bitmap(scrBitmap.Width, scrBitmap.Height);
+            for (var i = 0; i < scrBitmap.Width; i++)
+            {
+                for (var j = 0; j < scrBitmap.Height; j++)
+                {
+                    var pixel = scrBitmap.GetPixel(i, j);
+                    newBitmap.SetPixel(i, j, pixel.A != 0 ? base.ForeColor : pixel); // Leave 0-alpha pixels alone
+                }
+            }
+            Image = newBitmap;
             ImageAlign = ContentAlignment.MiddleRight;
             TextImageRelation = TextImageRelation.Overlay;
             LostFocus += RestoreBackgroundColor;
@@ -120,207 +126,28 @@ namespace pwiz.Common.Controls
 
         protected override void OnClick(EventArgs e)
         {
-            if (_listboxLostFocusToControl == this && !_listboxClosedByUnknownKeystroke)
+            // Show the dropdown menu
+            var contextMenuStrip = new ContextMenuStrip();
+            contextMenuStrip.ShowImageMargin = contextMenuStrip.ShowCheckMargin = false; // We only want to see the text, no image area needed
+            for (var i = 0; i < Items.Count; i++)
             {
-                // We were showing a listbox, user clicked on its button - don't reopen the listbox on this click
-                _listboxLostFocusToControl = null;
-                return;
-            }
-
-            if (_listbox == null)
-            {
-                // Position the listbox within the parent form, just below our button
-                var form = this.Parent;
-                var location = new Point(Location.X, Location.Y + Height);
-                while (!(form is Form) && (form.Parent != null))
+                contextMenuStrip.Items.Add(Items[i].ToString());
+                if (i == SelectedIndex)
                 {
-                    location.Offset(form.Location.X, form.Location.Y);
-                    form = form.Parent;
+                    contextMenuStrip.Items[i].Select(); // Set the initial selection
                 }
-                _listbox = new NonClippingListBox(form) {Location = location, AutoSize = true};
-                _listbox.SelectedIndexChanged += ListBox_SelectedValueChanged;
-                _listbox.LostFocus += ListBox_LostFocus;
-                _listbox.UnknownKeystroke += ListBox_UnknownKeystroke;
             }
-
-            _listbox.Items.Clear();
-            _listbox.Items.AddRange(Items.ToArray());
-            // Set size wide and tall enough to not require scrollbars
-            using (var g = _listbox.CreateGraphics())
-            {
-                var w = (from object item in _listbox.Items select TextRenderer.MeasureText(g, item.ToString(), _listbox.Font).Width).Prepend(0).Max();
-                _listbox.Size = new Size(w + 5, _listbox.ItemHeight * (Items.Count +1 ) );
-            }
-
-            _listboxClosedByUnknownKeystroke = false;
-            _listboxLostFocusToControl = null;
-            _listbox.SelectedIndex = _selectedIndex;
-            _listbox.BringToFront();
-            _listbox.Visible = true;
-            _listbox.Show();
-            _listbox.Focus();
+            contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked; // Update the button selection when use clicks on menu
+            contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
             base.BackColor = _backColorActive;
         }
 
-        // Mimic the keyboard handling of standard ComboBox
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        void contextMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-            if (keyData == Keys.Up || keyData == Keys.Left)
-            {
-                SelectedIndex = Math.Max(0, SelectedIndex - 1);
-                return true;
-            }
-            else if (keyData == Keys.Down || keyData == Keys.Right)
-            {
-                SelectedIndex = Math.Min(Items.Count - 1, SelectedIndex + 1);
-                return true;
-            }
-            return false;
-        }
-
-        private void ListBox_SelectedValueChanged(object sender, EventArgs e)
-        {
-            if (_listbox != null && !_listbox.Disposing &&  _listbox.SelectedIndex != -1)
-            {
-                SelectedIndex = _listbox.SelectedIndex;
-                if (_listbox.SelectionChangedByArrowKey)
-                {
-                    _listbox.SelectionChangedByArrowKey = false;
-                    return;
-                }
-                ListBox_Leave(); // Dropdown list goes away on selection (standard combo box behavior)
-                _listboxLostFocusToControl = null; // Next click on parent button should fire
-            }
-        }
-
-        private void ListBox_LostFocus(object sender, EventArgs e)
-        {
-            _listboxLostFocusToControl = (_listbox.mParent as ContainerControl)?.ActiveControl; // So we know if lost focus due to click on own parent button
-            ListBox_Leave();
-        }
-
-        private void ListBox_UnknownKeystroke(object sender, EventArgs e)
-        {
-            _listboxClosedByUnknownKeystroke = true;
-            ListBox_Leave();
-        }
-
-        private void ListBox_Leave()
-        {
-            if (_listbox != null && !_listbox.Disposing)
-            {
-                _listbox.SelectionChangedByArrowKey = false;
-                _listbox.Visible = false;
-                _listbox.Hide();
-            }
+            // Note the user selection, menu will close itself
+            var item = e.ClickedItem;
+            Text = item.Text;
             base.BackColor = _backColorInactive;
-        }
-
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (_listbox != null))
-            {
-                _listbox.Dispose();
-                _listbox = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        // A ListBox that doesn't get clipped by its parent container
-        // Credit to https://stackoverflow.com/users/17034/hans-passant
-        // https://stackoverflow.com/questions/353561/how-to-create-a-c-sharp-winforms-control-that-hovers#354326
-        private class NonClippingListBox : ListBox
-        {
-            internal Control mParent;
-            private Point mPos;
-            private Point relLocation;
-            private bool mInitialized;
-
-            public bool SelectionChangedByArrowKey;
-            public event EventHandler UnknownKeystroke;
-
-            public NonClippingListBox(Control parent)
-            {
-                mParent = parent;
-                mInitialized = true;
-                this.SetTopLevel(true);
-                parent.LocationChanged += parent_LocationChanged;
-                mPos = mParent.Location;
-            }
-
-            public new Point Location
-            {
-                get { return mParent.PointToClient(relLocation); }
-                set
-                {
-                    relLocation = value;
-                    Point zero = mParent.PointToScreen(Point.Empty);
-                    base.Location = new Point(zero.X + value.X, zero.Y + value.Y);
-                }
-            }
-
-            protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-            {
-                if (keyData == Keys.Up)
-                {
-                    SelectionChangedByArrowKey = true;
-                    SelectedIndex = Math.Max(0, SelectedIndex - 1);
-                    return true;
-                }
-                else if (keyData == Keys.Down)
-                {
-                    SelectionChangedByArrowKey = true;
-                    SelectedIndex = Math.Min(Items.Count - 1, SelectedIndex + 1);
-                    return true;
-                }
-                // Any other key should close the listbox
-                UnknownKeystroke?.Invoke(this, EventArgs.Empty);
-                return false;
-            }
-
-
-            protected override Size DefaultSize
-            {
-                get
-                {
-                    return mInitialized ? base.DefaultSize : Size.Empty;
-                }
-            }
-
-            protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
-            {
-                if (this.mInitialized)
-                    base.SetBoundsCore(x, y, width, height, specified);
-            }
-
-            void parent_LocationChanged(object sender, EventArgs e)
-            {
-                base.Location = new Point(Left + mParent.Left - mPos.X, Top + mParent.Top - mPos.Y);
-                mPos = mParent.Location;
-            }
-
-            protected override CreateParams CreateParams
-            {
-                get
-                {
-                    CreateParams cp = base.CreateParams;
-                    if (mParent != null && !DesignMode)
-                    {
-                        cp.Style = (int)(((long)cp.Style & 0xffff) | 0x90200000);
-                        cp.Parent = mParent.Handle;
-                        Point pos = mParent.PointToScreen(Point.Empty);
-                        cp.X = pos.X;
-                        cp.Y = pos.Y;
-                        cp.Width = base.DefaultSize.Width;
-                        cp.Height = base.DefaultSize.Height;
-                    }
-                    return cp;
-                }
-            }
         }
     }
 
