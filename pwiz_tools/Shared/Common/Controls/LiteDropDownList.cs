@@ -29,55 +29,17 @@ namespace pwiz.Common.Controls
     /// Substitute for ComboBox which avoids performance issues by only
     /// creating its dropdown list when user action demands it.
     ///
-    /// We'd call it DropDownList but there's one of those in the .net WebUI space, which might be confusing
+    /// We'd call it DropDownList but there's one of those in the .net WebUI namespace, which might be confusing
     /// </summary>
     public class LiteDropDownList : Button
     {
+
         private int _selectedIndex;
         private Color _backColorInactive;
         private Color _backColorActive;
         private Font _normalFont;
         private Font _specialFont;
 
-        public List<object> Items;
-        public List<object> SpecialItems; // Items which also appear in this list will be formatted in italics
-
-        public event EventHandler SelectedIndexChanged;
-
-        public int SelectedIndex
-        {
-            get => _selectedIndex;
-            set
-            {
-                var oldValue = _selectedIndex;
-                _selectedIndex = value;
-                var text = _selectedIndex < 0 || _selectedIndex >= Items.Count ? string.Empty : Items[_selectedIndex].ToString();
-                base.Font = SpecialItems.Contains(text) ? _specialFont : _normalFont;
-                base.Text = text;
-                if (value != oldValue)
-                {
-                    SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        public object SelectedItem
-        {
-            get
-            {
-                return SelectedIndex >= 0 ? Items[SelectedIndex] : null;
-            }
-            set
-            {
-                SelectedIndex = Items.IndexOf(value);
-            }
-        }
-
-        public override string Text
-        {
-            get => base.Text;
-            set => SelectedIndex = FindStringExact(value);
-        }
 
         public LiteDropDownList()
         {
@@ -109,19 +71,54 @@ namespace pwiz.Common.Controls
             TextImageRelation = TextImageRelation.Overlay;
             LostFocus += RestoreBackgroundColor;
             Leave += RestoreBackgroundColor;
-            _normalFont = base.Font;
+            _normalFont = new Font(base.Font, FontStyle.Regular);
             _specialFont = new Font(base.Font, FontStyle.Italic);
         }
 
-        private void RestoreBackgroundColor(object sender, EventArgs e)
+
+        public List<object> Items;
+        public List<object> SpecialItems; // Items which also appear in this list will be formatted in italics
+
+        public event EventHandler SelectedIndexChanged;
+
+        public int SelectedIndex
         {
-            // Tidy up background color if focus moves to a sibling etc, but losing focus to our listbox is a different story
-            base.BackColor = _backColorInactive; 
+            get => _selectedIndex;
+            set
+            {
+                var oldValue = _selectedIndex;
+                _selectedIndex = value;
+                var text = _selectedIndex < 0 || _selectedIndex >= Items.Count ? string.Empty : Items[_selectedIndex].ToString();
+                base.Font = SpecialItems.Contains(text) ? _specialFont : _normalFont;
+                base.Text = text;
+                if (value != oldValue)
+                {
+                    SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public object SelectedItem
+        {
+            get => SelectedIndex >= 0 ? Items[SelectedIndex] : null;
+            set => SelectedIndex = Items.IndexOf(value);
+        }
+
+        public override string Text
+        {
+            get => base.Text;
+            set => SelectedIndex = FindStringExact(value);
         }
 
         public int FindStringExact(string str)
         {
             return Items.IndexOf(str);
+        }
+
+        private void RestoreBackgroundColor(object sender, EventArgs e)
+        {
+            // Tidy up background color if focus moves to a sibling etc, but losing focus to our listbox is a different story
+            base.BackColor = _backColorInactive;
         }
 
         protected override void OnClick(EventArgs e)
@@ -149,6 +146,18 @@ namespace pwiz.Common.Controls
             Text = item.Text;
             base.BackColor = _backColorInactive;
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _normalFont?.Dispose();
+                _specialFont?.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
     }
 
 }
