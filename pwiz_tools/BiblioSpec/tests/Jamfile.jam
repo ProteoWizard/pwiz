@@ -304,6 +304,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
+blib-test-build diann-speclib-v3 : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef.speclib ;
 
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
