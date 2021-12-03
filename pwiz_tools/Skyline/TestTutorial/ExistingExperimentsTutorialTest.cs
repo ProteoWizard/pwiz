@@ -689,8 +689,9 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyDotpLine(string[] replicates, double[] dotps)
         {
-            var dotpLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().FirstOrDefault(curve => curve.Line.Color == Color.DimGray);
-            var cutoffHighlightLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().FirstOrDefault(curve => curve.Symbol.Fill.Color == Color.Red);
+            var lineItems = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().ToList();
+            var dotpLine = lineItems.FirstOrDefault(curve => curve.Line.Color == Color.DimGray && curve.IsY2Axis);
+            var cutoffHighlightLine = lineItems.FirstOrDefault(curve => curve.Symbol.Fill.Color == Color.Red && curve.IsY2Axis);
             Assert.IsNotNull(dotpLine, "Dotp line is not found");
             Assert.IsNotNull(cutoffHighlightLine, "Dotp cutoff highlight line is not found");
             Assert.AreEqual(3, (cutoffHighlightLine.Points as PointPairList)?.Count(pt => !double.IsNaN(pt.Y)));
