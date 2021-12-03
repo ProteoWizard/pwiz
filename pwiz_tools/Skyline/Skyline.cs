@@ -1651,7 +1651,7 @@ namespace pwiz.Skyline
 
         public void ShowPasteTransitionListDlg()
         {
-            EditMenu.ShowPasteTransitionListDlg();
+            EditMenu.ShowInsertTransitionListDlg();
         }
 
         public void ShowRefineDlg()

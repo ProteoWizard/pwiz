@@ -148,10 +148,15 @@ namespace pwiz.Skyline.Util
     public static class JavaDownloadInfo
     {
         static string JRE_FILENAME = @"jre-17.0.1";
-        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/{JRE_FILENAME}.zip");
+
+        /// <summary>
+        /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
+        /// </summary>
+        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
 
+        // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
         public static FileDownloadInfo[] FilesToDownload = { new FileDownloadInfo { Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true } };
     }
 
@@ -179,7 +184,7 @@ namespace pwiz.Skyline.Util
                     // for functional testing, replace the hostname with the Skyline tool testing mirror path on AWS
                     // TODO: make this conditional somehow so that once per day or week we run with the original URLs to test that they still work
                     var downloadUrl = requiredFile.DownloadUrl;
-                    if (Program.FunctionalTest)
+                    if (Program.FunctionalTest && !Program.UseOriginalURLs)
                         downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
 
                     string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);

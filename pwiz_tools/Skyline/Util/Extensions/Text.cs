@@ -830,9 +830,24 @@ namespace pwiz.Skyline.Util.Extensions
             if (line == null)
                 return null;
             _currentFields = line.ParseDsvFields(_separator);
-            if (_currentFields.Length != NumberOfFields)
+            if (_currentFields.Length > NumberOfFields)
             {
                 throw new IOException(string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, line, _currentFields.Length, NumberOfFields));
+            }
+            else if (_currentFields.Length < NumberOfFields)
+            {
+                // Tolerate missing trailing columns
+                var val = new string[NumberOfFields];
+                var index = 0;
+                foreach (var seen in _currentFields)
+                {
+                    val[index++] = seen;
+                }
+                while (index < NumberOfFields)
+                {
+                    val[index++] = string.Empty;
+                }
+                return val;
             }
             return _currentFields;
         }

@@ -17,7 +17,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: Q1	Q3	stripped_sequence	protein_name
+Extra Info: 459 transitions added
+Columns identified as '母离子质荷比','子离子质荷比','肽段修饰序列','蛋白质名称'
+Q1	Q3	stripped_sequence	protein_name
 853.431469	973.563049	SSSNEEVMFLTVQVK	A2MG
 849.42437	965.54885	SSSNEEVMFLTVQVK	A2MG
 853.431469	582.370087	SSSNEEVMFLTVQVK	A2MG
@@ -477,6 +479,7 @@ Extra Info: Q1	Q3	stripped_sequence	protein_name
 579.79312	532.287808	VDTVDPPYPR	VTNC
 584.797255	445.243313	VDTVDPPYPR	VTNC
 579.79312	435.235044	VDTVDPPYPR	VTNC
+
 
 Undo Redo : 已删除目标 Tr_peps_set2
 Summary   : 已删除目标 Tr_peps_set2

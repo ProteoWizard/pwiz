@@ -101,6 +101,15 @@ namespace pwiz.SkylineTestFunctional
                 dlg.GroupBy = Resources.GroupByItem_ToString_Replicates;
                 toSync = dlg.TargetOptions.ToArray();
                 dlg.Targets = toSync;
+
+                // Test alignment to RT prediction
+                Assert.IsFalse(SkylineWindow.AlignToRtPrediction);
+                Assert.IsTrue(dlg.SelectedAlignItem.IsNone);
+                Assert.IsTrue(dlg.SelectAlignRt());
+                Assert.IsTrue(SkylineWindow.AlignToRtPrediction);
+                // Reset alignment
+                Assert.IsTrue(dlg.SelectNone());
+                Assert.IsFalse(SkylineWindow.AlignToRtPrediction);
             });
             OkDialog(dlg, dlg.OkDialog);
 
@@ -127,11 +136,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Sync all
             dlg = ShowDialog<SynchronizedIntegrationDlg>(SkylineWindow.EditMenu.ShowSynchronizedIntegrationDialog);
+            targetChromName = "S_3";
             RunUI(() =>
             {
                 dlg.GroupBy = Resources.GroupByItem_ToString_Replicates;
                 toSync = dlg.TargetOptions.ToArray();
                 dlg.Targets = toSync;
+
+                // Test alignment to file
+                Assert.IsNull(SkylineWindow.AlignToFile);
+                var alignId = doc.MeasuredResults.Chromatograms.First(c => c.Name.Equals(targetChromName)).MSDataFileInfos[0].FileId;
+                Assert.IsTrue(dlg.SelectAlignFile(alignId));
+                Assert.IsTrue(ReferenceEquals(SkylineWindow.AlignToFile, alignId));
             });
             OkDialog(dlg, dlg.OkDialog);
 
@@ -139,8 +155,6 @@ namespace pwiz.SkylineTestFunctional
             CheckSettings(doc, null, null, true);
 
             // Test synchronized integration when times are aligned to a file
-            targetChromName = "S_3";
-            RunUI(() => SkylineWindow.AlignToFile = doc.MeasuredResults.Chromatograms.First(c => c.Name.Equals(targetChromName)).MSDataFileInfos[0].FileId);
             WaitForGraphs();
             tranGroup = doc.PeptideTransitionGroups.ElementAt(3).TransitionGroup;
             originalTimes = CollectPeakBoundaries(doc, tranGroup);

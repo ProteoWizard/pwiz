@@ -8565,7 +8565,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Insert Molecule Transition List</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>Error on line {0}, column{1}: {2}</value>
+    <value>Error on line {0}, column {1}: {2}</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
     <value>Error on line {0}: {1}</value>
@@ -11427,8 +11427,8 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>  
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Collision Cross Section (sq A)</value>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Explicit Collision Cross Section (sq A)</value>
   </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
     <value>Percentage of peak max height to use as intensity threshold.</value>
@@ -11457,8 +11457,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
     <value>Protein Description</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
-    <value>Explicit Delustering Potential</value>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
@@ -11475,7 +11475,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>Precursor Adduct and/or Precursor Charge</value>
   </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
+    <value>Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
+    <value>These filters cannot be applied as they would result in an empty transition list.</value>
+  </data>
+    <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
     <value>Skyline 21.1</value>
   </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
@@ -11525,6 +11531,15 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
     <value>This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks.</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
+    <value>Columns identified as {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>Associate Proteins enabled</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0} transitions added</value>
+  </data>
   <data name="DotpDisplayOption_label" xml:space="preserve">
     <value>Labels</value>
   </data>
@@ -11545,6 +11560,18 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="AreaReplicateGraphPane_Dotp_Cutoff_Line_Label" xml:space="preserve">
     <value>{0} cutoff</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>Retention time calculator ({0})</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>Retention time calculator...</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>To align to retention time prediction, you must first set up a retention time predictor in Peptide Settings / Prediction.</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected" xml:space="preserve">
     <value>MS2 analyzer must be selected.</value>
