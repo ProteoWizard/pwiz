@@ -123,9 +123,15 @@ namespace pwiz.Common.Controls
 
         protected override void OnClick(EventArgs e)
         {
+            ShowDropdown();
+        }
+
+        private void ShowDropdown()
+        {
             // Show the dropdown menu
             var contextMenuStrip = new ContextMenuStrip();
-            contextMenuStrip.ShowImageMargin = contextMenuStrip.ShowCheckMargin = false; // We only want to see the text, no image area needed
+            contextMenuStrip.ShowImageMargin =
+                contextMenuStrip.ShowCheckMargin = false; // We only want to see the text, no image area needed
             for (var i = 0; i < Items.Count; i++)
             {
                 contextMenuStrip.Items.Add(Items[i].ToString());
@@ -134,17 +140,88 @@ namespace pwiz.Common.Controls
                     contextMenuStrip.Items[i].Select(); // Set the initial selection
                 }
             }
+
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked; // Update the button selection when use clicks on menu
+            contextMenuStrip.KeyDown += contextMenuStrip_KeyDown; // Handle keys in the manner of a standard combobox
             contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
             base.BackColor = _backColorActive;
         }
 
-        void contextMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        // Update the button selection when use clicks on menu
+        private void contextMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             // Note the user selection, menu will close itself
             var item = e.ClickedItem;
             Text = item.Text;
             base.BackColor = _backColorInactive;
+        }
+
+        // Handle keys in the manner of a standard combobox
+        private void contextMenuStrip_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyData)
+            {
+                case Keys.Space:
+                {
+                    // Close the menu
+                    ((ContextMenuStrip)sender).Close();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    base.BackColor = _backColorInactive;
+                    break;
+                }
+            }
+        }
+
+        // Mimic the keyboard handling of standard ComboBox
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Alt | Keys.Down) || keyData == (Keys.Alt | Keys.Up))
+            {
+                ShowDropdown();
+                return true;
+            }
+
+            keyData &= ~(Keys.Control | Keys.Shift); // Ignore control and shift keys, as standard comboBox does
+
+            // Arrow keys change the selection rather than leaving the control
+            if (keyData == Keys.Up || keyData == Keys.Left)
+            {
+                SelectedIndex = Math.Max(0, SelectedIndex - 1);
+                return true;
+            }
+            if (keyData == Keys.Down || keyData == Keys.Right)
+            {
+                SelectedIndex = Math.Min(Items.Count - 1, SelectedIndex + 1);
+                return true;
+            }
+            if (keyData == Keys.PageDown || keyData == Keys.End)
+            {
+                SelectedIndex = Items.Count - 1;
+                return true;
+            }
+            if (keyData == Keys.PageUp || keyData == Keys.Home)
+            {
+                SelectedIndex = 0;
+                return true;
+            }
+            var kc = new KeysConverter();
+            var keyChar = kc.ConvertToString(keyData);
+            if (keyChar != null)
+            {
+                // Find the next item that starts with this key, if any
+                for (var i = 1; i <= Items.Count; i++)
+                {
+                    var proposedIndex = (SelectedIndex + i) % Items.Count;
+                    if (Items[proposedIndex].ToString().StartsWith(keyChar, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        SelectedIndex = proposedIndex;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         protected override void Dispose(bool disposing)
