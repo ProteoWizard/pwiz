@@ -313,6 +313,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Preparing a Document to Accept the Study 7 Transition List, p. 18
             RunUI(() => SkylineWindow.NewDocument());
+            Settings.Default.PeakAreaDotpCutoffValue = 0.80f;
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             if (IsCoverShotMode)
             {

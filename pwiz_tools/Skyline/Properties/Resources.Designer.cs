@@ -61,16 +61,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These filters cannot be applied as they would result in an empty transition list..
-        /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list_ {
-            get {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_ap" +
-                        "plied_as_they_would_result_in_an_empty_transition_list.", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid Analyst installation.
         /// </summary>
         public static string AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation {
@@ -1780,7 +1770,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} cutoff.
+        ///   Looks up a localized string similar to {0} cutoff - {1:F2}.
         /// </summary>
         public static string AreaReplicateGraphPane_Dotp_Cutoff_Line_Label {
             get {
@@ -1807,7 +1797,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replicates above cutoff: {0}, below cutoff: {1}.
+        ///   Looks up a localized string similar to Replicates above {2} cutoff: {0}, below cutoff: {1}.
         /// </summary>
         public static string AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff {
             get {
@@ -16234,6 +16224,16 @@ namespace pwiz.Skyline.Properties {
         public static string ImportSkyrHelper_ResolveImportConflicts_Use_command {
             get {
                 return ResourceManager.GetString("ImportSkyrHelper_ResolveImportConflicts_Use_command", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These filters cannot be applied as they would result in an empty transition list..
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list_ {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_app" +
+                        "lied_as_they_would_result_in_an_empty_transition_list.", resourceCulture);
             }
         }
         

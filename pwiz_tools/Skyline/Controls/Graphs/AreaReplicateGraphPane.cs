@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
                 var labelText = string.Format(Resources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
-                    _dotpData.Count - belowCutoffCount, belowCutoffCount);
+                    _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
                 var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
                 {
                     IsClippedToChartRect = true,
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //This is a placeholder to make sure the line shows in the legend.
                 CurveList.Insert(CurveList.Count - 1,
                     new LineItem(String.Format(CultureInfo.CurrentCulture,
-                        Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText))
+                        Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
                     {
                         Points = new PointPairList(new[] { new PointPair(0, 0) }),
                         Symbol = new Symbol(SymbolType.None, Color.Transparent)

@@ -11556,10 +11556,10 @@ If you do not have the original file, you may build the library with embedded sp
     <value>None of the targets in the document have any chromatograms.</value>
   </data>
   <data name="AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff" xml:space="preserve">
-    <value>Replicates above cutoff: {0}, below cutoff: {1}</value>
+    <value>Replicates above {2} cutoff: {0}, below cutoff: {1}</value>
   </data>
   <data name="AreaReplicateGraphPane_Dotp_Cutoff_Line_Label" xml:space="preserve">
-    <value>{0} cutoff</value>
+    <value>{0} cutoff - {1:F2}</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
     <value>Retention time calculator ({0})</value>
