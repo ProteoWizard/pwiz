@@ -18,10 +18,11 @@
 
 #include "DiaNNSpecLibReader.h"
 #include "pwiz/data/common/Unimod.hpp"
+#include <boost/type_index.hpp>
 
 namespace BiblioSpec
 {
-const int LATEST_SUPPORTED_VERSION = -2;
+const int LATEST_SUPPORTED_VERSION = -3;
 
 // code adapted from CC4-by-licensed diann.cpp by Vadim Demichev (https://github.com/vdemichev/DiaNN)
 namespace {
@@ -43,7 +44,8 @@ template<class F> void read_string(F &in, std::string &s) {
 }
 
 template <class F, class T> void read_array(F &in, std::vector<T> &a, int v = 0) {
-    int size = 0; in.read((char*)&size, sizeof(int)); 
+    int size = 0; in.read((char*)&size, sizeof(int));
+    Verbosity::debug("array of %d %s", size, boost::typeindex::type_index(typeid(T)).pretty_name());
     if (size) {
         a.resize(size);
         for (int i = 0; i < size; i++) a[i].read(in, v);
@@ -413,7 +415,7 @@ class Library {
         std::string name; // precursor id
         std::set<PG>::iterator prot;
         int pid_index = 0, pg_index = 0, eg_id, best_run = -1, peak = 0, apex = 0, window = 0;
-        float qvalue = 0.0, pg_qvalue = 0.0, best_fr_mz = 0.0;
+        float qvalue = 0.0, pg_qvalue = 0.0, best_fr_mz = 0.0, ptm_qvalue, site_conf;
 
         friend bool operator < (const Entry &left, const Entry &right) { return left.name < right.name; }
 
@@ -433,6 +435,11 @@ class Library {
             entry_flags = ff, proteotypic = prt;
             in.read((char*)&pid_index, sizeof(int));
             read_string(in, name);
+            if (v <= -3) {
+                in.read((char*)&pg_qvalue, sizeof(float));
+                in.read((char*)&ptm_qvalue, sizeof(float));
+                in.read((char*)&site_conf, sizeof(float));
+            }
         }
     };
 
@@ -447,6 +454,8 @@ class Library {
 
         if (version < LATEST_SUPPORTED_VERSION)
             Verbosity::error("speclib file has version %d, but BiblioSpec only supports up to version %d", -1*version, -1*LATEST_SUPPORTED_VERSION);
+        else
+            Verbosity::debug("speclib file has version %d",  -1*version);
 
         in.read((char*)&gc, sizeof(int));
         in.read((char*)&ip, sizeof(int));
@@ -575,10 +584,11 @@ bool DiaNNSpecLibReader::parseFile()
         psm->charge = entry.target.charge;
         psm->unmodSeq = get_aas(entry.name, psm->mods);
         psm->specIndex = entry.target.index;
+        psm->score = entry.target.lib_qvalue;
         psms_.emplace_back(psm);
     }
 
-    buildTables(UNKNOWN_SCORE_TYPE, impl_->specLibFile_);
+    buildTables(GENERIC_QVALUE, impl_->specLibFile_);
 
     return true;
 }
@@ -605,6 +615,9 @@ bool DiaNNSpecLibReader::getSpectrum(int identifier, SpecData& returnData, SPEC_
     returnData.numPeaks = entry.target.fragments.size();
     returnData.mz = entry.target.mz;
     returnData.retentionTime = entry.target.iRT;
+    returnData.ionMobility = entry.target.iIM;
+    if (returnData.ionMobility > 0)
+        returnData.ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
 
     if (!getPeaks)
         return true;
