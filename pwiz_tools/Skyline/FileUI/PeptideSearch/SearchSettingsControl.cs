@@ -48,6 +48,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
 
             searchEngineComboBox.SelectedIndex = 0;
+
+            LoadMassUnitEntries();
         }
 
         private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -215,7 +217,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadComboboxEntries()
         {
-            LoadMassUnitEntries();
             LoadFragmentIonEntries();
             LoadMs2AnalyzerEntries();
 
