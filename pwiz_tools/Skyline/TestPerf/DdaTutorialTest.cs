@@ -92,6 +92,8 @@ namespace TestPerf
         /// </summary>
         private bool IsRecordMode => false;
 
+        private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
+
         private Image _searchLogImage;
 
         protected override void ProcessCoverShot(Bitmap bmp)
@@ -108,7 +110,7 @@ namespace TestPerf
             PrepareDocument("TestDdaTutorial.sky");
 
             // delete downloaded tools if not recording new counts or audit logs
-            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+            if (RedownloadTools)
                 foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
                     if (requiredFile.Unzip)
                         DirectoryEx.SafeDelete(requiredFile.InstallPath);
@@ -214,7 +216,7 @@ namespace TestPerf
 
             // switch SearchEngine and handle download dialogs if necessary
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
-            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+            if (RedownloadTools)
             {
                 var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                 PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download MSFragger", tutorialPage++);
