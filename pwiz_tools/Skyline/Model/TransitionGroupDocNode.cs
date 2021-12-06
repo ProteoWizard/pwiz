@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
         }
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
             }
@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
         }
@@ -487,7 +487,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
             }
