@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
@@ -885,7 +885,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductResultsText(int indexResult)
         {
-            if (_dotpData?.Count > 0 && indexResult < _dotpData.Count)
+            if (_dotpData?.Count > 0 && indexResult < _dotpData.Count && !float.IsNaN(_dotpData[indexResult]))
             {
                 var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
                 return separator(new [] { DotpLabelText , string.Format(@"{0:F02}", _dotpData[indexResult]) } ) ;
@@ -1104,7 +1104,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         .Cast<double>());
                     return (float)statistics.Mean();
                 }
-                return -1;
+                return float.NaN;
             }
 
             protected NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
