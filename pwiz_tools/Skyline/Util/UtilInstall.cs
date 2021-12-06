@@ -179,13 +179,26 @@ namespace pwiz.Skyline.Util
             var filesNotAlreadyDownloaded = FilesNotAlreadyDownloaded(filesToDownload).ToList();
             using (var client = new MultiFileAsynchronousDownloadClient(waitBroker, filesNotAlreadyDownloaded.Count))
             {
+                Stopwatch downloadTimer = null;
+                Stopwatch unzipTimer = null;
+                if (Program.FunctionalTest)
+                {
+                    downloadTimer = new Stopwatch();
+                    unzipTimer = new Stopwatch();
+                }
+
                 foreach (var requiredFile in filesNotAlreadyDownloaded)
                 {
                     // for functional testing, replace the hostname with the Skyline tool testing mirror path on AWS
-                    // TODO: make this conditional somehow so that once per day or week we run with the original URLs to test that they still work
                     var downloadUrl = requiredFile.DownloadUrl;
                     if (Program.FunctionalTest && !Program.UseOriginalURLs)
                         downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
+
+                    if (downloadTimer != null)
+                    {
+                        Console.Write($@"# Downloading test data file {downloadUrl}...");
+                        downloadTimer.Start();
+                    }
 
                     string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     using (var fileSaver = new FileSaver(downloadFilename))
@@ -195,15 +208,40 @@ namespace pwiz.Skyline.Util
                         fileSaver.Commit();
                     }
 
+                    if (downloadTimer != null)
+                    {
+                        downloadTimer.Stop();
+                        Console.WriteLine(@" done.");
+                    }
+
                     if (!requiredFile.Unzip)
                         continue;
+
+                    if (unzipTimer != null)
+                    {
+                        Console.Write($@"# Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        unzipTimer.Start();
+                    }
 
                     Directory.CreateDirectory(requiredFile.InstallPath);
                     using (var zipFile = new ZipFile(downloadFilename))
                     {
                         zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
                     }
+
+                    if (unzipTimer != null)
+                    {
+                        unzipTimer.Stop();
+                        Console.WriteLine(@" done.");
+                    }
+
                     FileEx.SafeDelete(downloadFilename);
+                }
+
+                if (downloadTimer != null)
+                {
+                    Console.WriteLine(@"Total download time {0:F2} sec ", downloadTimer.ElapsedMilliseconds / 1000.0);
+                    Console.WriteLine(@"Total unzip time {0:F2} sec ", unzipTimer.ElapsedMilliseconds / 1000.0);
                 }
             }
             return true;

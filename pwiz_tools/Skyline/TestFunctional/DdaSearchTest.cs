@@ -58,7 +58,17 @@ namespace pwiz.SkylineTestFunctional
 
         public struct DdaTestSettings
         {
-            public SearchSettingsControl.SearchEngine SearchEngine { get; set; }
+            private SearchSettingsControl.SearchEngine _searchEngine;
+            public SearchSettingsControl.SearchEngine SearchEngine
+            {
+                get => _searchEngine;
+                set
+                {
+                    _searchEngine = value;
+                    HasMissingDependencies = !SearchSettingsControl.HasRequiredFilesDownloaded(value);
+                }
+            }
+
             public string FragmentIons { get; set; }
             public string Ms2Analyzer { get; set; }
             public MzTolerance PrecursorTolerance { get; set; }
@@ -66,6 +76,7 @@ namespace pwiz.SkylineTestFunctional
             public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
             public ExpectedResults ExpectedResults { get; set; }
             public ExpectedResults ExpectedResultsFinal { get; set; }
+            public bool HasMissingDependencies { get; private set; }
         }
 
         DdaTestSettings TestSettings;
@@ -100,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (!IsRecordMode)
+            if (RedownloadTools)
                 foreach (var requiredFile in MsgfPlusSearchEngine.FilesToDownload)
                     if (requiredFile.Unzip)
                         DirectoryEx.SafeDelete(requiredFile.InstallPath);
@@ -127,12 +138,12 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (!IsRecordMode)
+            if (RedownloadTools)
                 foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
-                if (requiredFile.Unzip)
-                    DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                else
-                    FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
 
             TestSettings = new DdaTestSettings
             {
@@ -144,17 +155,18 @@ namespace pwiz.SkylineTestFunctional
                 AdditionalSettings = new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("check_spectral_files", "0"),
-                    new KeyValuePair<string, string>("calibrate_mass", "2"),
+                    new KeyValuePair<string, string>("calibrate_mass", "0"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
-                ExpectedResults = new ExpectedResults(1131, 94, 94, 282),
-                ExpectedResultsFinal = new ExpectedResults(84, 94, 94, 282)
+                ExpectedResults = new ExpectedResults(1131, 90, 90, 270),
+                ExpectedResultsFinal = new ExpectedResults(81, 90, 90, 270)
             };
 
             RunFunctionalTest();
         }
 
         public bool IsRecordMode => false;
+        private bool RedownloadTools => !IsRecordMode && IsPass0;
 
         private string GetTestPath(string path)
         {
@@ -290,24 +302,27 @@ namespace pwiz.SkylineTestFunctional
 
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = TestSettings.SearchEngine));
 
-            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+            if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
-                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                if (msfraggerDownloaderDlg != null)
+                if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
-                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
-                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                    if (msfraggerDownloaderDlg != null)
+                    {
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                    }
                 }
-            }
 
-            if (TestSettings.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
-            {
-                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                if (downloaderDlg != null)
+                if (TestSettings.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
                 {
-                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                    WaitForClosedForm(waitDlg);
+                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                    if (downloaderDlg != null)
+                    {
+                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                        WaitForClosedForm(waitDlg);
+                    }
                 }
             }
 
