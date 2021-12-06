@@ -1066,7 +1066,9 @@ namespace pwiz.Skyline.Menus
                     var targets = dlg.TargetsInvariant.ToArray();
 
                     var existing = Document.Settings.TransitionSettings.Integration;
-                    if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+                    if (groupBy != existing.SynchronizedIntegrationGroupBy ||
+                        all != existing.SynchronizedIntegrationAll ||
+                        !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
                     {
                         ModifyDocument(
                             string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
