@@ -2167,7 +2167,8 @@ namespace pwiz.Skyline.Model
 
             if (Settings.DataSettings.AuditLogging && AuditLog != null)
             {
-                var auditLog = AuditLog.RecalculateHashValues(skylineVersion.SrmDocumentVersion, hash);
+                var auditLog = AuditLog.RecomputeEnExtraInfos()
+                    .RecalculateHashValues(skylineVersion.SrmDocumentVersion, hash);
                 auditLog.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
             }
             else if (File.Exists(auditLogPath))

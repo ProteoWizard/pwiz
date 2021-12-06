@@ -33,6 +33,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
@@ -40,7 +41,7 @@ namespace pwiz.Skyline.FileUI
     public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx, ITipDisplayer
     {
         public MassListImporter Importer { get; set; }
-        public List<ComboBox> ComboBoxes { get; private set; }
+        public List<LiteDropDownList> ComboBoxes { get; private set; }
 
         public bool WindowShown { get; private set; }
 
@@ -362,10 +363,10 @@ namespace pwiz.Skyline.FileUI
 
         private void InitializeComboBoxes()
         {
-            ComboBoxes = new List<ComboBox>();
+            ComboBoxes = new List<LiteDropDownList>();
             for (var i = 0; i < Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length; i++)
             {
-                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+                var combo = new LiteDropDownList();
                 ComboBoxes.Add(combo);
                 comboPanelInner.Controls.Add(combo);
                 combo.BringToFront();
@@ -497,24 +498,29 @@ namespace pwiz.Skyline.FileUI
             const int gridBorderWidth = 1;
             comboPanelOuter.Location = new Point(dataGrid.Location.X + gridBorderWidth,
                 dataGrid.Location.Y + (dataGrid.ColumnHeadersVisible ? dataGrid.ColumnHeadersHeight : 1));
-            
+
+
+            // Only puts columns that we want to show in the layout
+            var activeColumnIndexes = new List<int>();
+            for (var i = 0; i < dataGrid.Columns.Count; i++)
+            {
+                if (!(!showIgnoredCols && Equals(ComboBoxes[i].Text,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
+                {
+                    activeColumnIndexes.Add(i);
+                }
+            }
+
             var xOffset = 0;
             var height = 0;
-
-            for (var i = 0; i < dataGrid.Columns.Count; i++)
+            foreach (var i in activeColumnIndexes)
             {
                 var column = dataGrid.Columns[i];
                 var comboBox = ComboBoxes[i];
-                // Only puts columns that we want to show in the layout
-                if (!(!showIgnoredCols && Equals(comboBox.Text,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
-                {
-                    comboBox.Location = new Point(xOffset, 0);
-                    comboBox.Width = column.Width; 
-                    height = Math.Max(height, comboBox.Height);
-                    xOffset += column.Width;
-                } 
-                
+                comboBox.Location = new Point(xOffset, 0);
+                comboBox.Width = column.Width + (i < (activeColumnIndexes.Count - 1) ? 1 : 0); // Overlap that 1 pixel border to get a 1 pixel divider between controls
+                height = Math.Max(height, comboBox.Height);
+                xOffset += column.Width;
             }
             
             var scrollBars = dataGrid.ScrollBars == ScrollBars.Both;
@@ -584,7 +590,7 @@ namespace pwiz.Skyline.FileUI
             ComboBoxes[indexOfPreviousComboBox].SelectedIndex = newSelectedIndex;
         }
 
-        private void SetColumnColor(ComboBox comboBox)
+        private void SetColumnColor(LiteDropDownList comboBox)
         {
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             // Grey out any ignored column
@@ -607,7 +613,7 @@ namespace pwiz.Skyline.FileUI
         // Hides columns if the data is not being used and the appropriate setting is selected
         // This is intentionally not called whenever the user changes a column header to avoid essentially punishing
         // the user for making a mistake
-        private void SetUnusedColumnVisibility(ComboBox comboBox)
+        private void SetUnusedColumnVisibility(LiteDropDownList comboBox)
         {
             if (Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
             {
@@ -623,7 +629,7 @@ namespace pwiz.Skyline.FileUI
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
         {
-            var comboBox = (ComboBox) sender;
+            var comboBox = (LiteDropDownList) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer.RowReader.Indices;
             comboBoxChanged = true;
@@ -986,7 +992,7 @@ namespace pwiz.Skyline.FileUI
         ///  After the mode is changed this makes sure we are only showing columns relevant to the current mode
         /// </summary>
         /// <param name="comboBox"></param>
-        private void UpdateCombo(ComboBox comboBox)
+        private void UpdateCombo(LiteDropDownList comboBox)
         {
             // Add appropriate headers to the comboBox range based on the user selected mode
             foreach (var item in headerList)
@@ -998,9 +1004,12 @@ namespace pwiz.Skyline.FileUI
                     (type == SrmDocument.DOCUMENT_TYPE.small_molecules && !radioPeptide.Checked))
                 {
                     comboBox.Items.Add(name);
+                    if (Equals(name, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
+                    {
+                        comboBox.SpecialItems.Add(name); // Special font for this
+                    }
                 }
             }
-            ComboHelper.AutoSizeDropDown(comboBox);
         }
 
         /// <summary>
@@ -1364,7 +1373,7 @@ namespace pwiz.Skyline.FileUI
 
                     // Remove all options besides "Protein Name" from the new combo box
                     var proteinNameBox = ComboBoxes.First();
-                    var removeList = proteinNameBox.Items.Cast<object>().Where(item => item.ToString() !=
+                    var removeList = proteinNameBox.Items.Where(item => item.ToString() !=
                         proteinName &&
                         item.ToString() !=
                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column).ToList();
