@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 result.Add(TIC);
             }
 
-            if (document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications)
+            if (document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes)
                 {
