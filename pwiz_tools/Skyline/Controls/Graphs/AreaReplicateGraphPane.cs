@@ -652,7 +652,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            ToolTip.AddLine("",GetDotProductResultsText(index));
+            ToolTip.AddLine(Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate + @":", XAxis.Scale.TextLabels[index]);
+            ToolTip.AddLine(DotpLabelText + @":", string.Format(@"{0:F02}", _dotpData[index]));
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
