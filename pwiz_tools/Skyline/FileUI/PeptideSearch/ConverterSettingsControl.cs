@@ -312,12 +312,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
             diaUmpireConfig.UseMzMlSpillFile = UseMzMlSpillFile;
 
-            return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
+            return new DiaUmpireDdaConverter(ImportPeptideSearch, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }
 
         public MsconvertDdaConverter GetMsconvertConverter()
         {
-            return new MsconvertDdaConverter(ImportPeptideSearch.SearchEngine);
+            return new MsconvertDdaConverter(ImportPeptideSearch);
         }
     }
 }
