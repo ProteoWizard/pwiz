@@ -55,16 +55,6 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        [TestMethod]
-        // This isn't a real tutorial test - just exploiting a convenient framework for testing Associate Proteins
-        public void TestSrmTutorialLegacyWithAssociateProteins()
-        {
-            _exerciseAssociateProteins = true;
-            TestSrmTutorialLegacy();
-        }
-
-        private bool _exerciseAssociateProteins;
-
         private string GetTestPath(string relativePath)
         {
             const string folder = "USB";
@@ -349,12 +339,6 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editCollisionEnergy, editCollisionEnergy.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
-            // This is a convenient place to test associating proteins
-            if (_exerciseAssociateProteins)
-            {
-                TestAssociateProteins();
-            }
-
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
 
@@ -490,45 +474,6 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForDocumentLoaded();
             WaitForClosedForm<AllChromatogramsGraph>();
-        }
-
-        private void TestAssociateProteins()
-        {
-            // Try importing a transition list with a peptide matching multiple proteins
-            var multipleMatches = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
-                                     "VTTSTGASYSYD, 709.327105, 1116.483162\n" +
-                                     "AADD, 391.14600, 391.14600\n" +
-                                     "VTTSTGASYSYDR, 709.327105, 928.403455";
-            for (var i = 0; i < 2; i++)
-            {
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.AddToAll);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 68, 68, 69);
-                RunUI(() => SkylineWindow.Undo());
-                // Paste the same list, but this time select "No duplicates" on peptides with multiple matches
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.NoDuplicates);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2);
-                RunUI(() => SkylineWindow.Undo());
-                // Paste the same list, but this time select "Use first occurrence" on peptides with multiple matches
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.FirstOccurence);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3);
-                RunUI(() => SkylineWindow.Undo());
-                // Now add headers and do everything again
-                multipleMatches = multipleMatches.Insert(0, "Peptide Modified Sequence, Precursor m/z, Product m/z\n");
-            }
-            RunUI(() => SkylineWindow.Undo());
-            // Try importing a transition list with a transition that does not match anything from the 
-            // background proteome
-            var noMatchesCSV = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
-                               "VTTSTGADRAAAA, 1191.596, 1191.596\n" +
-                               "VTTSTGASYSYDR, 709.327105, 1029.451134";
-            ImportTransitions(noMatchesCSV, BackgroundProteome.DuplicateProteinsFilter.AddToAll,  true, false);
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3);
-            RunUI(() => SkylineWindow.Undo());
-            //TestProteinReassignmentMessage();
-
         }
 
         private void ImportTransitions(string transitions,
