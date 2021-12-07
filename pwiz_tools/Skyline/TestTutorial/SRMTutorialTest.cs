@@ -30,7 +30,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -475,72 +474,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
             WaitForClosedForm<AllChromatogramsGraph>();
         }
-
-        private void ImportTransitions(string transitions,
-            BackgroundProteome.DuplicateProteinsFilter filter, bool addUnmatched = true, bool expectError = true)
-        {
-            // Paste into the targets window
-            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = transitions);
-
-            // FilterMatchedPeptidesDlg should appear
-            var filterMatchedDlg =
-                ShowDialog<FilterMatchedPeptidesDlg>(() => colDlg.checkBoxAssociateProteins.Checked = true);
-            RunUI(() =>
-            {
-                filterMatchedDlg.AddUnmatched = addUnmatched;
-                filterMatchedDlg.DuplicateProteinsFilter = filter;
-                filterMatchedDlg.OkDialog();
-            });
-
-            if (expectError)
-            {
-                // Ignore error dialog
-                var colErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => colDlg.OkDialog());
-                OkDialog(colErrorDlg, colErrorDlg.AcceptButton.PerformClick);
-            }
-            else
-            {
-                RunUI(() =>colDlg.OkDialog());
-            }
-
-            WaitForDocumentChange(SkylineWindow.Document);
-            WaitForClosedForm(importDialog);
-        }
-
-        private void TestProteinReassignmentMessage()
-        {
-            // Try importing a list with a protein name column
-            var protColumnTSV = "VTTSTGASYSYDR, 709.327105, 1217.530841, Rv1812c_Rv1812c\n" +
-                                "VTTSTGASYSYDR, 709.327105, 1116.483162, Rv1812c_Rv1812c\n" +
-                                "VTTSTGASYSYDR, 709.327105, 1029.451134, Rv1812c_Rv1812c";
-            var importDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg =
-                ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDlg.textBox1.Text = protColumnTSV);
-
-            // Test our warning when the user associates proteins and then tries to reassign the protein name column
-            RunUI(() =>
-            {
-                colDlg.checkBoxAssociateProteins.Checked = true;
-                var boxes = colDlg.ComboBoxes;
-                var oldProtBox = boxes[4];
-                var messageDlg = ShowDialog<MessageDlg>(() =>
-                {
-                    RunUI(() =>
-                    {
-                        oldProtBox.SelectedIndex =
-                            oldProtBox.FindStringExact(Resources
-                                .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-                    });
-                });
-                Assert.IsNotNull(messageDlg);
-                RunUI(() =>
-                {
-                    messageDlg.CancelButton.PerformClick();
-                    colDlg.CancelButton.PerformClick();
-                });
-
-            });
-        }
+        
     }
 }
