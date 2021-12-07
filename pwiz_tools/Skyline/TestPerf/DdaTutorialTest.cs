@@ -92,6 +92,9 @@ namespace TestPerf
         /// </summary>
         private bool IsRecordMode => false;
 
+        private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
+        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
+
         private Image _searchLogImage;
 
         protected override void ProcessCoverShot(Bitmap bmp)
@@ -108,7 +111,7 @@ namespace TestPerf
             PrepareDocument("TestDdaTutorial.sky");
 
             // delete downloaded tools if not recording new counts or audit logs
-            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+            if (RedownloadTools)
                 foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
                     if (requiredFile.Unzip)
                         DirectoryEx.SafeDelete(requiredFile.InstallPath);
@@ -214,18 +217,24 @@ namespace TestPerf
 
             // switch SearchEngine and handle download dialogs if necessary
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
-            if (!IsRecordMode && !IsRecordAuditLogForTutorials)
+            if (RedownloadTools || HasMissingDependencies)
             {
                 var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download MSFragger", tutorialPage++);
-                RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
-                OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                if (msfraggerDownloaderDlg != null)
+                {
+                    PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download MSFragger", tutorialPage++);
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
 
                 var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download Java and Crux", tutorialPage++);
-                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                WaitForClosedForm(waitDlg);
+                if (downloaderDlg != null)
+                {
+                    PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Download Java and Crux", tutorialPage++);
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
+                }
             }
 
             RunUI(() =>
@@ -328,7 +337,7 @@ namespace TestPerf
 
             using (new WaitDocumentChange(null, true))
             {
-            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
+                OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             }
 
             FindNode(string.Format("{0:F04}++", IsFullData ? 835.914 : 699.3566));
