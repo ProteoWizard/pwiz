@@ -96,7 +96,8 @@ const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
     {MS_Spectrum_Mill_for_MassHunter_Workstation, "Spectrum Mill;SpectrumMill"},
     {MS_Proteios, "Proteios"},
     {MS_MS_GF_, "MS-GF+"},
-    {MS_Comet, "Comet"}
+    {MS_Comet, "Comet"},
+    {MS_Percolator, "Percolator"}
     // TODO: PROBID, InsPecT, Crux, Tide need CV terms
 };
 
@@ -200,7 +201,10 @@ const ScoreTranslation scoreTranslationTable[] =
     {MS_Comet, MS_Comet_deltacnstar, "deltacnstar"},
     {MS_Comet, MS_Comet_sprank, "sprank"},
     {MS_Comet, MS_Comet_spscore, "spscore"},
-    {MS_Comet, MS_Comet_expectation_value, "expect"}
+    {MS_Comet, MS_Comet_expectation_value, "expect"},
+    {MS_Percolator, MS_percolator_score, "percolator_score"},
+    {MS_Percolator, MS_percolator_Q_value, "qvalue;percolator_qvalue"},
+    {MS_Percolator, MS_percolator_PEP, "PEP;percolator_PEP"}
 };
 
 const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable)/sizeof(ScoreTranslation);
@@ -1097,7 +1101,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
         // there's not really a way to avoid hand coding these mappings
 
         // map "decoyprefix" from any search engine; this supports the mzid->pepXML->mzid path
-        const string& decoyPrefix = getValueOrDefault(kvPairs, "decoyprefix", "");
+        string decoyPrefix = getValueOrDefault(kvPairs, "decoyprefix", "");
+        if (decoyPrefix.empty())
+            decoyPrefix = getValueOrDefault(kvPairs, "decoy_prefix", "");
         if (!decoyPrefix.empty())
             _mzid->dataCollection.inputs.searchDatabase[0]->set(MS_decoy_DB_accession_regexp, "^" + decoyPrefix);
 
