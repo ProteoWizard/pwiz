@@ -112,6 +112,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
 
+        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        {
+            FileDownloadInfo[] fileDownloadInfo;
+            switch (searchEngine)
+            {
+                case SearchEngine.MSAmanda:
+                    return true;
+                case SearchEngine.MSGFPlus:
+                    fileDownloadInfo = MsgfPlusSearchEngine.FilesToDownload;
+                    break;
+                case SearchEngine.MSFragger:
+                    fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(fileDownloadInfo).Any();
+        }
+
         private AbstractDdaSearchEngine InitSelectedSearchEngine()
         {
             pBLogo.Image = null;

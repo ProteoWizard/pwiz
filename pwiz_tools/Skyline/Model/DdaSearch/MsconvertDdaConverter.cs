@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public string MsConvertOutputExtension { get; private set; }
         public string MsConvertOutputFormatParam { get; private set; }
 
-        public MsconvertDdaConverter(AbstractDdaSearchEngine searchEngine) : base(searchEngine)
+        public MsconvertDdaConverter(ImportPeptideSearch importPeptideSearch) : base(importPeptideSearch)
         {
             MsConvertOutputExtension = @".mzML";
             MsConvertOutputFormatParam = @"--mzML";
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
 
                 // tell the search engine to search the converted files instead of the original files
-                SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
+                ImportPeptideSearch.SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
                 return true;
             }
             catch (Exception e)
