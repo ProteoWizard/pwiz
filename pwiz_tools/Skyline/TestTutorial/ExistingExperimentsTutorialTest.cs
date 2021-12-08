@@ -158,16 +158,7 @@ namespace pwiz.SkylineTestTutorial
             var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
             string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
             var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
-
-            RunUI(() => {
-                colDlg.radioPeptide.PerformClick();
-                var comboBoxes = colDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-
-                colDlg.checkBoxAssociateProteins.Checked = true;
-            });
+            PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
 
             OkDialog(colDlg, colDlg.OkDialog);
 

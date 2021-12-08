@@ -34,6 +34,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Model.Proteome;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
@@ -133,6 +134,11 @@ namespace pwiz.Skyline.FileUI
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
+            if (checkBoxAssociateProteins.Enabled)
+            {
+                // If there's a background proteome, use it
+                checkBoxAssociateProteins.Checked = !docCurrent.Settings.PeptideSettings.BackgroundProteome.Equals(BackgroundProteome.NONE);
+            }
         }
 
         public Rectangle ScreenRect
@@ -1384,7 +1390,7 @@ namespace pwiz.Skyline.FileUI
 
                     // Change the text of the new column to italic
                     proteinNameBox.SelectedIndex = 0;
-                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Displayed,
+                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Visible,
                         DataGridViewElementStates.None);
                     if (firstColumn != null)
                     {

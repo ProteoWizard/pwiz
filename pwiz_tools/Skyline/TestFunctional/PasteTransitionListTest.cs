@@ -273,13 +273,6 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
-            RunUI(() => {
-                dlg.radioPeptide.PerformClick();
-                var comboBoxes = dlg.ComboBoxes;
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-            });
             // As long as the message tells us that we are missing "Peptide Modified Sequence" and not "Molecule Molecule", then everything is working how we want it to
             var msg = ShowDialog<MessageDlg>(dlg.buttonCheckForErrors.PerformClick);
             Assert.IsTrue(msg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
