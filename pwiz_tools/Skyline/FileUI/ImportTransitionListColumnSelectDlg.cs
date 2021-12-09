@@ -219,13 +219,38 @@ namespace pwiz.Skyline.FileUI
 
             var lines = new List<string>();
             var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
+            // Get a dictionary of peptides under consideration and the proteins they're associated with
+            var peptides = new List<string>(Importer.RowReader.Lines.Count);
+            peptides.AddRange(Importer.RowReader.Lines.Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[Importer.RowReader.Indices.PeptideColumn]));
+            var stripped = new Dictionary<string, string>();
+            foreach (var pep in peptides)
+            {
+                if (!stripped.ContainsKey(pep))
+                {
+                    var peptideSequence = FastaSequence.StripModifications(pep);
+                    stripped[pep] = FastaSequence.IsExSequence(peptideSequence) ? peptideSequence : null;
+                }
+            }
+            var proteome = _docCurrent.Settings.PeptideSettings.BackgroundProteome;
+            IDictionary<string, List<Protein>> dictSequenceProteins = null;
+            using (var longWaitDlg = new LongWaitDlg() {Message = checkBoxAssociateProteins.Text})
+            {
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
+                    {
+                        dictSequenceProteins = proteomeDb.GetDigestion().GetProteinsWithSequences(stripped.Values);
+                    }
+                });
+            }
+
             // Go through each line of the import
             foreach(var line in Importer.RowReader.Lines)
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
-                var action = associateHelper.determineAssociateAction(null, 
-                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false);
+                var action = associateHelper.DetermineAssociateAction(null, 
+                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
