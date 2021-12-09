@@ -97,6 +97,8 @@ class WiffFileImpl : public WiffFile
     virtual std::string getADCTraceName(int sample, int traceIndex) const;
     virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const;
 
+    virtual void getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const;
+
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
     void setExperiment(int sample, int period, int experiment) const;
@@ -911,6 +913,29 @@ void WiffFileImpl::getADCTrace(int sample, int traceIndex, ADCTrace& trace) cons
         ToBinaryData(adcData->GetActualYValues(), trace.y);
         trace.xUnits = ToStdString(adcData->XUnits);
         trace.yUnits = ToStdString(adcData->YUnits);
+    }
+    CATCH_AND_FORWARD
+}
+
+void WiffFileImpl::getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const
+{
+    try
+    {
+        setSample(sample);
+
+        try
+        {
+            if (this->sample->DADSample == nullptr)
+                return;
+            auto twc = this->sample->DADSample->GetTotalWavelengthChromatogram();
+            ToBinaryData(twc->GetActualXValues(), totalWavelengthChromatogram.x);
+            ToBinaryData(twc->GetActualYValues(), totalWavelengthChromatogram.y);
+            totalWavelengthChromatogram.xUnits = ToStdString(twc->XUnits);
+            totalWavelengthChromatogram.yUnits = ToStdString(twc->YUnits);
+        }
+        catch (...)
+        {
+        }
     }
     CATCH_AND_FORWARD
 }
