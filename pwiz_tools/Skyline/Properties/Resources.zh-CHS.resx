@@ -11336,7 +11336,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
-    <value>错误: 尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。</value>
+    <value>错误: 尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
+{2}</value>
   </data>
   <data name="GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range" xml:space="preserve">
     <value>过滤四极杆扫描范围</value>
