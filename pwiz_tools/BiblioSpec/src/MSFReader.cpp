@@ -334,9 +334,9 @@ namespace BiblioSpec
             // Confidence levels correspond to whatever the user selected.
             // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
             double threshold = getScoreThreshold(SQT);
-            if (abs(threshold - 0.01) < 0.001) {
+            if (std::abs(threshold - 0.01) < 0.001) {
                 pepConfidence = 3;
-            } else if (abs(threshold - 0.05) < 0.001) {
+            } else if (std::abs(threshold - 0.05) < 0.001) {
                 pepConfidence = 2;
             }
             if (useProtConfidence && columnExists(msfFile_, "TargetProteins", "ProteinFDRConfidence")) {
