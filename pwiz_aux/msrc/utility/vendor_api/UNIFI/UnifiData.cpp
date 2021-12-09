@@ -65,6 +65,8 @@ using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
 using std::size_t;
 
+auto toDouble = [](const auto& i) {return i; };
+
 namespace pwiz {
 namespace vendor_api {
 namespace UNIFI {
@@ -135,18 +137,11 @@ public:
     [ProtoBuf::ProtoMember(3)]
     property ProtoPolarity IonizationPolarity;
 
+    virtual ~MSeMassSpectrum() { if (driftTimeArray != nullptr) delete driftTimeArray; driftTimeArray = nullptr; }
+    !MSeMassSpectrum() { delete this; }
+
     property System::Collections::Generic::List<int>^ ScanIndexes;
-};
-
-
-template <typename T>
-struct ArrayLessThanByIndex
-{
-    ArrayLessThanByIndex(const std::vector<T>& a) : _a(a) {}
-    bool operator() (size_t lhs, size_t rhs) const { return _a[lhs] < _a[rhs]; }
-
-    private:
-    const std::vector<T>& _a;
+    std::vector<double>* driftTimeArray;
 };
 
 
@@ -202,6 +197,7 @@ ref class ParallelDownloadQueue
     System::String^ _accessToken;
     HttpClient^ _httpClient;
     int _numSpectra;
+    cli::array<double>^ _binToDriftTime; // drift time for each of the 200 bins (0-base indexed) 
     IMemoryCache<int, MSeMassSpectrum^>^ _cache;
     IDictionary<int, Task^>^ _tasksByIndex;
     System::Threading::CancellationTokenSource^ _cancelTokenSource;
@@ -217,13 +213,14 @@ ref class ParallelDownloadQueue
     ConcurrentQueue<HttpClient^>^ _httpClients;
 
     public:
-    ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, IMemoryCache<int, MSeMassSpectrum^>^ cache, IDictionary<int, Task^>^ tasksByIndex, int chunkSize, int concurrentTasks)
+    ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, const vector<double>& binToDriftTime, IMemoryCache<int, MSeMassSpectrum^>^ cache, IDictionary<int, Task^>^ tasksByIndex, int chunkSize, int concurrentTasks)
         : _chunkSize(chunkSize), _concurrentTasks(concurrentTasks)
     {
         _sampleResultUrl = url;
         _accessToken = token;
         _httpClient = client;
         _numSpectra = numSpectra;
+        _binToDriftTime = ToSystemArray<double>(binToDriftTime, toDouble);
         _cache = cache;
         _tasksByIndex = tasksByIndex;
         _httpClients = gcnew System::Collections::Concurrent::ConcurrentQueue<HttpClient^>();
@@ -518,6 +515,7 @@ ref class ParallelDownloadQueue
         {
             spectrum->mzArray = new vector<double>();
             spectrum->intensityArray = new vector<double>();
+            spectrum->driftTimeArray = nullptr;
             if (!_cache->Contains(taskIndex + spectrumIndex))
             {
                 //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
@@ -537,6 +535,7 @@ ref class ParallelDownloadQueue
 
         spectrum->mzArray = new vector<double>();
         spectrum->intensityArray = new vector<double>();
+        spectrum->driftTimeArray = nullptr;
         auto& mzArray = *spectrum->mzArray;
         auto& intensityArray = *spectrum->intensityArray;
 
@@ -545,59 +544,22 @@ ref class ParallelDownloadQueue
 
         if (spectrum->ScanSize->Length > 1)
         {
+            if (spectrum->ScanSize->Length != 200)
+                throw gcnew Exception("assumed ion-mobility spectrum but ScanSize.Length != 200");
+
+            spectrum->driftTimeArray = new vector<double>();
+            auto& driftTimeArray = *spectrum->driftTimeArray;
+            driftTimeArray.reserve(mzArray.size());
+
             // calculate cumulative scan indexes
             spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
             spectrum->ScanIndexes->Add(0);
-            for (int j = 1; j < spectrum->ScanSize->Length; ++j)
-                spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
-
-            // for IMS data, we must sort all the points from the drift scans
-            std::vector<size_t> p(mzArray.size());
-            std::iota(p.begin(), p.end(), 0);
-            std::sort(p.begin(), p.end(), ArrayLessThanByIndex<double>(mzArray));
-
-            std::vector<bool> done(mzArray.size());
-            for (size_t i = 0; i < mzArray.size(); ++i)
+            for (int j = 0; j < spectrum->ScanSize->Length; ++j)
             {
-                if (done[i])
-                    continue;
-
-                done[i] = true;
-                size_t prev_j = i;
-                size_t j = p[i];
-                while (i != j)
-                {
-                    std::swap(mzArray[prev_j], mzArray[j]);
-                    std::swap(intensityArray[prev_j], intensityArray[j]);
-                    done[j] = true;
-                    prev_j = j;
-                    j = p[j];
-                }
+                if (j > 0) spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
+                for (int k = 0; k < spectrum->ScanSize[j]; ++k)
+                    driftTimeArray.push_back(_binToDriftTime[j]);
             }
-
-            // and then combine equal points
-            vector<double>& a = mzArray, &b = intensityArray;
-
-            size_t i = 1, j = 0;
-            while (i < a.size())
-            {
-                while (a[i] == a[j] && i < a.size())
-                {
-                    b[j] += b[i];
-                    ++i;
-                }
-
-                if (i == a.size())
-                    break;
-
-                ++j;
-                a[j] = a[i];
-                b[j] = b[i];
-                ++i;
-            }
-
-            a.resize(j + 1);
-            b.resize(j + 1);
         }
         return spectrum;
     }
@@ -616,20 +578,14 @@ class UnifiData::Impl
             else
                 temp = gcnew Uri(ToSystemString("https://" + sampleResultUrl));
 
-            auto queryVars = System::Web::HttpUtility::ParseQueryString(temp->Query);
-            if (queryVars->Count > 0)
-            {
-                _identityServerUrl = gcnew Uri(queryVars[L"identity"]);
-                _clientScope = queryVars[L"scope"];
-                _clientSecret = queryVars[L"secret"];
-            }
-            else
-            {
+            _apiVersion = temp->Port == 50034 ? 3 : 4;
+            String^ defaultIdentityServer = System::String::Format("{0}://{1}@{2}:{3}", temp->Scheme, temp->UserInfo, temp->Host, _apiVersion == 3 ? 50333 : 48333);
+            String^ defaultClientScope = (_apiVersion == 3 ? L"unifi" : L"webapi");
 
-                _identityServerUrl = gcnew Uri(System::String::Format("{0}://{1}@{2}:50333", temp->Scheme, temp->UserInfo, temp->Host));
-                _clientScope = L"unifi";
-                _clientSecret = L"secret";
-            }
+            auto queryVars = System::Web::HttpUtility::ParseQueryString(temp->Query);
+            _identityServerUrl = gcnew Uri(queryVars[L"identity"] == nullptr ? defaultIdentityServer : queryVars[L"identity"]);
+            _clientScope = queryVars[L"scope"] == nullptr ? defaultClientScope : queryVars[L"scope"];
+            _clientSecret = queryVars[L"secret"] == nullptr ? L"secret" : queryVars[L"secret"];
             _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
             auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
@@ -665,7 +621,7 @@ class UnifiData::Impl
             _cache->SetPolicy(LruEvictionPolicy<int, MSeMassSpectrum^>::typeid->GetGenericTypeDefinition());
 
             _tasksByIndex = gcnew ConcurrentDictionary<int, Task^>();
-            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead);
+            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _binToDriftTime, _cache, _tasksByIndex, _chunkSize, _chunkReadahead);
         }
         CATCH_AND_FORWARD_EX(sampleResultUrl)
     }
@@ -673,7 +629,7 @@ class UnifiData::Impl
     friend class UnifiData;
 
     private:
-    System::String^ tokenEndpoint() { return System::Uri(_identityServerUrl, L"/identity/connect/token").ToString(); }
+    System::String^ tokenEndpoint() { return System::Uri(_identityServerUrl, _apiVersion == 3 ? L"/identity/connect/token" : L"/connect/token").ToString(); }
 
     /// returns JSON describing the sampleResult, for example:
     //{
@@ -900,6 +856,7 @@ class UnifiData::Impl
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
 
+    int _apiVersion;
     bool _combineIonMobilitySpectra; // do not treat drift bins as separate spectra
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
@@ -1051,9 +1008,10 @@ class UnifiData::Impl
             auto o = JObject::Parse(json);
             for each (auto spectrumInfo in o->SelectToken("$.value")->Children())
             {
-                // skip non-MS functions
+                // skip non-MS and non-retention-data functions
                 auto detectorType = spectrumInfo->SelectToken("$.detectorType")->ToString();
-                if (detectorType != "MS")
+                bool isRetentionData = (bool)spectrumInfo->SelectToken("$.isRetentionData");
+                if (detectorType != "MS" || !isRetentionData)
                     continue;
 
                 _functionInfo.emplace_back(_functionInfo.size());
@@ -1062,7 +1020,7 @@ class UnifiData::Impl
                 auto id = spectrumInfo->SelectToken("$.id")->ToString();
                 fi.id = ToStdString(id);
                 fi.isCentroidData = (bool)spectrumInfo->SelectToken("$.isCentroidData");
-                fi.isRetentionData = (bool)spectrumInfo->SelectToken("$.isRetentionData");
+                fi.isRetentionData = isRetentionData;
                 fi.isIonMobilityData = (bool)spectrumInfo->SelectToken("$.isIonMobilityData");
                 fi.hasCCSCalibration = (bool)spectrumInfo->SelectToken("$.hasCCSCalibration");
                 fi.lowMass = Convert::ToDouble(spectrumInfo->SelectToken("$.analyticalTechnique.lowMass")->ToString());
@@ -1091,14 +1049,14 @@ class UnifiData::Impl
                     json = response->Content->ReadAsStringAsync()->Result;
                     auto o2 = JObject::Parse(json); // there should only be one spectrum but it's in a JSON array
                     for each (auto spectrum in o2->SelectToken("$.value")->Children())
-                        fi.numSpectra = (int)spectrum->SelectToken("$.totalNumberOfSpectra");
+                        fi.numSpectra = isRetentionData ? (int)spectrum->SelectToken("$.totalNumberOfSpectra") : 1;
 
                     //if (fi.isIonMobilityData)
                     //    fi.numSpectra *= 200;
                 }
                 catch (Exception^ e)
                 {
-                    throw std::runtime_error("error getting data for spectrumInfo " + fi.id + ": " + ToStdString(e->ToString()->Split(L'\n')[0]));
+                    throw gcnew Exception("error getting data for spectrumInfo " + id + ": " + e->ToString()->Split(L'\n')[0]);
                 }
             }
 
@@ -1109,7 +1067,7 @@ class UnifiData::Impl
                     case EnergyLevel::Unknown: return 2;
                     case EnergyLevel::Low: return 0;
                     case EnergyLevel::High: return 1;
-                    default: throw std::runtime_error("unsupported energy level");
+                    default: throw gcnew Exception("unsupported energy level");
                 }
             };
 
@@ -1141,34 +1099,34 @@ class UnifiData::Impl
         if (!hasMSeData)
             throw std::runtime_error("only MSe and HD-MSe data is supported at this time");
 
-        if (!_combineIonMobilitySpectra && _hasAnyIonMobilityData)
+        if (!_hasAnyIonMobilityData)
+            return;
+
+        try
         {
-            try
-            {
-                auto postContent = gcnew System::Net::Http::StringContent("{\"bins\": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,"
-                                                                          "50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,"
-                                                                          "100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,"
-                                                                          "151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200]}");
-                postContent->Headers->ContentType->MediaType = "application/json";
-                auto response = _httpClient->PostAsync(binsToDriftTimesEndPoint(), postContent)->Result;
-                if (!response->IsSuccessStatusCode)
-                    throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + binsToDriftTimesEndPoint());
+            auto postContent = gcnew System::Net::Http::StringContent("{\"bins\": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,"
+                                                                        "50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,"
+                                                                        "100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,"
+                                                                        "151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200]}");
+            postContent->Headers->ContentType->MediaType = "application/json";
+            auto response = _httpClient->PostAsync(binsToDriftTimesEndPoint(), postContent)->Result;
+            if (!response->IsSuccessStatusCode)
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + binsToDriftTimesEndPoint());
 
-                json = response->Content->ReadAsStringAsync()->Result; // {"value": [0.071,0.142,0.213,...]}
+            json = response->Content->ReadAsStringAsync()->Result; // {"value": [0.071,0.142,0.213,...]}
 
-                _binToDriftTime.reserve(200);
+            _binToDriftTime.reserve(200);
 
-                auto o = JObject::Parse(json);
-                for each (auto value in o->SelectToken("$.value")->Children())
-                    _binToDriftTime.push_back((double) value);
+            auto o = JObject::Parse(json);
+            for each (auto value in o->SelectToken("$.value")->Children())
+                _binToDriftTime.push_back((double) value);
 
-                if (_binToDriftTime.size() != 200)
-                    throw gcnew Exception("convertbintodrifttime result did not contain 200 values as expected");
-            }
-            catch (Exception^ e)
-            {
-                throw std::runtime_error("error getting function spectrumInfos: " + ToStdString(e->ToString()->Split(L'\n')[0]));
-            }
+            if (_binToDriftTime.size() != 200)
+                throw gcnew Exception("convertbintodrifttime result did not contain 200 values as expected");
+        }
+        catch (Exception^ e)
+        {
+            throw std::runtime_error("error getting drift time values: " + ToStdString(e->ToString()->Split(L'\n')[0]));
         }
     }
 
@@ -1204,6 +1162,8 @@ class UnifiData::Impl
                 //ToStdVector(spectrum->Intensities, result.intensityArray);
                 result.mzArray = *spectrum->mzArray;
                 result.intensityArray = *spectrum->intensityArray;
+                if (spectrum->driftTimeArray)
+                    result.driftTimeArray = *spectrum->driftTimeArray;
             }
         }
         else

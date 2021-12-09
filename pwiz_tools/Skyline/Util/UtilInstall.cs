@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Ionic.Zip;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 
@@ -112,6 +115,137 @@ namespace pwiz.Skyline.Util
         }
 
         #endregion
+    }
+
+    public struct FileDownloadInfo
+    {
+        /// <summary>
+        /// The name of the file after downloading. For ZIP files (Unzip is true), the file will be deleted after unzipping.
+        /// </summary>
+        public string Filename;
+
+        /// <summary>
+        /// The path to download the file to, and to unzip if Unzip is true.
+        /// </summary>
+        public string InstallPath;
+
+        /// <summary>
+        /// The online location of the file to download.
+        /// </summary>
+        public Uri DownloadUrl;
+
+        /// <summary>
+        /// If true, existing files will be overwritten (including during the unzip step).
+        /// </summary>
+        public bool OverwriteExisting;
+
+        /// <summary>
+        /// If true, the file must be a ZIP file and it will unzipped into InstallPath after downloading.
+        /// </summary>
+        public bool Unzip;
+    }
+
+    public static class JavaDownloadInfo
+    {
+        static string JRE_FILENAME = @"jre-17.0.1";
+
+        /// <summary>
+        /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
+        /// </summary>
+        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
+        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
+
+        // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
+        public static FileDownloadInfo[] FilesToDownload = { new FileDownloadInfo { Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true } };
+    }
+
+    public static class SimpleFileDownloader
+    {
+        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror";
+
+        public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
+        {
+            return Directory.Exists(requiredFile.InstallPath);
+        }
+
+        public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
+        {
+            return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
+        }
+
+        public static bool DownloadRequiredFiles(IEnumerable<FileDownloadInfo> filesToDownload, ILongWaitBroker waitBroker)
+        {
+            var filesNotAlreadyDownloaded = FilesNotAlreadyDownloaded(filesToDownload).ToList();
+            using (var client = new MultiFileAsynchronousDownloadClient(waitBroker, filesNotAlreadyDownloaded.Count))
+            {
+                Stopwatch downloadTimer = null;
+                Stopwatch unzipTimer = null;
+                if (Program.FunctionalTest)
+                {
+                    downloadTimer = new Stopwatch();
+                    unzipTimer = new Stopwatch();
+                }
+
+                foreach (var requiredFile in filesNotAlreadyDownloaded)
+                {
+                    // for functional testing, replace the hostname with the Skyline tool testing mirror path on AWS
+                    var downloadUrl = requiredFile.DownloadUrl;
+                    if (Program.FunctionalTest && !Program.UseOriginalURLs)
+                        downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
+
+                    if (downloadTimer != null)
+                    {
+                        Console.Write($@"# Downloading test data file {downloadUrl}...");
+                        downloadTimer.Start();
+                    }
+
+                    string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+                    using (var fileSaver = new FileSaver(downloadFilename))
+                    {
+                        if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
+                            throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
+                        fileSaver.Commit();
+                    }
+
+                    if (downloadTimer != null)
+                    {
+                        downloadTimer.Stop();
+                        Console.WriteLine(@" done.");
+                    }
+
+                    if (!requiredFile.Unzip)
+                        continue;
+
+                    if (unzipTimer != null)
+                    {
+                        Console.Write($@"# Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        unzipTimer.Start();
+                    }
+
+                    Directory.CreateDirectory(requiredFile.InstallPath);
+                    using (var zipFile = new ZipFile(downloadFilename))
+                    {
+                        zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                    }
+
+                    if (unzipTimer != null)
+                    {
+                        unzipTimer.Stop();
+                        Console.WriteLine(@" done.");
+                    }
+
+                    FileEx.SafeDelete(downloadFilename);
+                }
+
+                if (downloadTimer != null)
+                {
+                    Console.WriteLine(@"Total download time {0:F2} sec ", downloadTimer.ElapsedMilliseconds / 1000.0);
+                    Console.WriteLine(@"Total unzip time {0:F2} sec ", unzipTimer.ElapsedMilliseconds / 1000.0);
+                }
+            }
+            return true;
+        }
     }
 
     // The test Asynchronous Download Client allows us to simulate downloading files from the internet

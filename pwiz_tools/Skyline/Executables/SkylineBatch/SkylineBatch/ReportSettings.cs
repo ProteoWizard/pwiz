@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -148,36 +149,55 @@ namespace SkylineBatch
             return new ReportSettings(newReports);
         }
 
+        public ReportSettings UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newReports = new List<ReportInfo>();
+            foreach (var report in Reports)
+                newReports.Add(report.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources));
+            return new ReportSettings(newReports);
+        }
+
+        public ReportSettings ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newReports = new List<ReportInfo>();
+            replaced = false;
+            foreach (var report in Reports)
+            {
+                newReports.Add(report.ReplacedRemoteFileSource(existingSource, newSource, out bool reportReplaced));
+                replaced = replaced || reportReplaced;
+            }
+            return new ReportSettings(newReports);
+        }
+
         public static ReportSettings ReadXml(XmlReader reader)
         {
-            var reports = new List<ReportInfo>();
-            while (reader.Read())
-            {
-                if (reader.IsElement(ReportInfo.XML_EL))
-                {
-                    reports.Add(ReportInfo.ReadXml(reader));
-                }
-                if (reader.IsElement(SkylineSettings.XML_EL))
-                {
-                    break;
-                }
-            }
-            return new ReportSettings(reports);
+            return ReadXmlWithFunction(reader, ReportInfo.ReadXml);
+        }
+
+        public static ReportSettings ReadXmlVersion_21_1(XmlReader reader)
+        {
+            return ReadXmlWithFunction(reader, ReportInfo.ReadXmlVersion_21_1);
         }
 
         public static ReportSettings ReadXmlVersion_20_2(XmlReader reader)
         {
+            return ReadXmlWithFunction(reader, ReportInfo.ReadXmlVersion_20_2);
+        }
+
+        private static ReportSettings ReadXmlWithFunction(XmlReader reader, Func<XmlReader, ReportInfo> ReadXmlFunction)
+        {
             var reports = new List<ReportInfo>();
             while (reader.Read())
             {
                 if (reader.IsElement(ReportInfo.XML_EL))
                 {
-                    reports.Add(ReportInfo.ReadXmlVersion_20_2(reader));
+                    reports.Add(ReadXmlFunction(reader));
                 }
                 if (reader.IsElement(SkylineSettings.XML_EL))
                 {
                     break;
-                } 
+                }
             }
             return new ReportSettings(reports);
         }
@@ -423,6 +443,29 @@ namespace SkylineBatch
                 serverFiles.AddServer(server);
         }
 
+        public ReportInfo UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newRScriptServers = new Dictionary<string, PanoramaFile>();
+            foreach (var rScript in RScriptServers.Keys)
+                newRScriptServers.Add(rScript, RScriptServers[rScript].UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources));
+            return new ReportInfo(Name, CultureSpecific, ReportPath, RScripts.ToList(), newRScriptServers, UseRefineFile);
+        }
+
+        public ReportInfo ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newRScriptServers = new Dictionary<string, PanoramaFile>();
+            replaced = false;
+            foreach (var rScript in RScriptServers.Keys)
+            {
+                newRScriptServers.Add(rScript,
+                    RScriptServers[rScript]
+                        .ReplacedRemoteFileSource(existingSource, newSource, out bool scriptReplaced));
+                replaced = replaced || scriptReplaced;
+            }
+            return new ReportInfo(Name, CultureSpecific, ReportPath, RScripts.ToList(), newRScriptServers, UseRefineFile);
+        }
+
         public static ReportInfo ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(XML_TAGS.name);
@@ -445,6 +488,30 @@ namespace SkylineBatch
             }
             
             return new ReportInfo(name, cultureSpecific, reportPath, rScripts, rScriptServers, resultsFile?? false);
+        }
+
+        public static ReportInfo ReadXmlVersion_21_1(XmlReader reader)
+        {
+            var name = reader.GetAttribute(XML_TAGS.name);
+            var cultureSpecific = reader.GetBoolAttribute(XML_TAGS.culture_specific);
+            var reportPath = reader.GetAttribute(XML_TAGS.path);
+            var resultsFile = reader.GetNullableBoolAttribute(XML_TAGS.use_refined_file);
+            var rScripts = new List<Tuple<string, string>>();
+            var rScriptServers = new Dictionary<string, PanoramaFile>();
+            if (reader.ReadToDescendant(XMLElements.R_SCRIPT))
+            {
+                do
+                {
+                    var path = reader.GetAttribute(XML_TAGS.path);
+                    var version = reader.GetAttribute(XML_TAGS.version);
+                    rScripts.Add(new Tuple<string, string>(path, version));
+                    var remoteFile = PanoramaFile.ReadXmlVersion_21_1(reader, path);
+                    if (remoteFile != null)
+                        rScriptServers.Add(path, remoteFile);
+                } while (reader.ReadToNextSibling(XMLElements.R_SCRIPT));
+            }
+
+            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, rScriptServers, resultsFile ?? false);
         }
 
         public static ReportInfo ReadXmlVersion_20_2(XmlReader reader)

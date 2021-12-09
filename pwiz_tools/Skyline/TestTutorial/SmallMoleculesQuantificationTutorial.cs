@@ -32,7 +32,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -91,43 +90,31 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
-
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-
-                RunUI(() =>
-                {
-                    pasteDlg.IsMolecule = true;
-                    pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 4);
-
-
-                var columnsOrdered = new[]
-                {
-                    // Prepare transition list insert window to match tutorial
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
-                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.coneVoltage,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                }.ToList();
-                RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 6);
-
+                
+                var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 var text = "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\r\nDrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\r\n";
                 text = text.Replace(',', TextUtil.CsvSeparator).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                SetClipboardText(text);
-                RunUI(pasteDlg.PasteTransitions);
-                RunUI(pasteDlg.ValidateCells);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = text);
 
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
+                    var comboBoxes = col4Dlg.ComboBoxes;
+                    comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                    comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                    comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                    comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                    comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
+                    comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                    comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                });
+
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dialog with ordered columns", 6);
+
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
+
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 1, 1, 2, 2);

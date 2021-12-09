@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Prosit
             var standardSpectra = new List<SpectrumMzInfo>();
 
             // First get predictions for iRT standards specified by the user which may or may not be in the document
-            if (IrtStandard != null && !ReferenceEquals(IrtStandard, IrtStandard.EMPTY) && !ReferenceEquals(IrtStandard, IrtStandard.AUTO))
+            if (IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
             {
                 var standardPeptidesToAdd = ReadStandardPeptides(IrtStandard);
                 if (standardPeptidesToAdd != null && standardPeptidesToAdd.Count > 0)

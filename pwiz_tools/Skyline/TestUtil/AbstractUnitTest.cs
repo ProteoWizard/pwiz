@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestUtil
                         timer.Start();
                         webClient.DownloadFile(zipURL.Split('\\')[0],
                             fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
-                        Console.Write(@" done. Download time (hh:mm:ss) {0} ", timer.Elapsed);
+                        Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
                     }
                     return zipURL;

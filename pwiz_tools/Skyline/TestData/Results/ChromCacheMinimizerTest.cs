@@ -150,11 +150,11 @@ namespace pwiz.SkylineTestData.Results
                         ChromatogramGroupInfo[] chromGroups2;
 
                         docMinimized1Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet1Min,
-                            pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroups1);
+                            pair.NodePep, pair.NodeGroup, tolerance, out chromGroups1);
                         docMinimized2Min.Settings.MeasuredResults.TryLoadChromatogram(chromSet2Min,
-                            pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroups2);
+                            pair.NodePep, pair.NodeGroup, tolerance, out chromGroups2);
                         docResults.Settings.MeasuredResults.TryLoadChromatogram(chromSetOriginal,
-                            pair.NodePep, pair.NodeGroup, tolerance, true, out chromGroupsOriginal);
+                            pair.NodePep, pair.NodeGroup, tolerance, out chromGroupsOriginal);
                         Assert.AreEqual(chromGroups1.Length, chromGroups2.Length);
                         Assert.AreEqual(chromGroups1.Length, chromGroupsOriginal.Length);
                         for (int iChromGroup = 0; iChromGroup < chromGroups1.Length; iChromGroup++)

@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Alerts
 
         private void btnClipboard_Click(object sender, EventArgs e)
         {
-            ClipboardEx.SetDataObject(MessageBody, true);
+            ClipboardEx.SetText(MessageBody);
         }
 
         private void btnOK_Click(object sender, EventArgs e)

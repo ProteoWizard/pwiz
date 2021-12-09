@@ -434,6 +434,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Settings.Default.Reset();
                 Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
+                Settings.Default.Save();
             }
         }
 

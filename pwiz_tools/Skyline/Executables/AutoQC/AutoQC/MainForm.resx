@@ -352,7 +352,7 @@
     <value>listViewConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>AutoQC.MyListView, AutoQC, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>AutoQC.MyListView, AutoQC, Version=21.1.0.158, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>

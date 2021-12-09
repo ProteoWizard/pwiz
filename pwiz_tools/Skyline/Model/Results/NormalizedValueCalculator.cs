@@ -273,6 +273,26 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
+        /// <summary>
+        /// Returns the ratio that should be displayed by default in the Targets tree
+        /// if the user has not yet selected a ratio to display.
+        /// </summary>
+        public NormalizationMethod GetFirstRatioNormalizationMethod()
+        {
+            var firstInternalStandardType = RatioInternalStandardTypes.FirstOrDefault();
+            if (firstInternalStandardType != null)
+            {
+                return new NormalizationMethod.RatioToLabel(firstInternalStandardType);
+            }
+
+            if (Document.Settings.HasGlobalStandardArea)
+            {
+                return NormalizationMethod.GLOBAL_STANDARDS;
+            }
+
+            return null;
+        }
+
         public IDictionary<PeptideDocNode.TransitionKey, TransitionDocNode> GetTransitionMap(
             TransitionGroupDocNode transitionGroupDocNode)
         {
@@ -408,8 +428,16 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
+        public NormalizationData GetNormalizationData()
+        {
+            return _normalizationData.Value;
+        }
+
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
         {
+            if(peptideDocNode == null)
+                return NormalizationMethod.NONE;
+            
             if (normalizeOption.NormalizationMethod != null)
             {
                 return normalizeOption.NormalizationMethod;

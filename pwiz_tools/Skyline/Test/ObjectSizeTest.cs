@@ -48,6 +48,12 @@ namespace pwiz.SkylineTest
             DumpTypeAndFields(chromDataType);
         }
 
+        [TestMethod]
+        public void TestTransitionChromInfoSize()
+        {
+            DumpTypeAndFields(typeof(TransitionChromInfo));
+        }
+
         private void DumpTypeAndFields(Type type)
         {
             StringWriter stringWriter = new StringWriter();

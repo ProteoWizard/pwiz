@@ -268,10 +268,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        void GraphSummary.IController.OnNormalizeOptionChanged()
-        {
-        }
-
         void GraphSummary.IController.OnResultsIndexChanged()
         {
             if (_controllerInterface.GraphSummary.GraphPanes.OfType<DetectionsByReplicatePane>().Any())
@@ -299,9 +295,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         };
                     break;
             }
-
-            if (!ReferenceEquals(_controllerInterface.GraphSummary.GraphPanes.FirstOrDefault(), pane))
-                (pane as IDisposable)?.Dispose();
         }
     }
 }

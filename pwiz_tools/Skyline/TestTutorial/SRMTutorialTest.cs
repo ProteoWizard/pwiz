@@ -337,16 +337,28 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Edit Collision Energy Equation Window", 2);
             OkDialog(editCollisionEnergy, editCollisionEnergy.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
-
+            
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
-            var insertTransitionDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() => insertTransitionDlg.IsMolecule = false); // Make sure it's ready to accept peptides, not small molecules
-            RunUI(insertTransitionDlg.PasteTransitions);
-            OkDialog(insertTransitionDlg, insertTransitionDlg.OkDialog);
+
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            string impliedLabeled = GetExcelFileText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
+                false);
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
+            
+            RunUI(() => {
+                var comboBoxes = col4Dlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                col4Dlg.checkBoxAssociateProteins.Checked = true;
+            });
+
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 30, 143);
 
+            
             var exportDlg3 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             RunUI(() =>
             {
@@ -462,5 +474,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
             WaitForClosedForm<AllChromatogramsGraph>();
         }
+        
     }
 }

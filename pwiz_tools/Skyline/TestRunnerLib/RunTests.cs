@@ -108,6 +108,7 @@ namespace TestRunnerLib
             bool buildMode,
             bool offscreen,
             bool internet,
+            bool originalURLs,
             bool showStatus,
             bool perftests,
             bool runsmallmoleculeversions,
@@ -136,6 +137,7 @@ namespace TestRunnerLib
             Skyline.Set("FunctionalTest", true);
             Skyline.Set("SkylineOffscreen", !demoMode && offscreen);
             Skyline.Set("DemoMode", demoMode);
+            Skyline.Set("UseOriginalURLs", originalURLs);
             Skyline.Set("NoVendorReaders", !useVendorReaders);
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
@@ -827,7 +829,7 @@ namespace TestRunnerLib
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
-            var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
+            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
             var types = assembly.GetTypes();
 
             foreach (var type in types)

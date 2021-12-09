@@ -64,12 +64,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private TestFilesDir _testFilesDir;
         private int _loopcount;
 
-        /*[TestInitialize]
-        public void Init()
-        {
-            RunPerfTests = true;
-        }*/
-
         /// <summary>
         /// compare various raw files and mz5 equivalents, 
         /// most with and without raw data centroiding with vendor algorithms.

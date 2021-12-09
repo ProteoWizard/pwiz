@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -65,29 +67,40 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(6, GetLossCount(docPaste1, 1));
 
             string insertListText = I18n(TRANSITIONS_MODLOSS_CLIPBOARD_TEXT);
+            
+            var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = insertListText);
 
-            SetClipboardTextUI(insertListText);
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, insertTransDlg =>
-                {
-                    insertTransDlg.IsMolecule = false; // Make sure it's ready to accept peptides rather than small molecules
-                    insertTransDlg.PasteTransitions();
-                    insertTransDlg.OkDialog();
-                });
+            RunUI(() => {
+                var comboBoxes = windowDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+            });
+            OkDialog(windowDlg, windowDlg.OkDialog);
+
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
-            // Nothing should have changed
-            RunUI(() => Assert.AreSame(docPaste1, SkylineWindow.DocumentUI));
-
             // Revert to the original empty document
+            RunUI(SkylineWindow.Undo);
             RunUI(SkylineWindow.Undo);
 
             Assert.AreSame(document, SkylineWindow.Document);
 
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, insertTransDlg =>
-            {
-                insertTransDlg.PasteTransitions();
-                insertTransDlg.OkDialog();
+            var showDialog1 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
+            var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.textBox1.Text = insertListText);
+
+            RunUI(() => {
+                var comboBoxes = windowDlg1.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
+            OkDialog(windowDlg1, windowDlg1.OkDialog);
 
             var docInsert1 = WaitForDocumentChange(document);
             AssertEx.IsDocumentState(docInsert1, null, 3, 4, 12); // revision # is hard to predict with background loaders running
@@ -98,28 +111,38 @@ namespace pwiz.SkylineTestFunctional
             string insertPart2 = I18n(TRANSITIONS_PREC_PART2_CLIPBOARD_TEXT);
             string insertSep = I18n(TRANSITIONS_PREC_SEP_CLIPBOARD_TEXT);
 
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, insertTransDlg =>
-            {
-                // Check error and grid cell selection for a bad product m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 757.420279, 888.8888, 8, 2);
-                // Non-numeric product m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 908.447222, "x", Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_, 1, 2);
-                // Check error and grid cell selection for a bad precursor m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 648.352161, 777.7777, 6, 1);
-                // Non-numeric precursor m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 762.033412, "x", Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number_, 0, 1);
-                // Empty peptide
-                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "", Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank, 9, 0);
-                // Bad peptide
-                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters, 9, 0);
-                // No mods explain all transitions
-                VerifyTransitionListError(insertTransDlg, insertPart1 + insertPart2, null, null, Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications, 3, 0, 2);
-                // Finally a working set of transitions
-                SetClipboardText(insertPart1 + insertSep + insertPart2);
-                insertTransDlg.PasteTransitions();
-                insertTransDlg.OkDialog();
+            // Check error and grid cell selection for a bad product m/z
+            VerifyTransitionListError(insertListText, 757.420279, 888.8888, 8, 2);
+            // Non-numeric product m/z
+            VerifyTransitionListError(insertListText, 908.447222, "x", 
+                string.Format(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion, 0, @"ELKEQQDSPGNKDFLQSLK"),
+                1, 2);
+            // Check error and grid cell selection for a bad precursor m/z
+            VerifyTransitionListError(insertListText, 648.352161, 777.7777, 6, 1);
+            // Non-numeric precursor m/z
+            VerifyTransitionListError(insertListText, 762.033412, "x",
+                string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_, 0, 28.5462, 28.5462, "ELKEQQDSPGNKDFLQSLK"),
+                0, 1);
+            // Empty peptide
+            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "", string.Format(Resources.MassListRowReader_NextRow_Invalid_peptide_sequence__0__found, ""), 9, 0);
+            // Bad peptide
+            VerifyTransitionListError(insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", string.Format(Resources.MassListRowReader_NextRow_Invalid_peptide_sequence__0__found, "BBBbBBBR"), 9, 0);
+            // No mods explain all transitions
+            VerifyTransitionListError(insertPart1 + insertPart2, null, null,
+                String.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications, "CDSSPDSAEDVR", 709.2505),
+                3, 0, 2);
+            // Finally a working set of transitions
+            SetClipboardText(insertPart1 + insertSep + insertPart2);
+            var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = insertPart1 + insertSep + insertPart2);
+            RunUI(() => {
+                var comboBoxes = windowDlg2.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
-
+            OkDialog(windowDlg2, windowDlg2.OkDialog);
             var docInsert2 = WaitForDocumentChange(docInsert1);
             AssertEx.IsDocumentState(docInsert2, null, 4, 7, 21); // revision # is hard to predict with background loaders running
             Assert.AreEqual(7, GetVariableModCount(docInsert2));
@@ -141,26 +164,45 @@ namespace pwiz.SkylineTestFunctional
             return text.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
         }
 
-        private static void VerifyTransitionListError(PasteDlg insertTransDlg, string insertListText,
+        private static void VerifyTransitionListError(string insertListText,
             object oldValue, object newValue, int row, int col)
         {
-            VerifyTransitionListError(insertTransDlg, insertListText, oldValue, newValue, newValue, row, col);
+            VerifyTransitionListError(insertListText, oldValue, newValue, newValue, row, col);
         }
 
-        private static void VerifyTransitionListError(PasteDlg insertTransDlg, string insertListText,
+        private static void VerifyTransitionListError(string insertListText,
             object oldValue, object newValue, object containsValue, int row, int col, int replacements = 0)
         {
             string pasteText = oldValue != null && newValue != null ?
                 insertListText.Replace(oldValue.ToString(), newValue.ToString()):
                 insertListText;
-            SetClipboardText(pasteText);
-            insertTransDlg.PasteTransitions();
-            insertTransDlg.OkDialog();
-            if (containsValue != null)
-               AssertEx.AreComparableStrings(containsValue.ToString(), insertTransDlg.ErrorText, replacements);
-            Assert.AreEqual(row, insertTransDlg.SelectedGridRow);
-            Assert.AreEqual(col, insertTransDlg.SelectedGridColumn);
-            insertTransDlg.ClearRows();
+            string allErrorText = "";
+            var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
+            RunUI(() => {
+                var comboBoxes = windowDlg.ComboBoxes;
+                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+            });
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
+            RunUI(() =>
+            {
+                foreach (var err in errDlg.ErrorList)
+                {
+                    allErrorText += err.ErrorMessage;
+                }
+                Assert.IsTrue(allErrorText.Contains(containsValue.ToString()),
+                    string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                        containsValue, errDlg.ErrorList));
+                errDlg.Close();
+            });
+            RunUI(windowDlg.CancelDialog);
+            WaitForClosedForm(transitionDlg);
+            // TODO: Do we need to support these checks for columnSelectDlg?
+            //Assert.AreEqual(row, insertTransDlg.SelectedGridRow);
+            //Assert.AreEqual(col, insertTransDlg.SelectedGridColumn);
         }
 
         private const string TRANSITIONS_MODLOSS_CLIPBOARD_TEXT =

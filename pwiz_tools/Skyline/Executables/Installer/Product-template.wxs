@@ -56,6 +56,7 @@
       <ComponentGroupRef Id="Method_AbSciex_TQ_files"/>
       <ComponentGroupRef Id="Method_Agilent_files"/>
       <ComponentGroupRef Id="Method_Bruker_files"/>
+      <ComponentGroupRef Id="Method_Shimadzu_files"/>
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
       <ComponentGroupRef Id="percolator_files"/>
@@ -98,6 +99,7 @@
         </Directory>
         <Directory Id="Method_Agilent_directory" Name="Agilent"/>
         <Directory Id="Method_Bruker_directory" Name="Bruker"/>
+        <Directory Id="Method_Shimadzu_directory" Name="Shimadzu"/>
         <Directory Id="Method_Thermo_directory" Name="Thermo"/>
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
@@ -145,9 +147,6 @@
       </Component>
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
-      </Component>
-      <Component Id="DataReader.dll"> <!-- no longer used by pwiz but required by Shimadzu method export -->
-        <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
       </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
@@ -199,12 +198,6 @@
       </Component>
       <Component Id="MathNet.Numerics.dll">
         <File Source="$(var.Skyline.TargetDir)/MathNet.Numerics.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="MethodConverter.dll">
-        <File Source="$(var.Skyline.TargetDir)/MethodConverter.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="MethodWriter.dll">
-        <File Source="$(var.Skyline.TargetDir)/MethodWriter.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
@@ -596,6 +589,23 @@
       </Component>
       <Component Id="Method_Bruker_BuildBrukerMethod.exe.config">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe.config" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Shimadzu_files" Directory="Method_Shimadzu_directory">
+      <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe.config" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_MethodConverter.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodConverter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_MethodWriter.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodWriter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_Shimadzu.LabSolutions.IO.IoModule.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" Id="Method_Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Thermo_files" Directory="Method_Thermo_directory">

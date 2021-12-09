@@ -995,6 +995,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class BlockedArray<TItem> : IReadOnlyList<TItem>
     {
+        public static readonly BlockedArray<TItem> EMPTY = new BlockedArray<TItem>();
         private readonly List<TItem[]> _blocks;
         private readonly int _itemCount;
 

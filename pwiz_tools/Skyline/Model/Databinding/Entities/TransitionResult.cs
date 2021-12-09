@@ -19,9 +19,11 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -64,7 +66,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? Background { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.BackgroundArea; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? AreaRatio { get { return ChromInfo.Ratio; } }
+        public double? AreaRatio 
+        {
+            get
+            {
+                var firstInternalStandard = DataSchema.NormalizedValueCalculator.RatioInternalStandardTypes.FirstOrDefault();
+                if (firstInternalStandard != null)
+                {
+                    return GetNormalizedArea(new NormalizationMethod.RatioToLabel(firstInternalStandard));
+                }
+                return GetNormalizedArea(NormalizationMethod.GLOBAL_STANDARDS);
+            }
+        }
         [Format(Formats.PEAK_AREA_NORMALIZED, NullValue = TextUtil.EXCEL_NA)]
         public double? AreaNormalized
         {
@@ -171,6 +184,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override bool IsEmpty()
         {
             return ChromInfo.IsEmpty;
+        }
+
+        public double? GetNormalizedArea(NormalizationMethod normalizationMethod)
+        {
+            if (normalizationMethod == null)
+            {
+                return null;
+            }
+
+            return DataSchema.NormalizedValueCalculator.GetTransitionValue(normalizationMethod,
+                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, ChromInfo);
         }
     }
 }

@@ -24,23 +24,30 @@ namespace pwiz.Skyline.Alerts
 {
     public class MessageDlg : AlertDlg
     {
-        public static void Show(IWin32Window parent, string message)
+        public static void Show(IWin32Window parent, string message, bool ignoreModeUI = false)
         {
-            new MessageDlg(message).ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI).ShowAndDispose(parent);
         }
 
-        public static void ShowException(IWin32Window parent, Exception exception)
+        // For displaying a MessageDlg with a specific set of buttons
+        public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons)
         {
-            ShowWithException(parent, exception.Message, exception);
+            return new MessageDlg(message, IgnoreModeUI, buttons).ShowAndDispose(parent);
         }
 
-        public static void ShowWithException(IWin32Window parent, string message, Exception exception)
+        public static void ShowException(IWin32Window parent, Exception exception, bool ignoreModeUI = false)
         {
-            new MessageDlg(message) { Exception = exception }.ShowAndDispose(parent);
+            ShowWithException(parent, exception.Message, exception, ignoreModeUI);
         }
 
-        private MessageDlg(string message) : base(message, MessageBoxButtons.OK)
+        public static void ShowWithException(IWin32Window parent, string message, Exception exception, bool ignoreModeUI = false)
         {
+            new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
+        }
+
+        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK) : base(message, buttons)
+        {
+            GetModeUIHelper().IgnoreModeUI = ignoreModeUI; // May not want any "peptide"->"molecule" translation
         }
     }
 }

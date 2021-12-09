@@ -1202,7 +1202,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
             Assert.AreEqual(widthAtDtMax, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
-            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor3.Replace("100", "0"), DocumentFormat.VERSION_19_1); // Accept 0 resolving power as "no IMS filtering, thanks"
 
             predictor3 = predictor3.Replace("\"resolving_power\"", "\"linear_range\"");
             pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);

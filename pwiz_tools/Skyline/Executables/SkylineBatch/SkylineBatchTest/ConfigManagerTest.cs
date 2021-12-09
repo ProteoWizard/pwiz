@@ -42,13 +42,13 @@ namespace SkylineBatchTest
             try
             {
                 testConfigManager.SelectConfig(0);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 0);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 0);
                 testConfigManager.SelectConfig(1);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 1);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 1);
                 testConfigManager.SelectConfig(2);
-                Assert.IsTrue(testConfigManager.SelectedConfig == 2);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == 2);
                 testConfigManager.DeselectConfig();
-                Assert.IsTrue(testConfigManager.SelectedConfig == -1);
+                Assert.IsTrue(testConfigManager.State.BaseState.Selected == -1);
             }
             catch (Exception e)
             {
@@ -56,11 +56,21 @@ namespace SkylineBatchTest
             }
 
             var selectedNegativeIndex = false;
-           
+            try
+            {
+                testConfigManager.State.BaseState.SelectIndex(-2).ValidateState();
+                selectedNegativeIndex = true;
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Assert.AreEqual("There is no configuration at index: -2", e.Message);
+            }
+            Assert.IsTrue(!selectedNegativeIndex, "Expected index out of range exception");
+
             var selectedIndexAboveRange = false;
             try
             {
-                testConfigManager.SelectConfig(3);
+                testConfigManager.State.BaseState.SelectIndex(3).ValidateState();
                 selectedIndexAboveRange = true;
             }
             catch (IndexOutOfRangeException e)
@@ -106,7 +116,7 @@ namespace SkylineBatchTest
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.UserRemoveSelected();
-            Assert.IsTrue(configManager.SelectedConfig == 0);
+            Assert.IsTrue(configManager.State.BaseState.Selected == 0);
             var oneRemoved = TestUtils.ConfigListFromNames(new List<string> { "two", "three" });
             Assert.IsTrue(configManager.ConfigListEquals(oneRemoved));
 
@@ -183,9 +193,9 @@ namespace SkylineBatchTest
             TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportConfigs(configsXmlPath, SkylineBatch.Properties.Settings.Default.XmlVersion, new [] {0,1,2});
+            configManager.State.BaseState.ExportConfigs(configsXmlPath, SkylineBatch.Properties.Settings.Default.XmlVersion, new [] {0,1,2});
             int i = 0;
-            while (configManager.HasConfigs() && i < 4)
+            while (configManager.State.BaseState.HasConfigs() && i < 4)
             {
                 configManager.SelectConfig(0);
                 configManager.UserRemoveSelected();

@@ -45,9 +45,11 @@
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
+            this.toolStripLabelPeakType = new System.Windows.Forms.ToolStripLabel();
+            this.comboBoxPeakType = new System.Windows.Forms.ToolStripComboBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showIonTypesRanksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showPeakAnnotationsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
@@ -89,9 +91,9 @@
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMove);
             this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
-            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             // 
             // toolBar
             // 
@@ -106,7 +108,9 @@
             this.filterBtn,
             this.lblScanId,
             this.btnIsolationWindow,
-            this.toolStripButtonShowAnnotations});
+            this.toolStripButtonShowAnnotations,
+            this.toolStripLabelPeakType,
+            this.comboBoxPeakType});
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
@@ -206,11 +210,25 @@
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
             this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
             // 
+            // toolStripLabelPeakType
+            // 
+            this.toolStripLabelPeakType.Name = "toolStripLabelPeakType";
+            resources.ApplyResources(this.toolStripLabelPeakType, "toolStripLabelPeakType");
+            // 
+            // comboBoxPeakType
+            // 
+            this.comboBoxPeakType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPeakType.Items.AddRange(new object[] {
+            resources.GetString("comboBoxPeakType.Items"),
+            resources.GetString("comboBoxPeakType.Items1")});
+            this.comboBoxPeakType.Name = "comboBoxPeakType";
+            resources.ApplyResources(this.comboBoxPeakType, "comboBoxPeakType");
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showScanNumberContextMenuItem,
-            this.showIonTypesRanksToolStripMenuItem,
+            this.showPeakAnnotationsContextMenuItem,
             this.toolStripSeparator1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
@@ -223,10 +241,10 @@
             // 
             // showIonTypesRanksToolStripMenuItem
             // 
-            this.showIonTypesRanksToolStripMenuItem.CheckOnClick = true;
-            this.showIonTypesRanksToolStripMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
-            resources.ApplyResources(this.showIonTypesRanksToolStripMenuItem, "showIonTypesRanksToolStripMenuItem");
-            this.showIonTypesRanksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
+            this.showPeakAnnotationsContextMenuItem.CheckOnClick = true;
+            this.showPeakAnnotationsContextMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
+            resources.ApplyResources(this.showPeakAnnotationsContextMenuItem, "showIonTypesRanksToolStripMenuItem");
+            this.showPeakAnnotationsContextMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
             // 
             // toolStripSeparator1
             // 
@@ -270,7 +288,9 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;
-        private System.Windows.Forms.ToolStripMenuItem showIonTypesRanksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showPeakAnnotationsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripLabel toolStripLabelPeakType;
+        private System.Windows.Forms.ToolStripComboBox comboBoxPeakType;
     }
 }

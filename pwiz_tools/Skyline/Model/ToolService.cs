@@ -204,7 +204,6 @@ namespace pwiz.Skyline.Model
                             nodePep,
                             nodeGroup,
                             (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
-                            true,
                             out arrayChromInfo);
                         foreach (var transition in nodeGroup.Transitions)
                         {

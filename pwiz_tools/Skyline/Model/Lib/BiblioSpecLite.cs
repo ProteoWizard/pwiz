@@ -577,8 +577,9 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        private byte[] CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
+            byte[] cacheBytes = null;
             var sm = loader.StreamManager;
             EnsureConnections(sm);
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -707,7 +708,7 @@ namespace pwiz.Skyline.Model.Lib
                             if (loader.IsCanceled)
                             {
                                 loader.UpdateProgress(status.Cancel());
-                                return false;
+                                return null;
                             }
 
                             // If not cancelled, update progress.
@@ -816,102 +817,110 @@ namespace pwiz.Skyline.Model.Lib
 
                 }
 
-                using (FileSaver fs = new FileSaver(CachePath, sm))
-                using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                var outStream = new MemoryStream();
+                foreach (var info in libraryEntries)
                 {
-                    foreach (var info in libraryEntries)
+                    // Write the spectrum header - order must match enum SpectrumCacheHeader
+                    info.Key.Write(outStream);
+                    outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
+
+                    // Optional protein name or molecule list name
+                    if (string.IsNullOrEmpty(info.Protein))
                     {
-                        // Write the spectrum header - order must match enum SpectrumCacheHeader
-                        info.Key.Write(outStream);
-                        outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
-
-                        // Optional protein name or molecule list name
-                        if (string.IsNullOrEmpty(info.Protein))
-                        {
-                            const int len = 0;
-                            outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-                        }
-                        else
-                        {
-                            var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
-                            outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
-                            outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
-                        }
-
-                        if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
-                        {
-                            scoreType = -1;
-                        }
-                        outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
-                        outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
-                        info.RetentionTimesByFileId.Write(outStream);
-                        info.IonMobilitiesByFileId.Write(outStream);
-                        WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
+                        const int len = 0;
+                        outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+                    }
+                    else
+                    {
+                        var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
+                        outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
+                        outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
                     }
 
-                    long sourcePosition = 0;
-                    if (librarySourceFiles.Count > 0)
+                    if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
                     {
-                        // Write all source files
-                        sourcePosition = outStream.Position;
-                        foreach (var librarySourceFile in librarySourceFiles)
-                        {
-                            outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
-                            // Spectra source filename
-                            var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
-                            // ID source (e.g. Mascot search results) filename
-                            var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
-                            outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
-                            outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
-                        }
-                        // Terminate with zero ID and zero name length
-                        var zeroBytes = BitConverter.GetBytes(0);
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        scoreType = -1;
                     }
+                    outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
+                    info.RetentionTimesByFileId.Write(outStream);
+                    info.IonMobilitiesByFileId.Write(outStream);
+                    WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
+                }
 
-                    long scoreTypesPosition = 0;
-                    if (scoreTypesById.Count > 0)
+                long sourcePosition = 0;
+                if (librarySourceFiles.Count > 0)
+                {
+                    // Write all source files
+                    sourcePosition = outStream.Position;
+                    foreach (var librarySourceFile in librarySourceFiles)
                     {
-                        scoreTypesPosition = outStream.Position;
-                        foreach (var score in scoreTypesById.OrderBy(kvp => kvp.Key))
-                        {
-                            outStream.Write(BitConverter.GetBytes(score.Key), 0, sizeof(int));
-                            var scoreTypeNameBytes = Encoding.UTF8.GetBytes(score.Value);
-                            outStream.Write(BitConverter.GetBytes(scoreTypeNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(scoreTypeNameBytes, 0, scoreTypeNameBytes.Length);
-                        }
-                        // Terminate with zero ID and zero name length
-                        var zeroBytes = BitConverter.GetBytes(0);
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
+                        // Spectra source filename
+                        var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
+                        // ID source (e.g. Mascot search results) filename
+                        var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
+                        outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
+                        outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
                     }
+                    // Terminate with zero ID and zero name length
+                    var zeroBytes = BitConverter.GetBytes(0);
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                }
 
-                    byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
-                    outStream.Write(lsidBytes, 0, lsidBytes.Length);
-                    outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
-                    outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
+                long scoreTypesPosition = 0;
+                if (scoreTypesById.Count > 0)
+                {
+                    scoreTypesPosition = outStream.Position;
+                    foreach (var score in scoreTypesById.OrderBy(kvp => kvp.Key))
+                    {
+                        outStream.Write(BitConverter.GetBytes(score.Key), 0, sizeof(int));
+                        var scoreTypeNameBytes = Encoding.UTF8.GetBytes(score.Value);
+                        outStream.Write(BitConverter.GetBytes(scoreTypeNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(scoreTypeNameBytes, 0, scoreTypeNameBytes.Length);
+                    }
+                    // Terminate with zero ID and zero name length
+                    var zeroBytes = BitConverter.GetBytes(0);
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                }
 
-                    sm.Finish(outStream);
-                    fs.Commit();
-                    sm.SetCache(FilePath, CachePath);
+                byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
+                outStream.Write(lsidBytes, 0, lsidBytes.Length);
+                outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
+                outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
+                outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
+                cacheBytes = outStream.ToArray();
+                try
+                {
+                    using (FileSaver fs = new FileSaver(CachePath, sm))
+                    using (Stream cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                    {
+                        cacheFileStream.Write(cacheBytes, 0, cacheBytes.Length);
+                        sm.Finish(cacheFileStream);
+                        fs.Commit();
+                        sm.SetCache(FilePath, CachePath);
+                    }
+                }
+                catch
+                {
+                    // ignore
                 }
             }
 
             loader.UpdateProgress(status.Complete());
-
-            return true;
+            return cacheBytes;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -980,6 +989,7 @@ namespace pwiz.Skyline.Model.Lib
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
                 failureException = null;
+                byte[] cacheBytes = null;
                 if (!cached)
                 {
                     // Building the cache will take 95% of the load time.
@@ -991,8 +1001,11 @@ namespace pwiz.Skyline.Model.Lib
 
                     try
                     {
-                        if (!CreateCache(loader, status, 100 - loadPercent))
+                        cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                        if (cacheBytes == null)
+                        {
                             return false;
+                        }
                     }
                     catch (Exception e)
                     {
@@ -1006,7 +1019,16 @@ namespace pwiz.Skyline.Model.Lib
                 loader.UpdateProgress(status);
 
                 var sm = loader.StreamManager;
-                using (Stream stream = sm.CreateStream(CachePath, FileMode.Open, true))
+                Stream stream;
+                if (cacheBytes != null)
+                {
+                    stream = new MemoryStream(cacheBytes, false);
+                }
+                else
+                {
+                    stream = sm.CreateStream(CachePath, FileMode.Open, true);
+                }
+                using (stream)
                 {
                     // Read library header from the end of the cache
                     int countHeader = (int) LibHeaders.count*sizeof (int);

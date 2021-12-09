@@ -18,12 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
@@ -34,7 +36,6 @@ using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -42,24 +43,6 @@ namespace pwiz.Skyline.Model.Results
     [StructLayout(LayoutKind.Sequential, Pack=4)]
     public struct ChromGroupHeaderInfo4
     {
-        public ChromGroupHeaderInfo4(float precursor, int fileIndex, int numTransitions, int startTransitionIndex,
-                int numPeaks, int startPeakIndex, int maxPeakIndex,
-                int numPoints, int compressedSize, long location)
-            : this()
-        {
-            Precursor = precursor;
-            FileIndex = fileIndex;
-            NumTransitions = numTransitions;
-            StartTransitionIndex = startTransitionIndex;
-            NumPeaks = numPeaks;
-            StartPeakIndex = startPeakIndex;
-            MaxPeakIndex = maxPeakIndex;
-            NumPoints = numPoints;
-            CompressedSize = compressedSize;
-            Align = 0;
-            LocationPoints = location;
-        }
-
         public ChromGroupHeaderInfo4(ChromGroupHeaderInfo header) : this()
         {
             Precursor = (float) header.Precursor;
@@ -1125,7 +1108,7 @@ namespace pwiz.Skyline.Model.Results
                 if (nextTime > prevTime)
                 {
                     double width = nextTime - prevTime;
-                    double area = intensity * width;
+                    double area = intensity * width * 60;
                     totalArea += area;
                     if (timeIntensities.MassErrors != null)
                     {
@@ -1583,7 +1566,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, null, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
         {
         }
 
@@ -1591,6 +1574,7 @@ namespace pwiz.Skyline.Model.Results
                                FlagValues flags,
                                DateTime fileWriteTime,
                                DateTime? runStartTime,
+                               DateTime? importTime,
                                float maxRT,
                                float maxIntensity,
                                int sizeScanIds,
@@ -1614,6 +1598,7 @@ namespace pwiz.Skyline.Model.Results
             Flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | ((FlagValues)((int)ionMobilityUnits << 4) & FlagValues.ion_mobility_type_bitmask);
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
+            ImportTime = importTime;
             MaxRetentionTime = maxRT;
             MaxIntensity = maxIntensity;
             SizeScanIds = sizeScanIds;
@@ -1628,6 +1613,7 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public DateTime? ImportTime { get; private set; }
         public float MaxRetentionTime { get; private set; }
         public float MaxIntensity { get; private set; }
         public int SizeScanIds { get; private set; }
@@ -2236,33 +2222,39 @@ namespace pwiz.Skyline.Model.Results
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
-        protected readonly IReadOnlyList<ChromPeak> _allPeaks;
-        protected readonly IReadOnlyList<float> _allScores;
+        [CanBeNull]
+        protected ChromatogramCache _chromatogramCache;
+        protected IList<ChromPeak> _chromPeaks;
+        protected IList<float> _scores;
+        private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
-                                     IReadOnlyList<ChromPeak> allPeaks,
-                                     IReadOnlyList<float> allScores)
+                                     ChromatogramCache chromatogramCache)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
             _textIdBytes = textIdBytes;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
-            _allPeaks = allPeaks;
-            _allScores = allScores;
+            _chromatogramCache = chromatogramCache;
         }
 
-        protected ChromatogramGroupInfo()
+        public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
+            TimeIntensitiesGroup timeIntensitiesGroup)
         {
-        }
-
-        protected ChromatogramGroupInfo(ChromGroupHeaderInfo header, ChromatogramGroupInfo copyFrom) 
-            : this(header, copyFrom._scoreTypeIndices, copyFrom._textIdBytes, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores)
-        {
+            _groupHeaderInfo = groupHeaderInfo;
+            _textIdBytes = Array.Empty<byte>();
+            _allFiles = Array.Empty<ChromCachedFile>();
+            _allTransitions = allTransitions;
+            _chromPeaks = peaks;
+            _timeIntensitiesGroup = timeIntensitiesGroup;
+            _scoreTypeIndices = new Dictionary<Type, int>();
+            _scores = Array.Empty<float>();
         }
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
@@ -2286,13 +2278,42 @@ namespace pwiz.Skyline.Model.Results
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }
         public int BestPeakIndex { get { return MaxPeakIndex; } }
 
-        private byte[] DeferedCompressedBytes { get; set; }
-
-        public TimeIntensitiesGroup TimeIntensitiesGroup { get; set; }
+        [Browsable(false)]
+        public TimeIntensitiesGroup TimeIntensitiesGroup
+        {
+            get
+            {
+                if (_timeIntensitiesGroup == null)
+                {
+                    _timeIntensitiesGroup = _chromatogramCache?.ReadTimeIntensities(Header);
+                }
+                return _timeIntensitiesGroup;
+            }
+        }
 
         public bool HasScore(Type scoreType)
         {
             return _scoreTypeIndices.ContainsKey(scoreType);
+        }
+
+        protected IList<float> ReadScores()
+        {
+            if (_scores == null)
+            {
+                _scores = _chromatogramCache?.ReadScores(Header);
+            }
+
+            return _scores;
+        }
+
+        protected IList<ChromPeak> ReadPeaks()
+        {
+            if (_chromPeaks == null)
+            {
+                _chromPeaks = _chromatogramCache?.ReadPeaks(Header);
+            }
+
+            return _chromPeaks;
         }
 
         public float GetScore(Type scoreType, int peakIndex)
@@ -2300,7 +2321,7 @@ namespace pwiz.Skyline.Model.Results
             int scoreIndex;
             if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
                 return float.NaN;
-            return _allScores[_groupHeaderInfo.StartScoreIndex + peakIndex*_scoreTypeIndices.Count + scoreIndex];
+            return ReadScores()[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets
@@ -2316,10 +2337,11 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<ChromPeak> GetPeaks(int transitionIndex)
         {
-            int startPeak = _groupHeaderInfo.StartPeakIndex + (transitionIndex * _groupHeaderInfo.NumPeaks);
+            var peaks = ReadPeaks();
+            int startPeak = transitionIndex * _groupHeaderInfo.NumPeaks;
             int endPeak = startPeak + _groupHeaderInfo.NumPeaks;
             for (int i = startPeak; i < endPeak; i++)
-                yield return _allPeaks[i];
+                yield return peaks[i];
         }
 
         public ChromatogramInfo GetTransitionInfo(int index)
@@ -2348,10 +2370,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var source = _allTransitions[index].Source;
             bool isMs1Chromatogram = source == ChromSource.ms1 || source == ChromSource.sim;
-            bool isTranMs1 = nodeTran == null || nodeTran.IsMs1;
             // Don't allow fragment ions to match data from MS1
-            if (!isTranMs1 && isMs1Chromatogram)
+            if (isMs1Chromatogram && nodeTran != null && !nodeTran.IsMs1)
+            {
                 return false;
+            }
             var globalMz = GetProductGlobal(index);
             var tranMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             return tranMz.CompareTolerant(globalMz, tolerance) == 0;
@@ -2360,11 +2383,6 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz GetProductLocal(int transitionIndex)
         {
             return new SignedMz(_allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex].Product, _groupHeaderInfo.NegativeCharge);
-        }
-
-        protected ChromTransition GetChromTransitionGlobal(int index)
-        {
-            return _allTransitions[index];
         }
 
         public ChromTransition GetChromTransitionLocal(int transitionIndex)
@@ -2445,7 +2463,7 @@ namespace pwiz.Skyline.Model.Results
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
                     for (int j = startOptTran; j <= endOptTran; j++)
-                        listChromInfo.Add(GetTransitionInfo(j - startTran));
+                        listChromInfo.Add(GetTransitionInfo(j - startTran, transform));
                     i = Math.Max(i, endOptTran);
                 }
             }
@@ -2475,7 +2493,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak GetTransitionPeak(int transitionIndex, int peakIndex)
         {
-            return _allPeaks[_groupHeaderInfo.StartPeakIndex + transitionIndex*_groupHeaderInfo.NumPeaks + peakIndex];
+            return ReadPeaks()[transitionIndex*_groupHeaderInfo.NumPeaks + peakIndex];
         }
 
         // ReSharper disable SuggestBaseTypeForParameter
@@ -2517,81 +2535,6 @@ namespace pwiz.Skyline.Model.Results
             return countMatches;
         }
 
-        public virtual void ReadChromatogram(ChromatogramCache cache, bool deferDecompression = false)
-        {
-            var compressedBytes = DeferedCompressedBytes ?? ReadCompressedBytes(cache);
-
-            if (deferDecompression)
-                DeferedCompressedBytes = compressedBytes;
-            else
-            {
-                CompressedBytesToTimeIntensities(compressedBytes);
-                DeferedCompressedBytes = null;
-            }
-        }
-
-        public void EnsureDecompressed()
-        {
-            if (DeferedCompressedBytes != null)
-                CompressedBytesToTimeIntensities(DeferedCompressedBytes);
-        }
-
-        public byte[] ReadCompressedBytes(ChromatogramCache cache)
-        {
-            Stream stream = cache.ReadStream.Stream;
-            byte[] pointsCompressed = new byte[_groupHeaderInfo.CompressedSize];
-            lock (stream)
-            {
-                try
-                {
-                    // Seek to stored location
-                    stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
-
-                    // Single read to get all the points
-                    if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                        throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
-                }
-                catch (Exception)
-                {
-                    // If an exception is thrown, close the stream in case the failure is something
-                    // like a network failure that can be remedied by re-opening the stream.
-                    cache.ReadStream.CloseStream();
-                    throw;
-                }
-            }
-            return pointsCompressed;
-        }
-
-        public void CompressedBytesToTimeIntensities(byte[] pointsCompressed)
-        {
-            int uncompressedSize = _groupHeaderInfo.UncompressedSize;
-            if (uncompressedSize < 0) // Before version 11
-            {
-                int numPoints = _groupHeaderInfo.NumPoints;
-                int numTrans = _groupHeaderInfo.NumTransitions;
-                bool hasErrors = _groupHeaderInfo.HasMassErrors;
-                bool hasMs1ScanIds = _groupHeaderInfo.HasMs1ScanIds;
-                bool hasFragmentScanIds = _groupHeaderInfo.HasFragmentScanIds;
-                bool hasSimScanIds = _groupHeaderInfo.HasSimScanIds;
-
-                uncompressedSize = ChromatogramCache.GetChromatogramsByteCount(
-                    numTrans, numPoints, hasErrors,
-                    hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds);
-            }
-            var uncompressedBytes = pointsCompressed.Uncompress(uncompressedSize);
-            if (_groupHeaderInfo.HasRawChromatograms)
-            {
-                TimeIntensitiesGroup = RawTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes));
-            }
-            else
-            {
-                var chromTransitions = Enumerable.Range(Header.StartTransitionIndex, Header.NumTransitions)
-                    .Select(i => _allTransitions[i]).ToArray();
-                TimeIntensitiesGroup = InterpolatedTimeIntensities.ReadFromStream(new MemoryStream(uncompressedBytes),
-                    Header, chromTransitions);
-            }
-        }
-
         public class PathEqualityComparer : IEqualityComparer<ChromatogramGroupInfo>
         {
             public bool Equals(ChromatogramGroupInfo x, ChromatogramGroupInfo y)
@@ -2609,11 +2552,52 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Throw away chromatogram and peaks, and disconnect from the ChromatogramCache.
+        /// This object be able to provide information about the ChromGroupHeaderInfo and ChromTransition's,
+        /// but will not have any chromatogram or peak data.
+        /// </summary>
+        public void DiscardData()
+        {
+            _chromatogramCache = null;
+            _timeIntensitiesGroup = null;
+            _chromPeaks = null;
+        }
+
         public static PathEqualityComparer PathComparer { get; private set; }
 
         static ChromatogramGroupInfo()
         {
             PathComparer = new PathEqualityComparer();
+        }
+
+        /// <summary>
+        /// Loads the peaks (and optionally the scores as well) for a list of ChromatogramGroupInfos.
+        /// 
+        /// </summary>
+        public static void LoadPeaksForAll(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos, bool loadScoresToo)
+        {
+            foreach (var grouping in chromatogramGroupInfos.Distinct()
+                .GroupBy(chromatogramGroupInfo => chromatogramGroupInfo._chromatogramCache))
+            {
+                if (grouping.Key == null)
+                {
+                    continue;
+                }
+                var groupInfos = grouping.ToList();
+                var headers = groupInfos.Select(group => group.Header).ToList();
+                var peaksArray = new IList<ChromPeak>[headers.Count];
+                var scoresArray = loadScoresToo ? new IList<float>[headers.Count] : null;
+                grouping.Key.ReadDataForAll(headers, peaksArray, scoresArray);
+                for (int i = 0; i < headers.Count; i++)
+                {
+                    groupInfos[i]._chromPeaks = peaksArray[i];
+                    if (scoresArray != null)
+                    {
+                        groupInfos[i]._scores = scoresArray[i];
+                    }
+                }
+            }
         }
     }
 
@@ -2638,6 +2622,8 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly ChromatogramGroupInfo _groupInfo;
         protected readonly int _transitionIndex;
+        private TimeIntensities _timeIntensities;
+        private TransformChrom _transformChrom;
 
         public ChromatogramInfo(ChromatogramGroupInfo groupInfo, int transitionIndex)
         {
@@ -2649,20 +2635,11 @@ namespace pwiz.Skyline.Model.Results
             }
             _groupInfo = groupInfo;
             _transitionIndex = transitionIndex;
-            var timeIntensitiesGroup = _groupInfo.TimeIntensitiesGroup;
-            if (timeIntensitiesGroup != null)
-            {
-                TimeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[_transitionIndex];
-                if (Header.HasRawTimes())
-                {
-                    RawTimeIntensities = TimeIntensities;
-                }
-            }
         }
 
         public ChromatogramInfo(float[] times, float[] intensities)
         {
-            TimeIntensities = new TimeIntensities(times, intensities, null, null);
+            _timeIntensities = new TimeIntensities(times, intensities, null, null);
         }
 
         public ChromatogramGroupInfo GroupInfo { get { return _groupInfo; } }
@@ -2734,22 +2711,106 @@ namespace pwiz.Skyline.Model.Results
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
         }
 
-        private TimeIntensities RawTimeIntensities { get; set; }
+        [Browsable(false)]
+        private TimeIntensities RawTimeIntensities
+        {
+            get
+            {
+                if (!Header.HasRawTimes())
+                {
+                    return null;
+                }
+
+                return _groupInfo?.TimeIntensitiesGroup?.TransitionTimeIntensities[TransitionIndex];
+            }
+        }
+        [Browsable(false)]
         public IList<float> RawTimes
         {
             get { return RawTimeIntensities?.Times; }
         }
-        public TimeIntensities TimeIntensities { get; set; }
+
+        [Browsable(false)]
+        public TimeIntensities TimeIntensities
+        {
+            get
+            {
+                if (_timeIntensities == null)
+                {
+                    _timeIntensities = GetTransformedTimeIntensities(_transformChrom);
+                }
+
+                return _timeIntensities;
+            }
+        }
+
+        private TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
+        {
+            var timeIntensitiesGroup = _groupInfo?.TimeIntensitiesGroup;
+            if (timeIntensitiesGroup == null)
+            {
+                return null;
+            }
+
+            var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[TransitionIndex];
+            if (transformChrom == TransformChrom.raw)
+            {
+                return timeIntensities;
+            }
+            timeIntensities = InterpolateTimeIntensities(timeIntensities);
+            return TransformInterpolatedTimeIntensities(timeIntensities, transformChrom);
+        }
+
+        private TimeIntensities InterpolateTimeIntensities(TimeIntensities timeIntensities)
+        {
+            var rawTimeIntensitiesGroup = _groupInfo?.TimeIntensitiesGroup as RawTimeIntensities;
+            if (rawTimeIntensitiesGroup == null)
+            {
+                return timeIntensities;
+            }
+
+            return timeIntensities.Interpolate(rawTimeIntensitiesGroup.GetInterpolatedTimes(),
+                rawTimeIntensitiesGroup.InferZeroes);
+        }
+
+        public static TimeIntensities TransformInterpolatedTimeIntensities(TimeIntensities interpolatedTimeIntensities, TransformChrom transformChrom)
+        {
+            switch (transformChrom)
+            {
+                default:
+                    return interpolatedTimeIntensities;
+                case TransformChrom.craw1d:
+                {
+                    var peakFinder = Crawdads.NewCrawdadPeakFinder();
+                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+                    return interpolatedTimeIntensities.ChangeIntensities(peakFinder.Intensities1d.ToArray());
+                }
+                case TransformChrom.craw2d:
+                {
+                    var peakFinder = Crawdads.NewCrawdadPeakFinder();
+                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+                    return interpolatedTimeIntensities.ChangeIntensities(peakFinder.Intensities2d.ToArray());
+                }
+                case TransformChrom.savitzky_golay:
+                {
+                    return interpolatedTimeIntensities.ChangeIntensities(
+                        SavitzkyGolaySmooth(interpolatedTimeIntensities.Intensities.ToArray()));
+                }
+            }
+        }
+
+        [Browsable(false)]
         public IList<float> Times { get { return TimeIntensities == null ? null : TimeIntensities.Times; } }
+        [Browsable(false)]
         public IList<int> ScanIndexes { get { return TimeIntensities == null ? null : TimeIntensities.ScanIds; } }
 
+        [Browsable(false)]
         public IList<float> Intensities
         {
             get { return TimeIntensities == null ? null : TimeIntensities.Intensities; }
-
-            set { TimeIntensities = TimeIntensities.ChangeIntensities(value); }
         }
 
+        [Browsable(false)]
         public IEnumerable<ChromPeak> Peaks
         {
             get
@@ -2831,11 +2892,13 @@ namespace pwiz.Skyline.Model.Results
         /// over which data actually was collected.
         /// The TimeIntervals will be null if this chromatogram was not from a triggered acquisition.
         /// </summary>
+        [Browsable(false)]
         public TimeIntervals TimeIntervals
         {
             get { return (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals; }
         }
 
+        [Browsable(false)]
         public double MaxIntensity
         {
             get
@@ -2855,49 +2918,34 @@ namespace pwiz.Skyline.Model.Results
                 {
                     continue;
                 }
-                TimeIntensities = TimeIntensities.MergeTimesAndAddIntensities(chromatogramInfo.TimeIntensities);
+                _timeIntensities = TimeIntensities.MergeTimesAndAddIntensities(chromatogramInfo.TimeIntensities);
             }
         }
 
         public void Transform(TransformChrom transformChrom)
         {
-            switch (transformChrom)
+            if (_transformChrom == transformChrom)
             {
-                case TransformChrom.interpolated:
-                    Interpolate();
-                    break;
-                case TransformChrom.craw2d:
-                    Interpolate();
-                    Crawdad2DTransform();
-                    break;
-                case TransformChrom.craw1d:
-                    Interpolate();
-                    Crawdad1DTransform();
-                    break;
-                case TransformChrom.savitzky_golay:
-                    Interpolate();
-                    SavitzkyGolaySmooth();
-                    break;
+                return;
             }
-        }
 
-        public void Crawdad2DTransform()
-        {
-            if (Intensities == null)
-                return;
-            var peakFinder = Crawdads.NewCrawdadPeakFinder();
-            peakFinder.SetChromatogram(Times, Intensities);
-            Intensities = peakFinder.Intensities2d.ToArray();
-        }
+            var timeIntensities = _timeIntensities;
+            if (timeIntensities != null)
+            {
+                if (transformChrom == TransformChrom.raw || _transformChrom == TransformChrom.craw1d || _transformChrom == TransformChrom.craw2d || _transformChrom == TransformChrom.savitzky_golay)
+                {
+                    throw new InvalidOperationException(string.Format(@"Cannot go from {0} to {1}", _transformChrom, transformChrom));
+                }
 
-        public void Interpolate()
-        {
-            if (_groupInfo == null)
-                return;
-            var rawTimeIntensities = _groupInfo.TimeIntensitiesGroup as RawTimeIntensities;
-            if (rawTimeIntensities == null)
-                return;
-            TimeIntensities = TimeIntensities.Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
+                if (_transformChrom == TransformChrom.raw)
+                {
+                    timeIntensities = InterpolateTimeIntensities(timeIntensities);
+                }
+
+                timeIntensities = TransformInterpolatedTimeIntensities(timeIntensities, transformChrom);
+            }
+            _transformChrom = transformChrom;
+            _timeIntensities = timeIntensities;
         }
 
         public TimeIntensities GetInterpolatedTimeIntensities()
@@ -2910,20 +2958,6 @@ namespace pwiz.Skyline.Model.Results
 
             return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
                 .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
-        }
-
-        public void Crawdad1DTransform()
-        {
-            if (Intensities == null)
-                return;
-            var peakFinder = Crawdads.NewCrawdadPeakFinder();
-            peakFinder.SetChromatogram(Times, Intensities);
-            Intensities = peakFinder.Intensities1d.ToArray();
-        }
-
-        public void SavitzkyGolaySmooth()
-        {
-            Intensities = SavitzkyGolaySmooth(Intensities.ToArray());
         }
 
         public static float[] SavitzkyGolaySmooth(float[] intensities)

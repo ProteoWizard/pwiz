@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -54,7 +55,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChangeLoaded(doc);
 
             var wiffPath = TestFilesDir.GetTestPath("102816 Plas ApoB MIDAS testing 2.wiff");
-            var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+            var importResults = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
             RunUI(() =>
             {
                 importResults.NamedPathSets =
