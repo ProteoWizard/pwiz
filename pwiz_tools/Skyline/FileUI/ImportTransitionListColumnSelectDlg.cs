@@ -34,7 +34,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
-using pwiz.Skyline.Model.Proteome;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
@@ -134,11 +133,6 @@ namespace pwiz.Skyline.FileUI
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
-            if (checkBoxAssociateProteins.Enabled)
-            {
-                // If there's a background proteome, use it
-                checkBoxAssociateProteins.Checked = !docCurrent.Settings.PeptideSettings.BackgroundProteome.Equals(BackgroundProteome.NONE);
-            }
         }
 
         public Rectangle ScreenRect
@@ -182,6 +176,7 @@ namespace pwiz.Skyline.FileUI
                 false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
+                filterDlg.Text = checkBoxAssociateProteins.Text; // This title makes more sense in this context
                 if (filterDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     // If they cancel do not change the document or the transition list
@@ -611,6 +606,12 @@ namespace pwiz.Skyline.FileUI
             foreach (var comboBox in ComboBoxes)
             {
                 SetColumnColor(comboBox);
+            }
+            // After initial display, see if we should enable AssociateProteins - which may cause a dialog to appear
+            if (checkBoxAssociateProteins.Visible && !WindowShown)
+            {
+                // If there's a background proteome, use it
+                checkBoxAssociateProteins.Checked = true;
             }
 
             WindowShown = true;

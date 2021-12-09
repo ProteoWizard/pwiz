@@ -27,7 +27,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -106,12 +105,8 @@ namespace pwiz.SkylineTestFunctional
             var pasteText = TransitionsClipboardText;
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
-            RunUI(() => {
-                var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-            });
+            var associateProteinsDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Some peptides aren't in background proteome
+            OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
             RunUI(() =>
             {
@@ -146,15 +141,14 @@ namespace pwiz.SkylineTestFunctional
             var pasteText2 = "LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg2 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg2.textBox1.Text = pasteText2);
-            RunUI(() => {
-                var comboBoxes = windowDlg2.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-            });
-            // This data was recognized by an error when put into PasteDlg but does not meet the criteria for an error here
-            RunUI(windowDlg2.CancelDialog);
+            associateProteinsDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Some peptides aren't in background proteome
+            OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
+
+            var noErrDlg = ShowDialog<MessageDlg>(() => windowDlg2.CheckForErrors());
+            Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
+            OkDialog(noErrDlg, noErrDlg.OkDialog);
+            RunUI(() => windowDlg2.CancelDialog());
+            WaitForClosedForm(windowDlg2);
         }
 
         private static void PastePeptides(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter, 
