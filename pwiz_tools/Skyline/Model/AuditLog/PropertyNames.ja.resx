@@ -1499,6 +1499,15 @@
   <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
     <value>すべて積分</value>
   </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationGroupBy" xml:space="preserve">
+    <value>以下で同期された統合グループ：</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
+    <value>同期した統合すべて</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationTargets" xml:space="preserve">
+    <value>同期した統合ターゲット</value>
+  </data>
   <data name="TransitionSettings_Integration" xml:space="preserve">
     <value>積分</value>
   </data>
@@ -1583,28 +1592,28 @@
   <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
     <value>単比</value>
   </data>
-  <data name="ViewLayout_ClusterSpec">
+  <data name="ViewLayout_ClusterSpec" xml:space="preserve">
     <value>クラスタリング指定</value>
   </data>
-  <data name="ClusteringSpec_Values">
+  <data name="ClusteringSpec_Values" xml:space="preserve">
     <value>値</value>
   </data>
-  <data name="ClusteringSpec_DistanceMetric">
+  <data name="ClusteringSpec_DistanceMetric" xml:space="preserve">
     <value>距離メトリック</value>
   </data>
-  <data name="ValueSpec_ColumnRef">
+  <data name="ValueSpec_ColumnRef" xml:space="preserve">
     <value>列参照</value>
   </data>
-  <data name="ExplicitMods_CrosslinkStructure">
+  <data name="ExplicitMods_CrosslinkStructure" xml:space="preserve">
     <value>クロスリンク構造</value>
   </data>
-  <data name="CrosslinkStructure_LinkedPeptides">
+  <data name="CrosslinkStructure_LinkedPeptides" xml:space="preserve">
     <value>リンクされているペプチド</value>
   </data>
-  <data name="CrosslinkStructure_LinkedExplicitMods">
+  <data name="CrosslinkStructure_LinkedExplicitMods" xml:space="preserve">
     <value>リンクされている明示的修飾</value>
   </data>
-  <data name="CrosslinkStructure_Crosslinks">
+  <data name="CrosslinkStructure_Crosslinks" xml:space="preserve">
     <value>クロスリンク</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
@@ -1639,5 +1648,11 @@
   </data>
   <data name="DdaConverterSettings_Protocol" xml:space="preserve">
     <value>DDA変換プロトコル</value>
+  </data>
+  <data name="DdaSearchSettings_Ms2Analyzer" xml:space="preserve">
+    <value>MS2アナライザー</value>
+  </data>
+  <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
+    <value>検索エンジン</value>
   </data>
 </root>
