@@ -301,8 +301,14 @@ namespace pwiz.Skyline.Model
                 return text;
 
             var sequences = new List<string>();
+            var consecutiveLinesWithoutChargeIndicators = 0;
             foreach (var line in text.Split('\n').Select(seq => seq.Trim()))
             {
+                if (consecutiveLinesWithoutChargeIndicators > 1000)
+                {
+                    sequences.Add(line); // If we haven't seen anything like "PEPTIDER+++" by now, we aren't going to 
+                    continue;
+                }
                 // Allow any run of charge indicators no matter how long, because users guess this might work
                 int chargePos = FindChargeSymbolRepeatStart(line, min, max);
                 if (chargePos == -1)
@@ -326,6 +332,15 @@ namespace pwiz.Skyline.Model
                             chargePos = adductStart;
                         }
                     }
+                }
+
+                if (chargePos == -1)
+                {
+                    consecutiveLinesWithoutChargeIndicators++;
+                }
+                else
+                {
+                    consecutiveLinesWithoutChargeIndicators = 0;
                 }
                 sequences.Add(chargePos == -1 ? line : line.Substring(0, chargePos));
             }
