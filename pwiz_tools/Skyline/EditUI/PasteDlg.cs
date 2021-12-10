@@ -776,7 +776,7 @@ namespace pwiz.Skyline.EditUI
             var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
             var pepModSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
 
-            var associateAction = associateHelper.determineAssociateAction(proteinName, pepModSequence, seenPepSeq, keepAllPeptides);
+            var associateAction = associateHelper.DetermineAssociateAction(proteinName, pepModSequence, seenPepSeq, keepAllPeptides);
             numUnmatched = associateHelper.numUnmatched;
             numMultipleMatches = associateHelper.numMultipleMatches;
             numFiltered = associateHelper.numFiltered;
@@ -848,9 +848,10 @@ namespace pwiz.Skyline.EditUI
             /// <param name="pepModSequence">Modified sequence of the peptide to be associated</param>
             /// <param name="seenPepSeq">Peptide sequences we have already seen in the data</param>
             /// <param name="keepAllPeptides">Keep peptides that have multiple matches or no matches</param>
+            /// <param name="dictSequenceProteins">Optional prefetched mapping of stripped peptides to proteins</param>
             /// <returns></returns>
-            public AssociateAction determineAssociateAction(string proteinName, string pepModSequence, HashSet<string> seenPepSeq, 
-                bool keepAllPeptides)
+            public AssociateAction DetermineAssociateAction(string proteinName, string pepModSequence, HashSet<string> seenPepSeq, 
+                bool keepAllPeptides, IDictionary<string, List<Protein>> dictSequenceProteins = null)
             {
 
                 // Only enumerate the proteins if the user has not specified a protein.
@@ -879,7 +880,14 @@ namespace pwiz.Skyline.EditUI
                     seenPepSeq.Add(peptideSequence);
                 }
 
-                proteinNames = GetProteinNamesForPeptideSequence(peptideSequence, _docCurrent, out var proteinList);
+                if (dictSequenceProteins != null && dictSequenceProteins.TryGetValue(peptideSequence, out var proteinList))
+                {
+                    proteinNames = proteinList.ConvertAll(p => p.Name);
+                }
+                else
+                {
+                    proteinNames = GetProteinNamesForPeptideSequence(peptideSequence, _docCurrent, out proteinList);
+                }
                 proteins = proteinList;
 
                 bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
