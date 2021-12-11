@@ -114,9 +114,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 69 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 69 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv0142_Rv0142,AADD, 391.14600, 391.14600
@@ -193,9 +193,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 2 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 2 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 928.403455
@@ -205,9 +205,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 3 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv0142_Rv0142,AADD, 391.14600, 391.14600
@@ -218,9 +218,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 69 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 69 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 蛋白质名称,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -298,9 +298,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 2 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 2 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 蛋白质名称,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -311,9 +311,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 3 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 蛋白质名称,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -325,9 +325,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 3 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 ,VTTSTGADRAAAA, 1191.596, 1191.596
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1029.451134
@@ -337,9 +337,9 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 143 transitions added
-Associate Proteins enabled
-Columns identified as '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
+Extra Info: 143 个离子对已添加
+关联蛋白质已启用
+列标识为 '蛋白质名称','肽段修饰序列','母离子质荷比','子离子质荷比'
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1217.530841
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1116.483162
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1029.451134

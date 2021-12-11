@@ -114,9 +114,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 69 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 69個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv0142_Rv0142,AADD, 391.14600, 391.14600
@@ -193,9 +193,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 2 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 2個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 928.403455
@@ -205,9 +205,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 3個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
 Rv0142_Rv0142,AADD, 391.14600, 391.14600
@@ -218,9 +218,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 69 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 69個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 タンパク質名,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -298,9 +298,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 2 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 2個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 タンパク質名,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -311,9 +311,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 3個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 タンパク質名,Peptide Modified Sequence, Precursor m/z, Product m/z
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 Rv1812c_Rv1812c,VTTSTGASYSYD, 709.327105, 1116.483162
@@ -325,9 +325,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 3 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 3個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1217.530841
 ,VTTSTGADRAAAA, 1191.596, 1191.596
 Rv1812c_Rv1812c,VTTSTGASYSYDR, 709.327105, 1029.451134
@@ -337,9 +337,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 143 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 143個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1217.530841
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1116.483162
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1029.451134
