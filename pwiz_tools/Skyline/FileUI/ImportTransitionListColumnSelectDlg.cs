@@ -176,6 +176,7 @@ namespace pwiz.Skyline.FileUI
                 false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
+                filterDlg.Text = checkBoxAssociateProteins.Text; // This title makes more sense in this context
                 if (filterDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     // If they cancel do not change the document or the transition list
@@ -203,28 +204,59 @@ namespace pwiz.Skyline.FileUI
             _dictNameSeq = new Dictionary<string, FastaSequence>();
             _proteinList = new List<Protein>();
             canceled = false;
-            // If there are headers, add one describing the protein name column we will add
-            if (Importer.RowReader.Indices.Headers != null)
+            IDictionary<string, List<Protein>> dictSequenceProteins = null;
+            var lines = new List<string>();
+
+            using (var longWaitDlg = new LongWaitDlg() { Message = checkBoxAssociateProteins.Text })
             {
-                // Add a header we should recognize
-                var newHeaders = new string[_originalHeaders.Length + 1];
-                newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
-                for (int i = 0; i < _originalHeaders.Length; i++)
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
-                    newHeaders[i + 1] = _originalHeaders[i];
-                }
-                Importer.RowReader.Indices.Headers = newHeaders;
+                    // If there are headers, add one describing the protein name column we will add
+                    if (Importer.RowReader.Indices.Headers != null)
+                    {
+                        // Add a header we should recognize
+                        var newHeaders = new string[_originalHeaders.Length + 1];
+                        newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
+                        for (int i = 0; i < _originalHeaders.Length; i++)
+                        {
+                            newHeaders[i + 1] = _originalHeaders[i];
+                        }
+                        Importer.RowReader.Indices.Headers = newHeaders;
+                    }
+
+                    // Get a dictionary of peptides under consideration and the proteins they're associated with
+                    var peptides = new List<string>(Importer.RowReader.Lines.Count);
+                    peptides.AddRange(Importer.RowReader.Lines.Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[Importer.RowReader.Indices.PeptideColumn]));
+                    var stripped = new Dictionary<string, string>();
+                    foreach (var pep in peptides)
+                    {
+                        if (!stripped.ContainsKey(pep))
+                        {
+                            var peptideSequence = FastaSequence.StripModifications(pep);
+                            stripped[pep] = FastaSequence.IsExSequence(peptideSequence) ? peptideSequence : null;
+                        }
+                    }
+                    var proteome = _docCurrent.Settings.PeptideSettings.BackgroundProteome;
+                    using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
+                    {
+                        dictSequenceProteins = proteomeDb.GetDigestion().GetProteinsWithSequences(stripped.Values, longWaitBroker.CancellationToken);
+                    }
+                });
+            }
+            if (dictSequenceProteins == null)
+            {
+                canceled = true;
+                return Importer.RowReader.Lines.ToArray();
             }
 
-            var lines = new List<string>();
-            var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
             // Go through each line of the import
-            foreach(var line in Importer.RowReader.Lines)
+            var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
+            foreach (var line in Importer.RowReader.Lines)
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
-                var action = associateHelper.determineAssociateAction(null, 
-                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false);
+                var action = associateHelper.DetermineAssociateAction(null, 
+                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
@@ -606,7 +638,14 @@ namespace pwiz.Skyline.FileUI
             {
                 SetColumnColor(comboBox);
             }
-
+/* Some performance issues to work out before this can be the default
+            // After initial display, see if we should enable AssociateProteins - which may cause a dialog to appear
+            if (checkBoxAssociateProteins.Visible && !WindowShown)
+            {
+                // If there's a background proteome, use it
+                checkBoxAssociateProteins.Checked = true;
+            }
+*/
             WindowShown = true;
         }
 
@@ -1384,7 +1423,7 @@ namespace pwiz.Skyline.FileUI
 
                     // Change the text of the new column to italic
                     proteinNameBox.SelectedIndex = 0;
-                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Displayed,
+                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Visible,
                         DataGridViewElementStates.None);
                     if (firstColumn != null)
                     {
