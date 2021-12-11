@@ -24,11 +24,14 @@
 
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
@@ -52,6 +55,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+
             // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -216,6 +220,50 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// We have some code, especially in commandline, that expects certain error messages to start with "Error:" or the L10N equivalent
+        /// </summary>
+        void InspectConsistentErrorMessages(List<string> errors)
+        {
+            var currentCulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = new CultureInfo("en"); // We want to compare against the "en" resources
+                var resourceSet = Skyline.Properties.Resources.ResourceManager.GetResourceSet(Thread.CurrentThread.CurrentUICulture, true, true);
+
+                // Build the string of resources.
+                foreach (var resource in resourceSet)
+                {
+                    var pair = resource as DictionaryEntry? ?? default;
+                    var val = pair.Value as string ?? string.Empty;
+                    if (val.StartsWith("Error:"))
+                    {
+                        var name = pair.Key.ToString();
+                        foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
+                        {
+                            var tryCulture = new CultureInfo(culture);
+                            Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;
+                            var local = Skyline.Properties.Resources.ResourceManager.GetString(name) ?? String.Empty;
+                            var commandStatusWriterWriteLineError = Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_;
+                            if (!local.StartsWith(commandStatusWriterWriteLineError, StringComparison.CurrentCulture) &&
+                                !local.StartsWith(@"Error:", StringComparison.InvariantCulture)) // Maybe not yet localized
+                            {
+                                // Report mismatch
+                                errors.Add(string.Format("The {0} language version of resource string {1} does not begin with the localized version of \"Error:\" (see Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_)", 
+                                    culture, name));
+                            }
+                        }
+                        Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+                    }
+                }
+            }
+
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+            }
+        }
+
+        /// <summary>
         /// Just a quick smoke test to remind devs to add audit log tests where needed, and to catch cases where its obvious that one or
         /// more languages need updating because line counts don't agree
         /// </summary>
@@ -364,6 +412,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Make sure that anything that should start with the L10N equivalent of "Error:" does so
+            InspectConsistentErrorMessages(results);
 
             InspectTutorialAuditLogs(root, results);
 
