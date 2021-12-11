@@ -196,7 +196,7 @@
     <value>0</value>
   </data>
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
-    <value>离子迁移库(&amp;I):</value>
+    <value>离子迁移库(&amp;I)：</value>
   </data>
   <data name="labelIonMobilityLibrary.ToolTip" xml:space="preserve">
     <value>指定在色谱图提取过程中用于离子迁移过滤的离子迁移库</value>

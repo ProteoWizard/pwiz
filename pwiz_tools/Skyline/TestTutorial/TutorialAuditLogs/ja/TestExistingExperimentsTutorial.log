@@ -21,9 +21,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 296 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 296個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 YAL038W	TANDVLTIR	501.778	830.474
 YAL038W	TANDVLTIR	506.7821345	840.482269
 YAL038W	TANDVLTIR	501.778	601.4072
@@ -374,8 +374,8 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 57 transitions added
-Columns identified as 'プリカーサーm/z','プロダクトm/z','列を無視','ペプチド修飾シークエンス','列を無視','列を無視'
+Extra Info: 57個のトランジションが追加されました
+'プリカーサーm/z','プロダクトm/z','列を無視','ペプチド修飾シークエンス','列を無視','列を無視'と特定されている列
 744.8	858.39	10	APR.AGLCQTFVYGGCR.y7.light	105	40
 744.8	959.44	11	APR.AGLCQTFVYGGCR.y8.light	105	39
 744.8	1087.5	12	APR.AGLCQTFVYGGCR.y9.light	105	39
