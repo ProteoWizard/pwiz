@@ -11308,11 +11308,11 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>エラー：</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
+    <value>エラー：ドキュメントをPanoramaにアップロードするため必要な以下の引数に値を指定してください：
 {0}</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>ドキュメントをPanormaにアップロードするため必要な以下の引数に値を指定してください：
+    <value>エラー：ドキュメントをPanormaにアップロードするため必要な以下の引数に値を指定してください：
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">

@@ -538,7 +538,7 @@
     <value>29</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>搜索引擎(&amp;S):</value>
+    <value>搜索引擎(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -589,7 +589,7 @@
     <value>30</value>
   </data>
   <data name="lblMs2Analyzer.Text" xml:space="preserve">
-    <value>MS2 分析仪(&amp;A):</value>
+    <value>MS2 分析仪(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.Name" xml:space="preserve">
     <value>lblMs2Analyzer</value>

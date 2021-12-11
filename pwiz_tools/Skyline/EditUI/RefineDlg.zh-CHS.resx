@@ -1457,7 +1457,7 @@
     <value>0</value>
   </data>
   <data name="labelCV.Text" xml:space="preserve">
-    <value>CV 截止(&amp;V):</value>
+    <value>CV 截止(&amp;V)：</value>
   </data>
   <data name="&gt;&gt;labelCV.Name" xml:space="preserve">
     <value>labelCV</value>

@@ -313,7 +313,7 @@ namespace TestPerf
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
-                IrtFilterText = "standard",
+                IrtFilterText = Resources.IrtDb_MakeDocumentXml_iRT_standards,
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 TargetCounts = new[] { 14, 75, 83, 498 },
                 FinalTargetCounts = new[] { 12, 75, 83, 498 },
@@ -381,7 +381,7 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IsWholeProteome = true,
-                IrtFilterText = "standard",
+                IrtFilterText = Resources.IrtDb_MakeDocumentXml_iRT_standards,
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
