@@ -283,7 +283,7 @@
     <value>62, 22</value>
   </data>
   <data name="toolStripLabelPeakType.Text" xml:space="preserve">
-    <value>峰类型:</value>
+    <value>峰类型：</value>
   </data>
   <data name="comboBoxPeakType.Items" xml:space="preserve">
     <value>Centroided</value>

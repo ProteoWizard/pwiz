@@ -37,7 +37,7 @@ All Info  :
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Label:13C(6)15N(4) (C-term R) = R[10] （同位素标签）"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
 导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "2014_01_HUMAN_UPS.fasta"
-导入肽段搜索 > DDA 搜索设置 > Search Engine 是 "MSFragger"
+导入肽段搜索 > DDA 搜索设置 > 搜索引擎 是 "MSFragger"
 导入肽段搜索 > DDA 搜索设置 > 母离子耐受性 是 5ppm
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 10ppm
 导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
@@ -66,7 +66,7 @@ Extra Info: 提取色谱图 =
 },
 DDA 搜索设置 = 
 {
-    Search Engine = "MSFragger",
+    搜索引擎 = "MSFragger",
     母离子耐受性 = 5ppm,
     片段耐受性 = 10ppm,
     每个肽段的最大可变修饰数 = "3",
