@@ -581,7 +581,7 @@ namespace pwiz.Skyline.Model.Results
                 readStream.Seek(LocationPeaks + firstPeakIndex * CacheFormat.ChromPeakSize, SeekOrigin.Begin);
                 if (CacheFormat.ChromPeakSize == targetFormat.ChromPeakSize)
                 {
-                    readStream.TransferBytes(writeStream, peakCount * CacheFormat.ChromPeakSize);
+                    readStream.TransferBytes(writeStream, (long) peakCount * CacheFormat.ChromPeakSize);
                     return;
                 }
 

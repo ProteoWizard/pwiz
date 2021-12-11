@@ -82,6 +82,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class TransitionSettingsPage : IFormView { }
         public class Ms1FullScanPage : IFormView { }
         public class Ms2FullScanPage : IFormView { }
+        public class ImsFullScanPage : IFormView { }
         public class FastaPage : IFormView { }
         public class ConverterSettingsPage : IFormView { }
         public class DDASearchSettingsPage : IFormView { }
@@ -1235,8 +1236,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 int selectedIndex = 0;
                 Invoke(new Action(() => selectedIndex = wizardPagesImportPeptideSearch.SelectedIndex));
-                if (selectedIndex == (int) Pages.full_scan_settings_page && WorkflowType != Workflow.dda)
-                    return new Ms2FullScanPage();
+                if (selectedIndex == (int)Pages.full_scan_settings_page && WorkflowType != Workflow.dda)
+                {
+                    if (TransitionSettingsControl.IonFilter)
+                        return new ImsFullScanPage();
+                    else
+                        return new Ms2FullScanPage();
+                }
                 if (selectedIndex == (int) Pages.chromatograms_page && WorkflowType == Workflow.dia)
                     return new ChromatogramsDiaPage();
                 return TAB_PAGES[selectedIndex];

@@ -323,6 +323,21 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
             }
         }
         break;
+
+        case MS_emission_chromatogram:
+        {
+            WiffFile::ADCTrace twc;
+            wifffile_->getTWC(sample, twc);
+
+            if (getBinaryData)
+                result->setTimeIntensityArrays(twc.x, twc.y, UO_minute, UO_absorbance_unit);
+            else
+            {
+                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, UO_absorbance_unit);
+                result->defaultArrayLength = twc.x.size();
+            }
+        }
+        break;
     }
 
     return result;
@@ -435,6 +450,21 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         ie.sample = sample;
         ie.transition = i;
         ie.chromatogramType = bal::icontains(name, "Pressure") ? MS_pressure_chromatogram : MS_flow_rate_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
+    WiffFile::ADCTrace twc;
+    wifffile_->getTWC(sample, twc);
+    if (!twc.x.empty())
+    {
+
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "TWC";
+        ie.sample = sample;
+        ie.transition = 0;
+        ie.chromatogramType = MS_emission_chromatogram;
         idToIndexMap_[ie.id] = ie.index;
     }
 

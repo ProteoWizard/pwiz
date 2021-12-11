@@ -741,7 +741,10 @@ namespace TestPerf
             OkDialog(isolationGraph, isolationGraph.CloseButton);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search - Configure Full-Scan Settings page", screenshotPage++);
+            if (IsPasef)
+                PauseForScreenShot<ImportPeptideSearchDlg.ImsFullScanPage>("Import Peptide Search - Configure Full-Scan Settings page", screenshotPage++);
+            else
+                PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search - Configure Full-Scan Settings page", screenshotPage++);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));

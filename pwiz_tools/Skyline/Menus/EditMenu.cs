@@ -322,11 +322,13 @@ namespace pwiz.Skyline.Menus
             else
             {
                 string text;
-                string textCsv;
                 try
                 {
-                    text = ClipboardEx.GetText().Trim();
-                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    text = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    if (string.IsNullOrEmpty(text))
+                    {
+                        text = ClipboardEx.GetText().Trim();
+                    }
                 }
                 catch (Exception)
                 {
@@ -335,7 +337,7 @@ namespace pwiz.Skyline.Menus
                 }
                 try
                 {
-                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
+                    Paste(text);
                 }
                 catch (Exception x)
                 {
