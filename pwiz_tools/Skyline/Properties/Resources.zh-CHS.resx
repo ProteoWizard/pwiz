@@ -11310,33 +11310,33 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <comment>Compact representation of "High Energy Ion Mobility Offset Offset"</comment>
   </data>
   <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
-    <value>错误: 发生故障。正在退出...</value>
+    <value>错误： 发生故障。正在退出...</value>
   </data>
   <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
     <value>错误：</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+    <value>错误： 请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>请为向 Panorma 上传文档时需要的以下参数指定一个值：
+    <value>错误： 请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
-    <value>错误: 无法验证 Panorama 服务器信息。
+    <value>错误： 无法验证 Panorama 服务器信息。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_Exception_" xml:space="preserve">
-    <value>错误: 尝试验证 Panorama 服务器信息时发生未知错误。
+    <value>错误： 尝试验证 Panorama 服务器信息时发生未知错误。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
-    <value>错误: 无法验证对 Panorama 文件夹的访问权限。
+    <value>错误： 无法验证对 Panorama 文件夹的访问权限。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
-    <value>错误: 尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
+    <value>错误： 尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
 {2}</value>
   </data>
   <data name="GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range" xml:space="preserve">
@@ -11350,31 +11350,31 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>该库包含 iRT 值。您是否想使用这些值创建保留时间预测器?</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>错误: 使用 CiRT 肽段时必须设置 {0}。</value>
+    <value>错误： 使用 CiRT 肽段时必须设置 {0}。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>错误: 已取消从 {0} 安装工具。</value>
+    <value>错误： 已取消从 {0} 安装工具。</value>
   </data>
   <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>错误: 没有与文件名模式 '{0}' 相匹配的文件。</value>
+    <value>错误： 没有与文件名模式 '{0}' 相匹配的文件。</value>
   </data>
   <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>错误: 没有与示例名称模式 '{0}' 相匹配的文件。</value>
+    <value>错误： 没有与示例名称模式 '{0}' 相匹配的文件。</value>
   </data>
   <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>错误: 加载 {0} 失败。</value>
+    <value>错误： 加载 {0} 失败。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>错误: Panorama 服务器 {0} 上取消了文档导入。</value>
+    <value>错误： Panorama 服务器 {0} 上取消了文档导入。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>错误: Panorama 服务器 {0} 发生导入错误。</value>
+    <value>错误： Panorama 服务器 {0} 发生导入错误。</value>
   </data>
   <data name="CommandLine_ImportResults_Error__No_files_left_to_import_" xml:space="preserve">
-    <value>错误: 没有可供导入的文件。</value>
+    <value>错误： 没有可供导入的文件。</value>
   </data>
   <data name="CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>错误: 指定的文档中已存在重复测定 {0}，并且未指定 --import-append 选项。该重复测定不会添加到文档中。</value>
+    <value>错误： 指定的文档中已存在重复测定 {0}，并且未指定 --import-append 选项。该重复测定不会添加到文档中。</value>
   </data>
   <data name="PeptideTipProvider_RenderTip_Ion_Mobility" xml:space="preserve">
     <value>离子迁移</value>
@@ -11392,7 +11392,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <comment>CCS is abbreviation for Collision Cross Section</comment>
   </data>
   <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>错误: 未添加新结果。跳过 Panorama 导入。</value>
+    <value>错误： 未添加新结果。跳过 Panorama 导入。</value>
   </data>
   <data name="SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_" xml:space="preserve">
     <value>尝试加载 iRT 数据库 {0} 时出错。iRT 标准无法自动添加到文档中。 </value>
@@ -11401,22 +11401,22 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>列 {0}</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
-    <value>在为 MaxQuant 输入文件 '{0}' 搜索谱图文件时，找不到以下具有任何支持的文件扩展名 ({3}) 的基本名称:
+    <value>在为 MaxQuant 输入文件 '{0}' 搜索谱图文件时，找不到以下具有任何支持的文件扩展名 ({3}) 的基本名称：
 
 {1}
 
-在以下任一目录中:
+在以下任一目录中：
 
 {2}
 
 如果您没有原始文件，可以使用输入文件中的嵌入谱图来建库。但是，MaxQuant 嵌入谱图中的碎片离子的电荷状态为解卷积，并且仅包含单电荷碎片离子，这些碎片离子可能无法代表质谱仪测出的强度。</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError" xml:space="preserve">
-    <value>在为 MaxQuant 输入文件 '{0}' 搜索谱图文件时，找不到以下具有任何支持的文件扩展名 ({3}) 的基本名称:
+    <value>在为 MaxQuant 输入文件 '{0}' 搜索谱图文件时，找不到以下具有任何支持的文件扩展名 ({3}) 的基本名称：
 
 {1}
 
-在以下任一目录中:
+在以下任一目录中：
 
 {2}
 
@@ -11489,13 +11489,13 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>重复测定</value>
   </data>
   <data name="FullScanAcquisitionMethod_DIA_TOOLTIP">
-    <value xml:space="preserve">非数据依赖采集: MS2 谱图用于其质荷比值在隔离窗口内的所有母离子的色谱图</value>
+    <value xml:space="preserve">非数据依赖采集： MS2 谱图用于其质荷比值在隔离窗口内的所有母离子的色谱图</value>
   </data>
   <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
-    <value xml:space="preserve">平行反应监测: MS2 谱图用于其质荷比在所选离子的 "方法匹配耐受性" 值内的母离子</value>
+    <value xml:space="preserve">平行反应监测： MS2 谱图用于其质荷比在所选离子的 "方法匹配耐受性" 值内的母离子</value>
   </data>
   <data name="FullScanAcquisitionMethod_DDA_TOOLTIP">
-    <value xml:space="preserve">数据依赖采集: 提取 MS2 色谱图但不用于定量</value>
+    <value xml:space="preserve">数据依赖采集： 提取 MS2 色谱图但不用于定量</value>
   </data>
   <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP">
     <value xml:space="preserve">类似于 "PRM"，但使用适用于 Thermo SureQuant 方法的 "触发采集" 和 "方法匹配耐受性" 设置</value>
@@ -11516,7 +11516,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>如果您将诱饵重新添加到此文档，可以手动添加和训练峰得分模型。</value>
   </data>
   <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_" xml:space="preserve">
-    <value>训练峰得分模型时出错: {0}</value>
+    <value>训练峰得分模型时出错： {0}</value>
   </data>
   <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
     <value>计算器 {0} 要求其标准肽段的所有 {1} 都在目标列表中，以便确定回归。缺少以下 {2} 肽段:
@@ -11581,7 +11581,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>正在检测 {0} 中的诱饵前缀。</value>
   </data>
   <data name="EnsureFastaHasDecoys_Some_common_prefixes_were_found_" xml:space="preserve">
-    <value>找到了一些共同前缀:</value>
+    <value>找到了一些共同前缀：</value>
   </data>
   <data name="EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_" xml:space="preserve">
     <value>使用 {0} 作为最有可能的诱饵前缀。</value>
@@ -11593,7 +11593,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>未找到共同前缀。</value>
   </data>
   <data name="EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_" xml:space="preserve">
-    <value>找到了一些共同后缀，但这些后缀不受支持:</value>
+    <value>找到了一些共同后缀，但这些后缀不受支持：</value>
   </data>
   <data name="EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes" xml:space="preserve">
     <value>后缀 {0} 可能用作诱饵后缀，但 Skyline 的 DDA 搜索工具不支持诱饵后缀。建议使用没有诱饵的原始 FASTA 重新运行。</value>
