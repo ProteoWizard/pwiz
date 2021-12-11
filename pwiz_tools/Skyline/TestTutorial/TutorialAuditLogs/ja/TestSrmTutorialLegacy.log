@@ -114,9 +114,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 143 transitions added
-Associate Proteins enabled
-Columns identified as 'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'
+Extra Info: 143個のトランジションが追加されました
+タンパク質の関連付けが有効になっています
+'タンパク質名','ペプチド修飾シークエンス','プリカーサーm/z','プロダクトm/z'と特定されている列
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1217.530841
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1116.483162
 Rv1812c_Rv1812c	VTTSTGASYSYDR	709.327105	1029.451134
