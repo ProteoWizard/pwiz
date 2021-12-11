@@ -35,6 +35,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -220,36 +221,42 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// We have some code, especially in commandline, that expects certain error messages to start with "Error:" or the L10N equivalent
+        /// We have some code, especially in commandline, that expects certain error messages to start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") or the L10N equivalent
         /// </summary>
         void InspectConsistentErrorMessages(List<string> errors)
         {
-            var currentCulture = Thread.CurrentThread.CurrentUICulture;
+            var currentCulture = Thread.CurrentThread.CurrentUICulture; // Preserve current test culture
             try
             {
                 Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = new CultureInfo("en"); // We want to compare against the "en" resources
-                var resourceSet = Skyline.Properties.Resources.ResourceManager.GetResourceSet(Thread.CurrentThread.CurrentUICulture, true, true);
+                var resourceSetEnglish = Skyline.Properties.Resources.ResourceManager.GetResourceSet(Thread.CurrentThread.CurrentUICulture, true, true);
 
-                // Build the string of resources.
-                foreach (var resource in resourceSet)
+                // Before we proceed, make sure that the hardcoded english language hint still agrees with the englsh language resource
+                AssertEx.IsTrue(Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT));
+
+                // Now work through each resource, checking for L10N consistency of strings that, in English, start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:")
+                foreach (var resource in resourceSetEnglish)
                 {
-                    var pair = resource as DictionaryEntry? ?? default;
-                    var val = pair.Value as string ?? string.Empty;
-                    if (val.StartsWith("Error:"))
+                    var pair = resource as DictionaryEntry? ?? new DictionaryEntry(); // For strings, resource object is a pair [resource name, L10N string]
+                    var englishString = pair.Value as string ?? string.Empty;
+                    if (englishString.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT))
                     {
-                        var name = pair.Key.ToString();
+                        var resourceName = pair.Key.ToString();
+                        // Now work through the other supported L10N languages, verifying that the L10N string is also properly marked as an error hint.
+                        // That is, either starts with localized Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_, or starts with
+                        // the english language string constant CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. hasn't been localized yet).
                         foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
                         {
                             var tryCulture = new CultureInfo(culture);
                             Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;
-                            var local = Skyline.Properties.Resources.ResourceManager.GetString(name) ?? String.Empty;
                             var commandStatusWriterWriteLineError = Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_;
-                            if (!local.StartsWith(commandStatusWriterWriteLineError, StringComparison.CurrentCulture) &&
-                                !local.StartsWith(@"Error:", StringComparison.InvariantCulture)) // Maybe not yet localized
+                            var localized = Skyline.Properties.Resources.ResourceManager.GetString(resourceName) ?? String.Empty;
+                            if (!localized.StartsWith(commandStatusWriterWriteLineError, StringComparison.CurrentCulture) &&
+                                !localized.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT, StringComparison.InvariantCulture)) // Maybe not yet localized
                             {
                                 // Report mismatch
-                                errors.Add(string.Format("The {0} language version of resource string {1} does not begin with the localized version of \"Error:\" (see Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_)", 
-                                    culture, name));
+                                errors.Add(string.Format("The {0} language version of resource string {1} does not begin with the localized version of \"{2}\" (see Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_)", 
+                                    culture, resourceName, CommandStatusWriter.ERROR_MESSAGE_HINT));
                             }
                         }
                         Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
@@ -413,7 +420,7 @@ namespace pwiz.SkylineTest
 
             var results = CheckFormsWithoutTestRunnerLookups();
 
-            // Make sure that anything that should start with the L10N equivalent of "Error:" does so
+            // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
             InspectConsistentErrorMessages(results);
 
             InspectTutorialAuditLogs(root, results);
