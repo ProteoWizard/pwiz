@@ -121,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestRecognizeChargeState();
             TestLabelsNoFormulas();
             TestHeavyLightPairs();
             TestHeavyPrecursorNoFormulas();
@@ -1181,6 +1182,21 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        private void TestRecognizeChargeState()
+        {
+            // Make sure we are properly recognizing these common header types
+            var text = "Molecular Formula, Precursor Charge,Product Formula, Product Charge\nH2O10,1,HO10,1\nH2O10,1,HO6,1";
+            var docOrig = NewDocument();
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            WaitForClosedForm(importDialog);
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
+            NewDocument();
         }
 
         private void TestLabelsNoFormulas()
