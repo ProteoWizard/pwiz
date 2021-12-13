@@ -650,7 +650,6 @@ namespace pwiz.Skyline.EditUI
                     case PasteFormat.fasta: return Resources.PasteDlg_Description_Insert_FASTA;
                     case PasteFormat.protein_list: return Resources.PasteDlg_Description_Insert_protein_list;
                     case PasteFormat.peptide_list: return Resources.PasteDlg_Description_Insert_peptide_list;
-                    case PasteFormat.transition_list: return Resources.PasteDlg_Description_Insert_transition_list;
                 }
                 return Resources.PasteDlg_Description_Insert;
             }
@@ -1423,7 +1422,6 @@ namespace pwiz.Skyline.EditUI
         fasta,
         protein_list,
         peptide_list,
-        transition_list,
     }
 
     public class ImportFastaHelper
