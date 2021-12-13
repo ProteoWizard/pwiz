@@ -463,7 +463,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.KEGGColumn, @"KEGG");
             SetComboBoxText(columns.InChiColumn, @"InChi");
             SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
-            // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+            SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
