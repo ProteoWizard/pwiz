@@ -332,11 +332,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(errDlg.Message.Contains(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_) &&
                               errDlg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
-                    string.Format(
-                        "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                        Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ +
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                        errDlg.Message));
+                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                    Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ +
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    errDlg.Message);
             });
             OkDialog(errDlg, errDlg.Close);
 

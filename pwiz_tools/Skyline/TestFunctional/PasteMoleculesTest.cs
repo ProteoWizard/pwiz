@@ -1219,9 +1219,8 @@ namespace pwiz.SkylineTestFunctional
                 }
                 var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
                 Assert.IsTrue(allErrorText.Contains(errText),
-                    string.Format(
-                        "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                        errText, errDlg.ErrorList));
+                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                    errText, errDlg.ErrorList);
             });
             OkDialog(errDlg, errDlg.Close);
             OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
