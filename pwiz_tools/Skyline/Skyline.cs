@@ -2451,7 +2451,7 @@ namespace pwiz.Skyline
                     bool success = false;
                     using (var longWaitDlg = new LongWaitDlg(this)
                     {
-                        Text = Text,    // Same as dialog box
+                        Text = Text, // Same as dialog box
                         Message = message,
                         ProgressValue = 0
                     })
@@ -2459,29 +2459,38 @@ namespace pwiz.Skyline
                         var undoState = GetUndoState();
                         longWaitDlg.PerformWork(parent, 800, progressMonitor =>
                         {
-                            using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, this))
+                            using (var settingsChangeMonitor =
+                                new SrmSettingsChangeMonitor(progressMonitor, message, this))
                             {
                                 // If background proteome lacks the needed protein metadata for uniqueness checks, force loading now
                                 var diff = new SrmSettingsDiff(newSettings, Document.Settings);
-                                if (diff.DiffPeptides || newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
+                                if (diff.DiffPeptides || newSettings.PeptideSettings
+                                    .NeedsBackgroundProteomeUniquenessCheckProcessing)
                                 {
                                     if (progressMonitor.IsCanceled)
                                     {
                                         return;
                                     }
+
                                     // Looping here in case some other agent interrupts us with a change to Document
                                     while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                                     {
-                                        BackgroundProteomeManager.BeginForegroundLoad();  // Signal the background task to stay out of our way
-                                        var manager = BackgroundProteomeManager; // Use the background loader logic, but in this thread
-                                        var withMetaData = manager.LoadForeground(newSettings.PeptideSettings, settingsChangeMonitor);
+                                        BackgroundProteomeManager
+                                            .BeginForegroundLoad(); // Signal the background task to stay out of our way
+                                        var manager =
+                                            BackgroundProteomeManager; // Use the background loader logic, but in this thread
+                                        var withMetaData = manager.LoadForeground(newSettings.PeptideSettings,
+                                            settingsChangeMonitor);
                                         if (withMetaData == null)
                                         {
                                             return; // Cancelled
                                         }
-                                        newSettings = newSettings.ChangePeptideSettings(s => s.ChangeBackgroundProteome(withMetaData));
+
+                                        newSettings = newSettings.ChangePeptideSettings(s =>
+                                            s.ChangeBackgroundProteome(withMetaData));
                                     }
                                 }
+
                                 success = ChangeSettings(newSettings, true, null, undoState, settingsChangeMonitor,
                                     () => longWaitDlg.EnableCancelOption(true),
                                     () => longWaitDlg.EnableCancelOption(false));
@@ -2497,6 +2506,15 @@ namespace pwiz.Skyline
                 {
                     // Canceled mid-change due to background document change
                     documentChanged = true;
+                }
+                catch (Exception exception)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(exception))
+                    {
+                        throw;
+                    }
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    return false;
                 }
                 finally
                 {
@@ -4597,6 +4615,23 @@ namespace pwiz.Skyline
         public void ShowPermuteIsotopeModificationsDlg()
         {
             RefineMenu.ShowPermuteIsotopeModificationsDlg();
+        }
+
+        /// <summary>
+        /// If the exception looks like it might be caused by an IO failure, display the error to the user.
+        /// For other types of exceptions, display the Unhandled Error dialog allowing them to report
+        /// the exception as a bug.
+        /// </summary>
+        public void HandlePossibleIoException(Exception exception)
+        {
+            if (exception is IOException || exception is UnauthorizedAccessException)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+            }
+            else
+            {
+                Program.ReportException(exception);
+            }
         }
 
         public EditMenu EditMenu { get; private set; }
