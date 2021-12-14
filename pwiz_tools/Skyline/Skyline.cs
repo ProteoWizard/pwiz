@@ -4617,23 +4617,6 @@ namespace pwiz.Skyline
             RefineMenu.ShowPermuteIsotopeModificationsDlg();
         }
 
-        /// <summary>
-        /// If the exception looks like it might be caused by an IO failure, display the error to the user.
-        /// For other types of exceptions, display the Unhandled Error dialog allowing them to report
-        /// the exception as a bug.
-        /// </summary>
-        public void HandlePossibleIoException(Exception exception)
-        {
-            if (exception is IOException || exception is UnauthorizedAccessException)
-            {
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
-            }
-            else
-            {
-                Program.ReportException(exception);
-            }
-        }
-
         public EditMenu EditMenu { get; private set; }
 
         public ViewMenu ViewMenu { get; private set; }
