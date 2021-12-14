@@ -338,30 +338,49 @@ namespace pwiz.SkylineTest
                 formTypes.Add(t);
             }
 
-            foreach (var formType in formTypes)
+            try
             {
-                // Now find all forms that inherit from formType
-                var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
-                foreach (var form in assembly.GetTypes()
-                    .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
-                                formType.IsAssignableFrom(t))) // Interface type match
+                foreach (var formType in formTypes)
                 {
-                    var formName = form.Name;
-                    // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
-                    if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
-                        !formTypes.Any(ft => Equals(formName, ft.Name)))
+                    // Now find all forms that inherit from formType
+                    var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
+                    foreach (var form in assembly.GetTypes()
+                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
+                                    formType.IsAssignableFrom(t))) // Interface type match
                     {
-                        forms.Add(formName);
-                    }
+                        var formName = form.Name;
+                        // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
+                        if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
+                            !formTypes.Any(ft => Equals(formName, ft.Name)))
+                        {
+                            forms.Add(formName);
+                        }
 
-                    // Look for tabs etc
-                    var typeIFormView = typeof(IFormView);
-                    foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
-                    {
-                        var nestedName = formName + "." + nested.Name;
-                        forms.Add(nestedName);
+                        // Look for tabs etc
+                        var typeIFormView = typeof(IFormView);
+                        foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
+                        {
+                            var nestedName = formName + "." + nested.Name;
+                            forms.Add(nestedName);
+                        }
                     }
                 }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindForms");
+                errMessage.AppendLine("(Perhaps Visual Studio menu item \"Test | Configure Run Settings | Select Solution Wide runsettings File\" is not set to \"TestSettings_x64.runsettings\"?)");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
             }
 
             return forms;
