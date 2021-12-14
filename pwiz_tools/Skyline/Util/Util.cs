@@ -2136,7 +2136,9 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
-            if (exception is IOException || exception is UnauthorizedAccessException)
+            if (exception is InvalidDataException 
+                || exception is IOException 
+                || exception is UnauthorizedAccessException)
             {
                 return false;
             }
