@@ -1161,7 +1161,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            LoadScan(false, false);
+            LoadScan(false, Settings.Default.LockYAxis);
         }
 
         private void comboBoxScanType_SelectedIndexChanged(object sender, EventArgs e)
