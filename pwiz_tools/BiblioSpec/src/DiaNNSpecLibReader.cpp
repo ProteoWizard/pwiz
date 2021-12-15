@@ -605,6 +605,8 @@ bool DiaNNSpecLibReader::parseFile()
         {
             if (!bfs::is_regular_file(tsvFilepath))
                 continue;
+            if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(speclibFilename, "first-pass"))
+                continue;
             int sharedPrefixLength = 0, i;
             auto tsvFilename = tsvFilepath.filename().string();
             for (i = 0; i < tsvFilename.length() && i < speclibFilename.length(); ++i)
@@ -647,6 +649,7 @@ bool DiaNNSpecLibReader::parseFile()
         char *run, *precursorId;
         float qValue, pep, rt, rtStart, rtStop, im;
         string currentRun;
+        hasSkippedRuns = false;
         while (reportReader.read_row(run, precursorId, qValue, pep, rt, rtStart, rtStop, im))
         {
             if (currentRun.empty())
