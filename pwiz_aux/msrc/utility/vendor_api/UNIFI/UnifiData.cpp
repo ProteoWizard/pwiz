@@ -235,6 +235,7 @@ ref class ParallelDownloadQueue
     TaskScheduler^ _readaheadScheduler;
     System::Threading::EventWaitHandle^ _waitForStart;
     DateTime _startTime;
+    bool _unifiDebug;
 
     //ConcurrentQueue<int>^ _chunkQueue;
     ConcurrentQueue<HttpClient^>^ _httpClients;
@@ -267,9 +268,11 @@ ref class ParallelDownloadQueue
             _httpClients->Enqueue(httpClient);
         }
 
-#ifdef WIN32 // DEBUG
-        Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
-#endif
+        auto unifiDebug = System::Environment::GetEnvironmentVariable("UNIFI_DEBUG");
+        _unifiDebug = unifiDebug != nullptr && unifiDebug != "0";
+
+        if (_unifiDebug)
+            Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
 
         _queueScheduler = gcnew QueuedTaskScheduler();
         _primaryScheduler = _queueScheduler->ActivateNewQueue(0);
@@ -377,9 +380,8 @@ ref class ParallelDownloadQueue
     int runChunkTask(size_t taskIndex)
     {
         int currentThreadId = System::Threading::Thread::CurrentThread->ManagedThreadId;
-#ifdef _WIN32 //DEBUG
-        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
-#endif
+        if (_unifiDebug)
+            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
 
         _waitForStart->Set();
 
@@ -427,9 +429,8 @@ ref class ParallelDownloadQueue
                         if (requestRetryCount < requestMaxRetryCount)
                         {
                             // try again
-#ifdef _WIN32 //DEBUG
-                            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
-#endif
+                            if (_unifiDebug)
+                                Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
                             System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
                         }
                         else
@@ -442,10 +443,9 @@ ref class ParallelDownloadQueue
                 DateTime stop = DateTime::UtcNow;
 
                 bytesDownloaded = response->Content->Headers->ContentLength.GetValueOrDefault(0);
-#ifdef _WIN32 //DEBUG
                 //if (streamRetryCount == 1)
+                if (_unifiDebug)
                     Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and receive {2} bytes; {3:0.}KB/s)", taskIndex, (stop - requestStart).TotalMilliseconds, bytesDownloaded, bytesDownloaded / 1024 / (stop - requestStart).TotalSeconds);
-#endif
 
                 start = DateTime::UtcNow;
                 auto lastSpectrum = start;
@@ -486,9 +486,9 @@ ref class ParallelDownloadQueue
                 if (streamRetryCount < streamMaxRetryCount || response->StatusCode == (HttpStatusCode) 429)
                 {
                     // try again
-#ifdef _WIN32 //DEBUG
-                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
-#endif
+                    if (_unifiDebug)
+                        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
+
                     if (response->StatusCode != (HttpStatusCode) 429)
                         System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
                     bytesDownloaded = 0;
@@ -504,10 +504,12 @@ ref class ParallelDownloadQueue
                     delete response;
             }
         }
-#ifdef _WIN32 //DEBUG
-        DateTime stop = DateTime::UtcNow;
-        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
-#endif
+
+        if (_unifiDebug)
+        {
+            DateTime stop = DateTime::UtcNow;
+            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
+        }
         _tasksByIndex->Remove(taskIndex); // remove the task
         _httpClients->Enqueue(httpClient); // add client back to queue
 
@@ -628,6 +630,8 @@ class UnifiData::Impl
             getNumberOfSpectra();
             //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
+            auto unifiDebug = System::Environment::GetEnvironmentVariable("UNIFI_DEBUG");
+            _unifiDebug = unifiDebug != nullptr && unifiDebug != "0";
 
             _chunkSize = 20;// Math::Max(10, (int)std::ceil(_numNetworkSpectra / 500.0));
 
@@ -1201,6 +1205,7 @@ class UnifiData::Impl
     gcroot<System::String^> _accessToken;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
+    bool _unifiDebug;
 
     int _apiVersion;
     bool _combineIonMobilitySpectra; // do not treat drift bins as separate spectra
@@ -1671,9 +1676,8 @@ class UnifiData::Impl
                 if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
                     _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
             }
-#ifdef _WIN32 //DEBUG
-            Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
-#endif
+            if (_unifiDebug)
+                Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
             chunkTask->Wait(); // wait for the task to finish
 
             spectrum = _cache->Get(networkIndex);

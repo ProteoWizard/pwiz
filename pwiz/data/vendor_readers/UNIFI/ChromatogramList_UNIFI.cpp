@@ -95,11 +95,14 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata
 
     for (const auto& info : unifiData_->chromatogramInfo())
     {
-        if (!bal::contains(info.id, chromatogramTag))
+        if (!bal::contains(info.id, chromatogramTag) || bal::contains(info.id, "Integrated"))
             continue;
 
         if (!bxp::regex_match(info.id, what, functionNumberRegex))
+        {
             msd_.run.spectrumListPtr->warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
+            continue;
+        }
 
         int functionNumber = lexical_cast<int>(what[1].str());
         if (config_.globalChromatogramsAreMs1Only && functionNumber != 1)
@@ -241,6 +244,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::createIndex() const
                     ie.id = "TIC";
                     ie.chromatogramType = MS_TIC_chromatogram;
                 }
+                /* FIXME: apparently this is not working the same as TIC; maybe it only gets peaks instead of times/intensities?
                 else if (!hasBPI && bal::contains(chromatogramInfo.id, "(BPI)"))
                 {
                     hasBPI = true;
@@ -248,7 +252,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::createIndex() const
                     IndexEntry& ie = index_.back();
                     ie.id = "BPI";
                     ie.chromatogramType = MS_basepeak_chromatogram;
-                }
+                }*/
             }
             break;
 
