@@ -167,6 +167,7 @@
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

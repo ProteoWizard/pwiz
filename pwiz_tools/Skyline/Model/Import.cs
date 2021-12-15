@@ -1544,7 +1544,7 @@ namespace pwiz.Skyline.Model
                     int iPrecursor = prec.PrecursorMzIdex;
                     int iProduct = FindProduct(fieldsFirstRow, prec.Sequence, prec.TransitionExps, prec.SequenceIndex, prec.PrecursorMzIdex,
                         tolerance, provider, settings);
-                    if (iProduct == -1)
+                    if (iProduct == -1 && !tolerateErrors)
                         throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
                     int iProt = indices.ProteinColumn;
