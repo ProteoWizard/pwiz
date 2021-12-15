@@ -122,6 +122,7 @@ namespace pwiz.SkylineTestFunctional
             var docEmpty = NewDocument();
 
             TestMissingProductMZ();
+            TestImpliedFragmentAdduct();
             TestRecognizeChargeState();
             TestLabelsNoFormulas();
             TestHeavyLightPairs();
@@ -1183,6 +1184,29 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        private void TestImpliedFragmentAdduct()
+        {
+            // Test ability to infer fragment adduct from formula and stated m/z
+            var text = 
+                "MoleculeListName\tscan\tPrecursorCharge\tPrecursorAdduct\tinchikey\tmolecularformula\tmoleculename\thmdb or cas\texplicitretentiontime\texplicitretentiontimewindow\tMW\tprecursor m/z\tproductformula\tproduct m/z\tfrag1calc\tfrag2comp\n" +
+                "QEP1_2021_0823_RJ_21_2ab55prm.raw\t3423\t1\t[M+H]\tQQVDJLLNRSOCEL-UHFFFAOYSA-N\tC2H8NO3P\t(2-AMINOETHYL)PHOSPHONATE\tHMDB11747\t5\t2\t125.0241796\t126.0320046\tCH6O3P\t97.0054556\tH4O4P\t98.9847214\n" + // Implied fragment M+
+                "QEP1_2021_0823_RJ_31_2ef55prm.raw\t5909\t1\t[M+H]\tXFNJVJPLKCPIBV-UHFFFAOYSA-N\tC3H10N2\t\"1,3 - DIAMINOPROPANE\"\tHMDB00002\t8.9\t2\t74.0844\t75.09222333\tC3H8N\t59.0656708\tna\tna\n"; // Implied fragment M+H
+            var docOrig = NewDocument();
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+            OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            WaitForClosedForm(importDialog);
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(pastedDoc, null, 2, 2, 2, 2);
+            var count = 0;
+            foreach (var transition in pastedDoc.MoleculeTransitions)
+            {
+                AssertEx.AreEqual(count++ == 0? Adduct.M_PLUS : Adduct.M_PLUS_H, transition.Transition.Adduct);
+            }
+            NewDocument();
         }
 
         private void TestRecognizeChargeState()
