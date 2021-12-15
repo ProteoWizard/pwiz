@@ -607,7 +607,8 @@ namespace pwiz.Skyline.Model
             if (adductInferred.IsEmpty)
             {
                 // See if this can be explained by the more common adduct types, possibly with water loss
-                var matches = new Dictionary<double, Adduct>();
+                var leastError = double.MaxValue;
+                var bestMatch = Adduct.EMPTY;
                 foreach (var adductList in new []{Adduct.DEFACTO_STANDARD_ADDUCTS, Adduct.COMMON_CHARGEONLY_ADDUCTS})
                 {
                     foreach (var text in adductList)
@@ -616,9 +617,10 @@ namespace pwiz.Skyline.Model
                         if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
                         {
                             var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                            if (err <= tolerance)
+                            if (err <= tolerance && err < leastError)
                             {
-                                matches.Add(err, adductInferred);
+                                bestMatch = adductInferred;
+                                leastError = err;
                             }
                             else if (isPrecursor)
                             {
@@ -629,18 +631,20 @@ namespace pwiz.Skyline.Model
                                     var tail = text.Substring(parts[0].Length);
                                     adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                     err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                    if (err <= tolerance)
+                                    if (err <= tolerance && err < leastError)
                                     {
-                                        matches.Add(err, adductInferred);
+                                        bestMatch = adductInferred;
+                                        leastError = err;
                                     }
                                     else
                                     {
                                         // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
                                         adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                         err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                        if (err <= tolerance)
+                                        if (err <= tolerance && err < leastError)
                                         {
-                                            matches.Add(err, adductInferred);
+                                            bestMatch = adductInferred;
+                                            leastError = err;
                                         }
                                     }
                                 }
@@ -648,13 +652,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                if (matches.Any())
-                {
-                    var best = matches.Keys.Min();
-                    adduct = matches[best];
-                    return adduct.AdductCharge;
-                }
-                adductInferred = Adduct.EMPTY; // No match
+                adductInferred = bestMatch;
             }
 
             if (adductInferred.IsEmpty)
