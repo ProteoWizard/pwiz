@@ -43,7 +43,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_UNIFI::identify(const std::string
 #ifdef PWIZ_READER_UNIFI
 #include "pwiz_aux/msrc/utility/vendor_api/UNIFI/UnifiData.hpp"
 #include "SpectrumList_UNIFI.hpp"
-//#include "ChromatogramList_UNIFI.hpp"
+#include "ChromatogramList_UNIFI.hpp"
 //#include "Reader_UNIFI_Detail.hpp"
 
 
@@ -148,9 +148,9 @@ void Reader_UNIFI::read(const string& sampleResultUrl,
         UnifiDataPtr unifiData(new UnifiData(sampleResultUrl, config.combineIonMobilitySpectra));
 
         SpectrumList_UNIFI* sl = new SpectrumList_UNIFI(result, unifiData, config);
-        //ChromatogramList_UNIFI* cl = new ChromatogramList_UNIFI(result, wifffile, experimentsMap, runIndex);
+        ChromatogramList_UNIFI* cl = new ChromatogramList_UNIFI(result, unifiData, config);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
-        //result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+        result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
         fillInMetadata(sampleResultUrl, result, unifiData, config);
     }
