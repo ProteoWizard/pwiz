@@ -604,41 +604,44 @@ namespace pwiz.Skyline.Model
                 maxCharge, new int[0],
                 TransitionCalc.MassShiftType.none, out _, out _);
 
-            if (isPrecursor && adductInferred.IsEmpty)
+            if (adductInferred.IsEmpty)
             {
                 // See if this can be explained by the more common adduct types, possibly with water loss
                 var matches = new Dictionary<double, Adduct>();
-                foreach (var text in Adduct.DEFACTO_STANDARD_ADDUCTS)
+                foreach (var adductList in new []{Adduct.DEFACTO_STANDARD_ADDUCTS, Adduct.COMMON_CHARGEONLY_ADDUCTS})
                 {
-                    adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
-                    if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
+                    foreach (var text in adductList)
                     {
-                        var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                        if (err <= tolerance)
+                        adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                        if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
                         {
-                            matches.Add(err, adductInferred);
-                        }
-                        else
-                        {
-                            // Try water loss
-                            var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
-                            if (parts.Length == 2)
+                            var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                            if (err <= tolerance)
                             {
-                                var tail = text.Substring(parts[0].Length);
-                                adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
-                                err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                if (err <= tolerance)
+                                matches.Add(err, adductInferred);
+                            }
+                            else if (isPrecursor)
+                            {
+                                // Try water loss
+                                var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
+                                if (parts.Length == 2)
                                 {
-                                    matches.Add(err, adductInferred);
-                                }
-                                else
-                                {
-                                    // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
-                                    adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                    var tail = text.Substring(parts[0].Length);
+                                    adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                     err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
                                     if (err <= tolerance)
                                     {
                                         matches.Add(err, adductInferred);
+                                    }
+                                    else
+                                    {
+                                        // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
+                                        adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                        err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                                        if (err <= tolerance)
+                                        {
+                                            matches.Add(err, adductInferred);
+                                        }
                                     }
                                 }
                             }
