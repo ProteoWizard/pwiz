@@ -87,7 +87,7 @@ lib pwiz_reader_unifi
     : # sources
         Reader_UNIFI.cpp
         SpectrumList_UNIFI.cpp
-        #ChromatogramList_UNIFI.cpp
+        ChromatogramList_UNIFI.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements
