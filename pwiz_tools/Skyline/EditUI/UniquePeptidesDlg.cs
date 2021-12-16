@@ -349,7 +349,7 @@ namespace pwiz.Skyline.EditUI
                     if (digestion != null)
                     {
                         var peptidesOfInterest = _peptideDocNodes.Select(node => node.Item2.Peptide.Target.Sequence);
-                        var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest);
+                        var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest, longWaitBroker.CancellationToken);
                         if (longWaitBroker.IsCanceled)
                         {
                             return;

@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Controls.Startup
                             skylineWindow.OpenPasteFileDlg(PasteFormat.protein_list);
                             break;
                         case DataType.transition_list:
-                            skylineWindow.OpenPasteFileDlg(PasteFormat.transition_list);
+                            skylineWindow.EditMenu.ShowInsertTransitionListDlg();
                             break;
                     }
                 }

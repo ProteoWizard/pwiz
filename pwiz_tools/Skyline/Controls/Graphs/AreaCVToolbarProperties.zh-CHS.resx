@@ -601,7 +601,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>CV 截止(&amp;C):</value>
+    <value>CV 截止(&amp;C)：</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>

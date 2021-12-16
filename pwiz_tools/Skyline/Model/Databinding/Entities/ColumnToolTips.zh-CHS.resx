@@ -180,9 +180,8 @@
     <value>使用与此重复测定具有相同批次名称的外部标准重复测定子集计算的目标定性离子比。</value>
   </data>
   <data name="BeginPos">
-    <value>在其归属的蛋白质序列中该肽段序列中的首位（N-末端）氨基酸的位置，
-如果没有可用的蛋白质序列，则为 #N/A。
-    </value>
+    <value>肽段的第一个 (N-末端) 氨基酸在其包含的蛋白质序列中的位置 (从零开始)，
+如果没有可用的蛋白质序列，则为 #N/A。</value>
   </data>
   <data name="BestReplicate">
     <value>如果此重复测定得出了最高的总肽段峰得分，则成立。</value>
@@ -306,8 +305,8 @@
     <value>在应用 mProphet 模型后，分配给每个选定峰（目标和诱饵）的归一化 mProphet 得分，表示为平均诱饵评分的标准偏差 (SD) 数。</value>
   </data>
   <data name="EndPos">
-    <value>在其归属的蛋白质序列中肽段的末尾（C-末端）氨基酸的位置，
-如果没有蛋白质序列，则为 #N/A</value>
+    <value>肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置 (从零开始)，
+如果没有可用的蛋白质序列，则为 #N/A。</value>
   </data>
   <data name="EndTime">
     <value>离子对峰结束积分边界的保留时间。</value>
@@ -380,6 +379,10 @@
   </data>
   <data name="Files">
     <value>文件</value>
+  </data>
+  <data name="FirstPosition">
+    <value>肽段的第一个 (N-末端) 氨基酸在其包含的蛋白质序列中的位置，
+如果没有可用的蛋白质序列，则为 #N/A。</value>
   </data>
   <data name="FoldChange">
     <value>倍数变化值。倍数变化是试验组的归一化强度与对照组归一化强度的比率。</value>
@@ -488,6 +491,10 @@
   </data>
   <data name="Key">
     <value>关键</value>
+  </data>
+  <data name="LastPosition">
+    <value>肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置，
+如果没有可用的蛋白质序列，则为 #N/A</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>离子迁移库中母离子的碰撞横截面</value>

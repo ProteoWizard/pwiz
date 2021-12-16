@@ -232,14 +232,18 @@ namespace pwiz.Skyline.Model.Lib
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
-                        catch (InvalidDataException x)
-                        {
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
                         catch (OperationCanceledException)
                         {
                             docNew = docCurrent;    // Just continue
+                        }
+                        catch (Exception x)
+                        {
+                            if (ExceptionUtil.IsProgrammingDefect(x))
+                            {
+                                throw;
+                            }
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                            break;
                         }
                     }
                 }
