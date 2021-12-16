@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
             var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
             string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
             PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
             RunUI(() => {
                 colDlg.checkBoxAssociateProteins.Checked = true; // Enable Associate Proteins

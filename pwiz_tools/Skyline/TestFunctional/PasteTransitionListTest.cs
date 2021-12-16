@@ -324,7 +324,7 @@ namespace pwiz.SkylineTestFunctional
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
             var text =  "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\nPEPTIDER\t478.738\ty1\t1\nPEPTIDER\t478.738\ty2\t1";
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text =
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText =
                 text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
 
             var errDlg = ShowDialog<MessageDlg>(columnSelectDlg.CheckForErrors);

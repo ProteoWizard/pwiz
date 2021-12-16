@@ -104,7 +104,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         var zneg = string.Format("{0}-1{0}", TextUtil.CsvSeparator);
                         text = text.Replace(z, zneg);
                     }
-                    var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+                    var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
 
                     RunUI(() => {
                         col4Dlg.radioMolecule.PerformClick();

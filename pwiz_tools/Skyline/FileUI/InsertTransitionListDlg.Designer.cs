@@ -73,7 +73,7 @@
         #endregion
 
         private System.Windows.Forms.Button buttonCancel;
-        public System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label1;
     }
 }

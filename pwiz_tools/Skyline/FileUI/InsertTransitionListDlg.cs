@@ -49,7 +49,11 @@ namespace pwiz.Skyline.FileUI
             textBox1.GotFocus += textBox1_HideCaret;  
         }
 
-        public string TransitionListText => textBox1.Text;
+        public string TransitionListText
+        {
+            get => textBox1.Text;
+            set { textBox1.Text = value; DialogResult = DialogResult.OK; }
+        } 
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -63,6 +67,7 @@ namespace pwiz.Skyline.FileUI
                 textBox1.Text = string.Empty;
                 textBox1.TextAlign = HorizontalAlignment.Left; // So the pasted text, which appears briefly, doesn't look weird
                 textBox1.Font = new Font(textBox1.Font.Name, textBox1.Font.Size / 2, textBox1.Font.Style); // Back to standard font
+                textBox1.WordWrap = false; // Makes brief appearance of pasted text look a little tidier
                 textBox1.Paste(); // Copy the clipboard contents to the textbox
                 DialogResult = DialogResult.OK;
             }

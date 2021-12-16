@@ -213,7 +213,7 @@ namespace TestPerf
         {
             // Paste into the targets window
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = transitions);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = transitions);
 
             if (associateProteins)
             {
@@ -249,7 +249,7 @@ namespace TestPerf
                                 "VTTSTGASYSYDR, 709.327105, 1116.483162, Rv1812c_Rv1812c\n" +
                                 "VTTSTGASYSYDR, 709.327105, 1029.451134, Rv1812c_Rv1812c";
             var importDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDlg.textBox1.Text = protColumnTSV);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDlg.TransitionListText = protColumnTSV);
             var proteinIndex = 0;
             // Test our warning when the user associates proteins and then tries to reassign the protein name column
             RunUI(() =>
