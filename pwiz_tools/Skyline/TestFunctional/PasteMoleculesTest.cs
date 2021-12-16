@@ -64,7 +64,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 windowDlg.radioMolecule.PerformClick();
-                SetComboBoxes(windowDlg, columnOrder);
+                if (columnOrder != null)
+                {
+                    SetComboBoxes(windowDlg, columnOrder);
+                }
             });
 
             if (string.IsNullOrEmpty(errText))
@@ -121,6 +124,8 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestImpliedAdductWithSynonyms();
+            TestMissingProductMZ();
             TestImpliedFragmentAdduct();
             TestRecognizeChargeState();
             TestLabelsNoFormulas();
@@ -1185,6 +1190,14 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
         }
 
+        private void TestImpliedAdductWithSynonyms()
+        {
+            // Deal with implied adducts for which we support synonyms (this caused trouble with use of a dictionary in parser code, since synonyms yield identical mz matches) 
+            var text = "moleculename\tmolecularformula\tprecursormz\nMyMol\tC40H23NO6\t658.1507"; // This m/z results from [M+FA-H], but we also accept [M+HCOO] as a synonym for that
+            TestError(text, String.Empty, null); // Should load with no problem
+            NewDocument();
+        }
+
         private void TestImpliedFragmentAdduct()
         {
             // Test ability to infer fragment adduct from formula and stated m/z
@@ -1221,6 +1234,36 @@ namespace pwiz.SkylineTestFunctional
             var pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 1, 2);
             NewDocument();
+        }
+
+        private void TestMissingProductMZ()
+        {
+            // Make sure we properly handle missing product mz info
+            var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
+            var text = "Molecular Formula\tPrecursor Charge\tProduct Name\tProduct Charge\nH2O10\t1\tHO10\t1\nH2O10\t1\tHO6\t1";
+            var docOrig = NewDocument();
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
+            RunUI(() =>
+            {
+                var allErrorText = string.Empty;
+                foreach (var err in errDlg.ErrorList)
+                {
+                    allErrorText += err.ErrorMessage;
+                }
+                var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
+                Assert.IsTrue(allErrorText.Contains(errText),
+                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                    errText, errDlg.ErrorList);
+            });
+            OkDialog(errDlg, errDlg.Close);
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+            WaitForClosedForm(importDialog);
+
+            NewDocument();
+            RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
         private void TestLabelsNoFormulas()
