@@ -64,7 +64,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 windowDlg.radioMolecule.PerformClick();
-                SetComboBoxes(windowDlg, columnOrder);
+                if (columnOrder != null)
+                {
+                    SetComboBoxes(windowDlg, columnOrder);
+                }
             });
 
             if (string.IsNullOrEmpty(errText))
@@ -121,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
             TestImpliedFragmentAdduct();
             TestRecognizeChargeState();
@@ -1184,6 +1188,14 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        private void TestImpliedAdductWithSynonyms()
+        {
+            // Deal with implied adducts for which we support synonyms (this caused trouble with use of a dictionary in parser code, since synonyms yield identical mz matches) 
+            var text = "moleculename\tmolecularformula\tprecursormz\nMyMol\tC40H23NO6\t658.1507"; // This m/z results from [M+FA-H], but we also accept [M+HCOO] as a synonym for that
+            TestError(text, String.Empty, null); // Should load with no problem
+            NewDocument();
         }
 
         private void TestImpliedFragmentAdduct()
