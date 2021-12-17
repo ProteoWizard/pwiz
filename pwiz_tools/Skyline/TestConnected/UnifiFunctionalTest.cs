@@ -32,7 +32,8 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class UnifiFunctionalTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        // TODO(nicksh): re-enable this test when the test server is working again
+        // [TestMethod]
         public void TestUnifi()
         {
             if (!UnifiTestUtil.EnableUnifiTests)

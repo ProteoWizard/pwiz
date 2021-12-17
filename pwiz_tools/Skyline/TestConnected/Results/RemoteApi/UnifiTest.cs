@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -50,7 +51,8 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             Assert.IsNotNull(tokenResponse.AccessToken);
         }
 
-        [TestMethod]
+        // TODO(nicksh): re-enable this test when the test server is working again
+        // [TestMethod]
         public void TestUnifiGetFolders()
         {
             if (!UnifiTestUtil.EnableUnifiTests)
@@ -63,6 +65,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var response = httpClient.GetAsync(account.GetFoldersUrl()).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
             Assert.IsNotNull(responseBody);
+            Console.Out.WriteLine(responseBody);
             var jsonObject = JObject.Parse(responseBody);
             
             var foldersValue = jsonObject["value"] as JArray;
@@ -71,7 +74,8 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             Assert.AreNotEqual(0, folders.Length);
         }
 
-        [TestMethod]
+        // TODO(nicksh): re-enable this test when the test server is working again
+        // [TestMethod]
         public void TestUnifiGetFiles()
         {
             if (!UnifiTestUtil.EnableUnifiTests)
