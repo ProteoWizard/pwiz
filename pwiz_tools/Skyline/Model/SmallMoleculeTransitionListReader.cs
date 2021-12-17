@@ -607,54 +607,49 @@ namespace pwiz.Skyline.Model
             if (adductInferred.IsEmpty)
             {
                 // See if this can be explained by the more common adduct types, possibly with water loss
-                var matches = new Dictionary<double, Adduct>();
-                foreach (var adductList in new []{Adduct.DEFACTO_STANDARD_ADDUCTS, Adduct.COMMON_CHARGEONLY_ADDUCTS})
+                var leastError = double.MaxValue;
+                var bestMatch = Adduct.EMPTY;
+                foreach (var text in Adduct.DEFACTO_STANDARD_ADDUCTS.Concat(Adduct.COMMON_CHARGEONLY_ADDUCTS))
                 {
-                    foreach (var text in adductList)
+                    adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                    if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
                     {
-                        adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
-                        if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
+                        var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                        if (err <= tolerance && err < leastError)
                         {
-                            var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                            if (err <= tolerance)
+                            bestMatch = adductInferred;
+                            leastError = err;
+                        }
+                        else if (isPrecursor)
+                        {
+                            // Try water loss
+                            var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
+                            if (parts.Length == 2)
                             {
-                                matches.Add(err, adductInferred);
-                            }
-                            else if (isPrecursor)
-                            {
-                                // Try water loss
-                                var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
-                                if (parts.Length == 2)
+                                var tail = text.Substring(parts[0].Length);
+                                adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                                if (err <= tolerance && err < leastError)
                                 {
-                                    var tail = text.Substring(parts[0].Length);
-                                    adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                    bestMatch = adductInferred;
+                                    leastError = err;
+                                }
+                                else
+                                {
+                                    // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
+                                    adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                     err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                    if (err <= tolerance)
+                                    if (err <= tolerance && err < leastError)
                                     {
-                                        matches.Add(err, adductInferred);
-                                    }
-                                    else
-                                    {
-                                        // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
-                                        adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
-                                        err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                        if (err <= tolerance)
-                                        {
-                                            matches.Add(err, adductInferred);
-                                        }
+                                        bestMatch = adductInferred;
+                                        leastError = err;
                                     }
                                 }
                             }
                         }
                     }
                 }
-                if (matches.Any())
-                {
-                    var best = matches.Keys.Min();
-                    adduct = matches[best];
-                    return adduct.AdductCharge;
-                }
-                adductInferred = Adduct.EMPTY; // No match
+                adductInferred = bestMatch;
             }
 
             if (adductInferred.IsEmpty)
