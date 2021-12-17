@@ -24,14 +24,19 @@
 
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -52,6 +57,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+
             // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -216,6 +222,56 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// We have some code, especially in commandline, that expects certain error messages to start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") or the L10N equivalent
+        /// </summary>
+        void InspectConsistentErrorMessages(List<string> errors)
+        {
+            var currentCulture = Thread.CurrentThread.CurrentUICulture; // Preserve current test culture
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = new CultureInfo("en"); // We want to compare against the "en" resources
+                var resourceSetEnglish = Skyline.Properties.Resources.ResourceManager.GetResourceSet(Thread.CurrentThread.CurrentUICulture, true, true);
+
+                // Before we proceed, make sure that the hardcoded english language hint still agrees with the englsh language resource
+                AssertEx.IsTrue(Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT));
+
+                // Now work through each resource, checking for L10N consistency of strings that, in English, start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:")
+                foreach (var resource in resourceSetEnglish)
+                {
+                    var pair = resource as DictionaryEntry? ?? new DictionaryEntry(); // For strings, resource object is a pair [resource name, L10N string]
+                    var englishString = pair.Value as string ?? string.Empty;
+                    if (englishString.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT))
+                    {
+                        var resourceName = pair.Key.ToString();
+                        // Now work through the other supported L10N languages, verifying that the L10N string is also properly marked as an error hint.
+                        // That is, either starts with localized Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_, or starts with
+                        // the english language string constant CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. hasn't been localized yet).
+                        foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
+                        {
+                            var tryCulture = new CultureInfo(culture);
+                            Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;
+                            var commandStatusWriterWriteLineError = Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_;
+                            var localized = Skyline.Properties.Resources.ResourceManager.GetString(resourceName) ?? String.Empty;
+                            if (!localized.StartsWith(commandStatusWriterWriteLineError, StringComparison.CurrentCulture) &&
+                                !localized.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT, StringComparison.InvariantCulture)) // Maybe not yet localized
+                            {
+                                // Report mismatch
+                                errors.Add(string.Format("The {0} language version of resource string {1} does not begin with the localized version of \"{2}\" (see Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_)", 
+                                    culture, resourceName, CommandStatusWriter.ERROR_MESSAGE_HINT));
+                            }
+                        }
+                        Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+                    }
+                }
+            }
+
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+            }
+        }
+
+        /// <summary>
         /// Just a quick smoke test to remind devs to add audit log tests where needed, and to catch cases where its obvious that one or
         /// more languages need updating because line counts don't agree
         /// </summary>
@@ -283,30 +339,49 @@ namespace pwiz.SkylineTest
                 formTypes.Add(t);
             }
 
-            foreach (var formType in formTypes)
+            try
             {
-                // Now find all forms that inherit from formType
-                var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
-                foreach (var form in assembly.GetTypes()
-                    .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
-                                formType.IsAssignableFrom(t))) // Interface type match
+                foreach (var formType in formTypes)
                 {
-                    var formName = form.Name;
-                    // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
-                    if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
-                        !formTypes.Any(ft => Equals(formName, ft.Name)))
+                    // Now find all forms that inherit from formType
+                    var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
+                    foreach (var form in assembly.GetTypes()
+                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
+                                    formType.IsAssignableFrom(t))) // Interface type match
                     {
-                        forms.Add(formName);
-                    }
+                        var formName = form.Name;
+                        // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
+                        if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
+                            !formTypes.Any(ft => Equals(formName, ft.Name)))
+                        {
+                            forms.Add(formName);
+                        }
 
-                    // Look for tabs etc
-                    var typeIFormView = typeof(IFormView);
-                    foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
-                    {
-                        var nestedName = formName + "." + nested.Name;
-                        forms.Add(nestedName);
+                        // Look for tabs etc
+                        var typeIFormView = typeof(IFormView);
+                        foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
+                        {
+                            var nestedName = formName + "." + nested.Name;
+                            forms.Add(nestedName);
+                        }
                     }
                 }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindForms");
+                errMessage.AppendLine("(Perhaps Visual Studio menu item \"Test | Configure Run Settings | Select Solution Wide runsettings File\" is not set to \"TestSettings_x64.runsettings\"?)");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
             }
 
             return forms;
@@ -364,6 +439,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
+            InspectConsistentErrorMessages(results);
 
             InspectTutorialAuditLogs(root, results);
 

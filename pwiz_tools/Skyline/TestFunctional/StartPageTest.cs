@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
     }
 
     /// <summary>
-    /// Checks that the Import Action works, randomly test either peptide, protein, transition list, or fasta import.
+    /// Checks that the Import Action works, randomly test either peptide, protein, or fasta import.
     /// </summary>
     [TestClass]
     public class StartPageImportTest : AbstractFunctionalTest
@@ -206,10 +206,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new PasteDlgTab(ActionImport.DataType.fasta, typeof(PasteDlg.FastaTab)),
                     new PasteDlgTab(ActionImport.DataType.proteins, typeof(PasteDlg.ProteinListTab)),
-                    new PasteDlgTab(ActionImport.DataType.transition_list, typeof(PasteDlg.TransitionListTab)),
                 };
                 var random = new Random(DateTime.UtcNow.Millisecond);
-                int rand = random.Next(0, 3);
+                int rand = random.Next(0, 2);
                 var selectedImport = types[rand];
                 var startPage = FindOpenForm<StartPage>();
                 RunUI(() => startPage.TestImportAction(selectedImport.DType));

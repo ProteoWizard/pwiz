@@ -26,7 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -104,45 +103,44 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List, p. 3
             {
                 var doc = SkylineWindow.Document;
-
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.IsMolecule = true;
-                    pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                    pasteDlg.Height = 290;
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in molecule mode", 3);
-
-                var columnsOrdered = new[]
-                {
-                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType
-                }.ToList();
+                
+                var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 if (_inferredLabels)
                 {
-                    columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
+                    // Remove the explicit ",heavy" and ",label" from the text
+                    var lines = impliedLabeled.Split('\n').Where(l => ! string.IsNullOrEmpty(l));
+                    var altered = lines.Select(l => l.Substring(0,l.LastIndexOf(TextUtil.CsvSeparator))).ToArray();
+                    impliedLabeled = TextUtil.LineSeparate(altered);
                 }
-                RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns - show columns checklist", 5);
+                PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
 
-                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
-                RunUI(pasteDlg.PasteTransitions);
-                RunUI(pasteDlg.ValidateCells);
-                RunUI(() => pasteDlg.Height = 428);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
+                    var comboBoxes = col4Dlg.ComboBoxes;
+                    comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                    comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                    comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                    comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                    comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                    comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                    comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                    if (!_inferredLabels)
+                    {
+                        comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    }
+                    
+                });
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with chosen column headers", 6);
 
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
+
+
+
+
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 6, 12, 19, 21);
@@ -230,21 +228,26 @@ namespace pwiz.SkylineTestTutorial
 
                     RestoreCoverViewOnScreen();
 
-                    var pasteCoverDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                    SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
-                    RunUI(() =>
-                    {
-                        pasteCoverDlg.Size = new Size(810, 375);
-                        pasteCoverDlg.Left = SkylineWindow.Left + 8;
-                        pasteCoverDlg.Top = SkylineWindow.Bottom - pasteCoverDlg.Height - 8;
-                        pasteCoverDlg.PasteTransitions();
-                        pasteCoverDlg.ValidateCells();
-                        columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
-                        pasteCoverDlg.SetSmallMoleculeColumns(columnsOrdered);
+                    var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                    string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
+                    var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = impliedLabeled2);
+
+                    RunUI(() => {
+                        var comboBoxes = colDlg.ComboBoxes;
+                        comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                        comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                        comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
+                        comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
+                        comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                        comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                        comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                        comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                        comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
                     });
+
                     TakeCoverShot();
 
-                    OkDialog(pasteCoverDlg, pasteCoverDlg.CancelDialog);
+                    OkDialog(colDlg, colDlg.CancelDialog);
                 }
             }
         }

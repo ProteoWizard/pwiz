@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,7 +56,9 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
-        { 
+        {
+            TestMissingFragmentMz();
+
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -80,9 +83,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[15].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[16].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[17].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_, thermBoxes[18].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[18].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[19].Text);
-                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential, thermBoxes[20].Text);
+                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[20].Text);
             });
             // RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
             OkDialog(therm, therm.CancelDialog);
@@ -272,13 +275,9 @@ namespace pwiz.SkylineTestFunctional
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-
-            RunUI(() => {
-                dlg.radioPeptide.PerformClick();
+            RunUI(() => { // Disable the peptide column
                 var comboBoxes = dlg.ComboBoxes;
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
                 comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
             });
             // As long as the message tells us that we are missing "Peptide Modified Sequence" and not "Molecule Molecule", then everything is working how we want it to
             var msg = ShowDialog<MessageDlg>(dlg.buttonCheckForErrors.PerformClick);
@@ -317,6 +316,33 @@ namespace pwiz.SkylineTestFunctional
             }); // Let it initialize
 
             RunUI(() => documentGrid.Close());
+        }
+
+        private void TestMissingFragmentMz()
+        {
+            // Make sure we properly handle missing fragment mz info
+            var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
+            var text =  "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\nPEPTIDER\t478.738\ty1\t1\nPEPTIDER\t478.738\ty2\t1";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text =
+                text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+
+            var errDlg = ShowDialog<MessageDlg>(columnSelectDlg.CheckForErrors);
+            RunUI(() =>
+            {
+                Assert.IsTrue(errDlg.Message.Contains(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_) &&
+                              errDlg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
+                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                    Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ +
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    errDlg.Message);
+            });
+            OkDialog(errDlg, errDlg.Close);
+
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+            WaitForClosedForm(importDialog);
+
+            RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
     }

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -152,23 +153,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            RunUI(() =>
-            {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+            var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+            string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
+            PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+            RunUI(() => {
+                colDlg.checkBoxAssociateProteins.Checked = true; // Enable Associate Proteins
             });
-            using (new CheckDocumentState(24, 44, 88, 296))
-            {
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.Height = 465;
-                    pasteDlg.IsMolecule = false;
-                    pasteDlg.PasteTransitions();  // Make sure it's ready to accept peptides rather than small molecules
-                });
-                PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
-            }
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
@@ -503,15 +499,22 @@ namespace pwiz.SkylineTestTutorial
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 1.00, 1.00, 1.00, 1.00 });
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.98, 0.97, 0.99, 0.99 });
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
-            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.09, 0.11, 0.96, 0.45 });
-            
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 });
+
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.line.ToString();
+            RunUI(SkylineWindow.UpdatePeakAreaGraph);
+            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 }); });
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with dotp line", 32);
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
+
+
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
@@ -646,7 +649,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
-            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.11, 0.20, 0.35, 0.66 });
+            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.29, 0.39, 0.50, 0.64 });
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
@@ -672,8 +675,23 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
                         .FindIndex(label => replicates[i].Equals(label));
-                    Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, "{0}\n{1:F02}", "rdotp", rdotps[i]), rdotpLabels[repIndex - 1]);
+                    Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                    var expectedLabel = TextUtil.LineSeparate("rdotp", string.Format(CultureInfo.CurrentCulture, "{0:F02}", rdotps[i]));
+                    Assert.AreEqual(expectedLabel, rdotpLabels[repIndex], "Dotp labels of the peak area graph are incorrect.");
                 }
+            }
+        }
+
+        private void VerifyDotpLine(string[] replicates, double[] dotps)
+        {
+            var dotpLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().ToList();
+            Assert.AreEqual(1, dotpLine.Count, "Dotp line is not found");
+            for (var i = 0; i < replicates.Length; i++)
+            {
+                var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
+                    .FindIndex(label => replicates[i].Equals(label));
+                Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                Assert.AreEqual(dotps[i], Math.Round(dotpLine[0].Points[repIndex].Y, 2));
             }
         }
 

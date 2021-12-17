@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -41,9 +42,26 @@ namespace pwiz.SkylineTestFunctional
     {
         private class TestDetails
         {
+            private SearchSettingsControl.SearchEngine _searchEngine;
             public string DocumentPath { get; set; }
             public IEnumerable<string> SearchFiles { get; set; }
             public string FastaPath { get; set; }
+
+            public SearchSettingsControl.SearchEngine SearchEngine
+            {
+                get => _searchEngine;
+                set
+                {
+                    _searchEngine = value;
+                    HasMissingDependencies = !SearchSettingsControl.HasRequiredFilesDownloaded(value);
+                }
+            }
+
+            public MzTolerance PrecursorMzTolerance { get; set; }
+            public MzTolerance FragmentMzTolerance { get; set; }
+            public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
+
+            public bool HasMissingDependencies { get; private set; }
 
             public class DocumentCounts
             {
@@ -63,11 +81,8 @@ namespace pwiz.SkylineTestFunctional
             public Action<ImportPeptideSearchDlg, EditIsolationSchemeDlg> EditIsolationSchemeAction { get; set; }
         }
 
-        [TestMethod]
-        public void TestDiaSearchVariableWindows()
+        private void SetupDiaSearchVariableWindows()
         {
-            TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
-
             _testDetails = new TestDetails
             {
                 DocumentPath = "TestVariableWindowDiaUmpire.sky",
@@ -77,9 +92,8 @@ namespace pwiz.SkylineTestFunctional
                     "collinsb_I180316_002_SW-B-subset.mz5"
                 },
                 FastaPath = "collinsb_I180316.fasta",
-
-                Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 78, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 },
+                PrecursorMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
+                FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -91,6 +105,48 @@ namespace pwiz.SkylineTestFunctional
                         importRangesDlg.Open();
                     });
                 }
+            };
+        }
+
+        [TestMethod]
+        public void TestDiaSearchVariableWindows()
+        {
+            TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
+
+            SetupDiaSearchVariableWindows();
+            _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 78, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
+
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestDiaSearchVariableWindowsMsgfPlus()
+        {
+            TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
+
+            SetupDiaSearchVariableWindows();
+            _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus;
+            _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 38, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
+
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestDiaSearchVariableWindowsMsFragger()
+        {
+            TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
+
+            SetupDiaSearchVariableWindows();
+            _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
+            _testDetails.PrecursorMzTolerance = new MzTolerance(100, MzTolerance.Units.ppm);
+            _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
+            _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 77, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
+            _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("check_spectral_files", "0")
             };
 
             RunFunctionalTest();
@@ -115,6 +171,8 @@ namespace pwiz.SkylineTestFunctional
                 },
 
                 FastaPath = Path.Combine(diaUmpireTestDataPath, "Hoofnagle_10xDil_SWATH.fasta"),
+                PrecursorMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
+                FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
                 Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
@@ -149,15 +207,16 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private TestDetails _testDetails;
+        public bool IsRecordMode => false;
 
         protected override void DoTest()
         {
-            TestDiaUmpireAmandaSearch(_testDetails);
+            TestDiaUmpireSearch(_testDetails);
         }
 
         private void ValidateTargets(TestDetails.DocumentCounts targetCounts, TestDetails.DocumentCounts actualCounts, string propName)
         {
-            if (RecordAuditLogs)
+            if (IsRecordMode)
                 Console.WriteLine(@"{0} = new TestDetails.DocumentCounts {1},", propName, actualCounts);
             else
             {
@@ -174,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Quick test that DDA search works with MSAmanda.
         /// </summary>
-        private void TestDiaUmpireAmandaSearch(TestDetails testDetails)
+        private void TestDiaUmpireSearch(TestDetails testDetails)
         {
             PrepareDocument(testDetails.DocumentPath);
 
@@ -283,6 +342,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
+                importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -310,14 +370,49 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // We're on the Adjust search settings page
-            bool? searchSucceeded = null;
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(50, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+            });
 
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = testDetails.SearchEngine));
+
+            if (testDetails.HasMissingDependencies)
+            {
+                if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                {
+                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                    if (msfraggerDownloaderDlg != null)
+                    {
+                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
+                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                    }
+                }
+
+                if (testDetails.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                {
+                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                    if (downloaderDlg != null)
+                    {
+                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                        WaitForClosedForm(waitDlg);
+                    }
+                }
+            }
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = testDetails.PrecursorMzTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = testDetails.FragmentMzTolerance;
+                //importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+            });
+
+            WaitForConditionUI(() => testDetails.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
+
+            bool? searchSucceeded = null;
+            RunUI(() =>
+            {
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
@@ -388,6 +483,9 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
+            if(IsRecordMode)
+                Console.WriteLine();
+
             RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
             {
                 var aic = new TestDetails.DocumentCounts();
@@ -395,11 +493,11 @@ namespace pwiz.SkylineTestFunctional
                 emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
                 if (Environment.Is64BitProcess)
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    ValidateTargets(testDetails.Initial, aic, "Initial");
+                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");
 
                 emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
                 if (Environment.Is64BitProcess)
-                    ValidateTargets(testDetails.Final, aic, "Final");
+                    ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
 
                 emptyProteinsDlg.OkDialog();
             });

@@ -2160,44 +2160,56 @@ namespace pwiz.Skyline
                 document = document.BeginDeferSettingsChanges();
             }
 
-            var changedGroupIds = new HashSet<IdentityPath>();
-            var peptideChanges = new Dictionary<IdentityPath, ChangedPeakBoundsEventArgs>();
+            var changedGroupIds = new HashSet<Tuple<IdentityPath, MsDataFileUri>>();
+            var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
                     change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
-                changedGroupIds.Add(change.GroupPath);
-                if (!peptideChanges.ContainsKey(change.GroupPath.Parent)) {
+
+                changedGroupIds.Add(Tuple.Create(change.GroupPath, change.FilePath));
+
+                var peptidePath = change.GroupPath.Parent;
+                if (!peptideChanges.TryGetValue(peptidePath, out var changesByFile))
+                {
+                    changesByFile = new Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>();
+                    peptideChanges[peptidePath] = changesByFile;
+                }
+                if (!changesByFile.ContainsKey(change.FilePath))
+                {
                     var transitionGroup = (TransitionGroupDocNode) document.FindNode(change.GroupPath);
                     if (transitionGroup.RelativeRT == RelativeRT.Matching)
                     {
-                        peptideChanges.Add(change.GroupPath.Parent, change);
+                        changesByFile.Add(change.FilePath, change);
                     }
                 }
             }
+
             // See if there are any other TransitionGroups that also have RelativeRT matching,
             // and set their peak boundaries to the same.
             foreach (var entry in peptideChanges)
             {
-                var peptide = (PeptideDocNode) document.FindNode(entry.Key);
-                var change = entry.Value;
-                foreach (var transitionGroup in peptide.TransitionGroups)
+                var peptide = (PeptideDocNode)document.FindNode(entry.Key);
+                foreach (var change in entry.Value.Select(v => v.Value))
                 {
-                    if (transitionGroup.RelativeRT != RelativeRT.Matching)
+                    foreach (var transitionGroup in peptide.TransitionGroups)
                     {
-                        continue;
+                        if (transitionGroup.RelativeRT != RelativeRT.Matching)
+                        {
+                            continue;
+                        }
+                        var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
+                        if (changedGroupIds.Contains(Tuple.Create(groupId, change.FilePath)))
+                        {
+                            continue;
+                        }
+                        if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
+                        {
+                            continue;
+                        }
+                        document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
+                            change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                     }
-                    var groupId = new IdentityPath(entry.Key, transitionGroup.TransitionGroup);
-                    if (changedGroupIds.Contains(groupId))
-                    {
-                        continue;
-                    }
-                    if (null == FindChromInfo(document, transitionGroup, change.NameSet, change.FilePath))
-                    {
-                        continue;
-                    }
-                    document = document.ChangePeak(groupId, change.NameSet, change.FilePath, null,
-                        change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, true);
                 }
             }
             return beforeDefer == null ? document : document.EndDeferSettingsChanges(beforeDefer, null);
@@ -2228,10 +2240,26 @@ namespace pwiz.Skyline
                 }
             }
 
+            var groupId = change.GroupPath.Child;
+            var nodePep = (PeptideDocNode)document.FindNode(change.GroupPath.Parent);
+            if (nodePep == null)
+                throw new IdentityNotFoundException(groupId);
+            var nodeGroup = (TransitionGroupDocNode)nodePep.FindNode(groupId);
+            if (nodeGroup == null)
+                throw new IdentityNotFoundException(groupId);
+
             foreach (var chromSet in syncTargets)
             {
-                foreach (var info in chromSet.MSDataFileInfos.Where(info => !(ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId))))
+                if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeGroup,
+                    (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
+                    continue;
+
+                foreach (var info in chromSet.MSDataFileInfos)
                 {
+                    if (ReferenceEquals(thisChromSet, chromSet) && ReferenceEquals(thisFile, info.FileId) ||
+                        chromInfos.IndexOf(info2 => Equals(info.FilePath, info2.FilePath)) == -1)
+                        continue;
+
                     var start = thisStart;
                     var end = thisEnd;
 
@@ -3569,7 +3597,12 @@ namespace pwiz.Skyline
                 areaNormalizeContextMenuItem.DropDownItems.Clear();
                 areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
-                var areaReplicateGraphPane = graphSummary.GraphPanes.FirstOrDefault() as AreaReplicateGraphPane;
+                AreaReplicateGraphPane areaReplicateGraphPane;
+                if (graphSummary.GraphControl.MasterPane.PaneList.Count == 1)
+                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.PaneList[0];
+                else
+                    areaReplicateGraphPane = (AreaReplicateGraphPane)graphSummary.GraphControl.MasterPane.FindPane(mousePt);
+
                 if (areaReplicateGraphPane != null)
                 {
                     // If the area replicate graph is being displayed and it shows a legend, 
@@ -3583,7 +3616,7 @@ namespace pwiz.Skyline
                     // If the area replicate graph is being displayed and it can show a library,
                     // display the "Show Library" option
                     var expectedVisible = areaReplicateGraphPane.ExpectedVisible;
-                    if (expectedVisible != AreaExpectedValue.none)
+                    if (expectedVisible.CanShowExpected())
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
                         showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
@@ -3596,7 +3629,11 @@ namespace pwiz.Skyline
                     // display the "Show Dot Product" option
                     if (areaReplicateGraphPane.CanShowDotProduct)
                     {
-                        showDotProductToolStripMenuItem.Checked = set.ShowDotProductPeakArea;
+                        showDotProductToolStripMenuItem.DropDownItems.Clear();
+                        var optionsList = DotProductDisplayOptionExtension.ListAll();
+                        if(areaReplicateGraphPane.IsLineGraph)
+                            optionsList = new[]{ DotProductDisplayOption.none, DotProductDisplayOption.line};
+                        showDotProductToolStripMenuItem.DropDownItems.AddRange(optionsList.Select(MakeShowDotpMenuItem).ToArray());
                         menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
                     }
                 } 
@@ -3759,6 +3796,20 @@ namespace pwiz.Skyline
             };
         }
 
+        private ToolStripItem MakeShowDotpMenuItem(DotProductDisplayOption displayOption)
+        {
+            return new ToolStripMenuItem(displayOption.GetLocalizedString(), null, DotpDisplayOptionMenuItemOnClick)
+            {
+                Checked = displayOption.IsSet(Settings.Default), Tag = displayOption
+            };
+        }
+        public void DotpDisplayOptionMenuItemOnClick(object sender, EventArgs eventArgs)
+        {
+            var displayOption = (DotProductDisplayOption)((ToolStripMenuItem)sender).Tag;
+            Settings.Default.PeakAreaDotpDisplay = displayOption.ToString();
+            UpdateSummaryGraphs();
+        }
+
         private IEnumerable<ToolStripItem> MakeNormalizeToMenuItems(IEnumerable<NormalizeOption> normalizeOptions,
             NormalizeOption selectedOption)
         {
@@ -3884,7 +3935,7 @@ namespace pwiz.Skyline
             double add = 0.0;
 
             // If the expected value (library) is visible the zoom has to be shifted
-            if (activePane is AreaReplicateGraphPane && (activePane as AreaReplicateGraphPane).IsExpectedVisible)
+            if (activePane is AreaReplicateGraphPane && (activePane as AreaReplicateGraphPane).ExpectedVisible.IsVisible())
                 add = -1.0;
        
             for (int i = 0; i < graphSummaries.Length; ++i)
@@ -3892,7 +3943,7 @@ namespace pwiz.Skyline
                 // Make sure we are not syncing the same graph or graphs of different types
                 if (i != index && graphSummaries[i] != null && graphSummaries[i].Type == graphSummaries[index].Type && graphSummaries[i].Visible)
                 {
-                    bool isExpectedVisible = graphSummaries[i].GraphControl.GraphPane is AreaReplicateGraphPane && ((AreaReplicateGraphPane)graphSummaries[i].GraphControl.GraphPane).IsExpectedVisible;
+                    bool isExpectedVisible = graphSummaries[i].GraphControl.GraphPane is AreaReplicateGraphPane && ((AreaReplicateGraphPane)graphSummaries[i].GraphControl.GraphPane).ExpectedVisible.IsVisible();
                     
                     if (isExpectedVisible)
                         ++add;
@@ -4171,12 +4222,21 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetNormalizationMethod(NormalizeOption normalizeOption, bool update = true)
+        public void SetNormalizationMethod(NormalizeOption normalizeOption)
         {
             Settings.Default.AreaNormalizeOption = normalizeOption;
             SequenceTree.NormalizeOption = normalizeOption;
-            if(update)
-                UpdatePeakAreaGraph();
+            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
+                AreaNormalizeOption == NormalizeOption.MAXIMUM ||
+                AreaNormalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
+                AreaNormalizeOption.IsRatioToLabel)
+            {
+                // Do not let the user combine Log with Ratios because
+                // the log scale does not work well with numbers that are less than 1.
+                // (this should be fixed)
+                Settings.Default.AreaLogScale = false;
+            }
+            UpdatePeakAreaGraph();
         }
 
         public NormalizeOption AreaNormalizeOption
@@ -4194,7 +4254,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void SetNormalizationMethod(NormalizationMethod normalizationMethod, bool update = true)
+        public void SetNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             SetNormalizationMethod(NormalizeOption.FromNormalizationMethod(normalizationMethod));
         }
@@ -4334,9 +4394,6 @@ namespace pwiz.Skyline
         {
             AreaNormalizeOption = areaView;
 
-            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaNormalizeOption == NormalizeOption.MAXIMUM)
-                Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
 
@@ -4429,12 +4486,6 @@ namespace pwiz.Skyline
         {
             // Show/hide the library column in the peak area view.
             Settings.Default.ShowLibraryPeakArea = !Settings.Default.ShowLibraryPeakArea;
-            UpdateSummaryGraphs();
-        }
-
-        private void showDotProductToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowDotProductPeakArea = !Settings.Default.ShowDotProductPeakArea;
             UpdateSummaryGraphs();
         }
 

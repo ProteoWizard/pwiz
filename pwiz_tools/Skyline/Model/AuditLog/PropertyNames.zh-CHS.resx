@@ -1499,6 +1499,15 @@
   <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
     <value>全部整合</value>
   </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationGroupBy" xml:space="preserve">
+    <value>同步积分分组依据</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
+    <value>全部同步积分</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationTargets" xml:space="preserve">
+    <value>同步积分目标</value>
+  </data>
   <data name="TransitionSettings_Integration" xml:space="preserve">
     <value>整合</value>
   </data>
@@ -1583,28 +1592,28 @@
   <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
     <value>样本比率</value>
   </data>
-  <data name="ViewLayout_ClusterSpec">
+  <data name="ViewLayout_ClusterSpec" xml:space="preserve">
     <value>去簇规格</value>
   </data>
-  <data name="ClusteringSpec_Values">
+  <data name="ClusteringSpec_Values" xml:space="preserve">
     <value>值</value>
   </data>
-  <data name="ClusteringSpec_DistanceMetric">
+  <data name="ClusteringSpec_DistanceMetric" xml:space="preserve">
     <value>距离度量</value>
   </data>
-  <data name="ValueSpec_ColumnRef">
+  <data name="ValueSpec_ColumnRef" xml:space="preserve">
     <value>列参考</value>
   </data>
-  <data name="ExplicitMods_CrosslinkStructure">
+  <data name="ExplicitMods_CrosslinkStructure" xml:space="preserve">
     <value>交联结构</value>
   </data>
-  <data name="CrosslinkStructure_LinkedPeptides">
+  <data name="CrosslinkStructure_LinkedPeptides" xml:space="preserve">
     <value>关联的肽段</value>
   </data>
-  <data name="CrosslinkStructure_LinkedExplicitMods">
+  <data name="CrosslinkStructure_LinkedExplicitMods" xml:space="preserve">
     <value>关联的明确修饰</value>
   </data>
-  <data name="CrosslinkStructure_Crosslinks">
+  <data name="CrosslinkStructure_Crosslinks" xml:space="preserve">
     <value>交联</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
@@ -1639,5 +1648,11 @@
   </data>
   <data name="DdaConverterSettings_Protocol" xml:space="preserve">
     <value>DDA 转换程序</value>
+  </data>
+  <data name="DdaSearchSettings_Ms2Analyzer" xml:space="preserve">
+    <value>MS2 分析仪</value>
+  </data>
+  <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
+    <value>搜索引擎</value>
   </data>
 </root>

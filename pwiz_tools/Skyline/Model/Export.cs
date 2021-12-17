@@ -1295,7 +1295,7 @@ namespace pwiz.Skyline.Model
 
             public EventInfo()
             {
-                Id = 0;
+                Id = 1;
                 PeptideId = -1;
                 TransitionsWritten = 0;
             }
@@ -1317,7 +1317,8 @@ namespace pwiz.Skyline.Model
 
             private void Next()
             {
-                Id++;
+                if (TransitionsWritten > 0)
+                    Id++;
                 TransitionsWritten = 0;
             }
         }

@@ -17,7 +17,9 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: Q1	Q3	stripped_sequence	protein_name
+Extra Info: 459個のトランジションが追加されました
+'プリカーサーm/z','プロダクトm/z','ペプチド修飾シークエンス','タンパク質名'と特定されている列
+Q1	Q3	stripped_sequence	protein_name
 853.431469	973.563049	SSSNEEVMFLTVQVK	A2MG
 849.42437	965.54885	SSSNEEVMFLTVQVK	A2MG
 853.431469	582.370087	SSSNEEVMFLTVQVK	A2MG
@@ -477,6 +479,7 @@ Extra Info: Q1	Q3	stripped_sequence	protein_name
 579.79312	532.287808	VDTVDPPYPR	VTNC
 584.797255	445.243313	VDTVDPPYPR	VTNC
 579.79312	435.235044	VDTVDPPYPR	VTNC
+
 
 Undo Redo : ターゲットTr_peps_set2が削除されました
 Summary   : ターゲットTr_peps_set2が削除されました

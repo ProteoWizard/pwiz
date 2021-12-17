@@ -1366,6 +1366,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS Amanda.
+        /// </summary>
+        public static string SearchEngine_MSAmanda {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSAmanda", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSFragger.
+        /// </summary>
+        public static string SearchEngine_MSFragger {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSFragger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS-GF+.
+        /// </summary>
+        public static string SearchEngine_MSGFPlus {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSGFPlus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string SelectOne_Max {

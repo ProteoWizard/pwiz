@@ -435,6 +435,9 @@ namespace pwiz.Skyline.Model.Results
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
         {
+            if(peptideDocNode == null)
+                return NormalizationMethod.NONE;
+            
             if (normalizeOption.NormalizationMethod != null)
             {
                 return normalizeOption.NormalizationMethod;

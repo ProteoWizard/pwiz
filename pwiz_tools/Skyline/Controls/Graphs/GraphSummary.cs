@@ -269,7 +269,12 @@ namespace pwiz.Skyline.Controls.Graphs
         internal IEnumerable<SummaryGraphPane> GraphPanes
         {
             get { return graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>(); }
-            set { graphControl.MasterPane.PaneList.Clear(); graphControl.MasterPane.PaneList.AddRange(value); }
+            set
+            {
+                graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>().ForEach(panel => panel.OnClose(EventArgs.Empty));
+                graphControl.MasterPane.PaneList.Clear();
+                graphControl.MasterPane.PaneList.AddRange(value);
+            }
         }
 
         public bool TryGetGraphPane<TPane>(out TPane pane) where TPane : class
