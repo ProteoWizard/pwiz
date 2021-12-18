@@ -2120,8 +2120,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 2003	YVSSLTEEISKR	706.37585449	2	YVSSLTEEISKR	-	-	1	12	1.03499996	0.0	0.0	2	5.60471010	5.51418066	5.69543027	3.35959582	N/A	N/A	N/A	N/A	N/A	2	1062	1.00000030e-09	19
 2004	YYSIASSSK	1005.48980712	1	YYSIASSSK	-	-	1	12	1.52454984	0.0	0.0	2	3.22125005	3.13155984	3.31085991	4.22724965	N/A	N/A	N/A	N/A	N/A	2	1063	1.00000030e-09	19
 id	fileName	idFileName	cutoffScore
-1	190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d	/BiblioSpec/tests/inputs/diann-hela-diapasef.speclib	-1.0
-2	190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d	/BiblioSpec/tests/inputs/diann-hela-diapasef.speclib	-1.0
+1	190314_TEN_175mingr_7-35_500nL_HeLa_SWATHlike_MSMS_Slot1-10_1_3421.d	/BiblioSpec/tests/inputs/diann-hela-diapasef-lib.speclib	-1.0
+2	190314_TEN_175mingr_7-35_500nL_HeLa_diaPASEFdouble_py3_MSMS_Slot1-10_1_3426.d	/BiblioSpec/tests/inputs/diann-hela-diapasef-lib.speclib	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
