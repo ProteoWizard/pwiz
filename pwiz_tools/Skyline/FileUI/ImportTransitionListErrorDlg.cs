@@ -89,7 +89,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void OKDialog()
+        public void OkDialog()
         {
             DialogResult = DialogResult.OK;
         }

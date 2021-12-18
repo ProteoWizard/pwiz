@@ -103,7 +103,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 4);
-                OkDialog(errDlg, errDlg.OKDialog);
+                OkDialog(errDlg, errDlg.OkDialog);
 
                 RunUI(() => col4Dlg.ComboBoxes[6].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
 
