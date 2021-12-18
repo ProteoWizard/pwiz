@@ -11624,4 +11624,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
     <value>Downloading required files...</value>
   </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label" xml:space="preserve">
+    <value>Label</value>
+  </data>
 </root>
