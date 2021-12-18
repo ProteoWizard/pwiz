@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 

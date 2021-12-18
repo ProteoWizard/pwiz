@@ -59,7 +59,12 @@ namespace pwiz.Skyline.Model.Databinding
         public static Attribute[] GetAttributes(IPeakFeatureCalculator calculator, CultureInfo language)
         {
             string displayName = LocalizationHelper.CallWithCulture(language, () => calculator.Name);
+            string toolTip = calculator.Tooltip;
             var attributes = new List<Attribute> { new DisplayNameAttribute(displayName) };
+            if (!string.IsNullOrEmpty(toolTip))
+            {
+                attributes.Add(new DescriptionAttribute(toolTip));
+            }
             attributes.Add(new FormatAttribute(Formats.PEAK_SCORE) { NullValue = TextUtil.EXCEL_NA });
             return attributes.ToArray();
         }

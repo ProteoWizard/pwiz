@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Databinding
             var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath);
             if (!loadPoints)
             {
-                chromatogramGroupInfo.DiscardData();
+                chromatogramGroupInfo?.DiscardData();
             }
             cacheSlot = Tuple.Create(key, chromatogramGroupInfo);
             if (loadPoints)
