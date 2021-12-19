@@ -1241,7 +1241,7 @@
     <value>12</value>
   </data>
   <data name="groupLibCorr.Text" xml:space="preserve">
-    <value>预期的相对亮度关联(&amp;E)：</value>
+    <value>预期的相对强度关联(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>
