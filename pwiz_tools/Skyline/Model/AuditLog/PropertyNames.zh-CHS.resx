@@ -319,7 +319,7 @@
     <value>结束</value>
   </data>
   <data name="IsolationScheme_PrespecifiedIsolationWindows" xml:space="preserve">
-    <value>预指定隔离窗口</value>
+    <value>预指定分离窗口</value>
   </data>
   <data name="IsolationScheme_SpecialHandling" xml:space="preserve">
     <value>去卷积</value>
@@ -331,7 +331,7 @@
     <value>边距</value>
   </data>
   <data name="IsolationScheme_IsolationWidth" xml:space="preserve">
-    <value>隔离宽度</value>
+    <value>分离宽度</value>
   </data>
   <data name="IsolationScheme_WindowsPerScan" xml:space="preserve">
     <value>每次扫描的窗口</value>
@@ -355,7 +355,7 @@
     <value>子离子</value>
   </data>
   <data name="TransitionFullScan_IsolationScheme" xml:space="preserve">
-    <value>隔离方案</value>
+    <value>分离方案</value>
   </data>
   <data name="PeptideSettings_Libraries" xml:space="preserve">
     <value>库</value>
