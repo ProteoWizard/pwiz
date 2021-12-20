@@ -226,7 +226,7 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>仅使用</value>
+    <value>仅使用预测保留</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -283,7 +283,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>预测保留时间的分钟</value>
+    <value>分钟之内的扫描</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -433,7 +433,7 @@
     <value>3</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Text" xml:space="preserve">
-    <value>仅使用</value>
+    <value>仅使用 MS/MS ID</value>
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids1</value>
@@ -490,7 +490,7 @@
     <value>4</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Text" xml:space="preserve">
-    <value>MS/MS ID的分钟</value>
+    <value>分钟之内的扫描</value>
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>
@@ -1615,7 +1615,7 @@
     <value>2</value>
   </data>
   <data name="labelIsolationScheme.Text" xml:space="preserve">
-    <value>隔离方案(&amp;L)：</value>
+    <value>分离方案(&amp;L)：</value>
   </data>
   <data name="&gt;&gt;labelIsolationScheme.Name" xml:space="preserve">
     <value>labelIsolationScheme</value>
