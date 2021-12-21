@@ -9,7 +9,6 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/BiblioSpec/**'
     - 'pwiz_tools/MSConvertGUI/**'
     - 'pwiz_tools/SeeMS/**'
     - 'pwiz_tools/Shared/**'
@@ -22,7 +21,6 @@ on:
   pull_request:
     branches: [ master ]
     paths-ignore:
-    - 'pwiz_tools/BiblioSpec/**'
     - 'pwiz_tools/MSConvertGUI/**'
     - 'pwiz_tools/SeeMS/**'
     - 'pwiz_tools/Shared/**'
@@ -103,6 +101,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 --slave /usr/bin/g++ g++ /usr/bin/g++-9 --slave /usr/bin/gcov gcov /usr/bin/gcov-9
           echo gcc version after
           gcc --version
+
       - name: Install dependencies on macos
         if: startsWith(matrix.config.os, 'macos')
         run: |
@@ -113,4 +112,4 @@ jobs:
         shell: bash
         run: |
           unset JAVA_HOME
-          ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
+          ./quickbuild.sh --abbreviate-paths -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz pwiz_tools/BiblioSpec executables ${{ matrix.config.toolset }}

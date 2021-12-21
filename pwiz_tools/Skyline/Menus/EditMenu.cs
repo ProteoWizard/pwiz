@@ -322,11 +322,13 @@ namespace pwiz.Skyline.Menus
             else
             {
                 string text;
-                string textCsv;
                 try
                 {
-                    text = ClipboardEx.GetText().Trim();
-                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    text = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    if (string.IsNullOrEmpty(text))
+                    {
+                        text = ClipboardEx.GetText().Trim();
+                    }
                 }
                 catch (Exception)
                 {
@@ -335,7 +337,7 @@ namespace pwiz.Skyline.Menus
                 }
                 try
                 {
-                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
+                    Paste(text);
                 }
                 catch (Exception x)
                 {
@@ -1066,7 +1068,9 @@ namespace pwiz.Skyline.Menus
                     var targets = dlg.TargetsInvariant.ToArray();
 
                     var existing = Document.Settings.TransitionSettings.Integration;
-                    if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+                    if (groupBy != existing.SynchronizedIntegrationGroupBy ||
+                        all != existing.SynchronizedIntegrationAll ||
+                        !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
                     {
                         ModifyDocument(
                             string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,

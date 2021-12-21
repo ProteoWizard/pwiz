@@ -112,7 +112,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
                 }
                 result->defaultArrayLength = ticPtr->getTotalDataPoints();
             }
-            catch (runtime_error& e)
+            catch (runtime_error&)
             {
                // It appears that some LabSolutions versions don't provide TIC, if that's not the issue then presumably the  MS_SRM_chromatogram entries will also fail so let this pass quietly
             }
@@ -156,13 +156,21 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
 {
     const set<SRMTransition>& transitions = rawfile_->getTransitions();
 
-    // support file-level TIC for all file types
-    index_.push_back(IndexEntry());
-    IndexEntry& ci = index_.back();
-    ci.index = index_.size() - 1;
-    ci.chromatogramType = MS_TIC_chromatogram;
-    ci.id = "TIC";
-    idMap_[ci.id] = ci.index;
+    try
+    {
+        auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
+        // support file-level TIC for all file types
+        index_.push_back(IndexEntry());
+        IndexEntry& ci = index_.back();
+        ci.index = index_.size() - 1;
+        ci.chromatogramType = MS_TIC_chromatogram;
+        ci.id = "TIC";
+        idMap_[ci.id] = ci.index;
+    }
+    catch (runtime_error&)
+    {
+        // It appears that some LabSolutions versions don't provide TIC, if that's not the issue then presumably the MS_SRM_chromatogram entries will also fail so let this pass quietly
+    }
 
     for (const SRMTransition& transition : transitions)
     {

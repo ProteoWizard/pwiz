@@ -25,11 +25,11 @@ namespace pwiz.Skyline.Model
     {
         public MsDataFileUri[] OriginalSpectrumSources { get; protected set; }
         public MsDataFileUri[] ConvertedSpectrumSources { get; protected set; }
-        protected AbstractDdaSearchEngine SearchEngine { get; private set; }
+        protected ImportPeptideSearch ImportPeptideSearch { get; private set; }
 
-        public AbstractDdaConverter(AbstractDdaSearchEngine searchEngine)
+        public AbstractDdaConverter(ImportPeptideSearch importPeptideSearch)
         {
-            SearchEngine = searchEngine;
+            ImportPeptideSearch = importPeptideSearch;
         }
 
         // NB: these must match the enum values in pwiz::msdata::MSDataFile::Format,

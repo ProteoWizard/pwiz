@@ -30,7 +30,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -54,16 +53,6 @@ namespace pwiz.SkylineTestTutorial
             };
             RunFunctionalTest();
         }
-
-        [TestMethod]
-        // This isn't a real tutorial test - just exploiting a convenient framework for testing Associate Proteins
-        public void TestSrmTutorialLegacyWithAssociateProteins()
-        {
-            _exerciseAssociateProteins = true;
-            TestSrmTutorialLegacy();
-        }
-
-        private bool _exerciseAssociateProteins;
 
         private string GetTestPath(string relativePath)
         {
@@ -349,12 +338,6 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editCollisionEnergy, editCollisionEnergy.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
             
-            // This is a convenient place to test associating proteins
-            if (_exerciseAssociateProteins)
-            {
-                TestAssociateProteins();
-            }
-
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
 
@@ -591,5 +574,6 @@ namespace pwiz.SkylineTestTutorial
 
             });
         }
+
     }
 }

@@ -2,8 +2,8 @@ Undo Redo : 已从剪切板导入离子对列表
 Summary   : 已从剪切板导入离子对列表
 All Info  :
 已从剪切板导入离子对列表
-Extra Info: 2 transitions added
-Columns identified as 'Molecule List Name','Molecule Name','标记类型','母离子质荷比','母离子电荷','子离子质荷比','子离子电荷','锥孔电压','明确碰撞能量','明确保留时间'
+Extra Info: 2 个离子对已添加
+列标识为 '分子列表名称','分子名称','标记类型','母离子质荷比','母离子电荷','子离子质荷比','子离子电荷','锥孔电压','明确碰撞能量','明确保留时间'
 DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7
 DrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7
 

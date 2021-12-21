@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model
         private IProgressStatus _progressStatus;
         private int _currentSourceIndex;
 
-        public DiaUmpireDdaConverter(AbstractDdaSearchEngine searchEngine, IsolationScheme isolationScheme, DiaUmpire.Config diaUmpireConfig) : base(searchEngine)
+        public DiaUmpireDdaConverter(ImportPeptideSearch importPeptideSearch, IsolationScheme isolationScheme, DiaUmpire.Config diaUmpireConfig) : base(importPeptideSearch)
         {
             var isolationWindows = isolationScheme.PrespecifiedIsolationWindows;
             var windowSizes = isolationWindows.Skip(1).Select(w => Math.Round(w.End - w.Start, 1));
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 // tell the search engine to search the converted files instead of the original files
-                SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
+                ImportPeptideSearch.SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
                 return true;
             }
             catch (Exception e)

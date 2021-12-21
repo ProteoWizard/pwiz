@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,7 +57,10 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
-        { 
+        {
+            TestMissingFragmentMz();
+
+            RunUI(() => SkylineWindow.NewDocument());
 
             var allText = File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv"));
             var lines = allText.Split('\n');
@@ -357,6 +361,33 @@ namespace pwiz.SkylineTestFunctional
             }); // Let it initialize
 
             RunUI(() => documentGrid.Close());
+        }
+
+        private void TestMissingFragmentMz()
+        {
+            // Make sure we properly handle missing fragment mz info
+            var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
+            var text =  "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\nPEPTIDER\t478.738\ty1\t1\nPEPTIDER\t478.738\ty2\t1";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text =
+                text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+
+            var errDlg = ShowDialog<MessageDlg>(columnSelectDlg.CheckForErrors);
+            RunUI(() =>
+            {
+                Assert.IsTrue(errDlg.Message.Contains(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_) &&
+                              errDlg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
+                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                    Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_ +
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    errDlg.Message);
+            });
+            OkDialog(errDlg, errDlg.Close);
+
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+            WaitForClosedForm(importDialog);
+
+            RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
     }
