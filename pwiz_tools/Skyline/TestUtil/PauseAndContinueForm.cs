@@ -22,9 +22,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -42,11 +45,24 @@ namespace pwiz.SkylineTestUtil
             InitializeComponent();
             _screenshotForm = screenshotForm;
             _screenshotManager = screenshotManager;
-            if (_screenshotForm == null || _screenshotManager == null)
+
+            if (_screenshotForm != null && _screenshotManager != null)
             {
-                // Don't show the "Image to clipboard" button
-                btnCopyToClipBoard.Visible = btnCopyToClipBoard.Enabled = false;
-                Width -= btnCopyToClipBoard.Width;
+                if (_screenshotForm is DockableForm dockableForm && dockableForm.DockState != DockState.Floating) 
+                {
+                    // If this dockable window isn't a floating window, then caller meant to screenshot the Skyline window
+                    var parent = _screenshotForm.ParentForm;
+                    if (parent != null)
+                    {
+                        _screenshotForm = parent;
+                    }
+                }
+                // Show the copy buttons
+                btnCopyToClipBoard.Visible = btnCopyToClipBoard.Enabled = true;
+                if ((_screenshotForm is GraphSummary zgControl) && zgControl.GraphControl != null)
+                {
+                    btnCopyMetafileToClipboard.Visible = btnCopyMetafileToClipboard.Enabled = true; // Control is a metafile provider
+                }
             }
             _linkUrl = link;
             if (!string.IsNullOrEmpty(link))
@@ -206,6 +222,15 @@ namespace pwiz.SkylineTestUtil
             // Copy current window image to clipboard, with clean edges
             _screenshotForm.Focus();
             _screenshotManager.TakeNextShot(_screenshotForm);
+        }
+
+        private void btnCopyMetaFileToClipboard_Click(object sender, EventArgs e)
+        {
+            _screenshotForm.Focus();
+            if (_screenshotForm is GraphSummary zgControl)
+            {
+                CopyEmfToolStripMenuItem.CopyEmf(zgControl.GraphControl);
+            }
         }
     }
 }

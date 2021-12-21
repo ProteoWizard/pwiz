@@ -35,6 +35,7 @@
             this.lblDescriptionLink = new System.Windows.Forms.LinkLabel();
             this.btnCopyToClipBoard = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.btnCopyMetafileToClipboard = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnContinue
@@ -71,15 +72,29 @@
             // 
             // btnCopyToClipBoard
             // 
-            this.btnCopyToClipBoard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCopyToClipBoard.Location = new System.Drawing.Point(95, 32);
+            this.btnCopyToClipBoard.Enabled = false;
+            this.btnCopyToClipBoard.Location = new System.Drawing.Point(12, 61);
             this.btnCopyToClipBoard.Name = "btnCopyToClipBoard";
             this.btnCopyToClipBoard.Size = new System.Drawing.Size(105, 23);
             this.btnCopyToClipBoard.TabIndex = 3;
             this.btnCopyToClipBoard.Text = "Copy to clipboard";
             this.toolTip1.SetToolTip(this.btnCopyToClipBoard, resources.GetString("btnCopyToClipBoard.ToolTip"));
             this.btnCopyToClipBoard.UseVisualStyleBackColor = true;
+            this.btnCopyToClipBoard.Visible = false;
             this.btnCopyToClipBoard.Click += new System.EventHandler(this.btnCopyToClipboard_Click);
+            // 
+            // btnCopyMetafileToClipboard
+            // 
+            this.btnCopyMetafileToClipboard.Enabled = false;
+            this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(12, 90);
+            this.btnCopyMetafileToClipboard.Name = "btnCopyMetafileToClipboard";
+            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(148, 23);
+            this.btnCopyMetafileToClipboard.TabIndex = 4;
+            this.btnCopyMetafileToClipboard.Text = "Copy metafile to clipboard";
+            this.toolTip1.SetToolTip(this.btnCopyMetafileToClipboard, "Copies metafile to clipboard");
+            this.btnCopyMetafileToClipboard.UseVisualStyleBackColor = true;
+            this.btnCopyMetafileToClipboard.Visible = false;
+            this.btnCopyMetafileToClipboard.Click += new System.EventHandler(this.btnCopyMetaFileToClipboard_Click);
             // 
             // PauseAndContinueForm
             // 
@@ -87,8 +102,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(212, 69);
+            this.ClientSize = new System.Drawing.Size(174, 128);
             this.ControlBox = false;
+            this.Controls.Add(this.btnCopyMetafileToClipboard);
             this.Controls.Add(this.btnCopyToClipBoard);
             this.Controls.Add(this.lblDescriptionLink);
             this.Controls.Add(this.lblDescription);
@@ -113,5 +129,6 @@
         private System.Windows.Forms.LinkLabel lblDescriptionLink;
         private System.Windows.Forms.Button btnCopyToClipBoard;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnCopyMetafileToClipboard;
     }
 }
