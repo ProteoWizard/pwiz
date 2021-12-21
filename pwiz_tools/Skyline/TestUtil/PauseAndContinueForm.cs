@@ -34,10 +34,20 @@ namespace pwiz.SkylineTestUtil
     {
         private readonly string _linkUrl;
         private readonly bool _showMatchingPage;
+        private Form _screenshotForm;
+        private ScreenshotManager _screenshotManager;
 
-        public PauseAndContinueForm(string description = null, string link = null, bool showMatchingPages = false)
+        public PauseAndContinueForm(string description = null, string link = null, bool showMatchingPages = false, Form screenshotForm = null, ScreenshotManager screenshotManager = null)
         {
             InitializeComponent();
+            _screenshotForm = screenshotForm;
+            _screenshotManager = screenshotManager;
+            if (_screenshotForm == null || _screenshotManager == null)
+            {
+                // Don't show the "Image to clipboard" button
+                btnCopyToClipBoard.Visible = btnCopyToClipBoard.Enabled = false;
+                Width -= btnCopyToClipBoard.Width;
+            }
             _linkUrl = link;
             if (!string.IsNullOrEmpty(link))
             {
@@ -90,7 +100,7 @@ namespace pwiz.SkylineTestUtil
 
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null, string link = null, bool showMatchingPages = false, int? timeout = null)
+        public static void Show(string description = null, string link = null, bool showMatchingPages = false, int? timeout = null, Form screenshotForm = null, ScreenshotManager screenshotManager = null)
         {
             ClipboardEx.UseInternalClipboard(false);
 
@@ -102,7 +112,7 @@ namespace pwiz.SkylineTestUtil
 
             RunUI(parentWindow, () =>
             {
-                var dlg = new PauseAndContinueForm(description, link, showMatchingPages) { Left = parentWindow.Left };
+                var dlg = new PauseAndContinueForm(description, link, showMatchingPages, screenshotForm, screenshotManager) { Left = parentWindow.Left };
                 const int spacing = 15;
                 var screen = Screen.FromControl(parentWindow);
                 if (parentWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
@@ -190,5 +200,12 @@ namespace pwiz.SkylineTestUtil
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        private void btnCopyToClipboard_Click(object sender, EventArgs e)
+        {
+            // Copy current window image to clipboard, with clean edges
+            _screenshotForm.Focus();
+            _screenshotManager.TakeNextShot(_screenshotForm);
+        }
     }
 }
