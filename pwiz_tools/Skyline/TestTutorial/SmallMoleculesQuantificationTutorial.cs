@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.SendPaste();
                 });
                 //SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
-                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so all rows can be seen ", 20);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so rows 95_0_1_1_00_1021523636 to end can be seen", 22);
                 foreach (var chromatogramSet in SkylineWindow.Document.MeasuredResults.Chromatograms)
                 {
                     if (chromatogramSet.Name.StartsWith("DoubleBlank"))
@@ -346,7 +346,7 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
-                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 21);
+                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 23);
 
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 47,
                     new[]
@@ -355,10 +355,10 @@ namespace pwiz.SkylineTestTutorial
                         "Proteins!*.Peptides!*.Results!*.Value.ExcludeFromCalibration"
                     },
                     "Replicates_custom_quant");
-                PauseForScreenShot<DocumentGridForm>("Custom document grid - resize so all rows are visible before screenshot", 23);
+                PauseForScreenShot<DocumentGridForm>("Custom document grid -scroll to end so same rows are in screenshot", 23);
 
                 SetDocumentGridExcludeFromCalibration();
-                PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 20);
+                PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 24);
 
                 if (IsCoverShotMode)
                 {
@@ -386,7 +386,6 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 ImportReplicates(false); // Import the rest of the replicates
-                PauseForScreenShot<CalibrationForm>("Calibration Curve - all replicates loaded", 24);
 
                 RunUI(() => documentGrid.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
                 WaitForConditionUI(() => documentGrid.ColumnCount > 6);
@@ -395,13 +394,13 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(colReplicate, ListSortDirection.Ascending);
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results", 25);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results - manually widen to show all columns", 25);
                 Settings.Default.CalibrationCurveOptions.LogXAxis = true;
                 Settings.Default.CalibrationCurveOptions.LogYAxis = true;
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 RunUI(()=>calibrationForm.UpdateUI(false));
-                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log");
+                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log", 26);
             }
 
         }
