@@ -131,6 +131,10 @@ namespace pwiz.SkylineTest
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
                 11); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            // Check for using DataGridView.
+            AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
+                "new System.Windows.Forms.DataGridView()", false,
+                "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
