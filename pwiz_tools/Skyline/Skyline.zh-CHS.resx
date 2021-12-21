@@ -1525,7 +1525,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportIsolationListMenuItem.Text" xml:space="preserve">
-    <value>隔离列表(&amp;I)…</value>
+    <value>分离列表(&amp;I)…</value>
   </data>
   <data name="exportMethodMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>

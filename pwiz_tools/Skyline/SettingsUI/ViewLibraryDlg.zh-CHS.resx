@@ -310,7 +310,7 @@
     <value>1</value>
   </data>
   <data name="NextLink.Text" xml:space="preserve">
-    <value>下一个 &gt;&gt;</value>
+    <value>下一步 &gt;&gt;</value>
   </data>
   <data name="&gt;&gt;NextLink.Name" xml:space="preserve">
     <value>NextLink</value>
@@ -340,7 +340,7 @@
     <value>0</value>
   </data>
   <data name="PreviousLink.Text" xml:space="preserve">
-    <value>&lt;&lt; 上一个</value>
+    <value>&lt;&lt; 上一步</value>
   </data>
   <data name="&gt;&gt;PreviousLink.Name" xml:space="preserve">
     <value>PreviousLink</value>

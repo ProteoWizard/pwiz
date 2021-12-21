@@ -256,13 +256,13 @@
     <value>101, 22</value>
   </data>
   <data name="btnIsolationWindow.Text" xml:space="preserve">
-    <value>隔离窗口</value>
+    <value>分离窗口</value>
   </data>
   <data name="btnIsolationWindow.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>TopLeft</value>
   </data>
   <data name="btnIsolationWindow.ToolTipText" xml:space="preserve">
-    <value>隔离窗口</value>
+    <value>分离窗口</value>
   </data>
   <data name="btnIsolationWindow.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -283,7 +283,7 @@
     <value>62, 22</value>
   </data>
   <data name="toolStripLabelPeakType.Text" xml:space="preserve">
-    <value>峰类型:</value>
+    <value>峰类型：</value>
   </data>
   <data name="comboBoxPeakType.Items" xml:space="preserve">
     <value>Centroided</value>
