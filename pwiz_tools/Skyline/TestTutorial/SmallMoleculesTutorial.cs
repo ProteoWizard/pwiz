@@ -117,8 +117,11 @@ namespace pwiz.SkylineTestTutorial
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
-                    var comboBoxes = col4Dlg.ComboBoxes;
-                    comboBoxes[9].SelectedIndex = _inferredLabels ? 0 : comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    if (!_inferredLabels)
+                    {
+                        var comboBoxes = col4Dlg.ComboBoxes;
+                        comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    }
                 });
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected", 6);
 
