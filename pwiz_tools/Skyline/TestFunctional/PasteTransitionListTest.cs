@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.NewDocument());
 
-            WaitForDocumentLoaded();
+            var doc = WaitForDocumentLoaded();
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv")));
             var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
@@ -80,17 +80,40 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13].Text);
                 Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[15].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[16].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[17].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[18].Text);
-                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[19].Text);
-                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[20].Text);
+                Assert.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC, thermBoxes[15].Text);
+                Assert.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0, thermBoxes[16].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[17].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[18].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[19].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[20].Text);
+                Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[21].Text);
+                Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[22].Text);
             });
-            // RunDlg<ImportTransitionListErrorDlg>(therm.OkDialog, errDlg => errDlg.Close());
-            OkDialog(therm, therm.CancelDialog);
+
+            // Attempt to proceed, should get an error about conflicting ion mobility declarations
+            for (var loop = 0; loop < 2; loop++)
+            {
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(therm.OkDialog);
+                AssertEx.IsTrue(errDlg.ErrorList.Any(err => err.ErrorMessage.Contains(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations)));
+                RunUI(() => errDlg.Close());
+                RunUI(() => therm.ComboBoxes[loop == 0? 16 : 21].SelectedIndex = 0); // Ignore the 1/K0 and CoV values
+            }
+            OkDialog(therm, therm.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            var transitionGroupDocNodes = doc.MoleculeTransitionGroups.ToArray();
+            AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitValues.IonMobility);
+            AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitValues.CollisionalCrossSectionSqA);
+            AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitValues.IonMobility);
+            AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitValues.CollisionalCrossSectionSqA);
+            var transitionDocNodes = doc.MoleculeTransitions.ToArray();
+            AssertEx.AreEqual(9, transitionDocNodes[0].ExplicitValues.DeclusteringPotential);
+            AssertEx.AreEqual(1.1, transitionDocNodes[1].ExplicitValues.SLens);
+            AssertEx.AreEqual(1.12, transitionDocNodes[1].ExplicitValues.ConeVoltage);
+            AssertEx.AreEqual(-0.2, transitionDocNodes[1].ExplicitValues.IonMobilityHighEnergyOffset);
+            AssertEx.AreEqual(-0.3, transitionDocNodes[2].ExplicitValues.IonMobilityHighEnergyOffset);
 
 
+            RunUI(() => SkylineWindow.NewDocument(true));
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
             var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
