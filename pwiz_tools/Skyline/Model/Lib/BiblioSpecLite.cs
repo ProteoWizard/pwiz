@@ -588,20 +588,6 @@ namespace pwiz.Skyline.Model.Lib
                 string lsid;
                 int dataRev, schemaVer;
 
-                // check what columns exist in LibInfo
-                var libInfoCols = new HashSet<string>();
-                using (var cmd = _sqliteConnection.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"PRAGMA table_info(LibInfo)";
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            libInfoCols.Add(reader.GetString(1).ToLower());
-                        }
-                    }
-                }
-
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
