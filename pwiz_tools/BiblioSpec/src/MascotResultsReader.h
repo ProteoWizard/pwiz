@@ -51,6 +51,7 @@ class MascotResultsReader : public BuildParser{
   ~MascotResultsReader();
 
   bool parseFile();
+  vector<PSM_SCORE_TYPE> getScoreTypes();
 
  private:
   enum { N_TERM_POS = 'n', C_TERM_POS = 'c' };

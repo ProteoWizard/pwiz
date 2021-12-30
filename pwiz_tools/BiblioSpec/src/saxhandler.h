@@ -42,6 +42,8 @@ public:
     SAXHandler();
     virtual ~SAXHandler();
 
+    class EndEarlyException : public std::exception {};
+
     /**
     * Receive notification of the start of an element.
     *

@@ -298,6 +298,10 @@ bool MascotResultsReader::parseFile(){
     return true;
 }
 
+vector<PSM_SCORE_TYPE> MascotResultsReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, MASCOT_IONS_SCORE);
+}
+
 /**
  * Translate the modstr into a set of SeqMod's and add them to the
  * psm-mods vector.  Also add any static mods which can be looked up

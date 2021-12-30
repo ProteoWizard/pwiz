@@ -215,6 +215,11 @@ bool SQTreader::parseFile() {
     return true;
 }
 
+vector<PSM_SCORE_TYPE> SQTreader::getScoreTypes() {
+    openRead(false);
+    return vector<PSM_SCORE_TYPE>(1, percolated ? PERCOLATOR_QVALUE : SEQUEST_XCORR);
+}
+
 /**
  * Read an sqt file beginning with the first S line. collect a
  * list of PSMs that pass score cutoff, populate the library tables

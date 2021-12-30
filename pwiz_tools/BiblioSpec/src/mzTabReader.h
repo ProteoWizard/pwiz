@@ -32,7 +32,9 @@ public:
     mzTabReader(BlibBuilder& maker, const char* filename, const ProgressIndicator* parentProgress);
     ~mzTabReader();
 
+    bool parse();
     bool parseFile();
+    vector<PSM_SCORE_TYPE> getScoreTypes();
 
 private:
     std::string filename_;
