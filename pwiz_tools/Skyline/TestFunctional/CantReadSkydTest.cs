@@ -16,7 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.IO;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.SettingsUI;
@@ -53,7 +56,27 @@ namespace pwiz.SkylineTestFunctional
 
             // Lock the .skyd file so that there will be an error when we try to change the document settings
             FileStreamManager.Default.CloseAllStreams();
-            var stream = File.OpenWrite(TestFilesDir.GetTestPath("Human_plasma.skyd"));
+            FileStream stream;
+            int retry = 0;
+            while (true)
+            {
+                try
+                {
+                    stream = File.OpenWrite(TestFilesDir.GetTestPath("Human_plasma.skyd"));
+                    break;
+                }
+                catch (IOException)
+                {
+                    retry++;
+                    if (retry >= 10)
+                    {
+                        throw;
+                    }
+                    Console.Out.WriteLine("Failed to open file, retry #{0}", retry);
+                    Thread.Sleep(100);
+                }
+            }
+                
 
             // Try OK'ing the settings dialog and make sure we get an error message
             var alertDlg = ShowDialog<AlertDlg>(transitionSettings.OkDialog);
