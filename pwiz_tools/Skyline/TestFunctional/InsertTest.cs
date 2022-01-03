@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -151,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
 
             var noErrDlg = ShowDialog<MessageDlg>(() => windowDlg2.CheckForErrors());
-            Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
+            Assert.AreEqual(Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
             OkDialog(noErrDlg, noErrDlg.OkDialog);
             RunUI(() => windowDlg2.CancelDialog());
             WaitForClosedForm(windowDlg2);
