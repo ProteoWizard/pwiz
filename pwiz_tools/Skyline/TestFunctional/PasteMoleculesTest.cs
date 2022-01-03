@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 windowDlg.radioMolecule.PerformClick();
                 if (columnOrder != null)
                 {
-                    SetComboBoxes(windowDlg, columnOrder);
+                    windowDlg.SetSelectedColumnTypes(columnOrder);
                 }
             });
 
@@ -397,7 +397,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 // Example line from that file: "PC,PC aa C24:0,,C32H64N1O8P1,C5H14N1O4P1,622.445,184.074"
-                SetComboBoxes(windowDlg,
+                windowDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     null, // Ignored empty column
@@ -560,20 +560,6 @@ namespace pwiz.SkylineTestFunctional
                 columnOrderC);
         }
 
-        private void SetComboBoxes(ImportTransitionListColumnSelectDlg dlg, params string[] headers)
-        {
-            var comboBoxes = dlg.ComboBoxes;
-            var index = 0;
-            foreach (var header in headers)
-            {
-                if (!string.IsNullOrEmpty(header) && comboBoxes.Count > index)
-                {
-                    comboBoxes[index].SelectedIndex = comboBoxes[1].FindStringExact(header);
-                }
-                index++;
-            }
-        }
-
         private void TestHeavyLightPairs()
         {
             // Verify that we can import heavy/light pairs
@@ -669,7 +655,7 @@ namespace pwiz.SkylineTestFunctional
                 ",4,4".Replace(',', TextUtil.CsvSeparator), (",4," + badcharge).Replace(',', TextUtil.CsvSeparator)));
             RunUI(() => {
                 windowDlg.radioMolecule.PerformClick();
-                SetComboBoxes(windowDlg,
+                windowDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -703,7 +689,7 @@ namespace pwiz.SkylineTestFunctional
             var col0Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => text1Dialog.textBox1.Text = text);
             RunUI(() => {
                 col0Dlg.radioMolecule.PerformClick();
-                SetComboBoxes(col0Dlg,
+                col0Dlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1312,7 +1298,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 col4Dlg.radioMolecule.PerformClick();
-                SetComboBoxes(col4Dlg,
+                col4Dlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1391,13 +1377,13 @@ namespace pwiz.SkylineTestFunctional
 
             var docOrig = NewDocument();
             const string precursorsTransitionList =
-            "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge,Note,PrecursorCE\n"+
-            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,precursor,C20H32O3,[M-H]1-,319.227868554909,-1,,21\n" + 
-            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 301.2172,,[M-H]1-,301.2172,-1,,21\n" + 
-            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 275.2377,,[M-H]1-,275.2377,-1,,21\n" + 
-            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,precursor,C20H32O3,[M8H2-H]1-,327.278082506909,-1,,21\n" + 
-            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 309.2674,,[M-H]1-,309.2674,-1,,21\n" + 
-            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 283.2879,,[M-H]1-,283.2879,-1,,21\n";
+            "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge,Note,PrecursorCE,Collisional Cross Section\n"+
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,precursor,C20H32O3,[M-H]1-,319.227868554909,-1,,21,123\n" +
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 301.2172,,[M-H]1-,301.2172,-1,,21,123\n" +
+            "12-HETE,12-HETE,C20H32O3,[M-H]1-,319.227868554909,-1,m/z 275.2377,,[M-H]1-,275.2377,-1,,21,123\n" +
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,precursor,C20H32O3,[M8H2-H]1-,327.278082506909,-1,,21,126\n" +
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 309.2674,,[M-H]1-,309.2674,-1,,21,126\n" +
+            "12-HETE,12-HETE(+[2]H8),C20H32O3,[M8H2-H]1-,327.278082506909,-1,m/z 283.2879,,[M-H]1-,283.2879,-1,,21,126\n";
             SetClipboardText(precursorsTransitionList);
 
             // Paste directly into targets area
@@ -1411,6 +1397,8 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
             Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
+            Assume.AreEqual(123.0, precursors[0].ExplicitValues.CollisionalCrossSectionSqA);
+            Assume.AreEqual(126.0, precursors[1].ExplicitValues.CollisionalCrossSectionSqA);
             NewDocument();
         }
 
@@ -1780,7 +1768,7 @@ namespace pwiz.SkylineTestFunctional
             // Correct the header assignments
             RunUI(() => {
                 errDlg.radioMolecule.PerformClick();
-                SetComboBoxes(errDlg,
+                errDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
@@ -1830,7 +1818,7 @@ namespace pwiz.SkylineTestFunctional
             var badDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
             RunUI(() => {
                 badDlg.radioMolecule.PerformClick();
-                SetComboBoxes(badDlg,
+                badDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                     Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                     Resources.PasteDlg_UpdateMoleculeType_Product_Name,
@@ -1975,7 +1963,7 @@ namespace pwiz.SkylineTestFunctional
                     // Correct the header assignments
                     RunUI(() => {
                         testImportDlg.radioMolecule.PerformClick();
-                        SetComboBoxes(testImportDlg,
+                        testImportDlg.SetSelectedColumnTypes(
                             Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
                             Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
                             Resources.PasteDlg_UpdateMoleculeType_Product_Name,
