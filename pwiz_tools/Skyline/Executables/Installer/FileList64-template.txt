@@ -109,7 +109,7 @@ ja\ProteomeDb.resources.dll
 ja\pwiz.Common.resources.dll
 ja\pwiz.CommonUtil.resources.dll
 ja\SkylineCmd.resources.dll
-ja\Skyline-daily.resources.dll
+ja\Skyline.resources.dll
 ja\ZedGraph.resources.dll
 Kajabity Tools.dll
 log4net.dll
@@ -223,10 +223,10 @@ Shimadzu.LabSolutions.IO.IoModule.dll (included automatically from ProteoWizard;
 sk\ZedGraph.resources.dll
 SkylineCmd.exe
 SkylineCmd.exe.config
-Skyline-daily.exe
-Skyline-daily.exe.config
-Skyline-daily.exe.manifest
-Skyline-daily.pdb
+Skyline.exe
+Skyline.exe.config
+Skyline.exe.manifest
+Skyline.pdb
 SkylineData.ico
 SkylineDoc.ico
 SkylineDocPointer.ico
@@ -258,6 +258,6 @@ zh-CHS\MSGraph.resources.dll
 zh-CHS\ProteomeDb.resources.dll
 zh-CHS\pwiz.Common.resources.dll
 zh-CHS\SkylineCmd.resources.dll
-zh-CHS\Skyline-daily.resources.dll
+zh-CHS\Skyline.resources.dll
 zh-CHS\ZedGraph.resources.dll
 zh-tw\ZedGraph.resources.dll

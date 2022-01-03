@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Util
                 return Type == InstallType.release
                     ? @"https://skyline.ms/skyline32.url"
                     : Type == InstallType.daily
-                        ? @"https://skyline.ms/skyline-daily32.url"
+                        ? @"https://skyline.ms/skyline-daily32.url" // Keep -daily
                         : string.Empty;
             }
         }
