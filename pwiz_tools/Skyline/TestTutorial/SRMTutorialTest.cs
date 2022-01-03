@@ -30,7 +30,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -346,8 +345,7 @@ namespace pwiz.SkylineTestTutorial
             string impliedLabeled = GetExcelFileText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
             var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
-            col4Dlg.SetSelectedColumnTypes(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence, 
-                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            
             RunUI(() => {
                 col4Dlg.checkBoxAssociateProteins.Checked = true;
             });
@@ -472,109 +470,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
             WaitForClosedForm<AllChromatogramsGraph>();
         }
-
-        private void TestAssociateProteins()
-        {
-            // Try importing a transition list with a peptide matching multiple proteins
-            var multipleMatches = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
-                                     "VTTSTGASYSYD, 709.327105, 1116.483162\n" +
-                                     "AADD, 391.14600, 391.14600\n" +
-                                     "VTTSTGASYSYDR, 709.327105, 928.403455";
-            for (var i = 0; i < 2; i++)
-            {
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.AddToAll);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 68, 68, 69);
-                RunUI(() => SkylineWindow.Undo());
-                // Paste the same list, but this time select "No duplicates" on peptides with multiple matches
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.NoDuplicates);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2);
-                RunUI(() => SkylineWindow.Undo());
-                // Paste the same list, but this time select "Use first occurrence" on peptides with multiple matches
-                ImportTransitions(multipleMatches,
-                    BackgroundProteome.DuplicateProteinsFilter.FirstOccurence);
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3);
-                RunUI(() => SkylineWindow.Undo());
-                // Now add headers and do everything again
-                multipleMatches = multipleMatches.Insert(0, "Peptide Modified Sequence, Precursor m/z, Product m/z\n");
-            }
-            RunUI(() => SkylineWindow.Undo());
-            // Try importing a transition list with a transition that does not match anything from the 
-            // background proteome
-            var noMatchesCSV = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
-                               "VTTSTGADRAAAA, 1191.596, 1191.596\n" +
-                               "VTTSTGASYSYDR, 709.327105, 1029.451134";
-            ImportTransitions(noMatchesCSV, BackgroundProteome.DuplicateProteinsFilter.AddToAll,  true, false);
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3);
-            RunUI(() => SkylineWindow.Undo());
-            //TestProteinReassignmentMessage();
-
-        }
-
-        private void ImportTransitions(string transitions,
-            BackgroundProteome.DuplicateProteinsFilter filter, bool addUnmatched = true, bool expectError = true)
-        {
-            // Paste into the targets window
-            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = transitions);
-
-            // FilterMatchedPeptidesDlg should appear
-            var filterMatchedDlg =
-                ShowDialog<FilterMatchedPeptidesDlg>(() => colDlg.checkBoxAssociateProteins.Checked = true);
-            RunUI(() =>
-            {
-                filterMatchedDlg.AddUnmatched = addUnmatched;
-                filterMatchedDlg.DuplicateProteinsFilter = filter;
-                filterMatchedDlg.OkDialog();
-            });
-
-            if (expectError)
-            {
-                // Ignore error dialog
-                var colErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => colDlg.OkDialog());
-                OkDialog(colErrorDlg, colErrorDlg.AcceptButton.PerformClick);
-            }
-            else
-            {
-                RunUI(() =>colDlg.OkDialog());
-            }
-
-            WaitForDocumentChange(SkylineWindow.Document);
-            WaitForClosedForm(importDialog);
-        }
-
-        private void TestProteinReassignmentMessage()
-        {
-            // Try importing a list with a protein name column
-            var protColumnTSV = "VTTSTGASYSYDR, 709.327105, 1217.530841, Rv1812c_Rv1812c\n" +
-                                "VTTSTGASYSYDR, 709.327105, 1116.483162, Rv1812c_Rv1812c\n" +
-                                "VTTSTGASYSYDR, 709.327105, 1029.451134, Rv1812c_Rv1812c";
-            var importDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var colDlg =
-                ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDlg.textBox1.Text = protColumnTSV);
-
-            // Test our warning when the user associates proteins and then tries to reassign the protein name column
-            RunUI(() =>
-            {
-                colDlg.checkBoxAssociateProteins.Checked = true;
-                var messageDlg = ShowDialog<MessageDlg>(() =>
-                {
-                    RunUI(() =>
-                    {
-                        colDlg.SetSelectedColumnTypes(null, null, null, null, Resources
-                            .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-                    });
-                });
-                Assert.IsNotNull(messageDlg);
-                RunUI(() =>
-                {
-                    messageDlg.CancelButton.PerformClick();
-                    colDlg.CancelButton.PerformClick();
-                });
-
-            });
-        }
-
+        
     }
 }

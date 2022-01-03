@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -106,12 +105,6 @@ namespace pwiz.SkylineTestFunctional
             var pasteText = TransitionsClipboardText;
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
-            RunUI(() => {
-                windowDlg.SetSelectedColumnTypes(
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-            });
             var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => windowDlg.checkBoxAssociateProteins.Checked = true ); // // Enable Associate Proteins, but some peptides aren't in background proteome
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
@@ -152,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
 
             var noErrDlg = ShowDialog<MessageDlg>(() => windowDlg2.CheckForErrors());
-            Assert.AreEqual(Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
+            Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
             OkDialog(noErrDlg, noErrDlg.OkDialog);
             RunUI(() => windowDlg2.CancelDialog());
             WaitForClosedForm(windowDlg2);

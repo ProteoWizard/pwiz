@@ -160,12 +160,6 @@ namespace pwiz.SkylineTestTutorial
             var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
             PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
             RunUI(() => {
-                colDlg.radioPeptide.PerformClick();
-                colDlg.SetSelectedColumnTypes(
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-
                 colDlg.checkBoxAssociateProteins.Checked = true; // Enable Associate Proteins
             });
 

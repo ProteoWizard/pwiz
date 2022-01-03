@@ -64,7 +64,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 windowDlg.radioMolecule.PerformClick();
-                windowDlg.SetSelectedColumnTypes(columnOrder);
+                if (columnOrder != null)
+                {
+                    windowDlg.SetSelectedColumnTypes(columnOrder);
+                }
             });
 
             if (string.IsNullOrEmpty(errText))
@@ -121,7 +124,6 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
-            TestFullyDescribedPrecursors();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
             TestImpliedFragmentAdduct();
@@ -139,6 +141,7 @@ namespace pwiz.SkylineTestFunctional
             TestPerTransitionValues();
             TestToolServiceAccess();
             TestPrecursorTransitions();
+            TestFullyDescribedPrecursors();
             TestTransitionListArrangementAndReporting();
 
             // Load a document whose settings understand heavy labeling

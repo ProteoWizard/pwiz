@@ -122,13 +122,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 RunUI(() => { SkylineWindow.NewDocument(true); });
                 WaitForDocumentLoaded();
-
             }
-
-
-
-
-
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
