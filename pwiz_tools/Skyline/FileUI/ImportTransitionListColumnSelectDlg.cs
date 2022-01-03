@@ -33,9 +33,9 @@ using System.Data;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
@@ -115,22 +115,7 @@ namespace pwiz.Skyline.FileUI
 
         public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant()
         {
-            List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> result = GetKnownHeaderTypes();
-            var currentCulture = Thread.CurrentThread.CurrentUICulture;
-            try
-            {
-                var tryCulture = new CultureInfo(@"en");
-                if (!Equals(currentCulture, tryCulture))
-                {
-                    Thread.CurrentThread.CurrentUICulture = tryCulture;
-                    result = GetKnownHeaderTypes();
-                }
-            }
-            finally
-            {
-                Thread.CurrentThread.CurrentUICulture = currentCulture;
-            }
-            return result;
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, GetKnownHeaderTypes);
         }
 
         // When we switch modes we want to keep the column positions that were set in the mode not being used
@@ -597,8 +582,8 @@ namespace pwiz.Skyline.FileUI
             return headerTypesInvariant[Math.Max(0, index)].Item1;
         }
         
-        public string[] SupportedColumnTypes => Enumerable.Range(0, ComboBoxes[1].Items.Count - 1).Select(i => ComboBoxes[1].Items[i].ToString()).ToArray();
-        public int[] ColumnTypeControlWidths => Enumerable.Range(0, ComboBoxes.Count - 1).Select(i => ComboBoxes[i].Width).ToArray();
+        public string[] SupportedColumnTypes => ComboBoxes[1].Items.Select(item=> item.ToString()).ToArray(); // Using 1th as 0th is sometimes generated with a restricted list as AssociateProteins
+        public int[] ColumnTypeControlWidths => ComboBoxes.Select(cb => cb.Width).ToArray();
 
         #endregion
 
