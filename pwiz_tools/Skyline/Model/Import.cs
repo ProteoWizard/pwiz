@@ -925,7 +925,7 @@ namespace pwiz.Skyline.Model
             // Check the various IM related columns, return error message (or null on success)
             public string TryGetIonMobility(out double? ionMobility, out eIonMobilityUnits imUnits, out int errColumn)
             {
-                var declarations = new Dictionary<eIonMobilityUnits, double>();
+                var declarations = new Dictionary<eIonMobilityUnits, double?>();
                 errColumn = -1;
                 if (TryColumnDouble(Fields, errColumn = Indices.ExplicitDriftTimeColumn, FormatProvider, out var im))
                 {

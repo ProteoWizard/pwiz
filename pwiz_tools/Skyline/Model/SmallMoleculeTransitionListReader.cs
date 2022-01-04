@@ -1021,7 +1021,7 @@ namespace pwiz.Skyline.Model
             double? retentionTime = null;
             double? retentionTimeWindow = null;
             double? declusteringPotential = null;
-            var ionMobility = new Dictionary<eIonMobilityUnits, double>();
+            var ionMobility = new Dictionary<eIonMobilityUnits, double?>();
 
             if (getPrecursorColumns)
             {
@@ -1512,7 +1512,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public static string GetMultipleIonMobilitiesErrorMessage(Dictionary<eIonMobilityUnits, double> ionMobility)
+        public static string GetMultipleIonMobilitiesErrorMessage(Dictionary<eIonMobilityUnits, double?> ionMobility)
         {
             return Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations +
                    $@" ({string.Join(@", ", ionMobility.Select(kvp => $@"{IonMobilityFilter.IonMobilityUnitsL10NString(kvp.Key)} = {kvp.Value}"))}";
