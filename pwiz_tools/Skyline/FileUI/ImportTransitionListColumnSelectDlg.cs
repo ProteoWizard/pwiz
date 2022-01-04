@@ -506,7 +506,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             // Did we consider all possible column types?
-            var missed = headerList.Where(hdr => !_considered.Contains(hdr.Item1)).Select(hdr => hdr.Item1).ToArray();
+            var missed = KnownHeaderTypes.Where(hdr => !_considered.Contains(hdr.Item1)).Select(hdr => hdr.Item1).ToArray();
             Assume.IsTrue(missed.Length == 0, @"missing handler for column(s) " + string.Join(@", ", missed));
         }
 
