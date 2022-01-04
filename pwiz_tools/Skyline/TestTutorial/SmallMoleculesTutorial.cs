@@ -118,20 +118,17 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
-                    var comboBoxes = col4Dlg.ComboBoxes;
-                    comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                    comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                    comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                    comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                    comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-                    comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                    comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                    if (!_inferredLabels)
-                    {
-                        comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                    }
+                    col4Dlg.SetSelectedColumnTypes(
+                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                        Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                        Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                        Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                        Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                        Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                        _inferredLabels ? Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column : Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
                     
                 });
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with chosen column headers", 6);
@@ -233,16 +230,16 @@ namespace pwiz.SkylineTestTutorial
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
 
                     RunUI(() => {
-                        var comboBoxes = colDlg.ComboBoxes;
-                        comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                        comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                        comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                        comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                        comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                        comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                        comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-                        comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                        comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                        colDlg.SetSelectedColumnTypes(
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                            Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                            Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
                     });
 
                     TakeCoverShot();

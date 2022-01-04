@@ -77,14 +77,14 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 colDlg.radioMolecule.PerformClick();
-                var comboBoxes = colDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-                comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                colDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
 
             OkDialog(colDlg, colDlg.OkDialog);

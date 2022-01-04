@@ -98,17 +98,17 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
-                    var comboBoxes = col4Dlg.ComboBoxes;
-                    comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                    comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                    comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                    comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                    comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                    comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
-                    comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
-                    comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                     col4Dlg.SetSelectedColumnTypes(
+                         Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                         Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                         Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                         Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                         Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                         Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
                 });
 
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dialog with ordered columns", 6);
