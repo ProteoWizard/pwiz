@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="id">The <see cref="TransitionGroup"/> identity for this node</param>
         /// <param name="children">A set of explicit children, or null if children should be auto-managed</param>
-        /// <param name="explicitTransitionGroupValues">Optional values like ion mobility etc
+        /// <param name="explicitTransitionGroupValues">Optional values like ion mobility etc</param>
         public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children, ExplicitTransitionGroupValues explicitTransitionGroupValues = null)
             : this(id,
                    Annotations.EMPTY,
