@@ -496,6 +496,12 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (SkylineWindow != null)
                 {
+                    if (SkylineWindow.SequenceTree == null)
+                    {
+                        // The SequenceTree can be null if we are in the process of restoring a .view
+                        // We should ignore any change that happens during that.
+                        return;
+                    }
                     SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
                         logFunc ?? (docPair => LogEntryFromEditDescription(editDescription, docPair)));
                 }

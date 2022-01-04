@@ -120,6 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetSpectraUI(MsDataSpectrum[] spectra)
         {
             _msDataFileScanHelper.MsDataSpectra = spectra;
+            if (_msDataFileScanHelper.MsDataSpectra == null || !_msDataFileScanHelper.MsDataSpectra.Any())
+                return;
             _rmis = null;
 
 
@@ -146,8 +148,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _heatMapData = null;
-            if (_msDataFileScanHelper.MsDataSpectra == null)
-                return;
             // Find max values.
             _maxMz = 0;
             _maxIntensity = 0;
