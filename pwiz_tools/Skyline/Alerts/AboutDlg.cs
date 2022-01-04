@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Alerts
             labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
 
             // Designer has problems getting images from resources
-            pictureSkylineIcon.Image = Install.Type == Install.InstallType.daily ? Resources.SkylineImg : Resources.Skyline_Release;
+            pictureSkylineIcon.Image = Program.SkylineImage;
             pictureProteoWizardIcon.Image = Resources.ProteoWizard;
         }
 
