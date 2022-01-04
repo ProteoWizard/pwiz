@@ -33,7 +33,6 @@ using System.Data;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -759,7 +758,7 @@ namespace pwiz.Skyline.FileUI
         private int[] previousIndices;
 
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
-        private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
+        private void ComboChanged(object sender, EventArgs e)  // N.B. no charge state columns for peptides - Skyline infers these and is confused when given explicit values
         {
             var comboBox = (LiteDropDownList) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
@@ -771,18 +770,16 @@ namespace pwiz.Skyline.FileUI
 
             var propertiesChecked = new HashSet<string>();
 
-            PropertyInfo GetNamedProperty(string propertyName)
-            {
-                var propertyInfo = columns.GetType().GetProperties().First(prop => propertyName == prop.Name);
-                return propertyInfo;
-            }
-
             bool SetColumn(string headerName, string propertyName)
             {
                 propertiesChecked.Add(propertyName);
                 if (comboBox.Text == headerName)
                 {
-                    var property = GetNamedProperty(propertyName);
+                    var property = columns.GetType().GetProperty(propertyName);
+                    if (property == null)
+                    {
+                        return false;
+                    }
                     var val = (int) property.GetValue(columns, null);
                     CheckForComboBoxOverlap(val, 0, comboBoxIndex);
                     columns.ResetDuplicateColumns(comboBoxIndex);

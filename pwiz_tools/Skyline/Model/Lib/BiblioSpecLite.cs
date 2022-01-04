@@ -1879,9 +1879,9 @@ namespace pwiz.Skyline.Model.Lib
                             var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
-                                var ionMobility = GetNullableDouble(reader, iIonMobility);
-                                var collisionalCrossSectionSqA = GetNullableDouble(reader, iCCS);
-                                var ionMobilityHighEnergyOffset = GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
+                                var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
+                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
+                                var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
                                 if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
@@ -2040,16 +2040,6 @@ namespace pwiz.Skyline.Model.Lib
                 return 0;
             }
             return Convert.ToInt32(value);
-        }
-
-        private static double? GetNullableDouble(SQLiteDataReader reader, int column)
-        {
-            var value = reader.GetValue(column);
-            if (value is DBNull)
-            {
-                return null;
-            }
-            return Convert.ToDouble(value);
         }
 
         #region Implementation of IXmlSerializable
