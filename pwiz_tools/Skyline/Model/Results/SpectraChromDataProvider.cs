@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.Results
         private IDemultiplexer _demultiplexer;
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
+        private Dictionary<string, int> _scanIdDictionary = new Dictionary<string, int>();
         private readonly bool _isProcessedScans;
         private double? _maxIonMobilityValue;
         private bool _isSingleMzMatch;
@@ -443,16 +444,14 @@ namespace pwiz.Skyline.Model.Results
 
         private int GetScanIdIndex(string id)
         {
-            if (_scanIdList.Count > 0)
+            if (_scanIdDictionary.TryGetValue(id, out int scanIndex))
             {
-                if (id == _scanIdList[_scanIdList.Count - 1])
-                {
-                    return _scanIdList.Count - 1;
-                }
+                return scanIndex;
             }
-            int nextIndex = _scanIdList.Count;
+            scanIndex = _scanIdList.Count;
             _scanIdList.Add(id);
-            return nextIndex;
+            _scanIdDictionary.Add(id, scanIndex);
+            return scanIndex;
         }
 
         private void AddChromatograms(ChromDataCollectorSet chromMap)
