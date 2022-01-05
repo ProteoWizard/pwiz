@@ -11630,4 +11630,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations" xml:space="preserve">
     <value>Multiple ion mobility declarations</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library___Identify_Columns" xml:space="preserve">
+    <value>Import Assay Library:  Identify Columns</value>
+  </data>
 </root>
