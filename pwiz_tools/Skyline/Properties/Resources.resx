@@ -11624,4 +11624,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
     <value>Downloading required files...</value>
   </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified" xml:space="preserve">
+    <value>Ion mobility units not specified</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations" xml:space="preserve">
+    <value>Multiple ion mobility declarations</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
+    <value>Import Assay Library: Identify Columns</value>
+  </data>
 </root>

@@ -626,6 +626,17 @@ namespace pwiz.Skyline
             }
         }
 
+        public static Image SkylineImage
+        {
+            get
+            {
+                // Dynamically assign the image based on the release type
+                return Install.Type == Install.InstallType.daily
+                    ? Resources.SkylineImg
+                    : Resources.Skyline_Release;
+            }
+        }
+
         /// <summary>
         /// A text writer that writes to the debug console
         /// </summary>
