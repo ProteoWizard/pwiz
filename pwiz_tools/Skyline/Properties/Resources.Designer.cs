@@ -30498,12 +30498,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility units not specified.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_unit" +
+                        "s_not_specified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing ion mobility units.
         /// </summary>
         public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobil" +
                         "ity_units", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple ion mobility declarations.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobi" +
+                        "lity_declarations", resourceCulture);
             }
         }
         
