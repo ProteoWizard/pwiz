@@ -137,9 +137,9 @@ namespace pwiz.Skyline.FileUI
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
             InitializeComponent();
 
-            if (assayLibrary) // Dialog title should be "Import Assay Library: Identify Columns" instead of "Transition List: Identify Columns"
+            if (assayLibrary) // Dialog title should be "Import Assay Library:Identify Columns" instead of "Transition List:Identify Columns"
             {
-                Text = Resources.ImportTransitionListColumnSelectDlg_Import_Assay_Library___Identify_Columns;
+                Text = Resources.ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns;
             }
 
             fileLabel.Text = Importer.Inputs.InputFilename;

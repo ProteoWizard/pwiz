@@ -16327,11 +16327,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import Assay Library:  Identify Columns.
+        ///   Looks up a localized string similar to Import Assay Library: Identify Columns.
         /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_Import_Assay_Library___Identify_Columns {
+        public static string ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns {
             get {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_Import_Assay_Library___Identify_Columns", resourceCulture);
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns", resourceCulture);
             }
         }
         
