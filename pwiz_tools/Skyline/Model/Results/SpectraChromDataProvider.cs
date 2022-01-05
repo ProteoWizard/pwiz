@@ -748,17 +748,24 @@ namespace pwiz.Skyline.Model.Results
                 
                 _lookaheadContext = new LookaheadContext(_filter, _dataFile);
                 _countSpectra = dataFile.SpectrumCount;
-                // Use the TIC chromatogram if possible, because spectrum count can be massive for data files with IMS
-                double[] tic = null;
+
+                // Initially use the number of spectra as the estimate of the number of points that chromatograms will have.
+                _countCycles = _countSpectra;
                 try
                 {
-                    tic = dataFile.GetTotalIonCurrent();
+                    double[] tic = dataFile.GetTotalIonCurrent();
+                    if (tic != null && tic.Length > 0)
+                    {
+                        // The TIC's length is equal to the number of MS1 spectra in the data file.
+                        // It is a better estimate of extracted chromatogram length
+                        // because spectrum count can be massive for data files with IMS
+                        _countCycles = tic.Length;
+                    }
                 }
                 catch (Exception)
                 {
                     // Ignore and use _countSpectra
                 }
-                _countCycles = tic != null ? tic.Length : _countSpectra;
 
                 HasSrmSpectra = dataFile.HasSrmSpectra;
                 
