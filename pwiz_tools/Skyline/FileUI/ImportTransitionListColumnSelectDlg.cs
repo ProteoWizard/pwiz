@@ -124,7 +124,7 @@ namespace pwiz.Skyline.FileUI
         private List<string> smallMolColPositions;
         private List<string> peptideColPositions;
 
-        public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath)
+        public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath, bool assayLibrary)
         {
             Importer = importer;
             _docCurrent = docCurrent;
@@ -136,6 +136,11 @@ namespace pwiz.Skyline.FileUI
             _proteinTip = new NodeTip(this) { Parent = this };
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
             InitializeComponent();
+
+            if (assayLibrary) // Dialog title should be "Import Assay Library:Identify Columns" instead of "Transition List:Identify Columns"
+            {
+                Text = Resources.ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns;
+            }
 
             fileLabel.Text = Importer.Inputs.InputFilename;
             InitializeComboBoxes();
