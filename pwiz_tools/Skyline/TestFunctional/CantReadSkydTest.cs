@@ -55,13 +55,13 @@ namespace pwiz.SkylineTestFunctional
             transitionSettings.MZMatchTolerance = newMzMatchTolerance;
 
             // Lock the .skyd file so that there will be an error when we try to change the document settings
-            FileStreamManager.Default.CloseAllStreams();
             FileStream stream;
             int retry = 0;
             while (true)
             {
                 try
                 {
+                    FileStreamManager.Default.CloseAllStreams();
                     stream = File.OpenWrite(TestFilesDir.GetTestPath("Human_plasma.skyd"));
                     break;
                 }
@@ -76,7 +76,6 @@ namespace pwiz.SkylineTestFunctional
                     Thread.Sleep(100);
                 }
             }
-                
 
             // Try OK'ing the settings dialog and make sure we get an error message
             var alertDlg = ShowDialog<AlertDlg>(transitionSettings.OkDialog);
