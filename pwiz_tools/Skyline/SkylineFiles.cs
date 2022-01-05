@@ -1969,7 +1969,7 @@ namespace pwiz.Skyline
             if (useColSelectDlg)
             {
                 // Allow the user to assign column types
-                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath, assayLibrary))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
                         return;
