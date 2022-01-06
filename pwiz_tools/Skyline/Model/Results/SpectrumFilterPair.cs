@@ -460,7 +460,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool MatchesDdaPrecursor(SignedMz precursorMz)
         {
-             return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
+            return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
         }
 
         public bool IsOutsideSpectraRangeIM(MsDataSpectrum[] spectra, double? minIonMobilityValue, double? maxIonMobilityValue)
