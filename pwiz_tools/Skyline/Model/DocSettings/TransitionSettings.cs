@@ -3091,7 +3091,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 im.SynchronizedIntegrationGroupBy = groupBy;
                 im.SynchronizedIntegrationAll = all;
-                im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : null;
+                im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : Array.Empty<string>();
             });
         }
 
@@ -3137,9 +3137,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (reader.IsStartElement(EL.synchronize_integration))
             {
-                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by);
+                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by) ?? string.Empty;
                 SynchronizedIntegrationAll = reader.GetBoolAttribute(ATTR.all);
-                SynchronizedIntegrationTargets = null;
+                SynchronizedIntegrationTargets = Array.Empty<string>();
 
                 if (!reader.IsEmptyElement)
                 {

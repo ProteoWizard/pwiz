@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static double GetMaxY(CurveList curveList, GraphPane g)
         {
             var maxY = double.MinValue;
-            foreach (var curve in curveList)
+            foreach (var curve in curveList.FindAll(curve => !curve.IsY2Axis))
             {
                 if (curve is MeanErrorBarItem)
                 {

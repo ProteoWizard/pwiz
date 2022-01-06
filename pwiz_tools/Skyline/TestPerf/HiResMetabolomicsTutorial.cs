@@ -17,19 +17,12 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -41,6 +34,12 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -91,38 +90,13 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 for (var retry = 0; retry < 2; retry++)
                 {
-                    var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                    
-                    RunUI(() =>
-                    {
-                        pasteDlg.IsMolecule = true;
-                        pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                        pasteDlg.Height = 290;
-                    });
+                    var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+
+                    // TODO (henrytsanford): update the tutorial to use ColumnSelectDlg instead of PasteDlg
                     if (retry == 0)
-                        PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
+                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with selected and ordered columns", 4);
 
-
-                    var columnsOrdered = new[]
-                    {
-                        // Prepare transition list insert window to match tutorial
-                        // Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Label Type,Precursor m/z,Precursor Charge,Explicit Retention Time
-                        SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                        SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.labelType,
-                        SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                        SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    }.ToList();
-                    RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                    TryWaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                    RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
-                    if (retry == 0)
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
-
-                    var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"), true);
+                    var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
                     if (retry > 0)
                     {
                         // Fix bad charge declaration
@@ -130,19 +104,32 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         var zneg = string.Format("{0}-1{0}", TextUtil.CsvSeparator);
                         text = text.Replace(z, zneg);
                     }
-                    SetClipboardText(text);
-                    RunUI(pasteDlg.PasteTransitions);
-                    RunUI(pasteDlg.ValidateCells);
-                    RunUI(() => pasteDlg.Height = 428);
+                    var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+
+                    RunUI(() => {
+                        col4Dlg.radioMolecule.PerformClick();
+                        col4Dlg.SetSelectedColumnTypes(
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                            Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                    });
+
+                    
+
                     if (retry == 0)
                     {
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents showing charge problem", 5);
-                        OkDialog(pasteDlg, pasteDlg.CancelDialog);
+                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents showing charge problem", 5);
+                        OkDialog(col4Dlg, col4Dlg.CancelDialog);
                     }
                     else
                     {
-                        PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
-                        OkDialog(pasteDlg, pasteDlg.OkDialog);
+                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 6);
+                        OkDialog(col4Dlg, col4Dlg.OkDialog);
                     }
                 }
                 var docTargets = WaitForDocumentChange(doc);

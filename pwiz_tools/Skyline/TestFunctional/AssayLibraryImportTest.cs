@@ -190,8 +190,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
 
-            // 8.2 Try again, this time click OK on the error dialog, accepting all transitions except the 3 with errors
-            string textIrtGroupConflictAccept = TestFilesDir.GetTestPath("InterleavedInconsistentIrt.csv");
+            // 8.2 Try again, this time click OK on the error dialog, accepting all transitions except the 3 with errors. Also, deal with ion mobility.
+            string textIrtGroupConflictAccept = TestFilesDir.GetTestPath("InterleavedInconsistentIrtWithIonMobility.csv"); // Same as before but also has column of fake 1/K0 values as 1+(precursorMZ/2)
             ImportTransitionListSkipColumnSelectWithMessage(textIrtGroupConflictAccept,
                 string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                     "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54), 2, true);
@@ -215,6 +215,20 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("AQUA4_Human_Existing_Calc-assay", currentLibraries.LibrarySpecs[0].Name);
                 var currentLibrary = currentLibraries.Libraries[0];
                 Assert.AreEqual(12, currentLibrary.SpectrumCount);
+                Assert.AreEqual(12, docCurrent.MoleculeTransitionGroups.Count(tg => tg.ExplicitValues.IonMobility.HasValue));
+                // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
+                var mobilities = new HashSet<double>();
+                foreach (var tg in docCurrent.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
+                {
+                    var imExpected = 1 + (0.5 * tg.PrecursorMz);
+                    AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.0001);
+                    mobilities.Add(tg.ExplicitValues.IonMobility.Value);
+                }
+                foreach(var key in currentLibrary.Keys)
+                {
+                    var spec = currentLibrary.GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.all).First();
+                    AssertEx.IsTrue(mobilities.Any(im => Math.Abs(im - spec.IonMobilityInfo.IonMobility.Mobility.Value) < 0.0001));
+                }
             });
 
             // 9. iRT not a number leads to error

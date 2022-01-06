@@ -411,6 +411,9 @@
   <data name="Files">
     <value>文件</value>
   </data>
+  <data name="FirstPosition">
+    <value>第一个位置</value>
+  </data>
   <data name="FoldChange">
     <value>倍数变化</value>
   </data>
@@ -530,6 +533,9 @@
   </data>
   <data name="Key">
     <value>关键</value>
+  </data>
+  <data name="LastPosition">
+    <value>最后一个位置</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>库碰撞横截面</value>

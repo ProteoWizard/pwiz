@@ -161,8 +161,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 result.Add(TIC);
             }
 
-            var modificationTypes = document.Settings.PeptideSettings.Modifications.GetModificationTypes().ToList();
-            if (modificationTypes.Count > 1)
+            if (document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes)
                 {
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public RatioToLabel(IsotopeLabelType isotopeLabelType) : base(ratio_prefix + isotopeLabelType.Name, null)
             {
-                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, 0);
+                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, isotopeLabelType.SortOrder);
             }
 
             public override string Label

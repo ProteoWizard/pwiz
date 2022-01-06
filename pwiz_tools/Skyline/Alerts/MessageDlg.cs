@@ -29,6 +29,12 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI).ShowAndDispose(parent);
         }
 
+        // For displaying a MessageDlg with a specific set of buttons
+        public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons)
+        {
+            return new MessageDlg(message, IgnoreModeUI, buttons).ShowAndDispose(parent);
+        }
+
         public static void ShowException(IWin32Window parent, Exception exception, bool ignoreModeUI = false)
         {
             ShowWithException(parent, exception.Message, exception, ignoreModeUI);
@@ -39,7 +45,7 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
         }
 
-        private MessageDlg(string message, bool ignoreModeUI) : base(message, MessageBoxButtons.OK)
+        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK) : base(message, buttons)
         {
             GetModeUIHelper().IgnoreModeUI = ignoreModeUI; // May not want any "peptide"->"molecule" translation
         }

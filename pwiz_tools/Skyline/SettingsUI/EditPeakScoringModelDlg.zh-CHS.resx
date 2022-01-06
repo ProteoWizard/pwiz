@@ -117,8 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>196, 17</value>
+    <value>334, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
@@ -224,7 +227,7 @@
     <value>70</value>
   </data>
   <metadata name="bindingPeakCalculators.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="gridPeakCalculators.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 213</value>
@@ -234,9 +237,6 @@
   </data>
   <data name="gridPeakCalculators.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
-  </data>
-  <data name="gridPeakCalculators.ToolTip" xml:space="preserve">
-    <value>峰值计算器和决定计算器对峰值得分之贡献的权重值</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Name" xml:space="preserve">
     <value>gridPeakCalculators</value>
@@ -313,11 +313,23 @@
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>447, 443</value>
+  </data>
+  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
   <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
     <value>zedGraphMProphet</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -353,7 +365,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>284, 17</value>
+    <value>426, 17</value>
   </metadata>
   <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -410,7 +422,7 @@
     <value>zedGraphSelectedCalculator</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -445,11 +457,23 @@
   <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>499, 443</value>
+  </data>
+  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
   <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
     <value>zedGraphPValues</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
     <value>tabPage4</value>
@@ -464,7 +488,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>452, 441</value>
+    <value>445, 441</value>
   </data>
   <data name="tabPage4.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -484,11 +508,23 @@
   <data name="&gt;&gt;tabPage4.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>499, 443</value>
+  </data>
+  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
   <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
     <value>zedGraphQValues</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
     <value>tabPage3</value>
@@ -503,7 +539,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>452, 441</value>
+    <value>445, 441</value>
   </data>
   <data name="tabPage3.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -544,78 +580,6 @@
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>447, 443</value>
-  </data>
-  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
-    <value>zedGraphMProphet</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>499, 443</value>
-  </data>
-  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
-    <value>zedGraphPValues</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
-    <value>tabPage4</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>499, 443</value>
-  </data>
-  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
-    <value>zedGraphQValues</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.24241, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
-    <value>tabPage3</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -645,54 +609,6 @@
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
-    <value>decoyCheckBox</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
-    <value>secondBestCheckBox</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 112</value>
-  </data>
-  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 67</value>
-  </data>
-  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="groupBox2.Text" xml:space="preserve">
-    <value>正在训练</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -753,6 +669,30 @@
   </data>
   <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 112</value>
+  </data>
+  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>385, 67</value>
+  </data>
+  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBox2.Text" xml:space="preserve">
+    <value>正在训练</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -909,6 +849,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>编辑峰值计得分型</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

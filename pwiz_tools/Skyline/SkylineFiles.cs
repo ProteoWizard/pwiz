@@ -1908,15 +1908,21 @@ namespace pwiz.Skyline
         /// <summary>
         /// Process and then add the mass list to the document
         /// </summary>
+        /// <param name="inputs">Inputs to import</param>
+        /// <param name="description">Description of action</param>
+        /// <param name="assayLibrary">True if input is an assay library</param>
+        /// <param name="inputType">"None" means "don't know if it's peptides or small molecules, go figure it out".</param>
+        /// <param name="forceDlg">True if we want to display a column select form, even if we think we know all the columns we need</param>
         public void ImportMassList(MassListInputs inputs, string description, bool assayLibrary, 
-            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none) // "None" means "don't know if it's peptides or small molecules, go figure it out".
+            SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none, bool forceDlg = false)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
             bool isSmallMoleculeList = true;
             bool useColSelectDlg = true;
-            bool hasHeaders = false;
+            bool hasHeaders = true;
+            bool isAssociateProteins = false;
             List<MeasuredRetentionTime> irtPeptides = new List<MeasuredRetentionTime>();
             List<SpectrumMzInfo> librarySpectra = new List<SpectrumMzInfo>();
             List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
@@ -1943,24 +1949,27 @@ namespace pwiz.Skyline
                 }
             }
             hasHeaders = importer.RowReader.Indices.Headers != null;
-            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules 
+                && !forceDlg) // We can skip this check if we will use the dialog regardless
             {
                 List<TransitionImportErrorInfo> testErrorList = new List<TransitionImportErrorInfo>();
                 var input = new MassListInputs(inputs.Lines.Take(100).ToArray());
                 // Try importing that list to check for errors
-                docCurrent = docCurrent.ImportMassList(input, importer, null,
+                docCurrent.ImportMassList(input, importer, null,
                     insertPath, out selectPath, out irtPeptides,
-                    out librarySpectra, out testErrorList, out peptideGroups);
+                    out librarySpectra, out testErrorList, out peptideGroups, null, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
                 if (!testErrorList.Any())
                 {
-                    useColSelectDlg = false;
+                    useColSelectDlg = false; // We should be able to import without consulting the user for column identities
                 }
             }
 
+            useColSelectDlg |= forceDlg;
+            string gridValues = null;
             if (useColSelectDlg)
             {
-                // Allow the user to assign column types if it is a proteomics transition list
-                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath))
+                // Allow the user to assign column types
+                using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docCurrent, inputs, insertPath, assayLibrary))
                 {
                     if (columnDlg.ShowDialog(this) != DialogResult.OK)
                         return;
@@ -1973,18 +1982,31 @@ namespace pwiz.Skyline
                     peptideGroups = insParams.PeptideGroups;
                     columnPositions = insParams.ColumnHeaderList;
                     isSmallMoleculeList = insParams.IsSmallMoleculeList;
+                    isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
+
+                    // Grab the final grid contents (may have been altered by Associate Proteins, or user additions/deletions
+                    var sb = new StringBuilder();
+                    if (columnDlg.Importer.RowReader.Indices.Headers != null &&
+                        columnDlg.Importer.RowReader.Indices.Headers.Any())
+                    {
+                        // Show the headers as the user sees them
+                        sb.AppendLine(string.Join(columnDlg.Importer.RowReader.Separator.ToString(), columnDlg.Importer.RowReader.Indices.Headers));
+                    }
+                    foreach (var line in columnDlg.Importer.RowReader.Lines.Where(l => !string.IsNullOrEmpty(l)))
+                    {
+                        // Show the input lines as the user sees them
+                        sb.AppendLine(line);
+                    }
+                    gridValues = sb.ToString();
                 }
             }
 
-            if (isSmallMoleculeList)
+            if (isSmallMoleculeList && useColSelectDlg || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && !useColSelectDlg)
             {
-                if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                {
-                    docCurrent = docCurrent.ImportMassList(inputs, importer, null,
-                        insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
-                        out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
-                }
-               
+                // We should have all the column header info we need, proceed with the import
+                docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                    insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                    out peptideGroups, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
             }
             if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
@@ -2093,22 +2115,39 @@ namespace pwiz.Skyline
             {
                 MessageType msgType;
                 object[] args;
-                string extraInfo = null;
+
+                // Log the column assignments
+                var columnsUsed = (columnPositions == null || columnPositions.Count == 0)
+                    ? null
+                    : string.Format(Resources.SkylineWindow_ImportMassList_Columns_identified_as__0_, TextUtil.ToCsvLine(columnPositions.Select(s => $@"'{s}'")));
+
+                var extraInfo = new List<string>
+                {
+                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_added,
+                        docPair.NewDoc.MoleculeTransitionCount - docPair.OldDoc.MoleculeTransitionCount)
+                };
+                if (isAssociateProteins)
+                {
+                    extraInfo.Add(Resources.SkylineWindow_ImportMassList_Associate_Proteins_enabled);
+                }
+                extraInfo.Add(columnsUsed);
 
                 // Imported from file
                 if (inputs.InputFilename != null)
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
                     args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
+                    extraInfo.Add(gridValues);
                 }
                 else
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
                     args = new object[0];
-                    extraInfo = inputs.InputText;
+                    extraInfo.Add(gridValues ?? inputs.InputText);
                 }
 
-                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), extraInfo).Merge(docPair, entryCreators);
+                return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), 
+                    TextUtil.LineSeparate(extraInfo.Where(s => !string.IsNullOrEmpty(s)))).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
