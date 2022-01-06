@@ -32,9 +32,23 @@ namespace SkylineBatchTest
     [TestClass]
     public class BcfgFileTest
     {
-        
+        // Xml version 21.12
         [TestMethod]
-        public void TestCurrentBcfgFiles()
+        public void TestBcfgVersion_21_12()
+        {
+            throw new NotImplementedException();
+        }
+
+        // Xml version 21.11
+        [TestMethod]
+        public void TestBcfgVersion_21_11()
+        {
+            throw new NotImplementedException();
+        }
+
+        // Updated Bcfg, includes program version number but no xml version number
+        [TestMethod]
+        public void TestBcfgVersion_21_1()
         {
             TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
@@ -130,32 +144,9 @@ namespace SkylineBatchTest
 
         }
 
-        private void CheckValues(SkylineBatchConfigManager configManager, string importPath, List<IConfig> expectedConfigs)
-        {
-            ClearConfigs(configManager);
-            configManager.Import(importPath, null);
-            var initialState = configManager.State;
-            var baseState = initialState.Copy().BaseState
-                .ReplaceAllSkylineVersions(TestUtils.GetTestSkylineSettings(), new List<string>(), null, out _);
-            var state = new SkylineBatchConfigManagerState(baseState, ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableDictionary<string, RemoteFileSource>.Empty, TestUtils.GetTestLogger()).UpdateFromBaseState(null);
-            configManager.SetState(initialState, state);
-            Assert.AreEqual(expectedConfigs.Count, configManager.State.BaseState.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.State.BaseState.ConfigNamesAsObjectArray().Length}.");
-            Assert.AreEqual(true, configManager.State.BaseState.IsConfigValid(0), "Expected imported configuration to be valid");
-            Assert.AreEqual(true, configManager.ConfigListEquals(expectedConfigs), $"Configurations did not have same values as expected configurations: {Path.GetFileName(importPath)}");
-        }
-
-        private void ClearConfigs(SkylineBatchConfigManager configManager)
-        {
-            while (configManager.State.BaseState.HasConfigs())
-            {
-                configManager.SelectConfig(0);
-                configManager.UserRemoveSelected();
-            }
-        }
-
-
+        // First update to Bcfg, no xml or program version, still parsed as 20.2
         [TestMethod]
-        public void TestOldBcfgFiles()
+        public void TestBcfgVersion_20_2_Update()
         {
             TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
@@ -247,10 +238,9 @@ namespace SkylineBatchTest
             CheckValues(configManager, multipleConfigsPath, new List<IConfig> { expectedFirstConfig, expectedSecondConfig });
         }
 
-
-
+        // First Bcfg version, does not include xml version number or program version number in xml
         [TestMethod]
-        public void TestOldestBcfgFile()
+        public void TestBcfgVersion_20_2_NoUpdate()
         {
             TestUtils.InitializeSettingsImportExport();
             var folderPath = TestUtils.GetTestFilePath("BcfgTestFiles");
@@ -261,6 +251,29 @@ namespace SkylineBatchTest
                 new MainSettings(SkylineTemplate.FromUi(TestUtils.GetTestFilePath("emptyTemplate.sky"), null, null), Path.Combine(folderPath, "Oldest"), false, TestUtils.GetTestFilePath("emptyData"), null, string.Empty, null, "Tester"),
                 new FileSettings(null, null, null, false, false, false), RefineSettings.Empty(), new ReportSettings(new List<ReportInfo>()), TestUtils.GetTestSkylineSettings());
             CheckValues(configManager, OldestConfigPath, new List<IConfig> { expectedMinimalConfig });
+        }
+
+        private void CheckValues(SkylineBatchConfigManager configManager, string importPath, List<IConfig> expectedConfigs)
+        {
+            ClearConfigs(configManager);
+            configManager.Import(importPath, null);
+            var initialState = configManager.State;
+            var baseState = initialState.Copy().BaseState
+                .ReplaceAllSkylineVersions(TestUtils.GetTestSkylineSettings(), new List<string>(), null, out _);
+            var state = new SkylineBatchConfigManagerState(baseState, ImmutableDictionary<string, string>.Empty, ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableDictionary<string, RemoteFileSource>.Empty, TestUtils.GetTestLogger()).UpdateFromBaseState(null);
+            configManager.SetState(initialState, state);
+            Assert.AreEqual(expectedConfigs.Count, configManager.State.BaseState.ConfigNamesAsObjectArray().Length, $"Expected {expectedConfigs.Count} downloaded config but instead got {configManager.State.BaseState.ConfigNamesAsObjectArray().Length}.");
+            Assert.AreEqual(true, configManager.State.BaseState.IsConfigValid(0), "Expected imported configuration to be valid");
+            Assert.AreEqual(true, configManager.ConfigListEquals(expectedConfigs), $"Configurations did not have same values as expected configurations: {Path.GetFileName(importPath)}");
+        }
+
+        private void ClearConfigs(SkylineBatchConfigManager configManager)
+        {
+            while (configManager.State.BaseState.HasConfigs())
+            {
+                configManager.SelectConfig(0);
+                configManager.UserRemoveSelected();
+            }
         }
     }
 }

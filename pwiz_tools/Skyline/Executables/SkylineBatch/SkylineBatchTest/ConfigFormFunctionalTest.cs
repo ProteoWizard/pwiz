@@ -36,6 +36,8 @@ namespace SkylineBatchTest
             TestEditInvalidDownloadingFolderPath(mainForm);
 
             TestZipFiles(mainForm);
+
+            TestRenameAnalysisFolder(mainForm);
         }
         private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
@@ -194,7 +196,12 @@ namespace SkylineBatchTest
             WaitForClosedForm(newConfigForm);
         }
 
-        
+        public void TestRenameAnalysisFolder(MainForm mainForm)
+        {
+            throw new NotImplementedException();
+        }
+
+
 
     }
 }
