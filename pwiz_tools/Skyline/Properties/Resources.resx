@@ -11633,4 +11633,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="CandidatePeakForm_CandidatePeakForm_Candidate_Peaks" xml:space="preserve">
+	  <value>Candidate Peaks</value>
+  </data>
 </root>

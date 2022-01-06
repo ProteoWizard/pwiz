@@ -8,6 +8,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -25,11 +26,12 @@ namespace pwiz.Skyline.Controls.Databinding
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _peakGroups = new CandidatePeakGroups(_dataSchema);
-            var viewContext =
-                new SkylineViewContext(ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup)),
-                    _peakGroups);
+            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup));
+            var rowSourceInfo = new RowSourceInfo(_peakGroups,
+                new ViewInfo(rootColumn, GetDefaultViewSpec()));
+            var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = "Candidate Peaks";
+            Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -113,6 +115,21 @@ namespace pwiz.Skyline.Controls.Databinding
         private HashSet<IdentityPath> GetPrecursorIdentityPaths(SrmDocument document, IEnumerable<IdentityPath> identityPaths)
         {
             return identityPaths.Where(path => path.Length >= 3).Select(path => path.GetPathTo(2)).ToHashSet();
+        }
+
+        private ViewSpec GetDefaultViewSpec()
+        {
+            var viewSpec = new ViewSpec().SetName(Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
+            {
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupStartTime))),
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupEndTime))),
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.Chosen))),
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
+                    .Property(nameof(PeakGroupScore.ModelScore))),
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
+                    .Property(nameof(PeakGroupScore.WeightedFeatures)).DictionaryValues())
+            });
+            return viewSpec;
         }
     }
 }

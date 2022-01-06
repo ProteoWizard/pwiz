@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         [Format(Formats.PEAK_SCORE, NullValue = TextUtil.EXCEL_NA)]
         public double? ModelScore { get; } 
-        [OneToMany(ItemDisplayName = "")]
+        [OneToMany(ItemDisplayName = "WeightedFeature")]
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
         public static PrecursorCandidatePeakScores MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
