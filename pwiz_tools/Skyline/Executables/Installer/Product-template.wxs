@@ -59,6 +59,8 @@
       <ComponentGroupRef Id="Method_Shimadzu_files"/>
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.CRT_files"/>
       <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
@@ -104,6 +106,7 @@
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="Microsoft.VC90.CRT_directory" Name="Microsoft.VC90.CRT"/>
       <Directory Id="percolator_directory" Name="percolator"/>
     </DirectoryRef>
   </Fragment>
@@ -632,6 +635,29 @@
       <Component Id="Method_Waters_VerifyESkylineLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Waters\VerifyESkylineLibrary.dll" KeyPath="yes"/>
       </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.MFC_files" Directory="Microsoft.VC90.MFC_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_mfc90u.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\mfc90u.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_Microsoft.VC90.MFC.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.CRT_files" Directory="Microsoft.VC90.CRT_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcp90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcp90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcr90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcr90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_Microsoft.VC90.CRT.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
     </ComponentGroup>
     <ComponentGroup Id="percolator_files" Directory="percolator_directory">
       <Component Id="percolator_percolator.exe">
