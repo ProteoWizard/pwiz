@@ -25,6 +25,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
+    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
@@ -91,6 +92,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local .version = "$(SKYLINE_YEAR).$(SKYLINE_ORDINAL).$(SKYLINE_BRANCH).$(SKYLINE_DOY)" ;
         VERSION on $(targets) = $(.version) ;
+
+        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
+        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        {
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
+            local batch-file-text = "CALL SignAfterPublish.bat $(.pfx-password) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
+        }
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
