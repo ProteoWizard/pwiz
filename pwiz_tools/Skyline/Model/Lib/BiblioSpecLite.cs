@@ -982,21 +982,12 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    try
+                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                    if (cacheBytes == null)
                     {
-                        cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                        if (cacheBytes == null)
-                        {
-                            return false;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        var failureException = new Exception(FormatErrorMessage(e), e);
-                        status = status.ChangeErrorException(failureException);
-                        loader.UpdateProgress(status);
                         return false;
                     }
+
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -1135,29 +1126,20 @@ namespace pwiz.Skyline.Model.Lib
 
                 return true;
             }
-            catch (InvalidDataException x)
-            {
-                var failureException = new InvalidDataException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
-            catch (IOException x)
-            {
-                var failureException = new IOException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
+
             catch (Exception x)
             {
-                var failureException = new Exception(FormatErrorMessage(x), x);
+                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
+                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
+                // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
+                    var failureException = new Exception(FormatErrorMessage(x), x);
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw failureException; // We want this to show up in ExceptionWeb
+                    }
+                    // This will show the user the error message after which the operation can be treated as canceled.
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
