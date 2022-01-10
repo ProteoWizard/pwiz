@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid");
         }
 
-        public abstract bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out string requiredFormat);
+        public abstract bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat);
 
         public void SetFastaFiles(string fastFile)
         {

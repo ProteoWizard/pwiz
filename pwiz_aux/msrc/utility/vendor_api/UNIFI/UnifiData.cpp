@@ -87,7 +87,16 @@ enum class ProtoPolarity
     Positive = 2
 };
 
+[ProtoBuf::ProtoContract]
+enum class ProtoMSType
+{
+    UnknownMSType = 0,
+    MS1 = 1,
+    MS2 = 2
+};
+
 ref class MSeMassSpectrum;
+ref class DDAMassSpectrum;
 ref class MassSpectrum;
 
 [ProtoBuf::ProtoContract]
@@ -107,6 +116,7 @@ public:
 
 [ProtoBuf::ProtoContract]
 [ProtoBuf::ProtoInclude(100, MSeMassSpectrum::typeid)]
+[ProtoBuf::ProtoInclude(101, DDAMassSpectrum::typeid)]
 public ref class MassSpectrum abstract : Spectrum
 {
 public:
@@ -144,6 +154,23 @@ public:
     std::vector<double>* driftTimeArray;
 };
 
+[ProtoBuf::ProtoContract]
+public ref class DDAMassSpectrum : MassSpectrum
+{
+public:
+
+    [ProtoBuf::ProtoMember(1)]
+    property double RetentionTime;
+
+    [ProtoBuf::ProtoMember(2)]
+    property float SetMass;
+
+    [ProtoBuf::ProtoMember(3)]
+    property ProtoMSType MSType;
+
+    virtual ~DDAMassSpectrum() {}
+    !DDAMassSpectrum() { delete this; }
+};
 
 ref class ParallelDownloadQueue
 {
@@ -208,6 +235,7 @@ ref class ParallelDownloadQueue
     TaskScheduler^ _readaheadScheduler;
     System::Threading::EventWaitHandle^ _waitForStart;
     DateTime _startTime;
+    bool _unifiDebug;
 
     //ConcurrentQueue<int>^ _chunkQueue;
     ConcurrentQueue<HttpClient^>^ _httpClients;
@@ -240,9 +268,11 @@ ref class ParallelDownloadQueue
             _httpClients->Enqueue(httpClient);
         }
 
-#ifdef WIN32 // DEBUG
-        Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
-#endif
+        auto unifiDebug = System::Environment::GetEnvironmentVariable("UNIFI_DEBUG");
+        _unifiDebug = unifiDebug != nullptr && unifiDebug != "0";
+
+        if (_unifiDebug)
+            Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
 
         _queueScheduler = gcnew QueuedTaskScheduler();
         _primaryScheduler = _queueScheduler->ActivateNewQueue(0);
@@ -350,9 +380,8 @@ ref class ParallelDownloadQueue
     int runChunkTask(size_t taskIndex)
     {
         int currentThreadId = System::Threading::Thread::CurrentThread->ManagedThreadId;
-#ifdef _WIN32 //DEBUG
-        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
-#endif
+        if (_unifiDebug)
+            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
 
         _waitForStart->Set();
 
@@ -400,9 +429,8 @@ ref class ParallelDownloadQueue
                         if (requestRetryCount < requestMaxRetryCount)
                         {
                             // try again
-#ifdef _WIN32 //DEBUG
-                            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
-#endif
+                            if (_unifiDebug)
+                                Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
                             System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
                         }
                         else
@@ -415,10 +443,9 @@ ref class ParallelDownloadQueue
                 DateTime stop = DateTime::UtcNow;
 
                 bytesDownloaded = response->Content->Headers->ContentLength.GetValueOrDefault(0);
-#ifdef _WIN32 //DEBUG
                 //if (streamRetryCount == 1)
+                if (_unifiDebug)
                     Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and receive {2} bytes; {3:0.}KB/s)", taskIndex, (stop - requestStart).TotalMilliseconds, bytesDownloaded, bytesDownloaded / 1024 / (stop - requestStart).TotalSeconds);
-#endif
 
                 start = DateTime::UtcNow;
                 auto lastSpectrum = start;
@@ -459,9 +486,9 @@ ref class ParallelDownloadQueue
                 if (streamRetryCount < streamMaxRetryCount || response->StatusCode == (HttpStatusCode) 429)
                 {
                     // try again
-#ifdef _WIN32 //DEBUG
-                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
-#endif
+                    if (_unifiDebug)
+                        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
+
                     if (response->StatusCode != (HttpStatusCode) 429)
                         System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
                     bytesDownloaded = 0;
@@ -477,10 +504,12 @@ ref class ParallelDownloadQueue
                     delete response;
             }
         }
-#ifdef _WIN32 //DEBUG
-        DateTime stop = DateTime::UtcNow;
-        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
-#endif
+
+        if (_unifiDebug)
+        {
+            DateTime stop = DateTime::UtcNow;
+            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
+        }
         _tasksByIndex->Remove(taskIndex); // remove the task
         _httpClients->Enqueue(httpClient); // add client back to queue
 
@@ -601,6 +630,8 @@ class UnifiData::Impl
             getNumberOfSpectra();
             //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
+            auto unifiDebug = System::Environment::GetEnvironmentVariable("UNIFI_DEBUG");
+            _unifiDebug = unifiDebug != nullptr && unifiDebug != "0";
 
             _chunkSize = 20;// Math::Max(10, (int)std::ceil(_numNetworkSpectra / 500.0));
 
@@ -825,6 +856,316 @@ class UnifiData::Impl
     //}
     System::String^ functionInfoEndpoint() { return _sampleResultUrl + "/spectrumInfos"; }
 
+    /// returns a JSON array describing the 'chromatograms', for example:
+    /*
+    "value": [
+        {
+            "id": "9fdfae70-24bf-4d0f-a4aa-00f524c28282",
+            "name": "FLR A",
+            "detectorType": "FLR",
+            "analyticalTechnique": {
+                "hardwareName": "ACQ-FLR#K06UPF015R"
+            },
+            "axisX": null,
+            "axisY": null
+        },
+        {
+            "id": "8a233325-4958-414e-a5da-0898fd0b6bd7",
+            "name": "1: TOF MSe (50-2000) 45V ESI+ (TIC)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 50.0,
+                "highMass": 2000.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "Low",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "TIC",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "8a233325-4958-414e-a5da-0898fd0b6bd8",
+            "name": "1: TOF MSe (50-2000) 45V ESI+ (BPI)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 50.0,
+                "highMass": 2000.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "Low",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "BPI",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "5b135f4c-c703-4e0b-8524-cbf46a86211c",
+            "name": "2: TOF MSe (50-2000) 60-80V ESI+ (TIC)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 50.0,
+                "highMass": 2000.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "High",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "TIC",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "5b135f4c-c703-4e0b-8524-cbf46a86211d",
+            "name": "2: TOF MSe (50-2000) 60-80V ESI+ (BPI)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 50.0,
+                "highMass": 2000.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "High",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "BPI",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "5c279069-fbae-4178-9a7c-18007283c446",
+            "name": "3: MS LockSpray Reference Data (551-562) 30V ESI+ (TIC)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 551.0,
+                "highMass": 562.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "Unknown",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "TIC",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "5c279069-fbae-4178-9a7c-18007283c447",
+            "name": "3: MS LockSpray Reference Data (551-562) 30V ESI+ (BPI)",
+            "detectorType": "MS",
+            "analyticalTechnique": {
+                "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                "hardwareName": "",
+                "scanningMethod": "MS",
+                "massAnalyser": "TIME OF FLIGHT",
+                "ionisationMode": "+",
+                "ionisationType": "ESI",
+                "lowMass": 551.0,
+                "highMass": 562.0,
+                "adcGroup": {
+                    "acquisitionMode": "ADC_PD",
+                    "acquisitionFrequency": "NaN",
+                    "ionResponses": [
+                        {
+                            "ionType": "PEPTIDE",
+                            "charge": 1,
+                            "averageIonArea": 25.8815208039415
+                        }
+                    ]
+                },
+                "tofGroup": {
+                    "nominalResolution": 10000.0,
+                    "mseLevel": "Unknown",
+                    "pusherFrequency": 21739.1304347826,
+                    "lteff": 800.0,
+                    "veff": 3307.71621789606,
+                    "samplingFrequency": 2.7
+                },
+                "quadGroup": null
+            },
+            "axisX": {
+                "label": "Retention Time",
+                "unit": "min",
+                "lowerBound": 0,
+                "upperBound": 55
+            },
+            "axisY": {
+                "label": "BPI",
+                "unit": "Counts",
+                "lowerBound": 0,
+                "upperBound": "NaN"
+            }
+        },
+        {
+            "id": "c30400a2-e8d4-499f-98a6-1a8ea06c14a6",
+            "name": "Integrated : FLR A",
+            "detectorType": "FLR",
+            "analyticalTechnique": {
+                "hardwareName": "ACQ-FLR#K06UPF015R"
+            },
+            "axisX": null,
+            "axisY": null
+        }
+    ]
+}
+    */
+    System::String^ chromatogramInfoEndpoint() { return _sampleResultUrl + "/chromatogramInfos"; }
+
     //{
     //  "value": [
     //      {
@@ -845,6 +1186,15 @@ class UnifiData::Impl
     /// returns a JSON array or protobuf stream of the spectral intensities and masses (if the HTTP Accept header specifies 'application/octet-stream')
     System::String^ spectrumEndpoint(size_t skip, size_t top) { return _sampleResultUrl + "/spectra/mass.mse?$skip=" + skip + "&$top=" + top; }
 
+    /// returns a JSON array of the chromatogram times and intensities
+    /*{
+     "id":"9fdfae70-24bf-4d0f-a4aa-00f524c28282",
+     "retentionTimes":[0,0.008333334,0.0166666675],
+     "intensities":[0,-0.000260543835,-0.000520992267],
+     "peaks":[...not used by pwiz...]
+    }*/
+    System::String^ chromatogramEndpoint(System::String^ chromatogramInfoId) { return _sampleResultUrl + "/chromatogramInfos(" + chromatogramInfoId + ")/data"; }
+
     /// a POST request to this with a JSON body of (1-based?) bin indexes, e.g. {"bins": [1,2,3,4,5]}
     System::String^ binsToDriftTimesEndPoint() { return _sampleResultUrl + "/spectra/mass.mse/convertbintodrifttime"; }
 
@@ -855,11 +1205,15 @@ class UnifiData::Impl
     gcroot<System::String^> _accessToken;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
+    bool _unifiDebug;
 
     int _apiVersion;
     bool _combineIonMobilitySpectra; // do not treat drift bins as separate spectra
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
+
+    gcroot<System::Collections::Generic::List<System::String^>^> _chromatogramIds; //  chromatogram GUIDs
+    vector<UnifiChromatogramInfo> _chromatogramInfo;
 
     string _sampleName;
     string _sampleDescription;
@@ -1099,6 +1453,89 @@ class UnifiData::Impl
         if (!hasMSeData)
             throw std::runtime_error("only MSe and HD-MSe data is supported at this time");
 
+        try
+        {
+            auto response = _httpClient->GetAsync(chromatogramInfoEndpoint())->Result;
+            if (!response->IsSuccessStatusCode)
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + chromatogramInfoEndpoint());
+
+            json = response->Content->ReadAsStringAsync()->Result;
+
+            /*"value": [
+            {
+                "id": "9fdfae70-24bf-4d0f-a4aa-00f524c28282",
+                "name": "FLR A",
+                "detectorType": "FLR",
+                "analyticalTechnique": {
+                    "hardwareName": "ACQ-FLR#K06UPF015R"
+                },
+                "axisX": null,
+                "axisY": null
+            },
+            {
+                "id": "8a233325-4958-414e-a5da-0898fd0b6bd7",
+                "name": "1: TOF MSe (50-2000) 45V ESI+ (TIC)",
+                "detectorType": "MS",
+                "analyticalTechnique": {
+                    "@odata.type": "#Waters.WebApi.Common.Models.MSTechnique",
+                    "hardwareName": "",
+                    "scanningMethod": "MS",
+                    "massAnalyser": "TIME OF FLIGHT",
+                    "ionisationMode": "+",
+                    "ionisationType": "ESI",
+                    "lowMass": 50.0,
+                    "highMass": 2000.0,
+                    "adcGroup": {
+                        "acquisitionMode": "ADC_PD",
+                        "acquisitionFrequency": "NaN",
+                        "ionResponses": [
+                            {
+                                "ionType": "PEPTIDE",
+                                "charge": 1,
+                                "averageIonArea": 25.8815208039415
+                            }
+                        ]
+                    },
+                    "tofGroup": {
+                        "nominalResolution": 10000.0,
+                        "mseLevel": "Low",
+                        "pusherFrequency": 21739.1304347826,
+                        "lteff": 800.0,
+                        "veff": 3307.71621789606,
+                        "samplingFrequency": 2.7
+                    },
+                    "quadGroup": null
+                },
+            },
+            and so on...
+            ]*/
+            auto o = JObject::Parse(json);
+            _chromatogramIds = gcnew System::Collections::Generic::List<System::String^>();
+            for each (auto chromatogramInfo in o->SelectToken("$.value")->Children())
+            {
+                _chromatogramIds->Add(chromatogramInfo->SelectToken("$.id")->ToString());
+
+                UnifiChromatogramInfo info;
+                info.index = _chromatogramInfo.size();
+                info.id = ToStdString(chromatogramInfo->SelectToken("$.name")->ToString());
+                auto detectorType = chromatogramInfo->SelectToken("$.detectorType")->ToString();
+                if (detectorType == "MS") info.detectorType = DetectorType::MS;
+                else if (detectorType == "UV") info.detectorType = DetectorType::UV;
+                else if (detectorType == "FLR") info.detectorType = DetectorType::FLR;
+                else if (detectorType == "IR") info.detectorType = DetectorType::IR;
+                else if (detectorType == "NMR") info.detectorType = DetectorType::NMR;
+                _chromatogramInfo.emplace_back(info);
+            }
+        }
+        catch (Exception^ e)
+        {
+            throw std::runtime_error("error getting chromatogramInfos: " + ToStdString(e->ToString()->Split(L'\n')[0]));
+        }
+        catch (std::exception& e)
+        {
+            throw e;
+        }
+
         if (!_hasAnyIonMobilityData)
             return;
 
@@ -1239,9 +1676,8 @@ class UnifiData::Impl
                 if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
                     _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
             }
-#ifdef _WIN32 //DEBUG
-            Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
-#endif
+            if (_unifiDebug)
+                Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
             chunkTask->Wait(); // wait for the task to finish
 
             spectrum = _cache->Get(networkIndex);
@@ -1253,6 +1689,64 @@ class UnifiData::Impl
         } CATCH_AND_FORWARD_EX(index)
     }
 
+    const std::vector<UnifiChromatogramInfo>& chromatogramInfo()
+    {
+        return _chromatogramInfo;
+    }
+
+    void getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData)
+    {
+        try
+        {
+            if (index > _chromatogramInfo.size())
+                throw gcnew ArgumentOutOfRangeException("index");
+
+            chromatogram.id = _chromatogramInfo[index].id;
+            chromatogram.index = _chromatogramInfo[index].index;
+            chromatogram.detectorType = _chromatogramInfo[index].detectorType;
+
+            auto response = _httpClient->GetAsync(chromatogramEndpoint(_chromatogramIds->default[index]))->Result;
+            if (!response->IsSuccessStatusCode)
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + chromatogramInfoEndpoint());
+
+            auto json = response->Content->ReadAsStringAsync()->Result;
+
+            /*{
+             "id":"9fdfae70-24bf-4d0f-a4aa-00f524c28282",
+             "retentionTimes":[0,0.008333334,0.0166666675],
+             "intensities":[0,-0.000260543835,-0.000520992267],
+             "peaks":[...not used by pwiz...]
+            }*/
+            auto o = JObject::Parse(json);
+
+            if (!getBinaryData)
+            {
+                chromatogram.arrayLength = 0;
+                for each (auto value in o->SelectToken("$.retentionTimes")->Children())
+                    ++chromatogram.arrayLength;
+                return;
+            }
+
+            for each (auto value in o->SelectToken("$.retentionTimes")->Children())
+                chromatogram.timeArray.push_back((double) value);
+
+            chromatogram.intensityArray.reserve(chromatogram.timeArray.size());
+            for each (auto value in o->SelectToken("$.intensities")->Children())
+                chromatogram.intensityArray.push_back((double) value);
+            if (chromatogram.intensityArray.size() != chromatogram.timeArray.size())
+                throw gcnew Exception("retentionTimes and intensities array had different sizes: UNIFI bug?");
+
+            chromatogram.arrayLength = chromatogram.timeArray.size();
+        }
+        catch (Exception^ e)
+        {
+            throw std::runtime_error("error getting chromatogramInfos: " + ToStdString(e->ToString()->Split(L'\n')[0]));
+        }
+        catch (std::exception& e)
+        {
+            throw e;
+        }
+    }
 
 };
 
@@ -1271,6 +1765,9 @@ UnifiData::~UnifiData()
 PWIZ_API_DECL size_t UnifiData::numberOfSpectra() const { return (size_t) _impl->_numLogicalSpectra; }
 
 PWIZ_API_DECL void UnifiData::getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData) const { _impl->getSpectrum(index, spectrum, getBinaryData); }
+
+PWIZ_API_DECL const std::vector<UnifiChromatogramInfo>& UnifiData::chromatogramInfo() const { return _impl->_chromatogramInfo;  }
+PWIZ_API_DECL void UnifiData::getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData) const { return _impl->getChromatogram(index, chromatogram, getBinaryData); }
 
 PWIZ_API_DECL const boost::local_time::local_date_time& UnifiData::getAcquisitionStartTime() const { return _impl->_acquisitionStartTime; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleName() const { return _impl->_sampleName; }

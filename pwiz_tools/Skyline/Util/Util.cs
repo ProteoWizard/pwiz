@@ -2127,6 +2127,24 @@ namespace pwiz.Skyline.Util
 
             return stringBuilder.ToString();
         }
+
+        /// <summary>
+        /// Returns true if the exception is not something which could happen while trying to read
+        /// from disk.
+        /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
+        /// so that they can report them as bugs.
+        /// </summary>
+        public static bool IsProgrammingDefect(Exception exception)
+        {
+            if (exception is InvalidDataException 
+                || exception is IOException 
+                || exception is UnauthorizedAccessException)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
     public class Alarms

@@ -2,8 +2,8 @@ Undo Redo : クリップボードからトランジションリストがイン�
 Summary   : クリップボードからトランジションリストがインポートされました
 All Info  :
 クリップボードからトランジションリストがインポートされました
-Extra Info: 21 transitions added
-Columns identified as 'Molecule List Name','Molecule Name','Molecular Formula','プリカーサー付加物','プリカーサー電荷','明示的保持時間','明示的衝突エネルギー','プロダクトm/z','プロダクト電荷','標識タイプ'
+Extra Info: 21個のトランジションが追加されました
+'分子リスト名','分子名','分子式','プリカーサー付加物','プリカーサー電荷','明示的保持時間','明示的衝突エネルギー','プロダクトm/z','プロダクト電荷','標識タイプ'と特定されている列
 Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge,Label
 Amino Acid,Methionine,C5H11NO2S,[M+H],1,2.5,15,104.07,1,
 Amino Acid,Methionine,C5H8H'3NO2S,[M+H],1,2.5,15,107.09,1,heavy

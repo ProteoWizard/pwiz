@@ -50,13 +50,14 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="id">The <see cref="TransitionGroup"/> identity for this node</param>
         /// <param name="children">A set of explicit children, or null if children should be auto-managed</param>
-        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children)
+        /// <param name="explicitTransitionGroupValues">Optional values like ion mobility etc</param>
+        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children, ExplicitTransitionGroupValues explicitTransitionGroupValues = null)
             : this(id,
                    Annotations.EMPTY,
                    null,
                    null,
                    null,
-                   ExplicitTransitionGroupValues.EMPTY,
+                   explicitTransitionGroupValues ?? ExplicitTransitionGroupValues.EMPTY,
                    null,
                    children,
                    children == null)
@@ -454,7 +455,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
         }
@@ -463,7 +464,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
             }
@@ -478,7 +479,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
         }
@@ -487,7 +488,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
             }

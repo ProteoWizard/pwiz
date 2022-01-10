@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
@@ -930,7 +930,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductResultsText(int indexResult)
         {
-            if (_dotpData?.Count > 0 && indexResult < _dotpData.Count)
+            if (_dotpData?.Count > 0 && indexResult < _dotpData.Count && !float.IsNaN(_dotpData[indexResult]))
             {
                 var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
                 return separator(new [] { DotpLabelText , string.Format(@"{0:F02}", _dotpData[indexResult]) } ) ;
@@ -1113,7 +1113,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)
             {
                 if (_expectedVisible == AreaExpectedValue.none)
-                    return -1;
+                    return float.NaN;
                 if (_expectedVisible == AreaExpectedValue.ratio_to_label)
                 {
                     if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
@@ -1141,15 +1141,15 @@ namespace pwiz.Skyline.Controls.Graphs
                         values = replicateIndices.Select(nodeGroup.GetLibraryDotProduct).ToList();
                     if (_expectedVisible == AreaExpectedValue.isotope_dist)
                         values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct).ToList();
-                    if (!values.Any())
-                        return -1;
+                    if (!values.Any(val => val.HasValue && !float.IsNaN(val.Value)))
+                        return float.NaN;
                     var statistics = new Statistics(values
                         .Select(value => value.HasValue ? (double?)value : null)
                         .Where(value => value.HasValue)
                         .Cast<double>());
                     return (float)statistics.Mean();
                 }
-                return -1;
+                return float.NaN;
             }
 
             protected NormalizedValueCalculator NormalizedValueCalculator { get; private set; }

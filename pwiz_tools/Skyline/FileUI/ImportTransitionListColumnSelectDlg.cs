@@ -31,8 +31,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.FileUI
@@ -40,7 +43,7 @@ namespace pwiz.Skyline.FileUI
     public partial class ImportTransitionListColumnSelectDlg : ModeUIInvariantFormEx, ITipDisplayer
     {
         public MassListImporter Importer { get; set; }
-        public List<ComboBox> ComboBoxes { get; private set; }
+        public List<LiteDropDownList> ComboBoxes { get; private set; }
 
         public bool WindowShown { get; private set; }
 
@@ -62,8 +65,11 @@ namespace pwiz.Skyline.FileUI
         private List<Protein> _proteinList;
 
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
-        private List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> headerList =
-            new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
+        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes = GetKnownHeaderTypes();
+
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes()
+        {
+            return new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
             {
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
@@ -77,14 +83,14 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic), // e.g. y7 etc
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules), // Could be anything
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
@@ -94,6 +100,8 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
@@ -105,11 +113,18 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(@"SMILES",SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(@"KEGG",SrmDocument.DOCUMENT_TYPE.small_molecules),
             };
+        }
+
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant()
+        {
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, GetKnownHeaderTypes);
+        }
+
         // When we switch modes we want to keep the column positions that were set in the mode not being used
         private List<string> smallMolColPositions;
         private List<string> peptideColPositions;
 
-        public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath)
+        public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath, bool assayLibrary)
         {
             Importer = importer;
             _docCurrent = docCurrent;
@@ -121,6 +136,11 @@ namespace pwiz.Skyline.FileUI
             _proteinTip = new NodeTip(this) { Parent = this };
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
             InitializeComponent();
+
+            if (assayLibrary) // Dialog title should be "Import Assay Library:Identify Columns" instead of "Transition List:Identify Columns"
+            {
+                Text = Resources.ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns;
+            }
 
             fileLabel.Text = Importer.Inputs.InputFilename;
             InitializeComboBoxes();
@@ -175,6 +195,7 @@ namespace pwiz.Skyline.FileUI
                 false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
+                filterDlg.Text = checkBoxAssociateProteins.Text; // This title makes more sense in this context
                 if (filterDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     // If they cancel do not change the document or the transition list
@@ -202,28 +223,59 @@ namespace pwiz.Skyline.FileUI
             _dictNameSeq = new Dictionary<string, FastaSequence>();
             _proteinList = new List<Protein>();
             canceled = false;
-            // If there are headers, add one describing the protein name column we will add
-            if (Importer.RowReader.Indices.Headers != null)
+            IDictionary<string, List<Protein>> dictSequenceProteins = null;
+            var lines = new List<string>();
+
+            using (var longWaitDlg = new LongWaitDlg() { Message = checkBoxAssociateProteins.Text })
             {
-                // Add a header we should recognize
-                var newHeaders = new string[_originalHeaders.Length + 1];
-                newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
-                for (int i = 0; i < _originalHeaders.Length; i++)
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
-                    newHeaders[i + 1] = _originalHeaders[i];
-                }
-                Importer.RowReader.Indices.Headers = newHeaders;
+                    // If there are headers, add one describing the protein name column we will add
+                    if (Importer.RowReader.Indices.Headers != null)
+                    {
+                        // Add a header we should recognize
+                        var newHeaders = new string[_originalHeaders.Length + 1];
+                        newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
+                        for (int i = 0; i < _originalHeaders.Length; i++)
+                        {
+                            newHeaders[i + 1] = _originalHeaders[i];
+                        }
+                        Importer.RowReader.Indices.Headers = newHeaders;
+                    }
+
+                    // Get a dictionary of peptides under consideration and the proteins they're associated with
+                    var peptides = new List<string>(Importer.RowReader.Lines.Count);
+                    peptides.AddRange(Importer.RowReader.Lines.Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[Importer.RowReader.Indices.PeptideColumn]));
+                    var stripped = new Dictionary<string, string>();
+                    foreach (var pep in peptides)
+                    {
+                        if (!stripped.ContainsKey(pep))
+                        {
+                            var peptideSequence = FastaSequence.StripModifications(pep);
+                            stripped[pep] = FastaSequence.IsExSequence(peptideSequence) ? peptideSequence : null;
+                        }
+                    }
+                    var proteome = _docCurrent.Settings.PeptideSettings.BackgroundProteome;
+                    using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
+                    {
+                        dictSequenceProteins = proteomeDb.GetDigestion().GetProteinsWithSequences(stripped.Values, longWaitBroker.CancellationToken);
+                    }
+                });
+            }
+            if (dictSequenceProteins == null)
+            {
+                canceled = true;
+                return Importer.RowReader.Lines.ToArray();
             }
 
-            var lines = new List<string>();
-            var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
             // Go through each line of the import
-            foreach(var line in Importer.RowReader.Lines)
+            var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
+            foreach (var line in Importer.RowReader.Lines)
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
-                var action = associateHelper.determineAssociateAction(null, 
-                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false);
+                var action = associateHelper.DetermineAssociateAction(null, 
+                    fields[Importer.RowReader.Indices.PeptideColumn], seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
@@ -362,10 +414,10 @@ namespace pwiz.Skyline.FileUI
 
         private void InitializeComboBoxes()
         {
-            ComboBoxes = new List<ComboBox>();
+            ComboBoxes = new List<LiteDropDownList>();
             for (var i = 0; i < Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length; i++)
             {
-                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+                var combo = new LiteDropDownList();
                 ComboBoxes.Add(combo);
                 comboPanelInner.Controls.Add(combo);
                 combo.BringToFront();
@@ -400,6 +452,7 @@ namespace pwiz.Skyline.FileUI
             columns.PrioritizePeptideColumn();
 
             // Set the combo boxes using the detected columns first. They will be changed if the saved column positions are determined to be correct
+            _considered = new HashSet<string>(){Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column };
             SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
             SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
             SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
@@ -409,12 +462,20 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+            SetComboBoxText(columns.ProteinDescriptionColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description);
             SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
-            SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
             SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
             SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+            SetComboBoxText(columns.SLensColumn, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
+            SetComboBoxText(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
+            SetComboBoxText(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
+            SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
+            SetComboBoxText(columns.ExplicitDriftTimeColumn, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC);
+            SetComboBoxText(columns.ExplicitInverseK0Column, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0);
+            SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
+            SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
             SetComboBoxText(columns.ExplicitCollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_);
             SetComboBoxText(columns.MolecularFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
             SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
@@ -430,7 +491,8 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.KEGGColumn, @"KEGG");
             SetComboBoxText(columns.InChiColumn, @"InChi");
             SetComboBoxText(columns.InChiKeyColumn, @"InChiKey");
-            // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+            SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+            SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
@@ -446,6 +508,10 @@ namespace pwiz.Skyline.FileUI
             {
                 UseSavedColumnsIfValid();
             }
+
+            // Did we consider all possible column types?
+            var missed = KnownHeaderTypes.Where(hdr => !_considered.Contains(hdr.Item1)).Select(hdr => hdr.Item1).ToArray();
+            Assume.IsTrue(missed.Length == 0, @"missing handler for column(s) " + string.Join(@", ", missed));
         }
 
         // Applies the saved column positions if they seem to be correct
@@ -454,8 +520,21 @@ namespace pwiz.Skyline.FileUI
             // Save the detected columns so if the saved columns are invalid we can revert back
             var detectedColumns = CurrentColumnPositions();
 
+            // Accept invariant column names from settings as well as localized
+            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
+            var settingsColumns = new List<string>();
+            foreach (var col in Settings.Default.CustomImportTransitionListColumnTypesList)
+            {
+                var index = KnownHeaderTypes.IndexOf(s => s.Item1.Equals(col));
+                if (index < 0)
+                {
+                    index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(col));
+                }
+                settingsColumns.Add(KnownHeaderTypes[Math.Max(0, index)].Item1);
+            }
+
             // Change the column positions to the saved columns so we can check if they produce valid transitions
-            SetColumnPositions(Settings.Default.CustomImportTransitionListColumnTypesList);
+            SetColumnPositions(settingsColumns);
 
             // Make a copy of the current transition list with 100 rows or the length of the current transition list (whichever is smaller)
             var input = new MassListInputs(Importer.RowReader.Lines.Take(100).ToArray());
@@ -473,13 +552,61 @@ namespace pwiz.Skyline.FileUI
                 SetColumnPositions(detectedColumns);
             }
         }
+
         /// <summary>
         /// Returns the current column positions as a list of strings
         /// </summary>
-        private List<string> CurrentColumnPositions()
+        public List<string> CurrentColumnPositions()
         {
             return ComboBoxes.Select(combo => combo.Text).ToList();
         }
+
+        /// <summary>
+        /// Returns the current column positions as a list of strings in invariant language
+        /// </summary>
+        public List<string> CurrentColumnPositionsInvariant()
+        {
+            return ColumnNamesInvariant(CurrentColumnPositions());
+        }
+        public static List<string> ColumnNamesInvariant(IEnumerable<string> local)
+        {
+            return local.Select(ColumnNameInvariant).ToList();
+        }
+
+        #region testing support
+
+        /// <summary>
+        /// For testing purposes only - normally this is done one at a time in UI rather than programatically
+        /// </summary>
+        public void SetSelectedColumnTypes(params string[] headers)
+        {
+            var index = 0;
+            foreach (var header in headers)
+            {
+                if (!string.IsNullOrEmpty(header) && ComboBoxes.Count > index)
+                {
+                    ComboBoxes[index].SelectedIndex = ComboBoxes[1].FindStringExact(header);
+                }
+                index++;
+            }
+        }
+
+        public static string ColumnNameInvariant(string local)
+        {
+            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
+            var headerTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes();
+            var index = headerTypes.IndexOf(s => s.Item1.Equals(local));
+            if (index < 0)
+            {
+                index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(local));
+            }
+            return headerTypesInvariant[Math.Max(0, index)].Item1;
+        }
+        
+        public string[] SupportedColumnTypes => ComboBoxes[1].Items.Select(item=> item.ToString()).ToArray(); // Using 1th as 0th is sometimes generated with a restricted list as AssociateProteins
+        public int[] ColumnTypeControlWidths => ComboBoxes.Select(cb => cb.Width).ToArray();
+
+        #endregion
 
         /// <summary>
         /// Set the combo boxes and column indices given a list of column positions
@@ -497,24 +624,29 @@ namespace pwiz.Skyline.FileUI
             const int gridBorderWidth = 1;
             comboPanelOuter.Location = new Point(dataGrid.Location.X + gridBorderWidth,
                 dataGrid.Location.Y + (dataGrid.ColumnHeadersVisible ? dataGrid.ColumnHeadersHeight : 1));
-            
+
+
+            // Only puts columns that we want to show in the layout
+            var activeColumnIndexes = new List<int>();
+            for (var i = 0; i < dataGrid.Columns.Count; i++)
+            {
+                if (!(!showIgnoredCols && Equals(ComboBoxes[i].Text,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
+                {
+                    activeColumnIndexes.Add(i);
+                }
+            }
+
             var xOffset = 0;
             var height = 0;
-
-            for (var i = 0; i < dataGrid.Columns.Count; i++)
+            foreach (var i in activeColumnIndexes)
             {
                 var column = dataGrid.Columns[i];
                 var comboBox = ComboBoxes[i];
-                // Only puts columns that we want to show in the layout
-                if (!(!showIgnoredCols && Equals(comboBox.Text,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
-                {
-                    comboBox.Location = new Point(xOffset, 0);
-                    comboBox.Width = column.Width; 
-                    height = Math.Max(height, comboBox.Height);
-                    xOffset += column.Width;
-                } 
-                
+                comboBox.Location = new Point(xOffset, 0);
+                comboBox.Width = column.Width + (i < (activeColumnIndexes.Count - 1) ? 1 : 0); // Overlap that 1 pixel border to get a 1 pixel divider between controls
+                height = Math.Max(height, comboBox.Height);
+                xOffset += column.Width;
             }
             
             var scrollBars = dataGrid.ScrollBars == ScrollBars.Both;
@@ -532,7 +664,7 @@ namespace pwiz.Skyline.FileUI
         /// <param name="text"></param>
         private void SetBoxesForMode(int comboBoxIndex, string text)
         {
-            foreach (var item in headerList)
+            foreach (var item in KnownHeaderTypes)
             {
                 string name = item.Item1;
                 SrmDocument.DOCUMENT_TYPE type = item.Item2;
@@ -567,9 +699,12 @@ namespace pwiz.Skyline.FileUI
 
         }
 
+        private HashSet<string> _considered;  // Helps make sure we don't forget to code for newly added column types
+
         // Sets the text of a combo box, with error checking
         private void SetComboBoxText(int comboBoxIndex, string text)
         {
+            _considered.Add(text);
             if (comboBoxIndex < 0 || comboBoxIndex >= ComboBoxes.Count)
                 return;
             ComboBoxes[comboBoxIndex].Text = text;
@@ -584,7 +719,7 @@ namespace pwiz.Skyline.FileUI
             ComboBoxes[indexOfPreviousComboBox].SelectedIndex = newSelectedIndex;
         }
 
-        private void SetColumnColor(ComboBox comboBox)
+        private void SetColumnColor(LiteDropDownList comboBox)
         {
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             // Grey out any ignored column
@@ -600,14 +735,21 @@ namespace pwiz.Skyline.FileUI
             {
                 SetColumnColor(comboBox);
             }
-
+/* Some performance issues to work out before this can be the default
+            // After initial display, see if we should enable AssociateProteins - which may cause a dialog to appear
+            if (checkBoxAssociateProteins.Visible && !WindowShown)
+            {
+                // If there's a background proteome, use it
+                checkBoxAssociateProteins.Checked = true;
+            }
+*/
             WindowShown = true;
         }
 
         // Hides columns if the data is not being used and the appropriate setting is selected
         // This is intentionally not called whenever the user changes a column header to avoid essentially punishing
         // the user for making a mistake
-        private void SetUnusedColumnVisibility(ComboBox comboBox)
+        private void SetUnusedColumnVisibility(LiteDropDownList comboBox)
         {
             if (Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
             {
@@ -621,9 +763,9 @@ namespace pwiz.Skyline.FileUI
         private int[] previousIndices;
 
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
-        private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
+        private void ComboChanged(object sender, EventArgs e)  // N.B. no charge state columns for peptides - Skyline infers these and is confused when given explicit values
         {
-            var comboBox = (ComboBox) sender;
+            var comboBox = (LiteDropDownList) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer.RowReader.Indices;
             comboBoxChanged = true;
@@ -631,247 +773,102 @@ namespace pwiz.Skyline.FileUI
             // Grey out any ignored column
             SetColumnColor(comboBox);
 
-            if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
+            var propertiesChecked = new HashSet<string>();
+
+            bool SetColumn(string headerName, string propertyName)
             {
-                CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.DecoyColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT)
-            {
-                CheckForComboBoxOverlap(columns.IrtColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.IrtColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type)
-            {
-                CheckForComboBoxOverlap(columns.LabelTypeColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.LabelTypeColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity)
-            {
-                CheckForComboBoxOverlap(columns.LibraryColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.LibraryColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name)
-            {
-                CheckForComboBoxOverlap(columns.MoleculeNameColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.MoleculeNameColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z)
-            {
-                CheckForComboBoxOverlap(columns.PrecursorColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PrecursorColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z)
-            {
-                CheckForComboBoxOverlap(columns.ProductColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
-            {
-                // When the user associates proteins and then tries to reassign the protein name column,
-                // display a warning and the option to cancel.
-                if (checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0)
+                propertiesChecked.Add(propertyName);
+                if (comboBox.Text == headerName)
                 {
-                    var dlgResult = MessageDlg.Show(this,
-                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome_,
-                        true, MessageBoxButtons.OKCancel);
-                    if (dlgResult == DialogResult.Cancel)
+                    var property = columns.GetType().GetProperty(propertyName);
+                    if (property == null)
                     {
-                        comboBox.SelectedIndex = previousIndices[comboBoxIndex];
-                        return;
+                        return false;
                     }
+                    var val = (int) property.GetValue(columns, null);
+                    CheckForComboBoxOverlap(val, 0, comboBoxIndex);
+                    columns.ResetDuplicateColumns(comboBoxIndex);
+                    property.SetValue(columns, comboBoxIndex);
+                    return true;
                 }
-                CheckForComboBoxOverlap(columns.ProteinColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProteinColumn = comboBoxIndex;
+
+                return false;
             }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name)
+
+            // Special handling for ion mobility - may be a combination of two columns (im and imUnits) or single column (im with specified units)
+            bool SetIonMobilityColumns()
             {
-                CheckForComboBoxOverlap(columns.FragmentNameColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.FragmentNameColumn = comboBoxIndex;
+                var handled =  SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, nameof(columns.ExplicitIonMobilityColumn));
+                handled |= SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, nameof(columns.ExplicitIonMobilityUnitsColumn));
+                // IM declarations that imply units
+                handled |= SetColumn(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0, nameof(columns.ExplicitInverseK0Column));
+                handled |= SetColumn(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC, nameof(columns.ExplicitDriftTimeColumn));
+                handled |= SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, nameof(columns.ExplicitCompensationVoltageColumn));
+                handled |= SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, nameof(columns.ExplicitIonMobilityHighEnergyOffsetColumn));
+                return handled;
             }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time)
+
+
+            bool HandleProteinColumn(out bool cancelled)
             {
-                CheckForComboBoxOverlap(columns.ExplicitRetentionTimeColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitRetentionTimeColumn = comboBoxIndex;
+                cancelled = false;
+                propertiesChecked.Add(nameof(columns.ProteinColumn));
+                if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
+                {
+                    // When the user associates proteins and then tries to reassign the protein name column,
+                    // display a warning and the option to cancel.
+                    if (checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0)
+                    {
+                        var dlgResult = MessageDlg.Show(this,
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome_,
+                            true, MessageBoxButtons.OKCancel);
+                        if (dlgResult == DialogResult.Cancel)
+                        {
+                            comboBox.SelectedIndex = previousIndices[comboBoxIndex];
+                            cancelled = true;
+                            return true;
+                        }
+                    }
+                    return SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, nameof(columns.ProteinColumn));
+                }
+                return false;
             }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitRetentionTimeWindowColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitRetentionTimeWindowColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitCollisionEnergyColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitCollisionEnergyColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Note)
-            {
-                CheckForComboBoxOverlap(columns.NoteColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.NoteColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_S_Lens)
-            {
-                CheckForComboBoxOverlap(columns.SLensColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.SLensColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage)
-            {
-                CheckForComboBoxOverlap(columns.ConeVoltageColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ConeVoltageColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitIonMobilityColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitIonMobilityColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitIonMobilityUnitsColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitIonMobilityUnitsColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitIonMobilityHighEnergyOffsetColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitIonMobilityHighEnergyOffsetColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitCompensationVoltageColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitCompensationVoltageColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitDeclusteringPotentialColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitDeclusteringPotentialColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_)
-            {
-                CheckForComboBoxOverlap(columns.ExplicitCollisionCrossSectionColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ExplicitCollisionCrossSectionColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description)
-            {
-                CheckForComboBoxOverlap(columns.ProteinDescriptionColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProteinDescriptionColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct)
-            {
-                CheckForComboBoxOverlap(columns.PrecursorAdductColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PrecursorAdductColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
-            {
-                CheckForComboBoxOverlap(columns.PrecursorChargeColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PrecursorChargeColumn = comboBoxIndex;                
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Name)
-            {
-                CheckForComboBoxOverlap(columns.ProductNameColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductNameColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Formula)
-            {
-                CheckForComboBoxOverlap(columns.ProductFormulaColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductFormulaColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss)
-            {
-                CheckForComboBoxOverlap(columns.ProductNeutralLossColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductNeutralLossColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Adduct)
-            {
-                CheckForComboBoxOverlap(columns.ProductAdductColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductAdductColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.PasteDlg_UpdateMoleculeType_Product_Charge)
-            {
-                CheckForComboBoxOverlap(columns.ProductChargeColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.ProductChargeColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"InChiKey")
-            {
-                CheckForComboBoxOverlap(columns.InChiKeyColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.InChiKeyColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"CAS")
-            {
-                CheckForComboBoxOverlap(columns.CASColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.CASColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"HMDB")
-            {
-                CheckForComboBoxOverlap(columns.HMDBColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.HMDBColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"InChi")
-            {
-                CheckForComboBoxOverlap(columns.InChiColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.InChiColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"SMILES")
-            {
-                CheckForComboBoxOverlap(columns.SMILESColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.SMILESColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == @"KEGG")
-            {
-                CheckForComboBoxOverlap(columns.KEGGColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.KEGGColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name)
-            {
-                CheckForComboBoxOverlap(columns.MoleculeListNameColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.MoleculeListNameColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula)
-            {
-                CheckForComboBoxOverlap(columns.MolecularFormulaColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.MolecularFormulaColumn = comboBoxIndex;
-            }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence)
-            {
-                CheckForComboBoxOverlap(columns.PeptideColumn, 0, comboBoxIndex);
-                columns.ResetDuplicateColumns(comboBoxIndex);
-                columns.PeptideColumn = comboBoxIndex;
-            }
+
+            if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy, nameof(columns.DecoyColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT, nameof(columns.IrtColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type, nameof(columns.LabelTypeColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name, nameof(columns.MoleculeNameColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, nameof(columns.PrecursorColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn))) {}
+            else if (HandleProteinColumn(out var cancelled)) { if (cancelled) return;}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name, nameof(columns.FragmentNameColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, nameof(columns.ExplicitRetentionTimeColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, nameof(columns.ExplicitRetentionTimeWindowColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, nameof(columns.ExplicitCollisionEnergyColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Note, nameof(columns.NoteColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_S_Lens, nameof(columns.SLensColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, nameof(columns.ConeVoltageColumn))) {}
+            else if (SetIonMobilityColumns()) {} // Ion mobility column interactions are somewhat complex
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, nameof(columns.ExplicitDeclusteringPotentialColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, nameof(columns.ExplicitCollisionCrossSectionColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description, nameof(columns.ProteinDescriptionColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, nameof(columns.PrecursorAdductColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge, nameof(columns.PrecursorChargeColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Formula, nameof(columns.ProductFormulaColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss, nameof(columns.ProductNeutralLossColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct, nameof(columns.ProductAdductColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Charge, nameof(columns.ProductChargeColumn))) {}
+            else if (SetColumn(@"InChiKey", nameof(columns.InChiKeyColumn))) {}
+            else if (SetColumn(@"CAS", nameof(columns.CASColumn))) {}
+            else if (SetColumn(@"HMDB", nameof(columns.HMDBColumn))) {}
+            else if (SetColumn(@"InChi", nameof(columns.InChiColumn))) {}
+            else if (SetColumn(@"SMILES", nameof(columns.SMILESColumn))) {}
+            else if (SetColumn(@"KEGG", nameof(columns.KEGGColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name, nameof(columns.MoleculeListNameColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula, nameof(columns.MolecularFormulaColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence, nameof(columns.PeptideColumn))) {}
             else
             {
                 // If any of the columns are set to the index being changed, we want to set their index to -1 now to get them out of the way
@@ -879,6 +876,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (property.Name.EndsWith(@"Column") && property.PropertyType == typeof(int))
                     {
+                        Assume.IsTrue(propertiesChecked.Contains(property.Name), @"Handler not implemented for property " + property.Name);
                         if ((int)property.GetValue(columns, null) == comboBoxIndex)
                         {
                             property.SetValue(columns, -1);
@@ -893,7 +891,7 @@ namespace pwiz.Skyline.FileUI
         // Saves column positions between transition lists
         private void UpdateColumnsList()
         {
-            Settings.Default.CustomImportTransitionListColumnTypesList = CurrentColumnPositions();
+            Settings.Default.CustomImportTransitionListColumnTypesList = CurrentColumnPositionsInvariant(); // Save the strings in invariant language for best portability
         }
 
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
@@ -986,10 +984,10 @@ namespace pwiz.Skyline.FileUI
         ///  After the mode is changed this makes sure we are only showing columns relevant to the current mode
         /// </summary>
         /// <param name="comboBox"></param>
-        private void UpdateCombo(ComboBox comboBox)
+        private void UpdateCombo(LiteDropDownList comboBox)
         {
             // Add appropriate headers to the comboBox range based on the user selected mode
-            foreach (var item in headerList)
+            foreach (var item in KnownHeaderTypes)
             {
                 string name = item.Item1;
                 SrmDocument.DOCUMENT_TYPE type = item.Item2;
@@ -998,9 +996,12 @@ namespace pwiz.Skyline.FileUI
                     (type == SrmDocument.DOCUMENT_TYPE.small_molecules && !radioPeptide.Checked))
                 {
                     comboBox.Items.Add(name);
+                    if (Equals(name, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
+                    {
+                        comboBox.SpecialItems.Add(name); // Special font for this
+                    }
                 }
             }
-            ComboHelper.AutoSizeDropDown(comboBox);
         }
 
         /// <summary>
@@ -1044,6 +1045,8 @@ namespace pwiz.Skyline.FileUI
             SetBoxesForMode(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
             SetBoxesForMode(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
             SetBoxesForMode(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
+            SetBoxesForMode(columns.ExplicitInverseK0Column, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0);
+            SetBoxesForMode(columns.ExplicitDriftTimeColumn, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC);
             SetBoxesForMode(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
             SetBoxesForMode(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
             SetBoxesForMode(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
@@ -1323,7 +1326,7 @@ namespace pwiz.Skyline.FileUI
             // Make sure we set the "Protein Name" column back to it's original index
             if (_originalProteinIndex != -1 && _originalProteinIndex != 0)
             {
-                ComboBoxes[_originalProteinIndex].SelectedIndex = headerList.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
+                ComboBoxes[_originalProteinIndex].SelectedIndex = KnownHeaderTypes.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
                     (Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, SrmDocument.DOCUMENT_TYPE.proteomic));
             }
         }
@@ -1364,7 +1367,7 @@ namespace pwiz.Skyline.FileUI
 
                     // Remove all options besides "Protein Name" from the new combo box
                     var proteinNameBox = ComboBoxes.First();
-                    var removeList = proteinNameBox.Items.Cast<object>().Where(item => item.ToString() !=
+                    var removeList = proteinNameBox.Items.Where(item => item.ToString() !=
                         proteinName &&
                         item.ToString() !=
                         Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column).ToList();
@@ -1375,7 +1378,7 @@ namespace pwiz.Skyline.FileUI
 
                     // Change the text of the new column to italic
                     proteinNameBox.SelectedIndex = 0;
-                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Displayed,
+                    var firstColumn = dataGrid.Columns.GetFirstColumn(DataGridViewElementStates.Visible,
                         DataGridViewElementStates.None);
                     if (firstColumn != null)
                     {

@@ -108,15 +108,15 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                     RunUI(() => {
                         col4Dlg.radioMolecule.PerformClick();
-                        var comboBoxes = col4Dlg.ComboBoxes;
-                        comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-                        comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
-                        comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                        comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
-                        comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                        comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                        comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                        comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                        col4Dlg.SetSelectedColumnTypes(
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                            Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                            Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
                     });
 
                     

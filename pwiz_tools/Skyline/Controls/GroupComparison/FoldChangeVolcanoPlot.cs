@@ -533,7 +533,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.Cursor = Cursors.Hand;
 
                 if (_tip == null)
-                    _tip = new NodeTip(this) { Parent = ParentForm };
+                    _tip = new NodeTip(this) { Parent = this };
 
                 _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
                     point);

@@ -94,7 +94,11 @@ namespace pwiz.Skyline.EditUI
                     using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
                     {
                         proteinsWithSequences = proteomeDb.GetDigestion()
-                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Target.Sequence));
+                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Target.Sequence), longWaitBroker.CancellationToken);
+                        if (longWaitBroker.IsCanceled)
+                        {
+                            proteinsWithSequences = null;
+                        }
                     }
                 });
             }

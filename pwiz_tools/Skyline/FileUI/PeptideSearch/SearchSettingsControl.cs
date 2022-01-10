@@ -48,6 +48,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
 
             searchEngineComboBox.SelectedIndex = 0;
+
+            LoadMassUnitEntries();
         }
 
         private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -108,6 +110,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SimpleFileDownloaderDlg.Show(TopLevelControl, string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_, searchEngineComboBox.SelectedItem),  filesNotAlreadyDownloaded);
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
+        }
+
+        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        {
+            FileDownloadInfo[] fileDownloadInfo;
+            switch (searchEngine)
+            {
+                case SearchEngine.MSAmanda:
+                    return true;
+                case SearchEngine.MSGFPlus:
+                    fileDownloadInfo = MsgfPlusSearchEngine.FilesToDownload;
+                    break;
+                case SearchEngine.MSFragger:
+                    fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(fileDownloadInfo).Any();
         }
 
         private AbstractDdaSearchEngine InitSelectedSearchEngine()
@@ -215,7 +237,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadComboboxEntries()
         {
-            LoadMassUnitEntries();
             LoadFragmentIonEntries();
             LoadMs2AnalyzerEntries();
 

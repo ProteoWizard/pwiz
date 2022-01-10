@@ -2071,7 +2071,13 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.zh-CHS.resx">
       <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
@@ -2557,7 +2563,13 @@
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.ja.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.zh-CHS.resx">
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
@@ -2593,6 +2605,9 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.ja.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\InsertTransitionListDlg.resx">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2615,6 +2630,9 @@
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.zh-CHS.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -3189,9 +3207,17 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.ja.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FeatureTooltips.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.zh-CHS.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
@@ -5623,7 +5649,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>

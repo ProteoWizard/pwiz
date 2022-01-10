@@ -53,13 +53,27 @@ namespace pwiz.Skyline.Alerts
             const string BOLD_PATTERN = "<b>(.*?)</b>";
             var academicBoldMatch = Regex.Match(rtbAgreeToLicense.Text, BOLD_PATTERN);
             rtbAgreeToLicense.Select(academicBoldMatch.Index, academicBoldMatch.Length);
-            rtbAgreeToLicense.SelectionFont = new Font(rtbAgreeToLicense.SelectionFont, FontStyle.Bold);
+            try
+            {
+                rtbAgreeToLicense.SelectionFont = new Font(rtbAgreeToLicense.SelectionFont, FontStyle.Bold);
+            }
+            catch (Exception)
+            {
+                // Ignore failed attempt to set text to bold
+            }
             rtbAgreeToLicense.SelectedText = Regex.Replace(rtbAgreeToLicense.SelectedText, BOLD_PATTERN, "$1");
 
             const string LINK_PATTERN = "<link>(.*?)</link>";
             var licenseLinkMatch = Regex.Match(rtbAgreeToLicense.Text, LINK_PATTERN);
             rtbAgreeToLicense.Select(licenseLinkMatch.Index, licenseLinkMatch.Length);
-            rtbAgreeToLicense.SelectionFont = new Font(rtbAgreeToLicense.SelectionFont, FontStyle.Underline);
+            try
+            {
+                rtbAgreeToLicense.SelectionFont = new Font(rtbAgreeToLicense.SelectionFont, FontStyle.Underline);
+            }
+            catch (Exception)
+            {
+                // Ignore failed attempt to set text to underline
+            }
             rtbAgreeToLicense.SelectionColor = SystemColors.HotTrack;
             rtbAgreeToLicense.SelectedText = Regex.Replace(rtbAgreeToLicense.SelectedText, LINK_PATTERN, "$1");
             licenseLinkStartEnd = new Tuple<int, int>(licenseLinkMatch.Index, licenseLinkMatch.Index + licenseLinkMatch.Length - 13);
@@ -75,8 +89,8 @@ namespace pwiz.Skyline.Alerts
             tbInstitution.TextChanged += tbTextChanged;
 
             // do not allow focusing on the text boxes (so caret stays hidden)
-            rtbAgreeToLicense.GotFocus += (sender, args) => Focus();
-            tbUsageConditions.GotFocus += (sender, args) => Focus();
+            rtbAgreeToLicense.GotFocus += (sender, args) => cbAgreeToLicense.Focus();
+            tbUsageConditions.GotFocus += (sender, args) => tbName.Focus();
         }
 
         public void SetValues(string name, string email, string institution)

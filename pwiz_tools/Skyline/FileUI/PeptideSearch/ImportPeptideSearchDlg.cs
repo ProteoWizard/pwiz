@@ -82,6 +82,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class TransitionSettingsPage : IFormView { }
         public class Ms1FullScanPage : IFormView { }
         public class Ms2FullScanPage : IFormView { }
+        public class ImsFullScanPage : IFormView { }
         public class FastaPage : IFormView { }
         public class ConverterSettingsPage : IFormView { }
         public class DDASearchSettingsPage : IFormView { }
@@ -709,6 +710,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ImportFastaControl.UpdateDigestSettings();
                     ImportPeptideSearch.SearchEngine.SetEnzyme(Document.Settings.PeptideSettings.Enzyme, Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
                     ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
+                    ImportPeptideSearch.DdaConverter?.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
                     SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
                     btnNext.Enabled = false;
@@ -716,12 +718,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnBack.Enabled = false;
                     ControlBox = false;
 
+                    AbstractDdaConverter.MsdataFileFormat requiredFormat = AbstractDdaConverter.MsdataFileFormat.mz5;
                     if (ImportPeptideSearch.DdaConverter == null &&
-                        BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out var r)))
+                        BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
                     {
                         ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetMsconvertConverter();
+                        ImportPeptideSearch.DdaConverter.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
+                        ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
                     }
-                    
+                    else if (ImportPeptideSearch.DdaConverter != null &&
+                             ImportPeptideSearch.DdaConverter.ConvertedSpectrumSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
+                    {
+                        ImportPeptideSearch.DdaConverter.SetRequiredOutputFormat(requiredFormat);
+                    }
+
                     if (!_expandedDdaSearchLog)
                     {
                         Width = Math.Min(Screen.FromControl(this).WorkingArea.Width, Width * 2); // give more space for search log
@@ -1226,8 +1236,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 int selectedIndex = 0;
                 Invoke(new Action(() => selectedIndex = wizardPagesImportPeptideSearch.SelectedIndex));
-                if (selectedIndex == (int) Pages.full_scan_settings_page && WorkflowType != Workflow.dda)
-                    return new Ms2FullScanPage();
+                if (selectedIndex == (int)Pages.full_scan_settings_page && WorkflowType != Workflow.dda)
+                {
+                    if (TransitionSettingsControl.IonFilter)
+                        return new ImsFullScanPage();
+                    else
+                        return new Ms2FullScanPage();
+                }
                 if (selectedIndex == (int) Pages.chromatograms_page && WorkflowType == Workflow.dia)
                     return new ChromatogramsDiaPage();
                 return TAB_PAGES[selectedIndex];

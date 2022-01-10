@@ -489,13 +489,9 @@ void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, pwi
                 if (!decompressed.empty())
                 {
                     byteBuffer = reinterpret_cast<void*>(&decompressed[0]);
-                    byteCount = decompressed.size();
                 }
-                else
-                {
-                    throw runtime_error("[BinaryDataEncoder::decode()] Compression error?");
-                }
-            } 
+                byteCount = decompressed.size();
+            }
             break;
         case Compression_None:
             break;

@@ -1525,7 +1525,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportIsolationListMenuItem.Text" xml:space="preserve">
-    <value>隔离列表(&amp;I)…</value>
+    <value>分离列表(&amp;I)…</value>
   </data>
   <data name="exportMethodMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -3914,5 +3914,29 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>225, 24</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>显示质量误差</value>
+  </data>
+  <data name="&gt;&gt;massErrorToolStripMenuItem.Name" xml:space="preserve">
+    <value>massErrorToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;massErrorToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="synchMzScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>同步质荷比尺度</value>
+  </data>
+  <data name="&gt;&gt;synchMzScaleToolStripMenuItem.Name" xml:space="preserve">
+    <value>synchMzScaleToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchMzScaleToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
