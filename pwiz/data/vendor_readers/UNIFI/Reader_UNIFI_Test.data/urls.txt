@@ -1,3 +1,4 @@
 https://demo.unifiapi.com:50034/unifi/v1/sampleresults(6c02e736-437b-46ab-9fa1-66cdb0f2ca79)?chunkReadahead=2&name=08Mar17_HDMSe_25fmolMix1_01_1_A,1_1
 https://demo.unifiapi.com:50034/unifi/v1/sampleresults(667ed3f9-4b7f-4277-8461-c2cc45af9b2d)?chunkReadahead=2&name=08Mar17_MSe_25fmolMix1_01_1_A,1_1
 https://demo.unifiapi.com:48444/unifi/v1/sampleresults(03add50c-bd22-45b3-a3ca-8a4ca6cd2082)?chunkReadahead=2&name=QC Vion IMSen190118_2_A,1_6
+https://demo.unifiapi.com:48444/unifi/v1/sampleresults(6fac3575-7b78-4394-b8c0-de8da827b2e3)?chunkReadahead=2&name=20181027 XZ blk_2_A,1_1

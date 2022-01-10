@@ -111,12 +111,13 @@ namespace pwiz.Skyline.Model.Results
 
         private static bool IsComparable(ChromDataSet dataSet)
         {
-            return dataSet.NodeGroup != null && dataSet.NodeGroup.RelativeRT != RelativeRT.Unknown;
+            return dataSet.RelativeRT != RelativeRT.Unknown;
         }
 
         private static IsotopeLabelType GetSafeLabelType(ChromDataSet dataSet)
         {
-            return dataSet.NodeGroup != null ? dataSet.NodeGroup.TransitionGroup.LabelType : null;
+            var labelTypes = dataSet.LabelTypes.Distinct().ToList();
+            return labelTypes.Count == 1 ? labelTypes[0] : null;
         }
 
         private IEnumerable<ChromData> ChromDatas
@@ -914,13 +915,7 @@ namespace pwiz.Skyline.Model.Results
                 var firstKey = DataSets[i].FirstKey;
                 if (Equals(chromDataSet.FirstKey.Precursor, firstKey.Precursor)) // Don't merge dissimilar precursors
                 {
-                    var nodeGroup = DataSets[i].NodeGroup;
-                    if (AreEquivalentGroups(nodeGroup, chromDataSet.NodeGroup))
-                    {
-                        DataSets[i].NodeGroup = nodeGroup.Merge(chromDataSet.NodeGroup);
-                        DataSets[i].Merge(chromDataSet);
-                        return true;
-                    }
+                    DataSets[i].Merge(chromDataSet);
                 }
             }
             return false;
@@ -1028,7 +1023,14 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                    {
+                        Ms2TranstionPeakData = ChromDataPeakList.EMPTY;
+                    }
+                    else
+                    {
+                        Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    }
                 }
             }
         }

@@ -167,6 +167,13 @@
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="StartPageInsertTransitionListTest.cs" />
+    <Compile Include="LibraryCacheTest.cs" />
+    <Compile Include="PermuteIsotopeModificationsTest.cs" />
+    <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -505,6 +512,7 @@
     <None Include="LegacyCrosslinkTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryCacheTest.zip" />
     <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
@@ -522,6 +530,7 @@
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
@@ -529,6 +538,7 @@
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
+    <None Include="PermuteIsotopeModificationsTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="PrositSkylineIntegrationTest.zip" />

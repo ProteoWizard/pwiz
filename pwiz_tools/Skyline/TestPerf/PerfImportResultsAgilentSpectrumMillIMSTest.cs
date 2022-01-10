@@ -159,7 +159,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

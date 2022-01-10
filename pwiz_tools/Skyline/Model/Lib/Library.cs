@@ -68,9 +68,8 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
+                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -233,14 +232,18 @@ namespace pwiz.Skyline.Model.Lib
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
-                        catch (InvalidDataException x)
-                        {
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
                         catch (OperationCanceledException)
                         {
                             docNew = docCurrent;    // Just continue
+                        }
+                        catch (Exception x)
+                        {
+                            if (ExceptionUtil.IsProgrammingDefect(x))
+                            {
+                                throw;
+                            }
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                            break;
                         }
                     }
                 }

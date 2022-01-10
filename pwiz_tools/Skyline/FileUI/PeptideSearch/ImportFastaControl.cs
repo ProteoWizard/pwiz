@@ -357,7 +357,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
-        public bool ImportFasta(IrtStandard irtStandard)
+        public void UpdateDigestSettings()
         {
             var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
@@ -370,6 +370,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DocumentContainer.ModifyDocumentNoUndo(doc =>
                     doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
+        }
+
+        public bool ImportFasta(IrtStandard irtStandard)
+        {
+            UpdateDigestSettings();
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))
             {

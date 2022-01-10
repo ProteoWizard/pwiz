@@ -73,7 +73,14 @@ namespace pwiz.Common.SystemUtil
             var proc = Process.Start(psi);
             if (proc == null)
                 throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
-            proc.PriorityClass = priorityClass;
+            try
+            {
+                proc.PriorityClass = priorityClass;
+            }
+            catch
+            {
+                // Ignore
+            }
             if (stdin != null)
             {
                 try
@@ -88,7 +95,7 @@ namespace pwiz.Common.SystemUtil
 
             try
             {
-                var reader = new ProcessStreamReader(proc);
+                var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
@@ -147,7 +154,10 @@ namespace pwiz.Common.SystemUtil
                     if (line != null)
                         sbError.AppendLine(line);
                     if (sbError.Length == 0)
+                    {
                         sbError.AppendLine(@"Error occurred running process.");
+                        sbError.Append(reader.GetErrorLines());
+                    }
                     string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;

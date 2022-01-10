@@ -27,6 +27,7 @@ namespace SkylineBatch
         log_test_format,
         modified,
         analysis_folder_path,
+        use_analysis_folder_name,
         replicate_naming_pattern,
         path,
         zip_path,

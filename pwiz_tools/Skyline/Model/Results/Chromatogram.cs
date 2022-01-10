@@ -61,8 +61,6 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-                return true;
             // If using full-scan filtering, then completion of library load
             // is a state change event, since peak picking cannot occur until
             // libraries are loaded.
@@ -185,7 +183,7 @@ namespace pwiz.Skyline.Model.Results
                 // behind this one, or the document has become loaded, then this thread
                 // has nothing to do.
                 var docInLock = container.Document;
-                if (StateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
+                if (IsStateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
                     return false;
                 docCurrent = docInLock;
 

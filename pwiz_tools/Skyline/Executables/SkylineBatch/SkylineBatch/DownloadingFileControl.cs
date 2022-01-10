@@ -43,7 +43,7 @@ namespace SkylineBatch
         public string Path { get; private set; }
         public Server Server { get; private set; }
 
-        public SkylineBatchConfigManagerState State { get; private set; }
+        public SkylineBatchConfigManagerState State { get; set; }
 
         public void SetPath(string newPath)
         {
@@ -177,6 +177,7 @@ namespace SkylineBatch
                 var addServerForm = new DataServerForm((DataServerInfo)Server, textPath.Text, State, _mainControl);
                 if (DialogResult.OK == addServerForm.ShowDialog(this))
                 {
+                    State = addServerForm.State;
                     Server = addServerForm.Server;
                     ToggleDownload(Server != null);
                 }
@@ -186,6 +187,7 @@ namespace SkylineBatch
                 var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, State);
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
+                    State = addPanoramaTemplate.State;
                     Server = addPanoramaTemplate.PanoramaServer;
                     ToggleDownload(Server != null);
                 }

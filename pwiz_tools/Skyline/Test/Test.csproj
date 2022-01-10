@@ -141,6 +141,7 @@
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />

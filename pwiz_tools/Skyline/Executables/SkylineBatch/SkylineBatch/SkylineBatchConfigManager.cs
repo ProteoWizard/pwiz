@@ -152,7 +152,7 @@ namespace SkylineBatch
         public bool CheckConfigAtIndex(int index, out string errorMessage)
         {
             var initialState = GetState();
-            var state = initialState.Copy().CheckConfigAtIndex(index, out errorMessage);
+            var state = initialState.Copy().CheckConfigAtIndex(index, _uiControl, out errorMessage);
             if (errorMessage != null)
                 return false;
             return SetState(initialState, state);
@@ -948,6 +948,8 @@ namespace SkylineBatch
                 if (!string.IsNullOrEmpty(dependentName))
                 {
                     var index = BaseState.GetConfigIndex(config.Name);
+                    var oldConfigRunner = ConfigRunners[config.Name];
+                    var oldTemplatePath = config.MainSettings.Template.FilePath;
                     ProgramaticallyRemoveAt(index);
                     string templatePath;
                     try
@@ -961,6 +963,8 @@ namespace SkylineBatch
                         continue;
                     }
                     ProgramaticallyInsertConfig(index, config.DependentChanged(dependentName, templatePath), uiControl);
+                    if (oldTemplatePath.Equals(templatePath))
+                        ConfigRunners = ConfigRunners.Remove(config.Name).Add(config.Name, oldConfigRunner);
                 }
             }
 
@@ -1039,7 +1043,7 @@ namespace SkylineBatch
 
         #region Change Config Enabled
 
-        public SkylineBatchConfigManagerState CheckConfigAtIndex(int index, out string errorMessage)
+        public SkylineBatchConfigManagerState CheckConfigAtIndex(int index, IMainUiControl uiControl, out string errorMessage)
         {
             errorMessage = null;
             var config = (SkylineBatchConfig) BaseState.ConfigList[index];
@@ -1063,7 +1067,7 @@ namespace SkylineBatch
                     string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
                 return this;
             }
-            UpdateConfigEnabled(config, !config.Enabled);
+            UpdateConfigEnabled(config, !config.Enabled, uiControl);
             if (runner.IsWaiting())
                 runner.Cancel();
             return this;
@@ -1082,14 +1086,14 @@ namespace SkylineBatch
             return this;
         }
 
-        private SkylineBatchConfigManagerState UpdateConfigEnabled(SkylineBatchConfig config, bool enabled)
+        private SkylineBatchConfigManagerState UpdateConfigEnabled(SkylineBatchConfig config, bool enabled, IMainUiControl uiControl = null)
         {
             var index = BaseState.GetConfigIndex(config.Name);
             var newConfig = new SkylineBatchConfig(config.GetName(), enabled, config.LogTestFormat,
                 config.Modified, config.MainSettings, config.FileSettings, config.RefineSettings,
                 config.ReportSettings, config.SkylineSettings);
             ProgramaticallyRemoveAt(index);
-            ProgramaticallyInsertConfig(index, newConfig, null);
+            ProgramaticallyInsertConfig(index, newConfig, uiControl);
             //BaseState.ModelUnchanged();
             return this;
         }
@@ -1363,7 +1367,7 @@ namespace SkylineBatch
                 ProgramaticallyRemoveAt(index);
                 ProgramaticallyInsertConfig(index, config, uiControl);
             }
-            //FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
+            FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
             return this;
         }
 

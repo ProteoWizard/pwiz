@@ -23,7 +23,6 @@ namespace SkylineBatch
             InitializeComponent();
             Icon = Program.Icon();
 
-            State = state;
             Server = editingServerInfo;
             _dataFolder = folder;
             _serverRequired = serverRequired;
@@ -39,13 +38,16 @@ namespace SkylineBatch
 
             textNamingPattern.Text = editingServerInfo != null ? editingServerInfo.DataNamingPattern : string.Empty;
 
+            _updated = editingServerInfo == null;
+            UpdateLabel();
+
             if (serverRequired)
                 btnRemoveServer.Hide();
         }
 
         public DataServerInfo Server;
         public ServerConnector serverConnector { get; private set; }
-        public SkylineBatchConfigManagerState State;
+        public SkylineBatchConfigManagerState State => _remoteFileControl.State;
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -160,7 +162,7 @@ namespace SkylineBatch
                 return null;
             }
 
-            return new DataServerInfo(server.FileSource, server.RelativePath, textNamingPattern.Text, _dataFolder);
+            return server != null ? new DataServerInfo(server.FileSource, server.RelativePath, textNamingPattern.Text, _dataFolder) : null;
         }
 
         private void btnRemoveServer_Click(object sender, EventArgs e)
@@ -235,7 +237,13 @@ namespace SkylineBatch
 
         private void RemoteFileChangedByUser(object sender, EventArgs e)
         {
-            _updated = false;
+            try
+            {
+                _updated = _remoteFileControl.RemoteFileSourceFromUI() == null;
+            } catch (ArgumentException)
+            {
+                _updated = false;
+            }
             UpdateLabel();
         }
     }

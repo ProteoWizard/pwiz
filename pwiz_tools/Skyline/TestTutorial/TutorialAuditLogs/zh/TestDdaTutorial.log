@@ -9,7 +9,7 @@ Summary   : 已添加谱图库“TestDdaTutorial”
 All Info  :
 已添加谱图库“TestDdaTutorial”
 建立谱图库 > 截止值 是 "0.95"
-建立谱图库 > 搜索文件 : 包含 "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+建立谱图库 > 搜索文件 : 包含 "QE_140221_01_UPS1_100fmolspiked.pepXML"
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
@@ -18,7 +18,7 @@ All Info  :
 Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+    "QE_140221_01_UPS1_100fmolspiked.pepXML"
 ],
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
@@ -37,10 +37,11 @@ All Info  :
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Label:13C(6)15N(4) (C-term R) = R[10] （同位素标签）"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
 导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "2014_01_HUMAN_UPS.fasta"
+导入肽段搜索 > DDA 搜索设置 > 搜索引擎 是 "MSFragger"
 导入肽段搜索 > DDA 搜索设置 > 母离子耐受性 是 5ppm
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 10ppm
 导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
-导入肽段搜索 > DDA 搜索设置 > 碎片离子类型 是 "b, y"
+导入肽段搜索 > DDA 搜索设置 > 碎片离子类型 是 "b,y"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -65,9 +66,10 @@ Extra Info: 提取色谱图 =
 },
 DDA 搜索设置 = 
 {
+    搜索引擎 = "MSFragger",
     母离子耐受性 = 5ppm,
     片段耐受性 = 10ppm,
     每个肽段的最大可变修饰数 = "3",
-    碎片离子类型 = "b, y"
+    碎片离子类型 = "b,y"
 }
 

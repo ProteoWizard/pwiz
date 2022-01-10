@@ -8,7 +8,6 @@ namespace SkylineBatch
 {
     public partial class RemoteFileForm : Form
     {
-        private string _folderPath;
         private CancellationTokenSource _cancelSource;
         private IMainUiControl _mainControl;
         private RemoteFileControl _remoteFileControl;
@@ -19,10 +18,9 @@ namespace SkylineBatch
             Icon = Program.Icon();
 
             path = path ?? string.Empty;
-            _folderPath = FileUtil.GetPathDirectory(path);
             _mainControl = mainControl;
             
-            _remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, path, false);
+            _remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false);
             _remoteFileControl.Dock = DockStyle.Fill;
             _remoteFileControl.Show();
             panelRemoteFile.Controls.Add(_remoteFileControl);
@@ -76,13 +74,6 @@ namespace SkylineBatch
         {
             _remoteFileControl.Clear();
         }
-
-        /*private PanoramaFile PanoramaFileFromUI(RemoteFileSource remoteFileSource, CancellationToken cancelToken)
-        {
-            if (remoteFileSource == null && string.IsNullOrEmpty(textRelativePath.Text))
-                return null;
-            return PanoramaFile.PanoramaFileFromUI(remoteFileSource, textRelativePath.Text, _folderPath, cancelToken);
-        }*/
 
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)
         {

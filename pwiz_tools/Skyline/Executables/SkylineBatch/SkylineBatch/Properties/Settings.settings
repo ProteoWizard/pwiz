@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="XmlVersion" Type="System.Decimal" Scope="Application">
-      <Value Profile="(Default)">21.11</Value>
+      <Value Profile="(Default)">21.12</Value>
     </Setting>
   </Settings>
 </SettingsFile>

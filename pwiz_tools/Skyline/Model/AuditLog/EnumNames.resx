@@ -154,7 +154,7 @@
     <value>None</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
-    <value>Targeted</value>
+    <value>Targeted (obsolete)</value>
   </data>
   <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>Centroided</value>
@@ -623,5 +623,14 @@
   </data>
   <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
     <value>PRM</value>
+  </data>
+  <data name="SearchEngine_MSAmanda" xml:space="preserve">
+    <value>MS Amanda</value>
+  </data>
+  <data name="SearchEngine_MSFragger" xml:space="preserve">
+    <value>MSFragger</value>
+  </data>
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+    <value>MS-GF+</value>
   </data>
 </root>

@@ -66,9 +66,9 @@ namespace SkylineBatch
         public new void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement(XMLElements.REMOTE_FILE_SET);
-            base.WriteXml(writer);
             if (!DataNamingPattern.Equals(".*"))
                 writer.WriteAttributeIfString(XML_TAGS.data_naming_pattern, DataNamingPattern);
+            base.WriteXml(writer);
             writer.WriteEndElement();
         }
 

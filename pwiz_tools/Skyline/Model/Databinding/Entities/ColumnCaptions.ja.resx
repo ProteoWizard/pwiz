@@ -411,6 +411,9 @@
   <data name="Files">
     <value>ファイル</value>
   </data>
+  <data name="FirstPosition">
+    <value>最初の位置</value>
+  </data>
   <data name="FoldChange">
     <value>倍率変化</value>
   </data>
@@ -530,6 +533,9 @@
   </data>
   <data name="Key">
     <value>キー</value>
+  </data>
+  <data name="LastPosition">
+    <value>最後の位置</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>ライブラリ衝突断面積</value>

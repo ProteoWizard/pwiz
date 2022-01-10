@@ -1295,7 +1295,7 @@ namespace pwiz.Skyline.Model
 
             public EventInfo()
             {
-                Id = 0;
+                Id = 1;
                 PeptideId = -1;
                 TransitionsWritten = 0;
             }
@@ -1317,7 +1317,8 @@ namespace pwiz.Skyline.Model
 
             private void Next()
             {
-                Id++;
+                if (TransitionsWritten > 0)
+                    Id++;
                 TransitionsWritten = 0;
             }
         }
@@ -2830,8 +2831,11 @@ namespace pwiz.Skyline.Model
             {
                 writer.Write(FieldSeparator);
                 writer.Write(@"Primary");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger");
+                if (MethodType == ExportMethodType.Triggered)
+                {
+                    writer.Write(FieldSeparator);
+                    writer.Write(@"Trigger");
+                }
                 writer.Write(FieldSeparator);
                 writer.Write(@"Threshold");
                 writer.Write(FieldSeparator);
@@ -2906,16 +2910,19 @@ namespace pwiz.Skyline.Model
             {
                 int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
                 writer.Write(BoolToString(rank.HasValue && rank.Value <= PrimaryTransitionCount)); // Primary
-                writer.Write(FieldSeparator);
-                // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
-                var trigger = false;
-                if (MethodType == ExportMethodType.Triggered && IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
+                if (MethodType == ExportMethodType.Triggered)
                 {
-                    int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
-                    if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
-                        trigger = true;
+                    writer.Write(FieldSeparator);
+                    // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
+                    var trigger = false;
+                    if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
+                    {
+                        int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
+                        if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
+                            trigger = true;
+                    }
+                    writer.Write(BoolToString(trigger));
                 }
-                writer.Write(BoolToString(trigger));
                 writer.Write(FieldSeparator);
                 writer.Write(0.ToString(CultureInfo)); // Threshold
                 writer.Write(FieldSeparator);

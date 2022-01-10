@@ -421,7 +421,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
                         // If there are any, set the ion mobility values of entry
-                        return SetIonMobilityCCSValues(info);
+                        return key.IsSmallMoleculeKey ? SetIonMobilityCCSValues(info) : info; // Don't do this for peptides until we have performance issues worked out
                     });
             }
 
@@ -799,7 +799,7 @@ namespace pwiz.Skyline.SettingsUI
                                     ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
                                 if (dt.HasIonMobilityValue)
                                     imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
-                                if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
+                                if ((dt.HighEnergyIonMobilityValueOffset??0) != 0) // Show the high energy value (as in Waters MSe) if different
                                     imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }

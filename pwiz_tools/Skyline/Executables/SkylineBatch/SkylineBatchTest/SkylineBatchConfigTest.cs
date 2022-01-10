@@ -73,7 +73,7 @@ namespace SkylineBatchTest
                 string.Format("The Skyline template file {0} does not exist.\r\nPlease provide a valid file.", invalidTemplate.FilePath));
             try
             {
-                var testValidMainSettings = new MainSettings(validTemplate, validAnalysisFolder, validDataDir, null, string.Empty, null, string.Empty);
+                var testValidMainSettings = new MainSettings(validTemplate, validAnalysisFolder, false, validDataDir, null, string.Empty, null, string.Empty);
                 testValidMainSettings.Validate();
             }
             catch (Exception e)
@@ -81,7 +81,7 @@ namespace SkylineBatchTest
                 Assert.Fail("Should have validated valid MainSettings. Threw exception: " + e.Message);
             }
 
-            var validMainSettings = new MainSettings(validTemplate, validAnalysisFolder, validDataDir, null, string.Empty, null, string.Empty);
+            var validMainSettings = new MainSettings(validTemplate, validAnalysisFolder, false, validDataDir, null, string.Empty, null, string.Empty);
             var validReportSettings = new ReportSettings(new List<ReportInfo>());
             var validSkylineSettings = new SkylineSettings(SkylineType.Custom, null, TestUtils.GetSkylineDir());
             var validFileSettings = FileSettings.FromUi(string.Empty, string.Empty, string.Empty, false, false, true);
@@ -129,7 +129,7 @@ namespace SkylineBatchTest
 
         private void TestValidateMainSettings(SkylineTemplate template, string analysis, string data, string pattern, string expectedError)
         {
-            var invalidMainSettings = new MainSettings(template, analysis, data, null, string.Empty, null, pattern);
+            var invalidMainSettings = new MainSettings(template, analysis, false, data, null, string.Empty, null, pattern);
             var validatedInvalidMainSettings = false;
             try
             {
@@ -149,7 +149,7 @@ namespace SkylineBatchTest
             var testMainSettings = TestUtils.GetTestMainSettings();
             Assert.IsTrue(Equals(testMainSettings, TestUtils.GetTestMainSettings()));
             var differentMainSettings = new MainSettings(testMainSettings.Template, 
-                testMainSettings.AnalysisFolderPath, testMainSettings.DataFolderPath, null, string.Empty, null, "differentPattern");
+                testMainSettings.AnalysisFolderPath, false, testMainSettings.DataFolderPath, null, string.Empty, null, "differentPattern");
             Assert.IsFalse(Equals(testMainSettings, null));
             Assert.IsFalse(Equals(testMainSettings, differentMainSettings));
         }
@@ -189,7 +189,7 @@ namespace SkylineBatchTest
             Assert.IsFalse(Equals(testConfig, differentReportSettings));
 
             var differentMain = new MainSettings(testConfig.MainSettings.Template,
-                TestUtils.GetTestFilePath(string.Empty), testConfig.MainSettings.DataFolderPath,
+                TestUtils.GetTestFilePath(string.Empty), false, testConfig.MainSettings.DataFolderPath,
                 null, string.Empty, null, testConfig.MainSettings.ReplicateNamingPattern);
             var differentMainSettings = new SkylineBatchConfig("name", false, false, DateTime.MinValue, 
                 differentMain, TestUtils.GetTestFileSettings(), TestUtils.GetTestRefineSettings(), TestUtils.GetTestReportSettings(), 

@@ -54,7 +54,8 @@ namespace SkylineBatch
 
         public Server ServerFromUI()
         {
-            return new Server(RemoteFileSourceFromUI(), textRelativePath.Text);
+            var remoteFileSource = RemoteFileSourceFromUI();
+            return remoteFileSource != null ? new Server(remoteFileSource, textRelativePath.Text) : null;
         }
 
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
@@ -85,7 +86,7 @@ namespace SkylineBatch
             }).Start();
         }
 
-        private RemoteFileSource RemoteFileSourceFromUI()
+        public RemoteFileSource RemoteFileSourceFromUI()
         {
             if (comboRemoteFileSource.SelectedIndex == -1 && string.IsNullOrEmpty(textRelativePath.Text) && !_fileRequired)
                 return null;

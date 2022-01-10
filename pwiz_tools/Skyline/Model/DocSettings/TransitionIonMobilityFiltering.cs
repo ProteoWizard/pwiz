@@ -471,7 +471,7 @@ namespace pwiz.Skyline.Model.DocSettings
             switch (WindowWidthMode)
             {
                 case IonMobilityWindowWidthType.resolving_power:
-                    if (ResolvingPower <= 0)
+                    if (ResolvingPower < 0) // Accept 0 as "no IMS filtering"
                         return Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_;
                     break;
                 case IonMobilityWindowWidthType.linear_range:

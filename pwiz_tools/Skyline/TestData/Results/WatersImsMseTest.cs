@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestData.Results
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
                     AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
+                        tolerance, out chromGroupInfo));
                     AssertEx.AreEqual(1, chromGroupInfo.Length, testModeStr + " chromGroupInfo.Length");
                     var chromGroup = chromGroupInfo[0];
                     int expectedPeaks;

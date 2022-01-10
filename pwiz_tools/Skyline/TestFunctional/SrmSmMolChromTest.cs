@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
                     foreach (var chromatogramSet in doc.MeasuredResults.Chromatograms)
                     {
                         ChromatogramGroupInfo[] chromatogramGroups;
-                        Assert.IsTrue(doc.MeasuredResults.TryLoadChromatogram(chromatogramSet, molecule, precursor, tolerance, true, out chromatogramGroups));
+                        Assert.IsTrue(doc.MeasuredResults.TryLoadChromatogram(chromatogramSet, molecule, precursor, tolerance, out chromatogramGroups));
                         Assert.AreEqual(1, chromatogramGroups.Length);
                         foreach (var transition in precursor.Transitions)
                         {

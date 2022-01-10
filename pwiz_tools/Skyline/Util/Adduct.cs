@@ -162,6 +162,13 @@ namespace pwiz.Skyline.Util
                 var posNext = input.IndexOf('M') + 1;
                 if (posNext > 0 && posNext < input.Length)
                 {
+                    var posClose = input.IndexOf(']');
+                    if (posClose >= 0 && posClose < posNext)
+                    {
+                        // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
+                        throw new InvalidOperationException(
+                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
+                    }
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
                         // No leading + or - : is it because description starts with a label, or because + mode is implied?
@@ -213,7 +220,7 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
-                    if (limit < 0)
+                    if (limit < posNext)
                     {
                         return null;
                     }

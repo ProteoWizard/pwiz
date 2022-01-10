@@ -352,7 +352,6 @@
             this.comboAcquisitionMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
             this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
-            this.toolTip.SetToolTip(this.comboAcquisitionMethod, resources.GetString("comboAcquisitionMethod.ToolTip"));
             this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
             // 
             // label20

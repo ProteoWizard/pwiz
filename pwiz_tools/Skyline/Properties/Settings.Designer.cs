@@ -1427,18 +1427,6 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ShowDotProductPeakArea {
-            get {
-                return ((bool)(this["ShowDotProductPeakArea"]));
-            }
-            set {
-                this["ShowDotProductPeakArea"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ShowPeakAreaLegend {
             get {
                 return ((bool)(this["ShowPeakAreaLegend"]));
@@ -3175,6 +3163,29 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["FullScanPeakType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("label")]
+        public string PeakAreaDotpDisplay {
+            get {
+                return ((string)(this["PeakAreaDotpDisplay"]));
+            }
+            set {
+                this["PeakAreaDotpDisplay"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int ChromatogramDisplayRTDigits {
+            get {
+                return ((int)(this["ChromatogramDisplayRTDigits"]));
+            }
+            set {
+                this["ChromatogramDisplayRTDigits"] = value;
             }
         }
     }

@@ -55,8 +55,9 @@ namespace SkylineBatch
             var addServerForm = new DataServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, State, _mainControl, true);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
+                State = addServerForm.State;
                 var mainSettings = config.MainSettings;
-                var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
+                var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath, mainSettings.UseAnalysisFolderName, mainSettings.DataFolderPath, 
                     addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.AnnotationsDownload, mainSettings.ReplicateNamingPattern);
                 var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.LogTestFormat, config.Modified, newMainSettings, config.FileSettings, 
                     config.RefineSettings, config.ReportSettings, config.SkylineSettings);

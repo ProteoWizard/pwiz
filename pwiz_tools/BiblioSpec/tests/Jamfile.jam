@@ -250,6 +250,8 @@ blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check 
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
+blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
+blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
@@ -304,6 +306,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
+blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
 
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
