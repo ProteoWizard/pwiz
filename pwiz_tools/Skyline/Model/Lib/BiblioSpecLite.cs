@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached, out var failureException))
+            if (Load(loader, status, cached))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -955,7 +955,7 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false, out failureException))
+                if (Load(loader, status, false))
                     return true;
             }
 
@@ -963,18 +963,15 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
 
-            if (failureException != null)
-                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                failureException = null;
                 byte[] cacheBytes = null;
                 if (!cached)
                 {
@@ -995,7 +992,9 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     catch (Exception e)
                     {
-                        failureException = new Exception(FormatErrorMessage(e), e);
+                        var failureException = new Exception(FormatErrorMessage(e), e);
+                        status = status.ChangeErrorException(failureException);
+                        loader.UpdateProgress(status);
                         return false;
                     }
                 }
@@ -1138,7 +1137,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (InvalidDataException x)
             {
-                failureException = new InvalidDataException(FormatErrorMessage(x), x);
+                var failureException = new InvalidDataException(FormatErrorMessage(x), x);
                 if (!cached)
                 {
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
@@ -1147,7 +1146,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (IOException x)
             {
-                failureException = new IOException(FormatErrorMessage(x), x);
+                var failureException = new IOException(FormatErrorMessage(x), x);
                 if (!cached)
                 {
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
@@ -1156,7 +1155,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception x)
             {
-                failureException = new Exception(FormatErrorMessage(x), x);
+                var failureException = new Exception(FormatErrorMessage(x), x);
                 if (!cached)
                 {
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
