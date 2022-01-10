@@ -3758,11 +3758,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public const string ERROR_MESSAGE_HINT = @"Error:";
+
         private bool IsErrorMessage(string message)
         {
             if (message != null && !IsErrorReported)
             {
-                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                return message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
                        message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
                            StringComparison.CurrentCulture);
             }

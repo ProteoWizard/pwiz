@@ -46,6 +46,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             }
             try
             {
+                if (DateTime.TryParseExact(value, @"dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+                    return result;
                 return DateTime.Parse(value, CultureInfo.InvariantCulture);
             }
             catch (Exception)

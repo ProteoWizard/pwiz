@@ -2469,6 +2469,7 @@ namespace pwiz.Skyline
                                     {
                                         return;
                                     }
+
                                     // Looping here in case some other agent interrupts us with a change to Document
                                     while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                                     {
@@ -2497,6 +2498,15 @@ namespace pwiz.Skyline
                 {
                     // Canceled mid-change due to background document change
                     documentChanged = true;
+                }
+                catch (Exception exception)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(exception))
+                    {
+                        throw;
+                    }
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    return false;
                 }
                 finally
                 {

@@ -313,7 +313,7 @@
     <value>1</value>
   </data>
   <data name="comboAlign.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+    <value>Bottom, Left, Right</value>
   </data>
   <data name="comboAlign.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 389</value>

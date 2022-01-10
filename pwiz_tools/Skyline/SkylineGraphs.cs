@@ -4221,12 +4221,21 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetNormalizationMethod(NormalizeOption normalizeOption, bool update = true)
+        public void SetNormalizationMethod(NormalizeOption normalizeOption)
         {
             Settings.Default.AreaNormalizeOption = normalizeOption;
             SequenceTree.NormalizeOption = normalizeOption;
-            if(update)
-                UpdatePeakAreaGraph();
+            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
+                AreaNormalizeOption == NormalizeOption.MAXIMUM ||
+                AreaNormalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
+                AreaNormalizeOption.IsRatioToLabel)
+            {
+                // Do not let the user combine Log with Ratios because
+                // the log scale does not work well with numbers that are less than 1.
+                // (this should be fixed)
+                Settings.Default.AreaLogScale = false;
+            }
+            UpdatePeakAreaGraph();
         }
 
         public NormalizeOption AreaNormalizeOption
@@ -4244,7 +4253,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void SetNormalizationMethod(NormalizationMethod normalizationMethod, bool update = true)
+        public void SetNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             SetNormalizationMethod(NormalizeOption.FromNormalizationMethod(normalizationMethod));
         }
@@ -4384,9 +4393,6 @@ namespace pwiz.Skyline
         {
             AreaNormalizeOption = areaView;
 
-            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaNormalizeOption == NormalizeOption.MAXIMUM)
-                Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
 

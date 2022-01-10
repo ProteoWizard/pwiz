@@ -31,7 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditLinkedPeptidesDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.dataGridViewLinkedPeptides = new System.Windows.Forms.DataGridView();
+            this.dataGridViewLinkedPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colModificationsButton = new System.Windows.Forms.DataGridViewButtonColumn();
             this.lblLinkedPeptides = new System.Windows.Forms.Label();
@@ -254,7 +254,7 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.DataGridView dataGridViewLinkedPeptides;
+        private Controls.DataGridViewEx dataGridViewLinkedPeptides;
         private Controls.DataGridViewEx dataGridViewCrosslinks;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
