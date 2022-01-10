@@ -153,6 +153,7 @@ actions test_msi
       exit %EXIT%
     )
 
+    chcp 437
     set PATH_TMP=%PATH%
     set PATH=
     copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)" >nul
