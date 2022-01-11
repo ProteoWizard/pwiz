@@ -73,11 +73,11 @@ namespace pwiz.SkylineTestFunctional
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = insertListText);
 
             RunUI(() => {
-                var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg, windowDlg.OkDialog);
 
@@ -94,11 +94,11 @@ namespace pwiz.SkylineTestFunctional
             var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.textBox1.Text = insertListText);
 
             RunUI(() => {
-                var comboBoxes = windowDlg1.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg1.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg1, windowDlg1.OkDialog);
 
@@ -136,11 +136,11 @@ namespace pwiz.SkylineTestFunctional
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = insertPart1 + insertSep + insertPart2);
             RunUI(() => {
-                var comboBoxes = windowDlg2.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg2.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg2, windowDlg2.OkDialog);
             var docInsert2 = WaitForDocumentChange(docInsert1);
@@ -180,11 +180,11 @@ namespace pwiz.SkylineTestFunctional
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
             RunUI(() => {
-                var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
             RunUI(() =>

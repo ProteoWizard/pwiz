@@ -1315,26 +1315,21 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x86/api-ms-win-crt-string-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-time-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-utility-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/concrt140.dll
-    Microsoft.VC140.CRT/x86/mfc140.dll 
+    #Microsoft.VC140.CRT/x86/concrt140.dll
+    #Microsoft.VC140.CRT/x86/mfc140.dll 
     Microsoft.VC140.CRT/x86/msvcp140.dll 
     Microsoft.VC140.CRT/x86/ucrtbase.dll 
     Microsoft.VC140.CRT/x86/vcomp140.dll 
     Microsoft.VC140.CRT/x86/vcruntime140.dll 
-    Microsoft.VC140.CRT/x86/msvcp140_1.dll
-    Microsoft.VC140.CRT/x86/msvcp140_2.dll
-    Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
-    Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
-    Microsoft.VC140.CRT/x86/vccorlib140.dll
-    Microsoft.VC90.CRT/x86/msvcm90.dll 
-    Microsoft.VC90.CRT/x86/msvcp90.dll 
-    Microsoft.VC90.CRT/x86/msvcr90.dll 
-    Microsoft.VC90.CRT/x86/vcomp90.dll 
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    #Microsoft.VC140.CRT/x86/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
+    #Microsoft.VC140.CRT/x86/vccorlib140.dll
     Microsoft.VC90.MFC/x86/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x86/mfc90.dll 
     Microsoft.VC90.MFC/x86/mfc90u.dll 
+    Microsoft.VC90.CRT/x86/msvcp90.dll # used by MSFileReader
+    Microsoft.VC90.CRT/x86/msvcr90.dll # used by MSFileReader
     ;
 
 .msvcrt-x64 =
@@ -1383,26 +1378,37 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x64/api-ms-win-crt-string-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-time-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-utility-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/concrt140.dll
-    Microsoft.VC140.CRT/x64/mfc140.dll
+    #Microsoft.VC140.CRT/x64/concrt140.dll
+    #Microsoft.VC140.CRT/x64/mfc140.dll
     Microsoft.VC140.CRT/x64/msvcp140.dll
     Microsoft.VC140.CRT/x64/ucrtbase.dll
     Microsoft.VC140.CRT/x64/vcomp140.dll
     Microsoft.VC140.CRT/x64/vcruntime140.dll
-    Microsoft.VC140.CRT/x64/msvcp140_1.dll
-    Microsoft.VC140.CRT/x64/msvcp140_2.dll
-    Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
-    Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
     Microsoft.VC140.CRT/x64/vcruntime140_1.dll
-    Microsoft.VC140.CRT/x64/vccorlib140.dll
-    Microsoft.VC90.CRT/x64/msvcm90.dll
-    Microsoft.VC90.CRT/x64/msvcp90.dll
-    Microsoft.VC90.CRT/x64/msvcr90.dll
-    Microsoft.VC90.CRT/x64/vcomp90.dll
+    #Microsoft.VC140.CRT/x64/vccorlib140.dll
+    ;
+
+.msvcrt-x86-cxt =    
+    Microsoft.VC90.CRT/x86/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x86/mfc90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    ;
+
+.msvcrt-x64-cxt =
+    Microsoft.VC90.CRT/x64/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcp90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcr90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x64/mfc90.dll # used by CompassXtract
     Microsoft.VC90.CRT/x64/Microsoft.VC90.CRT.manifest
     Microsoft.VC90.CRT/x64/Microsoft.VC90.OpenMP.manifest
     Microsoft.VC90.MFC/x64/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x64/mfc90.dll
     ;
 
 rule msvc-runtime-dlls ( properties * )
@@ -1410,13 +1416,16 @@ rule msvc-runtime-dlls ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
@@ -1427,13 +1436,16 @@ rule install-msvc-runtime-dlls-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
