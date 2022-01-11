@@ -448,6 +448,33 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsTrue(ReferenceEquals(editIrtDlg4.IrtStandards, IrtStandard.EMPTY)));
             OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
 
+            // New document
+            var twoStandardLib = TestFilesDir.GetTestPath("two.blib");
+            docNew = new SrmDocument(SrmSettingsList.GetDefault());
+            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            // Build a library with "automatic" iRT and input file with two different standards.
+            BuildLibrary(TestFilesDir.GetTestPath("library_valid"), new[] { "twostandards.blib" }, null, false, false,
+                false, false, IrtStandard.AUTO);
+            var selectIrtStandardDlg = WaitForOpenForm<SelectIrtStandardDlg>();
+            RunUI(() =>
+            {
+                var standards = selectIrtStandardDlg.Standards.ToArray();
+                Assert.AreEqual(2, standards.Length);
+                Assert.IsTrue(standards.Contains(IrtStandard.BIOGNOSYS_11));
+                Assert.IsTrue(standards.Contains(IrtStandard.PIERCE));
+                selectIrtStandardDlg.Selected = IrtStandard.BIOGNOSYS_11;
+            });
+            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(selectIrtStandardDlg.OkDialog);
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            var addPredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
+            OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
+            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib", null);
+            var dbStandards = twoStandardDb.StandardPeptides.ToArray();
+            // Check that the created blib has the chosen standards.
+            Assert.AreEqual(dbStandards.Length, IrtStandard.BIOGNOSYS_11.Peptides.Count);
+            foreach (var dbIrtPeptide in IrtStandard.BIOGNOSYS_11.Peptides)
+                Assert.IsTrue(dbStandards.Contains(dbIrtPeptide.ModifiedTarget));
+
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
         }
 

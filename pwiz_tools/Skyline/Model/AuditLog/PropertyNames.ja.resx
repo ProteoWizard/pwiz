@@ -423,6 +423,9 @@
   <data name="ViewSpecList_Views" xml:space="preserve">
     <value>レポート</value>
   </data>
+  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
+    <value>レイアウト</value>
+  </data>
   <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
     <value>列ヘッダー</value>
   </data>
@@ -1574,7 +1577,67 @@
   <data name="MetadataRuleSet_Rules" xml:space="preserve">
     <value>ルール</value>
   </data>
-  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
     <value>定性イオン比閾値</value>
+  </data>
+  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
+    <value>単比</value>
+  </data>
+  <data name="ViewLayout_ClusterSpec">
+    <value>クラスタリング指定</value>
+  </data>
+  <data name="ClusteringSpec_Values">
+    <value>値</value>
+  </data>
+  <data name="ClusteringSpec_DistanceMetric">
+    <value>距離メトリック</value>
+  </data>
+  <data name="ValueSpec_ColumnRef">
+    <value>列参照</value>
+  </data>
+  <data name="ExplicitMods_CrosslinkStructure">
+    <value>クロスリンク構造</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedPeptides">
+    <value>リンクされているペプチド</value>
+  </data>
+  <data name="CrosslinkStructure_LinkedExplicitMods">
+    <value>リンクされている明示的修飾</value>
+  </data>
+  <data name="CrosslinkStructure_Crosslinks">
+    <value>クロスリンク</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
+    <value>入力ファイルタイプ</value>
+  </data>
+  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
+    <value>ターゲットをインポートするFASTAファイル</value>
+  </data>
+  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
+    <value>装置のプリセット</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
+    <value>フラグメントイオンタイプ</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>フラグメント許容範囲</value>
+  </data>
+  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
+    <value>ペプチド当たりの最大可変修飾数</value>
+  </data>
+  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
+    <value>プリカーサー許容範囲</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
+    <value>DDAコンバーター設定</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
+    <value>DDA検索設定</value>
+  </data>
+  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>DDA変換非デフォルト設定</value>
+  </data>
+  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
+    <value>DDA変換プロトコル</value>
   </data>
 </root>

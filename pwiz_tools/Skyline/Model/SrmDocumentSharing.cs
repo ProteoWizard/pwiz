@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                zip.AddFile(DocumentPath);
+                AddDocumentAndAuditLog(zip, DocumentPath);
             }
             Save(zip);
         }
@@ -378,6 +378,11 @@ namespace pwiz.Skyline.Model
             string entryName = GetDocumentFileName();
             string docFilePath = Path.Combine(EnsureTempDir().DirPath, entryName);
             Document.SerializeToFile(docFilePath, docFilePath, ShareType.SkylineVersion ?? SkylineVersion.CURRENT, ProgressMonitor);
+            AddDocumentAndAuditLog(zip, docFilePath);
+        }
+
+        private void AddDocumentAndAuditLog(ZipFileShare zip, string docFilePath)
+        {
             zip.AddFile(docFilePath);
             var auditLogPath = SrmDocument.GetAuditLogPath(docFilePath);
             if (File.Exists(auditLogPath))

@@ -122,7 +122,9 @@ namespace pwiz.Skyline.Model
         public void StartStatisticsCollection()
         {
             _doStatisticsCollection = true;
-            StatisticsCollector = new BackgroundWorker(this);
+            // Check if cache file has been loaded
+            if (ChromCacheMinimizer != null)
+                StatisticsCollector = new BackgroundWorker(this);
         }
 
         public void MinimizeCacheFile(string targetFile)

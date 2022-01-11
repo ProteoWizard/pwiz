@@ -436,6 +436,9 @@ namespace TestPerf
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {

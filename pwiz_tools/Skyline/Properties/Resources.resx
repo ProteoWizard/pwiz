@@ -11022,10 +11022,10 @@ Invalid peptide sequence at position 18
     <value>Search is being canceled.</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
-    <value>Files to search:</value>
+    <value>&amp;Files to search:</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
-    <value>Result files:</value>
+    <value>&amp;Result files:</value>
   </data>
   <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
     <value>(variable)</value>
@@ -11446,5 +11446,8 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
     <value>Error: An unknown error occurred trying to verify access to Panorama folder '{0}' on the server {1}.
 {2}</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
+    <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
   </data>
 </root>

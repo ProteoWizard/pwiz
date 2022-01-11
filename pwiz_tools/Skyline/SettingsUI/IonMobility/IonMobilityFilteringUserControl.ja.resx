@@ -142,7 +142,7 @@
     <value>248, 17</value>
   </metadata>
   <data name="cbUseSpectralLibraryIonMobilities.ToolTip" xml:space="preserve">
-    <value>選択すると、ロードされたあらゆるスペクトルライブラリのイオン移動度値がクロマトグラム抽出で使用されます。</value>
+    <value>選択すると、イオン移動度ライブラリが値を提供しない場合にロードされたあらゆるスペクトルライブラリのイオン移動度値がクロマトグラム抽出で使用されます。</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryIonMobilities</value>

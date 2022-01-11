@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>绝对 Log2 倍数变化</value>
   </data>
+  <data name="Abundance">
+    <value>丰度</value>
+  </data>
   <data name="Accuracy">
     <value>准确性</value>
   </data>
@@ -248,6 +251,9 @@
   </data>
   <data name="Coeluting">
     <value>共洗脱</value>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>碰撞横截面</value>
   </data>
   <data name="CollisionalCrossSection">
     <value>碰撞横截面</value>
@@ -483,8 +489,14 @@
   <data name="IonMobilityFragment">
     <value>离子迁移碎片</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>离子迁移高能偏置</value>
+  </data>
   <data name="IonMobilityMS1">
     <value>离子迁移 MS1</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>离子迁移值</value>
   </data>
   <data name="IonMobilityWindow">
     <value>离子迁移窗口</value>
@@ -519,11 +531,26 @@
   <data name="Key">
     <value>关键</value>
   </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>库碰撞横截面</value>
+  </data>
   <data name="LibraryDotProduct">
     <value>库点积</value>
   </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>库离子迁移高能偏置</value>
+  </data>
   <data name="LibraryIntensity">
     <value>库强度</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>库离子迁移</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>库离子迁移单位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>库离子迁移值</value>
   </data>
   <data name="LibraryName">
     <value>库名称</value>
@@ -840,6 +867,9 @@
   <data name="PointsAcrossPeak">
     <value>峰内点</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>峰间周期时间</value>
+  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -978,6 +1008,9 @@
   <data name="ProteinSequence">
     <value>蛋白质序列</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>蛋白质序列覆盖率</value>
+  </data>
   <data name="ProteinSpecies">
     <value>蛋白质物种</value>
   </data>
@@ -1038,11 +1071,20 @@
   <data name="Replicate">
     <value>重复测定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>重复测定丰度</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>重复测定丰度</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>重复测定校准曲线</value>
   </data>
   <data name="ReplicateCount">
     <value>重复测定计数</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>重复测定群组</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>重复测定错误消息</value>
@@ -1070,6 +1112,9 @@
   </data>
   <data name="ReplicateRSquared">
     <value>重复测定 R 平方</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>重复测定样本身份</value>
   </data>
   <data name="ReplicateSlope">
     <value>重复测定斜度</value>
@@ -1226,6 +1271,12 @@
   </data>
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>离子对结果为 MS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>离子对结果为定量</value>
   </data>
   <data name="TransitionResultLocator">
     <value>离子对结果定位器</value>

@@ -244,8 +244,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // We should have skipped past the "Match Modifications" page of the wizard onto the MS1 full scan settings page.
-            // Click next
+            // We're on the "Match Modifications" page.
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                importPeptideSearchDlg.ClickNextButton();
+            });
+
+            // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
@@ -440,11 +446,13 @@ namespace pwiz.SkylineTestFunctional
                     new ImportPeptideSearch.FoundResultsFile(MODLESS_BASE_NAME, SearchFilesModless.First())
                 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.IonCount = 3;  // DIA will now default to 6 and 6 minimum
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -583,6 +591,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new ImportPeptideSearch.FoundResultsFile(MODLESS_BASE_NAME, SearchFilesModless.First())
                 };
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());

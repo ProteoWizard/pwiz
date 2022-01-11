@@ -144,17 +144,12 @@ namespace pwiz.Skyline.Model.Irt
         {
             RequireUsable();
 
-            var pepArr = peptides.ToArray();
-            var returnStandard = pepArr.Where(_database.IsStandard).Distinct().ToArray();
+            var returnStandard = peptides.Where(_database.IsStandard).Distinct().ToArray();
             var returnCount = returnStandard.Length;
             var databaseCount = _database.StandardPeptideCount;
 
             if (!IsAcceptableStandardCount(databaseCount, returnCount))
-            {
-                Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
-                Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
                 throw new IncompleteStandardException(this);
-            }
 
             minCount = MinStandardCount(databaseCount);
             return returnStandard;

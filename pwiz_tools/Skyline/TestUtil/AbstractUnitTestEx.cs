@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -37,10 +38,23 @@ namespace pwiz.SkylineTestUtil
     {
         protected static string RunCommand(params string[] inputArgs)
         {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
+            var cultureInfo = LocalizationHelper.CurrentCulture;
+            try
+            {
+                var consoleBuffer = new StringBuilder();
+                var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
+                CommandLineRunner.RunCommand(inputArgs, consoleOutput);
+                return consoleBuffer.ToString();
+            }
+            finally
+            {
+                // Set current culture back to its original value, if it got changed.
+                if (cultureInfo.Name != LocalizationHelper.CurrentCulture.Name)
+                {
+                    LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = cultureInfo;
+                    LocalizationHelper.InitThread();
+                }
+            }
         }
 
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,

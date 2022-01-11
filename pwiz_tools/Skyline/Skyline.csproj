@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Skyline</RootNamespace>
-    <AssemblyName>Skyline-daily</AssemblyName>
+    <AssemblyName>Skyline</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
@@ -31,9 +31,9 @@
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
-    <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
+    <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\labkey\static\software\Skyline-release-64_21_1\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -43,15 +43,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
-    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_21_1/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_21_1/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>105</ApplicationRevision>
-    <ApplicationVersion>21.0.9.105</ApplicationVersion>
+    <ApplicationRevision>145</ApplicationRevision>
+    <ApplicationVersion>21.1.0.145</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2152,15 +2152,36 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.zh-CHS.resx">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.ja.resx">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.zh-CHS.resx">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.ja.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.zh-CHS.resx">
+      <DependentUpon>HeatMapGraph.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\PcaPlot.ja.resx">
+      <DependentUpon>PcaPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Clustering\PcaPlot.zh-CHS.resx">
+      <DependentUpon>PcaPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
@@ -2228,6 +2249,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbarProperties.zh-CHS.resx">
       <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.ja.resx">
       <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
@@ -2478,7 +2500,13 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.ja.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.resx">
+      <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
@@ -2490,7 +2518,13 @@
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.ja.resx">
+      <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.resx">
+      <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.zh-CHS.resx">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.ja.resx">
@@ -2536,9 +2570,15 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.ja.resx">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.resx">
       <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.zh-CHS.resx">
+      <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
@@ -2549,6 +2589,12 @@
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.ja.resx">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
@@ -2593,16 +2639,40 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ChromatogramContextMenu.ja.resx">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
+      <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\EditMenu.ja.resx">
+      <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\EditMenu.zh-CHS.resx">
+      <DependentUpon>EditMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RefineMenu.ja.resx">
+      <DependentUpon>RefineMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\RefineMenu.resx">
       <DependentUpon>RefineMenu.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Menus\RefineMenu.zh-CHS.resx">
+      <DependentUpon>RefineMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ViewMenu.ja.resx">
+      <DependentUpon>ViewMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Menus\ViewMenu.resx">
+      <DependentUpon>ViewMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\ViewMenu.zh-CHS.resx">
       <DependentUpon>ViewMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.ja.resx">
@@ -5429,7 +5499,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline-daily.pdb">
+    <PublishFile Include="Skyline.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>

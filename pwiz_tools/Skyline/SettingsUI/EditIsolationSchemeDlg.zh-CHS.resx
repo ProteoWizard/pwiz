@@ -826,7 +826,7 @@
     <value>11</value>
   </data>
   <data name="btnImport.Text" xml:space="preserve">
-    <value>导入(&amp;O)...</value>
+    <value>导入(&amp;O)…</value>
   </data>
   <data name="&gt;&gt;btnImport.Name" xml:space="preserve">
     <value>btnImport</value>

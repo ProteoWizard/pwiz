@@ -32,12 +32,12 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteTransitionListTest : AbstractFunctionalTest
     {
-        private string precursor = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z;
-        private string product = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z;
-        private string peptide = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
-        private string protName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
-        private string fragName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
-        private string label  = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
+        private string precursor => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z;
+        private string product => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z;
+        private string peptide => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
+        private string protName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
+        private string fragName => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
+        private string label  => Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
 
         [TestMethod]
         public void TestPasteTransitionList()

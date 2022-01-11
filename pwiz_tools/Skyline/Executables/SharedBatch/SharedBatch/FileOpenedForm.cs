@@ -66,7 +66,7 @@ namespace SharedBatch
         //for testing only
         public void SetPath(string path)
         {
-            _filePathControl.SetText(path);
+            _filePathControl.SetInput(path);
         }
     }
 

@@ -553,4 +553,7 @@ with:
   <data name="MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
     <value>Do you want to import configurations from {0}?</value>
   </data>
+  <data name="Program_AddFileTypesToRegistry_AutoQC_Configuration_File" xml:space="preserve">
+    <value>AutoQC Configuration File</value>
+  </data>
 </root>

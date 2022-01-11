@@ -97,11 +97,11 @@ namespace SkylineBatch
             }
         }
 
-        public void SetText(string value)
+        public void SetInput(object value)
         {
             if (comboRVersions.Items.Contains(value))
             {
-                comboRVersions.SelectedIndex = comboRVersions.Items.IndexOf(value);
+                comboRVersions.SelectedIndex = comboRVersions.Items.IndexOf((string)value);
             }
             else
             {

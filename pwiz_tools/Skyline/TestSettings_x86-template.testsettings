@@ -3,16 +3,16 @@
   <Description>These are default test settings for a local test run.</Description>
   <Deployment>
     <!-- Localization -->
-    <DeploymentItem filename="bin\x86\Release\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
-    <DeploymentItem filename="bin\x86\Debug\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x86\Release\ja\Skyline.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x86\Debug\ja\Skyline.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Release\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Debug\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Release\ja\pwiz.Common.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Debug\ja\pwiz.Common.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Release\ja\ZedGraph.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x86\Debug\ja\ZedGraph.resources.dll" outputDirectory="ja" />
-    <DeploymentItem filename="bin\x86\Release\zh-CHS\Skyline-daily.resources.dll" outputDirectory="zh-CHS" />
-    <DeploymentItem filename="bin\x86\Debug\zh-CHS\Skyline-daily.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x86\Release\zh-CHS\Skyline.resources.dll" outputDirectory="zh-CHS" />
+    <DeploymentItem filename="bin\x86\Debug\zh-CHS\Skyline.resources.dll" outputDirectory="zh-CHS" />
     <DeploymentItem filename="bin\x86\Release\zh-CHS\ProteomeDb.resources.dll" outputDirectory="zh-CHS" />
     <DeploymentItem filename="bin\x86\Debug\zh-CHS\ProteomeDb.resources.dll" outputDirectory="zh-CHS" />
     <DeploymentItem filename="bin\x86\Release\zh-CHS\pwiz.Common.resources.dll" outputDirectory="zh-CHS" />

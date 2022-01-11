@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>Log2の絶対値の変化率</value>
   </data>
+  <data name="Abundance">
+    <value>存在度</value>
+  </data>
   <data name="Accuracy">
     <value>精度</value>
   </data>
@@ -248,6 +251,9 @@
   </data>
   <data name="Coeluting">
     <value>共溶出</value>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>衝突断面積</value>
   </data>
   <data name="CollisionalCrossSection">
     <value>衝突断面積</value>
@@ -483,8 +489,14 @@
   <data name="IonMobilityFragment">
     <value>イオン移動度のフラグメント</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>イオン移動度高エネルギーオフセット</value>
+  </data>
   <data name="IonMobilityMS1">
     <value>イオン移動度のMS1</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>イオン移動度値</value>
   </data>
   <data name="IonMobilityWindow">
     <value>イオン移動度ウィンドウ</value>
@@ -519,11 +531,26 @@
   <data name="Key">
     <value>キー</value>
   </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>ライブラリ衝突断面積</value>
+  </data>
   <data name="LibraryDotProduct">
     <value>ライブラリ内積</value>
   </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>ライブラリイオン移動度高エネルギーオフセット</value>
+  </data>
   <data name="LibraryIntensity">
     <value>ライブラリ強度</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>ライブラリイオン移動度</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>ライブラリイオン移動度単位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>ライブラリイオン移動度値</value>
   </data>
   <data name="LibraryName">
     <value>ライブラリ名</value>
@@ -840,6 +867,9 @@
   <data name="PointsAcrossPeak">
     <value>ピーク全体でのポイント数</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>ピーク全体でのサイクルタイム</value>
+  </data>
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
@@ -978,6 +1008,9 @@
   <data name="ProteinSequence">
     <value>タンパク質シークエンス</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>タンパク質シークエンス対象</value>
+  </data>
   <data name="ProteinSpecies">
     <value>タンパク質種</value>
   </data>
@@ -1038,11 +1071,20 @@
   <data name="Replicate">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>繰り返し測定存在度</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>繰り返し測定存在度</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>繰り返し測定検量線</value>
   </data>
   <data name="ReplicateCount">
     <value>繰り返し測定数</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>繰り返し測定グループ</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>繰り返し測定エラーメッセージ</value>
@@ -1070,6 +1112,9 @@
   </data>
   <data name="ReplicateRSquared">
     <value>繰り返し測定平方根</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>繰り返し測定サンプルID</value>
   </data>
   <data name="ReplicateSlope">
     <value>繰り返し測定勾配</value>
@@ -1226,6 +1271,12 @@
   </data>
   <data name="TransitionResult">
     <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>トランジション結果はMS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>トランジション結果は定量的</value>
   </data>
   <data name="TransitionResultLocator">
     <value>トランジション結果ロケーター</value>

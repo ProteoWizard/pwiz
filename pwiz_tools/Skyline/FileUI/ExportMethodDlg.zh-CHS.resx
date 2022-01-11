@@ -698,7 +698,7 @@
     <value>5, 6</value>
   </data>
   <data name="cbExportMultiQuant.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
+    <value>149, 17</value>
   </data>
   <data name="cbExportMultiQuant.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1211,7 +1211,7 @@
     <value>2</value>
   </data>
   <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
-    <value>332, 261</value>
+    <value>180, 261</value>
   </data>
   <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 27</value>
@@ -1422,6 +1422,9 @@
   </data>
   <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textMs1RepetitionTime.ToolTip" xml:space="preserve">
+    <value>MS1 谱图采集之间允许的最大时间散布在 PRM 的 MS/MS 谱图之间（默认为 10 ms）</value>
   </data>
   <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
     <value>textMs1RepetitionTime</value>

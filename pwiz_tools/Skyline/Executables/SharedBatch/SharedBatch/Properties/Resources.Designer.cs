@@ -226,21 +226,29 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please remove the configurations you would like to import..
+        ///   Looks up a localized string similar to Do you want to overwrite these configurations?.
         /// </summary>
-        public static string ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_ {
+        public static string ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_ {
             get {
-                return ResourceManager.GetString("ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These configurations already exist and could not be imported:.
+        ///   Looks up a localized string similar to Overwriting....
         /// </summary>
-        public static string ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported_ {
+        public static string ConfigManager_ImportFrom_Overwriting_ {
             get {
-                return ResourceManager.GetString("ConfigManager_Import_These_configurations_already_exist_and_could_not_be_imported" +
-                        "_", resourceCulture);
+                return ResourceManager.GetString("ConfigManager_ImportFrom_Overwriting_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations already exist:.
+        /// </summary>
+        public static string ConfigManager_ImportFrom_The_following_configurations_already_exist_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ImportFrom_The_following_configurations_already_exist_", resourceCulture);
             }
         }
         
@@ -473,6 +481,15 @@ namespace SharedBatch.Properties {
         public static string Logger_LogErrorToFile_ERROR___0_ {
             get {
                 return ResourceManager.GetString("Logger_LogErrorToFile_ERROR___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}%.
+        /// </summary>
+        public static string Logger_LogPercent__0__ {
+            get {
+                return ResourceManager.GetString("Logger_LogPercent__0__", resourceCulture);
             }
         }
         
@@ -720,6 +737,26 @@ namespace SharedBatch.Properties {
         public static string TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_ {
             get {
                 return ResourceManager.GetString("TextUtil_GetDirectory_Could_not_get_the_directory_of_a_null_file_path_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cound not parse &quot;{0}&quot; as type &quot;{1}&quot;.
+        /// </summary>
+        public static string TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1__ {
+            get {
+                return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromInvariantString_Cound_not_parse___0___as_type___1_" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid value for {1}. Please enter an integer..
+        /// </summary>
+        public static string TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_enter_an_integer_ {
+            get {
+                return ResourceManager.GetString("TextUtil_GetOptionalIntegerFromString__0__is_not_a_valid_value_for__1___Please_en" +
+                        "ter_an_integer_", resourceCulture);
             }
         }
     }

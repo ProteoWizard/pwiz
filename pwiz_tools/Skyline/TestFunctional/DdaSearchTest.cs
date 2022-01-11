@@ -173,6 +173,7 @@ namespace pwiz.SkylineTestFunctional
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
@@ -182,7 +183,10 @@ namespace pwiz.SkylineTestFunctional
 
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
+            });
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+            RunUI(() =>
+            {
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 

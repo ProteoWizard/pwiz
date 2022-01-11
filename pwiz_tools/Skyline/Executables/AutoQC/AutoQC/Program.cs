@@ -105,7 +105,7 @@ namespace AutoQC
                 }
 
                 // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");
-                var openFile = args.Length > 0 ? args[0] : null;
+                var openFile = GetFirstArg(args);
                 var form = new MainForm(openFile);
 
                 // CurrentDeployment is null if it isn't network deployed.
@@ -151,12 +151,46 @@ namespace AutoQC
             return true;
         }
 
+        private static string GetFirstArg(string[] args)
+        {
+            string arg;
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+                arg = activationData != null && activationData.Length > 0
+                    ? activationData[0]
+                    : string.Empty;
+            }
+            else
+            {
+                _version = string.Empty;
+                arg = args.Length > 0 ? args[0] : string.Empty;
+            }
+
+            return arg;
+        }
+
         private static void AddFileTypesToRegistry()
         {
+            var appReference = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\MacCoss Lab, UW\\" + AppName.Substring(0, AppName.IndexOf(" ")) + TextUtil.EXT_APPREF;
+            var appExe = Application.ExecutablePath;
+
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
-            FileUtil.AddFileType(".qcfg", "AutoQC.Configuration.0", @"AutoQC Configuration File",
-                Assembly.GetExecutingAssembly().Location, configFileIconPath);
+
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                    Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                    appReference, configFileIconPath);
+            }
+            else
+            {
+                FileUtil.AddFileTypeAdminInstall(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                    Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                    appExe, configFileIconPath);
+            }
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)

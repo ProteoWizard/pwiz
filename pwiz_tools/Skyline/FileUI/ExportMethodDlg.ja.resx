@@ -696,7 +696,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>5, 6</value>
   </data>
   <data name="cbExportMultiQuant.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
+    <value>149, 17</value>
   </data>
   <data name="cbExportMultiQuant.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -737,7 +737,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>0</value>
   </data>
   <data name="cbUseStartAndEndRts.Text" xml:space="preserve">
-    <value>保持時間の開始時間と終了時間を使用します</value>
+    <value>保持時間の開始時間と終了時間を使用します(&amp;R)</value>
   </data>
   <data name="cbUseStartAndEndRts.ToolTip" xml:space="preserve">
     <value>保持時間とウィンドウではなく開始･終了時間をエクスポートします。</value>
@@ -1208,7 +1208,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>2</value>
   </data>
   <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
-    <value>332, 261</value>
+    <value>180, 261</value>
   </data>
   <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 27</value>
@@ -1397,7 +1397,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>18</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>グラフ化(&amp;G )…</value>
+    <value>グラフ化(&amp;G)…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
@@ -1419,6 +1419,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="textMs1RepetitionTime.ToolTip" xml:space="preserve">
+    <value>PRMのMS/MSスペクトル間に散在しているMS1スペクトル取得間で許可されている最大時間 (デフォルトは10ms)</value>
   </data>
   <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
     <value>textMs1RepetitionTime</value>

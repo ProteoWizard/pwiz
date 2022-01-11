@@ -32,51 +32,59 @@ namespace SkylineBatch
         // IMMUTABLE - all fields are readonly literals
         // Describes file modifications user would like to do on the .sky file in the analysis folder
 
-        public FileSettings(string msOneResolvingPower, string msMsResolvingPower, string retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
+        public static FileSettings FromUi(string msOneResolvingPowerString, string msMsResolvingPowerString, string retentionTimeString, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
         {
-            MsOneResolvingPower = msOneResolvingPower ?? string.Empty;
-            MsMsResolvingPower = msMsResolvingPower ?? string.Empty;
-            RetentionTime = retentionTime ?? string.Empty;
+            var msOneResolvingPower = TextUtil.GetNullableIntFromUiString(msOneResolvingPowerString,
+                Resources.FileSettings_Validate_MS1_filtering_res_accuracy);
+            var msMsResolvingPower = TextUtil.GetNullableIntFromUiString(msMsResolvingPowerString,
+                Resources.FileSettings_Validate_Ms_Ms_filtering_res_accuracy);
+            var retentionTime = TextUtil.GetNullableIntFromUiString(retentionTimeString,
+                Resources.FileSettings_Validate_retention_time_filtering);
+            return new FileSettings(msOneResolvingPower, msMsResolvingPower, retentionTime, addDecoys, shuffleDecoys, trainMProphet);
+        }
+
+
+        public FileSettings(int? msOneResolvingPower, int? msMsResolvingPower, int? retentionTime, bool addDecoys, bool shuffleDecoys, bool trainMProphet)
+        {
+            MsOneResolvingPower = msOneResolvingPower;
+            MsMsResolvingPower = msMsResolvingPower;
+            RetentionTime = retentionTime;
             AddDecoys = addDecoys;
             ShuffleDecoys = shuffleDecoys;
             TrainMProphet = trainMProphet;
         }
 
-        public readonly string MsOneResolvingPower;
-        public readonly string MsMsResolvingPower;
-        public readonly string RetentionTime;
+        public readonly int? MsOneResolvingPower;
+        public readonly int? MsMsResolvingPower;
+        public readonly int? RetentionTime;
         public readonly bool AddDecoys;
         public readonly bool ShuffleDecoys;
         public readonly bool TrainMProphet;
 
-        private int ValidateIntTextField(string textToParse, string fieldName)
+        private void ValidateNonNegative(int? optionalInteger, string fieldName)
         {
-            if (string.IsNullOrWhiteSpace(textToParse)) return 0;
-            int parsedInt;
-            if (!Int32.TryParse(textToParse, out parsedInt))
-            {
-                throw new ArgumentException(string.Format(Resources.FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__, fieldName,
-                    textToParse) + Environment.NewLine +
-                                            Resources.FileSettings_ValidateIntTextField_Please_enter_a_number_);
-            }
-            return parsedInt;
+            if (optionalInteger == null) return;
+            if (optionalInteger < 0)
+                throw new ArgumentException(string.Format(Resources.FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_, fieldName) + Environment.NewLine +
+                                            Resources.FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_);
+        
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("MS1 filtering res/accuracy: ").AppendLine(MsOneResolvingPower);
-            sb.Append("Ms/Ms filtering res/accuracy: ").AppendLine(MsMsResolvingPower);
-            sb.Append("Retention time: ").AppendLine(RetentionTime);
+            sb.Append("MS1 filtering res/accuracy: ").AppendLine(MsOneResolvingPower.ToString());
+            sb.Append("Ms/Ms filtering res/accuracy: ").AppendLine(MsMsResolvingPower.ToString());
+            sb.Append("Retention time: ").AppendLine(RetentionTime.ToString());
             return sb.ToString();
         }
 
         public void Validate()
         {
-            ValidateIntTextField(MsOneResolvingPower, Resources.FileSettings_Validate_MS1_filtering_res_accuracy);
-            ValidateIntTextField(MsMsResolvingPower, Resources.FileSettings_Validate_Ms_Ms_filtering_res_accuracy);
-            ValidateIntTextField(RetentionTime, Resources.FileSettings_Validate_retention_time_filtering);
-            // CONSIDER: adding validation that checks if numbers are within a certain range
+            ValidateNonNegative(MsOneResolvingPower, Resources.FileSettings_Validate_MS1_filtering_res_accuracy);
+            ValidateNonNegative(MsMsResolvingPower, Resources.FileSettings_Validate_Ms_Ms_filtering_res_accuracy);
+            ValidateNonNegative(RetentionTime, Resources.FileSettings_Validate_retention_time_filtering);
+            // CONSIDER: adding more validation that checks if numbers are within a certain range
         }
         
         #region Read/Write XML
@@ -93,9 +101,9 @@ namespace SkylineBatch
 
         public static FileSettings ReadXml(XmlReader reader)
         {
-            var msOneResolvingPower = reader.GetAttribute(Attr.MsOneResolvingPower);
-            var msMsResolvingPower = reader.GetAttribute(Attr.MsMsResolvingPower);
-            var retentionTime = reader.GetAttribute(Attr.RetentionTime);
+            var msOneResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.MsOneResolvingPower));
+            var msMsResolvingPower = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.MsMsResolvingPower));
+            var retentionTime = TextUtil.GetNullableIntFromInvariantString(reader.GetAttribute(Attr.RetentionTime));
             var addDecoys = reader.GetBoolAttribute(Attr.AddDecoys);
             var shuffleDecoys = reader.GetBoolAttribute(Attr.ShuffleDecoys);
             var trainMProphet = reader.GetBoolAttribute(Attr.TrainMProphet);
@@ -105,9 +113,12 @@ namespace SkylineBatch
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("file_settings");
-            writer.WriteAttributeIfString(Attr.MsOneResolvingPower, MsOneResolvingPower);
-            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, MsMsResolvingPower);
-            writer.WriteAttributeIfString(Attr.RetentionTime, RetentionTime);
+            writer.WriteAttributeIfString(Attr.MsOneResolvingPower,
+                TextUtil.ToInvariantCultureString(MsOneResolvingPower));
+            writer.WriteAttributeIfString(Attr.MsMsResolvingPower, 
+                TextUtil.ToInvariantCultureString(MsMsResolvingPower));
+            writer.WriteAttributeIfString(Attr.RetentionTime, 
+                TextUtil.ToInvariantCultureString(RetentionTime));
             writer.WriteAttribute(Attr.AddDecoys, AddDecoys);
             writer.WriteAttribute(Attr.ShuffleDecoys, ShuffleDecoys);
             writer.WriteAttribute(Attr.TrainMProphet, TrainMProphet);
@@ -126,20 +137,20 @@ namespace SkylineBatch
 
         public void WriteMsOneCommand(CommandWriter commandWriter)
         {
-            if (!string.IsNullOrEmpty(MsOneResolvingPower))
-                commandWriter.Write(MS_ONE_RESOLVING_POWER_COMMAND, MsOneResolvingPower);
+            if (MsOneResolvingPower != null)
+                commandWriter.Write(MS_ONE_RESOLVING_POWER_COMMAND, TextUtil.ToUiString((int)MsOneResolvingPower));
         }
 
         public void WriteMsMsCommand(CommandWriter commandWriter)
         {
-            if (!string.IsNullOrEmpty(MsOneResolvingPower))
-                commandWriter.Write(MSMS_RESOLVING_POWER_COMMAND, MsMsResolvingPower);
+            if (MsMsResolvingPower != null)
+                commandWriter.Write(MSMS_RESOLVING_POWER_COMMAND, TextUtil.ToUiString((int)MsMsResolvingPower));
         }
 
         public void WriteRetentionTimeCommand(CommandWriter commandWriter)
         {
-            if (!string.IsNullOrEmpty(RetentionTime))
-                commandWriter.Write(RETENTION_TIME_COMMAND, RetentionTime);
+            if (RetentionTime != null)
+                commandWriter.Write(RETENTION_TIME_COMMAND, TextUtil.ToUiString((int)RetentionTime));
         }
 
         public void WriteAddDecoysCommand(CommandWriter commandWriter)

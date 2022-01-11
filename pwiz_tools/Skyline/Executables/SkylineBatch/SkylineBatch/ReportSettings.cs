@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using System.Linq;
+using System.Text;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -46,6 +48,47 @@ namespace SkylineBatch
             foreach (var reportInfo in Reports)
             {
                 reportInfo.Validate();
+            }
+        }
+
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, string analysisFolder, out StringBuilder message)
+        {
+            message = new StringBuilder();
+            if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
+                return false;
+            var tab = "      ";
+            var analysisFolderName = Path.GetFileName(analysisFolder);
+            var csvFiles = FileUtil.GetFilesInFolder(analysisFolder, TextUtil.EXT_CSV);
+            var existingReports = new List<string>();
+            foreach (var report in Reports)
+            {
+                var reportPath = Path.Combine(analysisFolder, report.Name + TextUtil.EXT_CSV);
+                if (csvFiles.Contains(reportPath))
+                    existingReports.Add(reportPath);
+            }
+
+
+            if (runOption == RunBatchOptions.FROM_REPORT_EXPORT)
+            {
+                if (existingReports.Count > 0)
+                {
+                    foreach (var reportPath in existingReports)
+                        message.Append(tab + tab).Append(Path.Combine(analysisFolderName, Path.GetFileName(reportPath))).AppendLine();
+                }
+                return existingReports.Count > 0;
+            }
+            else
+            {
+                var analysisFolderFiles = Directory.GetFiles(analysisFolder);
+                foreach (var file in analysisFolderFiles)
+                {
+                    var extension = Path.GetExtension(file);
+                    if (extension.StartsWith(TextUtil.EXT_SKY) || extension == TextUtil.EXT_LOG || existingReports.Contains(file))
+                        continue;
+                    message.Append(tab + tab).Append(analysisFolderName).AppendLine();
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -172,9 +215,10 @@ namespace SkylineBatch
         // IMMUTABLE
         // Represents a report and associated r scripts to run using that report.
         
-        public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
+        public ReportInfo(string name, bool cultureSpecific, string path, List<Tuple<string, string>> rScripts, bool useRefineFile)
         {
             Name = name;
+            CultureSpecific = cultureSpecific;
             ReportPath = path ?? string.Empty;
             RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
             UseRefineFile = useRefineFile;
@@ -186,6 +230,8 @@ namespace SkylineBatch
         }
 
         public readonly string Name;
+
+        public readonly bool CultureSpecific;
 
         public readonly string ReportPath;
 
@@ -259,21 +305,23 @@ namespace SkylineBatch
 
         public bool TryPathReplace(string oldRoot, string newRoot, out ReportInfo pathReplacedReportInfo)
         {
-            var reportReplaced = TextUtil.SuccessfulReplace(ValidateReportPath, oldRoot, newRoot, ReportPath, out string replacedReportPath);
+            var preferReplace = Program.FunctionalTest;
+            var reportReplaced = TextUtil.SuccessfulReplace(ValidateReportPath, oldRoot, newRoot, ReportPath, preferReplace, out string replacedReportPath);
             var replacedRScripts = new List<Tuple<string, string>>();
             var anyScriptReplaced = false;
             foreach (var rScriptAndVersion in RScripts)
             {
-                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, out string replacedRScript) || anyScriptReplaced;
+                anyScriptReplaced = TextUtil.SuccessfulReplace(ValidateRScriptPath, oldRoot, newRoot, rScriptAndVersion.Item1, preferReplace, out string replacedRScript) || anyScriptReplaced;
                 replacedRScripts.Add(new Tuple<string, string>(replacedRScript, rScriptAndVersion.Item2));
             }
-            pathReplacedReportInfo = new ReportInfo(Name, replacedReportPath, replacedRScripts, UseRefineFile);
+            pathReplacedReportInfo = new ReportInfo(Name, CultureSpecific, replacedReportPath, replacedRScripts, UseRefineFile);
             return reportReplaced || anyScriptReplaced;
         }
 
         private enum Attr
         {
             Name,
+            CultureSpecific,
             Path,
             UseRefineFile
         };
@@ -281,7 +329,8 @@ namespace SkylineBatch
         public static ReportInfo ReadXml(XmlReader reader)
         {
             var name = reader.GetAttribute(Attr.Name);
-            var reportPath = GetPath(reader.GetAttribute(Attr.Path));
+            var cultureSpecific = reader.GetBoolAttribute(Attr.CultureSpecific);
+            var reportPath = reader.GetAttribute(Attr.Path);
             var resultsFile = reader.GetNullableBoolAttribute(Attr.UseRefineFile);
             var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
@@ -289,7 +338,7 @@ namespace SkylineBatch
                 if (reader.Name == "script_path")
                 {
                     var tupleItems = reader.ReadElementContentAsString().Split(new[]{ '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    rScripts.Add(new Tuple<string,string>(GetPath(tupleItems[0].Trim()), tupleItems[1].Trim()));
+                    rScripts.Add(new Tuple<string,string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
                 }
                 else
                 {
@@ -297,15 +346,13 @@ namespace SkylineBatch
                 }
             }
 
-            return new ReportInfo(name, reportPath, rScripts, resultsFile?? false);
+            return new ReportInfo(name, cultureSpecific, reportPath, rScripts, resultsFile?? false);
         }
-
-        private static string GetPath(string path) =>
-            FileUtil.GetTestPath(Program.FunctionalTest, Program.TestDirectory, path);
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("report_info");
+            writer.WriteAttribute(Attr.CultureSpecific, CultureSpecific);
             writer.WriteAttributeIfString(Attr.Name, Name);
             writer.WriteAttributeIfString(Attr.Path, ReportPath);
             writer.WriteAttribute(Attr.UseRefineFile, UseRefineFile);
@@ -321,7 +368,9 @@ namespace SkylineBatch
 
         public const string ADD_REPORT_OVERWRITE_COMMAND =
             "--report-add=\"{0}\" --report-conflict-resolution=overwrite";
-        public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant";
+        public const string EXPORT_REPORT_COMMAND = "--report-name=\"{0}\" --report-file=\"{1}\"";
+        public const string REPORT_INVARIANT_COMMAND = "--report-invariant";
+        public const string REPORT_TSV_COMMAND = "--report-format=tsv";
         public const string SAVE_SETTINGS_COMMAND = "--save-settings";
         public const string RUN_R_ARGUMENT = "\"{0}\" \"{1}\"";
 
@@ -333,6 +382,12 @@ namespace SkylineBatch
                 commandWriter.Write(SAVE_SETTINGS_COMMAND);
             }
             commandWriter.Write(EXPORT_REPORT_COMMAND, Name, Path.Combine(analysisFolder, Name + TextUtil.EXT_CSV));
+            if (!CultureSpecific)
+            {
+                commandWriter.Write(REPORT_INVARIANT_COMMAND);
+                if (!commandWriter.ExportsInvariantReport)
+                    commandWriter.Write(REPORT_TSV_COMMAND);
+            }
             commandWriter.EndCommandGroup();
         }
 

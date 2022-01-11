@@ -83,6 +83,28 @@ namespace pwiz.SkylineTestFunctional
                     irtDlg1.CreateDatabase(databasePath);
                 });
 
+            RunUI(() =>
+            {
+                SetClipboardText(BuildStandardText(new[]
+                {
+                    BuildMeasuredPeptide("AAA", -10.00),
+                    BuildMeasuredPeptide("CCC", 0.00),
+                    BuildMeasuredPeptide("DDD", 10.00),
+                }, seq => seq.Substring(0, seq.Length - 1)));
+                irtDlg1.DoPasteStandard();
+            });
+            var calcToStandardDlg = ShowDialog<UseCurrentCalculatorDlg>(irtDlg1.AddStandard);
+            const string newStandardName = "testCalcToStandard";
+            RunUI(() => calcToStandardDlg.StandardNameText = newStandardName);
+            OkDialog(calcToStandardDlg, calcToStandardDlg.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(newStandardName, irtDlg1.IrtStandards.Name);
+                // set back to none and make sure standards are cleared
+                irtDlg1.IrtStandards = null;
+                Assert.IsFalse(irtDlg1.StandardPeptides.Any());
+            });
+
             /*
              * Check several error handling cases
              * Check the peptide choosing algorithm for sanity (correct # peptides)

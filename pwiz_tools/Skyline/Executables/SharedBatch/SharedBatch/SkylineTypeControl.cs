@@ -109,10 +109,10 @@ namespace SharedBatch
             btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
         }
 
-        public void SetText(string value)
+        public void SetInput(object variable)
         {
             radioButtonSpecifySkylinePath.Checked = true;
-            textSkylineInstallationPath.Text = value;
+            textSkylineInstallationPath.Text = (string)variable;
         }
     }
 }

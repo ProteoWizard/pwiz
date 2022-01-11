@@ -59,6 +59,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DataDownloadFunctionalTest.cs" />
     <Compile Include="FunctionalTestUtil.cs" />
     <Compile Include="AbstractSkylineBatchFunctionalTest.cs" />
     <Compile Include="DependencyFunctionalTest.cs" />

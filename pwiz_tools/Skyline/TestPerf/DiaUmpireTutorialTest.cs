@@ -550,7 +550,7 @@ namespace TestPerf
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 //importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
             });
-            PauseForScreenShot("Import Peptide Search - DiaUmpire settings page", 14);
+            PauseForScreenShot<ImportPeptideSearchDlg.ConverterSettingsPage>("Import Peptide Search - DiaUmpire settings page", 14);
 
             bool? searchSucceeded = null;
             RunUI(() =>

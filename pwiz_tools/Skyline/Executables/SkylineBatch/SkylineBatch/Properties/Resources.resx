@@ -132,17 +132,26 @@
   <data name="ReportInfo_Validate_Please_enter_a_name_for_this_report_" xml:space="preserve">
     <value>Please enter a name for this report.</value>
   </data>
+  <data name="RefineSettings_ValidateOutputFile_refined_output_file" xml:space="preserve">
+    <value>refined output file</value>
+  </data>
   <data name="ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_" xml:space="preserve">
     <value>R script path {0} is not a valid path.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__export_reports" xml:space="preserve">
-    <value>Run from step 3: export reports</value>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_report_export" xml:space="preserve">
+    <value>Start from report export</value>
   </data>
   <data name="MainSettings_ValidateSkylineFile_Skyline_file" xml:space="preserve">
     <value>Skyline file</value>
   </data>
   <data name="ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__" xml:space="preserve">
     <value>Could not find any R Installations in: </value>
+  </data>
+  <data name="ReportInfo_ValidateReportPath_report_path" xml:space="preserve">
+    <value>report path</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_" xml:space="preserve">
+    <value>An error occurred while downloading the data files.</value>
   </data>
   <data name="Program_Main__0__encountered_an_unexpected_error" xml:space="preserve">
     <value>{0} encountered an unexpected error</value>
@@ -168,8 +177,8 @@
   <data name="RInstallations_AddRDirectory_The_R_directory_is_already_used_to_find_R_installations___0_" xml:space="preserve">
     <value>The R directory is already used to find R installations: {0}</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__export_reports" xml:space="preserve">
-    <value>Run from step 4: export reports</value>
+  <data name="ConfigRunner_DownloadData_Trying_again___" xml:space="preserve">
+    <value>Trying again...</value>
   </data>
   <data name="ReportInfo_ValidateRVersion_Please_choose_a_different_version_of_R_" xml:space="preserve">
     <value>Please choose a different version of R.</value>
@@ -192,14 +201,14 @@
   <data name="SkylineBatchConfigForm_btnAddReport_Click_Creating_new_report_" xml:space="preserve">
     <value>Creating new report.</value>
   </data>
+  <data name="MainSettings_ValidateAnnotationsFile_annotations_file" xml:space="preserve">
+    <value>annotations file</value>
+  </data>
   <data name="ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_" xml:space="preserve">
     <value>Please wait until "{0}" has finished running.</value>
   </data>
-  <data name="FileSettings_ValidateIntTextField__0__is_not_a_valid_value_for__1__" xml:space="preserve">
-    <value>{0} is not a valid value for {1}.</value>
-  </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_4__run_R_scripts" xml:space="preserve">
-    <value>Run from step 4: run R scripts</value>
+  <data name="MainForm_UpdateRunBatchSteps_R_scripts_only" xml:space="preserve">
+    <value>R scripts only</value>
   </data>
   <data name="Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_" xml:space="preserve">
     <value>... Log truncated ... Full log is in {0}</value>
@@ -207,20 +216,29 @@
   <data name="SkylineBatchConfigForm_btnEditReport_Click_Editing_report_" xml:space="preserve">
     <value>Editing report.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_3__refine_file" xml:space="preserve">
-    <value>Run from step 3: refine file</value>
+  <data name="ConfigRunner_DownloadData_Skipping__0___Already_downloaded" xml:space="preserve">
+    <value>Skipping {0}. Already downloaded</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_refinement" xml:space="preserve">
+    <value>Start from refinement</value>
   </data>
   <data name="Program_Main_Error_details_may_be_found_in_the_SkylineBatchProgram_log_file_in_this_directory____0_" xml:space="preserve">
     <value>Error details may be found in the SkylineBatchProgram.log file in this directory : {0}</value>
   </data>
+  <data name="SkylineBatchConfigForm_Save_A_server_is_required_to_download_data__Please_select_a_server__or_uncheck_the_download_data_checkbox_" xml:space="preserve">
+    <value>A server is required to download data. Please select a server, or uncheck the download data checkbox.</value>
+  </data>
   <data name="RVersionControl_RVersionControl_R_version__0__not_found_" xml:space="preserve">
     <value>R version {0} not found.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_2__data_import" xml:space="preserve">
-    <value>Run from step 2: data import</value>
-  </data>
   <data name="RefineSettings_ValidateOutputFile_Please_provide_a_valid_output_file_path_" xml:space="preserve">
     <value>Please provide a valid output file path.</value>
+  </data>
+  <data name="MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_" xml:space="preserve">
+    <value>The parent directory of the analysis folder {0} does not exist.</value>
+  </data>
+  <data name="ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_" xml:space="preserve">
+    <value>Cannot run while the following configurations are running:</value>
   </data>
   <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
     <value>Another instance of {0} is already running.</value>
@@ -234,32 +252,32 @@
   <data name="Program_InitSkylineSettings_Please_install_Skyline_to_start__0__" xml:space="preserve">
     <value>Please install Skyline to start {0}.</value>
   </data>
-  <data name="MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_" xml:space="preserve">
-    <value>Please enter a valid file path, or no text if you do not wish to include annotations.</value>
+  <data name="ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_" xml:space="preserve">
+    <value>Cannot run while the following configurations have errors:</value>
+  </data>
+  <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
+    <value>Report {0}:</value>
   </data>
   <data name="MainForm_btnNewConfig_Click_Creating_a_new_configuration_" xml:space="preserve">
     <value>Creating a new configuration.</value>
   </data>
-  <data name="RefineSettings_Validate_CV_cutoff" xml:space="preserve">
-    <value>CV cutoff</value>
+  <data name="ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_" xml:space="preserve">
+    <value>Report path {0} is not a valid path.</value>
   </data>
-  <data name="SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_" xml:space="preserve">
-    <value>Cannot delete "{0}" while the following configurations are running:</value>
+  <data name="ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
   </data>
   <data name="MainSettings_ValidateSkylineFile_Please_provide_a_valid_file_" xml:space="preserve">
     <value>Please provide a valid file.</value>
   </data>
-  <data name="MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_" xml:space="preserve">
-    <value>The Skyline template file {0} does not exist.</value>
-  </data>
-  <data name="MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_" xml:space="preserve">
-    <value>Will another configuration generate {0} before this configuration runs?</value>
+  <data name="RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__" xml:space="preserve">
+    <value>The following R installations were not found by {0}:</value>
   </data>
   <data name="RefineSettings_Validate_Cannot_save_the_refined_file_to__0_" xml:space="preserve">
     <value>Cannot save the refined file to {0}</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_chromatagram_files" xml:space="preserve">
-    <value>chromatagram files</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_files" xml:space="preserve">
+    <value>files</value>
   </data>
   <data name="RInstallations_AddRDirectory_Please_enter_a_valid_directory_" xml:space="preserve">
     <value>Please enter a valid directory.</value>
@@ -270,11 +288,17 @@
   <data name="RefineSettings_Validate_Q_value_cutoff" xml:space="preserve">
     <value>Q value cutoff</value>
   </data>
+  <data name="ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__" xml:space="preserve">
+    <value>Found {0} matching data files on {1}:</value>
+  </data>
   <data name="ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_" xml:space="preserve">
     <value>Cannot disable "{0}" while it has status: {1}</value>
   </data>
   <data name="RefineSettings_Validate_Please_enter_values_for_the_refine_commands_you_wish_to_use__or_skip_the_refinement_step_by_removing_the_file_path_on_the_refine_tab_" xml:space="preserve">
     <value>Please enter values for the refine commands you wish to use, or skip the refinement step by removing the file path on the refine tab.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_Already_downloaded__Skipping_" xml:space="preserve">
+    <value>Already downloaded. Skipping.</value>
   </data>
   <data name="MainForm_btnOpenAnalysis_Click_analysis_folder" xml:space="preserve">
     <value>analysis folder</value>
@@ -282,8 +306,8 @@
   <data name="MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_" xml:space="preserve">
     <value>Please run "{0}" from step 1 and try again.</value>
   </data>
-  <data name="ReportInfo_Validate_Report_must_have_name_" xml:space="preserve">
-    <value>Report must have name.</value>
+  <data name="MainSettings_ValidateTemplateFile_Will_another_configuration_generate__0__before_this_configuration_runs_" xml:space="preserve">
+    <value>Will another configuration generate {0} before this configuration runs?</value>
   </data>
   <data name="RefineSettings_ValidateNumberInput__0__is_out_of_range_for_the__1__" xml:space="preserve">
     <value>{0} is out of range for the {1}.</value>
@@ -316,8 +340,8 @@
   <data name="ReportInfo_AsObjectArray_Refined" xml:space="preserve">
     <value>Refined</value>
   </data>
-  <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
-    <value>Editing configuration "{0}"</value>
+  <data name="downtriangle1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\downtriangle.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MainForm_TrimDisplayedLog_____Log_truncated____" xml:space="preserve">
     <value>... Log truncated ...</value>
@@ -334,23 +358,20 @@
   <data name="RefineSettings_Validate_minimum_detections_allowed" xml:space="preserve">
     <value>minimum detections allowed</value>
   </data>
-  <data name="RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_" xml:space="preserve">
-    <value>Please enter a number between {0} and {1}</value>
+  <data name="ReportInfo_Validate_Report_must_have_name_" xml:space="preserve">
+    <value>Report must have name.</value>
   </data>
-  <data name="MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_" xml:space="preserve">
-    <value>The parent directory of the analysis folder {0} does not exist.</value>
+  <data name="OpenFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OpenFolder.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_All_Steps" xml:space="preserve">
-    <value>Run All Steps</value>
+  <data name="MainForm_UpdateRunBatchSteps_All" xml:space="preserve">
+    <value>All</value>
   </data>
   <data name="FileSettings_Validate_MS1_filtering_res_accuracy" xml:space="preserve">
     <value>MS1 filtering res/accuracy</value>
   </data>
   <data name="ConfigRunner_KillProcessChildren_Killing_a_processes_spawned_by_the_process_with_Id___0_" xml:space="preserve">
     <value>Killing a processes spawned by the process with Id: {0}</value>
-  </data>
-  <data name="SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_" xml:space="preserve">
-    <value>Please enter a name.</value>
   </data>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -361,11 +382,11 @@
   <data name="uparrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\uparrow.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_" xml:space="preserve">
-    <value>Please choose a directory with R installations.</value>
-  </data>
   <data name="RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_" xml:space="preserve">
     <value>Could not find any R installations on this computer.</value>
+  </data>
+  <data name="ConfigRunner_Run_Converting__0__to_invariant_format___" xml:space="preserve">
+    <value>Converting {0} to invariant format...</value>
   </data>
   <data name="InvalidConfigSetupForm_FixInvalidMainSettings_annotations_file" xml:space="preserve">
     <value>annotations file</value>
@@ -376,8 +397,8 @@
   <data name="InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder" xml:space="preserve">
     <value>analysis folder</value>
   </data>
-  <data name="ReportInfo_AsObjectArray_Results" xml:space="preserve">
-    <value>Results</value>
+  <data name="AddServerForm_btnAdd_Click_Verifying" xml:space="preserve">
+    <value>Verifying</value>
   </data>
   <data name="SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" xml:space="preserve">
     <value>An unexpected error occurred while running {0}</value>
@@ -394,29 +415,38 @@
   <data name="ConfigRunner_KillProcessChildren_The_child_process_has_already_been_terminated_" xml:space="preserve">
     <value>The child process has already been terminated.</value>
   </data>
-  <data name="SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_" xml:space="preserve">
-    <value>"{0}" is not a valid name for the configuration.</value>
+  <data name="SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_" xml:space="preserve">
+    <value>Cannot delete "{0}" while the following configurations are running:</value>
   </data>
   <data name="ConfigRunner_Run_________________________________0____1_________________________________" xml:space="preserve">
     <value>------------------------------ {0}: {1} -------------------------------</value>
   </data>
+  <data name="MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
+    <value>Do you want to import configurations from {0}?</value>
+  </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_refined_files" xml:space="preserve">
     <value>refined files</value>
   </data>
-  <data name="ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_" xml:space="preserve">
-    <value>Killing {0} processes spawned by the process with Id: {1}</value>
+  <data name="RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_" xml:space="preserve">
+    <value>Would you like to add an R installation directory?</value>
   </data>
-  <data name="ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_" xml:space="preserve">
-    <value>Cannot run while the following configurations are running:</value>
+  <data name="MainSettings_ValidateAnnotationsFolder_Please_enter_a_valid_file_path__or_no_text_if_you_do_not_wish_to_include_annotations_" xml:space="preserve">
+    <value>Please enter a valid file path, or no text if you do not wish to include annotations.</value>
   </data>
-  <data name="MainForm_UpdateRunBatchSteps_Run_from_step_5__run_R_scripts" xml:space="preserve">
-    <value>Run from step 5: run R scripts</value>
+  <data name="RefineSettings_Validate_CV_cutoff" xml:space="preserve">
+    <value>CV cutoff</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_results_files" xml:space="preserve">
-    <value>results files</value>
+  <data name="ConfigManager_SelectLog_No_log_at_index__" xml:space="preserve">
+    <value>No log at index: </value>
   </data>
   <data name="SkylineData" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineData.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File" xml:space="preserve">
+    <value>Skyline Batch Configuration File</value>
+  </data>
+  <data name="ConfigRunner_Run_Updating__0_" xml:space="preserve">
+    <value>Updating {0}</value>
   </data>
   <data name="MainSettings_ValidateAnalysisFolder_Please_provide_a_valid_folder_" xml:space="preserve">
     <value>Please provide a valid folder.</value>
@@ -426,6 +456,9 @@
   </data>
   <data name="MainSettings_ValidateTemplateFile_The_Skyline_template_file_for_this_configuration_does_not_exist_" xml:space="preserve">
     <value>The Skyline template file for this configuration does not exist.</value>
+  </data>
+  <data name="ConfigRunner_KillProcessChildren_Killing__0__processes_spawned_by_the_process_with_Id___1_" xml:space="preserve">
+    <value>Killing {0} processes spawned by the process with Id: {1}</value>
   </data>
   <data name="RInstallations_AddRDirectory_No_R_installations_were_found_in___0_" xml:space="preserve">
     <value>No R installations were found in: {0}</value>
@@ -444,6 +477,9 @@
   </data>
   <data name="RefineSettings_ValidateNumberInput_Invalid_value_for_the__0____1_" xml:space="preserve">
     <value>Invalid value for the {0}: {1}</value>
+  </data>
+  <data name="ConfigRunner_DownloadData__0____1__of__2__" xml:space="preserve">
+    <value>{0} ({1} of {2})</value>
   </data>
   <data name="Comment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -469,9 +505,6 @@
   <data name="SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_" xml:space="preserve">
     <value>Please wait until the dependent configurations have stopped to change these values.</value>
   </data>
-  <data name="ReportInfo_ValidateReportPath_Report_path__0__is_not_a_valid_path_" xml:space="preserve">
-    <value>Report path {0} is not a valid path.</value>
-  </data>
   <data name="SkylineDoc" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\SkylineDoc.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -487,11 +520,14 @@
   <data name="ConfigManager_RunAll_Please_edit___0___to_enable_running_" xml:space="preserve">
     <value>Please edit "{0}" to enable running.</value>
   </data>
+  <data name="ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_" xml:space="preserve">
+    <value>A culture-invariant report ensures a CSV file with period decimal points and full-precision numbers.</value>
+  </data>
   <data name="RefineSettings_Validate_No_refine_commands_have_been_selected_" xml:space="preserve">
     <value>No refine commands have been selected.</value>
   </data>
-  <data name="OpenFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\OpenFolder.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="ConfigRunner_Run_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
   </data>
   <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Viewing_configuration___0__" xml:space="preserve">
     <value>Viewing configuration "{0}"</value>
@@ -499,26 +535,38 @@
   <data name="MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
     <value>Cannot add "{0}" because there is another configuration with the same name.</value>
   </data>
-  <data name="FileSettings_ValidateIntTextField_Please_enter_a_number_" xml:space="preserve">
-    <value>Please enter a number.</value>
-  </data>
-  <data name="ReportInfo_Validate_Report__0__" xml:space="preserve">
-    <value>Report {0}:</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_results_files" xml:space="preserve">
+    <value>results files</value>
   </data>
   <data name="SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_" xml:space="preserve">
     <value>The following configurations use refined template files from other configurations that do not exist:</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from_step__0__would_overwrite_the_following__1__" xml:space="preserve">
-    <value>Running the enabled configurations from step {0} would overwrite the following {1}:</value>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Running_the_enabled_configurations_from___0___would_overwrite_the__1__" xml:space="preserve">
+    <value>Running "{0}" on the enabled configurations would overwrite the {1}:</value>
+  </data>
+  <data name="SkylineBatchConfigForm_SkylineBatchConfigForm_Editing_configuration___0__" xml:space="preserve">
+    <value>Editing configuration "{0}"</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_" xml:space="preserve">
+    <value>The Skyline template file {0} does not exist.</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_" xml:space="preserve">
     <value>Please reorder the configurations so {0} runs first.</value>
   </data>
+  <data name="ConfigRunner_Run_Saving__0_" xml:space="preserve">
+    <value>Saving {0}</value>
+  </data>
   <data name="ConfigRunner_KillProcessChildren_Killing_child_process___0___with_Id___1_" xml:space="preserve">
     <value>Killing child process "{0}" with Id: {1}</value>
   </data>
-  <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs" xml:space="preserve">
-    <value>R script outputs</value>
+  <data name="SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_" xml:space="preserve">
+    <value>"{0}" is not a valid name for the configuration.</value>
+  </data>
+  <data name="FileSettings_ValidateNonNegative_Please_enter_a_positive_integer_" xml:space="preserve">
+    <value>Please enter a positive integer.</value>
+  </data>
+  <data name="SkylineBatchConfig_SkylineBatchConfig_Please_enter_a_name_" xml:space="preserve">
+    <value>Please enter a name.</value>
   </data>
   <data name="SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_" xml:space="preserve">
     <value>Please wait until these configurations have finished running.</value>
@@ -526,43 +574,130 @@
   <data name="SkylineBatchConfigManager_StartBatchRun_Configuration___0___" xml:space="preserve">
     <value>Configuration "{0}"</value>
   </data>
-  <data name="ConfigManager_SelectLog_No_log_at_index__" xml:space="preserve">
-    <value>No log at index: </value>
+  <data name="RInstallations_AddRDirectory_Please_choose_a_directory_with_R_installations_" xml:space="preserve">
+    <value>Please choose a directory with R installations.</value>
   </data>
-  <data name="ConfigManager_RunAll_Cannot_run_while_the_following_configurations_have_errors_" xml:space="preserve">
-    <value>Cannot run while the following configurations have errors:</value>
+  <data name="ConfigRunner_DownloadData_Starting_download___" xml:space="preserve">
+    <value>Starting download...</value>
   </data>
-  <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
-    <value>Error details may be found in the file: {0}.</value>
+  <data name="ReportInfo_AsObjectArray_Results" xml:space="preserve">
+    <value>Results</value>
   </data>
   <data name="SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_" xml:space="preserve">
     <value>Configuration {0} must be run before {1} to generate its template file.</value>
   </data>
-  <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
-    <value>Please choose a unique name.</value>
+  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\download.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="downtriangle1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\downtriangle.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__" xml:space="preserve">
-    <value>The following R installations were not found by {0}:</value>
-  </data>
-  <data name="RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_" xml:space="preserve">
-    <value>Would you like to add an R installation directory?</value>
-  </data>
-  <data name="MainForm_FileOpenedImport_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
-    <value>Do you want to import configurations from {0}?</value>
-  </data>
-  <data name="MainSettings_ValidateAnnotationsFile_annotations_file" xml:space="preserve">
-    <value>annotations file</value>
-  </data>
-  <data name="RefineSettings_ValidateOutputFile_refined_output_file" xml:space="preserve">
-    <value>refined output file</value>
+  <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
+    <value>Error details may be found in the file: {0}.</value>
   </data>
   <data name="ReportInfo_ValidateRScriptPath_R_script" xml:space="preserve">
     <value>R script</value>
   </data>
-  <data name="ReportInfo_ValidateReportPath_report_path" xml:space="preserve">
-    <value>report path</value>
+  <data name="RefineSettings_ValidateNumberInput_Please_enter_a_number_between__0__and__1_" xml:space="preserve">
+    <value>Please enter a number between {0} and {1}</value>
+  </data>
+  <data name="FileSettings_ValidateNonNegative_The__0__cannot_be_less_than_zero_" xml:space="preserve">
+    <value>The {0} cannot be less than zero.</value>
+  </data>
+  <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
+    <value>Please choose a unique name.</value>
+  </data>
+  <data name="downloadSelected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\downloadSelected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DataServerInfo_ValidateNamingPattern_A_data_naming_pattern_is_required_for_downloaded_data__Please_add_a_data_naming_pattern_" xml:space="preserve">
+    <value>A data naming pattern is required for downloaded data. Please add a data naming pattern.</value>
+  </data>
+  <data name="DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_" xml:space="preserve">
+    <value>There were no files found at {0}. Make sure the URL, username, and password are correct and try again.</value>
+  </data>
+  <data name="DataServerInfo_Validate_There_was_an_error_connecting_to__0____1_" xml:space="preserve">
+    <value>There was an error connecting to {0}: {1}</value>
+  </data>
+  <data name="Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___" xml:space="preserve">
+    <value>There was an error reading the saved configurations from an earlier version of {0}.</value>
+  </data>
+  <data name="Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_" xml:space="preserve">
+    <value>To help improve {0} in future versions, please post the configuration file to the Skyline Support board:</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Download_files_only" xml:space="preserve">
+    <value>Download files only</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_" xml:space="preserve">
+    <value>There is not enough remaining disk space to download {0}. Free up some disk space and try again.</value>
+  </data>
+  <data name="ConfigRunner_DownloadData_File_download_failed_" xml:space="preserve">
+    <value>File download failed.</value>
+  </data>
+  <data name="MainForm_MainForm_Loading_configurations_from_saved_settings___" xml:space="preserve">
+    <value>Loading configurations from saved settings...</value>
+  </data>
+  <data name="MainForm_DoImport_Importing_configurations_from__0____" xml:space="preserve">
+    <value>Importing configurations from {0}...</value>
+  </data>
+  <data name="DataServerInfo_Validate_None_of_the_file_names_on_the_server_matched_the_regular_expression___0_" xml:space="preserve">
+    <value>None of the file names on the server matched the regular expression: {0}</value>
+  </data>
+  <data name="DataServerInfo_Validate_Please_make_sure_your_regular_expression_is_correct_" xml:space="preserve">
+    <value>Please make sure your regular expression is correct.</value>
+  </data>
+  <data name="MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_" xml:space="preserve">
+    <value>The data folder cannot be empty. Please choose a folder with at least one data file.</value>
+  </data>
+  <data name="AddServerForm_FinishConnectToServer_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_" xml:space="preserve">
+    <value>There is not enough space on this computer to download the data for these configurations. You need an additional:</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun__0__GB_on_the__1__drive" xml:space="preserve">
+    <value>{0} GB on the {1} drive</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_" xml:space="preserve">
+    <value>Please free up some space to download the data.</value>
+  </data>
+  <data name="DataServerControl_ServerConnected_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="DataServerControl_ServerRemoved_No_server" xml:space="preserve">
+    <value>No server</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_R_script_outputs_in_the_following_analysis_folders" xml:space="preserve">
+    <value>R script outputs in the following analysis folders</value>
+  </data>
+  <data name="MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1" xml:space="preserve">
+    <value>The parent directory of the data folder {0} does not exist.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_" xml:space="preserve">
+    <value>The data for the following configurations has not fully downloaded:</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_" xml:space="preserve">
+    <value>Please download the data for these configurations before running them from a later step.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_" xml:space="preserve">
+    <value>There are no configurations to run.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_" xml:space="preserve">
+    <value>Please add configurations before running.</value>
+  </data>
+  <data name="MainForm_btnImport_Click_Cannot_add_configurations_while__0__is_loading__Please_wait_and_try_again_" xml:space="preserve">
+    <value>Cannot add configurations while {0} is loading. Please wait and try again.</value>
+  </data>
+  <data name="MainForm_UpdateRunBatchSteps_Start_from_template_copy" xml:space="preserve">
+    <value>Start from template copy</value>
+  </data>
+  <data name="MainForm_CheckDropDownOption_R_un___0_" xml:space="preserve">
+    <value>R&amp;un: {0}</value>
+  </data>
+  <data name="MainForm_RunBatch_Checking_servers_for_files_to_download___" xml:space="preserve">
+    <value>Checking servers for files to download...</value>
+  </data>
+  <data name="DataServerControl_SuccessfulConnect_Try_Reconnecting_to_Server" xml:space="preserve">
+    <value>Try Reconnecting to Server</value>
+  </data>
+  <data name="Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_" xml:space="preserve">
+    <value>There was an error connecting to {0}. Skipping sending analytics.</value>
   </data>
 </root>

@@ -83,10 +83,11 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat TRANSITION_SETTINGS_ION_MOBILITY = VERSION_20_14; // First version with ion mobility settings moved from PeptideSettings to TransitionSettings, and using .imsdb IMS libraries
         public static readonly DocumentFormat VERSION_20_2 = new DocumentFormat(20.2); // Release format
         public static readonly DocumentFormat VERSION_20_21 = new DocumentFormat(20.21); // Sequential audit log hash calculation
-        public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
         public static readonly DocumentFormat SEQUENTIAL_LOG_HASH = VERSION_20_21;
+        public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
         public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
-        public static readonly DocumentFormat CURRENT = VERSION_20_22;
+        public static readonly DocumentFormat VERSION_21_1 = new DocumentFormat(21.1); // Release format
+        public static readonly DocumentFormat CURRENT = VERSION_21_1;
 
 
         private readonly double _versionNumber;

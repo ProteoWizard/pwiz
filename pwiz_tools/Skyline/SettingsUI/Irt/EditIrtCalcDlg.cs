@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get
             {
-                if (!ReferenceEquals(SelectedRegressionType, _originalRegressionType))
+                if (_originalRegressionType != null && !ReferenceEquals(SelectedRegressionType, _originalRegressionType))
                     return true;
 
                 if (_originalPeptides == null)
@@ -1297,6 +1297,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                 }
                 comboStandards.SelectedIndex = 0;
+            }
+        }
+
+        public void AddStandard()
+        {
+            foreach (var item in comboStandards.Items)
+            {
+                if (item.ToString().Equals(Resources.SettingsListComboDriver_Add))
+                {
+                    comboStandards.SelectedItem = item;
+                    return;
+                }
             }
         }
 

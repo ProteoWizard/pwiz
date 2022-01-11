@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatchTest;
 using SkylineBatch;
@@ -9,17 +10,25 @@ namespace SkylineBatchTest
     [TestClass]
     public class MainFormFunctionalTest : AbstractSkylineBatchFunctionalTest
     {
+        private string TEST_FOLDER;
+        private string CONFIG_FOLDER;
+
         [TestMethod]
         public void ManipulateListViewTest()
         {
-            TestFilesZip = @"SkylineBatchTest\TestConfigurationFiles.zip";
+            TestFilesZipPaths = new[]
+                {@"SkylineBatchTest\MainFormFunctionalTest.zip", @"SkylineBatchTest\TestConfigurationFiles.zip"};
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            TEST_FOLDER = TestFilesDirs[0].FullPath;
+            CONFIG_FOLDER = TestFilesDirs[1].FullPath;
+
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
@@ -29,6 +38,8 @@ namespace SkylineBatchTest
 
             TestDeleteConfigurations(mainForm);
 
+            TestEnableConfigs(mainForm);
+
         }
 
         public void TestAddValidConfigurations(MainForm mainForm)
@@ -36,7 +47,7 @@ namespace SkylineBatchTest
             var newConfigForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
             RunUI(() =>
             {
-                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"One", TestFilesDirs[0].FullPath, this);
+                FunctionalTestUtil.PopulateConfigForm(newConfigForm, @"One", CONFIG_FOLDER, this);
                 newConfigForm.btnSaveConfig.PerformClick();
             });
 
@@ -121,5 +132,41 @@ namespace SkylineBatchTest
             Assert.AreEqual("Two", mainForm.SelectedConfigName());
         }
 
+        public void TestEnableConfigs(MainForm mainForm)
+        {
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            var validConfigFile = Path.Combine(TEST_FOLDER, "SevenConfigurations.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(validConfigFile);
+                FunctionalTestUtil.CheckConfigs(7, 0, mainForm);
+            });
+            var checkState = new[] {false, false, false, false, false, false, false};
+            var random = new Random();
+            for (int i = 0; i < 100; i++)
+            {
+                VerifyCheckState(mainForm, checkState);
+                var randomIndex = random.Next(0, checkState.Length);
+                checkState[randomIndex] = !checkState[randomIndex];
+                RunUI(() =>
+                {
+                    mainForm.SetConfigEnabled(randomIndex, checkState[randomIndex]);
+                });
+            }
+        }
+
+        private void VerifyCheckState(MainForm mainForm, bool [] checkState)
+        {
+            for (int i = 0; i < checkState.Length; i++)
+            {
+                RunUI(() =>
+                {
+                    var actualChecked = mainForm.IsConfigEnabled(i);
+                    Assert.AreEqual(checkState[i], actualChecked,
+                        $"Expected index {i} to have state enabled {checkState[i]} but was {actualChecked}.");
+                    //mainForm.AllowUpdate();
+                });
+            }
+        }
     }
 }

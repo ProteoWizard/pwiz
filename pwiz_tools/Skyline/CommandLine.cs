@@ -83,7 +83,15 @@ namespace pwiz.Skyline
         public int Run(string[] args, bool withoutUsage = false)
         {
             var exitStatus = RunInner(args, withoutUsage);
-            if (exitStatus != Program.EXIT_CODE_SUCCESS && !_out.IsErrorReported)
+
+            // Handle cases where the error reporting and exit code are out of synch
+            // TODO: Add testing that fails when these happen and fix the causes
+            if (exitStatus == Program.EXIT_CODE_SUCCESS)
+            {
+                if (_out.IsErrorReported)
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+            }
+            else if (!_out.IsErrorReported)
             {
                 _out.WriteLine(Resources.CommandLine_Run_Error__Failure_occurred__Exiting___);
             }
@@ -188,12 +196,16 @@ namespace pwiz.Skyline
                     }
                     DocContainer.SetDocument(_doc, null);
 
-                    if (ProcessDocument(commandArgs))
+                    bool successProcessing = ProcessDocument(commandArgs);
+                    if (successProcessing)
                         PerformExportOperations(commandArgs);
 
                     // Save any settings list changes made by opening the document
                     if (commandArgs.SaveSettings)
                         SaveSettings();
+
+                    if (!successProcessing)
+                        return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
             }
             finally

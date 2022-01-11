@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharedBatch;
 using SkylineBatch;
 
 
@@ -208,6 +209,7 @@ namespace SkylineBatchTest
 
             configManager.SelectConfig(2);
             configManager.UserRemoveSelected();
+
             configManager.Import(TestUtils.GetTestFilePath("configs.xml"), null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
@@ -226,8 +228,8 @@ namespace SkylineBatchTest
             configManager.GetSelectedLogger().Delete();
             var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             // Simulate loading saved configs from file
-            testConfigManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
-            Assert.IsTrue(testConfigManager.ConfigListEquals(testingConfigs));
+            configManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
+            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
             testConfigManager.GetSelectedLogger().Delete();
         }
 

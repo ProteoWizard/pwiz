@@ -217,6 +217,9 @@
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>高分解能メタボロミクス</value>
   </data>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>小分子IMSライブラリ</value>
+  </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>詳細なトピック</value>
   </data>
@@ -228,5 +231,8 @@
   </data>
   <data name="HiResMetabolomics_Description" xml:space="preserve">
     <value>プリカーサーイオン化学式や付加物として指定される分子をターゲットとするSkylineドキュメントの作成方法を学びます。血漿試料セットに対してQ Exactive Orbitrap質量分析計で収集された複数の繰り返し測定データセットをインポートし、元々ターゲットプロテオミクス解析を目的に作成された多数の既存のSkyline機能がどのように非プロテオミクス分子データに適用できるかを学習します。</value>
+  </data>
+  <data name="SmallMolLibraries_Description" xml:space="preserve">
+    <value>複雑なイオン移動度分光分析-質量分析(IMS-MS)小分子データを分析するためのスペクトルライブラリやイオン移動度フィルタリングの使用方法を学びます。m/z、保持時間、断片化、イオン移動度情報を含むスペクトルライブラリを調べ、各分子のCCS値をどのように使用してプリカーサーやフラグメント抽出イオンクロマトグラムの選択性を向上させるかを学びます。</value>
   </data>
 </root>

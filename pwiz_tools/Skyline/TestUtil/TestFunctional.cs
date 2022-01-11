@@ -1414,6 +1414,7 @@ namespace pwiz.SkylineTestUtil
         protected virtual void InitializeSkylineSettings()
         {
             Settings.Default.Reset();
+            Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
             Settings.Default.ImportResultsAutoCloseWindow = true;
             Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
             Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();

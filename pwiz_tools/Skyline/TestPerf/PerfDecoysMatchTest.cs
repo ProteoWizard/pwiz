@@ -51,7 +51,7 @@ namespace TestPerf
         [TestMethod] 
         public void DecoysMatchTest()
         {
-            TestFilesZip = "http://proteome.gs.washington.edu/software/test/skyline-perf/DecoyMatch.zip";
+            TestFilesZip = "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/DecoyMatch.zip";
             TestFilesPersistent = new[] {DDA_FILES, DIA_FILES, IRT_FILES}.SelectMany(l => l).ToArray();
 
             RunFunctionalTest();
