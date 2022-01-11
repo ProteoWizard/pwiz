@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Util.Extensions
             return reader.GetDouble(reader.GetOrdinal(columnName));
         }
 
+        public static double? GetNullableDouble(SQLiteDataReader reader, int column)
+        {
+            return reader.IsDBNull(column) ? (double?)null : reader.GetDouble(column);
+        }
+
         public static float GetFloat(this SQLiteDataReader reader, Enum columnName)
         {
             return reader.GetFloat(reader.GetOrdinal(columnName));

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Paige Pratt,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -68,33 +68,63 @@ namespace pwiz.SkylineTestFunctional
 
             for (var pass = 0; pass < 5; pass++)
             {
+                var doc = SkylineWindow.Document;
                 SetClipboardText(allText);
                 var nextHeader = string.Empty;
                 var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                int invK0Col = 0;
+                int covCol = 0;
                 RunUI(() =>
                 {
                     var thermBoxes = therm.CurrentColumnPositions();
                     // Checks that automatically assigning column headers works properly
-                    Assert.AreEqual(protName, thermBoxes[0]);
-                    Assert.AreEqual(peptide, thermBoxes[1]);
-                    Assert.AreEqual(precursor, thermBoxes[2]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4]);
-                    Assert.AreEqual(product, thermBoxes[5]);
-                    Assert.AreEqual(fragName, thermBoxes[7]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[15]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[16]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[17]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[18]);
-                    Assert.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[19]);
-                    Assert.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[20]);
+                    AssertEx.AreEqual(protName, thermBoxes[0]);
+                    AssertEx.AreEqual(peptide, thermBoxes[1]);
+                    AssertEx.AreEqual(precursor, thermBoxes[2]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4]);
+                    AssertEx.AreEqual(product, thermBoxes[5]);
+                    AssertEx.AreEqual(fragName, thermBoxes[7]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14]);
+                    AssertEx.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC, thermBoxes[15]);
+                    if (pass < 2)
+                        AssertEx.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0, thermBoxes[invK0Col = 16]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[17]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[18]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[19]);
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[20]);
+                    if (pass < 2)
+                        AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[covCol = 21]);
+                    AssertEx.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[22]);
                     nextHeader = string.Join(",", thermBoxes);
                 });
+                if (pass < 2)
+                {
+                    // Attempt to proceed, should get an error about conflicting ion mobility declarations
+                    for (var loop = 0; loop < 2; loop++)
+                    {
+                        var errDlg = ShowDialog<ImportTransitionListErrorDlg>(therm.OkDialog);
+                        AssertEx.IsTrue(errDlg.ErrorList.Any(err => err.ErrorMessage.Contains(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations)));
+                        RunUI(() => errDlg.Close());
+                        RunUI(() => therm.ComboBoxes[loop == 0? invK0Col : covCol].SelectedIndex = 0); // Ignore the 1/K0 and CoV values
+                    }
+                }
                 OkDialog(therm, therm.OkDialog);
+                doc = WaitForDocumentChange(doc);
+                var transitionGroupDocNodes = doc.MoleculeTransitionGroups.ToArray();
+                AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitValues.IonMobility);
+                AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitValues.CollisionalCrossSectionSqA);
+                AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitValues.IonMobility);
+                AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitValues.CollisionalCrossSectionSqA);
+                var transitionDocNodes = doc.MoleculeTransitions.ToArray();
+                AssertEx.AreEqual(9, transitionDocNodes[0].ExplicitValues.DeclusteringPotential);
+                AssertEx.AreEqual(1.1, transitionDocNodes[1].ExplicitValues.SLens);
+                AssertEx.AreEqual(1.12, transitionDocNodes[1].ExplicitValues.ConeVoltage);
+                AssertEx.AreEqual(-0.2, transitionDocNodes[1].ExplicitValues.IonMobilityHighEnergyOffset);
+                AssertEx.AreEqual(-0.3, transitionDocNodes[2].ExplicitValues.IonMobilityHighEnergyOffset);
 
                 if (pass == 0)
                 {

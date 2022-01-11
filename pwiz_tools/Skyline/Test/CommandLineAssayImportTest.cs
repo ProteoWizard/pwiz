@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -235,11 +237,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1170, docSuccess.PeptideTransitionCount);
             ValidateIrtAndLibrary(docSuccess);
 
-            // 14. Successful import and succesful load of existing database, with keeping of iRT's, plus successful library import
+            // 14. Successful import and succesful load of existing database, with keeping of iRT's, plus successful library import with ion mobility values
             documentUpdated = TestFilesDir.GetTestPath("AQUA4_Human_Blank3.sky"); 
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
             output = RunCommand("--in=" + documentBlank,
-                "--import-assay-library=" + textNoError,
+                "--import-assay-library=" + TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError_with_ion_mobility.csv"),
                 CommandArgs.ARG_IRT_DATABASE_PATH.ArgumentText + "=" + irtOriginal,
                 "--out=" + documentUpdated);
             expectedCount = 284;
@@ -249,6 +251,21 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1119, docSuccess2.PeptideTransitionCount);
             // Can't validate, because the document does not contain the iRT standard peptides
             AssertEx.Contains(output, Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
+            // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
+            var mobilities = new HashSet<double>();
+            foreach (var tg in docSuccess2.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
+            {
+                var imExpected = 1 + (0.5 * tg.PrecursorMz);
+                AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.001);
+                mobilities.Add(tg.ExplicitValues.IonMobility.Value);
+            }
+
+            var currentLibrary = docSuccess2.Settings.PeptideSettings.Libraries.Libraries[0];
+            foreach (var key in currentLibrary.Keys)
+            {
+                var spec = currentLibrary.GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.all).First();
+                AssertEx.IsTrue(mobilities.Any(im => Math.Abs(im - spec.IonMobilityInfo.IonMobility.Mobility.Value) < 0.001));
+            }
         }
 
         private void ValidateIrtAndLibraryOutput(string output, string path, int expectedCount)

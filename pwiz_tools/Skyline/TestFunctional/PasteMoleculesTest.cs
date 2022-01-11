@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -229,6 +229,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 // By default we don't show drift or other exotic columns
                 var columnOrder = (withSpecials == 0) ? fullColumnOrder.Take(16).ToArray() : fullColumnOrder;
+                int imIndex = 0;
+                int covIndex = 0;
                 // Take a legit full paste and mess with each field in turn
                 string[] fields =
                 {
@@ -259,6 +261,9 @@ namespace pwiz.SkylineTestFunctional
                 };
                 if (withSpecials > 0)
                 {
+                    // With addition of Explicit Ion Mobility, Explicit Compensation Voltage becomes a conflict
+                    expectedErrors[0] = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations;
+
                     var s = expectedErrors.Count;
                     expectedErrors.Add(
                         string.Format(Resources.PasteDlg_ShowNoErrors_No_errors)); s++; // No longer possible to have both "drift" and "ion mobility" columns at once, user would have to set this as "Ignore" so no error
@@ -271,7 +276,7 @@ namespace pwiz.SkylineTestFunctional
                     expectedErrors.Add(
                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, badfields[s++]));
                     expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, badfields[s++]));
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, badfields[covIndex = s++]));
                     expectedErrors.Add(
                         string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, badfields[s++]));
                     expectedErrors.Add(
@@ -287,7 +292,7 @@ namespace pwiz.SkylineTestFunctional
                     expectedErrors.Add(
                         Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper KEGG syntax check yet
                     expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, badfields[s++]));
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, badfields[imIndex = s++]));
                     expectedErrors.Add(
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_, badfields[s++]));
                     expectedErrors.Add(
@@ -303,6 +308,20 @@ namespace pwiz.SkylineTestFunctional
                         line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
                     if (!string.IsNullOrEmpty(expectedErrors[bad]))
                         TestError(line, expectedErrors[bad], columnOrder);
+                    if (imIndex > 0)
+                    {
+                        // Now that we have tested the warning, clear up the conflict between declared CoV and declared ion mobility
+                        if (bad < covIndex)
+                        {
+                            columnOrder[imIndex] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+                            columnOrder[covIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage;
+                        }
+                        else
+                        {
+                            columnOrder[imIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility;
+                            columnOrder[covIndex] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+                        }
+                    }
                 }
             }
             TestError(line1.Replace(caffeineFormula, caffeineFormula + "[M-H]").Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1", 
