@@ -113,12 +113,12 @@ GroupComparison <- function(dataFileName, ..., outputFolder="") {
     ## Visualization 1: Volcano plot
     ## default setup: FDR cutoff = 0.05; fold change cutoff = NA
     groupComparisonPlots(data=resultComparison$ComparisonResult, type="VolcanoPlot", address=outputFolder)
-    cat("\n Saved VolcanoPlot.pdf \n")
+    cat("\n Saved VolcanoPlot.pdf in", outputFolder, "\n")
     
     ## Visualization 2: Heatmap (required more than one comparisons)
     if (length(unique(resultComparison$ComparisonResult$Label)) > 1) {
       groupComparisonPlots(data=resultComparison$ComparisonResult, type="Heatmap", address=outputFolder)
-      cat("\n Saved Heatmap.pdf \n")
+      cat("\n Saved Heatmap.pdf in", outputFolder, "\n")
     } else {
       cat("\n No Heatmap. Need more than 1 comparison for Heatmap. \n")
     }
@@ -152,16 +152,16 @@ QualityControl <- function(dataFileName, width, height, ..., outputFolder="") {
     
     dataProcessPlots(data=quantData, type="ProfilePlot", 
                      address=outputFolder, width=width, height=height)
-    cat("\n Saved ProfilePlot.pdf \n \n")
+    cat("\n Saved ProfilePlot.pdf in", outputFolder, "\n \n")
     
     dataProcessPlots(data=quantData, type="QCPlot",
                      which.Protein = 'allonly',
                      address=outputFolder, width=width, height=height)
-    cat("\n Saved QCPlot.pdf \n \n")
+    cat("\n Saved QCPlot.pdf in", outputFolder, "\n \n")
     
     dataProcessPlots(data=quantData, type="ConditionPlot", 
                      address=outputFolder)
-    cat("\n Saved ConditionPlot.pdf \n ")
+    cat("\n Saved ConditionPlot.pdf in", outputFolder, "\n ")
   }
 }
 
@@ -231,7 +231,7 @@ DesignSampleSize <- function(dataFileName,
     pdf(ensureUniqueFileName("SampleSizePlot", outputFolder, ".pdf"))
     designSampleSizePlots(data=result.sample)
     dev.off()
-    cat("\n Saved SampleSizePlot.pdf \n \n")
+    cat("\n Saved SampleSizePlot.pdf in", outputFolder, "\n \n")
   }
   
 }
