@@ -157,6 +157,8 @@ namespace SkylineBatch
 
         public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
         {
+            if (listViewConfigs.Items.Count < 2)
+                return null;
             try
             {
                 skylineSettings.Validate();

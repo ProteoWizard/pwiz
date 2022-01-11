@@ -161,7 +161,7 @@ namespace SkylineBatch
         {
             var name = reader.GetAttribute(XML_TAGS.name);
             var enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
-            var logTestFormat = reader.GetBoolAttribute(XML_TAGS.log_test_format);
+            var logTestFormat = !SkylineInstallations.HasLocalSkylineCmd && reader.GetBoolAttribute(XML_TAGS.log_test_format);
             DateTime modified;
             DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
 

@@ -801,6 +801,24 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No parsable Skyline version found..
+        /// </summary>
+        public static string SkylineSettings_GetVersion_No_parsable_Skyline_version_found_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_GetVersion_No_parsable_Skyline_version_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing Skyline version..
+        /// </summary>
+        public static string SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find {0} at this location: {1}.
         /// </summary>
         public static string SkylineSettings_Validate_Could_not_find__0__at_this_location___1_ {

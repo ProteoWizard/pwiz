@@ -138,15 +138,16 @@ namespace SharedBatch
             if (error) return null;
 
             int i = 0;
-            while (i < versionString.Length && !Int32.TryParse(versionString[i].Substring(0, 1), out _)) i++;
-            if (i == versionString.Length) throw new Exception("No parsable Skyline version found.");
+            while (i < versionString.Length && (versionString[i].Length > 0 && !Int32.TryParse(versionString[i].Substring(0, 1), out _))) i++;
+            if (i == versionString.Length)
+                throw new Exception(Resources.SkylineSettings_GetVersion_No_parsable_Skyline_version_found_);
             return ParseVersionFromString(versionString[i]);
         }
 
         private int[] ParseVersionFromString(string stringVersion)
         {
             var versionArray = stringVersion.Split('.');
-            if (versionArray.Length != 4) throw new Exception("Error parsing Skyline version.");
+            if (versionArray.Length != 4) throw new Exception(Resources.SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_);
             var versionNumbers = new int[versionArray.Length];
             for (int i = 0; i < versionArray.Length; i++)
                 versionNumbers[i] = Int32.Parse(versionArray[i]);
