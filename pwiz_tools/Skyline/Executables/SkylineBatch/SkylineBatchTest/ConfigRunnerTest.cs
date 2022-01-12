@@ -74,7 +74,7 @@ namespace SkylineBatchTest
             var invariantReportWriter = new CommandWriter(logger, true, true);
             testRunner.WriteBatchCommandsToFile(invariantReportWriter, RunBatchOptions.ALL, true);
             var actualInvariantReportCommandFile = invariantReportWriter.GetCommandFile();
-            CompareFiles(expectedInvariantReportCommandFile, actualInvariantReportCommandFile);
+            TestUtils.CompareFiles(expectedInvariantReportCommandFile, actualInvariantReportCommandFile);
             File.Delete(tempFile1);
 
             // Skyline versions after 20.2.1.454
@@ -83,7 +83,7 @@ namespace SkylineBatchTest
             var multiLineWriter = new CommandWriter(logger, true, false);
             testRunner.WriteBatchCommandsToFile(multiLineWriter, RunBatchOptions.ALL, true);
             var actualMultiLineCommandFile = multiLineWriter.GetCommandFile();
-            CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
+            TestUtils.CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
             File.Delete(tempFile2);
 
             // Skyline versions after 20.2.0.0
@@ -92,7 +92,7 @@ namespace SkylineBatchTest
             var oldVersionWriter = new CommandWriter(logger, false, false);
             testRunner.WriteBatchCommandsToFile(oldVersionWriter, RunBatchOptions.ALL, false);
             var actualOldVersionCommandFile = oldVersionWriter.GetCommandFile();
-            CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
+            TestUtils.CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
             File.Delete(tempFile3);
         }
 
@@ -117,39 +117,6 @@ namespace SkylineBatchTest
                 }
             }
             return tempFilePath;
-        }
-
-        private void CompareFiles(string expectedFilePath, string actualFilePath)
-        {
-            using (var expectedReader = new StreamReader(expectedFilePath))
-            using (var actualReader = new StreamReader(actualFilePath))
-            {
-                int line = 1;
-                while (line < 1000)
-                {
-                    if (expectedReader.EndOfStream != actualReader.EndOfStream)
-                        Assert.Fail($"Line {line}: Expected end of stream value to be {expectedReader.EndOfStream} but instead was {actualReader.EndOfStream}.");
-                    var expectedLine = expectedReader.ReadLine();
-                    var actualLine = actualReader.ReadLine();
-                    if (expectedLine == null || actualLine == null)
-                    {
-                        Assert.IsTrue(expectedLine == actualLine,
-                            actualFilePath + Environment.NewLine +
-                            $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
-                        return;
-                    }
-
-                    Assert.IsTrue(expectedLine.Equals(actualLine),
-                        actualFilePath + Environment.NewLine +
-                        $"Line {line} does not match" + Environment.NewLine +
-                                                                   "Expected:" + Environment.NewLine +
-                                                                   expectedLine + Environment.NewLine +
-                                                                   "Actual:" + Environment.NewLine +
-                                                                   actualLine);
-                    line++;
-                }
-                throw new Exception("Test Error: should never reach 1000 lines");
-            }
         }
 
         // CONSIDER: add tests for configRunner.run

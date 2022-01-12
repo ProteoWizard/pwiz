@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigList>
+  <skylinebatch_config Name="Basic" Modified="1/12/2022 11:53 AM">
+    <main_settings TemplateFilePath="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" AnalysisFolderPath="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Basic" DataFolderPath="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" ReplicateNamingPattern="Tester" />
+    <file_settings />
+    <report_settings />
+    <config_skyline_settings Type="Skyline" CmdPath="C:\Users\alimarsh\Documents\Application Files\SkylineBatch_20_2_0_414\SkylineRunner.exe" />
+  </skylinebatch_config>
+</ConfigList>
