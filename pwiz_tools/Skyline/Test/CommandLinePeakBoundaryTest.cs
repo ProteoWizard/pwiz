@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -36,6 +37,8 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
+    [SuppressMessage("ReSharper", "IdentifierTypo")]
     public class CommandLinePeakBoundaryTest : AbstractUnitTestEx
     {
         const PeakIdentification FALSE = PeakIdentification.FALSE;
@@ -63,37 +66,53 @@ namespace pwiz.SkylineTest
         private readonly PeakIdentification[] _csvIdentified2 = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };
         private readonly double?[] _csvAreas2 = { 1.586e9, 6.603e8, null, 9.978e8, null, 1.853e10 };
 
-        private readonly string[] _precursorMzsUs = { "533.294964", "623.29589", "415.866352", "692.868631",
-                                                  "462.248179", "634.355888"};
-        private readonly string[] _precursorMzsIntl = { "533,294964", "623,29589", "415,866352", "692,868631",
-                                                  "462,248179", "634,355888"};
+        private readonly string[] _precursorMzsUs =
+        {
+            "533.294964", "623.29589", "415.866352", "692.868631",
+            "462.248179", "634.355888"
+        };
+
+        private readonly string[] _precursorMzsIntl =
+        {
+            "533,294964", "623,29589", "415,866352", "692,868631",
+            "462,248179", "634,355888"
+        };
         private const string annote = "PrecursorMz";
 
         private readonly double?[] _idMinTime1 = { 32.25, 33.02, 37.68, 21.19, 35.93, 33.85, 29.29, 31.55, 37.21, 27.02, 25.41, 29.55, 29.60, 25.07, 23.14, 29.11 };
         private readonly double?[] _idMaxTime1 = { 33.53, 33.90, 38.90, 22.23, 37.43, 35.35, 30.86, 31.66, 37.81, 28.68, 26.20, 31.13, 30.32, 26.08, 24.92, 29.58 };
-        private readonly PeakIdentification[] _idIdentified1 = {
-                                                                   FALSE, FALSE, FALSE, TRUE,  TRUE,
-                                                                   FALSE, TRUE,  FALSE,  FALSE, TRUE,
-                                                                   FALSE,  TRUE,  TRUE,  TRUE,  TRUE,
-                                                                   TRUE
-                                                               };
 
-        private readonly double?[] _idAreas1 = {4060, 1927, 16954, 16314, 4188, 23038, 28701, 354,
-                                               2063, 21784, 8775, 18019, 19579, 11013, 58116, 26262};
+        private readonly PeakIdentification[] _idIdentified1 =
+        {
+            FALSE, FALSE, FALSE, TRUE, TRUE,
+            FALSE, TRUE, FALSE, FALSE, TRUE,
+            FALSE, TRUE, TRUE, TRUE, TRUE,
+            TRUE
+        };
+
+        private readonly double?[] _idAreas1 =
+        {
+            4060, 1927, 16954, 16314, 4188, 23038, 28701, 354,
+            2063, 21784, 8775, 18019, 19579, 11013, 58116, 26262
+        };
 
         private readonly string[] _peptides = { "VLVLDTDYK", "TPEVDDEALEK", "FFVAPFPEVFGK", "YLGYLEQLLR" };
-        private readonly string[] _peptidesId ={ "LGGLRPESPESLTSVSR", "ALVEFESNPEETREPGSPPSVQR", "YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR",
-                                                    "ESEDKPEIEDVGSDEEEEKKDGDK", "GVVDSEDLPLNISR", "DMESPTKLDVTLAK",
-                                                    "VGSLDNVGHLPAGGAVK","KTGSYGALAEITASK","TGSYGALAEITASK","IVRGDQPAASGDSDDDEPPPLPR",
-                                                    "LLKEGEEPTVYSDEEEPKDESAR","KQITMEELVR","SSSVGSSSSYPISPAVSR",
-                                                    "EKTPELPEPSVK", "VPKPEPIPEPKEPSPEK", "KETESEAEDNLDDLEK"};
+
+        private readonly string[] _peptidesId =
+        {
+            "LGGLRPESPESLTSVSR", "ALVEFESNPEETREPGSPPSVQR", "YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR",
+            "ESEDKPEIEDVGSDEEEEKKDGDK", "GVVDSEDLPLNISR", "DMESPTKLDVTLAK",
+            "VGSLDNVGHLPAGGAVK", "KTGSYGALAEITASK", "TGSYGALAEITASK", "IVRGDQPAASGDSDDDEPPPLPR",
+            "LLKEGEEPTVYSDEEEPKDESAR", "KQITMEELVR", "SSSVGSSSSYPISPAVSR",
+            "EKTPELPEPSVK", "VPKPEPIPEPKEPSPEK", "KETESEAEDNLDDLEK"
+        };
 
         private readonly int[] _precursorCharge = { 2, 2, 3, 2, 3, 2 };
         private readonly int[] _precursorChargeId = { 3, 3, 4, 4, 2, 2, 3, 3, 2, 3, 4, 2, 2, 2, 3, 3 };
         private const double RT_TOLERANCE = 0.02;
 
         /// <summary>
-        /// Tests File > Import > Peak Boundaries support
+        /// Tests using the "--import-peak-boundaries" command line argument
         /// </summary>
         [TestMethod]
         public void TestCommandLineImportPeakBoundary()
@@ -102,12 +121,9 @@ namespace pwiz.SkylineTest
             var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             bool isIntl = (TextUtil.CsvSeparator != TextUtil.SEPARATOR_CSV);
             var precursorMzs = isIntl ? _precursorMzsIntl : _precursorMzsUs;
-            var peakBoundaryFileTsv = testFilesDir.GetTestPath(isIntl
-                                                                   ? "PeakBoundaryTsvIntl.tsv"
-                                                                   : "PeakBoundaryTsv.tsv");
-            var peakBoundaryFileCsv = testFilesDir.GetTestPath(isIntl
-                                                                   ? "PeakBoundaryIntl.csv"
-                                                                   : "PeakBoundaryUS.csv");
+            var peakBoundaryFileTsv =
+                testFilesDir.GetTestPath(isIntl ? "PeakBoundaryTsvIntl.tsv" : "PeakBoundaryTsv.tsv");
+            var peakBoundaryFileCsv = testFilesDir.GetTestPath(isIntl ? "PeakBoundaryIntl.csv" : "PeakBoundaryUS.csv");
             var originalDocumentPath = testFilesDir.GetTestPath("Chrom05.sky");
             var cult = LocalizationHelper.CurrentCulture;
             var cultI = CultureInfo.InvariantCulture;
@@ -116,16 +132,16 @@ namespace pwiz.SkylineTest
 
             // Test Tsv import, looking at first .raw file
             DoFileImportTests(originalDocumentPath, peakBoundaryFileTsv, _precursorCharge,
-                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, precursorMzs, annote);
+                _tsvMinTime1, _tsvMaxTime1, _tsvIdentified1, _tsvAreas1, _peptides, 0, precursorMzs);
             // Test Tsv import, looking at second .raw file
             DoFileImportTests(originalDocumentPath, peakBoundaryFileTsv, _precursorCharge,
-                    _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, precursorMzs, annote);
+                _tsvMinTime2, _tsvMaxTime2, _tsvIdentified2, _tsvAreas2, _peptides, 1, precursorMzs);
 
             // Test Csv import for local format
             DoFileImportTests(originalDocumentPath, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, precursorMzs, annote);
+                _csvMinTime1, _csvMaxTime1, _csvIdentified1, _csvAreas1, _peptides, 0, precursorMzs);
             DoFileImportTests(originalDocumentPath, peakBoundaryFileCsv, _precursorCharge,
-                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs, annote);
+                _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs);
 
             // Test that importing same file twice leads to no change to document the second time
             var afterImportPath = testFilesDir.GetTestPath("AfterImport.sky");
@@ -140,16 +156,16 @@ namespace pwiz.SkylineTest
             var docRoundTrip = ImportFileToDoc(afterImportPath, peakBoundaryExport);
             AssertEx.DocumentCloned(docNew, docRoundTrip);
 
-
-
             // 1. Empty file - 
             ImportThrowsException(originalDocumentPath, string.Empty,
                 Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
             // 2. No separator in first line
             ImportThrowsException(originalDocumentPath, "No-valid-separators",
-                    TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV
-                        ? Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_
-                        : Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_);
+                TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV
+                    ? Resources
+                        .PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_
+                    : Resources
+                        .PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_);
 
             // 3. Missing field names
             ImportThrowsException(originalDocumentPath, string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(3).ToArray()),
@@ -157,8 +173,9 @@ namespace pwiz.SkylineTest
 
             string[] values =
             {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
-                };
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult),
+                (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
+            };
             string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(values.Length));
             string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(values.Length));
 
@@ -240,8 +257,9 @@ namespace pwiz.SkylineTest
             // 12. Import with bad sample throws exception
             string[] valuesSample =
             {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
-                };
+                "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult),
+                (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
+            };
             string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(valuesSample.Length));
             ImportThrowsException(originalDocumentPath, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
                 Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
@@ -261,16 +279,17 @@ namespace pwiz.SkylineTest
             // Now check a file that has peptide ID's, and see that they're properly ported
             var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
             var peakBoundaryFileId = testFilesDir.GetTestPath(isIntl
-                                                                  ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
-                                                                  : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
+                ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
+                : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
             DoFileImportTests(peptideIdPath, peakBoundaryFileId, _precursorChargeId,
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
-            // 15. Decminal import format ok
+            // 15. Decimal import format ok
             var valuesUnimod = new[]
             {
-                    "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
-                };
+                "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff",
+                (80.5).ToString(cult), (82.0).ToString(cult)
+            };
             var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Where((s, i) =>
                 i != (int)PeakBoundaryImporter.Field.apex_time).Take(valuesUnimod.Length));
             ImportNoException(peptideIdPath, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
@@ -283,13 +302,15 @@ namespace pwiz.SkylineTest
             valuesUnimod[0] = "LGGLRPES(UniMod:21)PESLTSVSR";
             ImportNoException(peptideIdPath, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
 
-            // 18. Strange capitalizations OK
+            // 18. Strange capitalization OK
             valuesUnimod[0] = "LGGLRPES(uniMoD:21)PESLTSVSR";
             ImportNoException(peptideIdPath, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
 
             // 18. Unimod with brackets OK
             valuesUnimod[0] = "LGGLRPES[uniMoD:21]PESLTSVSR";
             ImportNoException(peptideIdPath, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            // 19. Peak boundaries file does not exist
+            TestPeakBoundariesNotFound(originalDocumentPath);
         }
 
         private static ReportSpec MakeReportSpec()
@@ -307,6 +328,19 @@ namespace pwiz.SkylineTest
             var lastLine = SplitLines(output).LastOrDefault();
             Assert.IsNotNull(lastLine);
             AssertEx.AreComparableStrings(message, lastLine);
+        }
+
+        private void TestPeakBoundariesNotFound(string documentPath)
+        {
+            var documentFolder = Path.GetDirectoryName(documentPath);
+            Assert.IsNotNull(documentFolder);
+            var peakBoundariesFile = Path.Combine(documentFolder, "FileDoesNotExist.txt");
+            var outputFile = Path.Combine(documentFolder, "TestPeakBoundariesNotFound.sky");
+            var output = ImportPeakBoundariesAndSaveAs(documentPath, peakBoundariesFile, outputFile);
+            var errorLines = FindErrorLines(output).ToList();
+            Assert.AreNotEqual(0, errorLines.Count);
+            var lastLine = SplitLines(output).LastOrDefault();
+            StringAssert.Contains(lastLine, peakBoundariesFile);
         }
 
         private static string ImportPeakBoundariesText(string documentPath, string importText)
@@ -384,17 +418,9 @@ namespace pwiz.SkylineTest
             CheckReportCompatibility.ReportToCsv(reportSpec, doc, fileName, LocalizationHelper.CurrentCulture);
         }
 
-        private void DoFileImportTests(string documentPath,
-                                       string importFile,
-                                       int[] chargeList,
-                                       double?[] minTime,
-                                       double?[] maxTime,
-                                       PeakIdentification[] identified,
-                                       double?[] peakAreas,
-                                       string[] peptides,
-                                       int fileId,
-                                       string[] precursorMzs = null,
-                                       string annotationName = null)
+        private void DoFileImportTests(
+            string documentPath, string importFile, int[] chargeList, double?[] minTime, double?[] maxTime, 
+            PeakIdentification[] identified, double?[] peakAreas, string[] peptides, int fileId, string[] precursorMzs = null) 
         {
             SrmDocument docNew = ImportFileToDoc(documentPath, importFile);
             int i = 0;
@@ -411,11 +437,11 @@ namespace pwiz.SkylineTest
                 // Make sure charge on each transition group is correct
                 Assert.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
                 // Make sure imported retention time boundaries, including nulls, are correct
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));
+                AssertEx.AreEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE);
+                AssertEx.AreEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE);
                 // Check that peak areas are updated correctly
                 double peakArea = peakAreas[j] ?? 0;
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE * peakArea));
+                AssertEx.AreEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE * peakArea);
                 // Check that identified values are preserved/updated appropriately
                 Assert.IsTrue(groupChromInfo.Identified == identified[j],
                     string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));
@@ -429,11 +455,6 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(annotations.ListAnnotations().Length, 0);
                 ++j;
             }
-        }
-
-        private bool ApproxEqualNullable(double? a, double? b, double tol)
-        {
-            return a == b || (a != null && b != null && Math.Abs((double)a - (double)b) < tol);
         }
     }
 }
