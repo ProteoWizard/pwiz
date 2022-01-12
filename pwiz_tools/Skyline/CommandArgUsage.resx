@@ -246,6 +246,9 @@
   <data name="_import_optimizing" xml:space="preserve">
     <value>Indicates the data being imported contains extra transitions for detecting optimal collision energy or declustering potential.</value>
   </data>
+	<data name="_import_peak_boundaries" xml:space="preserve">
+	<value>Read peak boundaries from a comma or tab separated file</value>	
+  </data>
   <data name="_import_process_count" xml:space="preserve">
     <value>A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system.</value>
   </data>
