@@ -382,5 +382,28 @@ namespace SkylineBatchTest
                 throw new Exception("Test Error: should never reach 1000 lines");
             }
         }
+
+        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName = null)
+        {
+            var originalFilePath = GetTestFilePath(fileName);
+            newName = newName ?? Path.GetTempFileName();
+
+            using (var fileStream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
+            using (var writeStream = File.OpenWrite(newName))
+            using (var streamReader = new StreamReader(fileStream))
+            using (var streamWriter = new StreamWriter(writeStream))
+            {
+                while (!streamReader.EndOfStream)
+                {
+                    var line = streamReader.ReadLine();
+                    if (line == null) continue;
+                    var tempLine = line;
+                    while (tempLine.Contains(stringToBeReplaced))
+                        tempLine = tempLine.Replace(stringToBeReplaced, replacementString);
+                    streamWriter.WriteLine(tempLine);
+                }
+            }
+            return newName;
+        }
     }
 }

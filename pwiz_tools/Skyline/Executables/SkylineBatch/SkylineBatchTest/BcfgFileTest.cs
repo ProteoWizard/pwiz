@@ -34,35 +34,45 @@ namespace SkylineBatchTest
     [TestClass]
     public class BcfgFileTest
     {
-        // PLEASE READ
-        // This test uses unique file paths depending on where the files are stored on the computer.
-        // It is reccommended you run this test in SETUP_MODE = true the first time (ideally before 
-        // code has been changed to ensure the test bcfg files are generated correctly)
-        public const bool SETUP_MODE = false;
-        
+
+        private string AppendToFileName(string filePath, string appendText) => Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + appendText + Path.GetExtension(filePath));
+
         private string ImportFilePath(string version, string type) => Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}{TextUtil.EXT_BCFG}");
-        private string ExpectedFilePath(string version, string type) => Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}_expected{TextUtil.EXT_BCFG}");
+        private string ExpectedFilePath(string version, string type) => AppendToFileName(ImportFilePath(version, type), "_expected");// Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}_expected{TextUtil.EXT_BCFG}");
 
         private void TestThreeBcfgs(string version)
         {
             TestUtils.InitializeSettingsImportExport();
             TestUtils.InitializeRInstallation();
-            if (!SETUP_MODE) TestCompareImports(version);
-            TestImportExport(version);
+
+            TestBcfgFile(version, "basic");
+            TestBcfgFile(version, "complex");
+            TestBcfgFile(version, "multi");
         }
 
-        private void TestCompareImports(string version)
+        private void TestBcfgFile(string version, string type)
         {
-            CompareImports(ImportFilePath(version, "basic"), ExpectedFilePath(version, "basic"));
-            CompareImports(ImportFilePath(version, "complex"), ExpectedFilePath(version, "complex"));
-            CompareImports(ImportFilePath(version, "multi"), ExpectedFilePath(version, "multi"));
-        }
+            /*var testFolderPath = TestUtils.GetTestFilePath(string.Empty);
+            var rawImportFile = ImportFilePath(version, type);
+            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, TestUtils.GetTestFilePath(string.Empty), "REPLACE_TEXT", AppendToFileName(rawImportFile, "(1)"));
+            var rawExpectedFile = ExpectedFilePath(version, type);
+            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, TestUtils.GetTestFilePath(string.Empty), "REPLACE_TEXT", AppendToFileName(rawExpectedFile, "(1)"));
+            */
+            // create bcfg files with file paths from this computer
+            var testFolderPath = TestUtils.GetTestFilePath(string.Empty);
+            var rawImportFile = ImportFilePath(version, type);
+            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", testFolderPath, AppendToFileName(rawImportFile, "_replaced"));
+            var rawExpectedFile = ExpectedFilePath(version, type);
+            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", testFolderPath, AppendToFileName(rawExpectedFile, "_replaced"));
+            
+            // run tests
+            CompareImports(updatedImportFile, updatedExpectedFile);
+            ImportExportCompare(updatedImportFile, updatedExpectedFile);
 
-        private void TestImportExport(string version)
-        {
-            ImportExportCompare(ImportFilePath(version, "basic"), ExpectedFilePath(version, "basic"));
-            ImportExportCompare(ImportFilePath(version, "complex"), ExpectedFilePath(version, "complex"));
-            ImportExportCompare(ImportFilePath(version, "multi"), ExpectedFilePath(version, "multi"));
+            // delete uniqie bcfg files
+            File.Delete(updatedImportFile);
+            File.Delete(updatedExpectedFile);
+
         }
 
         private void CompareImports(string oldVersionFile, string currentVersionFile)
@@ -93,21 +103,18 @@ namespace SkylineBatchTest
         {
             if (!File.Exists(filePathImport))
                 Assert.Fail(filePathImport + " does not exist. Must import from an existing file.");
+            
             var filePathActualExport = filePathExpectedExport.Replace("expected", "actual");
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
             configManager.Import(filePathImport, null);
             int[] indiciesToSave = new int[configManager.State.BaseState.ConfigList.Count];
             for (int index = 0; index < indiciesToSave.Length; index++)
                 indiciesToSave[index] = index;
-            if (SETUP_MODE)
-                configManager.State.BaseState.ExportConfigs(filePathExpectedExport, SkylineBatch.Properties.Settings.Default.XmlVersion, indiciesToSave);
-            else
-            {
-                var configModifiedLinePattern = new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$");//@"^  <skylinebatch_config name=(.*)[.enabled=(.*)]*modified=.*>$"
-                configManager.State.BaseState.ExportConfigs(filePathActualExport, SkylineBatch.Properties.Settings.Default.XmlVersion, indiciesToSave);
-                TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, new List<Regex> { configModifiedLinePattern });
-                File.Delete(filePathActualExport);
-            }
+            
+            var configModifiedLinePattern = new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$");//@"^  <skylinebatch_config name=(.*)[.enabled=(.*)]*modified=.*>$"
+            configManager.State.BaseState.ExportConfigs(filePathActualExport, SkylineBatch.Properties.Settings.Default.XmlVersion, indiciesToSave);
+            TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, new List<Regex> { configModifiedLinePattern });
+            File.Delete(filePathActualExport);
         }
 
         // Updated Bcfg, includes program version number but no xml version number
@@ -122,15 +129,15 @@ namespace SkylineBatchTest
 
             var expectedTemplate = new SkylineTemplate(null, @"Bruderer.sky.zip",
                 null, new PanoramaFile(new RemoteFileSource("panoramaweb.org Bruderer.sky.zip", "https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/Bruderer.sky.zip", "alimarsh@mit.edu",
-                "test", false), string.Empty, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test", "Bruderer.sky"));
+                "test", false), string.Empty, TestUtils.GetTestFilePath(string.Empty), "Bruderer.sky"));
             var expectedDataServerInfo = new DataServerInfo(new RemoteFileSource(@"ftp://ftp.peptideatlas.org/", "ftp://ftp.peptideatlas.org/", "PASS00589",
-                "WF6554orn", false), string.Empty, "0314_SGSDSsample.*_MHRM_", @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData");
+                "WF6554orn", false), string.Empty, "0314_SGSDSsample.*_MHRM_", TestUtils.GetTestFilePath("EmptyData"));
             var expectedAnnotationsFile = new PanoramaFile(new RemoteFileSource("panoramaweb.org MSstats_annotations.sky", "https://panoramaweb.org/_webdav/Panorama%20Public/2021/MacCoss%20-%202015-Bruderer/%40files/reports/MSstats_annotations.sky", "alimarsh@mit.edu",
-                "test", false), string.Empty, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test", "MSstats_annotations.sky");
+                "test", false), string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_annotations.sky");
 
-            var expectedMainSettings = new MainSettings(expectedTemplate, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Complex",
-                true, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData", expectedDataServerInfo,
-                @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_annotations.sky", expectedAnnotationsFile, "Tester");
+            var expectedMainSettings = new MainSettings(expectedTemplate, TestUtils.GetTestFilePath(@"BcfgTestFiles\Complex"),
+                true, TestUtils.GetTestFilePath("EmptyData"), expectedDataServerInfo,
+                TestUtils.GetTestFilePath("MSstats_annotations.sky"), expectedAnnotationsFile, "Tester");
 
             var expectedFileSettings = new FileSettings(1, 1000, 100, true, true, true);
 
@@ -173,21 +180,21 @@ namespace SkylineBatchTest
 
 
             var expectedRefineSettings = new RefineSettings(expectedRefineObject, true, true,
-                @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\refinedTemplate.sky");
-            var expectedPanoramaDict = new Dictionary<string, PanoramaFile>() {{ @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_Bruderer.R", new PanoramaFile(
+                TestUtils.GetTestFilePath("refinedTemplate.sky"));
+            var expectedPanoramaDict = new Dictionary<string, PanoramaFile>() {{ TestUtils.GetTestFilePath("MSstats_Bruderer.R"), new PanoramaFile(
                     new RemoteFileSource("panoramaweb.org MSstats_Bruderer.R", "https://panoramaweb.org/_webdav/Panorama%20Public/2021/MacCoss%20-%202015-Bruderer/%40files/reports/MSstats_Bruderer.R", "alimarsh@mit.edu", "test", false),
-                    string.Empty, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test", "MSstats_Bruderer.R") }};
+                    string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }};
 
 
             var expectedReportOne = new ReportInfo("MSstats Input-plus", false, null, new List<Tuple<string, string>>(){
-                new Tuple<string, string>(@"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_Bruderer.R", "4.0.3") },
-                new Dictionary<string, PanoramaFile>() {{ @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_Bruderer.R", new PanoramaFile(
+                new Tuple<string, string>(TestUtils.GetTestFilePath("MSstats_Bruderer.R"), "4.0.3") },
+                new Dictionary<string, PanoramaFile>() {{ TestUtils.GetTestFilePath("MSstats_Bruderer.R"), new PanoramaFile(
                     new RemoteFileSource("panoramaweb.org MSstats_Bruderer.R", "https://panoramaweb.org/_webdav/Panorama%20Public/2021/MacCoss%20-%202015-Bruderer/%40files/reports/MSstats_Bruderer.R", "alimarsh@mit.edu", "test", false),
-                    string.Empty, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test", "MSstats_Bruderer.R") }}, false);
+                    string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }}, false);
 
-            var expectedReportTwo = new ReportInfo("Unique Report", false, @"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr",
+            var expectedReportTwo = new ReportInfo("Unique Report", false, TestUtils.GetTestFilePath("UniqueReport.skyr"),
                 new List<Tuple<string, string>>(){
-                new Tuple<string, string>(@"C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R", "4.0.3") }, new Dictionary<string, PanoramaFile>(), true);
+                new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3") }, new Dictionary<string, PanoramaFile>(), true);
 
             var expectedReportSettings = new ReportSettings(new List<ReportInfo>() { expectedReportOne, expectedReportTwo });
 
@@ -195,6 +202,8 @@ namespace SkylineBatchTest
 
             var expectedConfig = new SkylineBatchConfig("Complex", false, false, DateTime.Now, expectedMainSettings, expectedFileSettings,
                 expectedRefineSettings, expectedReportSettings, expectedSkylineSettings);
+
+            Assert.IsTrue(expectedConfig.Equals(actualConfig));
         }
 
         [TestMethod]
