@@ -32,6 +32,7 @@
             this.buttonCancel = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.buttonPaste = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -54,10 +55,19 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // buttonPaste
+            // 
+            resources.ApplyResources(this.buttonPaste, "buttonPaste");
+            this.buttonPaste.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonPaste.Name = "buttonPaste";
+            this.buttonPaste.UseVisualStyleBackColor = true;
+            this.buttonPaste.Click += new System.EventHandler(this.buttonPaste_Click);
+            // 
             // InsertTransitionListDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.buttonPaste);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.buttonCancel);
@@ -75,5 +85,6 @@
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button buttonPaste;
     }
 }
