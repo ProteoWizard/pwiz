@@ -485,7 +485,7 @@ namespace pwiz.Skyline.Model
                                  decoyMassShift.Value);
         }
 
-        private readonly TransitionGroup _group;
+        private TransitionGroup _group;
 
         /// <summary>
         /// Creates a precursor transition
@@ -784,6 +784,13 @@ namespace pwiz.Skyline.Model
                 default:
                     return true;
             }
+        }
+
+        public Transition ChangeTransitionGroup(TransitionGroup transitionGroup)
+        {
+            var transition = (Transition) MemberwiseClone();
+            transition._group = transitionGroup;
+            return transition;
         }
 
 

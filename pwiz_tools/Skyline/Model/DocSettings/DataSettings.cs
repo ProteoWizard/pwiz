@@ -96,6 +96,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 im => im.MetadataRuleSets = ImmutableList.ValueOfOrEmpty(extractedMetadata));
         }
 
+        [TrackChildren]
+        public bool SynchronizeMolecules { get; private set; }
+
+        public DataSettings ChangeSynchronizeMolecules(bool synchronizeMolecules)
+        {
+            return ChangeProp(ImClone(this), im => im.SynchronizeMolecules = synchronizeMolecules);
+        }
+
+
         /// <summary>
         /// True if audit logging is enabled for this document. ModifyDocument calls will generate audit log entries that can be viewed in the
         /// AuditLogForm and are written to a separate file (.skyl) when the document is saved. If audit logging is disabled, no entries are kept
@@ -221,6 +230,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!string.IsNullOrEmpty(docGuid))
                 DocumentGuid = docGuid;
             AuditLogging = reader.GetBoolAttribute(Attr.audit_logging);
+            SynchronizeMolecules = reader.GetBoolAttribute(Attr.synchronize_molecules);
 
             var allElements = new List<IXmlSerializable>();
             // Consume tag
@@ -243,7 +253,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             panorama_publish_uri,
             document_guid,
-            audit_logging
+            audit_logging,
+            synchronize_molecules
         }
 
         public void WriteXml(XmlWriter writer)
@@ -254,6 +265,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
             writer.WriteAttribute(Attr.audit_logging, AuditLogging);
+            writer.WriteAttribute(Attr.synchronize_molecules, SynchronizeMolecules);
             var elements = AnnotationDefs.Cast<IXmlSerializable>()
                 .Concat(GroupComparisonDefs)
                 .Concat(Lists)
@@ -290,7 +302,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    && Equals(AuditLogging, other.AuditLogging)
                    && Equals(DocumentGuid, other.DocumentGuid)
                    && Equals(Lists, other.Lists)
-                   && Equals(MetadataRuleSets, other.MetadataRuleSets);
+                   && Equals(MetadataRuleSets, other.MetadataRuleSets)
+                   && Equals(SynchronizeMolecules, other.SynchronizeMolecules);
         }
 
         public override bool Equals(object obj)
@@ -305,14 +318,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = _annotationDefs.GetHashCodeDeep();
-                result = result*397 + _groupComparisonDefs.GetHashCodeDeep();
-                result = result*397 + ViewSpecList.GetHashCode();
-                result = result*397 + (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
-                result = result*397 + (AuditLogging ? 1 : 0);
-                result = result*397 + (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
-                result = result*397 + Lists.GetHashCode();
-                result = result*397 + MetadataRuleSets.GetHashCode();
+                int result = _annotationDefs.GetHashCode();
+                result = result * 397 ^ _groupComparisonDefs.GetHashCode();
+                result = result * 397 ^ ViewSpecList.GetHashCode();
+                result = result * 397 ^ (PanoramaPublishUri == null ? 0 : PanoramaPublishUri.GetHashCode());
+                result = result * 397 ^ AuditLogging.GetHashCode();
+                result = result * 397 ^ (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
+                result = result * 397 ^ Lists.GetHashCode();
+                result = result * 397 ^ MetadataRuleSets.GetHashCode();
+                result = result * 397 ^ SynchronizeMolecules.GetHashCode();
                 return result;
             }
         }

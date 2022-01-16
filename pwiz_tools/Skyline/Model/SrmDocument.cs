@@ -745,6 +745,17 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.UserRevisionIndex++);
         }
 
+        public override DocNodeParent ReplaceChild(DocNode childReplace)
+        {
+            SrmDocument newDocument = (SrmDocument) base.ReplaceChild(childReplace);
+            if (_moleculeIndex == null)
+            {
+                return newDocument;
+            }
+
+            return _moleculeIndex.AfterReplaceChild(this, ((PeptideGroupDocNode) childReplace).PeptideGroup);
+        }
+
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.
@@ -758,6 +769,14 @@ namespace pwiz.Skyline.Model
 
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
+            if (docClone.Settings.DataSettings.SynchronizeMolecules)
+            {
+                docClone._moleculeIndex = MoleculeSynchronizer.MakeMoleculeIndex(MoleculeGroups);
+            }
+            else
+            {
+                docClone._moleculeIndex = null;
+            }
 
             if (!DeferSettingsChanges)
             {
@@ -2593,6 +2612,13 @@ namespace pwiz.Skyline.Model
             }
 
             return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
+        }
+
+        private MoleculeSynchronizer _moleculeIndex;
+
+        public IEnumerable<IdentityPath> FindMolecules(PeptideSequenceModKey key)
+        {
+            return _moleculeIndex.FindMolecules(key);
         }
 
         #region object overrides

@@ -949,7 +949,7 @@ namespace pwiz.Skyline.Model
         /// <param name="childReplace">A child node with an Id that is reference equal to the node to be replaced</param>
         /// <returns>A new parent node</returns>
         /// <exception cref="IdentityNotFoundException"/>
-        public DocNodeParent ReplaceChild(DocNode childReplace)
+        public virtual DocNodeParent ReplaceChild(DocNode childReplace)
         {
             if (Children == null)
                 throw new InvalidOperationException(@"Invalid operation ReplaceChild before children set.");
