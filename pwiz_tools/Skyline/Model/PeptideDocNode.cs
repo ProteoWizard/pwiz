@@ -120,11 +120,11 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
-        public PeptideDocNode ChangePeptide(Peptide peptide)
+        public PeptideDocNode ChangePeptide(Peptide peptide, IEnumerable<TransitionGroupDocNode> newTransitionGroups)
         {
             var node = (PeptideDocNode) ChangeId(peptide);
-            return (PeptideDocNode) node.ChangeChildren(node.TransitionGroups.Select(tg => tg.ChangePeptide(peptide))
-                .Cast<DocNode>().ToList());
+            node = (PeptideDocNode) node.ChangeChildren(newTransitionGroups.Cast<DocNode>().ToList());
+            return node;
         }
 
         [TrackChildren(ignoreName:true, defaultValues: typeof(DefaultValuesNull))]

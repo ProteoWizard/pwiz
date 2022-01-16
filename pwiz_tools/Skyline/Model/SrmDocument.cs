@@ -748,12 +748,12 @@ namespace pwiz.Skyline.Model
         public override DocNodeParent ReplaceChild(DocNode childReplace)
         {
             SrmDocument newDocument = (SrmDocument) base.ReplaceChild(childReplace);
-            if (_moleculeIndex == null)
+            if (_moleculeSynchronizer == null)
             {
                 return newDocument;
             }
 
-            return _moleculeIndex.AfterReplaceChild(this, ((PeptideGroupDocNode) childReplace).PeptideGroup);
+            return _moleculeSynchronizer.AfterReplaceChild(newDocument, ((PeptideGroupDocNode) childReplace).PeptideGroup);
         }
 
         /// <summary>
@@ -771,11 +771,11 @@ namespace pwiz.Skyline.Model
             docClone.RevisionIndex = RevisionIndex + 1;
             if (docClone.Settings.DataSettings.SynchronizeMolecules)
             {
-                docClone._moleculeIndex = MoleculeSynchronizer.MakeMoleculeIndex(MoleculeGroups);
+                docClone._moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(docClone);
             }
             else
             {
-                docClone._moleculeIndex = null;
+                docClone._moleculeSynchronizer = null;
             }
 
             if (!DeferSettingsChanges)
@@ -971,6 +971,10 @@ namespace pwiz.Skyline.Model
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
+                if (doc.Settings.DataSettings.SynchronizeMolecules)
+                {
+                    doc._moleculeSynchronizer = _moleculeSynchronizer ?? MoleculeSynchronizer.MakeMoleculeSynchronizer(doc);
+                }
             });
         }
 
@@ -2104,6 +2108,10 @@ namespace pwiz.Skyline.Model
                 Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
+                if (Settings.DataSettings.SynchronizeMolecules)
+                {
+                    _moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(this);
+                }
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
@@ -2614,11 +2622,11 @@ namespace pwiz.Skyline.Model
             return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
         }
 
-        private MoleculeSynchronizer _moleculeIndex;
+        private MoleculeSynchronizer _moleculeSynchronizer;
 
         public IEnumerable<IdentityPath> FindMolecules(PeptideSequenceModKey key)
         {
-            return _moleculeIndex.FindMolecules(key);
+            return _moleculeSynchronizer.FindMolecules(key);
         }
 
         #region object overrides

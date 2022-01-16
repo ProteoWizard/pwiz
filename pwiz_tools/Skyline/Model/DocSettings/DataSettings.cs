@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 im => im.MetadataRuleSets = ImmutableList.ValueOfOrEmpty(extractedMetadata));
         }
 
-        [TrackChildren]
+        [Track]
         public bool SynchronizeMolecules { get; private set; }
 
         public DataSettings ChangeSynchronizeMolecules(bool synchronizeMolecules)
