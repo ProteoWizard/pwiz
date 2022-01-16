@@ -33,10 +33,13 @@ namespace pwiz.SkylineTest
                 AssertEx.IsTrue(substringFinder.ContainsSubstring("ell"));
                 AssertEx.IsTrue(substringFinder.ContainsSubstring("hello"));
                 AssertEx.IsTrue(substringFinder.ContainsSubstring("ello"));
+                AssertEx.IsTrue(substringFinder.ContainsSubstring(string.Empty));
                 AssertEx.IsFalse(substringFinder.ContainsSubstring("lloh"));
                 AssertEx.IsFalse(substringFinder.ContainsSubstring("olleh"));
                 AssertEx.IsFalse(substringFinder.ContainsSubstring("leh"));
             }
+            AssertEx.IsTrue(new SubstringFinder(string.Empty).ContainsSubstring(string.Empty));
+            AssertEx.IsFalse(new SubstringFinder(string.Empty).ContainsSubstring("x"));
         }
     }
 }

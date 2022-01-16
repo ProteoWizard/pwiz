@@ -49,6 +49,7 @@ namespace pwiz.Common.SystemUtil
             _stringToBeSearched = stringToBeSearched;
             if (string.IsNullOrEmpty(stringToBeSearched))
             {
+                _root = new TrieNode(0);
                 return;
             }
 
