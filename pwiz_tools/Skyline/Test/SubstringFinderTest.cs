@@ -27,9 +27,16 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestSubstringFinder()
         {
-            var substringFinder = new SubstringFinder("hello");
-            Assert.IsTrue(substringFinder.ContainsSubstring("ell"));
-            Assert.IsFalse(substringFinder.ContainsSubstring("leh"));
+            for (int maxSubstringLength = 0; maxSubstringLength < 5; maxSubstringLength++)
+            {
+                var substringFinder = new SubstringFinder("hello", maxSubstringLength);
+                AssertEx.IsTrue(substringFinder.ContainsSubstring("ell"));
+                AssertEx.IsTrue(substringFinder.ContainsSubstring("hello"));
+                AssertEx.IsTrue(substringFinder.ContainsSubstring("ello"));
+                AssertEx.IsFalse(substringFinder.ContainsSubstring("lloh"));
+                AssertEx.IsFalse(substringFinder.ContainsSubstring("olleh"));
+                AssertEx.IsFalse(substringFinder.ContainsSubstring("leh"));
+            }
         }
     }
 }

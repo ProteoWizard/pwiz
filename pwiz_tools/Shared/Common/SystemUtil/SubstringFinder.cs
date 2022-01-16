@@ -30,6 +30,8 @@ namespace pwiz.Common.SystemUtil
         private readonly TrieNode _root;
         // The lowest valued character that was found in the string to be searched
         private readonly char _minCharacter;
+        private readonly string _stringToBeSearched;
+        private readonly int _maxLengthInTrie;
 
         /// <summary>
         /// Constructs a new SubstringFinder that can look for substrings in a particular value
@@ -43,6 +45,8 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public SubstringFinder(string stringToBeSearched, int maxSubstringLength)
         {
+            _maxLengthInTrie = maxSubstringLength;
+            _stringToBeSearched = stringToBeSearched;
             if (string.IsNullOrEmpty(stringToBeSearched))
             {
                 return;
@@ -76,18 +80,33 @@ namespace pwiz.Common.SystemUtil
 
         public bool ContainsSubstring(string substring)
         {
+            if (!TrieContainsSubstring(substring.Substring(0, Math.Min(_maxLengthInTrie, substring.Length))))
+            {
+                return false;
+            }
+
+            if (substring.Length <= _maxLengthInTrie)
+            {
+                return true;
+            }
+
+            return _stringToBeSearched.Contains(substring);
+        }
+
+        private bool TrieContainsSubstring(string substring)
+        {
             var node = _root;
             for (int i = 0; i < substring.Length; i++)
             {
                 if (node.IsNull)
                 {
-                    return false;
+                    break;
                 }
 
                 node = GetChild(node, substring[i]);
             }
 
-            return true;
+            return !node.IsNull;
         }
 
         private TrieNode GetChild(TrieNode parent, char ch)
