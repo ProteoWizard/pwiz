@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -337,7 +336,7 @@ namespace pwiz.Skyline.EditUI
 
         private void btnApplyChanges_Click(object sender, EventArgs e)
         {
-           ApplyChanges();
+            ApplyChanges();
         }
 
         public AssociateProteinsSettings FormSettings
@@ -403,7 +402,7 @@ namespace pwiz.Skyline.EditUI
         private void checkBoxListMatches_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             // checkBoxListMatches.CheckedItems gets updates after this event is called which
-            // is why wehave to check the e.NewValue check state
+            // is why we have to check the e.NewValue check state
             List<string> checkedItems = new List<string>();
             foreach (var item in checkBoxListMatches.CheckedItems)
                 checkedItems.Add(item.ToString());

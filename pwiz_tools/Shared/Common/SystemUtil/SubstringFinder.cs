@@ -22,7 +22,7 @@ using System.Linq;
 namespace pwiz.Common.SystemUtil
 {
     /// <summary>
-    /// Class which preprocesses a string up front in order to be able to quickly
+    /// Class which pre-processes a string up front in order to be able to quickly
     /// answer the question as to whether that string contains a substring.
     /// </summary>
     public class SubstringFinder
@@ -47,7 +47,7 @@ namespace pwiz.Common.SystemUtil
         {
             _maxLengthInTrie = maxSubstringLength;
             _stringToBeSearched = stringToBeSearched;
-            if (string.IsNullOrEmpty(stringToBeSearched))
+            if (string.IsNullOrEmpty(stringToBeSearched) || maxSubstringLength == 0)
             {
                 _root = new TrieNode(0);
                 return;
@@ -68,11 +68,13 @@ namespace pwiz.Common.SystemUtil
                 int end = Math.Min(substringStart + maxSubstringLength, stringToBeSearched.Length);
                 for (int position = substringStart; position < end; position++)
                 {
+                    bool isLastPosition = position == end - 1;
                     int indexInChildren = stringToBeSearched[position] - _minCharacter;
                     var child = node._children[indexInChildren];
-                    if (child.IsNull)
+                    if (child._children == null || !isLastPosition && child._children.Length == 0)
                     {
-                        child = node._children[indexInChildren] = new TrieNode(childArraySize);
+                        child = isLastPosition ? TrieNode.EMPTY : new TrieNode(childArraySize);
+                        node._children[indexInChildren] = child;
                     }
                     node = child;
                 }
@@ -81,16 +83,14 @@ namespace pwiz.Common.SystemUtil
 
         public bool ContainsSubstring(string substring)
         {
-            if (!TrieContainsSubstring(substring.Substring(0, Math.Min(_maxLengthInTrie, substring.Length))))
+            if (substring.Length <= _maxLengthInTrie)
+            {
+                return TrieContainsSubstring(substring);
+            }
+            if (!TrieContainsSubstring(substring.Substring(0, _maxLengthInTrie)))
             {
                 return false;
             }
-
-            if (substring.Length <= _maxLengthInTrie)
-            {
-                return true;
-            }
-
             return _stringToBeSearched.Contains(substring);
         }
 
@@ -123,13 +123,18 @@ namespace pwiz.Common.SystemUtil
 
         private struct TrieNode
         {
+            public static readonly TrieNode EMPTY = new TrieNode(Array.Empty<TrieNode>());
             /// <summary>
             /// The children of this node. The first element in the array corresponds to the character <see cref="_minCharacter" />.
             /// </summary>
             public readonly TrieNode[] _children;
-            public TrieNode(int childArraySize)
+
+            private TrieNode(TrieNode[] array)
             {
-                _children = new TrieNode[childArraySize];
+                _children = array;
+            }
+            public TrieNode(int childArraySize) : this(new TrieNode[childArraySize])
+            {
             }
             public bool IsNull => _children == null;
         }
