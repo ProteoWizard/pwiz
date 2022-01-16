@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!string.IsNullOrEmpty(docGuid))
                 DocumentGuid = docGuid;
             AuditLogging = reader.GetBoolAttribute(Attr.audit_logging);
-            SynchronizeMolecules = reader.GetBoolAttribute(Attr.synchronize_molecules);
+            SynchronizeMolecules = reader.GetBoolAttribute(Attr.synchronize_molecules, false);
 
             var allElements = new List<IXmlSerializable>();
             // Consume tag
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
             writer.WriteAttribute(Attr.audit_logging, AuditLogging);
-            writer.WriteAttribute(Attr.synchronize_molecules, SynchronizeMolecules);
+            writer.WriteAttribute(Attr.synchronize_molecules, SynchronizeMolecules, false);
             var elements = AnnotationDefs.Cast<IXmlSerializable>()
                 .Concat(GroupComparisonDefs)
                 .Concat(Lists)
