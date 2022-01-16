@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -166,9 +167,15 @@ namespace pwiz.Skyline.EditUI
             checkBoxListMatches.Items.Clear();
             try
             {
-                using (var stream = File.Open(file, FileMode.Open))
+                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read))
                 {
-                    FindProteinMatchesWithFasta(stream);
+                    var proteinAssociations = FindProteinMatchesWithFasta(stream);
+                    if (proteinAssociations != null)
+                    {
+                        SetCheckBoxListItems(proteinAssociations,
+                            Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
+
+                    }
                 }
             }
             catch (Exception e)
@@ -178,32 +185,60 @@ namespace pwiz.Skyline.EditUI
         }
 
         // creates dictionary of a protein to a list of peptides that match
-        private void FindProteinMatchesWithFasta(Stream fastaFile)
+        private List<KeyValuePair<FastaSequence, List<PeptideDocNode>>> FindProteinMatchesWithFasta(Stream fastaFile)
         {
             var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
             var peptidesForMatching = ListPeptidesForMatching();
-            using (var reader = new StreamReader(fastaFile))
+            if (peptidesForMatching.Count == 0)
             {
-                foreach (var seq in FastaData.ParseFastaFile(reader))
+                return proteinAssociations;
+            }
+
+            int maxLength = peptidesForMatching.Max(peptide => peptide.Peptide.Target.Sequence.Length);
+
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.Message = Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
+                longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
-                    var matches = new List<PeptideDocNode>();
-                    foreach (var peptide in peptidesForMatching)
+                    using (var reader = new StreamReader(fastaFile))
                     {
-                        // TODO(yuval): does digest matter?
-                        if (fasta.Sequence.IndexOf(peptide.Peptide.Target.Sequence, StringComparison.Ordinal) < 0)
+                        foreach (var seq in FastaData.ParseFastaFile(reader))
                         {
-                            continue;
+                            broker.CancellationToken.ThrowIfCancellationRequested();
+                            int progressValue = (int) (100 * fastaFile.Position / fastaFile.Length);
+                            if (progressValue >= 0 && progressValue <= 100)
+                            {
+                                broker.ProgressValue = progressValue;
+                            }
+
+                            var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
+                            var trie = new SubstringFinder(seq.Sequence, maxLength);
+                            var matches = new List<PeptideDocNode>();
+                            foreach (var peptide in peptidesForMatching)
+                            {
+                                // TODO(yuval): does digest matter?
+                                if (!trie.ContainsSubstring(peptide.Peptide.Target.Sequence))
+                                {
+                                    continue;
+                                }
+
+                                matches.Add(peptide);
+                            }
+
+                            if (matches.Count > 0)
+                                proteinAssociations.Add(
+                                    new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fasta, matches));
                         }
-                        matches.Add(peptide);
                     }
-                    if(matches.Count > 0)
-                        proteinAssociations.Add(new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fasta, matches));
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return null;
                 }
             }
-            
-            SetCheckBoxListItems(proteinAssociations, 
-                Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
+
+            return proteinAssociations;
         }
 
         // once proteinAssociation(matches) have been found will populate checkBoxListMatches
