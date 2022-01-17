@@ -140,7 +140,6 @@ namespace pwiz.Skyline.EditUI
 
         private string GetPeptideSequence(IdentityPath identityPath)
         {
-            Assume.AreEqual(2, identityPath.Length);
             return ((Peptide) identityPath.Child).Target.Sequence;
         }
 
@@ -278,12 +277,10 @@ namespace pwiz.Skyline.EditUI
                 btnApplyChanges.Enabled = false;
             }
 
-            var i = 0;
-            foreach (var entry in proteinAssociations)
+            checkBoxListMatches.Items.AddRange(proteinAssociations.Select(assoc => assoc.Key.DisplayName).ToArray());
+            for (int i = 0; i < checkBoxListMatches.Items.Count; i++)
             {
-                checkBoxListMatches.Items.Add(entry.Key.DisplayName);
                 checkBoxListMatches.SetItemCheckState(i, CheckState.Checked);
-                i++;
             }
             _associatedProteins = proteinAssociations;
         }
