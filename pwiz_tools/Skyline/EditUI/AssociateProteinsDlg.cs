@@ -193,50 +193,54 @@ namespace pwiz.Skyline.EditUI
         // creates dictionary of a protein to a list of peptides that match
         private List<KeyValuePair<FastaSequence, List<IdentityPath>>> FindProteinMatchesWithFasta(Stream fastaFile)
         {
-            var proteinAssociations = new List<KeyValuePair<FastaSequence, List<IdentityPath>>>();
             var peptidesForMatching = ListPeptidesForMatching();
             if (peptidesForMatching.Count == 0)
             {
-                return proteinAssociations;
+                return new List<KeyValuePair<FastaSequence, List<IdentityPath>>>();
             }
 
             int maxLength = peptidesForMatching.Max(peptide => GetPeptideSequence(peptide).Length);
-
+            long streamLength = fastaFile.Length;
+            var proteinAssociations = new List<Tuple<int, FastaSequence, List<IdentityPath>>>();
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Message = Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    using (var reader = new StreamReader(fastaFile))
+                    var fastaRecords = ParseFastaFileWithProgress(fastaFile).Select((tuple, index) =>
+                        Tuple.Create(index, tuple.Item1, tuple.Item2));
+                    ParallelEx.ForEach(fastaRecords, recordTuple =>
                     {
-                        foreach (var seq in FastaData.ParseFastaFile(reader))
+                        int index = recordTuple.Item1;
+                        int progressValue = (int) (recordTuple.Item2 * 100 / streamLength);
+                        var seq = recordTuple.Item3;
+                        var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
+                        var substringFinder = new SubstringFinder(seq.Sequence, maxLength);
+                        var matches = new List<IdentityPath>();
+                        foreach (var peptide in peptidesForMatching)
+                        {
+                            // TODO(yuval): does digest matter?
+                            if (!substringFinder.ContainsSubstring(GetPeptideSequence(peptide)))
+                            {
+                                continue;
+                            }
+
+                            matches.Add(peptide);
+                        }
+
+                        lock (proteinAssociations)
                         {
                             broker.CancellationToken.ThrowIfCancellationRequested();
-                            int progressValue = (int) (100 * fastaFile.Position / fastaFile.Length);
-                            if (progressValue >= 0 && progressValue <= 100)
+                            if (progressValue > broker.ProgressValue && progressValue <= 100)
                             {
                                 broker.ProgressValue = progressValue;
                             }
-
-                            var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
-                            var trie = new SubstringFinder(seq.Sequence, maxLength);
-                            var matches = new List<IdentityPath>();
-                            foreach (var peptide in peptidesForMatching)
-                            {
-                                // TODO(yuval): does digest matter?
-                                if (!trie.ContainsSubstring(GetPeptideSequence(peptide)))
-                                {
-                                    continue;
-                                }
-
-                                matches.Add(peptide);
-                            }
-
                             if (matches.Count > 0)
-                                proteinAssociations.Add(
-                                    new KeyValuePair<FastaSequence, List<IdentityPath>>(fasta, matches));
+                            {
+                                proteinAssociations.Add(Tuple.Create(index, fasta, matches));
+                            }
                         }
-                    }
+                    });
                 });
                 if (longWaitDlg.IsCanceled)
                 {
@@ -244,7 +248,23 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
-            return proteinAssociations;
+            // Protein associations may be out of order because of multi-threading, so put them back in order.
+            return proteinAssociations.OrderBy(tuple => tuple.Item1).Select(tuple =>
+                new KeyValuePair<FastaSequence, List<IdentityPath>>(tuple.Item2, tuple.Item3)).ToList();
+        }
+
+        /// <summary>
+        /// Returns tuples of FastaData along with the position in the Stream that the fasta record was found.
+        /// </summary>
+        private IEnumerable<Tuple<long, FastaData>> ParseFastaFileWithProgress(Stream stream)
+        {
+            using (var reader = new StreamReader(stream))
+            {
+                foreach (var fastaRecord in FastaData.ParseFastaFile(reader))
+                {
+                    yield return Tuple.Create(stream.Position, fastaRecord);
+                }
+            }
         }
 
         // once proteinAssociation(matches) have been found will populate checkBoxListMatches
@@ -387,7 +407,7 @@ namespace pwiz.Skyline.EditUI
                 checkBoxListMatches.CheckedIndices.OfType<int>().Select(i => _associatedProteins[i]).ToList();
 
             _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
-                doc => CreateDocTree(_parent.Document, selectedProteins), FormSettings.EntryCreator.Create);
+                doc => CreateDocTree(doc, selectedProteins), FormSettings.EntryCreator.Create);
 
             DialogResult = DialogResult.OK;
         }
