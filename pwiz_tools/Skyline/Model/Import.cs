@@ -345,8 +345,9 @@ namespace pwiz.Skyline.Model
                 var inputLines = new List<string>();
                 string line;
                 char[] whitespace = { ' ', '\r', '\n', '\f' }; //The usual whitespace characters, except tab which may be a separator
-                while ((line = reader.ReadLine()?.Trim(whitespace)) != null)
+                while ((line = reader.ReadLine()) != null)
                 {
+                    line = line.Trim(whitespace);
                     if (line.Length > 0)
                         inputLines.Add(line);
                 }

@@ -629,10 +629,15 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
+
+            if (!atomOrder.Any())
+            {
+                return null;
+            }
             return atomOrder.Aggregate(string.Empty, (current, atom) =>
             {
                 var atomCount = dictAtomCounts[atom];
-                return current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", atom, (atomCount > 1) ? atomCount.ToString() : string.Empty);
+                return atomCount > 1 ? $@"{current}{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : $@"{current}{atom}";
             }); 
         }
 
