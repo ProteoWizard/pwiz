@@ -105,6 +105,7 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog3.Size = new Size(600, 300));
                 string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 if (_inferredLabels)
                 {

@@ -89,7 +89,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 var doc = SkylineWindow.Document;
 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-
+                RunUI(() => importDialog.Size = new Size(600, 300));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 3);
 
                 var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
@@ -102,6 +102,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 4);
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
+                RunUI(() => errDlg.Size = new Size(680, 250));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 4);
                 OkDialog(errDlg, errDlg.OkDialog);
 

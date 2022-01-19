@@ -75,9 +75,9 @@
             this.btnCopyToClipBoard.Enabled = false;
             this.btnCopyToClipBoard.Location = new System.Drawing.Point(12, 61);
             this.btnCopyToClipBoard.Name = "btnCopyToClipBoard";
-            this.btnCopyToClipBoard.Size = new System.Drawing.Size(105, 23);
+            this.btnCopyToClipBoard.Size = new System.Drawing.Size(75, 23);
             this.btnCopyToClipBoard.TabIndex = 3;
-            this.btnCopyToClipBoard.Text = "Copy to clipboard";
+            this.btnCopyToClipBoard.Text = "Copy Form";
             this.toolTip1.SetToolTip(this.btnCopyToClipBoard, resources.GetString("btnCopyToClipBoard.ToolTip"));
             this.btnCopyToClipBoard.UseVisualStyleBackColor = true;
             this.btnCopyToClipBoard.Visible = false;
@@ -88,9 +88,9 @@
             this.btnCopyMetafileToClipboard.Enabled = false;
             this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(12, 90);
             this.btnCopyMetafileToClipboard.Name = "btnCopyMetafileToClipboard";
-            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(148, 23);
+            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(75, 23);
             this.btnCopyMetafileToClipboard.TabIndex = 4;
-            this.btnCopyMetafileToClipboard.Text = "Copy metafile to clipboard";
+            this.btnCopyMetafileToClipboard.Text = "Copy Graph";
             this.toolTip1.SetToolTip(this.btnCopyMetafileToClipboard, "Copies metafile to clipboard");
             this.btnCopyMetafileToClipboard.UseVisualStyleBackColor = true;
             this.btnCopyMetafileToClipboard.Visible = false;

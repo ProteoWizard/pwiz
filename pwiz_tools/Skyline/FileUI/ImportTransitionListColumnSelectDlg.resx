@@ -196,7 +196,7 @@
     <value>9</value>
   </data>
   <data name="buttonCheckForErrors.Text" xml:space="preserve">
-    <value>Check For Errors</value>
+    <value>Check For &amp;Errors</value>
   </data>
   <data name="&gt;&gt;buttonCheckForErrors.Name" xml:space="preserve">
     <value>buttonCheckForErrors</value>
@@ -298,7 +298,7 @@
     <value>dataGrid</value>
   </data>
   <data name="&gt;&gt;dataGrid.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.382, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGrid.Parent" xml:space="preserve">
     <value>$this</value>
@@ -319,13 +319,13 @@
     <value>208, 362</value>
   </data>
   <data name="CheckShowUnusedColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>136, 17</value>
+    <value>133, 17</value>
   </data>
   <data name="CheckShowUnusedColumns.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
   <data name="CheckShowUnusedColumns.Text" xml:space="preserve">
-    <value>Show Unused Columns</value>
+    <value>&amp;Show unused columns</value>
   </data>
   <data name="&gt;&gt;CheckShowUnusedColumns.Name" xml:space="preserve">
     <value>CheckShowUnusedColumns</value>
@@ -412,13 +412,13 @@
     <value>364, 362</value>
   </data>
   <data name="checkBoxAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>113, 17</value>
+    <value>112, 17</value>
   </data>
   <data name="checkBoxAssociateProteins.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
   <data name="checkBoxAssociateProteins.Text" xml:space="preserve">
-    <value>Associate Proteins</value>
+    <value>&amp;Associate proteins</value>
   </data>
   <data name="&gt;&gt;checkBoxAssociateProteins.Name" xml:space="preserve">
     <value>checkBoxAssociateProteins</value>
@@ -451,12 +451,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.382, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportTransitionListColumnSelectDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=21.2.1.382, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

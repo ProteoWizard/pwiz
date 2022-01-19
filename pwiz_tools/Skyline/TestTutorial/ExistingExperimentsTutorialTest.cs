@@ -154,6 +154,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Inserting a Transition List With Associated Proteins, p. 6
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            RunUI(() => importDialog.Size = new Size(600, 300));
             PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
             var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
             string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
