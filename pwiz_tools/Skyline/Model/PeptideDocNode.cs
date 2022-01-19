@@ -123,6 +123,7 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeFastaSequence(FastaSequence newSequence)
         {
             int begin = newSequence.Sequence.IndexOf(Peptide.Target.Sequence, StringComparison.Ordinal);
+            Assume.IsTrue(begin >= 0);
             int end = begin + Peptide.Target.Sequence.Length;
             var newPeptide = new Peptide(newSequence, Peptide.Target.Sequence,
                 begin, end, Peptide.MissedCleavages);

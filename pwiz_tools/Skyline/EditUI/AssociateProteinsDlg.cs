@@ -206,15 +206,12 @@ namespace pwiz.Skyline.EditUI
                 longWaitDlg.Message = Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    var fastaRecords = ParseFastaFileWithProgress(fastaFile).Select((tuple, index) =>
-                        Tuple.Create(index, tuple.Item1, tuple.Item2));
-                    ParallelEx.ForEach(fastaRecords, recordTuple =>
+                    var fastaRecords = ParseFastaWithFilePositions(fastaFile);
+                    ParallelEx.ForEach(fastaRecords, fastaRecord =>
                     {
-                        int index = recordTuple.Item1;
-                        int progressValue = (int) (recordTuple.Item2 * 100 / streamLength);
-                        var seq = recordTuple.Item3;
-                        var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
-                        var substringFinder = new SubstringFinder(seq.Sequence, maxLength);
+                        int progressValue = (int) (fastaRecord.FilePosition * 100 / streamLength);
+                        var fasta = fastaRecord.FastaSequence;
+                        var substringFinder = new SubstringFinder(fasta.Sequence, maxLength);
                         var matches = new List<IdentityPath>();
                         foreach (var peptide in peptidesForMatching)
                         {
@@ -236,7 +233,7 @@ namespace pwiz.Skyline.EditUI
                             }
                             if (matches.Count > 0)
                             {
-                                proteinAssociations.Add(Tuple.Create(index, fasta, matches));
+                                proteinAssociations.Add(Tuple.Create(fastaRecord.RecordIndex, fasta, matches));
                             }
                         }
                     });
@@ -254,15 +251,16 @@ namespace pwiz.Skyline.EditUI
 
         /// <summary>
         /// Returns tuples of FastaData along with the position in the Stream that the fasta record was found.
+        /// This method returns an IEnumerable because it is intended to be passed to <see cref="ParallelEx.ForEach{TSource}" />
+        /// which starts processing in parallel before the last record has been fetched.
         /// </summary>
-        private IEnumerable<Tuple<long, FastaData>> ParseFastaFileWithProgress(Stream stream)
+        private IEnumerable<FastaRecord> ParseFastaWithFilePositions(Stream stream)
         {
-            using (var reader = new StreamReader(stream))
+            int index = 0;
+            foreach (var fastaData in FastaData.ParseFastaFile(new StreamReader(stream)))
             {
-                foreach (var fastaRecord in FastaData.ParseFastaFile(reader))
-                {
-                    yield return Tuple.Create(stream.Position, fastaRecord);
-                }
+                yield return new FastaRecord(index, stream.Position, new FastaSequence(fastaData.Name, null, null, fastaData.Sequence));
+                index++;
             }
         }
 
@@ -433,5 +431,26 @@ namespace pwiz.Skyline.EditUI
         // required for testing
         public Button ApplyButton { get { return btnApplyChanges; } }
         public CheckedListBox CheckboxListMatches { get { return checkBoxListMatches; } }
+
+        /// <summary>
+        /// Contains the fasta sequences read from a fasta file, along with properties indicating
+        /// the order that the records were found in the file, and the byte offset where the records
+        /// were found. (In theory, "RecordIndex" is redundant, and "FilePosition" could be used to order these
+        /// things, but, it's conceivable the fasta parsing code might not be careful about where the stream position
+        /// is as each record is returned).
+        /// </summary>
+        private class FastaRecord
+        {
+            public FastaRecord(int recordIndex, long filePosition, FastaSequence fastaSequence)
+            {
+                RecordIndex = recordIndex;
+                FilePosition = filePosition;
+                FastaSequence = fastaSequence;
+            }
+
+            public int RecordIndex { get; }
+            public long FilePosition { get; }
+            public FastaSequence FastaSequence { get; }
+        }
     }
 }

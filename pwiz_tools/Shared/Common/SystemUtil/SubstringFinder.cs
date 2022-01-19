@@ -49,7 +49,7 @@ namespace pwiz.Common.SystemUtil
             _stringToBeSearched = stringToBeSearched;
             if (string.IsNullOrEmpty(stringToBeSearched) || maxSubstringLength == 0)
             {
-                _root = new TrieNode(0);
+                _root = TrieNode.EMPTY;
                 return;
             }
 
@@ -71,10 +71,6 @@ namespace pwiz.Common.SystemUtil
                     bool isLastPosition = position == end - 1;
                     int indexInChildren = stringToBeSearched[position] - _minCharacter;
                     var child = node._children[indexInChildren];
-                    if (position == end - 1)
-                    {
-
-                    }
                     if (child._children == null || !isLastPosition && child._children.Length == 0)
                     {
                         child = isLastPosition ? TrieNode.EMPTY : new TrieNode(childArraySize);
