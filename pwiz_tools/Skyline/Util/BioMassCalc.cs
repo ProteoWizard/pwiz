@@ -634,11 +634,11 @@ namespace pwiz.Skyline.Util
             {
                 return null;
             }
-            return atomOrder.Aggregate(string.Empty, (current, atom) =>
+            return string.Concat(atomOrder.Select(atom =>
             {
                 var atomCount = dictAtomCounts[atom];
-                return atomCount > 1 ? $@"{current}{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : $@"{current}{atom}";
-            }); 
+                return atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom;
+            })); 
         }
 
         /// <summary>
