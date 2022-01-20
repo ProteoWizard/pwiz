@@ -3,7 +3,7 @@
 # Copyright 2014-2015 Rene Rivera
 # Copyright 2014 Microsoft Corporation
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This module implements regression testing framework. It declares a number of
 # main target rules which perform some action and, if the results are OK,
@@ -62,19 +62,6 @@ rule init ( )
 # Feature controlling the command used to launch test programs.
 feature.feature testing.launcher   : : free optional ;
 
-# Specifies a command or script that runs right before a test is launched.
-# The working directory is the location of the test executable.
-# The argument to this command is the test name.
-feature.feature testing.precommand  : : free optional ;
-
-# Specifies a command or script that runs right after a test finishes.
-# The working directory is the location of the test executable.
-# The arguments to this command are the test name and the exit status (0=pass !0=fail)
-feature.feature testing.postcommand : : free optional ;
-
-
-feature.feature testing.semaphore   : : free optional ;
-
 feature.feature test-info          : : free incidental ;
 feature.feature testing.arg        : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
@@ -129,15 +116,9 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     # The <location-prefix> forces the build system for generate paths in the
     # form '$build_dir/array1$(.TEST-DIR-SUFFIX)/gcc/debug'. This is necessary
     # to allow post-processing tools to work.
-    local location-prefix = <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX) ;
-    if <location-prefix> in $(requirements:G)
-    {
-        location-prefix = ; # respect existing location-prefix requirement
-    }
-
     local t = [ targets.create-typed-target [ type.type-from-rule-name
         $(target-type) ] : $(project) : $(real-name) : $(sources) :
-        $(requirements) $(location-prefix)$(.TEST-DIR-SUFFIX)
+        $(requirements) <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX)
         <relevant>toolset ] ;
 
     # The alias to the real target, per period replacement above.
@@ -509,9 +490,6 @@ local argv = [ modules.peek : ARGV ] ;
 
 toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
-toolset.flags testing.capture-output TEST_PRECOMMAND <testing.precommand> ;
-toolset.flags testing.capture-output TEST_POSTCOMMAND <testing.postcommand> ;
-toolset.flags testing.capture-output TEST_SEMAPHORE <testing.semaphore> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 
 toolset.uses-features testing.capture-output :
@@ -545,24 +523,7 @@ rule capture-output ( target : source : properties * )
     # bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
 
-    if ! [ on $(target) return $(TEST_PRECOMMAND) ]
-    {
-       TEST_PRECOMMAND_OUTPUT on $(target) = "> $(.NULL)" ;
-    }
-    if ! [ on $(target) return $(TEST_POSTCOMMAND) ]
-    {
-       TEST_POSTCOMMAND_OUTPUT on $(target) = "> $(.NULL)" ;
-    }
-    local name = $(target:G=) ;
-    TEST_NAME on $(target) = $(name:B) ;
-
     run-path-setup $(target) : $(source) : $(properties) ;
-
-    test-semaphore = [ on $(target) return $(TEST_SEMAPHORE) ] ;
-    if $(test-semaphore)
-    {
-        JAM_SEMAPHORE on $(target) = $(test-semaphore) ;
-    }
 
     DISABLE_TEST_EXECUTION on $(target) = 0 ;
     if [ feature.get-values testing.execute : $(properties) ] = off
@@ -577,9 +538,9 @@ rule capture-output ( target : source : properties * )
     }
 }
 
-.types-to-remove = EXE OBJ PDB ;
+.types-to-remove = EXE OBJ ;
 
-local rule get-test-targets ( target )
+local rule remove-test-targets ( target )
 {
     local action = [ on $(target) return $(.action) ] ;
     local associated-targets = [ virtual-target.traverse [ $(action).targets ] ] ;
@@ -591,13 +552,9 @@ local rule get-test-targets ( target )
             targets-to-remove += [ $(t).actual-name ] ;
         }
     }
-    return $(targets-to-remove) ;
+    rmtemp-sources $(target) : $(targets-to-remove) ;
 }
 
-local rule remove-test-targets ( target )
-{
-    rmtemp-sources $(target) : [ get-test-targets $(target) ] ;
-}
 local rule rmtemp-sources ( target : sources * )
 {
     if $(sources)
@@ -629,7 +586,6 @@ if [ os.name ] = NT
     .SHELL_SET     = "set " ;
     .CATENATE      = type ;
     .CP            = copy ;
-    .NULL          = nul ;
     .NULLIN        = ;
 }
 else if [ os.name ] = VMS
@@ -667,11 +623,9 @@ else
     .SHELL_SET     = "" ;
     .CATENATE      = cat ;
     .CP            = cp ;
-    .NULL          = /dev/null ;
     .NULLIN        = "<" "/dev/null" ;
 }
 
-.DEFAULT_CMD   = "echo " ;
 
 .VERBOSE_TEST = 0 ;
 if --verbose-test in [ modules.peek : ARGV ]
@@ -683,14 +637,6 @@ if --verbose-test in [ modules.peek : ARGV ]
 .RM = [ common.rm-command ] ;
 
 
-# used to delete test targets for unit-test rule
-rule remove-test-targets-shell ( target )
-{
-    local target-path = [ on $(target) return $(LOCATE) ] ;
-    local result = [ get-test-targets $(target) ] ;
-    result = $(.RM) [ sequence.transform path.native : "$(target-path)/$(result:BS)" ] ;
-}
-
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
@@ -699,14 +645,12 @@ actions capture-output bind INPUT_FILES output-file
         echo Skipping test execution due to testing.execute=off
         exit $(.EXIT_SUCCESS)
     $(.ENDIF)
-    $(.SHELL_SET)name=$(TEST_NAME)
-    $(TEST_PRECOMMAND:E=echo) $(TEST_PRECOMMAND_OUTPUT)
     $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1 $(.NULLIN)
     $(.SET_STATUS)
     $(.RUN_OUTPUT_NL) >> "$(output-file)"
     echo EXIT STATUS: $(.STATUS) >> "$(output-file)"
     if $(.STATUS_0)
-        $(.CP) "$(output-file)" "$(<)" > $(.NULL)
+        $(.CP) "$(output-file)" "$(<)"
     $(.ENDIF)
     $(.SHELL_SET)verbose=$(.VERBOSE_TEST)
     if $(.STATUS_NOT_0)
@@ -717,7 +661,6 @@ actions capture-output bind INPUT_FILES output-file
         $(.CATENATE) "$(output-file)"
         echo ====== END OUTPUT ======
     $(.ENDIF)
-    $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
     exit $(.STATUS)
 }
 
@@ -778,31 +721,10 @@ if [ os.name ] = VMS
 
 toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
 toolset.flags testing.unit-test ARGS <testing.arg> ;
-toolset.flags testing.unit-test TEST_PRECOMMAND <testing.precommand> ;
-toolset.flags testing.unit-test TEST_POSTCOMMAND <testing.postcommand> ;
-toolset.flags testing.unit-test TEST_SEMAPHORE <testing.semaphore> ;
 
 
 rule unit-test ( target : source : properties * )
 {
-    if ! [ on $(target) return $(TEST_PRECOMMAND) ]
-    {
-       TEST_PRECOMMAND_OUTPUT on $(target) = "> $(.NULL)" ;
-    }
-    if ! [ on $(target) return $(TEST_POSTCOMMAND) ]
-    {
-       TEST_POSTCOMMAND_OUTPUT on $(target) = "> $(.NULL)" ;
-    }
-
-
-    test-semaphore = [ on $(target) return $(TEST_SEMAPHORE) ] ;
-    if $(test-semaphore)
-    {
-        JAM_SEMAPHORE on $(target) = $(test-semaphore) ;
-    }
-
-    local name = $(target:G=) ;
-    TEST_NAME on $(target) = $(name:B) ;
     run-path-setup $(target) : $(source) : $(properties) ;
 
     if ! [ feature.get-values testing.launcher : $(properties) ]
@@ -810,27 +732,13 @@ rule unit-test ( target : source : properties * )
         ## On VMS set default launcher to MCR
         if [ os.name ] = VMS { LAUNCHER on $(target) = MCR ; }
     }
-
-    if [ feature.get-values preserve-test-targets : $(properties) ] = off
-    {
-        REMOVE_TEST_TARGETS on $(target) = [ remove-test-targets-shell $(target) ] ;
-}
 }
 
 
 actions unit-test
 {
     $(PATH_SETUP)
-    $(.SHELL_SET)name=$(TEST_NAME)
-    $(TEST_PRECOMMAND:E=echo) $(TEST_PRECOMMAND_OUTPUT)
     $(LAUNCHER) "$(>)" $(ARGS) && $(.MAKE_FILE) "$(<)"
-    $(.SET_STATUS)
-    if $(.STATUS_0)
-      $(.MAKE_FILE) "$(<)"
-      $(REMOVE_TEST_TARGETS)
-    $(.ENDIF)
-    $(TEST_POSTCOMMAND:E=echo) $(TEST_POSTCOMMAND_OUTPUT)
-    exit $(.STATUS)
 }
 
 if [ os.name ] = VMS

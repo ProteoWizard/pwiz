@@ -11,8 +11,8 @@
 #  Copyright (c) 2008 Steven Watanabe
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 ##import type ;
 ##import generators ;

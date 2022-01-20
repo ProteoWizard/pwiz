@@ -1,8 +1,8 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2005 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Essentially an include guard; ensures that no module is loaded multiple times.
 .loaded ?= ;
@@ -103,8 +103,7 @@ rule call-in ( module-name ? : rule-name args * : * )
     module $(module-name)
     {
         return [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) : $(10) :
-            $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18) :
-            $(19) ] ;
+            $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18)  ] ;
     }
 }
 
@@ -286,7 +285,7 @@ rule import ( module-names + : rules-opt * : rename-opt * )
             {
                 search = $(caller-location) $(search) ;
             }
-            
+
             if $(m:D)
             {
                 search = $(caller-location)/$(m:D) $(search)/$(m:D) $(search) ;
