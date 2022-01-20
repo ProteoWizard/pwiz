@@ -2,8 +2,8 @@
 #  Copyright (c) 2011 Bryce Lelbach
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import toolset ;
 import toolset : flags ;
@@ -85,27 +85,40 @@ rule init ( version ? :  command * : options * )
     local command_lib_path ;
     local detected_version ;
     local detected_command ;
+    local command_abs_path ;
     if ! $(user_version) && ! $(user_command)
     {
         # If nothing given, try and discover the latest toolset available.
         if ! $(detected_command)
         {
             local bin_paths = $(.bin(oneAPI)) ;
-            detected_command = [ common.find-tool icpx : $(bin_paths) : path-last ] ;
-            command_lib_path = $(detected_command:D)/../compiler/lib/intel64 ;
+            detected_command = [ common.find-tool icpx : $(bin_paths) ] ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../compiler/lib/intel64 ;
+            }
         }
         if ! $(detected_command)
         {
             local bin_paths = $(.bin(12.0)) $(.bin(11.1)) $(.bin(11.0)) ;
-            detected_command = [ common.find-tool icpc : $(bin_paths) : path-last ] ;
-            command_lib_path = $(detected_command:D)/../lib/x86_64 ;
+            detected_command = [ common.find-tool icpc : $(bin_paths) ] ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../lib/x86_64 ;
+            }
         }
         if ! $(detected_command)
         {
             local bin_paths = $(.bin(10.1)) $(.bin(9.1)) $(.bin(9.0))
                 $(.bin(8.1)) $(.bin(8.0)) ;
-            detected_command = [ common.find-tool icpc : $(bin_paths) : path-last ] ;
-            command_lib_path = $(detected_command:D)/../lib ;
+            detected_command = [ common.find-tool icpc : $(bin_paths) ] ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../lib ;
+            }
         }
         if $(detected_command)
         {
@@ -134,14 +147,15 @@ rule init ( version ? :  command * : options * )
             if $(bin_paths)
             {
                 detected_command = [ common.find-tool icpc : $(bin_paths) : path-last ] ;
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
             }
             if [ numbers.less $(user_version[1]) 11 ]
             {
-                command_lib_path = $(detected_command:D)/../lib ;
+                command_lib_path = $(command_abs_path)/../lib ;
             }
             else
             {
-                command_lib_path = $(detected_command:D)/../lib/x86_64 ;
+                command_lib_path = $(command_abs_path)/../lib/x86_64 ;
             }
         }
         else
@@ -149,7 +163,8 @@ rule init ( version ? :  command * : options * )
             detected_command = [ common.find-tool icpx
                 : [ regex.replace-list $(.bin(oneAPI)) : "latest" : $(user_version:J=.) ]
                 : path-last ] ;
-            command_lib_path = $(detected_command:D)/../compiler/lib/intel64 ;
+            command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+            command_lib_path = $(command_abs_path)/../compiler/lib/intel64 ;
         }
         if $(detected_command)
         {
@@ -254,9 +269,6 @@ actions compile.c bind PCH_FILE
     LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -c -xc $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -use-pch"$(PCH_FILE)" -c -o "$(<)" "$(>)"
 }
 
-rule compile.c++.pch ( targets * : sources * : properties * )
-{
-}
 #
 # Compiling a pch first deletes any existing *.pchi file, as Intel's compiler
 # won't over-write an existing pch: instead it creates filename$1.pchi, filename$2.pchi
@@ -270,10 +282,6 @@ actions compile.c++.pch
 actions compile.fortran
 {
     LD_LIBRARY_PATH="$(RUN_PATH)" "ifort" -c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-rule compile.c.pch ( targets * : sources * : properties * )
-{
 }
 
 actions compile.c.pch
