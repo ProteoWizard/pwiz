@@ -117,14 +117,12 @@ namespace pwiz.Skyline.Model
         public static string FormatThreeLetterCode(SrmSettings settings,
             IEnumerable<ModifiedSequence.Modification> mods)
         {
-            return string.Join(string.Empty,
-                mods.Select(mod => ModifiedSequence.Bracket(ModifiedSequence.FormatThreeLetterCode(mod))));
+            return string.Concat(mods.Select(mod => ModifiedSequence.Bracket(ModifiedSequence.FormatThreeLetterCode(mod))));
         }
 
         public static string FormatFullName(SrmSettings settings, IEnumerable<ModifiedSequence.Modification> mods)
         {
-            return string.Join(string.Empty,
-                mods.Select(mod => ModifiedSequence.Bracket(ModifiedSequence.FormatFullName(mod))));
+            return string.Concat(mods.Select(mod => ModifiedSequence.Bracket(ModifiedSequence.FormatFullName(mod))));
         }
 
         public static string FormatUnimodId(SrmSettings settings, IEnumerable<ModifiedSequence.Modification> mods)
