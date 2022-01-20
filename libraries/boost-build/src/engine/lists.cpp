@@ -395,7 +395,13 @@ void lol_init( LOL * lol )
 void lol_add( LOL * lol, LIST * l )
 {
     if ( lol->count < LOL_MAX )
+    {
         lol->list[ lol->count++ ] = l;
+        return;
+    }
+
+    err_printf( "lol_add failed due to reached limit of %d elements\n", LOL_MAX );
+    exit( EXITBAD );
 }
 
 
