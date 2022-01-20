@@ -53,7 +53,7 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ( [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1" "14.2" ) &&
+       [ msvc-has-current-dotnet $(properties) ] &&
        [ project-exists $(API_PATH) ] &&
        [ shimadzu-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
