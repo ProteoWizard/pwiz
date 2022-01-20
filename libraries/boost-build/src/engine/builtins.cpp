@@ -467,12 +467,6 @@ void load_builtins()
     }
 
     {
-          const char * args[] = { "directories", "*", 0 };
-          bind_builtin( "RESCAN",
-                        builtin_rescan, 0, args );
-      }
-
-    {
         char const * args[] = { "archives", "*",
                                 ":", "member-patterns", "*",
                                 ":", "case-insensitive", "?",
@@ -538,12 +532,6 @@ LIST * builtin_calc( FRAME * frame, int flags )
         result_value = lhs_value + rhs_value;
     else if ( !strcmp( "-", op ) )
         result_value = lhs_value - rhs_value;
-    else if (!strcmp( "%", op ) )
-        result_value = lhs_value % rhs_value;
-    else if (!strcmp( "/", op ) )
-        result_value = lhs_value / rhs_value;
-    else if (!strcmp( "*", op ) )
-        result_value = lhs_value * rhs_value;
     else
         return L0;
 
@@ -1925,15 +1913,6 @@ LIST *builtin_readlink( FRAME * frame, int flags )
     return result;
 #endif
 }
-
-LIST * builtin_rescan( FRAME * frame, int flags )
-{
-    /* clear file and timestamp hashes */
-    file_free_all();
-    time_free_all();
-    return L0;
-}
-
 
 #ifdef JAM_DEBUGGER
 

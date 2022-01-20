@@ -2,7 +2,7 @@
  *  Copyright 2001-2004 David Abrahams.
  *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -179,21 +179,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     PROFILE_ENTER( FILE_DIRSCAN );
     file_dirscan_impl( dir, func, closure );
     PROFILE_EXIT( FILE_DIRSCAN );
-}
-
-
-/*
- * file_free_all() - frees cached information for all files
- */
-
-void file_free_all()
-{
-    if ( filecache_hash )
-    {
-        hashenumerate( filecache_hash, free_file_info, (void *)0 );
-        hashdone( filecache_hash );
-        filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
-    }
 }
 
 
