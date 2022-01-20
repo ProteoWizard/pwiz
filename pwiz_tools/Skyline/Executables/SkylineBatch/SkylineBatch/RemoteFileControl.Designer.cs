@@ -75,7 +75,7 @@
         #endregion
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textRelativePath;
-        private System.Windows.Forms.ComboBox comboRemoteFileSource;
+        public System.Windows.Forms.ComboBox comboRemoteFileSource;
         private System.Windows.Forms.Label label1;
     }
 }

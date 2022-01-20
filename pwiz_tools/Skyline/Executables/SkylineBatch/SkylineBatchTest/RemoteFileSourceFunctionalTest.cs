@@ -12,15 +12,19 @@ namespace SkylineBatchTest
         public static string CONFIG_FOLDER;
         public static string TEST_FOLDER;
 
+        public static string BRUDERER_SOURCE_NAME = "Bruderer";
+        public static string BRUDERER_FOLDER_LINK = @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/";
+        public static string SELEVSEK_SOURCE_NAME = "Selevsek";
+        public static string SELEVSEK_FOLDER_LINK = @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/";
+
+
         [TestMethod]
         public void RemoteFileSourceTest()
         {
-            /*TestFilesZipPaths = new[]
+            TestFilesZipPaths = new[]
                {@"SkylineBatchTest\RemoteFileSourceFunctionalTest.zip", @"SkylineBatchTest\TestConfigurationFiles.zip"};
-
-            RunFunctionalTest();*/
-
-            throw new NotImplementedException();
+               
+            RunFunctionalTest();
         }
 
         protected override void DoTest()
@@ -35,51 +39,137 @@ namespace SkylineBatchTest
             Assert.AreEqual(0, mainForm.ConfigCount());
 
             TestAddRemoteFileSource(mainForm);
-
+            
             TestEditCurrentRemoteFileSource(mainForm);
 
-            TestEditListRemoteFileSource(mainForm);
+            /*TestEditListRemoteFileSource(mainForm);
 
             TestReplaceRemoteFileSources(mainForm);
-        }
 
-        /*private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
-        {
-            bool worked = false;
-            RunUI(() =>
-            {
-                worked = expectedAnswer == mainForm.ConfigRunning("EmptyTemplate");
-            });
-            return worked;
-        }*/
+            TestImportRemoteFileSource(mainForm);*/
+        }
 
         public void TestAddRemoteFileSource(MainForm mainForm)
         {
-            throw new NotImplementedException();
-            /*var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
-            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationFTP.bcfg");
-            
+            var configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
+            AddBrudererSelevsekSources(configForm);
+            CloseFormsInOrder(configForm);
+
+            configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
+            var dataServerForm = ShowDialog<DataServerForm>(() => configForm.dataControl.btnDownload.PerformClick());
+            var remoteFileControl = dataServerForm.remoteFileControl;
+            CheckRemoteFileSourceList(remoteFileControl, new string[] { BRUDERER_SOURCE_NAME, SELEVSEK_SOURCE_NAME });
+            CloseFormsInOrder(dataServerForm, configForm);
+            mainForm.ClearRemoteFileSources();
+        }
+
+        public void AddBrudererSelevsekSources(SkylineBatchConfigForm configForm)
+        {
+            var remoteFileForm = ShowDialog<RemoteFileForm>(() => configForm.templateControl.btnDownload.PerformClick());
+            var remoteFileControl = remoteFileForm.remoteFileControl;
+            var remoteSourceForm = ShowDialog<RemoteSourceForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Add...>");
+            AddRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK);
+            CheckRemoteFileSourceList(remoteFileControl, new string[] { BRUDERER_SOURCE_NAME });
+            var editRemoteFileSourcesForm = ShowDialog<EditRemoteFileSourcesForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit list...>");
+            remoteSourceForm = ShowDialog<RemoteSourceForm>(() => editRemoteFileSourcesForm.btnAdd.PerformClick());
+            AddRemoteFileSource(remoteSourceForm, SELEVSEK_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
+            RunUI(() => editRemoteFileSourcesForm.btnOk.PerformClick());
+            WaitForClosedForm(editRemoteFileSourcesForm);
+            CheckRemoteFileSourceList(remoteFileControl, new string[] { BRUDERER_SOURCE_NAME, SELEVSEK_SOURCE_NAME });
+            CloseFormsInOrder(remoteFileForm);
+        }
+
+        private void AddRemoteFileSource(RemoteSourceForm remoteSourceForm, string name, string url, string username = null, string password = null, bool encrypt = true)
+        {
             RunUI(() =>
             {
-                mainForm.DoImport(configFile);
-                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
+                remoteSourceForm.textName.Text = name;
+                remoteSourceForm.textFolderUrl.Text = url;
+                remoteSourceForm.textUserName.Text = username ?? string.Empty;
+                remoteSourceForm.textPassword.Text = password ?? string.Empty;
+                remoteSourceForm.checkBoxNoEncryption.Checked = !encrypt;
+                remoteSourceForm.btnSave.PerformClick();
             });
-            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
-            WaitForClosedForm(longWaitDialog);
-            var thirtySeconds = new TimeSpan(0,0,30);
-            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, thirtySeconds, 200,
-                "Config did not start");
-            var oneMinute = new TimeSpan(0, 1, 0);
-            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
-                "Config ran past timeout");
-            Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")));
-            Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")).Length);
-            */
+            WaitForClosedForm(remoteSourceForm);
+        }
+
+        private void CheckRemoteFileSource(RemoteSourceForm remoteSourceForm, string name, string url, string username = null, string password = null, bool encrypt = true)
+        {
+            RunUI(() =>
+            {
+                Assert.AreEqual(name, remoteSourceForm.textName.Text, name);
+                Assert.AreEqual(url, remoteSourceForm.textFolderUrl.Text);
+                Assert.AreEqual(username ?? string.Empty, remoteSourceForm.textUserName.Text);
+                Assert.AreEqual(password ?? string.Empty, remoteSourceForm.textPassword.Text);
+                Assert.AreEqual(!encrypt, remoteSourceForm.checkBoxNoEncryption.Checked);
+                remoteSourceForm.btnSave.PerformClick();
+            });
+            WaitForClosedForm(remoteSourceForm);
+        }
+
+        public void CloseFormsInOrder(params System.Windows.Forms.Form[] forms)
+        {
+            foreach (var form in forms)
+            {
+                RunUI(() => form.CancelButton.PerformClick());
+                WaitForClosedForm(form);
+            }
+        }
+
+
+        private void CheckRemoteFileSourceList(RemoteFileControl remoteFileControl, string[] expectedNames)
+        {
+            var expectedNumber = expectedNames.Length;
+            RunUI(() =>
+            {
+                Assert.IsTrue(remoteFileControl.comboRemoteFileSource.Items.Count == expectedNumber + 3, $"Remote file source added incorrectly. Expected {expectedNumber} items in list but instead got {remoteFileControl.comboRemoteFileSource.Items.Count - 3}");
+                int index = 0;
+                foreach (var expectedName in expectedNames)
+                {
+                    Assert.IsTrue(expectedName.Equals(remoteFileControl.comboRemoteFileSource.Items[index]),
+                    $"Expected remote file source {expectedName} at index {index} but instead got {remoteFileControl.comboRemoteFileSource.Items[index]}.");
+                    index++;
+                }
+            });
+            var editRemoteFileSourcesForm = ShowDialog<EditRemoteFileSourcesForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit list...>");
+            RunUI(() =>
+            {
+                Assert.IsTrue(editRemoteFileSourcesForm.listSources.Items.Count == expectedNumber,
+                $"Expected {expectedNumber} sources in EditRemoteFileSourcesForm but got {editRemoteFileSourcesForm.listSources.Items.Count}.");
+                int index = 0;
+                foreach (var expectedName in expectedNames)
+                {
+                    Assert.IsTrue(expectedName.Equals(editRemoteFileSourcesForm.listSources.Items[index]),
+                    $"Expected remote file source {expectedName} at index {index} in EditRemoteFileSourcesForm but instead got {remoteFileControl.comboRemoteFileSource.Items[index]}.");
+                    index++;
+                }
+                editRemoteFileSourcesForm.btnOk.PerformClick();
+            });
+            WaitForClosedForm(editRemoteFileSourcesForm);
         }
 
         public void TestEditCurrentRemoteFileSource(MainForm mainForm)
         {
-            throw new NotImplementedException();
+            var configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
+            AddBrudererSelevsekSources(configForm);
+            var remoteFileForm = ShowDialog<RemoteFileForm>(() => configForm.templateControl.btnDownload.PerformClick());
+            var remoteFileControl = remoteFileForm.remoteFileControl;
+            RunUI(() => remoteFileControl.comboRemoteFileSource.SelectedItem = BRUDERER_SOURCE_NAME);
+            var remoteSourceForm = ShowDialog<RemoteSourceForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
+            CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK);
+            var editRemoteFileSourcesForm = ShowDialog<EditRemoteFileSourcesForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit list...>");
+            RunUI(() => editRemoteFileSourcesForm.listSources.SelectedItem = BRUDERER_SOURCE_NAME);
+            remoteSourceForm = ShowDialog<RemoteSourceForm>(() => editRemoteFileSourcesForm.btnEdit.PerformClick());
+            
+            CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK);
+            CloseFormsInOrder(editRemoteFileSourcesForm);
+            editRemoteFileSourcesForm = ShowDialog<EditRemoteFileSourcesForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit list...>");
+            RunUI(() => editRemoteFileSourcesForm.listSources.SelectedItem = SELEVSEK_SOURCE_NAME);
+            remoteSourceForm = ShowDialog<RemoteSourceForm>(() => editRemoteFileSourcesForm.btnEdit.PerformClick());
+            RunUI(() => remoteSourceForm.textName.Text = "TEST");
+            CheckRemoteFileSource(remoteSourceForm, "TEST", SELEVSEK_FOLDER_LINK);
+            CloseFormsInOrder(editRemoteFileSourcesForm);
+            CheckRemoteFileSourceList(remoteFileControl, new string[] { BRUDERER_SOURCE_NAME, "TEST" });
 
         }
 
@@ -90,6 +180,12 @@ namespace SkylineBatchTest
         }
 
         public void TestReplaceRemoteFileSources(MainForm mainForm)
+        {
+            throw new NotImplementedException();
+
+        }
+
+        public void TestImportRemoteFileSource(MainForm mainForm)
         {
             throw new NotImplementedException();
 
