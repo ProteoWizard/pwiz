@@ -2548,7 +2548,7 @@ namespace pwiz.Skyline
 
             public LibraryReference(Library reference)
             {
-                Reference = Reference;
+                Reference = reference;
             }
 
             public void Dispose()
@@ -2895,8 +2895,8 @@ namespace pwiz.Skyline
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
                         return true;
                     }
-                    // Ovewrite conflicts
-                    if (resolveToolConflictsBySkipping == false)
+                    // Overwrite conflicts
+                    else
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__the_tool__0__was_overwritten, tool.Title);
 //                      _out.WriteLine("         tool {0} was modified.", tool.Title);
