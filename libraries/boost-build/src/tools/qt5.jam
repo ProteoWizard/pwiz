@@ -3,8 +3,8 @@
 # Copyright 2005-2012 Juergen Hunold
 #
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Qt5 library support module
 #
@@ -306,7 +306,6 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
        local usage-requirements =
            <include>$(.incprefix)
            <library-path>$(.libprefix)
-           <threading>multi
            <allow>qt5 ;
 
        if $(link) in shared

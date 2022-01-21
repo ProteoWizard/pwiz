@@ -3,7 +3,7 @@
 #
 # Distributed under the Boost
 # Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+# file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 from b2.build import type as type_
 from b2.manager import get_manager
 from b2.tools.cast import cast

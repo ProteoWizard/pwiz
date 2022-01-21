@@ -3,8 +3,8 @@
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Copyright 2020 Nikita Kniazev
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 import indirect ;
@@ -66,81 +66,85 @@ rule refine ( properties * : requirements * )
 #
 rule evaluate-conditionals-in-context ( properties * : context * )
 {
-    local base ;
-    local conditionals ;
-    local indirect ;
-    for local p in $(properties)
-    {
-        if [ MATCH "(:<)" : $(p) ] && ! free in [ feature.attributes $(p:G) ]
-        {
-            conditionals += $(p) ;
-        }
-        else if $(p:G) = <conditional>
-        {
-            indirect += $(p) ;
-        }
-        else
-        {
-            base += $(p) ;
-        }
-    }
-
-    local result = $(base) ;
-    for local p in $(conditionals)
-    {
-        # Separate condition and property.
-        local s = [ MATCH "^(.*):(<.*)" : $(p) ] ;
-        # Split condition into individual properties.
-        local condition = [ regex.split $(s[1]) "," ] ;
-        # Evaluate condition.
-        if ! [ MATCH ^(!).* : $(condition:G=) ]
-        {
-            # Only positive checks
-            if $(condition) in $(context)
-            {
-                result += $(s[2]) ;
-            }
-        }
-        else
-        {
-            # Have negative checks
-            local fail ;
-            for local c in $(condition)
-            {
-                local c = [ MATCH ^(!)?(.*) : $(c) ] ;
-                # It is XOR: $(c[1]) = "!" ^ $(c[2]) in $(context)
-                if $(c[1]) = "!" && $(c[2]) in $(context) || $(c[1]) != "!" && ! ( $(c[2]) in $(context) )
-                {
-                    fail = true ;
-                    break ;
-                }
-            }
-            if ! $(fail)
-            {
-                result += $(s[2]) ;
-            }
-        }
-    }
     # Import here to avoid cyclic dependency
     import project ;
-    for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+
+    local result ;
+    while $(properties)
     {
-        # If the rule was set in a project module, translate paths
-        # relative to that project's location.
-        local m = [ indirect.get-module $(i) ] ;
-        local p = [ project.target $(m) : allow-missing ] ;
-        local new = [ indirect.call $(i) $(context) ] ;
-        if $(p) && [ $(p).location ]
+        local conditionals ;
+        local indirect ;
+        for local p in $(properties)
         {
-            local location = [ $(p).location ] ;
-            local project-id = [ project.attribute $(m) id ] ;
-            project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-            result +=
-                [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
+            if [ MATCH "(:<)" : $(p) ] && ! free in [ feature.attributes $(p:G) ]
+            {
+                conditionals += $(p) ;
+            }
+            else if $(p:G) = <conditional>
+            {
+                indirect += $(p) ;
+            }
+            else
+            {
+                result += $(p) ;
+            }
         }
-        else
+
+        properties = ;
+        for local p in $(conditionals)
         {
-            result += $(new) ;
+            # Separate condition and property.
+            local s = [ MATCH "^(.*):(<.*)" : $(p) ] ;
+            # Split condition into individual properties.
+            local condition = [ regex.split $(s[1]) "," ] ;
+            # Evaluate condition.
+            if ! [ MATCH ^(!).* : $(condition:G=) ]
+            {
+                # Only positive checks
+                if $(condition) in $(context)
+                {
+                    properties += $(s[2]) ;
+                }
+            }
+            else
+            {
+                # Have negative checks
+                local fail ;
+                for local c in $(condition)
+                {
+                    local c = [ MATCH ^(!)?(.*) : $(c) ] ;
+                    # It is XOR: $(c[1]) = "!" ^ $(c[2]) in $(context)
+                    if $(c[1]) = "!" && $(c[2]) in $(context) || $(c[1]) != "!" && ! ( $(c[2]) in $(context) )
+                    {
+                        fail = true ;
+                        break ;
+                    }
+                }
+                if ! $(fail)
+                {
+                    properties += $(s[2]) ;
+                }
+            }
+        }
+        for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+        {
+            # If the rule was set in a project module, translate paths
+            # relative to that project's location.
+            local m = [ indirect.get-module $(i) ] ;
+            local p = [ project.target $(m) : allow-missing ] ;
+            local new = [ indirect.call $(i) $(context) ] ;
+            if $(p) && [ $(p).location ]
+            {
+                local location = [ $(p).location ] ;
+                local project-id = [ project.attribute $(m) id ] ;
+                project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+                properties +=
+                    [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
+            }
+            else
+            {
+                properties += $(new) ;
+            }
         }
     }
     return $(result) ;
@@ -150,7 +154,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
 # Returns <relevant> properties indicating how the conditionals in
 # properties affect feature relevance.  If the optional argument cond
 # is passed, it is treated as extra conditions for all properties.
-# 
+#
 rule evaluate-conditional-relevance ( properties * :  cond * )
 {
     cond = [ sequence.transform utility.ungrist : $(cond:G) ] ;
@@ -559,7 +563,7 @@ rule translate ( properties * : project-id : project-location : context-module )
         {
             condition = $(split[1]) ;
             property = $(split[2]) ;
-            
+
             local e ;
             for local c in [ regex.split $(condition) "," ]
             {
@@ -797,7 +801,7 @@ class property-map
         for local i in $(self.all-flags)
         {
             local list = $($(i)) ;
-            if [ $(property-set).contains-raw $(list[2-]) ] 
+            if [ $(property-set).contains-raw $(list[2-]) ]
             {
                 matches += $(list[1]) ;
                 match-ranks += [ sequence.length $(list) ] ;
@@ -808,6 +812,7 @@ class property-map
         if $(best[2])
         {
             import errors : error : errors.error ;
+	        properties = [ $(property-set).raw ] ;
             errors.error "Ambiguous key $(properties:J= :E=)" ;
         }
         return $(best) ;
@@ -968,6 +973,10 @@ rule __test__ ( )
     $(pm).insert <toolset>gcc : o ;
     $(pm).insert <toolset>gcc <os>NT : obj ;
     $(pm).insert <toolset>gcc <os>CYGWIN : obj ;
+
+    try ;
+        $(pm).find [ new property-set <toolset>gcc <os>NT <os>CYGWIN ] ;
+    catch "Ambiguous key <toolset>gcc <os>NT <os>CYGWIN" ;
 
     assert.equal o : [ $(pm).find-replace <toolset>gcc ] ;
 

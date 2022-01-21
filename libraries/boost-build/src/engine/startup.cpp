@@ -1,7 +1,7 @@
 /*
 Copyright 2020 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 #include "startup.h"
@@ -56,7 +56,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
             "   'boost-build '%s' ;\n"
             "\n"
             "Please consult the documentation at "
-            "'https://boostorg.github.io/build/'.\n\n",
+            "'https://www.bfgroup.xyz/b2/'.\n\n",
            dir.c_str());
         return L0;
     }
@@ -119,7 +119,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
         }
         err_puts(
             "Please consult the documentation at "
-            "'https://boostorg.github.io/build/'.\n\n");
+            "'https://www.bfgroup.xyz/b2/'.\n\n");
         return L0;
     }
 
@@ -233,7 +233,7 @@ bool b2::startup::bootstrap(FRAME *frame)
             "Attempted search from '%s' up to the root "
             "at '%s'\n"
             "Please consult the documentation at "
-            "'https://boostorg.github.io/build/'.\n\n";
+            "'https://www.bfgroup.xyz/b2/'.\n\n";
         err_printf(not_found_error, b2::cwd_str().c_str(), b2_exe_path.c_str());
         return false;
     }
@@ -261,7 +261,7 @@ bool b2::startup::bootstrap(FRAME *frame)
             "the location of the build system.\n"
             "\n"
             "Please consult the documentation at "
-            "'https://boostorg.github.io/build/'.\n\n",
+            "'https://www.bfgroup.xyz/b2/'.\n\n",
             b2_file_path.c_str(), b2::cwd_str().c_str());
         return false;
     }
