@@ -198,7 +198,7 @@ namespace SkylineBatch
                 comboTemplateFile.Text = mainSettings.Template.FilePath;
                 comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
             }
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -241,12 +241,12 @@ namespace SkylineBatch
         {
             if (!comboTemplateFile.Text.Equals(templateControl.Path))
                 comboTemplateFile.Text = templateControl.Path;
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private void templateControl_PathChanged(object sender, EventArgs e)
         {
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private void comboTemplateFile_TextChanged(object sender, EventArgs e)
@@ -264,7 +264,7 @@ namespace SkylineBatch
                     comboTemplateFile.Text = newPath;
                     comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
                     templateControl.SetPath(newPath);
-                    UpdateAnalysisFolderName();
+                    UpdateAnalysisFileName();
                 };
                 timer.Start();
             }
@@ -280,6 +280,31 @@ namespace SkylineBatch
                 textAnalysisPath.Text = path;
                 _lastEnteredPath = path;
             }
+        }
+
+        private void UpdateAnalysisFileName()
+        {
+            try
+            {
+                var fileName = checkBoxUseFolderName.Checked ?
+                     Path.GetFileName(textAnalysisPath.Text) + TextUtil.EXT_SKY : Path.GetFileName(templateControl.Path);
+                textAnalysisFileName.Text = fileName.EndsWith(TextUtil.EXT_SKY_ZIP) ? fileName.Replace(TextUtil.EXT_SKY_ZIP, TextUtil.EXT_SKY) : fileName;
+
+            }
+            catch (Exception)
+            {
+                textAnalysisFileName.Text = string.Empty;
+            }
+        }
+
+        private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFileName();
+        }
+
+        private void textAnalysisPath_TextChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFileName();
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -592,29 +617,19 @@ namespace SkylineBatch
 
         #endregion
 
-        private void UpdateAnalysisFolderName()
-        {
-            try
-            {
-                var fileName = checkBoxUseFolderName.Checked ?
-                     Path.GetFileName(textAnalysisPath.Text) + TextUtil.EXT_SKY : Path.GetFileName(templateControl.Path);
-                textAnalysisFileName.Text = fileName.EndsWith(TextUtil.EXT_SKY_ZIP) ? fileName.Replace(TextUtil.EXT_SKY_ZIP, TextUtil.EXT_SKY) : fileName;
+        #region Tests
 
-            }
-            catch (Exception)
-            {
-                textAnalysisFileName.Text = string.Empty;
-            }
+        public void ClickAddReport() => btnAddReport_Click(new object(), new EventArgs());
+
+        public void ClickEditReport(int index)
+        {
+            for(int i = 0; i < gridReportSettings.Rows.Count; i++)
+                gridReportSettings.Rows[i].Selected = i == index;
+            btnEditReport_Click(new object(), new EventArgs());
+
         }
 
-        private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateAnalysisFolderName();
-        }
 
-        private void textAnalysisPath_TextChanged(object sender, EventArgs e)
-        {
-            UpdateAnalysisFolderName();
-        }
+        #endregion
     }
 }

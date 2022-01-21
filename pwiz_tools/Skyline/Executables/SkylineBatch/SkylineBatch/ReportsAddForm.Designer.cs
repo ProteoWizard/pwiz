@@ -317,6 +317,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnUrl;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnVersion;
-        private System.Windows.Forms.ToolStripButton btnEdit;
+        public System.Windows.Forms.ToolStripButton btnEdit;
     }
 }
