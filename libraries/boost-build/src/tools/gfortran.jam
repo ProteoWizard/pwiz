@@ -1,8 +1,8 @@
 # Copyright (C) 2004 Toon Knapen
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import toolset : flags ;
 import feature ;
@@ -33,7 +33,7 @@ rule compile.fortran
 
 actions compile.fortran
 {
-  gcc -Wall $(OPTIONS) -D$(DEFINES) -I$(INCLUDES) -c -o "$(<)" "$(>)" 
+  gcc -Wall $(OPTIONS) -D$(DEFINES) -I$(INCLUDES) -c -o "$(<)" "$(>)"
 }
 
-generators.register-fortran-compiler gfortran.compile.fortran : FORTRAN FORTRAN90 : OBJ ; 
+generators.register-fortran-compiler gfortran.compile.fortran : FORTRAN FORTRAN90 : OBJ ;

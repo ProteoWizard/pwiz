@@ -1,7 +1,7 @@
 /*
     Copyright 2007 Rene Rivera
     Distributed under the Boost Software License, Version 1.0.
-    (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+    (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 #ifndef BJAM_OUTPUT_H
@@ -34,6 +34,10 @@ void out_data(char const * const s);
 void err_data(char const * const s);
 void out_printf(char const * const f, ...);
 void err_printf(char const * const f, ...);
+
+// Output current errno value & description along with given string.
+void errno_puts(char const * const s);
+void errno_printf(char const * const f, ...);
 
 OBJECT * outf_int( int const value );
 OBJECT * outf_double( double const value );

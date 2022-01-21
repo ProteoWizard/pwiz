@@ -1,6 +1,6 @@
 # Copyright David Abrahams 2004. Distributed under the Boost
 # Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+# file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Support for docutils ReStructuredText processing.
 
@@ -25,7 +25,7 @@ class rst-scanner : common-scanner
     {
         common-scanner.__init__ . $(paths) ;
     }
-    
+
     rule pattern ( )
     {
          return "^[ 	]*\\.\\.[ 	]+include::[ 	]+([^
@@ -55,9 +55,9 @@ rule init ( docutils-dir ? : tools-dir ? )
         {
             .docutils-dir = $(docutils-dir) ;
             .tools-dir = $(tools-dir:R="") ;
-           
-            .setup = [ 
-                common.prepend-path-variable-command PYTHONPATH 
+
+            .setup = [
+                common.prepend-path-variable-command PYTHONPATH
                     : $(.docutils-dir) $(.docutils-dir)/extras ] ;
             RST2XXX = [ common.find-tool rst2html ] ;
         }
@@ -86,7 +86,7 @@ rule html ( target : source : properties *  )
             : "On Windows, you can install from http://docutils.sourceforge.net/."
             ;
         }
-        
+
         if $(RST2XXX_PY)
         {
             if $(RST2XXX_PY:D)
@@ -116,7 +116,7 @@ feature docutils-cmd : : free ;
 toolset.flags docutils COMMON-FLAGS : <docutils> ;
 toolset.flags docutils HTML-FLAGS : <docutils-html> ;
 toolset.flags docutils RST2XXX : <docutils-cmd> ;
-  
+
 actions html
 {
     $(.setup)
