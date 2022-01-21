@@ -2,8 +2,8 @@
 # Copyright 2003-2004. Dave Abrahams
 # Copyright 2003-2006. Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Performs various path manipulations. Paths are always in a 'normalized'
 # representation. In it, a path may be either:

@@ -1,8 +1,8 @@
 # Copyright 2008 Eduardo Gurgel
 #
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 #
 
 # Support for creating components for the Tntnet web application
@@ -41,7 +41,7 @@ project tntnet ;
 
 # Save the project so that we tolerate 'import + using' combo.
 .project = [ project.current ] ;
-# Initialized the Tntnet support module. The 'prefix' parameter 
+# Initialized the Tntnet support module. The 'prefix' parameter
 # tells where Tntnet is installed.
 rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 {
@@ -51,7 +51,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
     local inc_prefix lib_prefix bin_prefix ;
     if $(full_inc)
     {
-        inc_prefix = $(full_inc) ; 
+        inc_prefix = $(full_inc) ;
     }
     else
     {
@@ -124,7 +124,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
       	# Scanner for ecpp includes
         type.set-scanner ECPP : ecpp-scanner ;
 
-	
+
 	local usage-requirements =
 		<include>$(.incprefix)
 		<library-path>$(.libprefix)
@@ -134,18 +134,18 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 	lib cxxtools : $(main)
 		:
 		:
-		: 
+		:
 		<include>$(.incprefix)/cxxtools
-		$(usage-requiriments) 
+		$(usage-requiriments)
 		;
 	lib tntnet : $(main)
 		:
 		:
-		: 
+		:
 		<include>$(.incprefix)/tntnet
 		$(usage-requiriments)
 		;
-		
+
     }
     project.pop-current ;
 

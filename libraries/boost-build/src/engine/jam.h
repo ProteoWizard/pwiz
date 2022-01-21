@@ -7,8 +7,8 @@
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -328,7 +328,9 @@
 #ifdef __OpenBSD__
     #define OSMINOR "OS=OPENBSD"
     #define OS_OPENBSD
-    #define unix
+    #ifndef unix
+        #define unix
+    #endif
 #endif
 #if defined (__FreeBSD_kernel__) && !defined(__FreeBSD__)
     #define OSMINOR "OS=KFREEBSD"
