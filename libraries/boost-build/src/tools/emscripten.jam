@@ -1,7 +1,7 @@
 # Copyright Rene Rivera 2016
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 import os ;
@@ -17,7 +17,7 @@ feature.feature link-optimization : off on full : propagated ;
 rule init ( version ? :  command * : options * )
 {
     command = [ common.get-invocation-command emscripten
-        : emcc 
+        : emcc
         : $(command) ] ;
 
     # Determine the version
@@ -42,7 +42,7 @@ toolset.inherit-generators emscripten <toolset>emscripten
     : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
     ;
 toolset.inherit-rules emscripten : gcc ;
-toolset.inherit-flags emscripten : gcc 
+toolset.inherit-flags emscripten : gcc
         :
         <optimization>off <optimization>speed <optimization>space
         <profiling>off <profiling>on

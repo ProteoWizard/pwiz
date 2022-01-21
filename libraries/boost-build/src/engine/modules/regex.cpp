@@ -1,8 +1,8 @@
 /*
  * Copyright 2003. Vladimir Prus
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "../mem.h"
@@ -42,7 +42,7 @@ LIST * regex_split( FRAME * frame, int flags )
     LISTITER iter = list_begin( args );
     s = list_item( iter );
     separator = list_item( list_next( iter ) );
-    
+
     re = regex_compile( separator );
 
     prev = pos = object_str( s );
@@ -105,9 +105,9 @@ LIST * regex_replace( FRAME * frame, int flags )
     match = list_item( iter );
     iter = list_next( iter );
     replacement = list_item(iter );
-    
+
     re = regex_compile( match );
-    
+
     string_new( buf );
 
     pos = object_str( s );

@@ -1,7 +1,8 @@
+# Copyright 2021 Nikita Kniazev
 # Copyright 2001, 2002 Dave Abrahams
 # Copyright 2002, 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import errors ;
 
@@ -58,6 +59,16 @@ rule range ( start finish ? : step ? )
         }
         return $(result) ;
     }
+}
+
+
+rule equal ( n1 n2 )
+{
+    if [ CALC $(n2) - $(n1) ] = 0
+    {
+        return true ;
+    }
+    return ;
 }
 
 
@@ -149,6 +160,18 @@ rule __test__ ( )
     assert.true  less 005 217 ;
     assert.true  less 0005 217 ;
     assert.true  less 5 00217 ;
+
+    assert.true  equal 0 0 ;
+    assert.true  equal 00 0 ;
+    assert.true  equal 0 00 ;
+    assert.true  equal 00 00 ;
+    assert.true  equal 00 000 ;
+    assert.true  equal 123 123 ;
+    assert.true  equal 0123 123 ;
+    assert.true  equal 123 0123 ;
+    assert.false equal 0 1 ;
+    assert.false equal 123 124 ;
+    assert.false equal 124 123 ;
 
     # TEMPORARY disabled, because nested "try"/"catch" do not work and I do no
     # have the time to fix that right now.
