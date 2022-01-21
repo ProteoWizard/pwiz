@@ -41,7 +41,7 @@ namespace SkylineBatchTest
             
             TestEditRemoteFileSource(mainForm);
 
-            //TestImportRemoteFileSource(mainForm);
+            TestImportRemoteFileSource(mainForm);
 
             TestReplaceRemoteFileSources(mainForm);
         }
@@ -174,7 +174,38 @@ namespace SkylineBatchTest
 
         public void TestImportRemoteFileSource(MainForm mainForm)
         {
-            throw new NotImplementedException();
+            var brudererBcfgSeperateSources = Path.Combine(TEST_FOLDER, "Bruderer_SeperateFileSources.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(brudererBcfgSeperateSources);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+                mainForm.ClickConfig(0);
+            });
+            var configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            var templateRemoteFileForm = ShowDialog<RemoteFileForm>(() => configForm.templateControl.btnDownload.PerformClick());
+            var templateRemoteFileControl = templateRemoteFileForm.remoteFileControl;
+            CheckRemoteFileSourceList(templateRemoteFileControl, new HashSet<string> {
+                "panoramaweb.org RawFiles",
+                "panoramaweb.org Bruderer.sky.zip",
+            });
+            CloseFormsInOrder(false, templateRemoteFileForm, configForm);
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            mainForm.ClearRemoteFileSources();
+
+            var brudererBcfgOneSource = Path.Combine(TEST_FOLDER, "Bruderer_OneFileSource.bcfg");
+            RunUI(() =>
+            {
+                mainForm.DoImport(brudererBcfgOneSource);
+                FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
+                mainForm.ClickConfig(1);
+            });
+            configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            var dataRemoteFileForm = ShowDialog<DataServerForm>(() => configForm.dataControl.btnDownload.PerformClick());
+            var dataRemoteFileControl = dataRemoteFileForm.remoteFileControl;
+            CheckRemoteFileSourceList(dataRemoteFileControl, new HashSet<string> { BRUDERER_SOURCE_NAME });
+            CloseFormsInOrder(false, dataRemoteFileForm, configForm);
+            RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
+            mainForm.ClearRemoteFileSources();
 
         }
 
