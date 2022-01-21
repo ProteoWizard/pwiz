@@ -5,8 +5,8 @@
 # Copyright 2006 Rene Rivera.
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Provides mechanism for installing whole packages into a specific directory
 # structure. This is opposed to the 'install' rule, that installs a number of

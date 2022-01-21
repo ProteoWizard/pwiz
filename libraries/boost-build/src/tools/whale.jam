@@ -1,10 +1,10 @@
-#  Copyright (C) Vladimir Prus 2002-2005. 
+#  Copyright (C) Vladimir Prus 2002-2005.
 
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
-#  This module implements support for Whale/Dolphin/WD parser/lexer tools. 
+#  This module implements support for Whale/Dolphin/WD parser/lexer tools.
 #  See http://www.cs.queensu.ca/home/okhotin/whale/ for details.
 #
 #  There are three interesting target types:
@@ -18,7 +18,7 @@ import path ;
 import "class" : new ;
 import errors ;
 
-rule init ( path # path the Whale/Dolphin/WD binaries 
+rule init ( path # path the Whale/Dolphin/WD binaries
           )
 {
     if $(.configured) && $(.path) != $(path)
@@ -34,7 +34,7 @@ rule init ( path # path the Whale/Dolphin/WD binaries
     .whale = [ path.join $(path) whale ] ;
     .dolphin = [ path.join $(path) dolphin ] ;
     .wd = [ path.join $(path) wd ] ;
-}     
+}
 
 
 # Declare the types.
@@ -58,37 +58,37 @@ class wd-to-cpp : generator
     {
         generator.__init__ $(1) : $(2) : $(3) ;
     }
-    
+
     rule run ( project name ? : property-set : source * )
     {
         if ! $(source[2])
-        {                
+        {
             local new-sources ;
             if ! [ $(source).type ] in WHL DLP
-            {            
-                local r1 = [ generators.construct $(project) $(name) 
+            {
+                local r1 = [ generators.construct $(project) $(name)
                   : WHL : $(property-set) : $(source) ] ;
-                local r2 = [ generators.construct $(project) $(name) 
+                local r2 = [ generators.construct $(project) $(name)
                   : DLP : $(property-set) : $(source) ] ;
-                
+
                 new-sources = [ sequence.unique $(r1[2-]) $(r2[2-]) ] ;
             }
             else
             {
                 new-sources = $(source) ;
             }
-            
+
             local result ;
-            for local i in $(new-sources) 
+            for local i in $(new-sources)
             {
-                local t = [ generators.construct $(project) $(name) : CPP 
-                  : $(property-set) : $(i) ] ;          
+                local t = [ generators.construct $(project) $(name) : CPP
+                  : $(property-set) : $(i) ] ;
                 result += $(t[2-]) ;
             }
             return $(result) ;
-        }        
+        }
     }
-    
+
 }
 
 
@@ -99,18 +99,18 @@ generators.override whale.wd-to-cpp : whale.dolphin ;
 generators.register [ new wd-to-cpp whale.wd-to-cpp : : CPP ] ;
 
 
-actions whale 
+actions whale
 {
-    $(.whale) -d $(<[1]:D) $(>)      
+    $(.whale) -d $(<[1]:D) $(>)
 }
 
 actions dolphin
-{    
+{
     $(.dolphin) -d $(<[1]:D) $(>)
 }
 
 actions wd
-{    
+{
     $(.wd) -d $(<[1]:D) -g $(>)
 }
 
