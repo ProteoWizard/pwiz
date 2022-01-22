@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestUtil
             sb.Append(LogMessageToCode(entry.Summary, 4));
 
             sb.Append("                new[]\r\n                {\r\n");
-            sb.Append(string.Join(string.Empty, entry.AllInfo.Select(info => LogMessageToCode(info, 5))));
+            sb.Append(string.Concat(entry.AllInfo.Select(info => LogMessageToCode(info, 5))));
 
             sb.Append("                }");
 
