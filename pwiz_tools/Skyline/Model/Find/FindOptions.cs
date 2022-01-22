@@ -65,13 +65,12 @@ namespace pwiz.Skyline.Model.Find
 
         public string GetDescription()
         {
-            var strings = new List<string>();
+            var strings = CustomFinders.Select(finder => finder.DisplayName);
             if (!string.IsNullOrEmpty(Text))
             {
-                strings.Add(Text);
+                strings = strings.Prepend(Text);
             }
-            strings.AddRange(CustomFinders.Select(finder => finder.DisplayName));
-            return string.Join(string.Empty, strings.ToArray());
+            return string.Concat(strings);
         }
 
         public string GetNotFoundMessage()
