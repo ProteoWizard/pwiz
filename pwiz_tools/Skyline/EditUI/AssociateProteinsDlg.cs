@@ -200,7 +200,7 @@ namespace pwiz.Skyline.EditUI
 
             int maxLength = peptidesForMatching.Max(peptide => GetPeptideSequence(peptide).Length);
             long streamLength = fastaFile.Length;
-            var proteinAssociations = new List<Tuple<int, FastaSequence, List<IdentityPath>>>();
+            var proteinAssociations = new List<Tuple<FastaRecord, List<IdentityPath>>>();
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Message = Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.EditUI
                             }
                             if (matches.Count > 0)
                             {
-                                proteinAssociations.Add(Tuple.Create(fastaRecord.RecordIndex, fasta, matches));
+                                proteinAssociations.Add(Tuple.Create(fastaRecord, matches));
                             }
                         }
                     });
@@ -245,8 +245,8 @@ namespace pwiz.Skyline.EditUI
             }
 
             // Protein associations may be out of order because of multi-threading, so put them back in order.
-            return proteinAssociations.OrderBy(tuple => tuple.Item1).Select(tuple =>
-                new KeyValuePair<FastaSequence, List<IdentityPath>>(tuple.Item2, tuple.Item3)).ToList();
+            return proteinAssociations.OrderBy(tuple => tuple.Item1.RecordIndex).Select(tuple =>
+                new KeyValuePair<FastaSequence, List<IdentityPath>>(tuple.Item1.FastaSequence, tuple.Item2)).ToList();
         }
 
         /// <summary>
