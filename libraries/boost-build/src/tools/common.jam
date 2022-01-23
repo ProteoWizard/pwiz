@@ -3,7 +3,7 @@
 # Copyright 2005 Toon Knapen
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #   Provides actions common to all toolsets, such as creating directories and
 # removing files.
@@ -1126,6 +1126,98 @@ local rule arch-and-model-tag ( name : type ? : property-set )
     local arch = [ MATCH ^(.) : $(architecture) ] ;
 
     return $(arch)$(address-model) ;
+}
+
+# TODO: probably needs to escape '"' in command parts
+# TODO: if part does not contain whitespaces it does not require escaping
+rule make-command-string ( command + )
+{
+    local command-string = \"$(command)\" ;
+    return $(command-string:J=" ") ;
+}
+
+rule find-compiler ( toolset : tool : version ? : command * : additional-paths * )
+{
+    #1): use user-provided command
+    if $(command)
+    {
+        if ! [ get-invocation-command-nodefault $(toolset) : $(tool)
+             : $(command) : $(additional-paths) ]
+        {
+            local command-string = [ make-command-string $(command) ] ;
+            errors.error toolset $(toolset) "initialization:"
+                : provided command '$(command-string)' not found
+                : initialized from [ errors.nearest-user-location ] ;
+        }
+    }
+    #2): enforce user-provided version
+    else if $(version)
+    {
+        command = [ get-invocation-command-nodefault $(toolset) : $(tool)-$(version)
+                  : : $(additional-paths) ] ;
+
+        #2.1) fallback: check whether "$(tool)" reports the requested version
+        if ! $(command) { # ?= operator does not short-circuit
+        command ?= [ get-invocation-command-nodefault $(toolset) : $(tool)
+                   : : $(additional-paths) ] ;
+        }
+
+        if ! $(command)
+        {
+            errors.error toolset $(toolset) "initialization:"
+                : version '$(version)' requested but neither
+                    '$(tool)-$(version)' nor default '$(tool)' found
+                : initialized from [ errors.nearest-user-location ] ;
+        }
+
+        import $(toolset) ;
+        local tool-version = [ $(toolset).get-full-version $(command) ] ;
+
+        import version ;
+        if ! [ version.version-compatible [ SPLIT_BY_CHARACTERS $(version) : . ]
+                                        : [ SPLIT_BY_CHARACTERS $(tool-version) : . ] ]
+        {
+            errors.error toolset $(toolset) "initialization:"
+                : version '$(version)' requested but
+                    '$(tool)-$(version)' not found and version
+                    '$(tool-version:J=.)' of default '$(command)'
+                    does not match
+                : initialized from [ errors.nearest-user-location ]
+                ;
+        }
+    }
+    #3) default: no command and no version specified, try using "$(tool)"
+    else
+    {
+        command = [ get-invocation-command-nodefault $(toolset) : $(tool)
+                  : : $(additional-paths) ] ;
+        if ! $(command)
+        {
+            errors.error toolset $(toolset) "initialization:"
+                : no command provided, default command '$(tool)' not found
+                : initialized from [ errors.nearest-user-location ] ;
+        }
+    }
+    return $(command) ;
+}
+
+rule match-command-output ( kind ? : pattern : command-string )
+{
+    local output = [ SHELL $(command-string) : exit-status ] ;
+    if 0 != $(output[2])
+    {
+        errors.error '$(command-string)'
+                     exited with error code $(output[2]) ;
+    }
+
+    local match = [ MATCH $(pattern) : $(output[1]) ] ;
+    if ! $(match)
+    {
+        errors.error '$(command-string)'
+                     returned an invalid $kind string '$(output[1])' ;
+    }
+
+    return $(match) ;
 }
 
 rule __test__ ( )
