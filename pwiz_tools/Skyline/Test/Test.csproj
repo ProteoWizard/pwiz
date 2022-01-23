@@ -143,6 +143,7 @@
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
