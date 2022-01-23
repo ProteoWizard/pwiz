@@ -1,6 +1,6 @@
 # Copyright 2012 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import os ;
 import targets ;
@@ -48,7 +48,7 @@ rule can-symlink ( project )
         if [ configure.try-build $(target) : [ property-set.empty ] : "symlinks supported" ]
         {
             .can-symlink = true ;
-        }       
+        }
         else
         {
             .can-symlink = false ;
@@ -78,7 +78,7 @@ rule can-junction ( project )
         if [ configure.try-build $(target) : [ property-set.empty ] : "junctions supported" ]
         {
             .can-junction = true ;
-        }       
+        }
         else
         {
             .can-junction = false ;
@@ -122,7 +122,7 @@ rule can-hardlink ( project )
         if [ configure.try-build $(target) : [ property-set.empty ] : "hardlinks supported" ]
         {
             .can-hardlink = true ;
-        }       
+        }
         else
         {
             .can-hardlink = false ;
@@ -216,10 +216,10 @@ class symlink-target-class : basic-target
 
             property-set = [ property-set.create <location>$(path) ] ;
         }
-        
+
         local a = [ new non-scanning-action $(source-target) :
             link.do-link-recursively : $(property-set) ] ;
-        
+
         local t = [ new notfile-target $(name)
             : $(self.project) : $(a) ] ;
 
