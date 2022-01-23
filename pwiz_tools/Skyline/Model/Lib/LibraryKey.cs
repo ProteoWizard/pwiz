@@ -688,7 +688,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Join(String.Empty, Crosslinks) + Transition.GetChargeIndicator(Adduct);
+            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks) + Transition.GetChargeIndicator(Adduct);
         }
 
         /// <summary>

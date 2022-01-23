@@ -659,6 +659,21 @@ namespace SkylineBatch
 
         public List<string> ConfigsBusy() => State.ConfigsBusy();
 
+
+        // For testing only - reset remote file sources
+        public void ClearRemoteFileSources()
+        {
+            var currentState = State;
+            var newState = currentState;
+            if (State.BaseState.ConfigList.Count > 0)
+                throw new Exception("Cannot clear remote file source list while configurations exist.");
+            foreach (var name in currentState.FileSources.Keys)
+            {
+                newState = newState.RemoveRemoteFileSource(name);
+            }
+            SetState(currentState, newState);
+        }
+
         #endregion
 
     }

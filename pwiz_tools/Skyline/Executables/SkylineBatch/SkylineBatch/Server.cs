@@ -324,12 +324,11 @@ namespace SkylineBatch
                 var duplicateIndexRegex = new Regex("\\(([1-9][0-9]*)\\)$");
                 var regexMatches = duplicateIndexRegex.Match(Name).Groups;
                 string newName;
-                if (regexMatches.Count > 0)
+                try
                 {
                     var lastIndex = int.Parse(regexMatches[0].Value);
                     newName = duplicateIndexRegex.Replace(Name, $"({lastIndex + 1})");
-                }
-                else
+                } catch (FormatException)
                 {
                     newName = Name + "(2)";
                 }

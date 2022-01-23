@@ -120,18 +120,21 @@ namespace SkylineBatch
                         if (error != null) throw error;
                         var count = (double) (files.AsEnumerable().Count());
                         int i = 0;
-                        foreach (var file in files)
+                        foreach (dynamic file in files)
                         {
                             doOnProgress((int) (i / count * percentScale) + percentDone,
                                 (int) ((i + 1) / count * percentScale) + percentDone);
-                            var pathOnServer = (string) file["id"];
-                            var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
-                            var panoramaServerUri = new Uri("https://panoramaweb.org/");
-                            var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
-                                 cancelToken);
-                            fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
-                                new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty), size,
-                                folder));
+                            if (file.collection == false && file.leaf == true)
+                            {
+                                var pathOnServer = (string)file["id"];
+                                var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
+                                var panoramaServerUri = new Uri("https://panoramaweb.org/");
+                                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
+                                     cancelToken);
+                                fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
+                                    new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty), size,
+                                    folder));
+                            }
                             i++;
                         }
                     }
