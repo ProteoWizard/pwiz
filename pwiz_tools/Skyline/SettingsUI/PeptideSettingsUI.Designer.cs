@@ -172,6 +172,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboStandardType, "comboStandardType");
             this.comboStandardType.Name = "comboStandardType";
             this.helpTip.SetToolTip(this.comboStandardType, resources.GetString("comboStandardType.ToolTip"));
+            this.comboStandardType.SelectedIndexChanged += new System.EventHandler(this.comboStandardType_SelectedIndexChanged);
             // 
             // comboLabelType
             // 
@@ -190,6 +191,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listHeavyMods.Name = "listHeavyMods";
             this.helpTip.SetToolTip(this.listHeavyMods, resources.GetString("listHeavyMods.ToolTip"));
             this.modeUIHandler.SetUIMode(this.listHeavyMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.listHeavyMods.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listHeavyMods_ItemCheck);
             // 
             // listStaticMods
             // 
@@ -207,6 +209,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.listStandardTypes, "listStandardTypes");
             this.listStandardTypes.Name = "listStandardTypes";
             this.helpTip.SetToolTip(this.listStandardTypes, resources.GetString("listStandardTypes.ToolTip"));
+            this.listStandardTypes.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listStandardTypes_ItemCheck);
             // 
             // textMaxVariableMods
             // 
