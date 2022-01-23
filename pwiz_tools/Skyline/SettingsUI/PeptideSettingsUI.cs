@@ -1164,27 +1164,13 @@ namespace pwiz.Skyline.SettingsUI
             comboNormalizationMethod.Items.AddRange(newComboItems.ToArray());
             comboNormalizationMethod.SelectedItem = currentNormalizationMethod;
         }
-        private void comboStandardType_SelectedIndexChanged(object sender, EventArgs e)
+
+        private void tabControl1_TabIndexChanged(object sender, EventArgs e)
         {
-            UpdateComboNormalizationMethod();
-        }
-        /// <summary>
-        /// Call <see cref="UpdateComboNormalizationMethod" /> via a BeginInvoke.
-        /// The CheckedListBox.ItemCheck event fires before the checked state of the item has updated,
-        /// so we want to wait to update the items in comboNormalizationMethod until the CheckListBox
-        /// can accurately tell us what is checked.
-        /// </summary>
-        private void DelayUpdateComboNormalizationMethod()
-        {
-            CommonActionUtil.SafeBeginInvoke(this, UpdateComboNormalizationMethod);
-        }
-        private void listHeavyMods_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            DelayUpdateComboNormalizationMethod();
-        }
-        private void listStandardTypes_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            DelayUpdateComboNormalizationMethod();
+            if (tabControl1.SelectedTab == tabQuantification)
+            {
+                UpdateComboNormalizationMethod();
+            }
         }
         #region Functional testing support
 
