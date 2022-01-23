@@ -1,0 +1,102 @@
+Undo Redo : Peptide Settings changed
+Summary   : Settings > Peptide Settings changed
+All Info  :
+Peptide Settings changed
+Settings > Peptide Settings -- Digestion > Max missed cleavages changed from "0" to "1"
+Settings > Peptide Settings > Background proteome changed from "None" to "mouse-proteome"
+Settings > Peptide Settings > Background proteome > Background proteome database path is "mouse-proteome.protdb"
+Settings > Peptide Settings -- Prediction > Time window changed from "2" to "5"
+Settings > Peptide Settings -- Filter > Exclude N-terminal AAs changed from "25" to "0"
+Settings > Peptide Settings -- Filter > Min length changed from "8" to "7"
+Settings > Peptide Settings -- Filter > Max length changed from "25" to "26"
+Settings > Peptide Settings -- Filter > Peptide Uniqueness changed from "none" to "protein"
+Settings > Peptide Settings -- Library > Libraries : "shotgun" was added
+Settings > Peptide Settings -- Library > Libraries > "shotgun" > Path is "shotgun.blib"
+Settings > Peptide Settings -- Library > Libraries : "heavy" was added
+Settings > Peptide Settings -- Library > Libraries > "heavy" > Path is "heavy.blib"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
+
+Undo Redo : Peptide Settings -- Quantification changed
+Summary   : Settings > Peptide Settings -- Quantification changed
+All Info  :
+Peptide Settings -- Quantification changed
+Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Peptide Settings -- Quantification > MS level changed from Missing to "2"
+Settings > Peptide Settings -- Quantification > Units changed from Missing to "fmol"
+
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
+Settings > Transition Settings -- Filter > Peptide Ion charges changed from "1" to "1, 2"
+Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b"
+Settings > Transition Settings -- Filter > Product ion selection start changed from "m/z > precursor" to "ion 1"
+Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion"
+Settings > Transition Settings -- Filter > Special ions: removed all
+Settings > Transition Settings -- Filter > Precursor m/z exclusion window changed from "0" to "5"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "0,05"
+Settings > Transition Settings -- Library > Minimum product ions changed from "0" to "3"
+Settings > Transition Settings -- Library > Product ions changed from "3" to "10"
+Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
+Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "340"
+Settings > Transition Settings -- Instrument > Max m/z changed from "1500" to "1200"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Centroided"
+Settings > Transition Settings -- Full-Scan > Mass accuracy changed from Missing to "10"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans within time frame of MS/MS IDs" to "Include all matching scans"
+Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
+Undo Redo : Inserted 31 peptides
+Summary   : Inserted 31 peptides
+All Info  :
+Inserted 31 peptides
+Extra Info: Peptide Sequence	Protein Name	Protein Description
+GVDC[+57]QEVSQEK	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+VVEATNSMTAVR	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+TSQSGLNTLSQR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+IADFGWSVHAPSLR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+AMQAVQQEGAGGQQEEK	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+SPATGGPQVLNAQR	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+DAGSALLSLHQEDQENVNPEK	sp|P51943|CCNA2_MOUSE	Cyclin-A2 OS=Mus musculus GN=Ccna2 PE=1 SV=2
+QLEEEQSVRPK	sp|P24860|CCNB1_MOUSE	G2/mitotic-specific cyclin-B1 OS=Mus musculus GN=Ccnb1 PE=1 SV=3
+LSGKPQNAPEGYQNR	sp|Q9JJ66|CDC20_MOUSE	Cell division cycle protein 20 homolog OS=Mus musculus GN=Cdc20 PE=1 SV=2
+GSISENEAQGASTQDTAK	sp|Q6RT24|CENPE_MOUSE	Centromere-associated protein E OS=Mus musculus GN=Cenpe PE=1 SV=1
+FIQPNIGELPTALK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+LDDIFEPVLIPEPK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+FYTQQWEDYR	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+ESFESQFLADTER	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+SPLAELGVLK	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+ASLGPNLDLQDSVVLYHR	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+AQGLDLLQAVLTR	sp|P60330|ESPL1_MOUSE	Separin OS=Mus musculus GN=Espl1 PE=1 SV=1
+EVAQAATPQNPVNQGK	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+GSQSDVLQDKPSTAPDAASR	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+LAASASTQQFQEVK	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+TPTC[+57]QSSTDSSPYAR	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+LNLVDLAGSENIGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+EAGNINQSLLTLGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+LTDDHVQFLIYQILR	sp|P47811|MK14_MOUSE	Mitogen-activated protein kinase 14 OS=Mus musculus GN=Mapk14 PE=1 SV=3
+SLAPVELLLR	sp|P70268|PKN1_MOUSE	Serine/threonine-protein kinase N1 OS=Mus musculus GN=Pkn1 PE=1 SV=3
+KLEEEEEGSAPATSR	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+NVTQAEPFSLETDK	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+EVTTLTADPPDGIK	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LLTEIHGGAC[+57]STSSGR	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+		
+

@@ -1,0 +1,102 @@
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
+All Info  :
+肽段设置 已更改
+设置 > 肽段设置 -- 酶解 > 最大的漏切酶解位点数 从 "0" 更改到 "1"
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "mouse-proteome"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "mouse-proteome.protdb"
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "5"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端氨基酸 从 "25" 更改到 "0"
+设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "7"
+设置 > 肽段设置 -- 过滤器 > 最大长度 从 "25" 更改到 "26"
+设置 > 肽段设置 -- 过滤器 > 肽段独特性 从 "无" 更改到 "蛋白质"
+设置 > 肽段设置 -- 库 > 库 : "shotgun" 已添加
+设置 > 肽段设置 -- 库 > 库 > "shotgun" > 路径 是 "shotgun.blib"
+设置 > 肽段设置 -- 库 > 库 : "heavy" 已添加
+设置 > 肽段设置 -- 库 > 库 > "heavy" > 路径 是 "heavy.blib"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
+
+Undo Redo : 肽段设置 -- 定量 已更改
+Summary   : 设置 > 肽段设置 -- 定量 已更改
+All Info  :
+肽段设置 -- 定量 已更改
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 肽段设置 -- 定量 > MS 级别 从 缺失 更改到 "2"
+设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "fmol"
+
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 过滤器 > 肽段母离子电荷 从 "2" 更改到 "2, 3"
+设置 > 离子对设置 -- 过滤器 > 肽段离子电荷 从 "1" 更改到 "1, 2"
+设置 > 离子对设置 -- 过滤器 > 离子类型 从 "y" 更改到 "y, b"
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 1"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+设置 > 离子对设置 -- 过滤器 > 母离子质荷比排除窗口 从 "0" 更改到 "5"
+设置 > 离子对设置 -- 库 > 离子匹配耐受性 从 "0.5" 更改到 "0.05"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "3"
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "10"
+设置 > 离子对设置 -- 库 > 选择 从 "从已过滤的离子电荷和类型" 更改到 "从已过滤的子离子"
+设置 > 离子对设置 -- 仪器 > 最小质荷比 从 "50" 更改到 "340"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1200"
+设置 > 离子对设置 -- 全扫描 > 采集方法 从 "无" 更改到 "PRM"
+设置 > 离子对设置 -- 全扫描 > 子离子质量分析仪 从 "无" 更改到 "棒状图形式"
+设置 > 离子对设置 -- 全扫描 > 质量准确度 从 缺失 更改到 "10"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤类型 从 "仅使用 MS/MS ID 时间范围内的扫描" 更改到 "包含所有匹配的扫描"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "5" 更改到 "0"
+
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
+All Info  :
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
+
+Undo Redo : 已插入 31 肽段
+Summary   : 已插入 31 肽段
+All Info  :
+已插入 31 肽段
+Extra Info: 肽段序列	蛋白质名称	蛋白质描述
+GVDC[+57]QEVSQEK	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+VVEATNSMTAVR	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+TSQSGLNTLSQR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+IADFGWSVHAPSLR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+AMQAVQQEGAGGQQEEK	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+SPATGGPQVLNAQR	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+DAGSALLSLHQEDQENVNPEK	sp|P51943|CCNA2_MOUSE	Cyclin-A2 OS=Mus musculus GN=Ccna2 PE=1 SV=2
+QLEEEQSVRPK	sp|P24860|CCNB1_MOUSE	G2/mitotic-specific cyclin-B1 OS=Mus musculus GN=Ccnb1 PE=1 SV=3
+LSGKPQNAPEGYQNR	sp|Q9JJ66|CDC20_MOUSE	Cell division cycle protein 20 homolog OS=Mus musculus GN=Cdc20 PE=1 SV=2
+GSISENEAQGASTQDTAK	sp|Q6RT24|CENPE_MOUSE	Centromere-associated protein E OS=Mus musculus GN=Cenpe PE=1 SV=1
+FIQPNIGELPTALK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+LDDIFEPVLIPEPK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+FYTQQWEDYR	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+ESFESQFLADTER	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+SPLAELGVLK	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+ASLGPNLDLQDSVVLYHR	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+AQGLDLLQAVLTR	sp|P60330|ESPL1_MOUSE	Separin OS=Mus musculus GN=Espl1 PE=1 SV=1
+EVAQAATPQNPVNQGK	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+GSQSDVLQDKPSTAPDAASR	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+LAASASTQQFQEVK	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+TPTC[+57]QSSTDSSPYAR	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+LNLVDLAGSENIGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+EAGNINQSLLTLGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+LTDDHVQFLIYQILR	sp|P47811|MK14_MOUSE	Mitogen-activated protein kinase 14 OS=Mus musculus GN=Mapk14 PE=1 SV=3
+SLAPVELLLR	sp|P70268|PKN1_MOUSE	Serine/threonine-protein kinase N1 OS=Mus musculus GN=Pkn1 PE=1 SV=3
+KLEEEEEGSAPATSR	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+NVTQAEPFSLETDK	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+EVTTLTADPPDGIK	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LLTEIHGGAC[+57]STSSGR	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+		
+

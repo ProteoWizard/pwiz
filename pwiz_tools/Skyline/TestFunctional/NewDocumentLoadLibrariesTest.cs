@@ -83,12 +83,7 @@ namespace pwiz.SkylineTestFunctional
             // Push the "Blank Document" button on the Start Page.
             // The Blank Document button causes an extra call to "SkylineWindow.NewDocument", which is
             // necessary to reproduce the problem that this code is verifying is fixed
-            RunUI(() =>
-            {
-                ActionBoxControl newDocumentControl = RecurseControlsOfType<ActionBoxControl>(startPage)
-                    .Single(control => control.Caption == Resources.SkylineStartup_SkylineStartup_Blank_Document);
-                newDocumentControl.EventAction();
-            });
+            RunUI(() => startPage.ClickWizardAction(Resources.SkylineStartup_SkylineStartup_Blank_Document));
             WaitForOpenForm<SkylineWindow>();
             WaitForDocumentLoaded();
 
@@ -111,16 +106,6 @@ namespace pwiz.SkylineTestFunctional
             var libarySpecLoaded = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Single();
             Assert.IsNotNull(libarySpecLoaded);
             Assert.AreEqual(librarySpec.FilePath, libarySpecLoaded.FilePath);
-        }
-
-        private IEnumerable<T> RecurseControlsOfType<T>(Control parent)
-        {
-            var result = parent.Controls.OfType<Control>().SelectMany(RecurseControlsOfType<T>);
-            if (parent is T)
-            {
-                result = result.Prepend((T) (object) parent);
-            }
-            return result;
         }
     }
 }
