@@ -1,8 +1,8 @@
-# Copyright 2003 Dave Abrahams 
-# Copyright 2002, 2003 Rene Rivera 
-# Copyright 2002, 2003, 2004, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2002, 2003 Rene Rivera
+# Copyright 2002, 2003, 2004, 2005 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Defines the "symlink" special target. 'symlink' targets make symbolic links
 # to the sources.
@@ -18,20 +18,20 @@ feature.feature symlink-location : project-relative build-relative : incidental 
 class symlink-targets : basic-target
 {
     import numbers modules class property project path ;
-    
+
     rule __init__ (
       project
         : targets *
         : sources *
     )
-    {    
+    {
         # Generate a fake name for now. Need unnamed targets eventually.
         local c = [ modules.peek symlink : .count ] ;
         modules.poke symlink : .count : [ numbers.increment $(c) ] ;
         local fake-name = symlink#$(c) ;
-    
+
           basic-target.__init__ $(fake-name) : $(project) : $(sources) ;
-    
+
         # Remember the targets to map the sources onto. Pad or truncate
         # to fit the sources given.
         self.targets = ;
@@ -47,11 +47,11 @@ class symlink-targets : basic-target
                 self.targets += $(source) ;
             }
         }
-    
+
         # The virtual targets corresponding to the given targets.
         self.virtual-targets = ;
-    }    
-    
+    }
+
     rule construct ( name : source-targets * : property-set )
     {
         local i = 1 ;
@@ -59,16 +59,16 @@ class symlink-targets : basic-target
         {
             local s = $(self.targets[$(i)]) ;
             local a = [ class.new action  $(t) : symlink.ln : $(property-set) ] ;
-            local vt = [ class.new file-target $(s:D=) 
+            local vt = [ class.new file-target $(s:D=)
               : [ $(t).type ] : $(self.project) : $(a) ] ;
-            
+
             # Place the symlink in the directory relative to the project
             # location, instead of placing it in the build directory.
             if [ property.select <symlink-location> : [ $(property-set).raw ] ] = <symlink-location>project-relative
             {
                 $(vt).set-path [ path.root $(s:D) [ $(self.project).get location ] ] ;
             }
-            
+
             self.virtual-targets += $(vt) ;
             i = [ numbers.increment $(i) ] ;
         }
@@ -96,9 +96,9 @@ rule symlink (
     )
 {
     local project = [ project.current ] ;
-    
+
     return [ targets.main-target-alternative
-        [ class.new symlink-targets $(project) : $(targets) : 
+        [ class.new symlink-targets $(project) : $(targets) :
           # Note: inline targets are not supported for symlink, intentionally,
           # since it's used to linking existing non-local targets.
           $(sources) ] ] ;

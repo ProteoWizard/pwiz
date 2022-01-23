@@ -1,16 +1,16 @@
 # Copyright 2017 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 
 #| tag::doc[]
 
 [[bbv2.builtin.features.architecture]]`architecture`::
-*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
+*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips`, `mips1`, `mips2`,
 `mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
-`s390x`, `combined`, `combined-x86-power`.
+`s390x`.
 +
 Specifies the general processor family to generate code for.
 
@@ -31,7 +31,7 @@ feature.feature architecture
         power
 
         # MIPS/SGI
-        mips1 mips2 mips3 mips4 mips32 mips32r2 mips64
+        mips mips1 mips2 mips3 mips4 mips32 mips32r2 mips64
 
         # HP/PA-RISC
         parisc
@@ -44,12 +44,6 @@ feature.feature architecture
 
         # z Systems (aka s390x)
         s390x
-
-        # Combined architectures for platforms/toolsets that support building for
-        # multiple architectures at once. "combined" would be the default multi-arch
-        # for the toolset.
-        combined
-        combined-x86-power
     :
         propagated optional
     ;

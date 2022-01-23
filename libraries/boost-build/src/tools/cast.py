@@ -2,8 +2,8 @@
 # Base revision: 64432.
 # Copyright 2005-2010 Vladimir Prus.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Defines main target 'cast', used to change type for target. For example, in Qt
 # library one wants two kinds of CPP files -- those that just compiled and those
