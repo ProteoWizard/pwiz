@@ -13,8 +13,8 @@
 # Copyright 2008 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import os
 import subprocess
@@ -177,13 +177,6 @@ def init(version = None, command = None, options = None):
     toolset.flags('gcc.archive', '.AR', condition, [archiver])
     if debug():
         print 'notice: using gcc archiver ::', condition, '::', archiver
-
-    # - Ranlib
-    ranlib = common.get_invocation_command('gcc',
-            'ranlib', feature.get_values('<ranlib>', options), [bin], path_last=True)
-    toolset.flags('gcc.archive', '.RANLIB', condition, [ranlib])
-    if debug():
-        print 'notice: using gcc archiver ::', condition, '::', ranlib
 
     # - The resource compiler.
     rc_command = common.get_invocation_command_nodefault('gcc',
@@ -669,7 +662,6 @@ def gcc_archive(targets, sources, properties):
 # That warning is produced only on some platforms, for whatever reasons.
 engine.register_action('gcc.archive',
                        '''"$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-                       "$(.RANLIB)" "$(<)"
                        ''',
                        function=gcc_archive,
                        flags=['piecemeal'])

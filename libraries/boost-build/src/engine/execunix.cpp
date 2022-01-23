@@ -215,7 +215,7 @@ void exec_cmd
     /* Create pipes for collecting child output. */
     if ( pipe( out ) < 0 || ( globs.pipe_action && pipe( err ) < 0 ) )
     {
-        perror( "pipe" );
+        errno_puts( "pipe" );
         exit( EXITBAD );
     }
 
@@ -257,7 +257,7 @@ void exec_cmd
 
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
-        perror( "vfork" );
+        errno_puts( "vfork" );
         exit( EXITBAD );
     }
 
@@ -294,11 +294,11 @@ void exec_cmd
             setrlimit( RLIMIT_CPU, &r_limit );
         }
         if (0 != setpgid( pid, pid )) {
-            perror("setpgid(child)");
+            errno_puts("setpgid(child)");
             /* exit( EXITBAD ); */
         }
         execvp( argv[ 0 ], (char * *)argv );
-        perror( "execvp" );
+        errno_puts( "execvp" );
         _exit( 127 );
     }
 
@@ -324,7 +324,7 @@ void exec_cmd
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
     if ( !cmdtab[ slot ].stream[ OUT ] )
     {
-        perror( "fdopen" );
+        errno_puts( "fdopen" );
         exit( EXITBAD );
     }
 
@@ -335,7 +335,7 @@ void exec_cmd
         cmdtab[ slot ].stream[ ERR ] = fdopen( cmdtab[ slot ].fd[ ERR ], "rb" );
         if ( !cmdtab[ slot ].stream[ ERR ] )
         {
-            perror( "fdopen" );
+            errno_puts( "fdopen" );
             exit( EXITBAD );
         }
     }

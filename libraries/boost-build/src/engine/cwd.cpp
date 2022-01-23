@@ -2,14 +2,15 @@
  * Copyright 2002. Vladimir Prus
  * Copyright 2005. Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "cwd.h"
 
 #include "jam.h"
 #include "mem.h"
+#include "output.h"
 #include "pathsys.h"
 
 #include <assert.h>
@@ -72,7 +73,7 @@ void cwd_init( void )
 
     if ( !cwd_ )
     {
-        perror( "can not get current working directory" );
+        errno_puts( "can not get current working directory" );
         exit( EXITBAD );
     }
 }
