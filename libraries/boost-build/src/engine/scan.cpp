@@ -166,7 +166,7 @@ int yyline()
         {
             FILE * f = stdin;
             if ( strcmp( object_str( i->fname ), "-" ) && !( f = fopen( object_str( i->fname ), "r" ) ) )
-                perror( object_str( i->fname ) );
+                errno_puts( object_str( i->fname ) );
             i->file = f;
         }
 
