@@ -16,7 +16,6 @@ namespace SkylineBatch
         private readonly bool _serverRequired;
         private readonly string _dataFolder;
         private bool _updated;
-        private RemoteFileControl _remoteFileControl;
 
         public DataServerForm(DataServerInfo editingServerInfo, string folder, SkylineBatchConfigManagerState state, IMainUiControl mainControl, bool serverRequired = false)
         {
@@ -27,13 +26,13 @@ namespace SkylineBatch
             _dataFolder = folder;
             _serverRequired = serverRequired;
 
-            _remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired);
-            _remoteFileControl.Dock = DockStyle.Fill;
-            _remoteFileControl.Show();
-            panelRemoteFile.Controls.Add(_remoteFileControl);
+            remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired);
+            remoteFileControl.Dock = DockStyle.Fill;
+            remoteFileControl.Show();
+            panelRemoteFile.Controls.Add(remoteFileControl);
 
-            _remoteFileControl.AddRemoteFileChangedEventHandler(RemoteFileChangedByUser);
-            _remoteFileControl.AddRelativePathChangedEventHandler(RemoteFileChangedByUser);
+            remoteFileControl.AddRemoteFileChangedEventHandler(RemoteFileChangedByUser);
+            remoteFileControl.AddRelativePathChangedEventHandler(RemoteFileChangedByUser);
 
 
             textNamingPattern.Text = editingServerInfo != null ? editingServerInfo.DataNamingPattern : string.Empty;
@@ -45,9 +44,12 @@ namespace SkylineBatch
                 btnRemoveServer.Hide();
         }
 
+
+        public RemoteFileControl remoteFileControl;
+
         public DataServerInfo Server;
         public ServerConnector serverConnector { get; private set; }
-        public SkylineBatchConfigManagerState State => _remoteFileControl.State;
+        public SkylineBatchConfigManagerState State => remoteFileControl.State;
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -154,7 +156,7 @@ namespace SkylineBatch
             Server server;
             try
             {
-                server = _remoteFileControl.ServerFromUI();
+                server = remoteFileControl.ServerFromUI();
             }
             catch (ArgumentException e)
             {
@@ -168,7 +170,7 @@ namespace SkylineBatch
         private void btnRemoveServer_Click(object sender, EventArgs e)
         {
             _cancelValidate?.Cancel();
-            _remoteFileControl.Clear();
+            remoteFileControl.Clear();
             textNamingPattern.Text = string.Empty;
             listBoxFileNames.Items.Clear();
             Server = null;
@@ -239,7 +241,7 @@ namespace SkylineBatch
         {
             try
             {
-                _updated = _remoteFileControl.RemoteFileSourceFromUI() == null;
+                _updated = remoteFileControl.RemoteFileSourceFromUI() == null;
             } catch (ArgumentException)
             {
                 _updated = false;
