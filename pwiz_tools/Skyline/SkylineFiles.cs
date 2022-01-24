@@ -3325,7 +3325,8 @@ namespace pwiz.Skyline
             ShareType shareType;
             try
             {
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, out var cancelled);
+                var cancelled = false;
+                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;

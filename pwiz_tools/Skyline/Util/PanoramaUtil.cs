@@ -31,7 +31,6 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -735,7 +734,7 @@ namespace pwiz.Skyline.Util
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
         ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType);
         ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk,
-            Control parent, out bool cancelled);
+            Control parent, ref bool cancelled);
 
         Uri UploadedDocumentUri { get; }
     }
@@ -798,16 +797,6 @@ namespace pwiz.Skyline.Util
         }
 
 
-        [CanBeNull]
-        public SkylineVersion GetMaxSupportedSkylineVersion(FolderInformation folderInfo, SrmDocument document)
-        {
-            var cacheVersion = GetDocumentCacheVersion(document);
-
-            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
-
-            return supportedVersions.Item2;
-        }
-
         private Tuple<CacheFormatVersion, SkylineVersion> GetSupportedVersionsForCacheFormat(FolderInformation folderInfo, CacheFormatVersion? cacheVersion)
         {
             var skydVersion = GetSupportedSkydVersion(folderInfo);
@@ -829,14 +818,19 @@ namespace pwiz.Skyline.Util
             return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
         }
 
-        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, out bool cancelled)
+        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
-            var skylineVersion = GetMaxSupportedSkylineVersion(folderInfo, document);
+            var cacheVersion = GetDocumentCacheVersion(document);
+            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
+            var skylineVersion = supportedVersions.Item2;
+
             if (!fileFormatOnDisk.HasValue && skylineVersion == null)
             {
+                // If the document is "dirty" fileFormatOnDisk will not be set.  If the max version supported by the server
+                // is not one of the versions Skyline supports for sharing we would end up with ShareTypeDlg not having any
+                // options for Skyline versions.  Display an error in this case.
                 MessageDlg.Show(parent,
-                    Resources
-                        .PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_);
+                    Resources.AbstractPanoramaPublishClient_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_);
                 cancelled = true;
                 return null;
             }
@@ -849,7 +843,6 @@ namespace pwiz.Skyline.Util
                 }
                 else
                 {
-                    cancelled = false;
                     return dlgType.ShareType;
                 }
             }

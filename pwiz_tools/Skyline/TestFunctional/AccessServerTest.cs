@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -154,8 +153,8 @@ namespace pwiz.SkylineTestFunctional
             DocumentFormat? documentFormat = DocumentFormat.VERSION_1_9;
             var version = string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__,
                 documentFormat.Value.GetDescription());
-            var supportedVersions = new List<string>{version}; // Server does not support any of the versions allowed for sharing. 
-                                                           // The only option available should be the current saved file format.
+            // Server does not support any of the versions allowed for sharing. The only option available should be the current saved file format.
+            var supportedVersions = new List<string>{version};
             CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
@@ -163,6 +162,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "13";
+            // The options available in ShareTypeDlg should be the current saved file format and the Skyline versions corresponding to skyd 13.
             supportedVersions = new List<string>{ version,
                 SkylineVersion.V19_1.ToString(),
                 SkylineVersion.V4_2.ToString(),
@@ -176,6 +176,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
+            // If there is an error in getting a response from the server or an error in parsing the version returned by the server
+            // PanoramaPublishClient.GetSupportedSkydVersion() returns CacheFormatVersion.CURRENT. So the available options in the 
+            // ShareTypeDlg will include the current saved file format and all versions supported for sharing.
             supportedVersions = new List<string> {version};
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
             CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
@@ -186,11 +189,12 @@ namespace pwiz.SkylineTestFunctional
             CheckPublishSuccess(WRITE_TARGETED, true, true, supportedVersions);
 
             // The document cache version is the same as the one supported on the server so we will not see the error about the
-            // "...selected server does not support version...".  However, the document is "dirty" so the share type dialog
-            // will not show the "Current file version..." as the selected option. Since the max version supported by server
-            // is not one of versions Skyline supports for sharing we expect to see an error message
+            // "...selected server does not support version {0} of the skyd file format".  However, the document is "dirty" so
+            // ShareTypeDlg will not show the "Current file version..." as the selected option. Since the max version supported 
+            // by server is not one of the versions Skyline supports for sharing we would end up with ShareTypeDlg not having 
+            // any options for Skyline versions.  We expect to see an error in this case.
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "9";
-            CheckPublishFailure(WRITE_TARGETED, Resources.PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_, true);
+            CheckPublishFailureNoVersions(Resources.AbstractPanoramaPublishClient_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_);
 
             TestPanoramaServerUrls();
         }
@@ -256,7 +260,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqualDeep(supportedVersions, availableItems);
         }
 
-        public void CheckPublishFailure(string nodeSelection, string failureMessage, bool hasUnsavedChanges)
+        public void CheckPublishFailureNoVersions(string failureMessage)
         {
             var saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);

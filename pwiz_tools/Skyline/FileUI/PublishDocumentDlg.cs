@@ -257,7 +257,8 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI, _fileFormatOnDisk, this, out bool cancelled);
+                var cancelled = false;
+                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI, _fileFormatOnDisk, this, ref cancelled);
                 if (cancelled)
                 {
                     return;

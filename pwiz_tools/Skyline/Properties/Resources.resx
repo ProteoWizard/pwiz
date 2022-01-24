@@ -11639,7 +11639,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
 	  <value>Finding peptides in FASTA file</value>
   </data>
-  <data name="PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_" xml:space="preserve">
-    <value>The selected Panorama server does not support any of the Skyline file formats available for sharing.Please contact the Panorama server administrator to upgrade the server.</value>
+  <data name="AbstractPanoramaPublishClient_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_" xml:space="preserve">
+    <value>The selected Panorama server does not support any of the Skyline file formats available for sharing. Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
 </root>

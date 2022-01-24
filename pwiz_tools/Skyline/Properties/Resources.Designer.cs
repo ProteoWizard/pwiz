@@ -299,6 +299,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected Panorama server does not support any of the Skyline file formats available for sharing. Please contact the Panorama server administrator to upgrade the server..
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_GetShareType_The_selected_Panorama_server_does_not_" +
+                        "support_any_of_the_Skyline_file_formats_available_for_sharing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occured while uploading to Panorama, would you like to go to Panorama?.
         /// </summary>
         public static string AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_ {
@@ -21172,17 +21182,6 @@ namespace pwiz.Skyline.Properties {
         public static string PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama {
             get {
                 return ResourceManager.GetString("PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The selected Panorama server does not support any of the Skyline file formats available for sharing.Please contact the Panorama server administrator to upgrade the server..
-        /// </summary>
-        public static string PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_th" +
-                        "e_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_" +
-                        "administrator_to_upgrade_the_server_", resourceCulture);
             }
         }
         

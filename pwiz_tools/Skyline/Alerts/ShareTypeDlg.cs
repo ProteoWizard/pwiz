@@ -51,6 +51,8 @@ namespace pwiz.Skyline.Alerts
 
             foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
             {
+                // Show only those versions supported by the Panorama server. If maxSupportedVersion is null
+                // it means that none of the Skyline versions available for sharing are supported. 
                 if (maxSupportedVersion != null && skylineVersion.CompareTo(maxSupportedVersion) <= 0)
                 {
                     _skylineVersionOptions.Add(skylineVersion);
