@@ -195,7 +195,7 @@
     <value>2</value>
   </data>
   <data name="rtbAgreeToLicense.Text" xml:space="preserve">
-    <value>私は、&lt;b&gt;学術&lt;/b&gt;&lt;link&gt;ライセンス&lt;/link&gt;について読み、このライセンスがMSFraggerをライセンシーの部署内での学術研究、非営利目的または教育目的のみに使用する非排他的で譲渡不可能な権利を提供することを理解します。</value>
+    <value>私は、&lt;b&gt;学術&lt;/b&gt;&lt;link&gt;ライセンス&lt;/link&gt;について読み、このライセンスがMSFraggerをライセンシーの部署内での学術研究、非営利目的または教育目的のみに使用する非排他的で譲渡不可能な権利を提供することを理解しました。</value>
   </data>
   <data name="&gt;&gt;rtbAgreeToLicense.Name" xml:space="preserve">
     <value>rtbAgreeToLicense</value>
