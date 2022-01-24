@@ -36,6 +36,9 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ZedGraphClipboardTest : AbstractFunctionalTest
     {
+        // Using the system clipboard causes intermittent failures, since the clipboard might
+        // be locked by other applications
+        private bool _canUseSystemClipboard = false;
         [TestMethod]
         public void TestZedGraphClipboard()
         {
@@ -68,11 +71,10 @@ namespace pwiz.SkylineTestFunctional
             ClickContextMenuItem(graphChromatogram.GraphControl, copyMenuText);
             Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
 
-            bool canUseSystemClipboard = RunPerfTests;
             // Switch to using the system clipboard for the rest of the test so that we can test the "Copy Metafile"
             // menu item as well as testing the message when the clipboard is locked.
             // Only use the system clipboard if RunPerfTests is true, because tests using the system clipboard can be annoying.
-            if (canUseSystemClipboard)
+            if (_canUseSystemClipboard)
             {
                 ClipboardEx.UseInternalClipboard(false);
             }
@@ -90,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            if (canUseSystemClipboard)
+            if (_canUseSystemClipboard)
             {
                 ClickContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText);
                 RunUI(() =>
@@ -107,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(HasClipboardFormat(DataFormats.Bitmap));
                 Assert.IsFalse(HasClipboardFormat(DataFormats.EnhancedMetafile));
             });
-            if (canUseSystemClipboard)
+            if (_canUseSystemClipboard)
             {
                 ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMenuText));
                 ClickCopyItemWithLockedClipboard(ShowContextMenuItem(graphChromatogram.GraphControl, copyMetafileMenuText));

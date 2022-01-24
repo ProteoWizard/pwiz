@@ -24,6 +24,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -311,7 +312,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 diaUmpireConfig.Parameters[kvp.Key] = kvp.Value.Value;
             diaUmpireConfig.UseMzMlSpillFile = UseMzMlSpillFile;
 
-            return new DiaUmpireDdaConverter(ImportPeptideSearch.SearchEngine, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
+            return new DiaUmpireDdaConverter(ImportPeptideSearch, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
+        }
+
+        public MsconvertDdaConverter GetMsconvertConverter()
+        {
+            return new MsconvertDdaConverter(ImportPeptideSearch);
         }
     }
 }

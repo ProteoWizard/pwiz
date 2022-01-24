@@ -24,15 +24,19 @@
 
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -53,6 +57,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+
             // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -126,6 +131,10 @@ namespace pwiz.SkylineTest
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
                 11); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            // Check for using DataGridView.
+            AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
+                "new System.Windows.Forms.DataGridView()", false,
+                "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -216,6 +225,114 @@ namespace pwiz.SkylineTest
             return missing;
         }
 
+        /// <summary>
+        /// We have some code, especially in commandline, that expects certain error messages to start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") or the L10N equivalent
+        /// </summary>
+        void InspectConsistentErrorMessages(List<string> errors)
+        {
+            var currentCulture = Thread.CurrentThread.CurrentUICulture; // Preserve current test culture
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = new CultureInfo("en"); // We want to compare against the "en" resources
+                var resourceSetEnglish = Skyline.Properties.Resources.ResourceManager.GetResourceSet(Thread.CurrentThread.CurrentUICulture, true, true);
+
+                // Before we proceed, make sure that the hardcoded english language hint still agrees with the englsh language resource
+                AssertEx.IsTrue(Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT));
+
+                // Now work through each resource, checking for L10N consistency of strings that, in English, start with CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:")
+                foreach (var resource in resourceSetEnglish)
+                {
+                    var pair = resource as DictionaryEntry? ?? new DictionaryEntry(); // For strings, resource object is a pair [resource name, L10N string]
+                    var englishString = pair.Value as string ?? string.Empty;
+                    if (englishString.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT))
+                    {
+                        var resourceName = pair.Key.ToString();
+                        // Now work through the other supported L10N languages, verifying that the L10N string is also properly marked as an error hint.
+                        // That is, either starts with localized Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_, or starts with
+                        // the english language string constant CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. hasn't been localized yet).
+                        foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
+                        {
+                            var tryCulture = new CultureInfo(culture);
+                            Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;
+                            var commandStatusWriterWriteLineError = Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_;
+                            var localized = Skyline.Properties.Resources.ResourceManager.GetString(resourceName) ?? String.Empty;
+                            if (!localized.StartsWith(commandStatusWriterWriteLineError, StringComparison.CurrentCulture) &&
+                                !localized.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT, StringComparison.InvariantCulture)) // Maybe not yet localized
+                            {
+                                // Report mismatch
+                                errors.Add(string.Format("The {0} language version of resource string {1} does not begin with the localized version of \"{2}\" (see Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_)", 
+                                    culture, resourceName, CommandStatusWriter.ERROR_MESSAGE_HINT));
+                            }
+                        }
+                        Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+                    }
+                }
+            }
+
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = currentCulture;
+            }
+        }
+
+        /// <summary>
+        /// Just a quick smoke test to remind devs to add audit log tests where needed, and to catch cases where its obvious that one or
+        /// more languages need updating because line counts don't agree
+        /// </summary>
+        void InspectTutorialAuditLogs(string root, List<string> errors)
+        {
+            var logsDir = Path.Combine(root, @"TestTutorial", @"TutorialAuditLogs");
+            var logs = Directory.GetFiles(logsDir, "*.log", SearchOption.AllDirectories).ToList();
+            var languages = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[1]).Distinct().ToList();
+            var tests = logs.Select(l => l.Replace(logsDir, string.Empty).Split(Path.DirectorySeparatorChar)[2]).Distinct().ToList();
+            foreach (var test in tests)
+            {
+                var results = new List<string>();
+                foreach (var language in languages)
+                {
+                    var lPath = Path.Combine(logsDir, language, test);
+                    if (!logs.Contains(lPath))
+                    {
+                        results.Add(string.Format("Did not find {0} version. This needs to be created and added to source control.", language));
+                    }
+                }
+
+                var english = @"en";
+                var enVersion = Path.Combine(logsDir, english, test);
+                if (File.Exists(enVersion))
+                {
+                    var lines = File.ReadAllLines(enVersion);
+                    var badLang = new List<string>();
+                    foreach (var language in languages.Where(l => l != english))
+                    {
+                        var l10nVersion = Path.Combine(logsDir, language, test);
+                        if (!File.Exists(l10nVersion))
+                        {
+                            continue; // Already noted
+                        }
+
+                        var l10nLines = File.ReadAllLines(l10nVersion);
+                        if (lines.Length != l10nLines.Length)
+                        {
+                            badLang.Add(language);
+                        }
+                    }
+
+                    if (badLang.Any())
+                    {
+                        results.Add(string.Format(
+                            @"Line count for {0} does not match {1}. Tutorial audit logs should be regenerated.",
+                            english, string.Join(@", ", badLang)));
+                    }
+                }
+
+                if (results.Any())
+                {
+                    errors.Add(string.Format(@"{0} Error: {1}", test, string.Join(@", ", results)));
+                }
+            }
+        }
+
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
@@ -273,7 +390,7 @@ namespace pwiz.SkylineTest
                 formTypes.Add(t);
             }
 
-            foreach (var formType in formTypes)
+            try
             {
                 // Now find all forms that inherit from formType
                 var assembly = formType == typeof(Form) ? TryGetAssembly(typeof(FormEx)) : TryGetAssembly(formType);
@@ -281,22 +398,45 @@ namespace pwiz.SkylineTest
                     .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
                                 formType.IsAssignableFrom(t))) // Interface type match
                 {
-                    var formName = form.Name;
-                    // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
-                    if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
-                        !formTypes.Any(ft => Equals(formName, ft.Name)))
+                    // Now find all forms that inherit from formType
+                    var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
+                    foreach (var form in assembly.GetTypes()
+                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
+                                    formType.IsAssignableFrom(t))) // Interface type match
                     {
-                        forms.Add(formName);
-                    }
+                        var formName = form.Name;
+                        // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
+                        if (directParentTypes.Any(ft => Equals(formName, ft.Name)) ||
+                            !formTypes.Any(ft => Equals(formName, ft.Name)))
+                        {
+                            forms.Add(formName);
+                        }
 
-                    // Look for tabs etc
-                    var typeIFormView = typeof(IFormView);
-                    foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
-                    {
-                        var nestedName = formName + "." + nested.Name;
-                        forms.Add(nestedName);
+                        // Look for tabs etc
+                        var typeIFormView = typeof(IFormView);
+                        foreach (var nested in form.GetNestedTypes().Where(t => typeIFormView.IsAssignableFrom(t)))
+                        {
+                            var nestedName = formName + "." + nested.Name;
+                            forms.Add(nestedName);
+                        }
                     }
                 }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindForms");
+                errMessage.AppendLine("(Perhaps Visual Studio menu item \"Test | Configure Run Settings | Select Solution Wide runsettings File\" is not set to \"TestSettings_x64.runsettings\"?)");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
             }
 
             return forms;
@@ -354,6 +494,12 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
+            InspectConsistentErrorMessages(results);
+
+            InspectTutorialAuditLogs(root, results);
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)

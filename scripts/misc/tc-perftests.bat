@@ -1,13 +1,23 @@
+@setlocal ENABLEDELAYEDEXPANSION
 @echo off
 set SKYLINE_DOWNLOAD_PATH=z:\download
 
 REM Remove C++ build artifacts to free up space
 rmdir /s /q build-nt-x86
 
-pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll loop=1 language=en perftests=on teamcitytestdecoration=on
-rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll,TestPerf.dll listonly > tests.txt
+powershell "Get-Content tests.txt | ForEach-Object { $_.split(\"`t\")[1] }" > testNames.txt
 
-FOR %%I IN (AgilentIMSImportTest,AgilentSpectrumMillRampedIMSImportTest,AgilentSpectrumMillSpectralLibTest,BrukerPasefMascotImportTest,TestDdaTutorial,ElectronIonizationAllIonsPerfTest,ImportResultsHugeTest,MeasuredDriftValuesPerfTest,MeasuredInverseK0ValuesPerfTest,NegativeIonDIATest,PeakSortingTest,TestAreaCVHistogramQValuesAndRatios,TestDiaTtofTutorial,TestDiaQeTutorial,TestDiaTtofDiaUmpireTutorial,TestDriftTimePredictorSmallMolecules,TestDriftTimePredictorTutorial,TestHiResMetabolomicsTutorial,TestImportMassOnlyMolecules,TestMinimizeResultsPerformance,TestMs3Chromatograms,TestThermoFAIMS,UniquePeptides0PerfTest,UniquePeptides1PerfTest,UniquePeptides2PerfTest,UniquePeptides3PerfTest,UniquePeptides4PerfTest,UniquePeptides5PerfTest,WatersIMSImportTest,WatersLockmassCmdlinePerfTest,WatersLockmassPerfTest,WatersSonarPerfTest) DO (
-pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on teamcitytestdecoration=on
-rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+set FailedTests=0
+FOR /F %%I IN (testNames.txt) DO (
+REM check if test is in skip list
+findstr /b %%I scripts\misc\tc-perftests-skiplist.txt >nul
+REM if test is in skiplist, ERRORLEVEL will be 0
+IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off) ELSE echo Skipped %%I
+IF ERRORLEVEL 1 set /a FailedTests += 1
+IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
+IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
 )
+
+echo %FailedTests% tests failed.
+exit /b %FailedTests%

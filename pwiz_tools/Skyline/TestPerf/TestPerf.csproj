@@ -147,6 +147,7 @@
     <Compile Include="DiaUmpireVendorFormatTest.cs" />
     <Compile Include="DiaUmpireTutorialTest.cs" />
     <Compile Include="DiaSwathTutorialTest.cs" />
+    <Compile Include="PerfAssociateProteinsTest.cs" />
     <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />

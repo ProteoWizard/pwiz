@@ -94,7 +94,9 @@ class WiffFile2Impl : public WiffFile
 
     virtual int getADCTraceCount(int sampleIndex) const { return 0; }
     virtual std::string getADCTraceName(int sampleIndex, int traceIndex) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
-    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); };
+    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
+
+    virtual void getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const {}
 
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;

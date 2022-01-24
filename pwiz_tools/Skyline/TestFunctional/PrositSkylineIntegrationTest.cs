@@ -1281,7 +1281,8 @@ namespace pwiz.SkylineTestFunctional
             // Unsupported mod
             TestPrositException("S[+80]KYLINE", typeof(PrositUnsupportedModificationException));
             // Small molecule
-            TestPrositException("Methionine", typeof(PrositSmallMoleculeException));
+            // We are careful not to involve Prosit with small molecules, so no exception expected
+            TestPrositException("Methionine", null);
         }
 
         private void SelectNodeBySeq(string seq)
@@ -1338,15 +1339,17 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForConditionUI(() => SkylineWindow.SelectedNode.Nodes.Count == 1);*/
             WaitForGraphs();
-            WaitForConditionUI(() =>
-                SkylineWindow.GraphSpectrum.GraphException != null &&
-                !(SkylineWindow.GraphSpectrum.GraphException is PrositPredictingException));
-
-            RunUI(() =>
+            if (expectedException != null)
             {
-                Assert.IsInstanceOfType(SkylineWindow.GraphSpectrum.GraphException, expectedException);
-            });
+                WaitForConditionUI(() =>
+                    SkylineWindow.GraphSpectrum.GraphException != null &&
+                    !(SkylineWindow.GraphSpectrum.GraphException is PrositPredictingException));
 
+                RunUI(() =>
+                {
+                    Assert.IsInstanceOfType(SkylineWindow.GraphSpectrum.GraphException, expectedException);
+                });
+            }
             Settings.Default.Prosit = false;
         }
 

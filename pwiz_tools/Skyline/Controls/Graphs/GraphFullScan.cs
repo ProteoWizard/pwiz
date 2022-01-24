@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private HeatMapData _heatMapData;
         private double _maxMz;
         private double _maxIntensity;
+        private double _minIonMobility;
         private double _maxIonMobility;
         private bool _zoomXAxis;
         private bool _zoomYAxis;
@@ -119,6 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetSpectraUI(MsDataSpectrum[] spectra)
         {
             _msDataFileScanHelper.MsDataSpectra = spectra;
+            if (_msDataFileScanHelper.MsDataSpectra == null || !_msDataFileScanHelper.MsDataSpectra.Any())
+                return;
             _rmis = null;
 
 
@@ -145,13 +148,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _heatMapData = null;
-            if (_msDataFileScanHelper.MsDataSpectra == null)
-                return;
             // Find max values.
             _maxMz = 0;
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
-            GetMaxMobility(out _maxIonMobility);
+            GetIonMobilityRange(out _minIonMobility, out _maxIonMobility);
             
             _requestedRange = new MzRange(0, _maxMz * 1.1);
             if (Settings.Default.SyncMZScale)
@@ -876,11 +877,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void GetMaxMobility(out double maxIonMobility)
+        private void GetIonMobilityRange(out double minIonMobility, out double maxIonMobility)
         {
+            minIonMobility = double.MaxValue;
             maxIonMobility = 0;
             foreach (var spectrum in _msDataFileScanHelper.MsDataSpectra)
             {
+                var spectrumMinMobility = Math.Abs(spectrum.MinIonMobility ?? spectrum.IonMobility.Mobility ?? 0);
                 var spectrumMaxMobility = Math.Abs(spectrum.MaxIonMobility ?? spectrum.IonMobility.Mobility ?? 0);
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
@@ -889,8 +892,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     var sonarBinToPrecursorMz = _msDataFileScanHelper.ScanProvider.SonarBinToPrecursorMz(bin);
                     Assume.IsTrue(sonarBinToPrecursorMz.HasValue, @"error determining m/z value for SONAR bin #" + bin);
                     spectrumMaxMobility = sonarBinToPrecursorMz.Value;
+                    bin = (int)spectrumMinMobility;
+                    sonarBinToPrecursorMz = _msDataFileScanHelper.ScanProvider.SonarBinToPrecursorMz(bin);
+                    Assume.IsTrue(sonarBinToPrecursorMz.HasValue, @"error determining m/z value for SONAR bin #" + bin);
+                    spectrumMinMobility = sonarBinToPrecursorMz.Value;
                 }
-                maxIonMobility = Math.Max(_maxIonMobility, spectrumMaxMobility);
+                minIonMobility = Math.Min(minIonMobility, spectrumMinMobility);
+                maxIonMobility = Math.Max(maxIonMobility, spectrumMaxMobility);
             }
         }
 
@@ -1046,8 +1054,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!filterBtn.Checked && !magnifyBtn.Checked)
             {
-                yScale.Min = 0;
-                yScale.Max = _maxIonMobility * 1.1;
+                var margin = 0.1 * (_maxIonMobility - _minIonMobility);
+                yScale.Min = _minIonMobility - margin;
+                yScale.Max = _maxIonMobility + margin;
             }
             else
             {
@@ -1195,8 +1204,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
         {
-            HeatMapGraphPane.ShowHeatMap = !spectrumBtn.Checked;
-            Settings.Default.SumScansFullScan = spectrumBtn.Checked;
+            ShowMobility(!spectrumBtn.Checked);
+        }
+
+        public void ShowMobility(bool show)
+        {
+            HeatMapGraphPane.ShowHeatMap = show;
+            Settings.Default.SumScansFullScan = spectrumBtn.Checked = !show;
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();

@@ -1427,18 +1427,6 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ShowDotProductPeakArea {
-            get {
-                return ((bool)(this["ShowDotProductPeakArea"]));
-            }
-            set {
-                this["ShowDotProductPeakArea"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ShowPeakAreaLegend {
             get {
                 return ((bool)(this["ShowPeakAreaLegend"]));
@@ -3109,6 +3097,54 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExportSureQuant {
+            get {
+                return ((bool)(this["ExportSureQuant"]));
+            }
+            set {
+                this["ExportSureQuant"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double IntensityThresholdPercent {
+            get {
+                return ((double)(this["IntensityThresholdPercent"]));
+            }
+            set {
+                this["IntensityThresholdPercent"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100000")]
+        public double IntensityThresholdValue {
+            get {
+                return ((double)(this["IntensityThresholdValue"]));
+            }
+            set {
+                this["IntensityThresholdValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public double IntensityThresholdMin {
+            get {
+                return ((double)(this["IntensityThresholdMin"]));
+            }
+            set {
+                this["IntensityThresholdMin"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool SyncMZScale {
             get {
                 return ((bool)(this["SyncMZScale"]));
@@ -3127,6 +3163,29 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["FullScanPeakType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("label")]
+        public string PeakAreaDotpDisplay {
+            get {
+                return ((string)(this["PeakAreaDotpDisplay"]));
+            }
+            set {
+                this["PeakAreaDotpDisplay"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int ChromatogramDisplayRTDigits {
+            get {
+                return ((int)(this["ChromatogramDisplayRTDigits"]));
+            }
+            set {
+                this["ChromatogramDisplayRTDigits"] = value;
             }
         }
     }

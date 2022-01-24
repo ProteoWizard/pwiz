@@ -748,7 +748,7 @@
     <value>326, 192</value>
   </data>
   <data name="groupBoxMS1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="groupBoxMS1.Text" xml:space="preserve">
     <value>&amp;MS1 filtering</value>
@@ -1333,7 +1333,7 @@
     <value>326, 135</value>
   </data>
   <data name="groupBoxMS2.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="groupBoxMS2.Text" xml:space="preserve">
     <value>M&amp;S/MS filtering</value>
@@ -1638,14 +1638,6 @@
   <data name="comboAcquisitionMethod.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="comboAcquisitionMethod.ToolTip" xml:space="preserve">
-    <value>DIA: Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window
-PRM: Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion
-DDA: Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification
-SureQuant: similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods
-Targeted: (obsolete): MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion
-</value>
-  </data>
   <data name="&gt;&gt;comboAcquisitionMethod.Name" xml:space="preserve">
     <value>comboAcquisitionMethod</value>
   </data>
@@ -1701,7 +1693,7 @@ Targeted: (obsolete): MS2 spectra contribute to the chromatogram of the one prec
     <value>96, 13</value>
   </data>
   <data name="lblPrecursorCharges.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>5</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
     <value>Precursor charges:</value>
@@ -1728,7 +1720,7 @@ Targeted: (obsolete): MS2 spectra contribute to the chromatogram of the one prec
     <value>76, 20</value>
   </data>
   <data name="textPrecursorCharges.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="textPrecursorCharges.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1761,7 +1753,7 @@ Targeted: (obsolete): MS2 spectra contribute to the chromatogram of the one prec
     <value>166, 17</value>
   </data>
   <data name="cbHighSelectivity.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="cbHighSelectivity.Text" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
@@ -1789,13 +1781,13 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>365, 140</value>
   </data>
   <data name="usercontrolIonMobilityFiltering.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Name" xml:space="preserve">
     <value>usercontrolIonMobilityFiltering</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=21.1.1.245, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Parent" xml:space="preserve">
     <value>$this</value>

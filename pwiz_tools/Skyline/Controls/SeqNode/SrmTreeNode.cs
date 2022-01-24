@@ -439,6 +439,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                 popup.Show(FormEx.GetParentForm(TreeView));
                 popup.Focus();
             }
+            // Deal with apparent race condition with this timer-driven call and deletion of the associated node
+            catch (ObjectDisposedException)
+            {
+                return; // Ignore
+            }
             // Catch exceptions that may be caused trying to read results information from SKYD file
             catch (IOException x)
             {

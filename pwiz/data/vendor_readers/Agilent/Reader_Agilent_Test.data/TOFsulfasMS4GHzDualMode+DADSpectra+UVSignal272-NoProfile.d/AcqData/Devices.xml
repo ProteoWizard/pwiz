@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Devices xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Devices.xsd">
+  <Version>1</Version>
+  <Device DeviceID="1">
+    <Name>TOF</Name>
+    <ModelNumber>G6220A</ModelNumber>
+    <OrdinalNumber>1</OrdinalNumber>
+    <SerialNumber>0</SerialNumber>
+    <Type>4</Type>
+    <StoredDataType>8</StoredDataType>
+    <Delay>0</Delay>
+  </Device>
+  <Device DeviceID="2">
+    <Name>TCC</Name>
+    <ModelNumber>G1316A</ModelNumber>
+    <OrdinalNumber>1</OrdinalNumber>
+    <SerialNumber>
+    </SerialNumber>
+    <Type>40</Type>
+    <StoredDataType>2</StoredDataType>
+    <Delay>0</Delay>
+  </Device>
+  <Device DeviceID="3">
+    <Name>DAD</Name>
+    <ModelNumber>g1315a</ModelNumber>
+    <OrdinalNumber>1</OrdinalNumber>
+    <SerialNumber>
+    </SerialNumber>
+    <Type>14</Type>
+    <StoredDataType>5</StoredDataType>
+    <Delay>0</Delay>
+  </Device>
+</Devices>

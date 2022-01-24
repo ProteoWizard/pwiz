@@ -1895,7 +1895,7 @@ namespace pwiz.Skyline
                 return false;
 
             // Add iRTs
-            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            if (import.IrtStandard != null && !import.IrtStandard.IsEmpty)
             {
                 ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
                     out var irtProviders, out var autoStandards, out var cirtPeptides);
@@ -1909,7 +1909,7 @@ namespace pwiz.Skyline
                     }
                     numCirt = commandArgs.NumCirts.Value;
                 }
-                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                else if (import.IrtStandard.IsAuto)
                 {
                     switch (autoStandards.Count)
                     {
@@ -3734,11 +3734,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public const string ERROR_MESSAGE_HINT = @"Error:";
+
         private bool IsErrorMessage(string message)
         {
             if (message != null && !IsErrorReported)
             {
-                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                return message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
                        message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
                            StringComparison.CurrentCulture);
             }

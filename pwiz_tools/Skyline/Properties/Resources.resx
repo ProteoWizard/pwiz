@@ -2057,9 +2057,6 @@
   <data name="CommandLine_ImportSearch_Adding_1_modification_" xml:space="preserve">
     <value>Adding 1 modification.</value>
   </data>
-  <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
-    <value>The calculator {0} requires all of its standard peptides in order to determine a regression.</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Collision_Energy" xml:space="preserve">
     <value>Opt Collision Energy</value>
   </data>
@@ -8568,7 +8565,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Insert Molecule Transition List</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>Error on line {0}, column{1}: {2}</value>
+    <value>Error on line {0}, column {1}: {2}</value>
   </data>
   <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
     <value>Error on line {0}: {1}</value>
@@ -11430,8 +11427,14 @@ If you do not have the original file, you may build the library with embedded sp
 
 </value>
   </data>  
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Collision Cross Section (sq A)</value>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Explicit Collision Cross Section (sq A)</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
+    <value>Percentage of peak max height to use as intensity threshold.</value>
+  </data>
+  <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_" xml:space="preserve">
+    <value>Absolute relative intensity threshold value.</value>
   </data>
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
@@ -11454,8 +11457,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description" xml:space="preserve">
     <value>Protein Description</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Delustering_Potential" xml:space="preserve">
-    <value>Explicit Delustering Potential</value>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
+    <value>Explicit Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
@@ -11472,7 +11475,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>Precursor Adduct and/or Precursor Charge</value>
   </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
+    <value>Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome.</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
+    <value>These filters cannot be applied as they would result in an empty transition list.</value>
+  </data>
+    <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
     <value>Skyline 21.1</value>
   </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
@@ -11481,7 +11490,147 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP">
+    <value xml:space="preserve">Data independent acquisition: MS2 spectra contribute to the chromatograms of all precursors whose m/z values are within the isolation window</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
+    <value xml:space="preserve">Parallel reaction monitoring: MS2 spectra contribute to those precursors whose m/z is within the "method match tolerance" value of the selected ion</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP">
+    <value xml:space="preserve">Data dependent acquisition: MS2 chromatograms are extracted but not used for quantification</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP">
+    <value xml:space="preserve">Similar to "PRM", but using "triggered acquisition" and "method match tolerance" settings appropriate for Thermo SureQuant methods</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP">
+    <value xml:space="preserve">MS2 spectra contribute to the chromatogram of the one precursor whose m/z is closest to the selection ion</value>
+  </data>
+  <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
+    <value>Change synchronized integration to {0}</value>
+  </data>
   <data name="BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_" xml:space="preserve">
     <value>Error getting database Id for score {0}</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_The_decoys_have_been_removed_from_the_document__so_the_peak_scoring_model_will_not_be_automatically_trained_" xml:space="preserve">
+    <value>The decoys have been removed from the document, so the peak scoring model will not be automatically trained.</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_If_you_re_add_decoys_to_the_document_you_can_add_and_train_a_peak_scoring_model_manually_" xml:space="preserve">
+    <value>If you re-add decoys to the document you can add and train a peak scoring model manually.</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_An_error_occurred_while_training_the_peak_scoring_model___0_" xml:space="preserve">
+    <value>An error occurred while training the peak scoring model: {0}</value>
+  </data>
+  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
+    <value>The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
+
+{3}</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_" xml:space="preserve">
+    <value>This document does not contain decoy peptides. Would you like to add decoy peptides before extracting chromatograms? After chromatogram extraction is finished, Skyline will use the decoy and target chromatograms to train a peak scoring model in order to choose better peaks.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
+    <value>Columns identified as {0}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Associate_Proteins_enabled" xml:space="preserve">
+    <value>Associate Proteins enabled</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_added" xml:space="preserve">
+    <value>{0} transitions added</value>
+  </data>
+  <data name="DotpDisplayOption_label" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="DotpDisplayOption_line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="DotpDisplayOption_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AutoTrainManager_LoadBackground_None_of_the_decoys_in_the_document_have_any_chromatograms_" xml:space="preserve">
+    <value>None of the decoys in the document have any chromatograms.</value>
+  </data>
+  <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
+    <value>None of the targets in the document have any chromatograms.</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
+    <value>Retention time calculator ({0})</value>
+  </data>
+  <data name="AlignItem_ToString_Retention_time_calculator___" xml:space="preserve">
+    <value>Retention time calculator...</value>
+  </data>
+  <data name="AlignItem_ToString_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="SynchronizedIntegrationDlg_comboAlign_SelectedIndexChanged_To_align_to_retention_time_prediction__you_must_first_set_up_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>To align to retention time prediction, you must first set up a retention time predictor in Peptide Settings / Prediction.</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected" xml:space="preserve">
+    <value>MS2 analyzer must be selected.</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_" xml:space="preserve">
+    <value>Downloading MSFragger {0}</value>
+  </data>
+  <data name="SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_" xml:space="preserve">
+    <value>Download {0}</value>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
+    <value>Starting msconvert conversion.</value>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__" xml:space="preserve">
+    <value>Re-using existing converted {0} file for {1}.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__" xml:space="preserve">
+    <value>Detecting decoy prefix in {0}.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Some_common_prefixes_were_found_" xml:space="preserve">
+    <value>Some common prefixes were found:</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_" xml:space="preserve">
+    <value>Using {0} as the most likely decoy prefix.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__" xml:space="preserve">
+    <value>No prefixes were frequent enough to be a decoy prefix (present in at least 40% of entries).</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_common_prefixes_were_found_" xml:space="preserve">
+    <value>No common prefixes were found.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_" xml:space="preserve">
+    <value>Some common suffixes were found but these are not supported:</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes" xml:space="preserve">
+    <value>The suffix {0} was likely intended as a decoy suffix, but Skyline's DDA search tools do not support decoy suffixes. We suggest rerunning with the original FASTA without decoys.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_common_suffixes_were_found_" xml:space="preserve">
+    <value>No common suffixes were found.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__" xml:space="preserve">
+    <value>No decoy prefix detected, but an existing decoy database seems to exist at {0}. Retrying the decoy prefix calculation on that.</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____" xml:space="preserve">
+    <value>No decoy prefix detected. A new FASTA will be generated using reverse sequences as decoys (with prefix '{0}').</value>
+  </data>
+  <data name="EnsureFastaHasDecoys_Using_decoy_database_at__0___1_" xml:space="preserve">
+    <value>Using decoy database at {0}.{1}</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_" xml:space="preserve">
+    <value>The following files are required. Do you want to download them?</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
+    <value>The following file is required. Do you want to download it?</value>
+  </data>
+  <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
+    <value>Downloading required files...</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified" xml:space="preserve">
+    <value>Ion mobility units not specified</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations" xml:space="preserve">
+    <value>Multiple ion mobility declarations</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
+    <value>Import Assay Library: Identify Columns</value>
   </data>
 </root>

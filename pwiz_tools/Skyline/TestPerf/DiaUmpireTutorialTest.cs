@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -346,16 +345,6 @@ namespace TestPerf
         /// </summary>
         private bool IsRecordMode { get { return false; } }
 
-        private string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
-        {
-            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
-            var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
-            Assert.IsTrue(match.Success);
-            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
-            if (sign == "+") sign = string.Empty;
-            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
-        }
-
         protected override void DoTest()
         {
             Assert.AreEqual("IrtSlope = 3.005,\r\nIrtIntercept = -67.173,\r\n", ParseIrtProperties("iRT = 3.005 * Measured RT - 67.173", CultureInfo.InvariantCulture));
@@ -383,9 +372,15 @@ namespace TestPerf
             // build the document library.
             string diaDir = GetTestPath("DIA");
 
-            // delete -diaumpire files so they get regenerated instead of reused
-            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                FileEx.SafeDelete(file);
+            // when in regular test mode, delete -diaumpire files so they get regenerated instead of reused
+            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+            if (!IsRecordMode)
+            {
+                var diaumpireFiles = Directory.GetFiles(diaDir, "*-diaumpire.*");
+                var filesToRegenerate = diaumpireFiles.Skip(1); // regenerate all but 1 file in order to test file reusability
+                foreach (var file in filesToRegenerate)
+                    FileEx.SafeDelete(file);
+            }
 
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)

@@ -9,19 +9,19 @@ namespace SkylineBatch
     {
 
         private readonly IMainUiControl _mainUiControl;
-        private readonly SkylineBatchConfigManager _configManager;
 
-        public RDirectorySelector(IMainUiControl mainUiControl, SkylineBatchConfigManager configManager)
+        public RDirectorySelector(IMainUiControl mainUiControl)
         {
             _mainUiControl = mainUiControl;
-            _configManager = configManager;
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public bool ShownDialog { get; private set; }
 
-        public void AddIfNecassary()
+        public void AddIfNecassary(SkylineBatchConfigManagerState state, out bool stateChanged)
         {
-            var configurationRVersions = _configManager.RVersionsUsed();
+            stateChanged = false;
+            var configurationRVersions = state.RVersionsUsed();
             if (configurationRVersions.IsSubsetOf(Settings.Default.RVersions.Keys))
                 return; // do not show dialog if no configuration is invalid due to an R version that wasn't found
 
@@ -32,20 +32,21 @@ namespace SkylineBatch
                 TextUtil.LineSeparate(configurationRVersions) + Environment.NewLine +
                 Resources.RDirectorySelector_AddIfNecassary_Would_you_like_to_add_an_R_installation_directory_);
             if (addDirectory)
-                ShowAddDirectoryDialog();
+                stateChanged = ShowAddDirectoryDialog(state);
         }
 
-        public bool RequiredDirectoryAdded()
+        public bool RequiredDirectoryAdded(SkylineBatchConfigManagerState state)
         {
             _mainUiControl.DisplayError(
                 "No R installations were found in the following directories:" + Environment.NewLine +
                 TextUtil.LineSeparate(Settings.Default.RDirs) + Environment.NewLine +
                 "Please add an R installation directory to continue.");
-            return ShowAddDirectoryDialog();
+            return ShowAddDirectoryDialog(state);
         }
         
-        public bool ShowAddDirectoryDialog()
+        public bool ShowAddDirectoryDialog(SkylineBatchConfigManagerState state)
         {
+            State = state;
             // TODO(Ali): handle R installation after dialog appears
             var dialog = new FolderBrowserDialog();
             var initialPath = Settings.Default.RDirs.Count > 0 ? FileUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
@@ -65,9 +66,9 @@ namespace SkylineBatch
                 }
 
                 if (directoryAdded)
-                    _configManager.UpdateConfigValidation();
+                    State.UpdateConfigValidation();
                 else
-                    return ShowAddDirectoryDialog(); // Show dialog again if there was an error
+                    return ShowAddDirectoryDialog(State); // Show dialog again if there was an error
             }
 
             return directoryAdded;

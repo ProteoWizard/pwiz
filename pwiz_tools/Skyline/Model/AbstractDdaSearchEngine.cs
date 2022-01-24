@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model
     public abstract class AbstractDdaSearchEngine : IDisposable
     {
         public abstract string[] FragmentIons { get; }
+        public abstract string[] Ms2Analyzers { get; }
         public abstract string EngineName { get; }
         public abstract Bitmap SearchEngineLogo { get; }
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
@@ -136,9 +137,20 @@ namespace pwiz.Skyline.Model
 
             public override string ToString()
             {
+                return ToString(true);
+            }
+
+            public string ToString(IFormatProvider provider)
+            {
+                return ToString(true, provider);
+            }
+
+            public string ToString(bool withEqualSign, IFormatProvider provider = null)
+            {
+                string delimiter = withEqualSign ? @" =" : string.Empty;
                 if (Value is double d)
-                    return $@"{Name} = {d.ToString(@"F")}";
-                return $@"{Name} = {Value}";
+                    return $@"{Name}{delimiter} {d.ToString(@"F", provider)}";
+                return $@"{Name}{delimiter} {Value}";
             }
 
             public string AuditLogText => ToString();
@@ -153,6 +165,7 @@ namespace pwiz.Skyline.Model
         public abstract void SetPrecursorMassTolerance(MzTolerance mzTolerance);
         public abstract void SetFragmentIonMassTolerance(MzTolerance mzTolerance);
         public abstract void SetFragmentIons(string ions);
+        public abstract void SetMs2Analyzer(string analyzer);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
 
         public delegate void NotificationEventHandler(object sender, IProgressStatus status);
@@ -174,13 +187,15 @@ namespace pwiz.Skyline.Model
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid");
         }
 
+        public abstract bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat);
+
         public void SetFastaFiles(string fastFile)
         {
             //todo check multi-fasta support
             FastaFileNames = new[] {fastFile};
         }
 
-        public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods);
+        public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_);
 
         public abstract void Dispose();
     }

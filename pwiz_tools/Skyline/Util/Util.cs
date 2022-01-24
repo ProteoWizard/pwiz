@@ -995,6 +995,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class BlockedArray<TItem> : IReadOnlyList<TItem>
     {
+        public static readonly BlockedArray<TItem> EMPTY = new BlockedArray<TItem>();
         private readonly List<TItem[]> _blocks;
         private readonly int _itemCount;
 
@@ -2125,6 +2126,24 @@ namespace pwiz.Skyline.Util
             }
 
             return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Returns true if the exception is not something which could happen while trying to read
+        /// from disk.
+        /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
+        /// so that they can report them as bugs.
+        /// </summary>
+        public static bool IsProgrammingDefect(Exception exception)
+        {
+            if (exception is InvalidDataException 
+                || exception is IOException 
+                || exception is UnauthorizedAccessException)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 

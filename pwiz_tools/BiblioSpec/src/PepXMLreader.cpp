@@ -33,6 +33,36 @@
 
 namespace bal = boost::algorithm;
 
+namespace {
+    template<typename MapT>
+    typename MapT::const_iterator find_nearest(MapT const& m, typename MapT::key_type const& query, typename MapT::key_type const& tolerance)
+    {
+        typename MapT::const_iterator cur, min, max, best;
+
+        min = m.lower_bound(query - tolerance);
+        max = m.lower_bound(query + tolerance);
+
+        if (min == m.end() || fabs(query - min->first) > tolerance)
+            return m.end();
+        else if (min == max)
+            return min;
+        else
+            best = min;
+
+        double minDiff = fabs(query - best->first);
+        for (cur = min; cur != max; ++cur)
+        {
+            double curDiff = fabs(query - cur->first);
+            if (curDiff < minDiff)
+            {
+                minDiff = curDiff;
+                best = cur;
+            }
+        }
+        return best;
+    }
+}
+
 namespace BiblioSpec {
 
     enum ParserState
@@ -130,8 +160,16 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
           Verbosity::comment(V_DEBUG, "Pepxml file is from Proteome Discoverer.");
           analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
       }
+   } else if (isElement("parameter", name)) {
+       string paramName = bal::to_lower_copy(string(getAttrValue("name", attr)));
+       string paramValue = bal::to_lower_copy(string(getAttrValue("value", attr)));
+       if (paramName == "post-processor" && paramValue == "percolator")
+       {
+           analysisType_ = CRUX_ANALYSIS;
+           scoreType_ = PERCOLATOR_QVALUE;
+           probCutOff = getScoreThreshold(SQT);
+       }
    }
-
    //get massType and search engine
    else if(isElement("search_summary",name)) {
        string search_engine_version = getAttrValue("search_engine_version", attr);
@@ -355,7 +393,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // If this modification mass was already specified earlier in the file, use that mass.
        map<char, map<double, double> >::iterator itAaModMasses = aminoAcidModificationMasses.find(aa);
        if (itAaModMasses != aminoAcidModificationMasses.end()) {
-           map<double, double>::iterator itMass = itAaModMasses->second.find(modMass);
+           auto itMass = find_nearest(itAaModMasses->second, modMass, 1e-2);
            if (itMass != itAaModMasses->second.end()) {
                curmod.deltaMass = itMass->second;
            }

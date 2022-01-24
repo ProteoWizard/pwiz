@@ -17,13 +17,16 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -32,7 +35,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -41,6 +43,8 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -149,23 +153,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            RunUI(() =>
-            {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+            var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+            string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text1);
+            PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+            RunUI(() => {
+                colDlg.checkBoxAssociateProteins.Checked = true; // Enable Associate Proteins
             });
-            using (new CheckDocumentState(24, 44, 88, 296))
-            {
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.Height = 465;
-                    pasteDlg.IsMolecule = false;
-                    pasteDlg.PasteTransitions();  // Make sure it's ready to accept peptides rather than small molecules
-                });
-                PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
-            }
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
@@ -282,13 +281,22 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyPrecursorRatio(TransitionGroupTreeNode precursorTreeNode, double ratioExpected)
         {
-            Assert.AreEqual(ratioExpected, precursorTreeNode.DocNode.Results[0][0].Ratio.Value, 0.005);
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
+                precursorTreeNode.DocNode, precursorTreeNode.DocNode.Results[0][0]);
+            Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 
         private void VerifyTransitionRatio(TransitionTreeNode transitionTreeNode, string ionName, double? ratioExpected = null)
         {
             Assert.AreEqual(ionName, transitionTreeNode.DocNode.FragmentIonName);
-            var ratioActual = transitionTreeNode.DocNode.Results[0][0].Ratio;
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
+                transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
+                transitionTreeNode.DocNode.Results[0][0]);
+
             if (ratioExpected.HasValue)
                 Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
             else
@@ -431,7 +439,10 @@ namespace pwiz.SkylineTestTutorial
             });
 
             if (!IsPauseForScreenShots && !IsFullData)
+            {
                 TestApplyToAll();
+                FindNode("YEVQGEVFTKPQLWP");
+            }
 
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 26);
             CheckReportCompatibility.CheckAll(SkylineWindow.Document);
@@ -486,12 +497,23 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 29);
 
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
+            WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.98, 0.97, 0.99, 0.99 });
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
+            WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
+            VerifyRdotPLabels(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 });
+
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.line.ToString();
+            RunUI(SkylineWindow.UpdatePeakAreaGraph);
+            RunUI(() => { VerifyDotpLine(new[] { "A_01", "A_02", "C_03", "C_04" }, new[] { 0.25, 0.25, 0.87, 0.54 }); });
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with dotp line", 32);
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
+
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
@@ -627,6 +649,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
+            VerifyRdotPLabels(new[] { "A1_ 01", "B_ 01", "C_ 01", "D_ 01" }, new[] { 0.29, 0.39, 0.50, 0.64 });
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
@@ -639,6 +662,37 @@ namespace pwiz.SkylineTestTutorial
             SkylineWindow.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
+        }
+
+        private void VerifyRdotPLabels(string[] replicates, double[] rdotps)
+        {
+            if (!Program.SkylineOffscreen)
+            {
+                var rdotpLabels = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.GraphObjList.OfType<TextObj>().ToList()
+                    .FindAll(txt => txt.Text.StartsWith(@"rdotp")).Select((obj) => obj.Text).ToArray();
+
+                for (var i =0; i < replicates.Length; i++)
+                {
+                    var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
+                        .FindIndex(label => replicates[i].Equals(label));
+                    Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                    var expectedLabel = TextUtil.LineSeparate("rdotp", string.Format(CultureInfo.CurrentCulture, "{0:F02}", rdotps[i]));
+                    Assert.AreEqual(expectedLabel, rdotpLabels[repIndex], "Dotp labels of the peak area graph are incorrect.");
+                }
+            }
+        }
+
+        private void VerifyDotpLine(string[] replicates, double[] dotps)
+        {
+            var dotpLine = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.CurveList.OfType<LineItem>().ToList();
+            Assert.AreEqual(1, dotpLine.Count, "Dotp line is not found");
+            for (var i = 0; i < replicates.Length; i++)
+            {
+                var repIndex = SkylineWindow.GraphPeakArea.GraphControl.GraphPane.XAxis.Scale.TextLabels.ToList()
+                    .FindIndex(label => replicates[i].Equals(label));
+                Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                Assert.AreEqual(dotps[i], Math.Round(dotpLine[0].Points[repIndex].Y, 2));
+            }
         }
 
         private void AdjustModifications(string peptideSeq, bool removeCTerminalMod, char aa13C, double expectedPrecursorMz)

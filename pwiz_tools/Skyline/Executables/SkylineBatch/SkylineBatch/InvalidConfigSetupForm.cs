@@ -15,7 +15,8 @@ namespace SkylineBatch
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
         private SkylineBatchConfig _invalidConfig;
-        private readonly SkylineBatchConfigManager _configManager;
+        private SkylineBatchConfig _validConfig;
+        
         private readonly IMainUiControl _mainControl;
         private readonly RDirectorySelector _rDirectorySelector;
 
@@ -25,18 +26,18 @@ namespace SkylineBatch
 
         private TaskCompletionSource<bool> clickNextButton; // allows awaiting btnNext click
 
-        public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManager configManager, RDirectorySelector rDirectorySelector)
+        public InvalidConfigSetupForm(IMainUiControl mainControl, SkylineBatchConfig invalidConfig, SkylineBatchConfigManagerState state, RDirectorySelector rDirectorySelector)
         {
             InitializeComponent();
             Icon = Program.Icon();
             _invalidConfig = invalidConfig;
-            _configManager = configManager;
+            State = state;
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
             CreateValidConfig();
         }
 
-        public SkylineBatchConfig Config { get; private set; }
+        public SkylineBatchConfigManagerState State { get; private set; }
 
         public IValidatorControl CurrentControl { get; private set; }
 
@@ -52,18 +53,17 @@ namespace SkylineBatch
             var validReportSettings = await FixInvalidReportSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, _invalidConfig.LogTestFormat, DateTime.Now, 
+            _validConfig = new SkylineBatchConfig(_invalidConfig.Name, _invalidConfig.Enabled, _invalidConfig.LogTestFormat, DateTime.Now, 
                 validMainSettings, _invalidConfig.FileSettings, validRefineSettings, 
                 validReportSettings, validSkylineSettings);
             // replace old configuration
-            _configManager.UserReplaceSelected(Config);
-            _mainControl.UpdateUiConfigurations();
+            State.UserReplaceSelected(_validConfig, _mainControl);
             CloseSetup();
         }
 
         private void btnSkip_Click(object sender, EventArgs e)
         {
-            Config = _invalidConfig;
+            _validConfig = _invalidConfig;
             CloseSetup();
         }
 
@@ -95,7 +95,7 @@ namespace SkylineBatch
                         Resources.InvalidConfigSetupForm_FixInvalidMainSettings_folder_to_download_the_Skyline_template_into,
                         invalidPanoramaFile.DownloadFolder, PanoramaFile.ValidateDownloadFolder, null, PathDialogOptions.Folder);
                     validTemplate = SkylineTemplate.FromUi(null, mainSettings.Template.DependentConfigName,
-                        new PanoramaFile(invalidPanoramaFile, validDownloadFolder, invalidPanoramaFile.FileName));
+                       invalidPanoramaFile.ReplaceFolder(validDownloadFolder));
                 }
             }
 
@@ -109,11 +109,10 @@ namespace SkylineBatch
                 annotationsValidator, TextUtil.FILTER_CSV, PathDialogOptions.File);
             var validAnnotationsDownload =
                 !string.IsNullOrEmpty(validAnnotationsFilePath) && mainSettings.AnnotationsDownload != null
-                    ? new PanoramaFile(mainSettings.AnnotationsDownload,
-                        Path.GetDirectoryName(validAnnotationsFilePath), mainSettings.AnnotationsDownload.FileName)
+                    ? mainSettings.AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(validAnnotationsFilePath))
                     : null;
 
-            return new MainSettings(validTemplate, validAnalysisFolderPath, validDataFolderPath, mainSettings.Server,
+            return new MainSettings(validTemplate, validAnalysisFolderPath, mainSettings.UseAnalysisFolderName, validDataFolderPath, mainSettings.Server,
                 validAnnotationsFilePath, validAnnotationsDownload, mainSettings.ReplicateNamingPattern);
         }
 
@@ -167,8 +166,10 @@ namespace SkylineBatch
         {
             if (!string.IsNullOrEmpty(SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath))
                 return new SkylineSettings(SkylineType.Local, null, SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath);
-            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
-            return (SkylineSettings)await GetValidVariable(skylineTypeControl);
+            var runningConfigs = State.ConfigsBusy();
+            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath, runningConfigs, State.BaseState);
+            var validSkylineSettings = (SkylineSettings)await GetValidVariable(skylineTypeControl);
+            return validSkylineSettings;
         }
         
         #endregion
@@ -188,12 +189,12 @@ namespace SkylineBatch
             
             if (!_askedAboutRootReplacement)
             {
-                var doReplacement = _configManager.AddRootReplacement(invalidPath, path, true, out string oldRoot, 
+                State.AddRootReplacement(invalidPath, path, true, _mainControl, out bool addedRootReplacement, out string oldRoot, 
                     out _askedAboutRootReplacement);
-                if (doReplacement)
+                if (addedRootReplacement)
                 {
-                    _configManager.RootReplaceConfigs(oldRoot);
-                    _invalidConfig = _configManager.GetSelectedConfig();
+                    State.RootReplaceConfigs(oldRoot, State.BaseState.RootReplacement[oldRoot], _mainControl);
+                    _invalidConfig = State.GetSelectedConfig();
                 }
             }
 
@@ -204,8 +205,10 @@ namespace SkylineBatch
         private async Task<string> GetValidRVersion(string scriptName, string invalidVersion)
         {
             var version = invalidVersion;
-            var rVersionControl = new RVersionControl(scriptName, version, _rDirectorySelector);
-            return (string) await GetValidVariable(rVersionControl);
+            var rVersionControl = new RVersionControl(scriptName, version, _rDirectorySelector, State);
+            var validPath = (string) await GetValidVariable(rVersionControl);
+            State = rVersionControl.State;
+            return validPath;
         }
         
         private async Task<object> GetValidVariable(IValidatorControl control, bool removeControl = true)

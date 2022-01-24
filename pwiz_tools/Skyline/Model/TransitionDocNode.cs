@@ -373,15 +373,6 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public float? GetPeakAreaRatio(int i, int indexIS)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-                return null;
-            return chromInfo.GetRatio(indexIS);
-        }
-
         private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)
         {
             return HasResults ? Results.GetAverageValue(getVal) : null;
@@ -931,7 +922,7 @@ namespace pwiz.Skyline.Model
 
         private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
         {
-            return new TransitionChromInfo(fileId, step, peak, ionMobility, new float?[ratioCount], Annotations.EMPTY, userSet);
+            return new TransitionChromInfo(fileId, step, peak, ionMobility, Annotations.EMPTY, userSet);
         }
 
         public DocNode RemovePeak(int indexSet, ChromFileInfoId fileId, UserSet userSet)

@@ -180,6 +180,7 @@ namespace pwiz.Skyline.Controls
             _pickTimer.Tick += tick_ShowPickList;
 
             _nodeTip = new NodeTip(this) {Parent = TopLevelControl};
+            _normalizeOption = Settings.Default.AreaNormalizeOption;
 
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
@@ -309,14 +310,24 @@ namespace pwiz.Skyline.Controls
             Document = document;
             NormalizedValueCalculator = new NormalizedValueCalculator(Document);
 
-            bool integrateAllChanged = e.DocumentPrevious != null &&
-                                       e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
-                                       document.Settings.TransitionSettings.Integration.IsIntegrateAll;
-            // If none of the children changed, then do nothing
-            if (!integrateAllChanged && e.DocumentPrevious != null &&
-                    ReferenceEquals(document.Children, e.DocumentPrevious.Children))
+            bool updateNodeStates = false;
+            if (e.DocumentPrevious != null)
             {
-                return;                
+                if (e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
+                    document.Settings.TransitionSettings.Integration.IsIntegrateAll)
+                {
+                    updateNodeStates = true;
+                }
+                else if (document.Settings.IsGlobalRatioChange(e.DocumentPrevious.Settings))
+                {
+                    updateNodeStates = true;
+                }
+            }
+            // If none of the children changed, then do nothing
+            if (!updateNodeStates && e.DocumentPrevious != null &&
+                ReferenceEquals(document.Children, e.DocumentPrevious.Children))
+            {
+                return;
             }
 
             HideEffects();
@@ -354,7 +365,7 @@ namespace pwiz.Skyline.Controls
 
                 SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
                     true, PeptideGroupTreeNode.CreateInstance, changeAll);
-                if (integrateAllChanged)
+                if (updateNodeStates)
                 {
                     UpdateNodeStates();
                 }

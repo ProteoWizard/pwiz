@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Targeted.
+        ///   Looks up a localized string similar to Targeted (obsolete).
         /// </summary>
         public static string FullScanAcquisitionMethod_Targeted {
             get {
@@ -1362,6 +1362,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SampleType_unknown {
             get {
                 return ResourceManager.GetString("SampleType_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS Amanda.
+        /// </summary>
+        public static string SearchEngine_MSAmanda {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSAmanda", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSFragger.
+        /// </summary>
+        public static string SearchEngine_MSFragger {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSFragger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS-GF+.
+        /// </summary>
+        public static string SearchEngine_MSGFPlus {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSGFPlus", resourceCulture);
             }
         }
         

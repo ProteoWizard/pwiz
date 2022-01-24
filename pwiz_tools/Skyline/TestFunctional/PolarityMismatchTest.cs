@@ -23,7 +23,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -124,13 +124,6 @@ namespace pwiz.SkylineTestFunctional
                     SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.cePrecursor,
                 };
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
-                WaitForConditionUI(() => columnOrder.ToList().SequenceEqual(pasteDlg.GetColumnNames()));
-            });
             var clipText = File.ReadAllText(testFilesDir.GetTestPath("SRMs.csv")).Replace(',', TextUtil.CsvSeparator)
                 .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             string expectedError = null;
@@ -148,12 +141,26 @@ namespace pwiz.SkylineTestFunctional
                     expectedError = Resources.ChromCacheBuilder_BuildCache_This_document_contains_only_positive_ion_mode_transitions__and_the_imported_file_contains_only_negative_ion_mode_data_so_nothing_can_be_loaded___Negative_ion_mode_transitions_need_to_have_negative_charge_values_;
                 }
             }
-            SetClipboardTextUI(clipText);
-            RunUI(pasteDlg.PasteTransitions);
-            RunUI(pasteDlg.ValidateCells);
-            OkDialog(pasteDlg, pasteDlg.OkDialog);
-            var document = WaitForDocumentChangeLoaded(docEmpty);
 
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = clipText);
+
+            RunUI(() => {
+                col4Dlg.radioMolecule.PerformClick();
+                col4Dlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+            });
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
+            
+            var document = WaitForDocumentChangeLoaded(docEmpty);
             AssertEx.IsDocumentState(document, null, 1, 236, 236, 236);
             if (expectedError == null)
             {

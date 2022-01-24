@@ -73,7 +73,6 @@ All Info  :
 ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択終了は"最後のイオン"です
 ペプチド検索のインポート>トランジション設定を行う>最大イオンm/zは"2000"です
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"pituitary_database.fasta"です
-ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 空,
@@ -93,8 +92,7 @@ Extra Info: クロマトグラムを抽出 =
 },
 FASTAをインポート = 
 {
-    FASTAファイル = "pituitary_database.fasta",
-    ターゲット毎のデコイ = "1"
+    FASTAファイル = "pituitary_database.fasta"
 }
 
 Undo Redo : sp|P01222|TSHB_HUMAN>K.YALSQDVCTYR.D [65, 75]>688.3192++のピーク境界が変更されました

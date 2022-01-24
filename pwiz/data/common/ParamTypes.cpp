@@ -282,6 +282,12 @@ PWIZ_API_DECL void ParamContainer::set(CVID cvid, double value, CVID units)
 }
 
 
+PWIZ_API_DECL void ParamContainer::set(CVID cvid, float value, CVID units)
+{
+    set(cvid, pwiz::util::toString(value), units);
+}
+
+
 PWIZ_API_DECL void ParamContainer::set(CVID cvid, int value, CVID units)
 {
     set(cvid, pwiz::util::toString(value), units);

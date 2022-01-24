@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(expectedFirstTimes.TryGetValue(key, out expectedFirstTime));
                     ChromatogramGroupInfo[] chromatogramGroupInfos;
                     Assert.IsTrue(SkylineWindow.Document.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, precursor,
-                        tolerance, true, out chromatogramGroupInfos));
+                        tolerance, out chromatogramGroupInfos));
                     Assert.AreEqual(1, chromatogramGroupInfos.Length);
                     Assert.AreEqual(expectedFirstTime, chromatogramGroupInfos[0].TransitionPointSets.First().RawTimes[0], .0001);
                 }

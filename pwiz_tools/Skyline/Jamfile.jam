@@ -1,7 +1,4 @@
 #
-# $Id$
-#
-#
 # Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
 #                  MacCoss Lab, Department of Genome Sciences, UW
 #
@@ -28,12 +25,13 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
+    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 21 ;
-    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_ORDINAL : 2 ; # A count of official releases made so far this year
     constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
@@ -94,6 +92,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local .version = "$(SKYLINE_YEAR).$(SKYLINE_ORDINAL).$(SKYLINE_BRANCH).$(SKYLINE_DOY)" ;
         VERSION on $(targets) = $(.version) ;
+
+        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
+        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        {
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
+            local batch-file-text = "CALL SignAfterPublish.bat $(.pfx-password) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
+        }
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
@@ -249,11 +256,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -271,7 +278,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
     

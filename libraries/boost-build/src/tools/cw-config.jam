@@ -1,6 +1,6 @@
 #~ Copyright 2005 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
-#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Automatic configuration for CodeWarrior toolset. To use, just import this module.
 
@@ -21,7 +21,7 @@ if [ os.name ] = NT
             "HKEY_LOCAL_MACHINE\\SOFTWARE\\Metrowerks\\CodeWarrior for Windows\\$(R).0"
             : "PATH" ] ;
         cw-version ?= $(R).0 ;
-        
+
         if $(cw-path)
         {
             if --debug-configuration in [ modules.peek : ARGV ]

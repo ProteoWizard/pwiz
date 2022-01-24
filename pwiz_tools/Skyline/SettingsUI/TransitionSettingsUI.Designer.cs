@@ -122,7 +122,6 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.label16 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -560,6 +559,7 @@
             this.radioAllAndFiltered.Name = "radioAllAndFiltered";
             this.radioAllAndFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAllAndFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
@@ -568,6 +568,7 @@
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioFiltered, resources.GetString("radioFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -576,6 +577,7 @@
             this.radioAll.Name = "radioAll";
             this.radioAll.TabStop = true;
             this.helpTip.SetToolTip(this.radioAll, resources.GetString("radioAll.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAll, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
@@ -794,11 +796,6 @@
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
-            // label16
-            // 
-            resources.ApplyResources(this.label16, "label16");
-            this.label16.Name = "label16";
-            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -930,6 +927,5 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
-        private System.Windows.Forms.Label label16;
     }
 }

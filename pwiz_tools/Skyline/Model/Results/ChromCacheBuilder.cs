@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, null, fullScanAcquisitionMethod, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, fullScanAcquisitionMethod, chromData);
                 }
                 lastKey = key;
             }
@@ -656,9 +656,9 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            // Otherwise, add it to the dictionary by its peptide GlobalIndex to make
+            // Otherwise, add it to the dictionary by its PeptideSequenceModKey to make
             // sure precursors are grouped by peptide
-            Assume.IsTrue(peptidePrecursorMz.PrecursorMz.IsNegative == chromDataSet.PrecursorMz.IsNegative);
+            Assume.AreEqual(peptidePrecursorMz.PrecursorMz.IsNegative, chromDataSet.PrecursorMz.IsNegative);
             var nodePep = peptidePrecursorMz.NodePeptide;
             var key = nodePep.SequenceKey;
             if (!dictPeptideChromData.TryGetValue(key, out pepDataSets))
@@ -667,7 +667,11 @@ namespace pwiz.Skyline.Model.Results
                     _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
                 dictPeptideChromData.Add(key, pepDataSets);
             }
-            chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
+
+            if (peptidePrecursorMz.NodeGroup != null)
+            {
+                chromDataSet.NodeGroups = ImmutableList.ValueOf(chromDataSet.NodeGroups.Append(Tuple.Create(peptidePrecursorMz.NodePeptide, peptidePrecursorMz.NodeGroup)));
+            }
             pepDataSets.Add(nodePep, chromDataSet);
         }
 
@@ -885,9 +889,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // If the current chromDataSet has already been used, make a copy.
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
-                        peptidePrecursorMz.NodePeptide.ModifiedTarget,
+                        peptidePrecursorMz.NodePeptide,
+                        peptidePrecursorMz.NodeGroup,
                         chromDataSet.FullScanAcquisitionMethod, 
-                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
+                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()));
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
                 if (groupData != null)
@@ -937,19 +942,11 @@ namespace pwiz.Skyline.Model.Results
 
                 // Make sure the same chrom data object is not added twice, or two threads
                 // may end up processing it at the same time.
-                var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups.Where(match =>
                     !bestMz.HasValue || bestMz.Value == match.Item1.PrecursorMz))
                 {
-                    var arrayChromData = match.Item3.ToArray();
-                    for (int j = 0; j < arrayChromData.Length; j++)
-                    {
-                        var chromData = arrayChromData[j];
-                        if (setChromData.Contains(chromData))
-                            arrayChromData[j] = chromData.CloneForWrite();
-                        setChromData.Add(chromData);
-                    }
-                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide.ModifiedTarget, chromDataSet.FullScanAcquisitionMethod, arrayChromData);
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide,
+                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, match.Item3);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }

@@ -84,6 +84,13 @@ namespace pwiz.SkylineTestUtil
             docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
             var docSmallMol =
                 refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
+            if (docSmallMol.MeasuredResults != null)
+            {
+                foreach (var stream in docSmallMol.MeasuredResults.ReadStreams)
+                {
+                    stream.CloseStream();
+                }
+            }
             var listChromatograms = new List<ChromatogramSet>();
             if (dataPaths != null)
             {

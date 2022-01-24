@@ -143,7 +143,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     double collisionEnergy = 0;
     string collisionEnergyStr = isMS ? rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::COLLISION_ENERGY) : "";
     if (!collisionEnergyStr.empty())
-        collisionEnergy = lexical_cast<double>(collisionEnergyStr);
+        collisionEnergy = abs(lexical_cast<double>(collisionEnergyStr));
 
     // heuristic to detect high-energy MSe function (must run for DetailLevel_InstantMetadata so that msLevel is the same at all detail levels)
     if (msLevel == 1 && ie.function == 1 && collisionEnergy > 0)

@@ -1739,7 +1739,16 @@ namespace SkylineTester
         {
             string skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
             string fileName = GetFileForLanguage(formName, languageName);
-            return Directory.GetFiles(skylineDir, fileName, SearchOption.AllDirectories)[0];
+            var files =  Directory.GetFiles(skylineDir, fileName, SearchOption.AllDirectories);
+            if (files.Length == 0)
+            {
+                string commonDir = Path.GetFullPath(Path.Combine(skylineDir, @"..\Shared\Common"));
+                files = Directory.GetFiles(commonDir, fileName, SearchOption.AllDirectories);
+                if (files.Length == 0)
+                    return String.Empty;
+            }
+
+            return files[0];
         }
 
         private string GetFileForLanguage(string formName, string languageName)

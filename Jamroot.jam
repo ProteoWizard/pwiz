@@ -340,6 +340,9 @@ project pwiz
         <toolset>gcc:<define>_DEFAULT_SOURCE
         <toolset>clang:<define>_DEFAULT_SOURCE
 
+        # msparser uses old libstd++ API, so with GCC 5+, the entire project has to use it as well
+        <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
+
         # set standard to C++14
         <toolset>gcc:<cxxflags>-std=c++14
         <toolset>darwin:<cxxflags>-std=c++14
@@ -747,10 +750,7 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset-msvc:version>12.0 in $(properties) ||
-       <toolset-msvc:version>14.0 in $(properties) ||
-       <toolset-msvc:version>14.1 in $(properties) ||
-       <toolset-msvc:version>14.2 in $(properties)
+    if [ msvc-has-current-dotnet $(properties) ]
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
@@ -962,26 +962,27 @@ rule msvc-requirement ( properties * )
     if ! <toolset>msvc in $(properties) { return <build>no ; }
 }
 
+rule msvc-has-current-dotnet ( properties * )
+{
+    # require VS 2017 or higher because of .NET Framework version
+    if <toolset>msvc in $(properties) && 
+       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3"
+    {
+        return 1 ;
+    }
+}
+
 # predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
 rule msvc-dotnet-requirement ( properties * )
 {
-    # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
-           <toolset-msvc:version>14.0 in $(properties) ||
-           <toolset-msvc:version>14.1 in $(properties) ||
-           <toolset-msvc:version>14.2 in $(properties) )
-    { return <build>no ; }
+    if ! [ msvc-has-current-dotnet $(properties) ] { return <build>no ; }
 }
 
 # predicate for use as a <conditional> requirement of targets that must only build with non-express version of MSVC
 rule no-express-requirement ( properties * )
 {
-    # only the latest, non-express version of MSVC
-    if ! ( <toolset-msvc:version>12.0 in $(properties) || 
-           <toolset-msvc:version>14.0 in $(properties) || 
-           <toolset-msvc:version>14.1 in $(properties) || 
-           <toolset-msvc:version>14.2 in $(properties) )
-    { return <build>no ; }
+    # only non-express version of MSVC since 2017
+    if ! [ msvc-has-current-dotnet $(properties) ] { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
@@ -1315,26 +1316,21 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x86/api-ms-win-crt-string-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-time-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-utility-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/concrt140.dll
-    Microsoft.VC140.CRT/x86/mfc140.dll 
+    #Microsoft.VC140.CRT/x86/concrt140.dll
+    #Microsoft.VC140.CRT/x86/mfc140.dll 
     Microsoft.VC140.CRT/x86/msvcp140.dll 
     Microsoft.VC140.CRT/x86/ucrtbase.dll 
     Microsoft.VC140.CRT/x86/vcomp140.dll 
     Microsoft.VC140.CRT/x86/vcruntime140.dll 
-    Microsoft.VC140.CRT/x86/msvcp140_1.dll
-    Microsoft.VC140.CRT/x86/msvcp140_2.dll
-    Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
-    Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
-    Microsoft.VC140.CRT/x86/vccorlib140.dll
-    Microsoft.VC90.CRT/x86/msvcm90.dll 
-    Microsoft.VC90.CRT/x86/msvcp90.dll 
-    Microsoft.VC90.CRT/x86/msvcr90.dll 
-    Microsoft.VC90.CRT/x86/vcomp90.dll 
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    #Microsoft.VC140.CRT/x86/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
+    #Microsoft.VC140.CRT/x86/vccorlib140.dll
     Microsoft.VC90.MFC/x86/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x86/mfc90.dll 
     Microsoft.VC90.MFC/x86/mfc90u.dll 
+    Microsoft.VC90.CRT/x86/msvcp90.dll # used by MSFileReader
+    Microsoft.VC90.CRT/x86/msvcr90.dll # used by MSFileReader
     ;
 
 .msvcrt-x64 =
@@ -1383,26 +1379,37 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x64/api-ms-win-crt-string-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-time-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-utility-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/concrt140.dll
-    Microsoft.VC140.CRT/x64/mfc140.dll
+    #Microsoft.VC140.CRT/x64/concrt140.dll
+    #Microsoft.VC140.CRT/x64/mfc140.dll
     Microsoft.VC140.CRT/x64/msvcp140.dll
     Microsoft.VC140.CRT/x64/ucrtbase.dll
     Microsoft.VC140.CRT/x64/vcomp140.dll
     Microsoft.VC140.CRT/x64/vcruntime140.dll
-    Microsoft.VC140.CRT/x64/msvcp140_1.dll
-    Microsoft.VC140.CRT/x64/msvcp140_2.dll
-    Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
-    Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
     Microsoft.VC140.CRT/x64/vcruntime140_1.dll
-    Microsoft.VC140.CRT/x64/vccorlib140.dll
-    Microsoft.VC90.CRT/x64/msvcm90.dll
-    Microsoft.VC90.CRT/x64/msvcp90.dll
-    Microsoft.VC90.CRT/x64/msvcr90.dll
-    Microsoft.VC90.CRT/x64/vcomp90.dll
+    #Microsoft.VC140.CRT/x64/vccorlib140.dll
+    ;
+
+.msvcrt-x86-cxt =    
+    Microsoft.VC90.CRT/x86/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x86/mfc90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    ;
+
+.msvcrt-x64-cxt =
+    Microsoft.VC90.CRT/x64/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcp90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcr90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x64/mfc90.dll # used by CompassXtract
     Microsoft.VC90.CRT/x64/Microsoft.VC90.CRT.manifest
     Microsoft.VC90.CRT/x64/Microsoft.VC90.OpenMP.manifest
     Microsoft.VC90.MFC/x64/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x64/mfc90.dll
     ;
 
 rule msvc-runtime-dlls ( properties * )
@@ -1410,13 +1417,16 @@ rule msvc-runtime-dlls ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
@@ -1427,13 +1437,16 @@ rule install-msvc-runtime-dlls-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
@@ -1666,11 +1679,10 @@ constant .common-sources :
 
     "path-anchor:$(PWIZ_BUILD_PATH)"
     $(PWIZ_BUILD_PATH)/SUBSET
-
-    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .l = 
+    "path-anchor:$(PWIZ_ROOT_PATH)"
     $(PWIZ_LIBRARIES_PATH)/boost-build
     $(PWIZ_LIBRARIES_PATH)/boost_aux
     $(PWIZ_LIBRARIES_PATH)/predef
@@ -1683,8 +1695,6 @@ constant .common-sources :
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     "path-anchor:$(BOOST_SUBSET_PATH)"
     $(BOOST_SUBSET_PATH)/libraries
-
-    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .no-t = 
@@ -1713,7 +1723,7 @@ constant .common-sources :
 # l = without libraries, t = without tests, v = without vendor APIs
 tar.create pwiz-src.tar.bz2             : $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-l.tar.bz2   : $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.pwiz-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-ltv.tar.bz2 : $(.no-t) $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-ltv-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-lv-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;

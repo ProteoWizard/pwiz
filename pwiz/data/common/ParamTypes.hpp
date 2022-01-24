@@ -310,6 +310,9 @@ struct PWIZ_API_DECL ParamContainer
     void set(CVID cvid, double value, CVID units = CVID_Unknown);
 
     /// set/add a CVParam (not recursive)
+    void set(CVID cvid, float value, CVID units = CVID_Unknown);
+
+    /// set/add a CVParam (not recursive)
     void set(CVID cvid, int value, CVID units = CVID_Unknown);
 
     /// set/add a CVParam (not recursive)

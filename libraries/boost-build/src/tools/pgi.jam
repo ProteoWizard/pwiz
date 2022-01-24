@@ -1,8 +1,8 @@
 #  Copyright Noel Belcourt 2007.
 #  Copyright 2017, NVIDIA CORPORATION.
 #  Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import property ;
 import generators ;
@@ -22,14 +22,14 @@ generators.override pgi.searched-lib-generator : searched-lib-generator ;
 # Documentation and toolchain description located
 # http://www.pgroup.com/resources/docs.htm
 
-rule init ( version ? : command * : options * ) 
+rule init ( version ? : command * : options * )
 {
   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
 
   local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
 
   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
-    
+
   command_c = $(command_c[1--2]) $(l_command[-1]:B=pgcc) ;
 
   toolset.flags pgi CONFIG_C_COMMAND $(condition) : $(command_c) ;

@@ -220,7 +220,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 double numDecoys;
-                return DecoyGenerationEnabled && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
+                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
             }
             set { txtNumDecoys.Text = value.ToString(); }
         }
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
-        public bool ImportFasta(IrtStandard irtStandard)
+        public void UpdateDigestSettings()
         {
             var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
@@ -370,6 +370,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DocumentContainer.ModifyDocumentNoUndo(doc =>
                     doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
+        }
+
+        public bool ImportFasta(IrtStandard irtStandard)
+        {
+            UpdateDigestSettings();
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))
             {
@@ -484,14 +489,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (docNew == null)
                     return false;
 
+                var hasDecoys = docNew.Peptides.Any(pep => pep.IsDecoy);
                 if (AutoTrain)
                 {
-                    if (!docNew.Peptides.Any(pep => pep.IsDecoy))
+                    if (!hasDecoys)
                     {
                         MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
                         return false;
                     }
-                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(integration => integration.ChangeAutoTrain(true)));
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.mprophet_model)));
+                }
+                else if (hasDecoys)
+                {
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
                 }
 
                 DocumentContainer.ModifyDocumentNoUndo(doc =>
