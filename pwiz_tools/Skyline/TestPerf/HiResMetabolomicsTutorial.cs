@@ -88,50 +88,28 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             {
                 var doc = SkylineWindow.Document;
 
-                for (var retry = 0; retry < 2; retry++)
-                {
-                    var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog.Size = new Size(600, 300));
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 3);
 
-                    // TODO (henrytsanford): update the tutorial to use ColumnSelectDlg instead of PasteDlg
-                    if (retry == 0)
-                        PauseForScreenShot<InsertTransitionListDlg>("Paste Dialog with selected and ordered columns", 4);
+                var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
 
-                    var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
-                    if (retry > 0)
-                    {
-                        // Fix bad charge declaration
-                        var z = string.Format("{0}1{0}", TextUtil.CsvSeparator);
-                        var zneg = string.Format("{0}-1{0}", TextUtil.CsvSeparator);
-                        text = text.Replace(z, zneg);
-                    }
-                    var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
+                });
 
-                    RunUI(() => {
-                        col4Dlg.radioMolecule.PerformClick();
-                        col4Dlg.SetSelectedColumnTypes(
-                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                            Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                            Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-                    });
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 4);
 
-                    
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
+                RunUI(() => errDlg.Size = new Size(680, 250));
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 4);
+                OkDialog(errDlg, errDlg.OkDialog);
 
-                    if (retry == 0)
-                    {
-                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents showing charge problem", 5);
-                        OkDialog(col4Dlg, col4Dlg.CancelDialog);
-                    }
-                    else
-                    {
-                        PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 6);
-                        OkDialog(col4Dlg, col4Dlg.OkDialog);
-                    }
-                }
+                RunUI(() => col4Dlg.ComboBoxes[6].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
+
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 5);
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 7);
@@ -144,7 +122,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     SkylineWindow.ExpandPeptides();
                 });
                 RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets - show the right-click menu for setting DHA to be a surrogate standard", 7);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets - show the right-click menu for setting DHA to be a surrogate standard", 6);
 
                 // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
                 RunUI(() =>
@@ -173,7 +151,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 9);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 8);
 
 
                 RunUI(() =>
@@ -187,7 +165,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.PrecursorResMz = 200;
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 10);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 9);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(docTargets);
@@ -204,7 +182,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 11);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 10);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
@@ -213,7 +191,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 12);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 11);
 
                 var docResults = SkylineWindow.Document;
 
@@ -256,7 +234,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
                         Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules)));
                 }
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 13);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 12);
 
                 if (IsCoverShotMode)
                 {
@@ -303,7 +281,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         peptideSettingsUI.QuantUnits = "uM";
                     });
 
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 14);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 13);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
@@ -333,7 +311,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 });
                 // Make sure the edits have flowed to the document
                 WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms.Where(c => c.Name.StartsWith("GW")).All(c => c.SampleType.Equals(SampleType.QC)));
-                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 15);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 14);
 
                 // Finish setting up quant
                 var documentGrid3 = FindOpenForm<DocumentGridForm>();
@@ -361,7 +339,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 WaitForGraphs();
-                PauseForScreenShot<DocumentGridForm>("Calibration curve", 16);
+                PauseForScreenShot<DocumentGridForm>("Calibration curve", 15);
             }
 
         }

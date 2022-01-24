@@ -230,6 +230,7 @@
     <Compile Include="TimeIntervalsTest.cs" />
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="SubstringFinderTest.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
