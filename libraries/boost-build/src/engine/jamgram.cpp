@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.7.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -45,11 +45,11 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
-/* Identify Bison output.  */
-#define YYBISON 1
+/* Identify Bison output, and Bison version.  */
+#define YYBISON 30706
 
-/* Bison version.  */
-#define YYBISON_VERSION "3.7.2"
+/* Bison version string.  */
+#define YYBISON_VERSION "3.7.6"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -302,6 +302,18 @@ typedef int_least16_t yytype_int16;
 typedef short yytype_int16;
 #endif
 
+/* Work around bug in HP-UX 11.23, which defines these macros
+   incorrectly for preprocessor constants.  This workaround can likely
+   be removed in 2023, as HPE has promised support for HP-UX 11.23
+   (aka HP-UX 11i v2) only through the end of 2022; see Table 2 of
+   <https://h20195.www2.hpe.com/V2/getpdf.aspx/4AA4-7673ENW.pdf>.  */
+#ifdef __hpux
+# undef UINT_LEAST8_MAX
+# undef UINT_LEAST16_MAX
+# define UINT_LEAST8_MAX 255
+# define UINT_LEAST16_MAX 65535
+#endif
+
 #if defined __UINT_LEAST8_MAX__ && __UINT_LEAST8_MAX__ <= __INT_MAX__
 typedef __UINT_LEAST8_TYPE__ yytype_uint8;
 #elif (!defined __UINT_LEAST8_MAX__ && defined YY_STDINT_H \
@@ -399,9 +411,9 @@ typedef int yy_state_fast_t;
 
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
-# define YYUSE(E) ((void) (E))
+# define YY_USE(E) ((void) (E))
 #else
-# define YYUSE(E) /* empty */
+# define YY_USE(E) /* empty */
 #endif
 
 #if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
@@ -778,9 +790,9 @@ static const yytype_int16 yypgoto[] =
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int16 yydefgoto[] =
+static const yytype_uint8 yydefgoto[] =
 {
-      -1,    17,    38,    39,    31,   168,    40,   109,   140,   175,
+       0,    17,    38,    39,    31,   168,    40,   109,   140,   175,
       19,   195,    20,    30,    41,    82,    81,   176,    35,   125,
      193,    36,   143,    29,   136,    32,   142,    25,   123,    37,
      113,    79,   145,   190,   151,   192,    50,    68,   133,   128,
@@ -989,7 +1001,7 @@ yy_symbol_value_print (FILE *yyo,
                        yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   FILE *yyoutput = yyo;
-  YYUSE (yyoutput);
+  YY_USE (yyoutput);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
@@ -997,7 +1009,7 @@ yy_symbol_value_print (FILE *yyo,
     YYPRINT (yyo, yytoknum[yykind], *yyvaluep);
 # endif
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YYUSE (yykind);
+  YY_USE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
@@ -1111,13 +1123,13 @@ static void
 yydestruct (const char *yymsg,
             yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
 {
-  YYUSE (yyvaluep);
+  YY_USE (yyvaluep);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
 
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YYUSE (yykind);
+  YY_USE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
@@ -1380,719 +1392,719 @@ yyreduce:
   case 3: /* run: rules  */
 #line 148 "src/engine/jamgram.y"
                 { parse_save( yyvsp[0].parse ); }
-#line 1384 "src/engine/jamgram.cpp"
+#line 1396 "src/engine/jamgram.cpp"
     break;
 
   case 4: /* block: null  */
 #line 159 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 1390 "src/engine/jamgram.cpp"
+#line 1402 "src/engine/jamgram.cpp"
     break;
 
   case 5: /* block: rules  */
 #line 161 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 1396 "src/engine/jamgram.cpp"
+#line 1408 "src/engine/jamgram.cpp"
     break;
 
   case 6: /* rules: rule  */
 #line 165 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 1402 "src/engine/jamgram.cpp"
+#line 1414 "src/engine/jamgram.cpp"
     break;
 
   case 7: /* rules: rule rules  */
 #line 167 "src/engine/jamgram.y"
                 { yyval.parse = prules( yyvsp[-1].parse, yyvsp[0].parse ); }
-#line 1408 "src/engine/jamgram.cpp"
+#line 1420 "src/engine/jamgram.cpp"
     break;
 
   case 8: /* $@1: %empty  */
 #line 168 "src/engine/jamgram.y"
                   { yymode( SCAN_ASSIGN ); }
-#line 1414 "src/engine/jamgram.cpp"
+#line 1426 "src/engine/jamgram.cpp"
     break;
 
   case 9: /* $@2: %empty  */
 #line 168 "src/engine/jamgram.y"
                                                                            { yymode( SCAN_NORMAL ); }
-#line 1420 "src/engine/jamgram.cpp"
+#line 1432 "src/engine/jamgram.cpp"
     break;
 
   case 10: /* rules: LOCAL_t $@1 list assign_list_opt _SEMIC_t $@2 block  */
 #line 169 "src/engine/jamgram.y"
                 { yyval.parse = plocal( yyvsp[-4].parse, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1426 "src/engine/jamgram.cpp"
+#line 1438 "src/engine/jamgram.cpp"
     break;
 
   case 11: /* null: %empty  */
 #line 173 "src/engine/jamgram.y"
         { yyval.parse = pnull(); }
-#line 1432 "src/engine/jamgram.cpp"
+#line 1444 "src/engine/jamgram.cpp"
     break;
 
   case 12: /* $@3: %empty  */
 #line 176 "src/engine/jamgram.y"
                             { yymode( SCAN_PUNCT ); }
-#line 1438 "src/engine/jamgram.cpp"
+#line 1450 "src/engine/jamgram.cpp"
     break;
 
   case 13: /* assign_list_opt: _EQUALS_t $@3 list  */
 #line 177 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_SET; }
-#line 1444 "src/engine/jamgram.cpp"
+#line 1456 "src/engine/jamgram.cpp"
     break;
 
   case 14: /* assign_list_opt: null  */
 #line 179 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_APPEND; }
-#line 1450 "src/engine/jamgram.cpp"
+#line 1462 "src/engine/jamgram.cpp"
     break;
 
   case 15: /* arglist_opt: _LPAREN_t lol _RPAREN_t  */
 #line 183 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[-1].parse; }
-#line 1456 "src/engine/jamgram.cpp"
+#line 1468 "src/engine/jamgram.cpp"
     break;
 
   case 16: /* arglist_opt: %empty  */
 #line 185 "src/engine/jamgram.y"
                 { yyval.parse = P0; }
-#line 1462 "src/engine/jamgram.cpp"
+#line 1474 "src/engine/jamgram.cpp"
     break;
 
   case 17: /* local_opt: LOCAL_t  */
 #line 189 "src/engine/jamgram.y"
                 { yyval.number = 1; }
-#line 1468 "src/engine/jamgram.cpp"
+#line 1480 "src/engine/jamgram.cpp"
     break;
 
   case 18: /* local_opt: %empty  */
 #line 191 "src/engine/jamgram.y"
                 { yyval.number = 0; }
-#line 1474 "src/engine/jamgram.cpp"
+#line 1486 "src/engine/jamgram.cpp"
     break;
 
   case 19: /* else_opt: ELSE_t rule  */
 #line 195 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 1480 "src/engine/jamgram.cpp"
+#line 1492 "src/engine/jamgram.cpp"
     break;
 
   case 20: /* else_opt: %empty  */
 #line 197 "src/engine/jamgram.y"
                 { yyval.parse = pnull(); }
-#line 1486 "src/engine/jamgram.cpp"
+#line 1498 "src/engine/jamgram.cpp"
     break;
 
   case 21: /* rule: _LBRACE_t block _RBRACE_t  */
 #line 200 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[-1].parse; }
-#line 1492 "src/engine/jamgram.cpp"
+#line 1504 "src/engine/jamgram.cpp"
     break;
 
   case 22: /* $@4: %empty  */
 #line 201 "src/engine/jamgram.y"
                     { yymode( SCAN_PUNCT ); }
-#line 1498 "src/engine/jamgram.cpp"
+#line 1510 "src/engine/jamgram.cpp"
     break;
 
   case 23: /* rule: INCLUDE_t $@4 list _SEMIC_t  */
 #line 202 "src/engine/jamgram.y"
                 { yyval.parse = pincl( yyvsp[-1].parse ); yymode( SCAN_NORMAL ); }
-#line 1504 "src/engine/jamgram.cpp"
+#line 1516 "src/engine/jamgram.cpp"
     break;
 
   case 24: /* $@5: %empty  */
 #line 203 "src/engine/jamgram.y"
               { yymode( SCAN_PUNCT ); }
-#line 1510 "src/engine/jamgram.cpp"
+#line 1522 "src/engine/jamgram.cpp"
     break;
 
   case 25: /* rule: ARG $@5 lol _SEMIC_t  */
 #line 204 "src/engine/jamgram.y"
                 { yyval.parse = prule( yyvsp[-3].string, yyvsp[-1].parse ); yymode( SCAN_NORMAL ); }
-#line 1516 "src/engine/jamgram.cpp"
+#line 1528 "src/engine/jamgram.cpp"
     break;
 
   case 26: /* $@6: %empty  */
 #line 205 "src/engine/jamgram.y"
                      { yymode( SCAN_PUNCT ); }
-#line 1522 "src/engine/jamgram.cpp"
+#line 1534 "src/engine/jamgram.cpp"
     break;
 
   case 27: /* rule: arg assign $@6 list _SEMIC_t  */
 #line 206 "src/engine/jamgram.y"
                 { yyval.parse = pset( yyvsp[-4].parse, yyvsp[-1].parse, yyvsp[-3].number ); yymode( SCAN_NORMAL ); }
-#line 1528 "src/engine/jamgram.cpp"
+#line 1540 "src/engine/jamgram.cpp"
     break;
 
   case 28: /* $@7: %empty  */
 #line 207 "src/engine/jamgram.y"
                    { yymode( SCAN_ASSIGN ); }
-#line 1534 "src/engine/jamgram.cpp"
+#line 1546 "src/engine/jamgram.cpp"
     break;
 
   case 29: /* $@8: %empty  */
 #line 207 "src/engine/jamgram.y"
                                                           { yymode( SCAN_PUNCT ); }
-#line 1540 "src/engine/jamgram.cpp"
+#line 1552 "src/engine/jamgram.cpp"
     break;
 
   case 30: /* rule: arg ON_t $@7 list assign $@8 list _SEMIC_t  */
 #line 208 "src/engine/jamgram.y"
                 { yyval.parse = pset1( yyvsp[-7].parse, yyvsp[-4].parse, yyvsp[-1].parse, yyvsp[-3].number ); yymode( SCAN_NORMAL ); }
-#line 1546 "src/engine/jamgram.cpp"
+#line 1558 "src/engine/jamgram.cpp"
     break;
 
   case 31: /* $@9: %empty  */
 #line 209 "src/engine/jamgram.y"
                    { yymode( SCAN_PUNCT ); }
-#line 1552 "src/engine/jamgram.cpp"
+#line 1564 "src/engine/jamgram.cpp"
     break;
 
   case 32: /* rule: RETURN_t $@9 list _SEMIC_t  */
 #line 210 "src/engine/jamgram.y"
                 { yyval.parse = preturn( yyvsp[-1].parse ); yymode( SCAN_NORMAL ); }
-#line 1558 "src/engine/jamgram.cpp"
+#line 1570 "src/engine/jamgram.cpp"
     break;
 
   case 33: /* rule: BREAK_t _SEMIC_t  */
 #line 212 "src/engine/jamgram.y"
         { yyval.parse = pbreak(); }
-#line 1564 "src/engine/jamgram.cpp"
+#line 1576 "src/engine/jamgram.cpp"
     break;
 
   case 34: /* rule: CONTINUE_t _SEMIC_t  */
 #line 214 "src/engine/jamgram.y"
         { yyval.parse = pcontinue(); }
-#line 1570 "src/engine/jamgram.cpp"
+#line 1582 "src/engine/jamgram.cpp"
     break;
 
   case 35: /* $@10: %empty  */
 #line 215 "src/engine/jamgram.y"
                                    { yymode( SCAN_PUNCT ); }
-#line 1576 "src/engine/jamgram.cpp"
+#line 1588 "src/engine/jamgram.cpp"
     break;
 
   case 36: /* $@11: %empty  */
 #line 215 "src/engine/jamgram.y"
                                                                             { yymode( SCAN_NORMAL ); }
-#line 1582 "src/engine/jamgram.cpp"
+#line 1594 "src/engine/jamgram.cpp"
     break;
 
   case 37: /* rule: FOR_t local_opt ARG IN_t $@10 list _LBRACE_t $@11 block _RBRACE_t  */
 #line 216 "src/engine/jamgram.y"
                 { yyval.parse = pfor( yyvsp[-7].string, yyvsp[-4].parse, yyvsp[-1].parse, yyvsp[-8].number ); }
-#line 1588 "src/engine/jamgram.cpp"
+#line 1600 "src/engine/jamgram.cpp"
     break;
 
   case 38: /* $@12: %empty  */
 #line 217 "src/engine/jamgram.y"
                    { yymode( SCAN_PUNCT ); }
-#line 1594 "src/engine/jamgram.cpp"
+#line 1606 "src/engine/jamgram.cpp"
     break;
 
   case 39: /* $@13: %empty  */
 #line 217 "src/engine/jamgram.y"
                                                             { yymode( SCAN_NORMAL ); }
-#line 1600 "src/engine/jamgram.cpp"
+#line 1612 "src/engine/jamgram.cpp"
     break;
 
   case 40: /* rule: SWITCH_t $@12 list _LBRACE_t $@13 cases _RBRACE_t  */
 #line 218 "src/engine/jamgram.y"
                 { yyval.parse = pswitch( yyvsp[-4].parse, yyvsp[-1].parse ); }
-#line 1606 "src/engine/jamgram.cpp"
+#line 1618 "src/engine/jamgram.cpp"
     break;
 
   case 41: /* $@14: %empty  */
 #line 219 "src/engine/jamgram.y"
                { yymode( SCAN_CONDB ); }
-#line 1612 "src/engine/jamgram.cpp"
+#line 1624 "src/engine/jamgram.cpp"
     break;
 
   case 42: /* $@15: %empty  */
 #line 219 "src/engine/jamgram.y"
                                                         { yymode( SCAN_NORMAL ); }
-#line 1618 "src/engine/jamgram.cpp"
+#line 1630 "src/engine/jamgram.cpp"
     break;
 
   case 43: /* rule: IF_t $@14 expr _LBRACE_t $@15 block _RBRACE_t else_opt  */
 #line 220 "src/engine/jamgram.y"
                 { yyval.parse = pif( yyvsp[-5].parse, yyvsp[-2].parse, yyvsp[0].parse ); }
-#line 1624 "src/engine/jamgram.cpp"
+#line 1636 "src/engine/jamgram.cpp"
     break;
 
   case 44: /* $@16: %empty  */
 #line 221 "src/engine/jamgram.y"
                    { yymode( SCAN_PUNCT ); }
-#line 1630 "src/engine/jamgram.cpp"
+#line 1642 "src/engine/jamgram.cpp"
     break;
 
   case 45: /* $@17: %empty  */
 #line 221 "src/engine/jamgram.y"
                                                             { yymode( SCAN_NORMAL ); }
-#line 1636 "src/engine/jamgram.cpp"
+#line 1648 "src/engine/jamgram.cpp"
     break;
 
   case 46: /* rule: MODULE_t $@16 list _LBRACE_t $@17 block _RBRACE_t  */
 #line 222 "src/engine/jamgram.y"
                 { yyval.parse = pmodule( yyvsp[-4].parse, yyvsp[-1].parse ); }
-#line 1642 "src/engine/jamgram.cpp"
+#line 1654 "src/engine/jamgram.cpp"
     break;
 
   case 47: /* $@18: %empty  */
 #line 223 "src/engine/jamgram.y"
                   { yymode( SCAN_PUNCT ); }
-#line 1648 "src/engine/jamgram.cpp"
+#line 1660 "src/engine/jamgram.cpp"
     break;
 
   case 48: /* $@19: %empty  */
 #line 223 "src/engine/jamgram.y"
                                                           { yymode( SCAN_NORMAL ); }
-#line 1654 "src/engine/jamgram.cpp"
+#line 1666 "src/engine/jamgram.cpp"
     break;
 
   case 49: /* rule: CLASS_t $@18 lol _LBRACE_t $@19 block _RBRACE_t  */
 #line 224 "src/engine/jamgram.y"
                 { yyval.parse = pclass( yyvsp[-4].parse, yyvsp[-1].parse ); }
-#line 1660 "src/engine/jamgram.cpp"
+#line 1672 "src/engine/jamgram.cpp"
     break;
 
   case 50: /* $@20: %empty  */
 #line 225 "src/engine/jamgram.y"
                   { yymode( SCAN_CONDB ); }
-#line 1666 "src/engine/jamgram.cpp"
+#line 1678 "src/engine/jamgram.cpp"
     break;
 
   case 51: /* $@21: %empty  */
 #line 225 "src/engine/jamgram.y"
                                                  { yymode( SCAN_NORMAL ); }
-#line 1672 "src/engine/jamgram.cpp"
+#line 1684 "src/engine/jamgram.cpp"
     break;
 
   case 52: /* rule: WHILE_t $@20 expr $@21 _LBRACE_t block _RBRACE_t  */
 #line 226 "src/engine/jamgram.y"
                 { yyval.parse = pwhile( yyvsp[-4].parse, yyvsp[-1].parse ); }
-#line 1678 "src/engine/jamgram.cpp"
+#line 1690 "src/engine/jamgram.cpp"
     break;
 
   case 53: /* $@22: %empty  */
 #line 227 "src/engine/jamgram.y"
                         { yymode( SCAN_PUNCT ); }
-#line 1684 "src/engine/jamgram.cpp"
+#line 1696 "src/engine/jamgram.cpp"
     break;
 
   case 54: /* $@23: %empty  */
 #line 227 "src/engine/jamgram.y"
                                                       { yymode( SCAN_PARAMS ); }
-#line 1690 "src/engine/jamgram.cpp"
+#line 1702 "src/engine/jamgram.cpp"
     break;
 
   case 55: /* $@24: %empty  */
 #line 227 "src/engine/jamgram.y"
                                                                                              { yymode( SCAN_NORMAL ); }
-#line 1696 "src/engine/jamgram.cpp"
+#line 1708 "src/engine/jamgram.cpp"
     break;
 
   case 56: /* rule: local_opt RULE_t $@22 ARG $@23 arglist_opt $@24 rule  */
 #line 228 "src/engine/jamgram.y"
                 { yyval.parse = psetc( yyvsp[-4].string, yyvsp[0].parse, yyvsp[-2].parse, yyvsp[-7].number ); }
-#line 1702 "src/engine/jamgram.cpp"
+#line 1714 "src/engine/jamgram.cpp"
     break;
 
   case 57: /* rule: ON_t arg rule  */
 #line 230 "src/engine/jamgram.y"
                 { yyval.parse = pon( yyvsp[-1].parse, yyvsp[0].parse ); }
-#line 1708 "src/engine/jamgram.cpp"
+#line 1720 "src/engine/jamgram.cpp"
     break;
 
   case 58: /* $@25: %empty  */
 #line 232 "src/engine/jamgram.y"
                 { yymode( SCAN_STRING ); }
-#line 1714 "src/engine/jamgram.cpp"
+#line 1726 "src/engine/jamgram.cpp"
     break;
 
   case 59: /* $@26: %empty  */
 #line 234 "src/engine/jamgram.y"
                 { yymode( SCAN_NORMAL ); }
-#line 1720 "src/engine/jamgram.cpp"
+#line 1732 "src/engine/jamgram.cpp"
     break;
 
   case 60: /* rule: ACTIONS_t eflags ARG bindlist _LBRACE_t $@25 STRING $@26 _RBRACE_t  */
 #line 236 "src/engine/jamgram.y"
                 { yyval.parse = psete( yyvsp[-6].string,yyvsp[-5].parse,yyvsp[-2].string,yyvsp[-7].number ); }
-#line 1726 "src/engine/jamgram.cpp"
+#line 1738 "src/engine/jamgram.cpp"
     break;
 
   case 61: /* assign: _EQUALS_t  */
 #line 244 "src/engine/jamgram.y"
                 { yyval.number = ASSIGN_SET; }
-#line 1732 "src/engine/jamgram.cpp"
+#line 1744 "src/engine/jamgram.cpp"
     break;
 
   case 62: /* assign: _PLUS_EQUALS_t  */
 #line 246 "src/engine/jamgram.y"
                 { yyval.number = ASSIGN_APPEND; }
-#line 1738 "src/engine/jamgram.cpp"
+#line 1750 "src/engine/jamgram.cpp"
     break;
 
   case 63: /* assign: _QUESTION_EQUALS_t  */
 #line 248 "src/engine/jamgram.y"
                 { yyval.number = ASSIGN_DEFAULT; }
-#line 1744 "src/engine/jamgram.cpp"
+#line 1756 "src/engine/jamgram.cpp"
     break;
 
   case 64: /* assign: DEFAULT_t _EQUALS_t  */
 #line 250 "src/engine/jamgram.y"
                 { yyval.number = ASSIGN_DEFAULT; }
-#line 1750 "src/engine/jamgram.cpp"
+#line 1762 "src/engine/jamgram.cpp"
     break;
 
   case 65: /* expr: arg  */
 #line 257 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_EXISTS, yyvsp[0].parse, pnull() ); yymode( SCAN_COND ); }
-#line 1756 "src/engine/jamgram.cpp"
+#line 1768 "src/engine/jamgram.cpp"
     break;
 
   case 66: /* $@27: %empty  */
 #line 258 "src/engine/jamgram.y"
                          { yymode( SCAN_CONDB ); }
-#line 1762 "src/engine/jamgram.cpp"
+#line 1774 "src/engine/jamgram.cpp"
     break;
 
   case 67: /* expr: expr _EQUALS_t $@27 expr  */
 #line 259 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_EQUALS, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1768 "src/engine/jamgram.cpp"
+#line 1780 "src/engine/jamgram.cpp"
     break;
 
   case 68: /* $@28: %empty  */
 #line 260 "src/engine/jamgram.y"
                               { yymode( SCAN_CONDB ); }
-#line 1774 "src/engine/jamgram.cpp"
+#line 1786 "src/engine/jamgram.cpp"
     break;
 
   case 69: /* expr: expr _BANG_EQUALS_t $@28 expr  */
 #line 261 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_NOTEQ, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1780 "src/engine/jamgram.cpp"
+#line 1792 "src/engine/jamgram.cpp"
     break;
 
   case 70: /* $@29: %empty  */
 #line 262 "src/engine/jamgram.y"
                          { yymode( SCAN_CONDB ); }
-#line 1786 "src/engine/jamgram.cpp"
+#line 1798 "src/engine/jamgram.cpp"
     break;
 
   case 71: /* expr: expr _LANGLE_t $@29 expr  */
 #line 263 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_LESS, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1792 "src/engine/jamgram.cpp"
+#line 1804 "src/engine/jamgram.cpp"
     break;
 
   case 72: /* $@30: %empty  */
 #line 264 "src/engine/jamgram.y"
                                 { yymode( SCAN_CONDB ); }
-#line 1798 "src/engine/jamgram.cpp"
+#line 1810 "src/engine/jamgram.cpp"
     break;
 
   case 73: /* expr: expr _LANGLE_EQUALS_t $@30 expr  */
 #line 265 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_LESSEQ, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1804 "src/engine/jamgram.cpp"
+#line 1816 "src/engine/jamgram.cpp"
     break;
 
   case 74: /* $@31: %empty  */
 #line 266 "src/engine/jamgram.y"
                          { yymode( SCAN_CONDB ); }
-#line 1810 "src/engine/jamgram.cpp"
+#line 1822 "src/engine/jamgram.cpp"
     break;
 
   case 75: /* expr: expr _RANGLE_t $@31 expr  */
 #line 267 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_MORE, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1816 "src/engine/jamgram.cpp"
+#line 1828 "src/engine/jamgram.cpp"
     break;
 
   case 76: /* $@32: %empty  */
 #line 268 "src/engine/jamgram.y"
                                 { yymode( SCAN_CONDB ); }
-#line 1822 "src/engine/jamgram.cpp"
+#line 1834 "src/engine/jamgram.cpp"
     break;
 
   case 77: /* expr: expr _RANGLE_EQUALS_t $@32 expr  */
 #line 269 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_MOREEQ, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1828 "src/engine/jamgram.cpp"
+#line 1840 "src/engine/jamgram.cpp"
     break;
 
   case 78: /* $@33: %empty  */
 #line 270 "src/engine/jamgram.y"
                         { yymode( SCAN_CONDB ); }
-#line 1834 "src/engine/jamgram.cpp"
+#line 1846 "src/engine/jamgram.cpp"
     break;
 
   case 79: /* expr: expr _AMPER_t $@33 expr  */
 #line 271 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_AND, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1840 "src/engine/jamgram.cpp"
+#line 1852 "src/engine/jamgram.cpp"
     break;
 
   case 80: /* $@34: %empty  */
 #line 272 "src/engine/jamgram.y"
                              { yymode( SCAN_CONDB ); }
-#line 1846 "src/engine/jamgram.cpp"
+#line 1858 "src/engine/jamgram.cpp"
     break;
 
   case 81: /* expr: expr _AMPERAMPER_t $@34 expr  */
 #line 273 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_AND, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1852 "src/engine/jamgram.cpp"
+#line 1864 "src/engine/jamgram.cpp"
     break;
 
   case 82: /* $@35: %empty  */
 #line 274 "src/engine/jamgram.y"
                       { yymode( SCAN_CONDB ); }
-#line 1858 "src/engine/jamgram.cpp"
+#line 1870 "src/engine/jamgram.cpp"
     break;
 
   case 83: /* expr: expr _BAR_t $@35 expr  */
 #line 275 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_OR, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1864 "src/engine/jamgram.cpp"
+#line 1876 "src/engine/jamgram.cpp"
     break;
 
   case 84: /* $@36: %empty  */
 #line 276 "src/engine/jamgram.y"
                          { yymode( SCAN_CONDB ); }
-#line 1870 "src/engine/jamgram.cpp"
+#line 1882 "src/engine/jamgram.cpp"
     break;
 
   case 85: /* expr: expr _BARBAR_t $@36 expr  */
 #line 277 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_OR, yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 1876 "src/engine/jamgram.cpp"
+#line 1888 "src/engine/jamgram.cpp"
     break;
 
   case 86: /* $@37: %empty  */
 #line 278 "src/engine/jamgram.y"
                    { yymode( SCAN_PUNCT ); }
-#line 1882 "src/engine/jamgram.cpp"
+#line 1894 "src/engine/jamgram.cpp"
     break;
 
   case 87: /* expr: arg IN_t $@37 list  */
 #line 279 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_IN, yyvsp[-3].parse, yyvsp[0].parse ); yymode( SCAN_COND ); }
-#line 1888 "src/engine/jamgram.cpp"
+#line 1900 "src/engine/jamgram.cpp"
     break;
 
   case 88: /* $@38: %empty  */
 #line 280 "src/engine/jamgram.y"
                   { yymode( SCAN_CONDB ); }
-#line 1894 "src/engine/jamgram.cpp"
+#line 1906 "src/engine/jamgram.cpp"
     break;
 
   case 89: /* expr: _BANG_t $@38 expr  */
 #line 281 "src/engine/jamgram.y"
                 { yyval.parse = peval( EXPR_NOT, yyvsp[0].parse, pnull() ); }
-#line 1900 "src/engine/jamgram.cpp"
+#line 1912 "src/engine/jamgram.cpp"
     break;
 
   case 90: /* $@39: %empty  */
 #line 282 "src/engine/jamgram.y"
                     { yymode( SCAN_CONDB ); }
-#line 1906 "src/engine/jamgram.cpp"
+#line 1918 "src/engine/jamgram.cpp"
     break;
 
   case 91: /* expr: _LPAREN_t $@39 expr _RPAREN_t  */
 #line 283 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[-1].parse; }
-#line 1912 "src/engine/jamgram.cpp"
+#line 1924 "src/engine/jamgram.cpp"
     break;
 
   case 92: /* cases: %empty  */
 #line 294 "src/engine/jamgram.y"
                 { yyval.parse = P0; }
-#line 1918 "src/engine/jamgram.cpp"
+#line 1930 "src/engine/jamgram.cpp"
     break;
 
   case 93: /* cases: case cases  */
 #line 296 "src/engine/jamgram.y"
                 { yyval.parse = pnode( yyvsp[-1].parse, yyvsp[0].parse ); }
-#line 1924 "src/engine/jamgram.cpp"
+#line 1936 "src/engine/jamgram.cpp"
     break;
 
   case 94: /* $@40: %empty  */
 #line 299 "src/engine/jamgram.y"
                  { yymode( SCAN_CASE ); }
-#line 1930 "src/engine/jamgram.cpp"
+#line 1942 "src/engine/jamgram.cpp"
     break;
 
   case 95: /* $@41: %empty  */
 #line 299 "src/engine/jamgram.y"
                                                        { yymode( SCAN_NORMAL ); }
-#line 1936 "src/engine/jamgram.cpp"
+#line 1948 "src/engine/jamgram.cpp"
     break;
 
   case 96: /* case: CASE_t $@40 ARG _COLON_t $@41 block  */
 #line 300 "src/engine/jamgram.y"
                 { yyval.parse = psnode( yyvsp[-3].string, yyvsp[0].parse ); }
-#line 1942 "src/engine/jamgram.cpp"
+#line 1954 "src/engine/jamgram.cpp"
     break;
 
   case 97: /* lol: list  */
 #line 309 "src/engine/jamgram.y"
                 { yyval.parse = pnode( P0, yyvsp[0].parse ); }
-#line 1948 "src/engine/jamgram.cpp"
+#line 1960 "src/engine/jamgram.cpp"
     break;
 
   case 98: /* lol: list _COLON_t lol  */
 #line 311 "src/engine/jamgram.y"
                 { yyval.parse = pnode( yyvsp[0].parse, yyvsp[-2].parse ); }
-#line 1954 "src/engine/jamgram.cpp"
+#line 1966 "src/engine/jamgram.cpp"
     break;
 
   case 99: /* list: listp  */
 #line 321 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 1960 "src/engine/jamgram.cpp"
+#line 1972 "src/engine/jamgram.cpp"
     break;
 
   case 100: /* listp: %empty  */
 #line 325 "src/engine/jamgram.y"
                 { yyval.parse = pnull(); }
-#line 1966 "src/engine/jamgram.cpp"
+#line 1978 "src/engine/jamgram.cpp"
     break;
 
   case 101: /* listp: listp arg  */
 #line 327 "src/engine/jamgram.y"
                 { yyval.parse = pappend( yyvsp[-1].parse, yyvsp[0].parse ); }
-#line 1972 "src/engine/jamgram.cpp"
+#line 1984 "src/engine/jamgram.cpp"
     break;
 
   case 102: /* arg: ARG  */
 #line 331 "src/engine/jamgram.y"
                 { yyval.parse = plist( yyvsp[0].string ); }
-#line 1978 "src/engine/jamgram.cpp"
+#line 1990 "src/engine/jamgram.cpp"
     break;
 
   case 103: /* @42: %empty  */
 #line 332 "src/engine/jamgram.y"
                       { yyval.number = yymode( SCAN_CALL ); }
-#line 1984 "src/engine/jamgram.cpp"
+#line 1996 "src/engine/jamgram.cpp"
     break;
 
   case 104: /* arg: _LBRACKET_t @42 func _RBRACKET_t  */
 #line 333 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[-1].parse; yymode( yyvsp[-2].number ); }
-#line 1990 "src/engine/jamgram.cpp"
+#line 2002 "src/engine/jamgram.cpp"
     break;
 
   case 105: /* $@43: %empty  */
 #line 341 "src/engine/jamgram.y"
               { yymode( SCAN_PUNCT ); }
-#line 1996 "src/engine/jamgram.cpp"
+#line 2008 "src/engine/jamgram.cpp"
     break;
 
   case 106: /* func: ARG $@43 lol  */
 #line 342 "src/engine/jamgram.y"
                 { yyval.parse = prule( yyvsp[-2].string, yyvsp[0].parse ); }
-#line 2002 "src/engine/jamgram.cpp"
+#line 2014 "src/engine/jamgram.cpp"
     break;
 
   case 107: /* $@44: %empty  */
 #line 343 "src/engine/jamgram.y"
                        { yymode( SCAN_PUNCT ); }
-#line 2008 "src/engine/jamgram.cpp"
+#line 2020 "src/engine/jamgram.cpp"
     break;
 
   case 108: /* func: ON_t arg ARG $@44 lol  */
 #line 344 "src/engine/jamgram.y"
                 { yyval.parse = pon( yyvsp[-3].parse, prule( yyvsp[-2].string, yyvsp[0].parse ) ); }
-#line 2014 "src/engine/jamgram.cpp"
+#line 2026 "src/engine/jamgram.cpp"
     break;
 
   case 109: /* $@45: %empty  */
 #line 345 "src/engine/jamgram.y"
                             { yymode( SCAN_PUNCT ); }
-#line 2020 "src/engine/jamgram.cpp"
+#line 2032 "src/engine/jamgram.cpp"
     break;
 
   case 110: /* func: ON_t arg RETURN_t $@45 list  */
 #line 346 "src/engine/jamgram.y"
                 { yyval.parse = pon( yyvsp[-3].parse, yyvsp[0].parse ); }
-#line 2026 "src/engine/jamgram.cpp"
+#line 2038 "src/engine/jamgram.cpp"
     break;
 
   case 111: /* eflags: %empty  */
 #line 356 "src/engine/jamgram.y"
                 { yyval.number = 0; }
-#line 2032 "src/engine/jamgram.cpp"
+#line 2044 "src/engine/jamgram.cpp"
     break;
 
   case 112: /* eflags: eflags eflag  */
 #line 358 "src/engine/jamgram.y"
                 { yyval.number = yyvsp[-1].number | yyvsp[0].number; }
-#line 2038 "src/engine/jamgram.cpp"
+#line 2050 "src/engine/jamgram.cpp"
     break;
 
   case 113: /* eflag: UPDATED_t  */
 #line 362 "src/engine/jamgram.y"
                 { yyval.number = EXEC_UPDATED; }
-#line 2044 "src/engine/jamgram.cpp"
+#line 2056 "src/engine/jamgram.cpp"
     break;
 
   case 114: /* eflag: TOGETHER_t  */
 #line 364 "src/engine/jamgram.y"
                 { yyval.number = EXEC_TOGETHER; }
-#line 2050 "src/engine/jamgram.cpp"
+#line 2062 "src/engine/jamgram.cpp"
     break;
 
   case 115: /* eflag: IGNORE_t  */
 #line 366 "src/engine/jamgram.y"
                 { yyval.number = EXEC_IGNORE; }
-#line 2056 "src/engine/jamgram.cpp"
+#line 2068 "src/engine/jamgram.cpp"
     break;
 
   case 116: /* eflag: QUIETLY_t  */
 #line 368 "src/engine/jamgram.y"
                 { yyval.number = EXEC_QUIETLY; }
-#line 2062 "src/engine/jamgram.cpp"
+#line 2074 "src/engine/jamgram.cpp"
     break;
 
   case 117: /* eflag: PIECEMEAL_t  */
 #line 370 "src/engine/jamgram.y"
                 { yyval.number = EXEC_PIECEMEAL; }
-#line 2068 "src/engine/jamgram.cpp"
+#line 2080 "src/engine/jamgram.cpp"
     break;
 
   case 118: /* eflag: EXISTING_t  */
 #line 372 "src/engine/jamgram.y"
                 { yyval.number = EXEC_EXISTING; }
-#line 2074 "src/engine/jamgram.cpp"
+#line 2086 "src/engine/jamgram.cpp"
     break;
 
   case 119: /* bindlist: %empty  */
 #line 381 "src/engine/jamgram.y"
                 { yyval.parse = pnull(); }
-#line 2080 "src/engine/jamgram.cpp"
+#line 2092 "src/engine/jamgram.cpp"
     break;
 
   case 120: /* $@46: %empty  */
 #line 382 "src/engine/jamgram.y"
                  { yymode( SCAN_PUNCT ); }
-#line 2086 "src/engine/jamgram.cpp"
+#line 2098 "src/engine/jamgram.cpp"
     break;
 
   case 121: /* bindlist: BIND_t $@46 list  */
 #line 383 "src/engine/jamgram.y"
                 { yyval.parse = yyvsp[0].parse; }
-#line 2092 "src/engine/jamgram.cpp"
+#line 2104 "src/engine/jamgram.cpp"
     break;
 
 
-#line 2096 "src/engine/jamgram.cpp"
+#line 2108 "src/engine/jamgram.cpp"
 
       default: break;
     }

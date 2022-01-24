@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_list saved_path_root="REPLACE_TEXT\BcfgTestFiles" xml_version="21.12">
+  <skylinebatch_config name="Basic" modified="01/12/2022 14:37:53">
+    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Basic">
+      <template_file path="REPLACE_TEXT\emptyTemplate.sky" />
+      <data_folder path="REPLACE_TEXT\EmptyData" />
+      <annotations_file />
+    </file_settings>
+    <import_settings />
+    <refine_settings remove_decoys="true" remove_results="true" />
+    <report_settings />
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Complex" enabled="true" modified="01/12/2022 13:53:28">
+    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Complex" replicate_naming_pattern="Tester">
+      <template_file zip_path="REPLACE_TEXT\Bruderer.sky.zip">
+        <remote_file>
+          <remote_file_source name="panoramaweb.org Bruderer.sky.zip" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/Bruderer.sky.zip" username="alimarsh@mit.edu" password="test" />
+        </remote_file>
+      </template_file>
+      <data_folder path="REPLACE_TEXT\EmptyData">
+        <remote_file_set data_naming_pattern="0314_SGSDSsample.*_MHRM_">
+          <remote_file_source name="ftp://ftp.peptideatlas.org/" url="ftp://ftp.peptideatlas.org/" username="PASS00589" password="WF6554orn" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="REPLACE_TEXT\MSstats_annotations.sky">
+        <remote_file>
+          <remote_file_source name="panoramaweb.org MSstats_annotations.sky" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/reports/MSstats_annotations.sky" username="alimarsh@mit.edu" password="test" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings ms_one_resolving_power="1" ms_ms_resolving_power="1000" retention_time="100" add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings remove_decoys="true" remove_results="true" output_file_path="REPLACE_TEXT\refinedTemplate.sky">
+      <command_argument name="min_peptides" value="1" />
+      <command_argument name="remove_repeats" value="True" />
+      <command_argument name="remove_duplicates" value="True" />
+      <command_argument name="missing_library" value="True" />
+      <command_argument name="min_transitions" value="1" />
+      <command_argument name="label_type" value="hello" />
+      <command_argument name="add_label_type" value="True" />
+      <command_argument name="auto_select_peptides" value="True" />
+      <command_argument name="auto_select_precursors" value="True" />
+      <command_argument name="auto_select_transitions" value="True" />
+      <command_argument name="min_peak_found_ratio" value="2" />
+      <command_argument name="max_peak_found_ratio" value="2" />
+      <command_argument name="max_peptide_peak_rank" value="1" />
+      <command_argument name="max_transition_peak_rank" value="1" />
+      <command_argument name="max_precursor_only" value="True" />
+      <command_argument name="prefer_larger_products" value="True" />
+      <command_argument name="missing_results" value="True" />
+      <command_argument name="min_time_correlation" value="1.1" />
+      <command_argument name="min_dotp" value="0.5" />
+      <command_argument name="min_idotp" value="1" />
+      <command_argument name="use_best_result" value="True" />
+      <command_argument name="cv_remove_above_cutoff" value="4" />
+      <command_argument name="cv_reference_normalize" value="heavy" />
+      <command_argument name="cv_transitions_count" value="3" />
+      <command_argument name="qvalue_cutoff" value="4.4" />
+      <command_argument name="minimum_detections" value="2" />
+      <command_argument name="gc_p_value_cutoff" value="3" />
+      <command_argument name="gc_fold_change_cutoff" value="1" />
+      <command_argument name="gc_ms_level" value="2" />
+      <command_argument name="gc_name" value="1" />
+      <command_argument name="cv_global_normalize" value="global_standards" />
+      <command_argument name="cv_transitions" value="best" />
+      <command_argument name="cv_ms_level" value="products" />
+    </refine_settings>
+    <report_settings>
+      <report_info name="MSstats Input-plus">
+        <r_script path="REPLACE_TEXT\MSstats_Bruderer.R" version="4.0.3">
+          <remote_file>
+            <remote_file_source name="panoramaweb.org MSstats_Bruderer.R" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/reports/MSstats_Bruderer.R" username="alimarsh@mit.edu" password="test" />
+          </remote_file>
+        </r_script>
+      </report_info>
+      <report_info name="Unique Report" path="REPLACE_TEXT\UniqueReport.skyr" use_refined_file="true">
+        <r_script path="REPLACE_TEXT\testScript.R" version="4.0.3" />
+      </report_info>
+    </report_settings>
+    <config_skyline_settings type="Custom" version="latest" path="C:\Program Files\Skyline\SkylineCmd.exe" />
+  </skylinebatch_config>
+</config_list>

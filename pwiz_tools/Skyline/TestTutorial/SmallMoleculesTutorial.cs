@@ -105,6 +105,7 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog3.Size = new Size(600, 300));
                 string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 if (_inferredLabels)
                 {
@@ -115,23 +116,15 @@ namespace pwiz.SkylineTestTutorial
                 }
                 PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
-
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
-                    col4Dlg.SetSelectedColumnTypes(
-                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                        Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                        Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                        Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                        Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                        Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                        Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                        Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                        _inferredLabels ? Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column : Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-                    
+                    if (!_inferredLabels)
+                    {
+                        var comboBoxes = col4Dlg.ComboBoxes;
+                        comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    }
                 });
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with chosen column headers", 6);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected", 6);
 
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
 
@@ -149,7 +142,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Size = new Size(957, 654);
                 });
                 RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 6);
 
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Amino Acid Metabolism.sky")));
 
@@ -163,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 6);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 7);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -172,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 9);
 
                 var docResults = SkylineWindow.Document;
 
@@ -211,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 if (!string.IsNullOrEmpty(msg))
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 10);
 
                 if (IsCoverShotMode)
                 {
@@ -228,19 +221,6 @@ namespace pwiz.SkylineTestTutorial
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                     string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = impliedLabeled2);
-
-                    RunUI(() => {
-                        colDlg.SetSelectedColumnTypes(
-                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                            Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                            Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                            Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                            Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                            Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-                    });
 
                     TakeCoverShot();
 

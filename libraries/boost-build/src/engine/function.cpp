@@ -2,8 +2,8 @@
  * Copyright 2011 Steven Watanabe
  * Copyright 2016 Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -476,6 +476,13 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(). */
 
+    if ( n_args > LOL_MAX )
+    {
+        out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( inner );
+        exit( EXITBAD );
+    }
+
     for ( i = 0; i < n_args; ++i )
         lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
 
@@ -568,6 +575,13 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     inner->prev = frame;
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
+
+    if ( n_args > LOL_MAX )
+    {
+        out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( inner );
+        exit( EXITBAD );
+    }
 
     for( i = 0; i < n_args; ++i )
     {
@@ -5228,6 +5242,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 expansion_item ei = { stack_pop( s ) };
                 filename = expand( &ei, 1 );
+                list_free( ei.values );
             }
             // Apply modifiers to "raw" filename.
             VAR_EXPANDED filename_mod = eval_modifiers( s, filename, code->arg );

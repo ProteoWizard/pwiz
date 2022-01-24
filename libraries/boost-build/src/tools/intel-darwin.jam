@@ -1,8 +1,8 @@
 # Copyright Vladimir Prus 2004.
 # Copyright Noel Belcourt 2007.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import intel ;
 import feature : feature ;
@@ -119,10 +119,6 @@ rule init ( version ? :  command * : options * )
         flags intel-darwin.compile DEFINES $(condition) : __WINT_TYPE__=int : unchecked ;
     }
 
-    # - Ranlib.
-    local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
-    toolset.flags intel-darwin.archive .RANLIB $(condition) : $(ranlib[1]) ;
-
     # - Archive builder.
     local archiver = [ feature.get-values <archiver> : $(options) ] ;
     toolset.flags intel-darwin.archive .AR $(condition) : $(archiver[1]) ;
@@ -174,53 +170,6 @@ actions compile.c++
 {
     "$(CONFIG_COMMAND)" -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
-
-flags intel-darwin ARFLAGS <archiveflags> ;
-
-# Default value. Mostly for the sake of intel-linux
-# that inherits from gcc, but does not has the same
-# logic to set the .AR variable. We can put the same
-# logic in intel-linux, but that's hardly worth the trouble
-# as on Linux, 'ar' is always available.
-.AR = ar ;
-.RANLIB = ranlib ;
-
-rule archive ( targets * : sources * : properties * )
-{
-  # Always remove archive and start again. Here's rationale from
-  # Andre Hentz:
-  #
-  # I had a file, say a1.c, that was included into liba.a.
-  # I moved a1.c to a2.c, updated my Jamfiles and rebuilt.
-  # My program was crashing with absurd errors.
-  # After some debugging I traced it back to the fact that a1.o was *still*
-  # in liba.a
-  #
-  # Rene Rivera:
-  #
-  # Originally removing the archive was done by splicing an RM
-  # onto the archive action. That makes archives fail to build on NT
-  # when they have many files because it will no longer execute the
-  # action directly and blow the line length limit. Instead we
-  # remove the file in a different action, just before the building
-  # of the archive.
-  #
-  local clean.a = $(targets[1])(clean) ;
-  TEMPORARY $(clean.a) ;
-  NOCARE $(clean.a) ;
-  LOCATE on $(clean.a) = [ on $(targets[1]) return $(LOCATE) ] ;
-  DEPENDS $(clean.a) : $(sources) ;
-  DEPENDS $(targets) : $(clean.a) ;
-  common.RmTemps $(clean.a) : $(targets) ;
-}
-
-actions piecemeal archive
-{
-  "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-  "$(.RANLIB)" -cs "$(<)"
-}
-
-flags intel-darwin.link USER_OPTIONS <linkflags> ;
 
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )

@@ -1,7 +1,7 @@
 # Copyright 2018 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Named parameters are represented as a list which has the
 # argument name as the first element and the value as the
@@ -33,7 +33,7 @@ rule handle-named-params ( parameter-names * )
                     import errors ;
                     errors.error Parameter '$($(v-8bef5c096d06a1b0)[1])' passed more than once. ;
                 }
-                found-8bef5c096d06a1b0 = true ; 
+                found-8bef5c096d06a1b0 = true ;
                 tmp-8bef5c096d06a1b0.$($(v-8bef5c096d06a1b0)[1]) = $($(v-8bef5c096d06a1b0)[2-]) ;
             }
             else if $($(v-8bef5c096d06a1b0))-is-defined
