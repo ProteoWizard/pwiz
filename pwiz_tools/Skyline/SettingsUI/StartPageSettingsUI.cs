@@ -53,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsIntegrateAll 
         {
             get { return radioBtnQuant.Checked; }
-            set { radioBtnQuant.Checked = true; }
+            set { radioBtnQuant.Checked = value; }
         }
 
         private void peptideSettingsBtn_Click(object sender, EventArgs e)
