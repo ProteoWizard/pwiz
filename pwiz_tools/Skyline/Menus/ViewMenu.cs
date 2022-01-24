@@ -238,6 +238,8 @@ namespace pwiz.Skyline.Menus
                 case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
                 case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
                 case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
+                case IonType.zh: set.ShowZHIons = zhMenuItem.Checked = check; zhMenuItem.Visible = visible; break;
+                case IonType.zhh: set.ShowZHHIons = zhhMenuItem.Checked = check; zhhMenuItem.Visible = visible; break;
                 case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
             }
         }
@@ -251,6 +253,8 @@ namespace pwiz.Skyline.Menus
             xMenuItem.Checked = set.ShowXIons;
             yMenuItem.Checked = set.ShowYIons;
             zMenuItem.Checked = set.ShowZIons;
+            zhMenuItem.Checked = set.ShowZHIons;
+            zhhMenuItem.Checked = set.ShowZHHIons;
             fragmentsMenuItem.Checked = set.ShowFragmentIons;
             precursorIonMenuItem.Checked = set.ShowPrecursorIon;
             UpdateIonTypesMenuItemsVisibility();
@@ -260,7 +264,7 @@ namespace pwiz.Skyline.Menus
         public void UpdateIonTypesMenuItemsVisibility()
         {
             aMenuItem.Visible = bMenuItem.Visible = cMenuItem.Visible =
-                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible =
+                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = zhMenuItem.Visible = zhhMenuItem.Visible =
                     DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
 
             fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
@@ -299,6 +303,16 @@ namespace pwiz.Skyline.Menus
         private void zMenuItem_Click(object sender, EventArgs e)
         {
             GraphSpectrumSettings.ShowZIons = !GraphSpectrumSettings.ShowZIons;
+        }
+
+        private void zhMenuItem_Click(object sender, EventArgs e)
+        {
+            GraphSpectrumSettings.ShowZHIons = !GraphSpectrumSettings.ShowZHIons;
+        }
+
+        private void zhhMenuItem_Click(object sender, EventArgs e)
+        {
+            GraphSpectrumSettings.ShowZHHIons = !GraphSpectrumSettings.ShowZHHIons;
         }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)

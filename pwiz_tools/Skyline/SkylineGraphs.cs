@@ -876,6 +876,16 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowZIons = !_graphSpectrumSettings.ShowZIons;
         }
+        private void zhMenuItem_Click(object sender, EventArgs e)
+        {
+            _graphSpectrumSettings.ShowZHIons = !_graphSpectrumSettings.ShowZHIons;
+        }
+
+        private void zhhMenuItem_Click(object sender, EventArgs e)
+        {
+            _graphSpectrumSettings.ShowZHHIons = !_graphSpectrumSettings.ShowZHHIons;
+        }
+
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
@@ -1042,6 +1052,10 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
                     zionsContextMenuItem.Checked = set.ShowZIons;
                     menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+                    zhionsContextMenuItem.Checked = set.ShowZHIons;
+                    menuStrip.Items.Insert(iInsert++, zhionsContextMenuItem);
+                    zhhionsContextMenuItem.Checked = set.ShowZHHIons;
+                    menuStrip.Items.Insert(iInsert++, zhhionsContextMenuItem);
                 }
                 else
                 {

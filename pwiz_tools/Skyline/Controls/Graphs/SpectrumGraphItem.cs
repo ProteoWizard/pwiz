@@ -269,7 +269,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.b: fontSpec = FONT_SPEC_B; break;
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
-                case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                case IonType.z:
+                case IonType.zh:
+                case IonType.zhh: fontSpec = FONT_SPEC_Z; break;
                 case IonType.custom:
                     {
                     if (rmi.Rank == 0 && !rmi.HasAnnotations)

@@ -353,6 +353,18 @@
   <data name="zionsContextMenuItem.Text" xml:space="preserve">
     <value>Z-ions</value>
   </data>
+  <data name="zhionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="zhionsContextMenuItem.Text" xml:space="preserve">
+    <value>ZH-ions</value>
+  </data>
+  <data name="zhhionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="zhhionsContextMenuItem.Text" xml:space="preserve">
+    <value>ZHH-ions</value>
+  </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>

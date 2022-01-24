@@ -33,12 +33,12 @@ namespace pwiz.Skyline.Model
 {
     public enum IonType
     {
-         precursor = -2, custom = -1, a, b, c, x, y, z
+        precursor = -2, custom = -1, a, b, c, x, y, z, zh, zhh
     }
 
     public static class IonTypeExtension
     {
-        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z"};
+        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z", @"zH", @"zH2" };
 
         private static readonly Color COLOR_A = Color.YellowGreen;
         private static readonly Color COLOR_X = Color.Green;
@@ -88,7 +88,9 @@ namespace pwiz.Skyline.Model
                 case IonType.b: color = COLOR_B; break;
                 case IonType.y: color = COLOR_Y; break;
                 case IonType.c: color = COLOR_C; break;
-                case IonType.z: color = COLOR_Z; break;
+                case IonType.z:
+                case IonType.zh:
+                case IonType.zhh:color = COLOR_Z; break;
                 case IonType.custom: color = (rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
                 case IonType.precursor: color = COLOR_PRECURSOR; break;
             }
@@ -165,7 +167,7 @@ namespace pwiz.Skyline.Model
 
         public static bool IsCTerminal(IonType type)
         {
-            return type == IonType.x || type == IonType.y || type == IonType.z;
+            return type == IonType.x || type == IonType.y || type == IonType.z || type == IonType.zh || type == IonType.zhh;
         }
 
         public static bool IsPrecursor(IonType type)
