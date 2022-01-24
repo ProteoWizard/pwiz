@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -38,6 +39,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -312,7 +314,7 @@ namespace pwiz.Skyline.Util
 
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
         { return new WebPanoramaClient(serverUri);}
-}
+    }
 
     [XmlRoot("server")]
     public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
@@ -731,7 +733,9 @@ namespace pwiz.Skyline.Util
         Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
-        ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document);
+        ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType);
+        ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk,
+            Control parent, out bool cancelled);
 
         Uri UploadedDocumentUri { get; }
     }
@@ -773,13 +777,9 @@ namespace pwiz.Skyline.Util
             return CacheFormatVersion.CURRENT;
         }
 
-        public ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document)
+        public ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType)
         {
-            ShareType shareType = ShareType.DEFAULT;
-            
-            var settings = document.Settings;
-            Assume.IsTrue(document.IsLoaded);
-            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+            var cacheVersion = GetDocumentCacheVersion(document);
 
             if (!cacheVersion.HasValue)
             {
@@ -787,18 +787,72 @@ namespace pwiz.Skyline.Util
                 return shareType;
             }
 
-            CacheFormatVersion supportedVersion = GetSupportedSkydVersion(folderInfo);
+            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
+            CacheFormatVersion supportedVersion = supportedVersions.Item1;
             if (supportedVersion >= cacheVersion.Value)
             {
                 return shareType;
             }
-            var skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= supportedVersion);
-            if (skylineVersion == null)
+            
+            return shareType.ChangeSkylineVersion(supportedVersions.Item2);
+        }
+
+
+        [CanBeNull]
+        public SkylineVersion GetMaxSupportedSkylineVersion(FolderInformation folderInfo, SrmDocument document)
+        {
+            var cacheVersion = GetDocumentCacheVersion(document);
+
+            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
+
+            return supportedVersions.Item2;
+        }
+
+        private Tuple<CacheFormatVersion, SkylineVersion> GetSupportedVersionsForCacheFormat(FolderInformation folderInfo, CacheFormatVersion? cacheVersion)
+        {
+            var skydVersion = GetSupportedSkydVersion(folderInfo);
+            var skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= skydVersion);
+
+            if (cacheVersion.HasValue && skydVersion < cacheVersion && skylineVersion == null)
             {
                 throw new PanoramaServerException(string.Format(
-                    Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int) cacheVersion.Value));
+                    Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
             }
-            return shareType.ChangeSkylineVersion(skylineVersion);
+
+            return new Tuple<CacheFormatVersion, SkylineVersion>(skydVersion, skylineVersion);
+        }
+
+        private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
+        {
+            var settings = document.Settings;
+            Assume.IsTrue(document.IsLoaded);
+            return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+        }
+
+        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, out bool cancelled)
+        {
+            var skylineVersion = GetMaxSupportedSkylineVersion(folderInfo, document);
+            if (!fileFormatOnDisk.HasValue && skylineVersion == null)
+            {
+                MessageDlg.Show(parent,
+                    Resources
+                        .PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_);
+                cancelled = true;
+                return null;
+            }
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, skylineVersion))
+            {
+                if (dlgType.ShowDialog(parent) == DialogResult.Cancel)
+                {
+                    cancelled = true;
+                    return null;
+                }
+                else
+                {
+                    cancelled = false;
+                    return dlgType.ShareType;
+                }
+            }
         }
 
         public void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath)

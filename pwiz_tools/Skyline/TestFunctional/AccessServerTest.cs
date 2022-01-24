@@ -18,6 +18,9 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -28,6 +31,8 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestFunctional
@@ -146,25 +151,81 @@ namespace pwiz.SkylineTestFunctional
 
             // Server supports the version of the chromatogram cache in this document -- Success
             ((TestPanoramaPublishClient) _testPublishClient).ServerSkydVersion = "9";
-            CheckPublishSuccess(WRITE_TARGETED, false);
+            DocumentFormat? documentFormat = DocumentFormat.VERSION_1_9;
+            var version = string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__,
+                documentFormat.Value.GetDescription());
+            var supportedVersions = new List<string>{version}; // Server does not support any of the versions allowed for sharing. 
+                                                           // The only option available should be the current saved file format.
+            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
+
+            // Server supports a higher version than the document. 
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
+            WaitForDocumentLoaded();
+            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "13";
+            supportedVersions = new List<string>{ version,
+                SkylineVersion.V19_1.ToString(),
+                SkylineVersion.V4_2.ToString(),
+                SkylineVersion.V4_1.ToString(),
+                SkylineVersion.V3_7.ToString(),
+                SkylineVersion.V3_6.ToString() };
+            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
             // Document should be published even if an invalid version is returned by the server -- Success 
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
+            WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
-            CheckPublishSuccess(WRITE_TARGETED, true);
+            supportedVersions = new List<string> {version};
+            supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
+            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+
+            // After a document has been published, it is "dirty" because a "panorama_publish_uri" is added.
+            // The share type dialog will no longer show the "Current file version..." as the selected option
+            supportedVersions = new List<string>(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
+            CheckPublishSuccess(WRITE_TARGETED, true, true, supportedVersions);
+
+            // The document cache version is the same as the one supported on the server so we will not see the error about the
+            // "...selected server does not support version...".  However, the document is "dirty" so the share type dialog
+            // will not show the "Current file version..." as the selected option. Since the max version supported by server
+            // is not one of versions Skyline supports for sharing we expect to see an error message
+            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "9";
+            CheckPublishFailure(WRITE_TARGETED, Resources.PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_, true);
 
             TestPanoramaServerUrls();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
         {
+            CheckPublishSuccess(nodeSelection, expectingSavedUri, false, null);
+        }
+
+        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, bool hasUnsavedChanges, IList<string> supportedVersions)
+        {
             bool hasSavedUri = SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri != null;
             Assert.AreEqual(expectingSavedUri, hasSavedUri);
             if (hasSavedUri)
             {
                 // Test click don't use saved uri
-                var publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                MultiButtonMsgDlg publishToSavedUri;
+                if (hasUnsavedChanges)
+                {
+                    var saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                    OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+                    publishToSavedUri = WaitForOpenForm<MultiButtonMsgDlg>();
+                }
+                else
+                {
+                    publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                }
+
                 OkDialog(publishToSavedUri, publishToSavedUri.ClickYes);
+                var shareTypeDlg = WaitForOpenForm<ShareTypeDlg>();
+                if (supportedVersions != null)
+                {
+                    VerifySupportedVersions(supportedVersions, shareTypeDlg);
+                }
+                OkDialog(shareTypeDlg, shareTypeDlg.OkDialog);
             }
             else
             {
@@ -175,10 +236,36 @@ namespace pwiz.SkylineTestFunctional
                     publishDocumentDlg.SelectItem(nodeSelection);
                     Assert.AreEqual(nodeSelection, publishDocumentDlg.GetSelectedNodeText());
                 });
-                OkDialog(publishDocumentDlg, publishDocumentDlg.OkDialog);
+                RunDlg<ShareTypeDlg>(publishDocumentDlg.OkDialog, shareTypeDlg =>
+                {
+                    if (supportedVersions != null)
+                    {
+                        VerifySupportedVersions(supportedVersions, shareTypeDlg);
+                    }
+                    shareTypeDlg.OkDialog();
+                });
+                
             }
             var goToSite = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(goToSite, goToSite.ClickNo);
+        }
+
+        private static void VerifySupportedVersions(IList<string> supportedVersions, ShareTypeDlg shareTypeDlg)
+        {
+            var availableItems = shareTypeDlg.GetAvailableVersionItems();
+            AssertEx.AreEqualDeep(supportedVersions, availableItems);
+        }
+
+        public void CheckPublishFailure(string nodeSelection, string failureMessage, bool hasUnsavedChanges)
+        {
+            var saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+            var publishToSavedUri = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunDlg<MessageDlg>(publishToSavedUri.ClickYes, messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, failureMessage);
+                messageDlg.OkDialog();
+            });
         }
 
         public void CheckPublishFailure(string nodeSelection, string failureMessage)

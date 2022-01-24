@@ -21176,6 +21176,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected Panorama server does not support any of the Skyline file formats available for sharing.Please contact the Panorama server administrator to upgrade the server..
+        /// </summary>
+        public static string PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_the_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_administrator_to_upgrade_the_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_GetShareType_The_selected_Panorama_server_does_not_support_any_of_th" +
+                        "e_Skyline_file_formats_available_for_sharing_Please_contact_the_Panorama_server_" +
+                        "administrator_to_upgrade_the_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a Panorama folder.
         /// </summary>
         public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
