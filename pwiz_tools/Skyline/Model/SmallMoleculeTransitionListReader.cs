@@ -88,11 +88,6 @@ namespace pwiz.Skyline.Model
                 return Double.TryParse(GetCell(index), NumberStyles.Float, _parent._cultureInfo, out val);
             }
 
-            public void SetCell(int index, string value)
-            {
-                if (index >= 0)
-                    _cells[index] = value;
-            }
         }
 
         private bool RowHasDistinctProductValue(Row row, int productCol, int precursorCol)
@@ -1299,7 +1294,7 @@ namespace pwiz.Skyline.Model
                         });
                         return null;
                     }
-                    row.SetCell(indexAdduct, adduct.AdductFormula);
+                    row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct.AdductFormula);
                 }
             }
             if (mz > 0)
@@ -1368,8 +1363,8 @@ namespace pwiz.Skyline.Model
                             {
                                 adduct = adduct.ChangeIsotopeLabels(labels);
                                 formula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(formula);
-                                row.SetCell(indexFormula, formula);
-                                row.SetCell(indexAdduct, adduct.AsFormulaOrSignedInt());
+                                row.UpdateCell(indexFormula, formula);
+                                row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct.AsFormulaOrSignedInt());
                             }
                         }
                         if (mz > 0)
@@ -1385,7 +1380,7 @@ namespace pwiz.Skyline.Model
                             var initialAdduct = adduct;
                             charge = ValidateFormulaWithMzAndAdduct(tolerance, useMonoisotopicMass,
                                 ref formula, ref adduct,  mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMmass, out mzCalc);
-                            row.SetCell(indexFormula, formula);
+                            row.UpdateCell(indexFormula, formula);
                             massOk = monoMass < CustomMolecule.MAX_MASS && averageMmass < CustomMolecule.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS)); // Null charge => masses are 0 but meaningless
                             if (adduct.IsEmpty && charge.HasValue)
@@ -1399,7 +1394,7 @@ namespace pwiz.Skyline.Model
                                     row.UpdateCell(indexCharge, charge.Value);
                                     if (!Equals(adduct, initialAdduct))
                                     {
-                                        row.UpdateCell(indexAdduct, adduct); // Show the deduced adduct
+                                        row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct); // Show the deduced adduct
                                     }
                                     hasError = false;
                                     return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
@@ -2193,6 +2188,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
+                    Tuple.Create(labelType, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),
                     Tuple.Create(idCAS, idCAS),
                     Tuple.Create(idHMDB, idHMDB),

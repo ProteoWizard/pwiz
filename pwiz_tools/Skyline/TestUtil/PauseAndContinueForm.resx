@@ -117,4 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="btnCopyToClipBoard.ToolTip" xml:space="preserve">
+    <value>Copies window image to clipboard, and tries to clean up image border by setting all edge pixels to the color most used in the original edge pixels.
+
+This may not work well for all system settings, if so you will need to reposition the image so that it is over an empty background (e.g. MSPaint) and use Alt-PrtScn instead.</value>
+  </data>
 </root>
