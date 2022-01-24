@@ -2188,6 +2188,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
+                    Tuple.Create(labelType, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),
                     Tuple.Create(idCAS, idCAS),
                     Tuple.Create(idHMDB, idHMDB),

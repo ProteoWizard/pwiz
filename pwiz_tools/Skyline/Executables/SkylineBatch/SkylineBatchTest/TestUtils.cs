@@ -25,6 +25,7 @@ using SharedBatch;
 using System.Linq;
 using System.Threading;
 using SharedBatch.Properties;
+using System.Text.RegularExpressions;
 
 namespace SkylineBatchTest
 {
@@ -36,7 +37,9 @@ namespace SkylineBatchTest
             if (File.Exists(Path.Combine(currentPath, "SkylineCmd.exe")))
                 currentPath = Path.Combine(currentPath, "..", "..", "..", "Executables", "SkylineBatch", "SkylineBatchTest");
             else
-                currentPath = Path.Combine(currentPath, "..", "..");
+            {
+                currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
+            }
 
             var batchTestPath = Path.Combine(currentPath, "Test");
             if (!Directory.Exists(batchTestPath))
@@ -330,6 +333,77 @@ namespace SkylineBatchTest
                 Thread.Sleep(timestep);
             }
             throw new Exception(errorMessage);
+        }
+
+        public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)
+        {
+            if (skipLines == null) skipLines = new List<Regex>();
+            using (var expectedReader = new StreamReader(expectedFilePath))
+            using (var actualReader = new StreamReader(actualFilePath))
+            {
+                int line = 1;
+                while (line < 1000)
+                {
+                    if (expectedReader.EndOfStream != actualReader.EndOfStream)
+                        Assert.Fail($"Line {line}: Expected end of stream value to be {expectedReader.EndOfStream} but instead was {actualReader.EndOfStream}.");
+                    var expectedLine = expectedReader.ReadLine();
+                    var actualLine = actualReader.ReadLine();
+                    if (expectedLine == null || actualLine == null)
+                    {
+                        Assert.IsTrue(expectedLine == actualLine,
+                            actualFilePath + Environment.NewLine +
+                            $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
+                        return;
+                    }
+                    if (!expectedLine.Equals(actualLine))
+                    {
+                        var fail = true;
+                        foreach (var pattern in skipLines)
+                        {
+                            //var a = pattern.Match(expectedLine).Groups;
+                            //var b = pattern.Match(actualLine).Groups;
+                            if (pattern.IsMatch(expectedLine) && pattern.IsMatch(actualLine) &&
+                                pattern.Match(expectedLine).Groups[1].Value.Equals(pattern.Match(actualLine).Groups[1].Value))
+                                fail = false;
+                        }
+                        if (fail)
+                        {
+                            Assert.IsTrue(expectedLine.Equals(actualLine),
+                                                 actualFilePath + Environment.NewLine +
+                                                 $"Line {line} does not match" + Environment.NewLine +
+                                                "Expected:" + Environment.NewLine +
+                                                expectedLine + Environment.NewLine +
+                                                "Actual:" + Environment.NewLine +
+                                                actualLine);
+                        }
+                    }
+                    line++;
+                }
+                throw new Exception("Test Error: should never reach 1000 lines");
+            }
+        }
+
+        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName = null)
+        {
+            var originalFilePath = GetTestFilePath(fileName);
+            newName = newName ?? Path.GetTempFileName();
+
+            using (var fileStream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
+            using (var writeStream = File.OpenWrite(newName))
+            using (var streamReader = new StreamReader(fileStream))
+            using (var streamWriter = new StreamWriter(writeStream))
+            {
+                while (!streamReader.EndOfStream)
+                {
+                    var line = streamReader.ReadLine();
+                    if (line == null) continue;
+                    var tempLine = line;
+                    while (tempLine.Contains(stringToBeReplaced))
+                        tempLine = tempLine.Replace(stringToBeReplaced, replacementString);
+                    streamWriter.WriteLine(tempLine);
+                }
+            }
+            return newName;
         }
     }
 }
