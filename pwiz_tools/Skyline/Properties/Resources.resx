@@ -11633,4 +11633,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
+	  <value>Finding peptides in FASTA file</value>
+  </data>
 </root>
