@@ -31,10 +31,7 @@
       <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
     </transition_settings>
     <data_settings>
-      <annotation name="Condition" targets="replicate" type="value_list">
-        <value>Disease</value>
-        <value>Healthy</value>
-      </annotation>
+      <annotation name="Condition" targets="replicate" type="text" />
       <annotation name="BioReplicate" targets="replicate" type="text" />
     </data_settings>
   </settings_summary>
