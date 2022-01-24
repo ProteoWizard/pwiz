@@ -154,6 +154,7 @@
             this.Name = "ImportTransitionListColumnSelectDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.Shown += new System.EventHandler(this.OnColumnsShown);
             this.Resize += new System.EventHandler(this.form_Resize);
             this.comboPanelOuter.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
