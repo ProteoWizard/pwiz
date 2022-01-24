@@ -1808,7 +1808,7 @@ namespace pwiz.Skyline.Model
                     foreach (var line in lines)
                     {
                         var fieldsNext = line.ParseDsvFields(separator);
-                        if (!RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i]))
+                        if ((i >= fieldsNext.Length) || !RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i])) // Beware of short lines
                         {
                             allGood = false;
                             break;

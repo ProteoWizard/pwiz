@@ -5,8 +5,8 @@
 # Copyright Rene Rivera 2006.
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #   Supports 'abstract' targets, which are targets explicitly defined in Jamfile.
 #
@@ -1408,7 +1408,7 @@ class TypedTarget (BasicTarget):
                 print "error: no generators were found for type '" + self.type_ + "'"
                 print "error: and the requested properties"
                 print "error: make sure you've configured the needed tools"
-                print "See http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html"
+                print "See https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration"
 
                 print "To debug this problem, try the --debug-generators option."
                 sys.exit(1)

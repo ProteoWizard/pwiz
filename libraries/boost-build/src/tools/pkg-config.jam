@@ -1,8 +1,8 @@
 #|
 Copyright 2019 Dmitry Arkhipov
 Distributed under the Boost Software License, Version 1.0. (See
-accompanying file LICENSE_1_0.txt or copy at
-http://www.boost.org/LICENSE_1_0.txt)
+accompanying file LICENSE.txt or copy at
+https://www.bfgroup.xyz/b2/LICENSE.txt)
 |#
 
 
@@ -119,7 +119,8 @@ rule import
 
 #| tag::doc[]
 
-== Initialization [[ pkg-config-init ]]
+[[pkg-config-init]]
+== Initialization
 
 To use the `pkg-config` tool you need to declare it in a configuration file
 with the `using` rule:

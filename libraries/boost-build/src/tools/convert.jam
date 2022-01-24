@@ -1,8 +1,8 @@
 # Copyright (c) 2009 Vladimir Prus
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements 'convert' target that takes a bunch of source and
 # tries to convert each one to the specified type.

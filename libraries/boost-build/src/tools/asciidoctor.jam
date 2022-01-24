@@ -1,8 +1,8 @@
 #|
 Copyright 2017 Rene Rivera
 Distributed under the Boost Software License, Version 1.0. (See
-accompanying file LICENSE_1_0.txt or copy at
-http://www.boost.org/LICENSE_1_0.txt)
+accompanying file LICENSE.txt or copy at
+https://www.bfgroup.xyz/b2/LICENSE.txt)
 |#
 
 #| tag::doc[]
@@ -124,7 +124,7 @@ rule init ( command * )
                 [ new asciidoctor-generator asciidoctor.convert
                     : ASCIIDOC : $(target-type) ] ;
         }
-        
+
         # Seriously bad kludge to prevent docbook generators from being
         # considered when we are generating html directly.
         # TODO: Design and implement a mechanism to resolve generator conflicts.
@@ -147,14 +147,14 @@ rule init ( command * )
 class asciidoctor-generator : generator
 {
     import property-set ;
-    
+
     rule run ( project name ? : property-set : sources + )
     {
         # ECHO *** asciidoctor-generator.run $(project) $(name) :: [ $(property-set).raw ] :: $(sources) ;
-        
+
         # We set a default backend based on the target type.
         local backend = [ $(property-set).get <asciidoctor-backend> ] ;
-        
+
         # For now, we only accept a single adoc source.
         if ( ! $(sources[2]) ) && ( [ $(sources[1]).type ] = ASCIIDOC )
         {
@@ -166,7 +166,7 @@ class asciidoctor-generator : generator
             {
                 name = [ generator.determine-output-name $(sources) ] ;
             }
-            
+
             # Depending on the kind of target we set up the backend, and
             # and any other options.
             if ! $(backend)
@@ -180,7 +180,7 @@ class asciidoctor-generator : generator
                 }
             }
         }
-        
+
         # We build a reduced property set so that we are not toolset dependent.
         local raw-set = <asciidoctor-backend>$(backend) ;
         for local p in [ $(property-set).raw ]
