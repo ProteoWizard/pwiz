@@ -28,9 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PauseAndContinueForm));
             this.btnContinue = new System.Windows.Forms.Button();
             this.lblDescription = new System.Windows.Forms.Label();
             this.lblDescriptionLink = new System.Windows.Forms.LinkLabel();
+            this.btnCopyToClipBoard = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.btnCopyMetafileToClipboard = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnContinue
@@ -65,14 +70,42 @@
             this.lblDescriptionLink.Visible = false;
             this.lblDescriptionLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblDescriptionLink_LinkClicked);
             // 
+            // btnCopyToClipBoard
+            // 
+            this.btnCopyToClipBoard.Enabled = false;
+            this.btnCopyToClipBoard.Location = new System.Drawing.Point(12, 61);
+            this.btnCopyToClipBoard.Name = "btnCopyToClipBoard";
+            this.btnCopyToClipBoard.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyToClipBoard.TabIndex = 3;
+            this.btnCopyToClipBoard.Text = "Copy Form";
+            this.toolTip1.SetToolTip(this.btnCopyToClipBoard, resources.GetString("btnCopyToClipBoard.ToolTip"));
+            this.btnCopyToClipBoard.UseVisualStyleBackColor = true;
+            this.btnCopyToClipBoard.Visible = false;
+            this.btnCopyToClipBoard.Click += new System.EventHandler(this.btnCopyToClipboard_Click);
+            // 
+            // btnCopyMetafileToClipboard
+            // 
+            this.btnCopyMetafileToClipboard.Enabled = false;
+            this.btnCopyMetafileToClipboard.Location = new System.Drawing.Point(12, 90);
+            this.btnCopyMetafileToClipboard.Name = "btnCopyMetafileToClipboard";
+            this.btnCopyMetafileToClipboard.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyMetafileToClipboard.TabIndex = 4;
+            this.btnCopyMetafileToClipboard.Text = "Copy Graph";
+            this.toolTip1.SetToolTip(this.btnCopyMetafileToClipboard, "Copies metafile to clipboard");
+            this.btnCopyMetafileToClipboard.UseVisualStyleBackColor = true;
+            this.btnCopyMetafileToClipboard.Visible = false;
+            this.btnCopyMetafileToClipboard.Click += new System.EventHandler(this.btnCopyMetaFileToClipboard_Click);
+            // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(101, 69);
+            this.ClientSize = new System.Drawing.Size(174, 128);
             this.ControlBox = false;
+            this.Controls.Add(this.btnCopyMetafileToClipboard);
+            this.Controls.Add(this.btnCopyToClipBoard);
             this.Controls.Add(this.lblDescriptionLink);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnContinue);
@@ -94,5 +127,8 @@
         private System.Windows.Forms.Button btnContinue;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.LinkLabel lblDescriptionLink;
+        private System.Windows.Forms.Button btnCopyToClipBoard;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnCopyMetafileToClipboard;
     }
 }
