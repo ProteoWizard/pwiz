@@ -120,6 +120,22 @@ namespace pwiz.SkylineTestUtil
             return TestContext is TestRunnerLib.TestRunnerContext;
         }
 
+        /// <summary>
+        /// Returns true if the test is not running in TestRunner. Also outputs a message to the console
+        /// indicating that the test is being skipped. It is the caller's responsibility to actually
+        /// skip the test if this method returns true.
+        /// </summary>
+        protected bool SkipWiff2TestInTestExplorer(string testName)
+        {
+            if (IsRunningInTestRunner())
+            {
+                return false;
+            }
+            Console.Out.WriteLine("Skipping {0} because Wiff2 DLLs do not load in the correct order when test is executed by Test Explorer.", testName);
+            Console.Out.WriteLine("This test only runs to completion when executed by TestRunner or SkylineTester.");
+            return true;
+        }
+
         public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
 
         public static string GetPerfTestDataURL(string filename)

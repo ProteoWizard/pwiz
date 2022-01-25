@@ -47,12 +47,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FileTypeTest()
         {
-            if (!IsRunningInTestRunner())
-            {
-                // Skip this test when not running in TestRunner because wiff 2 libraries load strangely in Test Explorer
-                Console.Out.WriteLine("Skipping FileTypeTest because not running in TestRunner");
+            if (SkipWiff2TestInTestExplorer(nameof(FileTypeTest)))
                 return;
-            }
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // wiff1
@@ -89,12 +85,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void Wiff2ResultsTest()
         {
-            if (!IsRunningInTestRunner())
-            {
-                // Skip this test when not running in TestRunner because wiff 2 libraries load strangely in Test Explorer
-                Console.Out.WriteLine("Skipping Wiff2ResultsTest because not running in TestRunner");
+            if (SkipWiff2TestInTestExplorer(nameof(Wiff2ResultsTest)))
                 return;
-            }
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath = testFilesDir.GetTestPath("OnyxTOFMS.sky");

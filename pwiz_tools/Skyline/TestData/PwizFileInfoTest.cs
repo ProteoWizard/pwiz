@@ -36,12 +36,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestInstrumentInfo()
         {
-            if (!IsRunningInTestRunner())
-            {
-                // Skip this test when not running in TestRunner because wiff 2 libraries load strangely in Test Explorer
-                Console.Out.WriteLine("Skipping TestInstrumentInfo because not running in TestRunner");
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentInfo)))
                 return;
-            }
             const string testZipPath = @"TestData\PwizFileInfoTest.zip";
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
@@ -186,12 +182,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestInstrumentSerialNumbers()
         {
-            if (!IsRunningInTestRunner())
-            {
-                // Skip this test when not running in TestRunner because wiff 2 libraries load strangely in Test Explorer
-                Console.Out.WriteLine("Skipping TestInstrumentSerialNumbers because not running in TestRunner");
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentSerialNumbers)))
                 return;
-            }
             if (Skyline.Program.NoVendorReaders)
                 return;
 
