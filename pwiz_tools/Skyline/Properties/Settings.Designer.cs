@@ -3213,5 +3213,29 @@ namespace pwiz.Skyline.Properties {
                 this["ChromatogramDisplayRTDigits"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
+        public float PeakAreaIDotpCutoffValue {
+            get {
+                return ((float)(this["PeakAreaIDotpCutoffValue"]));
+            }
+            set {
+                this["PeakAreaIDotpCutoffValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
+        public float PeakAreaRDotpCutoffValue {
+            get {
+                return ((float)(this["PeakAreaRDotpCutoffValue"]));
+            }
+            set {
+                this["PeakAreaRDotpCutoffValue"] = value;
+            }
+        }
     }
 }

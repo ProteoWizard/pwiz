@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -32,14 +33,27 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
+            comboDotpDisplayType.Items.AddRange( DotProductDisplayOptionExtension.ListAll().Select(op => op.GetLocalizedString()).ToArray());
+            comboDotpDisplayType.SelectedItem = DotProductDisplayOptionExtension.GetCurrent(Settings.Default).GetLocalizedString();
+
             cbDecimalCvs.Checked = Settings.Default.PeakDecimalCv;
             if (Settings.Default.PeakAreaMaxArea != 0)
                 textMaxArea.Text = Settings.Default.PeakAreaMaxArea.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.PeakAreaMaxCv != 0)
                 textMaxCv.Text = Settings.Default.PeakAreaMaxCv.ToString(LocalizationHelper.CurrentCulture);
             GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.AreaFontSize);
-            cbShowDotpCutoff.Checked = textDotpCutoffValue.Enabled = Settings.Default.PeakAreaDotpCutoffShow;
-            textDotpCutoffValue.Text = Settings.Default.PeakAreaDotpCutoffValue.ToString(LocalizationHelper.CurrentCulture);
+            cbShowDotpCutoff.Checked = dataGridDotpCutoffValues.Enabled = Settings.Default.PeakAreaDotpCutoffShow;
+
+            foreach (var expectedValue in new[]
+                {AreaExpectedValue.library, AreaExpectedValue.isotope_dist, AreaExpectedValue.ratio_to_label})
+            {
+                var rowIndex = dataGridDotpCutoffValues.Rows.Add(
+                    new[] { expectedValue.GetDotpLabel(), expectedValue.GetDotpValueCutoff(Settings.Default).ToString(LocalizationHelper.CurrentCulture)});
+                dataGridDotpCutoffValues.Rows[rowIndex].Tag = expectedValue;
+            }
+
+            dataGridDotpCutoffValues.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridDotpCutoffValues.AutoResizeColumns();
         }
 
         public void OkDialog()
@@ -65,14 +79,36 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
+            Settings.Default.PeakAreaDotpDisplay =
+                DotProductDisplayOptionExtension.ParseLocalizedString(comboDotpDisplayType.SelectedItem as string).ToString();
+
             Settings.Default.PeakAreaDotpCutoffShow = cbShowDotpCutoff.Checked;
             if (cbShowDotpCutoff.Checked)
             {
-                if (!helper.ValidateDecimalTextBox(textDotpCutoffValue, 0, 1, out var dotpCutoff, false))
+                var isError = false;
+                foreach (DataGridViewRow row in dataGridDotpCutoffValues.Rows)
+                {
+                    try
+                    {
+                        var val = float.Parse(row.Cells[1].Value.ToString(), LocalizationHelper.CurrentCulture);
+                        ((AreaExpectedValue)(row.Tag??AreaExpectedValue.none)).SetDotpValueCutoff(Settings.Default, val);
+                        row.ErrorText = null;
+                    }
+                    catch (FormatException)
+                    {
+                        row.ErrorText =
+                            string.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, row.Cells[0].Value);
+                        isError = true;
+                    }
+                    catch (AssumptionException ex)
+                    {
+                        row.ErrorText = ex.Message;
+                        isError = true;
+                    }
+                }
+                if (isError)
                     return;
-                Settings.Default.PeakAreaDotpCutoffValue = (float)dotpCutoff;
             }
-
             Settings.Default.PeakAreaMaxArea = maxArea;
             Settings.Default.PeakAreaMaxCv = maxCv;
             Settings.Default.PeakDecimalCv = decimalCv;
@@ -96,7 +132,7 @@ namespace pwiz.Skyline.EditUI
         }
         private void cbShowDotpCutoff_CheckedChanged(object sender, EventArgs e)
         {
-            textDotpCutoffValue.Enabled = cbShowDotpCutoff.Checked;
+            dataGridDotpCutoffValues.Enabled = cbShowDotpCutoff.Checked;
         }
     }
 }

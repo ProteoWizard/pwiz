@@ -11639,4 +11639,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
+    <value>{0} must contain a decimal value.</value>
+  </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
+    <value>{0} cutoff value must be greater or equal than 0. and lesser or equal than 1.</value>
+  </data>
 </root>
