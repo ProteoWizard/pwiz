@@ -157,14 +157,14 @@
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textUserName;
-        private System.Windows.Forms.CheckBox checkBoxNoEncryption;
+        public System.Windows.Forms.TextBox textUserName;
+        public System.Windows.Forms.CheckBox checkBoxNoEncryption;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textPassword;
-        private System.Windows.Forms.TextBox textName;
+        public System.Windows.Forms.TextBox textPassword;
+        public System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox textFolderUrl;
+        public System.Windows.Forms.TextBox textFolderUrl;
         public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
     }

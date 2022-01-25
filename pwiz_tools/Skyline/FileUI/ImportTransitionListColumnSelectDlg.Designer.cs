@@ -94,11 +94,11 @@
             this.dataGrid.ReadOnly = true;
             this.dataGrid.RowHeadersVisible = false;
             this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.DataGrid_ColumnHeadersHeightChanged);
+            this.dataGrid.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGrid_MouseLeave);
+            this.dataGrid.CellMouseMove += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGrid_MouseMove);
             this.dataGrid.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnAdded);
             this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.DataGrid_ColumnWidthChanged);
             this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.DataGrid_Scroll);
-            this.dataGrid.CellMouseMove += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGrid_MouseMove);
-            this.dataGrid.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGrid_MouseLeave);
             // 
             // CheckShowUnusedColumns
             // 
@@ -154,7 +154,7 @@
             this.Name = "ImportTransitionListColumnSelectDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Shown += OnColumnsShown;
+            this.Shown += new System.EventHandler(this.OnColumnsShown);
             this.Resize += new System.EventHandler(this.form_Resize);
             this.comboPanelOuter.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
