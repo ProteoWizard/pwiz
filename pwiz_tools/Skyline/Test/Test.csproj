@@ -142,6 +142,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
+    <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="StripePainterTest.cs" />
