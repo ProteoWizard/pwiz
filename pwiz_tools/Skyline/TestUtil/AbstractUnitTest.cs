@@ -17,6 +17,11 @@
  * limitations under the License.
  */
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,18 +29,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 
 namespace pwiz.SkylineTestUtil
 {
-   
+
     /// <summary>
     /// This is the base class for every unit test in Skyline.  It enables logging
     /// and also provides quick information about the running time of the test.
@@ -113,6 +113,11 @@ namespace pwiz.SkylineTestUtil
         {
             // Lots of properties with MSTest which are not supplied by TestRunner. Not sure this is the best one.
             get { return TestContext.Properties.Contains("DeploymentDirectory"); }
+        }
+
+        public bool IsRunningInTestRunner()
+        {
+            return TestContext is TestRunnerLib.TestRunnerContext;
         }
 
         public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
