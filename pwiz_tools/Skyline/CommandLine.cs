@@ -2913,7 +2913,7 @@ namespace pwiz.Skyline
                         return false; // Dont add.
                     }
                     // Skip conflicts
-                    if (resolveToolConflictsBySkipping == true)
+                    else if (resolveToolConflictsBySkipping == true)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, tool.Title);
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
