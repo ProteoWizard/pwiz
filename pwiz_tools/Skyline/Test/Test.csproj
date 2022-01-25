@@ -142,7 +142,9 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
+    <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
@@ -229,6 +231,7 @@
     <Compile Include="TimeIntervalsTest.cs" />
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="SubstringFinderTest.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />

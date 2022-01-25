@@ -37,8 +37,7 @@ namespace pwiz.Skyline.Alerts
             UpdateAutomatic = automatic;
             UpdateFound = updateFound;
 
-            // Designer has problems with getting images from resources
-            pictureSkyline.Image = Resources.SkylineImg;
+            pictureSkyline.Image = Program.SkylineImage;
 
             if (!updateFound)
             {

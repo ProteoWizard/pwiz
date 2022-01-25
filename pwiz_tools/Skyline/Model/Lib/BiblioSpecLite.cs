@@ -588,20 +588,6 @@ namespace pwiz.Skyline.Model.Lib
                 string lsid;
                 int dataRev, schemaVer;
 
-                // check what columns exist in LibInfo
-                var libInfoCols = new HashSet<string>();
-                using (var cmd = _sqliteConnection.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"PRAGMA table_info(LibInfo)";
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            libInfoCols.Add(reader.GetString(1).ToLower());
-                        }
-                    }
-                }
-
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
@@ -957,7 +943,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached, out var failureException))
+            if (Load(loader, status, cached))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -969,7 +955,7 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false, out failureException))
+                if (Load(loader, status, false))
                     return true;
             }
 
@@ -977,18 +963,15 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
 
-            if (failureException != null)
-                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                failureException = null;
                 byte[] cacheBytes = null;
                 if (!cached)
                 {
@@ -999,19 +982,12 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    try
+                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                    if (cacheBytes == null)
                     {
-                        cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                        if (cacheBytes == null)
-                        {
-                            return false;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        failureException = new Exception(FormatErrorMessage(e), e);
                         return false;
                     }
+
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -1150,29 +1126,20 @@ namespace pwiz.Skyline.Model.Lib
 
                 return true;
             }
-            catch (InvalidDataException x)
-            {
-                failureException = new InvalidDataException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
-            catch (IOException x)
-            {
-                failureException = new IOException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
+
             catch (Exception x)
             {
-                failureException = new Exception(FormatErrorMessage(x), x);
+                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
+                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
+                // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
+                    var failureException = new Exception(FormatErrorMessage(x), x);
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw failureException; // We want this to show up in ExceptionWeb
+                    }
+                    // This will show the user the error message after which the operation can be treated as canceled.
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
@@ -1893,9 +1860,9 @@ namespace pwiz.Skyline.Model.Lib
                             var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
-                                var ionMobility = reader.GetDouble(iIonMobility);
-                                var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                                var ionMobilityHighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
+                                var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
+                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
+                                var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
                                 if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
@@ -2054,7 +2021,7 @@ namespace pwiz.Skyline.Model.Lib
                 return 0;
             }
             return Convert.ToInt32(value);
-        } 
+        }
 
         #region Implementation of IXmlSerializable
         

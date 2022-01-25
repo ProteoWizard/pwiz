@@ -50,13 +50,14 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="id">The <see cref="TransitionGroup"/> identity for this node</param>
         /// <param name="children">A set of explicit children, or null if children should be auto-managed</param>
-        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children)
+        /// <param name="explicitTransitionGroupValues">Optional values like ion mobility etc</param>
+        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children, ExplicitTransitionGroupValues explicitTransitionGroupValues = null)
             : this(id,
                    Annotations.EMPTY,
                    null,
                    null,
                    null,
-                   ExplicitTransitionGroupValues.EMPTY,
+                   explicitTransitionGroupValues ?? ExplicitTransitionGroupValues.EMPTY,
                    null,
                    children,
                    children == null)
@@ -887,6 +888,20 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode ChangePrecursorConcentration(double? precursorConcentration)
         {
             return ChangeProp(ImClone(this), im => im.PrecursorConcentration = precursorConcentration);
+        }
+
+        public TransitionGroupDocNode ChangePeptide(Peptide peptide)
+        {
+            var newId = new TransitionGroup(peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, true,
+                TransitionGroup.DecoyMassShift);
+            return ChangeTransitionGroupId(newId, Transitions.Select(t => t.ChangeTransitionGroup(newId)));
+        }
+
+        public TransitionGroupDocNode ChangeTransitionGroupId(TransitionGroup newId, IEnumerable<TransitionDocNode> newTransitions)
+        {
+            var node = (TransitionGroupDocNode)ChangeId(newId);
+            node = (TransitionGroupDocNode)node.ChangeChildren(newTransitions.Cast<DocNode>().ToList());
+            return node;
         }
 
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
