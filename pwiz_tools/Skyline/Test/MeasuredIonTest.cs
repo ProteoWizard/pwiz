@@ -36,6 +36,20 @@ namespace pwiz.SkylineTest
                 var roundTrip = AssertEx.RoundTrip(measuredIon);
                 Assert.AreEqual(measuredIon.Adduct, roundTrip.Adduct);
             }
+
+            // Verify that the masses of the TMT ions are the same as published in:
+            // https://assets.thermofisher.com/TFS-Assets/LSG/manuals/MAN0015866_2162600_TMT_MassTagging_UG.pdf
+            const double delta = .000001;
+            Assert.AreEqual(126.127726, MeasuredIonList.TMT_126.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(127.124761, MeasuredIonList.TMT_127_L.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(127.131081, MeasuredIonList.TMT_127_H.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(128.128116, MeasuredIonList.TMT_128_L.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(128.134436, MeasuredIonList.TMT_128_H.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(129.131471, MeasuredIonList.TMT_129_L.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(129.137790, MeasuredIonList.TMT_129_H.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(130.134825, MeasuredIonList.TMT_130_L.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(130.141145, MeasuredIonList.TMT_130_H.SettingsCustomIon.MonoisotopicMassMz, delta);
+            Assert.AreEqual(131.138180, MeasuredIonList.TMT_131.SettingsCustomIon.MonoisotopicMassMz, delta);
         }
     }
 }
