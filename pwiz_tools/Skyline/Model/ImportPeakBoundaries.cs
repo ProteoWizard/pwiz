@@ -747,7 +747,11 @@ namespace pwiz.Skyline.Model
             private string GetField(int i)
             {
                 int fieldIndex = _fieldIndices[i];
-                return fieldIndex != -1 ? _dataFields[fieldIndex] : null;
+                if (fieldIndex == -1 || fieldIndex >= _dataFields.Length)
+                {
+                    return null;
+                }
+                return _dataFields[fieldIndex];
             }
 
             public string GetField(Field field)
