@@ -3194,7 +3194,7 @@ namespace pwiz.Skyline
 
             // Issue 866: Provide option in Skyline to upload a minimized library to Panorama
             // Changed from SaveDocument() to CheckSaveDocument() so that the user has to save changes first rather than silently
-            // saving in the current format even if there are no changes.  If the user is uploading an older document with an newer
+            // saving in the current format even if there are no changes.  If the user is uploading an older document with a newer
             // version of Skyline they may want to preserve the version in the .sky file. The version is preserved only with a 
             // "complete" share, however. 
             if (!CheckSaveDocument())

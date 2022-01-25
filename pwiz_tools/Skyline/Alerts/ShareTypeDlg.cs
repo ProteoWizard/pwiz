@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -39,11 +38,11 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
-        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, [CanBeNull] SkylineVersion maxSupportedVersion)
+        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion)
         {
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
-            if (savedFileFormat.HasValue && (maxSupportedVersion == null || maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0))
+            if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
                 _skylineVersionOptions.Add(null);
                 comboSkylineVersion.Items.Add(string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__, savedFileFormat.Value.GetDescription()));
@@ -51,9 +50,8 @@ namespace pwiz.Skyline.Alerts
 
             foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
             {
-                // Show only those versions supported by the Panorama server. If maxSupportedVersion is null
-                // it means that none of the Skyline versions available for sharing are supported. 
-                if (maxSupportedVersion != null && skylineVersion.CompareTo(maxSupportedVersion) <= 0)
+                // Show only those versions supported by the Panorama server.
+                if (skylineVersion.CompareTo(maxSupportedVersion) <= 0)
                 {
                     _skylineVersionOptions.Add(skylineVersion);
                     comboSkylineVersion.Items.Add(skylineVersion.ToString());
