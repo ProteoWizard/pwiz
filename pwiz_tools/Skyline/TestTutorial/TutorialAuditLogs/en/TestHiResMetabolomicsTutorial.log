@@ -3,15 +3,15 @@ Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
 Extra Info: 7 transitions added
-Columns identified as 'Molecule List Name','Molecule Name','Molecular Formula','Precursor Adduct','Label Type','Precursor m/z','Precursor Charge','Explicit Retention Time'
+Columns identified as 'Molecule List Name','Molecule Name','Molecular Formula','Precursor Adduct','Label Type','Precursor m/z','Ignore Column','Explicit Retention Time'
 Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Label Type,Precursor m/z,Precursor Charge,Explicit Retention Time
-Fatty Acid,FA 18:2 omega-6 (LA),C18H32O2,[M-H],,,-1,1.3
-Fatty Acid,FA 18:2 omega-6 (LA),C18H28H'4O2,[M-H],,,-1,1.3
-Fatty Acid,FA 18:3 omega-3 (ALA),C18H30O2,[M-H],,,-1,1.1
-Fatty Acid,FA 20:4 omega-6 (AA),C20H32O2,[M-H],,,-1,1.2
-Fatty Acid,FA 20:4 omega-6 (AA),C20H24H'8O2,[M-H],,,-1,1.2
-Fatty Acid,FA 22:6 omega-3 (DHA),C22H32O2,[M-H],,,-1,1.1
-Fatty Acid,FA 22:6 omega-3 (DHA),C22H27H'5O2,[M-H],,,-1,1.1
+Fatty Acid,FA 18:2 omega-6 (LA),C18H32O2,[M-H],,,1,1.3
+Fatty Acid,FA 18:2 omega-6 (LA),C18H28H'4O2,[M-H],,,1,1.3
+Fatty Acid,FA 18:3 omega-3 (ALA),C18H30O2,[M-H],,,1,1.1
+Fatty Acid,FA 20:4 omega-6 (AA),C20H32O2,[M-H],,,1,1.2
+Fatty Acid,FA 20:4 omega-6 (AA),C20H24H'8O2,[M-H],,,1,1.2
+Fatty Acid,FA 22:6 omega-3 (DHA),C22H32O2,[M-H],,,1,1.1
+Fatty Acid,FA 22:6 omega-3 (DHA),C22H27H'5O2,[M-H],,,1,1.1
 
 
 Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
