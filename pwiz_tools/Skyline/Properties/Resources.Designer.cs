@@ -5680,6 +5680,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed importing peak boundaries..
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing peak boundaries from {0}.
+        /// </summary>
+        public static string CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: No files left to import..
         /// </summary>
         public static string CommandLine_ImportResults_Error__No_files_left_to_import_ {
