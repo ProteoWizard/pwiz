@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestImportMethods();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
             TestImpliedFragmentAdduct();
@@ -1193,6 +1194,42 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        // Test uniform handling in File>Import>TransitionList, Edit>Insert>TransitionList, and pasting into Targets area
+        private void TestImportMethods()
+        {
+            var filename = TestFilesDir.GetTestPath("heavy_and_light.txt");
+            for (var pass = 0; pass < 3; pass++)
+            {
+                var doc = SkylineWindow.Document;
+                switch (pass)
+                {
+                    case 0: // Use Edit | Insert | Transition List
+                        TestError(GetCsvFileText(filename), null, null);
+                        break;
+                    case 1: // Use File | Import | Transition List
+                        ImportTransitionListSkipColumnSelect(filename);
+                        break;
+                    case 2: // Paste into Targets window
+                        var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(GetCsvFileText(filename)));
+                        OkDialog(dlg, dlg.OkDialog);
+                        break;
+                }
+                doc = WaitForDocumentChangeLoaded(doc);
+                AssertEx.IsDocumentState(doc, null, 1, 244, 488, 1430);
+
+                // In this data set, all heavy labeled precursors should have heavy labeled transitions
+                foreach (var precursor in doc.MoleculeTransitionGroups)
+                {
+                    foreach (var transition in precursor.Transitions)
+                    {
+                        AssertEx.IsTrue(precursor.PrecursorAdduct.HasIsotopeLabels == transition.Transition.Adduct.HasIsotopeLabels ||
+                                        !transition.Transition.CustomIon.Formula.Contains(@"C")); // Can't C13-label a fragment with no C in it
+                    }
+                }
+                NewDocument();
+            }
         }
 
         private void TestImpliedAdductWithSynonyms()
