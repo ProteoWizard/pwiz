@@ -75,9 +75,13 @@ namespace AutoQCTest
             var skylineSettings = TestUtils.GetTestSkylineSettings();
             Assert.IsNotNull(skylineSettings, "Test cannot run without an installation of Skyline or Skyline-daily.");
 
+            var mainSettings = new MainSettings(TestUtils.GetTestFilePath("QEP_2015_0424_RJ.sky"),
+                TestUtils.GetTestFilePath("PanoramaTestConfig"), false, MainSettings.GetDefaultQcFileFilter(),
+                MainSettings.GetDefaultRemoveResults(), MainSettings.GetDefaultResultsWindow(),
+                MainSettings.GetDefaultInstrumentType(), "0");
+
             var config = new AutoQcConfig("PanoramaTestConfig", false, DateTime.MinValue, DateTime.MinValue,
-                TestUtils.GetTestMainSettings("folderToWatch", "PanoramaTestConfig"),
-                new PanoramaSettings(true, SERVER_URL, PANORAMA_USER_NAME, PANORAMA_PASSWORD, $"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}"), 
+                mainSettings, new PanoramaSettings(true, SERVER_URL, PANORAMA_USER_NAME, PANORAMA_PASSWORD, $"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}"), 
                 TestUtils.GetTestSkylineSettings());
 
             // Validate the configuration
