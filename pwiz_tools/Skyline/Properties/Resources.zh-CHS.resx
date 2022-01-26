@@ -948,7 +948,7 @@
     <value>重复测定</value>
   </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
-    <value>导出采集列表</value>
+    <value>导出分离列表</value>
   </data>
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
     <value>FASTA 序列不同的肽段不可比较。</value>
