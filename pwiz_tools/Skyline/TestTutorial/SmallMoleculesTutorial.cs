@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestTutorial
                     impliedLabeled = TextUtil.LineSeparate(altered);
                 }
                 PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
-                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = impliedLabeled);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = impliedLabeled);
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
                     if (!_inferredLabels)
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestTutorial
 
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                     string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
-                    var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = impliedLabeled2);
+                    var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
 
                     TakeCoverShot();
 
