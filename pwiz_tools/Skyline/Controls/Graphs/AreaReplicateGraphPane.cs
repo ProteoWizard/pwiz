@@ -22,9 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using NHibernate.Mapping;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -85,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public static void SetDotpValueCutoff(this AreaExpectedValue expectedValue, Settings set, float val)
         {
-            Assume.IsTrue(val >= 0 || val <= 1, string.Format(Resources.AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1, expectedValue.GetDotpLabel()));
+            Assume.IsTrue(val >= 0 || val <= 1, string.Format(CultureInfo.CurrentCulture, Resources.AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1, expectedValue.GetDotpLabel()));
 
             switch (expectedValue)
             {
@@ -700,7 +698,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 GraphObjList.Add(cutoffLine);
                 //This is a placeholder to make sure the line shows in the legend.
-                CurveList.Insert(0, new LineItem(String.Format(CultureInfo.CurrentCulture,
+                CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
                     Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
                 {
                     Points = new PointPairList(new[] { new PointPair(0, 0) }),
@@ -716,8 +714,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            ToolTip.AddLine(Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate + @":", XAxis.Scale.TextLabels[index]);
-            ToolTip.AddLine(DotpLabelText + @":", string.Format(@"{0:F02}", _dotpData[index]));
+            ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
+                string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.EditUI
                     catch (FormatException)
                     {
                         row.ErrorText =
-                            string.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, row.Cells[0].Value);
+                            string.Format(CultureInfo.CurrentCulture, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, row.Cells[0].Value);
                         isError = true;
                     }
                     catch (AssumptionException ex)
