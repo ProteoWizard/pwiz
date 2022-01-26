@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             
             var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = moleculeGroupName + @",MyMolecule,MyTransition,H10O10,H10O10,1,1");
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = moleculeGroupName + @",MyMolecule,MyTransition,H10O10,H10O10,1,1");
 
             RunUI(() => {
                 colDlg.radioMolecule.PerformClick();
