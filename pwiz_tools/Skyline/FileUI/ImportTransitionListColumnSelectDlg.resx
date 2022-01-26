@@ -298,7 +298,7 @@
     <value>dataGrid</value>
   </data>
   <data name="&gt;&gt;dataGrid.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.390, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.382, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGrid.Parent" xml:space="preserve">
     <value>$this</value>
