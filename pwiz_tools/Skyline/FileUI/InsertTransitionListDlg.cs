@@ -64,18 +64,13 @@ namespace pwiz.Skyline.FileUI
         {
             if (e.Control && (e.KeyCode == Keys.V)) // Ignore any keyboard activity other than paste
             {
-                DoPaste();
+                textBox1.Text = string.Empty;
+                textBox1.TextAlign = HorizontalAlignment.Left; // So the pasted text, which appears briefly, doesn't look weird
+                textBox1.Font = new Font(textBox1.Font.Name, textBox1.Font.Size / 2, textBox1.Font.Style); // Back to standard font
+                textBox1.WordWrap = false; // Makes brief appearance of pasted text look a little tidier
+                textBox1.Paste(); // Copy the clipboard contents to the textbox
+                DialogResult = DialogResult.OK;
             }
-        }
-
-        private void DoPaste()
-        {
-            textBox1.Text = string.Empty;
-            textBox1.TextAlign = HorizontalAlignment.Left; // So the pasted text, which appears briefly, doesn't look weird
-            textBox1.Font = new Font(textBox1.Font.Name, textBox1.Font.Size / 2, textBox1.Font.Style); // Back to standard font
-            textBox1.WordWrap = false; // Makes brief appearance of pasted text look a little tidier
-            textBox1.Paste(); // Copy the clipboard contents to the textbox
-            DialogResult = DialogResult.OK;
         }
 
         [DllImport("user32.dll")]
@@ -83,11 +78,6 @@ namespace pwiz.Skyline.FileUI
         private void textBox1_HideCaret(object sender, EventArgs e)
         {
             HideCaret(textBox1.Handle);// Don't show the blinking cursor
-        }
-
-        private void buttonPaste_Click(object sender, EventArgs e)
-        {
-            DoPaste();
         }
     }
 }
