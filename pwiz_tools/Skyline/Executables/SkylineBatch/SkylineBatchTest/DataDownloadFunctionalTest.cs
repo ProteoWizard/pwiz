@@ -42,12 +42,7 @@ namespace SkylineBatchTest
 
         private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
-            bool worked = false;
-            RunUI(() =>
-            {
-                worked = expectedAnswer == mainForm.ConfigRunning("EmptyTemplate");
-            });
-            return worked;
+            return expectedAnswer == mainForm.ConfigRunning("EmptyTemplate");
         }
 
         public void TestSmallDataDownload(MainForm mainForm)
@@ -98,10 +93,9 @@ namespace SkylineBatchTest
             {
                 Assert.IsTrue(spaceErrorDlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
                 spaceErrorDlg.ClickOk();
-                Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
                 Assert.AreEqual(0, mainForm.tabMain.SelectedIndex);
             });
-            
+            Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
         }
 
         public void TestPanoramaDataDownload(MainForm mainForm)
