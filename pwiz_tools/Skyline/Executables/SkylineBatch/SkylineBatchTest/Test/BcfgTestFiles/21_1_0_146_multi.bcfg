@@ -53,6 +53,6 @@
         <script_path>(REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R, 4.0.3)</script_path>
       </report_info>
     </report_settings>
-    <config_skyline_settings Type="Custom" CmdPath="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Debug\SkylineCmd.exe" />
+    <config_skyline_settings Type="Custom" CmdPath="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
   </skylinebatch_config>
 </ConfigList>

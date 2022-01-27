@@ -54,6 +54,6 @@
         <r_script path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R" version="4.0.3" />
       </report_info>
     </report_settings>
-    <config_skyline_settings type="Custom" version="latest" path="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Debug\SkylineCmd.exe\SkylineCmd.exe" />
+    <config_skyline_settings type="Custom" version="latest" path="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe\SkylineCmd.exe" />
   </skylinebatch_config>
 </config_list>
