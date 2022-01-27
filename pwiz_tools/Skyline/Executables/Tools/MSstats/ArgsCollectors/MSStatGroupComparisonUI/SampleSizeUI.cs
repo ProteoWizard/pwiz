@@ -19,88 +19,36 @@
 
 using System;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace MSStatArgsCollector
 {
     public partial class SampleSizeUi : Form
     {
-        private enum Args { normalize_to, samples, 
-            power, fdr, lower_fold, upper_fold, allow_missing_peaks,
-            feature_selection,remove_interfered_proteins,max_arg
-        }
-
         public string[] Arguments { get; private set; }
 
-        public SampleSizeUi(string[] oldArgs)
+        public SampleSizeUi(DataSetInfo dataSetInfo, Arguments arguments)
         {
             InitializeComponent();
-            comboNormalizeTo.SelectedIndex = 1;
-
-            if (oldArgs != null && oldArgs.Length == (int) Args.max_arg)
-                Arguments = oldArgs;
-
-            RestoreValues();
+            commonOptionsControl1.SetDataSetInfo(dataSetInfo);
+            RestoreArguments(arguments);
         }
 
-        private const string Truestring = "TRUE"; // Not L10N
-        private const string Falsestring = "FALSE"; // Not L10N
-
-        private void RestoreValues()
+        
+        private void RestoreArguments(Arguments arguments)
         {
-            if (Arguments == null)
-                RestoreDefaults();
-            else
+            commonOptionsControl1.RestoreArguments(arguments);
+            tbxSampleSize.Text = arguments.GetInt(Arg.numSample).ToString();
+            tbxPower.Text = arguments.GetDouble(Arg.power).ToString();
+            numberFDR.Text = (arguments.GetDouble(Arg.FDR) ?? 0.05).ToString(CultureInfo.CurrentCulture);
+            numberLDFC.Text = (arguments.GetDouble(Arg.ldfc) ?? 1.25).ToString(CultureInfo.CurrentCulture);
+            numberUDFC.Text = (arguments.GetDouble(Arg.udfc) ?? 1.75).ToString(CultureInfo.CurrentCulture);
+            if (string.IsNullOrEmpty(tbxSampleSize.Text) && string.IsNullOrEmpty(tbxPower.Text))
             {
-                RestoreCountValue(Args.samples, rBtnSamples, numberSamples, Samples);
-
-                string valueText = Arguments[(int) Args.power];
-                if (valueText.Equals(Truestring))
-                {
-                    rBtnPower.Checked = true;
-                }
-                else
-                {
-                    RestoreDecimalText(valueText, numberPower, Power);
-                }
-
-                RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
-                RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
-                RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
-                cbxSelectHighQualityFeatures.Checked = Truestring == Arguments[(int) Args.feature_selection];
-                cbxRemoveInterferedProteins.Checked = Truestring == Arguments[(int) Args.remove_interfered_proteins];
+                tbxSampleSize.Text = 2.ToString();
             }
-
-            if (!rBtnSamples.Checked && !rBtnPower.Checked)
-            {
-                rBtnSamples.Checked = true;
-            }
-        }
-
-        private void RestoreCountValue(Args argument, RadioButton radio, NumericUpDown numeric, decimal defaultValue)
-        {
-            int count;
-            string argText = Arguments[(int) argument];
-            if (argText.Equals(Truestring))
-            {
-                radio.Checked = true;
-            }
-            else if (int.TryParse(argText, NumberStyles.Integer, CultureInfo.InvariantCulture, out count))
-            {
-                numeric.Value = count;
-            }
-            else
-            {
-                numeric.Value = defaultValue;
-            }
-        }
-
-        private void RestoreDecimalText(string valueText, TextBox textBox, decimal defaultValue)
-        {
-            decimal decimalValue;
-            if (!decimal.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out decimalValue))
-                decimalValue = defaultValue;
-            textBox.Text = decimalValue.ToString(CultureInfo.CurrentCulture);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -108,172 +56,107 @@ namespace MSStatArgsCollector
             OkDialog();
         }
 
+        private Arguments GetArguments()
+        {
+            var arguments = new Arguments();
+            if (!commonOptionsControl1.GetArguments(arguments))
+            {
+                return null;
+            }
+
+            if (!Util.ValidateOptionalDouble(tbxPower, out double? power))
+            {
+                return null;
+            }
+
+            if (power.HasValue)
+            {
+                if (power < 0 || power > 1)
+                {
+                    Util.ShowControlMessage(tbxPower, "Power must be between 0 and 1.");
+                    return null;
+                }
+                arguments.Set(Arg.power, power.Value);
+            }
+
+            if (!Util.ValidateOptionalInteger(tbxSampleSize, out int? sampleSize))
+            {
+                return null;
+            }
+
+            if (sampleSize.HasValue)
+            {
+
+                if (sampleSize<= 0)
+                {
+                    Util.ShowControlMessage(tbxSampleSize, "Sample size must be a positive integer or blank");
+                    return null;
+                }
+
+                arguments.Set(Arg.numSample, sampleSize.Value);
+            }
+
+            if (power.HasValue && sampleSize.HasValue)
+            {
+                Util.ShowControlMessage(tbxSampleSize, "Only one of Power or Sample Size can be specified, and the other must be blank.");
+                return null;
+            }
+
+            if (!power.HasValue && !sampleSize.HasValue)
+            {
+                Util.ShowControlMessage(tbxSampleSize, "You must specify either Power or Sample Size.");
+            }
+
+                
+            if (!Util.ValidateDouble(numberFDR, out double fdr))
+            {
+                return null;
+            }
+            arguments.Set(Arg.FDR, fdr);
+            if (!Util.ValidateDouble(numberLDFC, out double ldfc))
+            {
+                return null;
+            }
+            arguments.Set(Arg.ldfc, ldfc);
+            if (!Util.ValidateDouble(numberUDFC, out double udfc))
+            {
+                return null;
+            }
+            arguments.Set(Arg.udfc, udfc);
+            return arguments;
+        }
+
         private void OkDialog()
         {
-            var decimalPoint = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-            if (!rBtnPower.Checked && string.IsNullOrEmpty(numberPower.Text))
+            var arguments = GetArguments();
+            if (arguments == null)
             {
-                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_Power_);
+                return;
             }
-            else if (string.IsNullOrEmpty(numberFDR.Text) || numberFDR.Text.Equals(decimalPoint))
-            {
-                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_FDR_);
-            }
-            else if (string.IsNullOrEmpty(numberLDFC.Text) || numberLDFC.Text.Equals(decimalPoint))
-            {
-                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_);
-            }
-            else if (string.IsNullOrEmpty(numberUDFC.Text) || numberLDFC.Text.Equals(decimalPoint))
-            {
-                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_);
-            }
-            else
-            {
-                decimal decimalPower, decimalFdr, decimalLdfc, decimalUdfc;
-                if (!ValidateNumber(numberPower, out decimalPower) ||
-                    !ValidateNumber(numberFDR, out decimalFdr) ||
-                    !ValidateNumber(numberLDFC, out decimalLdfc) ||
-                    !ValidateNumber(numberUDFC, out decimalUdfc))
-                {
-                    return;
-                }
-                if (decimalUdfc <= decimalLdfc)
-                {
-                    MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_);
-                }
-                else
-                {
-                    GenerateArguments(decimalPower, decimalFdr, decimalLdfc, decimalUdfc);
-                    DialogResult = DialogResult.OK;
-                }
-            }
+
+            Arguments = arguments.ToArgumentList().ToArray();
+            DialogResult = DialogResult.OK;
         }
-
-        private bool ValidateNumber(TextBox textBox, out decimal decimalPower)
-        {
-            if (!decimal.TryParse(textBox.Text, out decimalPower))
-            {
-                MessageBox.Show(this, string.Format(MSstatsResources.SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_, textBox.Text));
-                numberPower.Focus();
-                return false;
-            }
-            if (decimalPower < 0)
-            {
-                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Negative_values_are_not_valid_);
-                numberPower.Focus();
-                return false;
-            }
-            return true;
-        }
-
-        // The command line arguments generated by the Sample Size UI is a 7 element array
-        // consisting of:
-        //
-        // 0. The integer number of samples desired (or "TRUE" if we want this to be calculated)
-        // 1. The integer number of peptides per protein (or "TRUE")
-        // 2. The integer number of transition per peptides (or "TRUE")
-        // 3. The power (or "TRUE")
-        // 4. The FDR
-        // 5. The lower desired fold change 
-        // 6. The upper desired fold change
-        //
-        private void GenerateArguments(decimal power, decimal fdr, decimal ldfc, decimal udfc)
-        {
-            Arguments = new string[(int) Args.max_arg];
-
-            Arguments[(int) Args.normalize_to] = (comboNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.power] = (rBtnPower.Checked) ? Truestring : power.ToString(CultureInfo.InvariantCulture);
-
-            Arguments[(int) Args.fdr] = fdr.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.lower_fold] = ldfc.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.upper_fold] = udfc.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring;
-            Arguments[(int) Args.feature_selection] =
-                cbxSelectHighQualityFeatures.Checked ? Truestring : Falsestring;
-            Arguments[(int) Args.remove_interfered_proteins] =
-                cbxRemoveInterferedProteins.Checked ? Truestring : Falsestring;
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-        }
-
-        private void numericTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            var decimalPoint = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-            bool decimalKey = decimalPoint.IndexOf(e.KeyChar) != -1;
-            if (!char.IsDigit(e.KeyChar) && !decimalKey && e.KeyChar != (char)Keys.Back)
-            {
-                e.Handled = true;
-            }
-            if (decimalKey)
-            {
-                var source = (TextBox) sender;
-                if (source.Text.Contains(decimalPoint)) // Not L10N
-                    e.Handled = true;
-            }
-        }
-
-        // defaults
-        private const int Normalize = 1;
-        private const decimal Samples = 2m;
-        private const decimal Power = 0.80m;
-        private const decimal Fdr = 0.05m;
-        private const decimal Ldfc = 1.25m;
-        private const decimal Udfc = 1.75m;
 
         private void btnDefault_Click(object sender, EventArgs e)
         {
-            RestoreDefaults();
-        }
-
-        private void RestoreDefaults()
-        {
-            comboNormalizeTo.SelectedIndex = Normalize;
-            rBtnSamples.Checked = true;
-            numberSamples.Value = Samples;
-            numberPower.Text = Power.ToString(CultureInfo.CurrentCulture);
-            numberFDR.Text = Fdr.ToString(CultureInfo.CurrentCulture);
-            numberLDFC.Text = Ldfc.ToString(CultureInfo.CurrentCulture);
-            numberUDFC.Text = Udfc.ToString(CultureInfo.CurrentCulture);
-        }
-
-        private void rBtnSamples_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rBtnSamples.Checked)
-            {
-                numberSamples.Enabled = numberSamples.Visible = false;
-            }
-            else
-            {
-                numberSamples.Enabled = numberSamples.Visible = true;
-            }
-        }
-
-        private void rBtnPower_CheckedChanged(object sender, EventArgs e)
-        {
-            numberPower.Enabled = numberPower.Visible = !rBtnPower.Checked;
-        }
-
-        private void cbxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
-        {
-            cbxRemoveInterferedProteins.Enabled = cbxSelectHighQualityFeatures.Checked;
+            RestoreArguments(new Arguments());
         }
     }
 
     public class MSstatsSampleSizeCollector
     {
-        public static string[] CollectArgs(IWin32Window parent, string report, string[] args)
+        public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] args)
         {
-            using (var dlg = new SampleSizeUi(args))
+            var dataSetInfo = DataSetInfo.ReadDataSet(report);
+            using (var dlg = new SampleSizeUi(dataSetInfo, Arguments.FromArgumentList(args)))
             {
-                if (parent != null)
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
-                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
+                    return dlg.Arguments;
                 }
-                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
+
+                return null;
             }
         }
     }

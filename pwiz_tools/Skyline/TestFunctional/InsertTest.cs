@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
             string allErrorText = "";
             var pasteText = TransitionsClipboardText;
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
             var associateProteinsDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Some peptides aren't in background proteome
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
 
             var pasteText2 = "LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg2 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg2.textBox1.Text = pasteText2);
+            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg2.TransitionListText = pasteText2);
             associateProteinsDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Some peptides aren't in background proteome
             OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
 

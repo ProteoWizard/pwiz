@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigList>
+  <skylinebatch_config Name="Complex" Enabled="true" Modified="1/12/2022 11:56 AM">
+    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\EmptyData" ReplicateNamingPattern="Tester" />
+    <file_settings MsOneResolvingPower="1" MsMsResolvingPower="2" RetentionTime="3" AddDecoys="true" ShuffleDecoys="true" TrainMProphet="true" />
+    <report_settings>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr">
+        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings Type="Custom" CmdPath="C:\Program Files\Skyline\SkylineCmd.exe" />
+  </skylinebatch_config>
+</ConfigList>

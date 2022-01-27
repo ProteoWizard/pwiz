@@ -659,6 +659,21 @@ namespace SkylineBatch
 
         public List<string> ConfigsBusy() => State.ConfigsBusy();
 
+
+        // For testing only - reset remote file sources
+        public void ClearRemoteFileSources()
+        {
+            var currentState = State;
+            var newState = currentState;
+            if (State.BaseState.ConfigList.Count > 0)
+                throw new Exception("Cannot clear remote file source list while configurations exist.");
+            foreach (var name in currentState.FileSources.Keys)
+            {
+                newState = newState.RemoveRemoteFileSource(name);
+            }
+            SetState(currentState, newState);
+        }
+
         #endregion
 
     }
@@ -834,7 +849,6 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManagerState UserRemoveSelected(IMainUiControl uiControl)
         {
-            //var sameModelState = state.UpdateValues(state.BaseState.UpdateValues(modelChanged: false));
             BaseState.AssertConfigSelected();
             var index = BaseState.Selected;
             var removingConfigName = BaseState.ConfigList[index].GetName();
@@ -843,7 +857,6 @@ namespace SkylineBatch
                 ConfigManager.DisplayWarning(uiControl, string.Format(
                     Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
                     removingConfigName));
-                //BaseState.ModelUnchanged();
                 return this;
             }
             var configDependencies = GetDependencies();
@@ -858,7 +871,6 @@ namespace SkylineBatch
                                               Resources.SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_, removingConfigName) + Environment.NewLine +
                                           TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
                                           Resources.SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_);
-                    //BaseState.ModelUnchanged();
                     return this;
                 }
                 var answer = ConfigManager.DisplayQuestion(uiControl,
@@ -1288,12 +1300,19 @@ namespace SkylineBatch
 
         #region Remote File Sources
 
-        public SkylineBatchConfigManagerState UserAddRemoteFileSource(RemoteFileSource remoteFileSource, IMainUiControl uiControl)
+        public SkylineBatchConfigManagerState UserAddRemoteFileSource(RemoteFileSource remoteFileSource, bool preferPanorama, IMainUiControl uiControl)
         {
             if (FileSources.ContainsKey(remoteFileSource.Name))
                 ConfigManager.DisplayError(uiControl, string.Format(Resources.SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_, remoteFileSource.Name));
             else
+            {
+                if (preferPanorama && remoteFileSource.FtpSource)
+                {
+                    if (DialogResult.No == ConfigManager.DisplayQuestion(uiControl, Resources.SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_))
+                        return this;
+                }
                 FileSources = FileSources.Add(remoteFileSource.Name, remoteFileSource);
+            }
             return this;
         }
 
