@@ -29,7 +29,6 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
@@ -37,6 +36,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.BiblioSpec;
 using pwiz.Common.Database;
 using pwiz.Skyline.Model.Results;
 using BiblioSpecLiteLibrary = pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
@@ -46,7 +46,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
-        private MsDataFileUri[] _ddaSearchDataSources = new MsDataFileUri[0];
+        private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
+
+        private object _gridFilesLock = new object();
+        private const string CELL_LOADING = @"...";
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
@@ -56,7 +59,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
-            textCutoff.Text = ImportPeptideSearch.CutoffScore.ToString(LocalizationHelper.CurrentCulture);
+            CutOffScore = ImportPeptideSearch.CutoffScore;
 
             if (DocumentContainer.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
@@ -142,7 +145,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void FireInputFilesChanged()
         {
-            InputFilesChanged?.Invoke(this, new EventArgs());
+            InputFilesChanged?.Invoke(this, EventArgs.Empty);
+            gridSearchFiles_SelectedIndexChanged(this, EventArgs.Empty);
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
@@ -151,10 +155,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SrmDocument.DOCUMENT_TYPE ModeUI => (WizardForm is FormEx parent) ? parent.ModeUI : SrmDocument.DOCUMENT_TYPE.none;
 
-        private Form WizardForm
-        {
-            get { return FormEx.GetParentForm(this); }
-        }
+        private Form WizardForm => FormEx.GetParentForm(this);
 
         public IrtStandard IrtStandards
         {
@@ -232,17 +233,128 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Always show sorted list of files
                 Array.Sort(ImportPeptideSearch.SearchFilenames);
 
-                // Calculate the common root directory
-                string dirInputRoot = PathEx.GetCommonRoot(ImportPeptideSearch.SearchFilenames);
+                var toAdd = value.ToHashSet();
 
                 // Populate the input files list
-                listSearchFiles.BeginUpdate();
-                listSearchFiles.Items.Clear();
-                foreach (string fileName in ImportPeptideSearch.SearchFilenames)
+                lock (_gridFilesLock)
                 {
-                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileName, dirInputRoot));
+                    gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
+
+                    var existingFiles = new HashSet<string>();
+                    for (var i = gridSearchFiles.RowCount - 1; i >= 0; i--)
+                    {
+                        var existingFile = FileCellValue.Get(gridSearchFiles.Rows[i], columnFile).File;
+                        if (!toAdd.Contains(existingFile))
+                            gridSearchFiles.Rows.RemoveAt(i);
+                        else
+                            existingFiles.Add(existingFile);
+                    }
+                    toAdd.ExceptWith(existingFiles);
+
+                    foreach (var file in toAdd)
+                    {
+                        var i = gridSearchFiles.Rows.Add();
+                        gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
+                        gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue();
+                        gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
+                    }
+
+                    if (gridSearchFiles.SortedColumn == null || gridSearchFiles.SortOrder == SortOrder.None)
+                        gridSearchFiles.Sort(columnFile, ListSortDirection.Ascending);
+                    else
+                        gridSearchFiles.Sort(gridSearchFiles.SortedColumn, gridSearchFiles.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
+
+                    gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
                 }
-                listSearchFiles.EndUpdate();
+
+                if (toAdd.Any())
+                {
+                    // Run background worker to get score types
+                    var blibBuild = new BlibBuild(null, toAdd.ToArray());
+                    var monitor = new SilentProgressMonitor();
+                    IProgressStatus status = new ProgressStatus();
+                    var bw = new BackgroundWorker();
+                    bw.DoWork += (sender, e) =>
+                    {
+                        var success = blibBuild.GetScoreTypes(monitor, ref status, out _, out _, out var scoreTypes);
+
+                        var files = (HashSet<string>)e.Argument;
+
+                        // Match input/output files
+                        var filesByLength = files.OrderByDescending(s => s.Length).ToArray();
+                        var scoreTypesTmp = new Dictionary<string, BiblioSpecScoreType[]>();
+                        foreach (var pair in scoreTypes)
+                            scoreTypesTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
+                        scoreTypes = scoreTypesTmp;
+
+                        lock (_gridFilesLock)
+                        {
+                            gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
+
+                            Invoke(new MethodInvoker(delegate
+                            {
+                                // Gather existing score thresholds
+                                var existingThresholds = new Dictionary<string, double?>();
+                                foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => !files.Contains(FileCellValue.Get(row, columnFile).File)))
+                                {
+                                    var scoreType = ScoreTypeCellValue.Get(row, columnScoreType).NameInvariant;
+                                    if (scoreType != null)
+                                        existingThresholds[scoreType] = ThresholdCell.Get(row, columnThreshold).Threshold;
+                                }
+
+                                for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                                {
+                                    var row = gridSearchFiles.Rows[i];
+                                    var file = FileCellValue.Get(row, columnFile).File;
+                                    if (!files.Contains(file))
+                                        continue;
+                                    if (success && scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
+                                    {
+                                        for (var j = 0; j < scoreTypesThis.Length; j++)
+                                        {
+                                            var scoreType = scoreTypesThis[j];
+                                            if (j == 0)
+                                            {
+                                                row.Cells[columnScoreType.Index].Value = new ScoreTypeCellValue(scoreType);
+                                            }
+                                            else
+                                            {
+                                                gridSearchFiles.Rows.Insert(i + 1);
+                                                row = gridSearchFiles.Rows[++i];
+                                                gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
+                                                gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue(scoreType);
+                                                gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
+                                            }
+                                            var thresholdCell = ThresholdCell.Get(row, columnThreshold);
+                                            if (scoreType.CanSet)
+                                            {
+                                                thresholdCell.Value = existingThresholds.TryGetValue(scoreType.NameInvariant, out var threshold)
+                                                    ? threshold
+                                                    : BiblioSpecLiteBuilder.GetDefaultScoreThreshold(scoreType.NameInvariant, scoreType.DefaultValue);
+                                                thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
+                                                    ? Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
+                                                    : Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
+                                            }
+                                            else
+                                            {
+                                                thresholdCell.Value = scoreType.DefaultValue;
+                                                thresholdCell.ReadOnly = true;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ThresholdCell.Get(row, columnThreshold).Value = string.Empty;
+                                    }
+                                }
+                            }));
+
+                            gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
+                        }
+                        FireInputFilesChanged();
+                    };
+                    bw.RunWorkerAsync(toAdd);
+                }
 
                 FireInputFilesChanged();
             }
@@ -259,23 +371,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Always show sorted list of files
                 Array.Sort(_ddaSearchDataSources);
 
-                // Calculate the common root directory
-                string dirInputRoot = PathEx.GetCommonRoot(_ddaSearchDataSources.Select(o => o.GetFilePath()));
-
                 // Populate the input files list
-                listSearchFiles.BeginUpdate();
-                listSearchFiles.Items.Clear();
-                foreach (var uri in _ddaSearchDataSources)
+                lock (_gridFilesLock)
                 {
-                    string fileAndSampleLocator = uri.GetFilePath();
-                    if (uri.GetSampleIndex() > 0)
-                        fileAndSampleLocator += $@":{uri.GetSampleIndex()}";
-                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileAndSampleLocator, dirInputRoot));
+                    gridSearchFiles.Rows.Clear();
+                    foreach (var uri in _ddaSearchDataSources)
+                    {
+                        var fileAndSampleLocator = uri.GetFilePath();
+                        if (uri.GetSampleIndex() > 0)
+                            fileAndSampleLocator += $@":{uri.GetSampleIndex()}";
+                        var i = gridSearchFiles.Rows.Add();
+                        gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, fileAndSampleLocator);
+                    }
                 }
 
-                listSearchFiles.EndUpdate();
-
                 FireInputFilesChanged();
+            }
+        }
+
+        private IEnumerable<string> SelectedFiles
+        {
+            get
+            {
+                lock (_gridFilesLock)
+                {
+                    return gridSearchFiles.SelectedCells.Cast<DataGridViewCell>()
+                        .Where(cell => cell.ColumnIndex == columnFile.Index)
+                        .Select(cell => cell.OwningRow).Distinct()
+                        .Select(row => FileCellValue.Get(row, columnFile))
+                        .Where(value => value != null)
+                        .Select(value => value.File);
+                }
             }
         }
 
@@ -286,25 +412,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void RemoveFiles()
         {
-            IList listSearchFilenames = PerformDDASearch ? (IList) _ddaSearchDataSources.ToList() : SearchFilenames.ToList();
-            var selectedIndices = listSearchFiles.SelectedIndices;
-            for (int i = selectedIndices.Count - 1; i >= 0; i--)
-            {
-                listSearchFilenames.RemoveAt(selectedIndices[i]);
-                listSearchFiles.Items.RemoveAt(selectedIndices[i]); // this changes SelectedIndices
-            }
-
+            var selectedFiles = SelectedFiles.ToHashSet();
             if (PerformDDASearch)
-                _ddaSearchDataSources = listSearchFilenames.Cast<MsDataFileUri>().ToArray();
+                DdaSearchDataSources = DdaSearchDataSources.Where(source => !selectedFiles.Contains(source.GetFilePath())).ToArray();
             else
-                SearchFilenames = listSearchFilenames.Cast<string>().ToArray();
-
+                SearchFilenames = SearchFilenames.Where(file => !selectedFiles.Contains(file)).ToArray();
             FireInputFilesChanged();
         }
 
-        private void listSearchFiles_SelectedIndexChanged(object sender, EventArgs e)
+        private void gridSearchFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
-            btnRemFile.Enabled = listSearchFiles.SelectedItems.Count > 0;
+            btnRemFile.Enabled = SelectedFiles.Any();
         }
 
         private void btnAddFile_Click(object sender, EventArgs e)
@@ -313,10 +431,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MsDataFileUri[] dataSources;
                 using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
-                {
-                    Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
-                    InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
-                })
+                       {
+                           Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
+                           InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
+                       })
                 {
                     // Use saved source type, if there is one.
                     //string sourceType = Settings.Default.SrmResultsSourceType;
@@ -366,14 +484,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool BuildOrUsePeptideSearchLibrary(CancelEventArgs e)
         {
-            if (UseExistingLibrary)
-            {
-                return AddExistingLibrary(e);
-            }
-            else 
-            {
-                return BuildPeptideSearchLibrary(e);
-            }
+            return UseExistingLibrary ? AddExistingLibrary(e) : BuildPeptideSearchLibrary(e);
         }
 
         public string LastBuildCommandArgs { get; private set; }
@@ -391,19 +502,74 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return libSpec != null && LoadPeptideSearchLibrary(libSpec);
             }
 
-            double cutOffScore;
-            MessageBoxHelper helper = new MessageBoxHelper(WizardForm);
-            if (!helper.ValidateDecimalTextBox(textCutoff, 0, 1.0, out cutOffScore))
+            var thresholdsByScoreType = new Dictionary<BiblioSpecScoreType, double>();
+            var thresholdsByFile = new Dictionary<string, double>();
+            lock (_gridFilesLock)
             {
-                e.Cancel = true;
-                return false;
+                var errors = new List<string>();
+                var warnings = new List<string>();
+                foreach (DataGridViewRow row in gridSearchFiles.Rows)
+                {
+                    var scoreType = ScoreTypeCellValue.Get(row, columnScoreType);
+                    var thresholdCell = ThresholdCell.Get(row, columnThreshold);
+                    var threshold = thresholdCell.Threshold;
+                    var file = FileCellValue.Get(row, columnFile).ToString();
+                    if (scoreType.MinValue <= threshold && threshold <= scoreType.MaxValue)
+                    {
+                        thresholdsByFile[FileCellValue.Get(row, columnFile).File] = threshold.Value;
+                        thresholdsByScoreType[ScoreTypeCellValue.Get(row, columnScoreType).ScoreType] = threshold.Value;
+                    }
+                    else
+                    {
+                        errors.Add(string.Format(
+                            Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___,
+                            thresholdCell.Value, file, scoreType.MinValue, scoreType.MaxValue));
+                    }
+                }
+                if (errors.Any())
+                {
+                    MessageDlg.Show(WizardForm, TextUtil.LineSeparate(errors));
+                    e.Cancel = true;
+                    return false;
+                }
+
+                foreach (var pair in thresholdsByScoreType)
+                {
+                    var scoreType = pair.Key;
+                    var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
+                    var threshold = pair.Value;
+                    if (threshold < suggestedMin || threshold > suggestedMax)
+                    {
+                        var warning = string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_, threshold, scoreType.DisplayName);
+                        if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
+                        else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
+                        warnings.Add(warning);
+                    }
+                }
+                if (warnings.Any())
+                {
+                    warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
+                    if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    {
+                        e.Cancel = true;
+                        return false;
+                    }
+                }
             }
-            ImportPeptideSearch.CutoffScore = cutOffScore;
+            foreach (var threshold in thresholdsByScoreType)
+                BiblioSpecLiteBuilder.SetDefaultScoreThreshold(threshold.Key.NameInvariant, threshold.Value);
 
             BiblioSpecLiteBuilder builder;
             try
             {
                 builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
+                builder.ScoreThresholdsByFile = thresholdsByFile;
                 builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
                 builder.DebugMode = DebugMode;
             }
@@ -417,10 +583,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             do
             {
                 using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                    Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-                })
+                       {
+                           Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
+                           Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
+                       })
                 {
                     // Disable the wizard, because the LongWaitDlg does not
                     try
@@ -622,7 +788,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void UpdateUseExistingLibrary()
         {
             panelChooseFile.Visible = UseExistingLibrary;
-            peptideSearchSplitContainer.Visible = !UseExistingLibrary;
+            panelPeptideSearch.Visible = !UseExistingLibrary;
             FireInputFilesChanged();
         }
 
@@ -636,7 +802,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public bool AnyInputFiles
+        public bool IsReady
         {
             get
             {
@@ -645,7 +811,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return !string.IsNullOrEmpty(tbxLibraryPath.Text);
                 }
 
-                return 0 != listSearchFiles.Items.Count;
+                lock (_gridFilesLock)
+                {
+                    return gridSearchFiles.RowCount > 0;
+                }
             }
         }
 
@@ -689,9 +858,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             //peptideSearchSplitContainer.Visible = PerformDDASearch;
 
             if (PerformDDASearch)
+            {
                 DdaSearchDataSources = DdaSearchDataSources;
+                panelSearchThreshold.Visible = true;
+                columnScoreType.Visible = false;
+                columnThreshold.Visible = false;
+            }
             else
+            {
                 SearchFilenames = SearchFilenames;
+                panelSearchThreshold.Visible = false;
+                columnScoreType.Visible = true;
+                columnThreshold.Visible = true;
+            }
         }
 
         public bool PerformDDASearch
@@ -711,6 +890,106 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void comboInputFileType_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdatePerformDDASearch();
+        }
+
+        private void gridSearchFiles_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != columnThreshold.Index)
+                return;
+
+            // Copy new threshold to all other files with same score type
+            lock (_gridFilesLock)
+            {
+                var scoreType = ScoreTypeCellValue.Get(e.RowIndex, columnScoreType)?.NameInvariant;
+                foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => Equals(ScoreTypeCellValue.Get(row, columnScoreType)?.NameInvariant, scoreType)))
+                {
+                    row.Cells[columnThreshold.Index].Value = gridSearchFiles[e.ColumnIndex, e.RowIndex].Value;
+                }
+            }
+        }
+
+        private class FileCellValue
+        {
+            private DataGridView Grid { get; }
+            private DataGridViewColumn FileColumn { get; }
+            public string File { get; }
+
+            public FileCellValue(DataGridView grid, DataGridViewColumn fileColumn, string file)
+            {
+                Grid = grid;
+                FileColumn = fileColumn;
+                File = file;
+            }
+
+            public override string ToString()
+            {
+                return PathEx.RemovePrefix(File, PathEx.GetCommonRoot(Grid.Rows.Cast<DataGridViewRow>().Select(row => Get(row, FileColumn).File)));
+            }
+
+            public static FileCellValue Get(DataGridViewRow row, DataGridViewColumn col)
+            {
+                return row.Cells[col.Index].Value as FileCellValue;
+            }
+        }
+
+        private class ScoreTypeCellValue
+        {
+            public BiblioSpecScoreType ScoreType { get; }
+            public string NameInvariant => ScoreType?.NameInvariant;
+            public double MinValue => ScoreType?.ValidRange.Item1 ?? 0;
+            public double MaxValue => ScoreType?.ValidRange.Item2 ?? 1;
+
+            public ScoreTypeCellValue(BiblioSpecScoreType scoreType = null)
+            {
+                ScoreType = scoreType;
+            }
+
+            public override string ToString()
+            {
+                return ScoreType?.DisplayName ?? CELL_LOADING;
+            }
+
+            public static ScoreTypeCellValue Get(DataGridViewRow row, DataGridViewColumn col)
+            {
+                return row.Cells[col.Index].Value as ScoreTypeCellValue;
+            }
+
+            public static ScoreTypeCellValue Get(int rowIndex, DataGridViewColumn col)
+            {
+                return Get(col.DataGridView.Rows[rowIndex], col);
+            }
+        }
+
+        private class ThresholdCell : DataGridViewTextBoxCell
+        {
+            public double? Threshold
+            {
+                get
+                {
+                    switch (Value)
+                    {
+                        case null:
+                            return null;
+                        case double d:
+                            return d;
+                        default:
+                            return double.TryParse(Value.ToString(), out var threshold) ? (double?)threshold : null;
+                    }
+                }
+            }
+
+            public ThresholdCell(double? threshold = null)
+            {
+                if (threshold.HasValue)
+                    Value = threshold.Value;
+                else
+                    Value = CELL_LOADING;
+            }
+
+            public static ThresholdCell Get(DataGridViewRow row, DataGridViewColumn col)
+            {
+                return row.Cells[col.Index] as ThresholdCell;
+            }
         }
     }
 }

@@ -211,29 +211,27 @@ const set<string>* BlibBuilder::getTargetSequencesModified() {
 int BlibBuilder::parseCommandArgs(int argc, char* argv[])
 {
     int i = BlibMaker::parseCommandArgs(argc, argv);
-    argc--;               // Remove output library at the end
+    if (!isScoreLookupMode()) {
+        argc--; // Remove output library at the end
+    }
 
     bool filesFromStdin = false;
-    while (!stdinput.empty())
-    {
+    while (!stdinput.empty()) {
         // handle list
-        switch (stdinput.front())
-        {
+        switch (stdinput.front()) {
         case FILENAMES:
             // read filenames until end of cin or empty line
             filesFromStdin = true;
             Verbosity::debug("Reading input filenames");
-            while (*stdinStream)
-            {
+            while (*stdinStream) {
                 string infileName;
                 getline(*stdinStream, infileName);
                 bal::trim(infileName);
-                if (infileName.empty())
-                {
+                if (infileName.empty()) {
                     break;
                 }
                 const string thresholdSearch = "score_threshold=";
-                size_t thresholdIdx = infileName.find(thresholdSearch);
+                size_t thresholdIdx = infileName.rfind(thresholdSearch);
                 if (thresholdIdx == string::npos) {
                     Verbosity::debug("Input file: %s", infileName.c_str());
                 } else {
@@ -267,7 +265,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
         ((ifstream*)stdinStream)->close();
     }
 
-    if(!filesFromStdin) {
+    if (!filesFromStdin) {
         int nInputs = argc - i;
         if (nInputs < 1)
         {

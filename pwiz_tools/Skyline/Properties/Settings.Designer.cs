@@ -3177,6 +3177,7 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaDotpDisplay"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
@@ -3186,6 +3187,17 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ChromatogramDisplayRTDigits"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection BlibLibraryThresholds {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["BlibLibraryThresholds"]));
+            }
+            set {
+                this["BlibLibraryThresholds"] = value;
             }
         }
     }

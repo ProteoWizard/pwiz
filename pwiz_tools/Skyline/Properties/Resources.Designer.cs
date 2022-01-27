@@ -2978,12 +2978,52 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is" +
+                        "_probability_that_identification_is_incorrect__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is" +
+                        "_probability_that_identification_is_correct__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} scores indicate the probability that an identification is {1}..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_th" +
+                        "e_probability_that_an_identification_is__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add document spectral library.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_" +
                         "library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to continue?.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_" +
+                        "to_continue_", resourceCulture);
             }
         }
         
@@ -3008,12 +3048,50 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to correct.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to build the library {0}..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__ {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_li" +
                         "brary__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to incorrect.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold &apos;{0}&apos; for {1} is invalid (must be a decimal value between {2} and {3})..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___" +
+                        "for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold {0} for {1} is unusually permissive..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__fo" +
+                        "r__1__is_unusually_permissive_", resourceCulture);
             }
         }
         

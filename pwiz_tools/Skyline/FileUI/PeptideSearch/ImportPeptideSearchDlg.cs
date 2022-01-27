@@ -755,7 +755,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
-                            return;
+                        return;
 
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
@@ -1192,10 +1192,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             base.OnFormClosing(e);
         }
 
-        private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,
-            EventArgs e)
+        private void BuildPepSearchLibForm_OnInputFilesChanged(object sender, EventArgs e)
         {
-            bool isReady = BuildPepSearchLibControl.AnyInputFiles;
+            var isReady = BuildPepSearchLibControl.IsReady;
             btnNext.Enabled = isReady;
             if (btnEarlyFinish.Visible)
             {

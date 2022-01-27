@@ -90,14 +90,13 @@ static void WriteErrorLines(string s)
 }
 
 static void WriteScoreTypesLine(string file, vector<PSM_SCORE_TYPE> scoreTypes) {
-    cout << "SCORETYPE" << '\t' << file << '\t';
     for (size_t i = 0; i < scoreTypes.size(); i++) {
-        if (i > 0) {
-            cout << ',';
-        }
-        cout << scoreTypes[i];
+        cout << "SCORETYPE" << '\t'
+             << file << '\t'
+             << scoreTypeToString(scoreTypes[i])
+             << '\t' << scoreTypeToProbabilityTypeString(scoreTypes[i])
+             << std::endl;
     }
-    cout << std::endl;
 }
 
 int main(int argc, char* argv[])

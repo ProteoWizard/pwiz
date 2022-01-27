@@ -76,15 +76,17 @@ int BlibMaker::parseCommandArgs(int argc, char* argv[])
         else
             i = parseNextSwitch(i, argc, argv);
     }
-    
-    // Must at least have the library name left
-    if (argc - i < 1)
-        usage();
-    
-    lib_name = argv[argc - 1];
-    if (lib_id == NULL)
-        lib_id = libIdFromName(lib_name);
-    
+
+    if (!isScoreLookupMode()) {
+        // Must at least have the library name left
+        if (argc - i < 1)
+            usage();
+
+        lib_name = argv[argc - 1];
+        if (lib_id == NULL)
+            lib_id = libIdFromName(lib_name);
+    }
+
     return i;
 }
 
