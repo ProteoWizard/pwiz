@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model
         /// Prioritize, paired list of non-custom product ion types
         /// </summary>
         public static readonly IonType[] PEPTIDE_ION_TYPES =
-            {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
+            {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a, IonType.zh, IonType.zhh};
         // And its small molecule equivalent
         public static readonly IonType[] MOLECULE_ION_TYPES = { IonType.custom };
         public static readonly IonType[] DEFAULT_MOLECULE_FILTER_ION_TYPES = { IonType.custom }; 
