@@ -18,6 +18,8 @@
  */
 
 using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,25 +34,50 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+
+            // Move the prompt text from the label to the text box, hopefully a more obvious cue
+            label1.Visible = false;
+            textBox1.TextAlign = HorizontalAlignment.Center;
+            textBox1.Text = Environment.NewLine + Environment.NewLine + Environment.NewLine + label1.Text;
+            textBox1.SelectionStart = textBox1.Text.Length;
+            textBox1.SelectionLength = 0;
+
+            // Bigger prompt
+            textBox1.Font = new Font(textBox1.Font.Name, textBox1.Font.Size * 2, textBox1.Font.Style);
+
+            // Don't show the blinking cursor
+            textBox1.GotFocus += textBox1_HideCaret;  
         }
 
-        public string TransitionListText => textBox1.Text;
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
+        public string TransitionListText
         {
-            DialogResult = DialogResult.OK;
-        }
+            get => textBox1.Text;
+            set { textBox1.Text = value; DialogResult = DialogResult.OK; }
+        } 
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            e.Handled = !inputIsCommand;
+            e.Handled = true; // We're not interested in any keyboard input other than ctrl-V, and we handle that in keydown event
         }
-
-        private bool inputIsCommand;
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            inputIsCommand = e.Control && (e.KeyCode == Keys.V || e.KeyCode == Keys.C);
+            if (e.Control && (e.KeyCode == Keys.V)) // Ignore any keyboard activity other than paste
+            {
+                textBox1.Text = string.Empty;
+                textBox1.TextAlign = HorizontalAlignment.Left; // So the pasted text, which appears briefly, doesn't look weird
+                textBox1.Font = new Font(textBox1.Font.Name, textBox1.Font.Size / 2, textBox1.Font.Style); // Back to standard font
+                textBox1.WordWrap = false; // Makes brief appearance of pasted text look a little tidier
+                textBox1.Paste(); // Copy the clipboard contents to the textbox
+                DialogResult = DialogResult.OK;
+            }
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool HideCaret(IntPtr hWnd);
+        private void textBox1_HideCaret(object sender, EventArgs e)
+        {
+            HideCaret(textBox1.Handle);// Don't show the blinking cursor
         }
     }
 }
