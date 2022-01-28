@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,8 +10,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MSStatArgsCollector</RootNamespace>
     <AssemblyName>MSStatArgsCollector</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -46,6 +49,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arg.cs" />
+    <Compile Include="Arguments.cs" />
+    <Compile Include="CommonOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CommonOptionsControl.Designer.cs">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataSetInfo.cs" />
     <Compile Include="GroupComparisonUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,6 +69,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>MSstatsResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="NormalizationMethod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QualityControlUI.cs">
       <SubType>Form</SubType>
@@ -70,8 +83,12 @@
     <Compile Include="SampleSizeUI.Designer.cs">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CommonOptionsControl.resx">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GroupComparisonUI.ja.resx">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
     </EmbeddedResource>
@@ -117,13 +134,12 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>cd "$(SolutionDir)"
-
-
-
-del MSstats3_external.zip 2&gt; nul
-
-"$(ProgramW6432)\7-zip\7z.exe" a MSstats3_external.zip ..\*.r ..\tool-inf  "$(TargetDir)\$(TargetFileName)" "$(TargetDir)\$(TargetName).pdb"
+    <PostBuildEvent>pushd $(TargetDir)
+"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a $(SolutionDir)\..\MSstats.zip $(TargetFileName) $(TargetName).pdb ja zh-CHS
+popd
+pushd "$(SolutionDir)"\..
+"$(SolutionDir)\..\..\..\..\..\..\libraries\7za.exe" a MSstats.zip *.r tool-inf
+popd
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

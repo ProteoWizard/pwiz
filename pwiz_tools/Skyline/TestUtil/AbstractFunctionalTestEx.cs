@@ -631,7 +631,10 @@ namespace pwiz.SkylineTestUtil
             });
 
             if (pausePage.HasValue)
+            {
+                RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
                 PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage.Value);
+            }
 
             OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
             OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);

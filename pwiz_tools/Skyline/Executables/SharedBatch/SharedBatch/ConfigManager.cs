@@ -305,10 +305,8 @@ namespace SharedBatch
     {
         public ImmutableList<IConfig> ConfigList { get; private set; }
         public ImmutableDictionary<string, bool> ConfigValidation { get; private set; }
-        //public ImmutableList<Logger> LogList { get; private set; }
         public ImmutableDictionary<string, string> RootReplacement { get; private set; }
         public int Selected { get; private set; }
-        //public int SelectedLog { get; private set; }
         public bool ModelChanged { get; private set; }
 
         public static ConfigManagerState Empty()
@@ -320,10 +318,8 @@ namespace SharedBatch
         {
             ConfigList = configList;
             ConfigValidation = configValidation;
-            //LogList = logList;
             RootReplacement = rootReplacement;
             Selected = selected;
-            //SelectedLog = selectedLog;
             ModelChanged = modelChanged;
         }
 
@@ -367,7 +363,6 @@ namespace SharedBatch
             Selected = -1;
             foreach (var config in Settings.Default.ConfigList.ToList())
                 ProgramaticallyInsertConfig(ConfigList.Count, config);
-            //ModelUnchanged();
             return this;
         }
 

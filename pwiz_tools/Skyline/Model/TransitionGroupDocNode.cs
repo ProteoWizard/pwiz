@@ -894,13 +894,13 @@ namespace pwiz.Skyline.Model
         {
             var newId = new TransitionGroup(peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, true,
                 TransitionGroup.DecoyMassShift);
-            return ChangeTransitionGroupId(newId, Transitions.Select(t=>t.ChangeTransitionGroup(newId)));
+            return ChangeTransitionGroupId(newId, Transitions.Select(t => t.ChangeTransitionGroup(newId)));
         }
 
         public TransitionGroupDocNode ChangeTransitionGroupId(TransitionGroup newId, IEnumerable<TransitionDocNode> newTransitions)
         {
             var node = (TransitionGroupDocNode)ChangeId(newId);
-            node = (TransitionGroupDocNode) node.ChangeChildren(newTransitions.Cast<DocNode>().ToList());
+            node = (TransitionGroupDocNode)node.ChangeChildren(newTransitions.Cast<DocNode>().ToList());
             return node;
         }
 

@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         var textSequences = PeptideTreeNode.CreateTextSequences(node.DocNode,
                             SkylineWindow.Document.Settings, node.Text, g, modFontHolder);
-                        var text = string.Join(string.Empty, textSequences.Select(seq => seq.Text));
+                        var text = string.Concat(textSequences.Select(seq => seq.Text));
                         texts.Add(text);
                     }
                 }

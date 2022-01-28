@@ -880,4 +880,10 @@
   <data name="RemoteFileControl_UpdateRemoteSourceList__Edit_list____" xml:space="preserve">
     <value>&lt;Edit list...&gt;</value>
   </data>
+  <data name="SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_" xml:space="preserve">
+    <value>This file type must be downloaded from Panorama instead of an FTP source. Do you want to add this FTP file source anyway?</value>
+  </data>
+  <data name="RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_" xml:space="preserve">
+    <value>This file type does not support downloads from an FTP file source. Please download this file from Panorama.</value>
+  </data>
 </root>

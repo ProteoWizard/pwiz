@@ -16,8 +16,9 @@ namespace SkylineBatch
         private readonly bool _adding;
         private readonly RemoteFileSource _initialRemoteSource;
         private readonly SkylineBatchConfigManagerState _initialState;
+        private readonly bool _preferPanoramaSource;
 
-        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
+        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl, SkylineBatchConfigManagerState state, bool preferPanoramaSource)
         {
             InitializeComponent();
             _remoteFileSources = state.FileSources;
@@ -27,6 +28,7 @@ namespace SkylineBatch
             _initialState = state.Copy();
             _initialRemoteSource = editingRemoteSource;
             _adding = editingRemoteSource == null;
+            _preferPanoramaSource = preferPanoramaSource;
 
             if (editingRemoteSource != null)
             {
@@ -71,7 +73,7 @@ namespace SkylineBatch
                 RemoteFileSource = RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text,
                     textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked);
                 if (_adding)
-                    State.UserAddRemoteFileSource(RemoteFileSource, _mainControl);
+                    State.UserAddRemoteFileSource(RemoteFileSource, _preferPanoramaSource, _mainControl);
                 else
                 {
                     State.ReplaceRemoteFileSource(_initialRemoteSource, RemoteFileSource, _mainControl);
@@ -82,44 +84,7 @@ namespace SkylineBatch
             {
                 AlertDlg.ShowError(this, Program.AppName(), ex.Message);
             }
-
-            /*btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
-            btnSave.Enabled = false;
-            new Thread(() =>
-            {
-                try
-                {
-                    var remoteSource = RemoteSourceFromUI(_cancelSource.Token);
-                    DoneValidatingServer(remoteSource, null);
-                }
-                catch (Exception ex)
-                {
-                    DoneValidatingServer(null, ex);
-                }
-
-            }).Start();*/
         }
-
-        /*private void DoneValidatingServer(RemoteFileSource remoteFileSource, Exception error)
-        {
-            var cancelled = _cancelSource.IsCancellationRequested;
-            _cancelSource = null;
-            if (cancelled || error != null)
-            {
-                if (error != null)
-                    RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), error.Message); });
-                RunUi(() =>
-                {
-                    btnSave.Enabled = true;
-                    btnSave.Text = Resources.AddPanoramaTemplate_DoneValidatingServer_Save;
-                });
-                return;
-            }
-
-            RemoteFileSource = remoteFileSource;
-            State.UserAddRemoteFileSource(RemoteFileSource, _mainControl);
-            DialogResult = DialogResult.OK;
-        }*/
 
         private void CancelValidate()
         {
@@ -127,30 +92,10 @@ namespace SkylineBatch
                 _cancelSource.Cancel();
         }
 
-        /*private RemoteFileSource RemoteSourceFromUI(CancellationToken cancelToken)
-        {
-            return RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text, textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked);
-        }*/
-
         private void RemoteSourceForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             CancelValidate();
         }
-
-
-        /*private void RunUi(Action action)
-        {
-            try
-            {
-                Invoke(action);
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (InvalidOperationException)
-            {
-            }
-        }*/
 
         private void btnCancel_Click(object sender, EventArgs e)
         {

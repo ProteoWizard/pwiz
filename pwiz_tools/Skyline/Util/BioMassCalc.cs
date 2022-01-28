@@ -598,7 +598,8 @@ namespace pwiz.Skyline.Util
             }
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
-            ParseCounts(ref parse, dictAtomCounts, false);
+            var atomOrder = new List<string>(); // Returned as the original order of elements - e.g. C3C'4H2O7 => C,C',H,O
+            ParseCounts(ref parse, dictAtomCounts, false, atomOrder);
             if (!string.IsNullOrEmpty(parse))
             {
                 return desc; // That wasn't understood as a formula
@@ -613,9 +614,31 @@ namespace pwiz.Skyline.Util
                     dictAtomCounts.TryGetValue(unlabeled, out var count); // Get current count of unlabeled version, if any
                     dictAtomCounts[unlabeled] = count + kvp.Value; // Add the heavy version's count to the unlabeled version's count
                     dictAtomCounts.Remove(kvp.Key); // And remove heavy isotope from the formula
+                    // Preserve order - e.g. C3C'4H2O3 comes out as C7H2O3 and not something dependent on dictionary implementation like H2O3C7 etc
+                    var index = atomOrder.IndexOf(kvp.Key);
+                    if (index >= 0)
+                    {
+                        if (atomOrder.Contains(unlabeled))
+                        {
+                            atomOrder.RemoveAt(index); // Formula was mixed heavy and light - e.g. C and C'
+                        }
+                        else
+                        {
+                            atomOrder[index] = unlabeled; // Formula was all heavy - e.g. C' but no C
+                        }
+                    }
                 }
             }
-            return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); 
+
+            if (!atomOrder.Any())
+            {
+                return null;
+            }
+            return string.Concat(atomOrder.Select(atom =>
+            {
+                var atomCount = dictAtomCounts[atom];
+                return atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom;
+            })); 
         }
 
         /// <summary>
@@ -888,7 +911,8 @@ namespace pwiz.Skyline.Util
         /// <param name="desc">Molecular formula</param>
         /// <param name="dictAtomCounts">Dictionary of atomic symbols and counts (may already contain counts from other formulas)</param>
         /// <param name="negative">True if counts should be subtracted</param>
-        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative)
+        /// <param name="atomOrder">If non-null, used to note order of appearance of atomic symbols in formula</param>
+        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null)
         {
             if (string.IsNullOrEmpty(desc))
             {
@@ -901,7 +925,7 @@ namespace pwiz.Skyline.Util
                 {
                     // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
                     desc = desc.Substring(1);
-                    ParseCounts(ref desc, dictAtomCounts, !negative);
+                    ParseCounts(ref desc, dictAtomCounts, !negative, atomOrder);
                     break;
                 }
                 string sym = NextSymbol(desc);
@@ -927,9 +951,17 @@ namespace pwiz.Skyline.Util
                     count = -count;
 
                 if (dictAtomCounts.ContainsKey(sym))
+                {
                     dictAtomCounts[sym] += count;
+                }
                 else
+                {
                     dictAtomCounts.Add(sym, count);
+                    if (atomOrder != null)
+                    {
+                        atomOrder.Add(sym);
+                    }
+                }
 
                 if (dictAtomCounts[sym] == 0)
                     dictAtomCounts.Remove(sym);
