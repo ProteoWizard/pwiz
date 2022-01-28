@@ -265,6 +265,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
             TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
+            TestPentaneAdduct("[M+2Cu65+2H]", "C5Cu'2H14", 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
             TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
