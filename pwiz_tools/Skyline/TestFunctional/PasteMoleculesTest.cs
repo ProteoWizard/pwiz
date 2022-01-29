@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestErrorDialog();
             TestImportMethods();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
@@ -1290,15 +1291,15 @@ namespace pwiz.SkylineTestFunctional
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
             RunUI(() =>
             {
-                var allErrorText = string.Empty;
+                var lineNum = 2;
+                AssertEx.AreEqual(2, errDlg.ErrorList.Count);
                 foreach (var err in errDlg.ErrorList)
                 {
-                    allErrorText += err.ErrorMessage;
+                    var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, lineNum++);
+                    Assert.IsTrue(err.ErrorMessage.Contains(errText),
+                        "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                        errText, err.ErrorMessage);
                 }
-                var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
-                Assert.IsTrue(allErrorText.Contains(errText),
-                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                    errText, errDlg.ErrorList);
             });
             OkDialog(errDlg, errDlg.Close);
             OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
@@ -1362,6 +1363,42 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestErrorDialog()
+        {
+            var text = "Precursor Name	Precursor Formula \tPrecursor Charge \tPrecursor Adduct \tPrecursor m/z\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[M-H]\t59\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[6M-H6+Fe3+O]\t536.88\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[6M-H6+H2O+Fe3+O]\t555.88\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[7M-H6+Fe3+O]\t596.9\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[8M-H6+Fe3+O]\t657.92\n";
+            SetClipboardText(text);
+            // Paste directly into targets area
+            var transitionDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => transitionDlg.buttonCheckForErrors.PerformClick());
+            RunUI(() => errDlg.ShowLineText(true));
+
+            /*
+             Expect errors
+                Adduct[M - H] charge - 1 does not agree with declared charge 1    2   4   Acetic Acid C2H4O2 1 [M-H] 59
+                Error on line 3: Precursor m/ z 536,88 does not agree with value 537,879 as calculated from ion formula and charge state(delta = 0,9990012, Transition Settings | Instrument | Method match tolerance m / z = 0,055).  Correct the m / z value in the table, or leave it blank and Skyline will calculate it for you.   3   5   Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88
+                Error on line 5: Precursor m / z 596, 9 does not agree with value 597, 9001 as calculated from ion formula and charge state(delta = 1, 000131, Transition Settings | Instrument | Method match tolerance m / z = 0, 055).Correct the m / z value in the table, or leave it blank and Skyline will calculate it for you.    5   5   Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9
+            */
+            AssertEx.AreEqual(3, errDlg.ErrorList.Count);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "[M-H]", -1, 1),
+                3, 2, "Acetic Acid C2H4O2 1 [M-H] 59"), errDlg.ErrorList[0]);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                    3, 536.88, 537.879, 0.9990012, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance), 
+                4, 3, "Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88"), errDlg.ErrorList[1]);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
+                    5, 596.9, 597.9001, 1.000131, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance),
+                4, 5, "Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9"), errDlg.ErrorList[2]);
+            RunUI(() => errDlg.OkDialog());
+            RunUI(() => transitionDlg.CancelDialog());
         }
 
         private void TestProductNeutralLoss()
