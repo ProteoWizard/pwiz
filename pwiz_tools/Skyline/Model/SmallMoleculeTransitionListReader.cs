@@ -1333,7 +1333,6 @@ namespace pwiz.Skyline.Model
             }
 
             string errMessage = null;
-            var humanReadableRowIndex = row.Index + (HasHeaders ? 2 : 1);
             if (countValues >= 2) // Do we have at least 2 of charge, mz, formula?
             {
                 TypedMass monoMass;
@@ -1427,17 +1426,17 @@ namespace pwiz.Skyline.Model
                                 {
                                     // There was an initial charge value, but it didn't make sense with formula and proposed mz
                                     errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_
-                                        : Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                                        humanReadableRowIndex, (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                                        ? Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_
+                                        : Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
+                                        (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
                                     errColumn = indexMz;
                                 }
                                 else
                                 {
                                     // No charge state given, and mz makes no sense with formula
-                                    errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, humanReadableRowIndex);
+                                    errMessage = getPrecursorColumns
+                                        ? Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                                        : Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_;
                                     errColumn = indexMz;
                                 }
                             }
@@ -1512,9 +1511,9 @@ namespace pwiz.Skyline.Model
                 }
                 else if (countValues < 2)
                 {
-                    errMessage = string.Format(getPrecursorColumns
-                            ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
-                            : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, humanReadableRowIndex);
+                    errMessage = getPrecursorColumns
+                            ? Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
+                            : Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_;
                 }
                 else
                 {
