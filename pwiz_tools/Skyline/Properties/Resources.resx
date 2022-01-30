@@ -11475,6 +11475,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>Precursor Adduct and/or Precursor Charge</value>
   </data>
+  <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
+    <value>Error: Failed importing peak boundaries.</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_" xml:space="preserve">
+    <value>Importing peak boundaries from {0}</value>
+  </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
     <value>Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome.</value>
   </data>
@@ -11624,6 +11630,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
     <value>Downloading required files...</value>
   </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label" xml:space="preserve">
+    <value>Label</value>
+  </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified" xml:space="preserve">
     <value>Ion mobility units not specified</value>
   </data>
@@ -11632,5 +11641,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
+	  <value>Finding peptides in FASTA file</value>
   </data>
 </root>
