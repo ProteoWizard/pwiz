@@ -222,23 +222,20 @@ namespace TestPerf
 
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Modifications tab", 10);
 
-            // TODO: Remove this after Nick's fix
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(startPageSettings.ShowPeptideSettingsUI);
 
             RunUI(() =>
             {
-                peptideSettingsUI2.SelectedTab = PeptideSettingsUI.TABS.Quantification;
-                peptideSettingsUI2.QuantNormalizationMethod = NormalizationMethod.FromIsotopeLabelTypeName("heavy");
-                peptideSettingsUI2.QuantMsLevel = 2;
-                peptideSettingsUI2.QuantUnits = "fmol";
+                peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                peptideSettingsUI.QuantNormalizationMethod = NormalizationMethod.FromIsotopeLabelTypeName("heavy");
+                peptideSettingsUI.QuantMsLevel = 2;
+                peptideSettingsUI.QuantUnits = "fmol";
             });
 
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Quantification tab", 10);
 
             using (new WaitDocumentChange(null, true))
             {
-                OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             }
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(startPageSettings.ShowTransitionSettingsUI);
