@@ -42,10 +42,7 @@ namespace pwiz.SkylineTestFunctional
             NormalizationMethod ratioToHeavy = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Human_plasma.sky")));
             VerifyNormalizationMethodDisplayed(ratioToHeavy);
-            RunUI(()=>
-            {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
-            });
+            RunUI(()=> SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
             // Consider(nicksh): When we first open "Rat_plasma.sky", Skyline is displaying ratios to heavy
             // even though this document has no heavy peptides. Maybe this behavior should be changed to show ratios to global
             // standards
@@ -54,10 +51,31 @@ namespace pwiz.SkylineTestFunctional
             VerifyNormalizationMethodDisplayed(NormalizationMethod.GLOBAL_STANDARDS);
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Human_plasma.sky")));
             VerifyNormalizationMethodDisplayed(ratioToHeavy);
+            RunUI(()=>
+            {
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.SetStandardType(StandardType.GLOBAL_STANDARD);
+            });
+            VerifyNormalizationMethodDisplayed(ratioToHeavy);
+            RunUI(()=>
+            {
+                SkylineWindow.AreaNormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
+                Assert.AreEqual(NormalizeOption.GLOBAL_STANDARDS, SkylineWindow.SequenceTree.NormalizeOption);
+            });
+            VerifyNormalizationMethodDisplayed(NormalizationMethod.GLOBAL_STANDARDS);
+            RunUI(()=>
+            {
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.FromNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS));
+            });
+            VerifyNormalizationMethodDisplayed(NormalizationMethod.GLOBAL_STANDARDS);
+            RunUI(()=>SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.FromNormalizationMethod(ratioToHeavy)));
+            VerifyNormalizationMethodDisplayed(ratioToHeavy);
         }
 
         private void VerifyNormalizationMethodDisplayed(NormalizationMethod normalizationMethod)
         {
+            Assert.AreEqual(normalizationMethod, SkylineWindow.SequenceTree.NormalizeOption?.NormalizationMethod);
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             int transitionGroupCount = 0;
             string strTotalRatio = string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
@@ -105,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
                             {
                                 Assert.IsTrue(nodeText.Contains(strTotalRatio), "{0} should contain {1}", nodeText, strTotalRatio);
                                 string ratioText = TransitionGroupTreeNode.FormatRatioValue(expectedRatio);
-                                Assert.IsTrue(nodeText.Contains(ratioText));
+                                Assert.IsTrue(nodeText.Contains(ratioText), "{0} should contain {1}", nodeText, ratioText);
                             }
                         }
                     }
