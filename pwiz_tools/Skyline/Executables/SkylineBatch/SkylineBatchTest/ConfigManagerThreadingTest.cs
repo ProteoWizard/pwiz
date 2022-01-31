@@ -55,11 +55,13 @@ namespace SkylineBatchTest
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(2);
             Exception firstThreadException = null;
+            bool movedBoth = true;
             var threadStart = new ThreadStart(() =>
             {
                 try
                 {
-                    configManager.MoveSelectedConfig(true);
+                    if (!configManager.MoveSelectedConfig(true))
+                        movedBoth = false;
                 }
                 catch (Exception e)
                 {
@@ -69,9 +71,16 @@ namespace SkylineBatchTest
             
             StartTestingThreads(threadStart, 2);
             configManager.GetSelectedLogger().Delete();
-
-            Assert.AreEqual("three  one  two  ", configManager.ListConfigNames());
-            Assert.AreEqual(0, configManager.SelectedConfig);
+            if (movedBoth)
+            {
+                Assert.AreEqual("three  one  two  ", configManager.ListConfigNames());
+                Assert.AreEqual(0, configManager.State.BaseState.Selected);
+            }
+            else
+            {
+                Assert.AreEqual("one  three  two  ", configManager.ListConfigNames());
+                Assert.AreEqual(1, configManager.State.BaseState.Selected);
+            }
             var exceptionMessage = firstThreadException == null ? string.Empty : firstThreadException.Message;
             Assert.IsTrue(firstThreadException == null, "Unexpected Exception: " + exceptionMessage);
         }
@@ -90,12 +99,13 @@ namespace SkylineBatchTest
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(2);
             Exception firstThreadException = null;
-
+            bool deletedBoth = true;
             var threadStart = new ThreadStart(() =>
             {
                 try
                 {
-                    configManager.UserRemoveSelected();
+                    if (!configManager.UserRemoveSelected())
+                        deletedBoth = false;
                 }
                 catch (Exception e)
                 {
@@ -105,7 +115,16 @@ namespace SkylineBatchTest
             StartTestingThreads(threadStart, 2);
             configManager.GetSelectedLogger().Delete();
 
-            Assert.AreEqual("one  ", configManager.ListConfigNames());
+            if (deletedBoth)
+            {
+                Assert.AreEqual("one  ", configManager.ListConfigNames());
+                Assert.AreEqual(0, configManager.State.BaseState.Selected);
+            }
+            else
+            {
+                Assert.AreEqual("one  two  ", configManager.ListConfigNames());
+                Assert.AreEqual(1, configManager.State.BaseState.Selected);
+            }
             Assert.IsTrue(firstThreadException == null, "Should have removed configuration at 0 index twice with no exceptions.");
         }
 
@@ -113,7 +132,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingReplace()
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
             {
                 ThreadingReplace();
             }
@@ -125,10 +144,11 @@ namespace SkylineBatchTest
             configManager.SelectConfig(0);
             var random = new Random();
             var newConfig = TestUtils.GetTestConfig("new");
-            Exception firstThreadException = null;
+            string unexpectedExceptionMessage = null;
 
             var threadStart = new ThreadStart(() =>
             {
+                Exception threadException = null;
                 try
                 {
                     configManager.SelectConfig(random.Next(0,2));
@@ -136,18 +156,21 @@ namespace SkylineBatchTest
                 }
                 catch (Exception e)
                 {
-                    firstThreadException = firstThreadException ?? e;
+                    threadException = e;
                 }
+
+                var expectedErrorMessage =
+                    "Configuration \"new\" already exists.\r\nPlease enter a unique name for the configuration.";
+                if (threadException != null && !Equals(expectedErrorMessage, threadException.Message))
+                    unexpectedExceptionMessage = string.Format("Expected exception: {0}\r\nActual: {1}", expectedErrorMessage, threadException.Message);
             });
 
-            StartTestingThreads(threadStart, 15);
+            StartTestingThreads(threadStart, 200);
             configManager.GetSelectedLogger().Delete();
-
+            if (unexpectedExceptionMessage != null)
+                Assert.Fail(unexpectedExceptionMessage);
             var expectedConfigLists = new List<string> {"new  two  three  ", "one  new  three  ", "one  two  new  "};
             Assert.IsTrue(expectedConfigLists.Contains(configManager.ListConfigNames()), "Unexpected config list: " + configManager.ListConfigNames());
-            if (firstThreadException != null)
-                Assert.AreEqual("Configuration \"new\" already exists.\r\nPlease enter a unique name for the configuration.", firstThreadException.Message); // possible no exception thrown if random index was always same number
-            
         }
 
         public void StartTestingThreads(ThreadStart operation, int numThreads)

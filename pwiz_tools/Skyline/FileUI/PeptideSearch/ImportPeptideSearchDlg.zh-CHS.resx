@@ -163,7 +163,7 @@
     <value>3</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-    <value>下一个(&amp;N) &gt;</value>
+    <value>下一步(&amp;N) &gt;</value>
   </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>

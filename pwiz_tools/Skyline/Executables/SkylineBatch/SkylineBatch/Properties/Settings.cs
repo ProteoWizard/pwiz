@@ -27,7 +27,7 @@ namespace SkylineBatch.Properties
 
         
         
-        [ApplicationScopedSetting]
+        [UserScopedSetting]
         public Dictionary<string,string> RVersions
         {
             get
@@ -61,18 +61,10 @@ namespace SkylineBatch.Properties
             SharedBatch.Properties.Settings.Default.Upgrade();
         }
 
-        public void UpdateIfNecessary(string version)
+        public void UpdateIfNecessary()
         {
-            SharedBatch.Properties.ConfigList.Version = version;
+            SharedBatch.Properties.ConfigList.XmlVersion = Default.XmlVersion;
             SharedBatch.Properties.ConfigList.Importer = SkylineBatchConfig.ReadXml;
-            if (Equals(version, Default.InstalledVersion))
-                return;
-            Upgrade();
-            var xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
-                .FilePath;
-            if (System.IO.File.Exists(xmlFile) && string.IsNullOrEmpty(Default.InstalledVersion))
-                SharedBatch.Properties.Settings.Default.Update(xmlFile, version, Program.AppName(), XmlUpdater.GetUpdatedXml);
-            Default.InstalledVersion = version;
             Save();
         }
 

@@ -60,16 +60,12 @@ namespace SharedBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
+            var initialDirectory = FileUtil.GetInitialDirectory(_lastUsedPath);
             if (_pathDialogOptions.Contains(PathDialogOptions.Folder))
             {
-                using (FolderBrowserDialog dlg = new FolderBrowserDialog
-                {
-                    SelectedPath = FileUtil.GetInitialDirectory(_lastUsedPath)
-            })
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                        textFilePath.Text = dlg.SelectedPath;
-                }
+                var folderPath = UiFileUtil.OpenFolder(initialDirectory);
+                if (folderPath != null)
+                    textFilePath.Text = folderPath;
             }
             else
             {
@@ -77,7 +73,7 @@ namespace SharedBatch
                 FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
                 dialog.CheckFileExists = !saveFileDialog && !_pathDialogOptions.Contains(PathDialogOptions.ExistingOptional);
                 dialog.Filter = _filter;
-                dialog.InitialDirectory = FileUtil.GetInitialDirectory(_lastUsedPath);
+                dialog.InitialDirectory = initialDirectory;
                 if (dialog.ShowDialog() == DialogResult.OK)
                     textFilePath.Text = dialog.FileName;
             }

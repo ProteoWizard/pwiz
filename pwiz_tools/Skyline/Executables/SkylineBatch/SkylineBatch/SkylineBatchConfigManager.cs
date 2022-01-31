@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -36,533 +37,186 @@ namespace SkylineBatch
     public class SkylineBatchConfigManager : ConfigManager
     {
         // Extension of ConfigManager, handles more specific SkylineBatch functionality
-        // The UI should reflect the configs, runners, and log files from this class
+        // The UI should reflect the state of this class (_state)
+        
+        private List<SkylineBatchConfigManagerState> _stateList;
+        private int _currentIndex;
 
-        private ImmutableDictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        private ImmutableDictionary<string, string> _refinedTemplates; // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
+        private SkylineBatchConfigManagerState _state;
 
-        private SkylineBatchConfigManagerState _checkedRunState;
-        private RunBatchOptions? _checkedRunOption;
-        private ServerFilesManager _runServerFiles;
+        private RunBatchOptions? _startingRunOption; // the run option of the currently starting run. null if no run is being started.
+        private ServerFilesManager _runServerFiles; // the verified set of server files that will be used when the run starts
 
         // Shared variables with ConfigManager:
-        //  Protected -
-        //    Importer importer; <- a ReadXml method to import the configurations
-        //    List<IConfig> _configList; <- the list of configurations. Every config must have a runner in _configRunners
-        //    Dictionary<string, bool> _configValidation; <- dictionary mapping from config name to if that config is valid
-        //    List<Logger>  _logList; <- list of all loggers displayed in the dropDown list on the log tab, _logList[0] is always "Skyline Batch.log"
         //
-        //    _runningUi; <- if the UI is displayed (false when unit testing)
         //    IMainUiControl _uiControl; <- null if no UI displayed
+        //    object _lock = new object(); <- lock required for getting and setting the state
         //
-        //    object _lock = new object(); <- lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
-        //    object _loggerLock = new object(); <- lock required for any mutator or getter method on _logList or SelectedLog
-        //  
-        //  Public - 
-        //    int SelectedConfig <- index of the selected configuration
-        //    int SelectedLog <- index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
-        //    Dictionary<string, string> RootReplacement; <- dictionary mapping from roots of invalid file paths to roots of valid file paths
-
 
         public SkylineBatchConfigManager(Logger logger, IMainUiControl mainForm = null)
         {
-            importer = SkylineBatchConfig.ReadXml;
-            getUpdatedXml = XmlUpdater.GetUpdatedXml;
-            SelectedLog = 0;
-            _logList.Add(logger);
-            _configRunners = ImmutableDictionary<string, IConfigRunner>.Empty;
-            _refinedTemplates = ImmutableDictionary<string, string>.Empty;
-
             _uiControl = mainForm;
-            _runningUi = mainForm != null;
-            Init();
-            LoadOldLogs();
+            LoadLogs(logger);
+            _state = SkylineBatchConfigManagerState.Empty(logger);
+            _stateList = new List<SkylineBatchConfigManagerState>();
+            _currentIndex = -1;
+            _startingRunOption = null;
+        }
+
+        public new SkylineBatchConfigManagerState State => GetState();
+
+        // Instance Methods
+
+        #region Open / Close SkylineBatchConfigManager
+
+        public void LoadConfigList()
+        {
+            var initialState = State;
+            var state = initialState.Copy().LoadConfigList(_uiControl);
+            SetState(initialState, state);
         }
 
         public new void Close()
         {
-            base.Close();
-            lock (_loggerLock)
+            lock (_lock)
             {
-                _logList[0].Archive();
+                base.Close();
+                ArchiveFirstLog();
                 _logList[0].Close();
-            }
-            foreach (var runner in _configRunners.Values)
-                runner.Cancel();
-        }
-
-        public void LoadConfigList()
-        {
-            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
-            var state = new SkylineBatchConfigManagerState(this);
-            configs = AssignDependencies(configs, true, state, out _); // ignore warning
-            foreach (var config in configs)
-                state = ProgramaticallyAddConfig(config, state);
-            state = DisableInvalidConfigs(state);
-            SetState(state);
-        }
-
-
-        #region Add/Remove Configs
-
-        private List<IConfig> AssignDependencies(List<IConfig> newConfigs, bool checkExistingConfigs, SkylineBatchConfigManagerState state, out string warningMessage)
-        {
-            warningMessage = null;
-            var configDictionary = new Dictionary<string, IConfig>();
-            if (checkExistingConfigs)
-            {
-                foreach (var existingConfig in state.baseState.configList)
-                    configDictionary.Add(existingConfig.GetName(), existingConfig);
-            }
-            foreach (var newConfig in newConfigs)
-                configDictionary.Add(newConfig.GetName(), newConfig);
-            var errorConfigs = new List<string>();
-            var configsWithDependency = new List<IConfig>();
-
-            foreach (var iconfig in newConfigs)
-            {
-                var config = (SkylineBatchConfig) iconfig;
-                var dependentName = config.MainSettings.Template.DependentConfigName;
-                if (!string.IsNullOrEmpty(dependentName))
-                {
-                    SkylineBatchConfig dependentConfig;
-                    try
-                    {
-                        dependentConfig = (SkylineBatchConfig)configDictionary[dependentName];
-                    }
-                    catch (Exception)
-                    {
-                        errorConfigs.Add(config.Name);
-                        configsWithDependency.Add(config.WithoutDependency());
-                        continue;
-                    }
-                    configsWithDependency.Add(config.DependentChanged(dependentConfig.Name, dependentConfig.RefineSettings.OutputFilePath));
-                }
-                else
-                {
-                    configsWithDependency.Add(config);
-                }
-            }
-
-            if (errorConfigs.Count != 0)
-                warningMessage = Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
-                               TextUtil.LineSeparate(errorConfigs) + Environment.NewLine +
-                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_;
-            return configsWithDependency;
-        }
-
-        public void UserReplaceSelected(IConfig newConfig)
-        {
-            var state = new SkylineBatchConfigManagerState(this);
-            var index = state.baseState.selected;
-            var config = GetSelectedConfig();
-            var replacingConfig = (SkylineBatchConfig)newConfig;
-            var oldDependencies = GetDependencies(state);
-
-            var nameChanged = !config.Name.Equals(replacingConfig.Name);
-            var refineFileChanged =
-                !config.RefineSettings.OutputFilePath.Equals(replacingConfig.RefineSettings.OutputFilePath);
-            if (oldDependencies.ContainsKey(config.Name) && (nameChanged || refineFileChanged))
-            {
-                var runningConfigs = ConfigsBusy();
-                var runningDependentConfigs = oldDependencies[config.Name].Where(x => runningConfigs.Contains(x)).ToList();
-                if (runningDependentConfigs.Any())
-                {
-                    DisplayWarning(
-                        Resources.SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_name_or_the_refined_output_file_path_while_the_following_dependent_configurations_are_running_ +
-                        Environment.NewLine +
-                        TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
-                        Resources.SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_);
-                    var newRefineSettings = RefineSettings.GetPathChanged(replacingConfig.RefineSettings, config.RefineSettings.OutputFilePath);
-                    newConfig = new SkylineBatchConfig(config.Name, replacingConfig.Enabled, replacingConfig.LogTestFormat, DateTime.Now,
-                        replacingConfig.MainSettings,
-                        replacingConfig.FileSettings, newRefineSettings, replacingConfig.ReportSettings,
-                        replacingConfig.SkylineSettings);
-                    nameChanged = refineFileChanged = false;
-                }
-            }
-
-            state = ProgramaticallyRemoveAt(index, state);
-            state = UserInsertConfig(newConfig, index, state); // can throw ArgumentException
-
-            if ((nameChanged || refineFileChanged) && oldDependencies.ContainsKey(config.Name))
-            {
-                foreach (var dependent in oldDependencies[config.Name])
-                    state = DependencyReplace(dependent, replacingConfig.Name, replacingConfig.RefineSettings.OutputFilePath, state);
-            }
-
-            SetState(state);
-        }
-
-        public void UserAddConfig(IConfig iconfig)
-        {
-            lock (_lock)
-            {
-                var newState = UserInsertConfig(iconfig, _configList.Count, new SkylineBatchConfigManagerState(this));
-                SetState(newState);
+                State.CancelRunners();
             }
         }
 
-        private SkylineBatchConfigManagerState UserInsertConfig(IConfig iconfig, int index, SkylineBatchConfigManagerState state)
-        {
-            state.baseState = base.UserInsertConfig(iconfig, index, state.baseState);
-            state = AddConfig(iconfig, state);
-            return state;
-        }
-
-        private SkylineBatchConfigManagerState ProgramaticallyAddConfig(IConfig iconfig, SkylineBatchConfigManagerState state)
-        {
-            return ProgramaticallyInsertConfig(iconfig, state.baseState.configList.Count, state);
-        }
-
-        private SkylineBatchConfigManagerState ProgramaticallyInsertConfig(IConfig iconfig, int index, SkylineBatchConfigManagerState state)
-        {
-            state.baseState = base.ProgramaticallyInsertConfig(iconfig, index, state.baseState);
-            return AddConfig(iconfig, state);
-        }
-
-        private SkylineBatchConfigManagerState AddConfig(IConfig iconfig, SkylineBatchConfigManagerState state)
-        {
-            var config = (SkylineBatchConfig)iconfig;
-            if (state.configRunners.ContainsKey(config.GetName()))
-                throw new Exception("Config runner already exists.");
-            ImmutableDictionary<string, IConfigRunner> configRunners;
-            lock (_loggerLock)
-            {
-                var runner = new ConfigRunner(config, _logList[0], _uiControl);
-                configRunners = state.configRunners.Add(config.GetName(), runner);
-            }
-            var refinedTemplates = state.templates;
-            if (config.RefineSettings.WillRefine())
-                refinedTemplates = refinedTemplates.Add(config.Name, config.RefineSettings.OutputFilePath);
-            return new SkylineBatchConfigManagerState(state)
-            {
-                configRunners = configRunners,
-                templates = refinedTemplates
-            };
-        }
-
-        private Dictionary<string, List<string>> GetDependencies(SkylineBatchConfigManagerState state)
-        {
-            var dependencies = new Dictionary<string, List<string>>();
-            foreach (var iconfig in state.baseState.configList)
-            {
-                var config = (SkylineBatchConfig) iconfig;
-                var dependentConfigName = config.MainSettings.Template.DependentConfigName;
-                if (!string.IsNullOrEmpty(dependentConfigName))
-                {
-                    if (!dependencies.ContainsKey(dependentConfigName))
-                        dependencies.Add(dependentConfigName, new List<string>());
-                    dependencies[dependentConfigName].Add(config.Name);
-                }
-            }
-            return dependencies;
-        }
-
-        public void UserRemoveSelected()
-        {
-            lock (_lock)
-            {
-                var state = new SkylineBatchConfigManagerState(this);
-                AssertConfigSelected(state.baseState);
-                var index = SelectedConfig;
-                var removingConfigName = _configList[index].GetName();
-                if (_configRunners[removingConfigName].IsBusy())
-                {
-                    DisplayWarning(string.Format(
-                        Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
-                        removingConfigName));
-                    return;
-}
-                var configDependencies = GetDependencies(state);
-                if (configDependencies.ContainsKey(removingConfigName))
-                {
-                    var runningConfigs = ConfigsBusy();
-                    var runningDependentConfigs = configDependencies[removingConfigName].Where(x => runningConfigs.Contains(x)).ToList();
-
-                    if (runningDependentConfigs.Any())
-                    {
-                        DisplayError(string.Format(
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_, removingConfigName) + Environment.NewLine +
-                            TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_);
-                        return;
-                    }
-                    var answer = DisplayQuestion(
-                        string.Format(
-                            Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_,
-                            removingConfigName) +
-                        Environment.NewLine +
-                        TextUtil.LineSeparate(configDependencies[removingConfigName]) + Environment.NewLine +
-                        string.Format(Resources.SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___, removingConfigName));
-
-                    if (answer != DialogResult.Yes) return;
-                    foreach (var dependentName in configDependencies[removingConfigName])
-                        state = DependencyRemove(dependentName, state);
-                }
-
-                state = RemoveConfig(_configList[index], state);
-                state.baseState = UserRemoveAt(index, state.baseState);
-                SetState(state);
-            }
-        }
-
-        private SkylineBatchConfigManagerState ProgramaticallyRemoveAt(int index, SkylineBatchConfigManagerState state)
-        {
-            state = RemoveConfig(state.baseState.configList[index], state);
-            state.baseState = base.ProgramaticallyRemoveAt(index, state.baseState);
-            return state;
-        }
-
-        private SkylineBatchConfigManagerState DependencyReplace(string configName, string dependentName, string templateFile, SkylineBatchConfigManagerState state)
-        {
-            var index = GetConfigIndex(configName);
-            var config = (SkylineBatchConfig) _configList[index];
-            state = ProgramaticallyRemoveAt(index, state);
-            var newConfig = config.DependentChanged(dependentName, templateFile);
-            state = ProgramaticallyInsertConfig(newConfig, index, state);
-            state = DisableInvalidConfigs(state);
-            return state;
-        }
-
-        private SkylineBatchConfigManagerState DependencyRemove(string configName, SkylineBatchConfigManagerState state)
-        {
-            var index = GetConfigIndex(configName, state.baseState);
-            var config = (SkylineBatchConfig)state.baseState.configList[index];
-            state = ProgramaticallyRemoveAt(index, state);
-            var newConfig = config.WithoutDependency();
-            state = ProgramaticallyInsertConfig(newConfig, index, state);
-            state = DisableInvalidConfigs(state);
-            return state;
-        }
-
-        private SkylineBatchConfigManagerState RemoveConfig(IConfig iconfig, SkylineBatchConfigManagerState state)
-        {
-            var config = (SkylineBatchConfig)iconfig;
-            
-            if (!state.configRunners.ContainsKey(config.Name))
-                throw new Exception("Config runner does not exist.");
-            var configRunners = state.configRunners.Remove(config.Name);
-            var templates = state.templates;
-            if (state.templates.ContainsKey(config.Name))
-                templates = state.templates.Remove(config.Name);
-            return new SkylineBatchConfigManagerState(state)
-            {
-                configRunners = configRunners,
-                templates = templates
-            };
-        }
-        
         #endregion
 
-        #region Configs
+        #region Select Config
 
-        public HashSet<string> RVersionsUsed()
+        public void SelectConfig(int newIndex)
         {
-            lock (_lock)
-            {
-                var RVersions = new HashSet<string>();
-                foreach (var iconfig in _configList)
-                {
-                    var config = (SkylineBatchConfig) iconfig;
-                    RVersions.UnionWith(config.ReportSettings.RVersions());
-                }
-
-                return RVersions;
-            }
+            var initialState = State;
+            var newState = State.SelectIndex(newIndex);
+            SetState(initialState, newState, true);
         }
 
-        public new SkylineBatchConfig GetSelectedConfig()
+        public void DeselectConfig()
         {
-            return (SkylineBatchConfig) base.GetSelectedConfig();
+            var initialState = State;
+            var newState = State.SelectIndex(-1);
+            SetState(initialState, newState, true);
         }
 
-        public new SkylineBatchConfig GetConfig(int index)
-        {
-            return (SkylineBatchConfig)base.GetConfig(index);
-        }
+        #endregion
 
+        #region Information About Configs
+        
         public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
-            var state = new SkylineBatchConfigManagerState(this);
-            return ConfigsListViewItems(state.configRunners, graphics, state.baseState);
+            var state = State;
+            return state.BaseState.ConfigsAsListViewItems(state.ConfigRunners, graphics);
 
+        }
+
+        #endregion
+
+        #region Operation Wrappers
+
+
+        public void UserAddConfig(SkylineBatchConfig config)
+        {
+            var initialState = State;
+            var state = initialState.Copy().UserAddConfig(config, _uiControl);
+            SetState(initialState, state);
+        }
+
+        public bool UserRemoveSelected()
+        {
+            var initialState = State;
+            var state = initialState.Copy().UserRemoveSelected(_uiControl);
+            return SetState(initialState, state);
+        }
+
+        public void UserReplaceSelected(SkylineBatchConfig config)
+        {
+            var initialState = GetState();
+            var state = initialState.Copy().UserReplaceSelected(config, _uiControl);
+            SetState(initialState, state);
+        }
+
+        public bool MoveSelectedConfig(bool moveUp)
+        {
+            var initialState = GetState();
+            var state = initialState.Copy().MoveSelectedConfig(moveUp);
+            return SetState(initialState, state, true);
         }
 
         public bool CheckConfigAtIndex(int index, out string errorMessage)
         {
-            lock (_lock)
-            {
-                errorMessage = "";
-                var config = (SkylineBatchConfig)_configList[index];
-                var runner = _configRunners[config.Name];
-                if (!IsConfigValid(index))
-                {
-                    errorMessage =
-                        string.Format(
-                            Resources.MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_,
-                            config.Name) +
-                        Environment.NewLine +
-                        string.Format(Resources.ConfigManager_RunAll_Please_edit___0___to_enable_running_, config.Name);
-                    return false;
-                }
-                if (runner.IsRunning() || runner.IsCanceling())
-                {
-                    errorMessage =
-                        string.Format( Resources.ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_,
-                            config.Name, runner.GetStatus()) +
-                        Environment.NewLine +
-                        string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
-                    return false;
-                }
-                config.Enabled = !config.Enabled;
-                if (runner.IsWaiting())
-                    runner.Cancel();
-                return true;
-            }
+            var initialState = GetState();
+            var state = initialState.Copy().CheckConfigAtIndex(index, _uiControl, out errorMessage);
+            if (errorMessage != null)
+                return false;
+            return SetState(initialState, state);
         }
 
-        public Dictionary<string, string> GetRefinedTemplates()
+        public bool Import(string filePath, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm)
         {
-            return new Dictionary<string, string>(_refinedTemplates);
-        }
-
-        public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
-        {
-            lock (_lock)
-            {
-                var state = new SkylineBatchConfigManagerState(this);
-                var runningConfigs = ConfigsBusy();
-                var replacingConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
-                foreach (var indexAndConfig in replacingConfigs)
-                {
-                    state = ProgramaticallyRemoveAt(indexAndConfig.Item1, state);
-                    state = ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1, state);
-                }
-                if (runningConfigs.Count > 0)
-                    throw new ArgumentException(
-                        Resources
-                            .SkylineBatchConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
-                        + Environment.NewLine +
-                        TextUtil.LineSeparate(runningConfigs));
-                SetState(state);
-            }
-        }
-
-        public void RootReplaceConfigs(string oldRoot)
-        {
-            var state = new SkylineBatchConfigManagerState(this);
-            var replacedConfigs = GetRootReplacedConfigs(oldRoot, state.baseState);
-            replacedConfigs = AssignDependencies(replacedConfigs, false, state, out _);
-            foreach (var config in replacedConfigs)
-            {
-                var configIndex = GetConfigIndex(config.GetName(), state.baseState);
-                state = ProgramaticallyRemoveAt(configIndex, state);
-                state = ProgramaticallyInsertConfig(config, configIndex, state);
-            }
-
-            SetState(state);
+            var initialState = State;
+            var state = initialState.Copy().Import(filePath, _uiControl, showDownloadedFileForm);
+            return SetState(initialState, state);
         }
 
         #endregion
-        
+
         #region Run Configs
-
-        public bool WillRefine()
-        {
-            var state = new SkylineBatchConfigManagerState(this);
-            foreach (var iconfig in state.baseState.configList)
-            {
-                var config = (SkylineBatchConfig) iconfig;
-                if (config.Enabled && config.RefineSettings.WillRefine())
-                    return true;
-            }
-            return false;
-        }
-
-        public ConfigRunner GetSelectedConfigRunner()
-        {
-            lock (_lock)
-            {
-                return (ConfigRunner) _configRunners[GetSelectedConfig().GetName()];
-            }
-        }
-
-        private List<string> GetEnabledConfigNames(SkylineBatchConfigManagerState state)
-        {
-            var enabledConfigNames = new List<string>();
-            var enabledConfigs = GetEnabledConfigs(state);
-            foreach (var config in enabledConfigs)
-                enabledConfigNames.Add(config.Name);
-            return enabledConfigNames;
-        }
-
-        private List<SkylineBatchConfig> GetEnabledConfigs(SkylineBatchConfigManagerState state)
-        {
-            var enabledConfigs = new List<SkylineBatchConfig>();
-            foreach (var iconfig in state.baseState.configList)
-            {
-                var config = (SkylineBatchConfig)iconfig;
-                if (config.Enabled) enabledConfigs.Add(config);
-            }
-            return enabledConfigs;
-        }
-
-        public SkylineBatchConfig ConfigFromName(string name)
-        {
-            return (SkylineBatchConfig) _configRunners[name].GetConfig();
-        }
-
 
         public bool CanRun(RunBatchOptions runOption, bool checkOverwrite = true)
         {
-            if (_checkedRunOption != null || _checkedRunState != null)
+            if (_startingRunOption != null)
                 throw new Exception("Another run is already being started. Should not get here.");
             // Check that no configs are currently running
-            SkylineBatchConfigManagerState state;
-            lock (_lock)
+            _startingRunOption = runOption;
+            var state = State;
+            var configsRunning = state.ConfigsBusy();
+
+            if (configsRunning.Count > 0)
             {
-                var configsRunning = ConfigsBusy();
-
-                if (configsRunning.Count > 0)
-                {
-                    DisplayError(
-                        Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ +
-                        Environment.NewLine +
-                        string.Join(Environment.NewLine, configsRunning) + Environment.NewLine +
-                        Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
-                    return false;
-                }
-
-                state = new SkylineBatchConfigManagerState(this);
-            }
-
-            
-            // check that configs exist
-            if (state.baseState.configList.Count == 0)
-            {
-                DisplayError(Resources.SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_ +
-                             Environment.NewLine +
-                             Resources
-                                 .SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_);
+                DisplayError(_uiControl,
+                    Resources.ConfigManager_RunAll_Cannot_run_while_the_following_configurations_are_running_ +
+                    Environment.NewLine +
+                    string.Join(Environment.NewLine, configsRunning) + Environment.NewLine +
+                    Resources.ConfigManager_RunAll_Please_wait_until_the_current_run_is_finished_);
+                _startingRunOption = null;
                 return false;
             }
 
-            var enabledConfigs = GetEnabledConfigs(state);
+
+            // check that configs exist
+            if (state.BaseState.ConfigList.Count == 0)
+            {
+                DisplayError(_uiControl, Resources.SkylineBatchConfigManager_StartBatchRun_There_are_no_configurations_to_run_ +
+                                         Environment.NewLine +
+                                         Resources
+                                             .SkylineBatchConfigManager_StartBatchRun_Please_add_configurations_before_running_);
+                _startingRunOption = null;
+                return false;
+            }
+
+            var enabledConfigs = state.GetEnabledConfigs();
             // Check there are enabled (checked) configs to run
             if (enabledConfigs.Count == 0)
             {
-                DisplayError(
+                DisplayError(_uiControl,
                     Resources.SkylineBatchConfigManager_StartBatchRun_There_are_no_enabled_configurations_to_run_ +
                     Environment.NewLine +
                     Resources
                         .SkylineBatchConfigManager_StartBatchRun_Please_check_the_checkbox_next_to_one_or_more_configurations_);
+                _startingRunOption = null;
                 return false;
             }
 
             // Check that configs run in correct order
-            var dependencies = GetDependencies(state);
-            var enabledConfigNames = GetEnabledConfigNames(state);
+            var dependencies = state.GetDependencies();
+            var enabledConfigNames = state.GetEnabledConfigNames();
             foreach (var dependency in dependencies)
             {
                 foreach (var configToRun in enabledConfigNames)
@@ -574,9 +228,9 @@ namespace SkylineBatch
                         {
                             if ((runOption == RunBatchOptions.FROM_TEMPLATE_COPY ||
                                  runOption == RunBatchOptions.ALL) &&
-                                !File.Exists(ConfigFromName(configToRun).MainSettings.Template.FilePath))
+                                !File.Exists(state.ConfigFromName(configToRun).MainSettings.Template.FilePath))
                             {
-                                DisplayError(
+                                DisplayError(_uiControl,
                                     string.Format(
                                         Resources
                                             .SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_,
@@ -586,6 +240,7 @@ namespace SkylineBatch
                                         Resources
                                             .SkylineBatchConfigManager_StartBatchRun_Please_reorder_the_configurations_so__0__runs_first_,
                                         dependency.Key));
+                                _startingRunOption = null;
                                 return false;
                             }
                         }
@@ -630,28 +285,23 @@ namespace SkylineBatch
             overwriteMessage.Append(Resources.SkylineBatchConfigManager_StartBatchRun_Do_you_want_to_continue_);
             if (showOverwriteMessage && checkOverwrite)
             {
-                if (DisplayLargeOkCancel(overwriteMessage.ToString()) != DialogResult.OK)
+                if (DisplayLargeOkCancel(_uiControl, overwriteMessage.ToString()) != DialogResult.OK)
+                {
+                    _startingRunOption = null;
                     return false;
+                }
             }
-            _checkedRunState = state;
-            _checkedRunOption = runOption;
             return true;
         }
 
         public void StartCheckingServers(LongWaitDlg longWaitDlg, Callback callback)
         {
-            if (_checkedRunState == null)
-                throw new Exception("Run state was never checked, should never get here.");
-
+            if (_startingRunOption == null)
+                throw new Exception("No run was started with CanRun method.");
+            if (_uiControl != null)
+                _uiControl.UpdateRunningButtons(false, false);
             _runServerFiles = new ServerFilesManager();
-            // Servers don't need to connect for steps after refine
-            if (_checkedRunOption >= RunBatchOptions.FROM_REFINE)
-            {
-                FinishCheckingServers(true, new List<SkylineBatchConfig>(), callback);
-                return;
-            }
-            
-            var enabledConfigs = GetEnabledConfigs(_checkedRunState);
+            var enabledConfigs = State.GetEnabledConfigs();
             var downloadingConfigs = new List<SkylineBatchConfig>();
             // Try connecting to all necessary servers
             foreach (var config in enabledConfigs)
@@ -685,7 +335,8 @@ namespace SkylineBatch
 
             if (_runServerFiles.HadConnectionExceptions)
             {
-                var connectionForm = new ConnectionErrorForm(downloadingConfigs, _runServerFiles);
+                var initialState = State;
+                var connectionForm = new ConnectionErrorForm(initialState.Copy(), downloadingConfigs, _runServerFiles, _uiControl);
                 _uiControl.DisplayForm(connectionForm);
                 if (connectionForm.DialogResult != DialogResult.OK)
                 {
@@ -695,16 +346,14 @@ namespace SkylineBatch
                 
                 foreach (var config in connectionForm.ReplacingConfigs)
                 {
-                    var index = GetConfigIndex(config.Name, _checkedRunState.baseState);
-                    _checkedRunState = ProgramaticallyRemoveAt(index, _checkedRunState);
-                    _checkedRunState = ProgramaticallyInsertConfig(config, index, _checkedRunState);
-                    // replace configs in downloading configs list
                     int i = 0;
                     while (i < downloadingConfigs.Count && !downloadingConfigs[i].Name.Equals(config.Name)) i++;
                     downloadingConfigs.RemoveAt(i);
                     downloadingConfigs.Insert(i, config);
                 }
-                SetState(_checkedRunState);
+                //connectionForm.State.ModelUnchanged();
+                if (!SetState(initialState, connectionForm.State, true))
+                    return;
             }
 
             var configsWillDownload = new List<string>();
@@ -716,8 +365,8 @@ namespace SkylineBatch
             }
 
             var driveSpaceNeeded = _runServerFiles.GetSize();
-            if (_checkedRunOption == RunBatchOptions.ALL ||
-                _checkedRunOption == RunBatchOptions.DOWNLOAD_DATA)
+            if (_startingRunOption == RunBatchOptions.ALL ||
+                _startingRunOption == RunBatchOptions.DOWNLOAD_DATA)
             {
                 var spaceError = false;
                 var errorMessage =
@@ -736,12 +385,12 @@ namespace SkylineBatch
 
                 if (spaceError)
                 {
-                    DisplayError(errorMessage + Environment.NewLine + Resources.SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_);
+                    DisplayError(_uiControl, errorMessage + Environment.NewLine + Resources.SkylineBatchConfigManager_StartBatchRun_Please_free_up_some_space_to_download_the_data_);
                     CannotRun(callback);
                     return;
                 }
             }
-            else if (_checkedRunOption == RunBatchOptions.FROM_TEMPLATE_COPY && driveSpaceNeeded.Keys.Count > 0)
+            else if (_startingRunOption == RunBatchOptions.FROM_TEMPLATE_COPY && driveSpaceNeeded.Keys.Count > 0)
             {
                 // data files need to be downloaded but user did not start from a download step
                 var errorMessage = Resources.SkylineBatchConfigManager_StartBatchRun_The_data_for_the_following_configurations_has_not_fully_downloaded_ + Environment.NewLine + Environment.NewLine;
@@ -749,7 +398,7 @@ namespace SkylineBatch
                                 Environment.NewLine;
                 errorMessage +=
                     Resources.SkylineBatchConfigManager_StartBatchRun_Please_download_the_data_for_these_configurations_before_running_them_from_a_later_step_;
-                DisplayError(errorMessage);
+                DisplayError(_uiControl, errorMessage);
                 CannotRun(callback);
                 return;
             }
@@ -758,52 +407,37 @@ namespace SkylineBatch
 
         public void CannotRun(Callback callback)
         {
-            _checkedRunOption = null;
-            _checkedRunState = null;
-            _runServerFiles = null;
+            _startingRunOption = null;
             callback(false);
+            if (_uiControl != null)
+                _uiControl.UpdateRunningButtons(true, false);
         }
-
-
 
         public void StartBatchRun()
         {
-            var enabledConfigNames = GetEnabledConfigNames(_checkedRunState);
-                // Starts config runners waiting
-                foreach (var config in enabledConfigNames)
-                    ((ConfigRunner)_configRunners[config]).ChangeStatus(RunnerStatus.Waiting);
-            
-            // Archives old log
-            lock (_loggerLock)
-            {
-                var oldLogger = (_logList[0]).Archive();
-                if (oldLogger != null)
-                    _logList.Insert(1, oldLogger);
-            }
-
-            if (_checkedRunOption == null)
-                throw new Exception("No run option selected.");
-            var runOption = (RunBatchOptions)_checkedRunOption;
+            if (_startingRunOption == null)
+                throw new Exception("No run initiated.");
             var serverFiles = _runServerFiles;
-            _checkedRunOption = null;
-            _checkedRunState = null;
-            _runServerFiles = null;
+            var enabledConfigNames = State.GetEnabledConfigNames();
+            // Starts config runners waiting
+            foreach (var config in enabledConfigNames)
+                ((ConfigRunner)State.ConfigRunners[config]).ChangeStatus(RunnerStatus.Waiting);
+            
+            ArchiveFirstLog();
+            var runOption = _startingRunOption ?? RunBatchOptions.ALL;
+            _startingRunOption = null;
             new Thread(() => _ = RunAsync(runOption, serverFiles)).Start();
         }
-
-
+        
         public async Task RunAsync(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
             UpdateUiLogs();
             UpdateIsRunning(false, true);
-            string nextConfig = GetNextWaitingConfig();
+            var state = State;
+            string nextConfig = state.GetNextWaitingConfig();
             while (!string.IsNullOrEmpty(nextConfig))
             {
-                ConfigRunner startingConfigRunner;
-                lock (_lock)
-                {
-                    startingConfigRunner = (ConfigRunner)_configRunners[nextConfig];
-                }
+                var startingConfigRunner = (ConfigRunner)state.ConfigRunners[nextConfig];
 
                 try
                 {
@@ -812,16 +446,15 @@ namespace SkylineBatch
                 catch (Exception e)
                 {
                     startingConfigRunner.ChangeStatus(RunnerStatus.Error);
-                    DisplayErrorWithException(string.Format(Resources.SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_, nextConfig), e);
+                    DisplayErrorWithException(_uiControl, string.Format(Resources.SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_, nextConfig), e);
                 }
-
-                nextConfig = GetNextWaitingConfig();
+                nextConfig = state.GetNextWaitingConfig();
             }
 
             UpdateIsRunning(true, false);
         }
 
-        private string StepToReadableString(RunBatchOptions runOption)
+        private static string StepToReadableString(RunBatchOptions runOption)
         {
             switch (runOption)
             {
@@ -842,93 +475,30 @@ namespace SkylineBatch
             }
         }
 
-        private string GetNextWaitingConfig()
-        {
-            lock (_lock)
-            {
-                foreach (var config in _configList)
-                {
-                    if (_configRunners[config.GetName()].GetStatus() == RunnerStatus.Waiting)
-                    {
-                        return config.GetName();
-                    }
-                }
-                return null;
-            }
-        }
-
-        public List<string> ConfigsBusy()
-        {
-            var configsRunning = new List<string>();
-            lock (_lock)
-            {
-                foreach (var runner in _configRunners.Values)
-                {
-                    if (runner.IsBusy())
-                        configsRunning.Add(runner.GetConfigName());
-                }
-            }
-            return configsRunning;
-        }
-
-        public bool ConfigRunning()
-        {
-            lock (_lock)
-            {
-                foreach (var runner in _configRunners.Values)
-                {
-                    if (runner.IsRunning())
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        public void CancelRunners()
-        {
-            lock (_lock)
-            {
-                foreach (var configRunner in _configRunners.Values)
-                {
-                    configRunner.Cancel();
-                }
-            }
-        }
-
         #endregion
 
-        #region Logging
+        #region Logs
+
+        public void LoadLogs(Logger mainLogger)
+        {
+            lock (_loggerLock)
+            {
+                var logDirectory = Path.GetDirectoryName(mainLogger.LogFile);
+                var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
+                InsertLog(0, mainLogger);
+                foreach (var file in files)
+                {
+                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(mainLogger.LogFileName))
+                    {
+                        InsertLog(1, new Logger(file.FullName, file.Name, true));
+                    }
+                }
+            }
+        }
 
         public bool HasOldLogs()
         {
-            lock (_loggerLock)
-                return _logList.Count > 1;
-        }
-
-        public void SelectLog(int selected)
-        {
-            lock (_loggerLock)
-            {
-                if (selected < 0 || selected >= _logList.Count)
-                    throw new IndexOutOfRangeException(Resources.ConfigManager_SelectLog_No_log_at_index__ + selected);
-                SelectedLog = selected;
-            }
-        }
-
-        private void LoadOldLogs()
-        {
-            lock (_loggerLock)
-            {
-                var logDirectory = Path.GetDirectoryName(_logList[0].LogFile);
-                var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
-                foreach (var file in files)
-                {
-                    if (file.Name.EndsWith(TextUtil.EXT_LOG) && !file.Name.Equals(_logList[0].LogFileName))
-                    {
-                        _logList.Insert(1, new Logger(file.FullName, file.Name, true));
-                    }
-                }
-            }
+            return _logList.Count > 1;
         }
 
         public object[] GetOldLogFiles()
@@ -945,138 +515,903 @@ namespace SkylineBatch
             }
         }
 
-        public object[] GetAllLogFiles()
-        {
-            lock (_loggerLock)
-            {
-                var logFiles = new object[_logList.Count];
-                for (int i = 0; i < _logList.Count; i++)
-                    logFiles[i] = _logList[i].LogFileName;
-                return logFiles;
-            }
-        }
-
         public void DeleteLogs(object[] deletingLogs)
         {
             lock (_loggerLock)
             {
+                //var initialState = State;
                 var oldSelectedLog = _logList[SelectedLog].Name;
+                RemoveLogsByName(deletingLogs);
                 SelectedLog = 0;
-                int i = 0;
-                while (i < _logList.Count)
+                for (int i = 0; i < _logList.Count; i++)
                 {
-                    if (deletingLogs.Contains(_logList[i].LogFileName))
+                    if (_logList[i].Name.Equals(oldSelectedLog))
                     {
-                        _logList[i].Delete(); // closes and deletes log file
-                        _logList.RemoveAt(i); // removes from list
-                        continue;
-                    }
-                    i++;
-                }
-                for (int j = 0; j < _logList.Count; j++)
-                {
-                    if (_logList[j].Name.Equals(oldSelectedLog))
-                    {
-                        SelectedLog = j;
+                        SelectedLog = i;
                         break;
                     }
                 }
-                UpdateUiLogs();
             }
+            UpdateUiLogs();
         }
 
         #endregion
 
+        #region Update State
 
-        #region Import/Export
-
-        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
-        {
-            var state = new SkylineBatchConfigManagerState(this);
-            var importedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
-            foreach (var config in importedConfigs)
-            {
-                if (state.configRunners.ContainsKey(config.GetName()))
-                    state = ProgramaticallyRemoveAt(GetConfigIndex(config.GetName(), state.baseState), state);
-            }
-            importedConfigs = AssignDependencies(importedConfigs, true, state, out string warningMessage);
-
-            foreach (var config in importedConfigs)
-                state = ProgramaticallyAddConfig(config, state);
-            state = DisableInvalidConfigs(state);
-            SetState(state);
-            if (warningMessage != null)
-                DisplayWarning(warningMessage);
-        }
-
-        private SkylineBatchConfigManagerState DisableInvalidConfigs(SkylineBatchConfigManagerState state)
-        {
-            var newState = new SkylineBatchConfigManagerState(state);
-            foreach (var config in newState.baseState.configList)
-            {
-                if (!newState.baseState.configValidation[config.GetName()])
-                    ((SkylineBatchConfig)config).Enabled = false;
-            }
-            return newState;
-        }
-
-        #endregion
-
-        private void SetState(SkylineBatchConfigManagerState newState)
+        public new SkylineBatchConfigManagerState GetState()
         {
             lock (_lock)
             {
-                newState.ValidateState();
-                base.SetState(newState.baseState);
-                _refinedTemplates = newState.templates;
-                _configRunners = newState.configRunners;
-                _uiControl?.UpdateUiConfigurations();
+                return _state.Copy();
             }
         }
 
-
-        class SkylineBatchConfigManagerState
+        public bool SetState(SkylineBatchConfigManagerState expectedState, SkylineBatchConfigManagerState newState, bool overrideRunStart = false)
         {
-            public ConfigManagerState baseState;
-            public ImmutableDictionary<string, string> templates;
-            public ImmutableDictionary<string, IConfigRunner> configRunners;
-
-            public SkylineBatchConfigManagerState(SkylineBatchConfigManager configManager)
+            string errorMessage = null;
+            lock (_lock)
             {
-                baseState = new ConfigManagerState(configManager);
-                templates = configManager._refinedTemplates;
-                configRunners = configManager._configRunners;
-            }
-
-            public SkylineBatchConfigManagerState(SkylineBatchConfigManagerState state)
-            {
-                baseState = new ConfigManagerState(state.baseState);
-                templates = state.templates;
-                configRunners = state.configRunners;
-            }
-
-            public void ValidateState()
-            {
-                var validated = configRunners.Count == baseState.configList.Count;
-                foreach (var config in baseState.configList)
+                try
                 {
-                    if (!validated) break;
-                    if (!configRunners.ContainsKey(config.GetName()))
-                        validated = false;
-                }
+                    if (!Equals(expectedState, GetState()))
+                    {
+                        throw new ArgumentException(SharedBatch.Properties.Resources
+                            .ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_);
+                    }
 
-                foreach (var configName in templates.Keys)
-                {
-                    if (!validated) break;
-                    if (!configRunners.ContainsKey(configName) || !templates[configName]
-                        .Equals(((SkylineBatchConfig) configRunners[configName].GetConfig()).RefineSettings
-                            .OutputFilePath))
-                        validated = false;
+                    if (Equals(expectedState, newState) && _currentIndex > 0)
+                        newState = newState.Copy(); // sets model unchanged
+                    if (_startingRunOption != null && !overrideRunStart)
+                    {
+                        throw new ArgumentException(Resources.SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_changed_while_a_run_is_being_started__Please_try_again_);
+                    }
+                    newState.ValidateState();
+                    SetState(expectedState.BaseState, newState.BaseState); // sets the base state in ConfigManager
                 }
-                if (!validated)
-                    throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
+                catch (Exception e)
+                {
+                    errorMessage = e.Message;
+                }
+                if (errorMessage == null)
+                {
+                    _state = newState.Copy();
+                    if (newState.BaseState.ModelChanged || _currentIndex < 0)
+                    {
+                        if (_currentIndex != _stateList.Count - 1)
+                        {
+                            _stateList.RemoveRange(_currentIndex + 1, _stateList.Count - _currentIndex - 1);
+                        }
+                        _stateList.Add(newState);
+                        _currentIndex++;
+                    }
+                    else
+                    {
+                        _stateList[_currentIndex] = _state;
+                    }
+                }
+            }
+            if (errorMessage != null)
+            {
+                DisplayError(_uiControl, errorMessage);
+                return false;
+            }
+            _uiControl?.UpdateUiConfigurations();
+            return true;
+        }
+
+        public bool CanUndo()
+        {
+            return _currentIndex > 0;
+        }
+        
+        public void Undo()
+        {
+            if (CanUndo())
+            {
+                var expectedState = _stateList[_currentIndex];
+                _currentIndex--;
+                if (!SetState(expectedState, _stateList[_currentIndex].ModelUnchanged()))
+                    return;
+                if (_stateList[_currentIndex].BaseState.Selected > -1)
+                {
+                    SelectConfig(_stateList[_currentIndex].BaseState.Selected);
+                }
+                else
+                {
+                    DeselectConfig();
+                }
             }
         }
+
+        public bool CanRedo()
+        {
+            return _currentIndex < _stateList.Count - 1;
+        }
+
+        public void Redo()
+        {
+            if (CanRedo())
+            {
+                var expectedState = _stateList[_currentIndex];
+                _currentIndex++;
+                if (!SetState(expectedState, _stateList[_currentIndex].ModelUnchanged()))
+                    return;
+                if (_stateList[_currentIndex].BaseState.Selected > -1)
+                {
+                    SelectConfig(_stateList[_currentIndex].BaseState.Selected);
+                }
+                else
+                {
+                    DeselectConfig();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Tests
+
+        public SkylineBatchConfig GetConfig(int index)
+        {
+            return (SkylineBatchConfig) State.BaseState.GetConfig(index);
+        }
+
+        public List<string> ConfigsBusy() => State.ConfigsBusy();
+
+
+        // For testing only - reset remote file sources
+        public void ClearRemoteFileSources()
+        {
+            var currentState = State;
+            var newState = currentState;
+            if (State.BaseState.ConfigList.Count > 0)
+                throw new Exception("Cannot clear remote file source list while configurations exist.");
+            foreach (var name in currentState.FileSources.Keys)
+            {
+                newState = newState.RemoveRemoteFileSource(name);
+            }
+            SetState(currentState, newState);
+        }
+
+        #endregion
+
+    }
+
+    public class SkylineBatchConfigManagerState
+    {
+        public readonly ConfigManagerState BaseState; // the ConfigManagerState that holds the list of configurations etc
+        public ImmutableDictionary<string, string> Templates { get; private set; } // dictionary mapping from config name to it's refined output file (not included if no refinement occurs)
+        public ImmutableDictionary<string, IConfigRunner> ConfigRunners { get; private set; } // dictionary mapping from config name to that config's runner
+
+        public ImmutableDictionary<string, RemoteFileSource> FileSources { get; private set; } // dictionary mapping from config name to that config's runner
+
+        private readonly Logger _mainLogger; // the ConfigManagerState that holds the list of configurations etc
+
+        public static SkylineBatchConfigManagerState Empty(Logger mainLogger)
+        {
+            return new SkylineBatchConfigManagerState(ConfigManagerState.Empty(), ImmutableDictionary<string, string>.Empty, 
+                ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableDictionary<string, RemoteFileSource>.Empty, mainLogger);
+        }
+
+        public SkylineBatchConfigManagerState(ConfigManagerState baseState, ImmutableDictionary<string, string> templates, ImmutableDictionary<string, IConfigRunner> configRunners, 
+            ImmutableDictionary<string, RemoteFileSource> fileSources, Logger mainLogger)
+        {
+            BaseState = baseState;
+            Templates = templates;
+            ConfigRunners = configRunners;
+            FileSources = fileSources;
+            _mainLogger = mainLogger;
+        }
+
+
+        public void ValidateState()
+        {
+            var validated = ConfigRunners.Count == BaseState.ConfigList.Count;
+            foreach (var config in BaseState.ConfigList)
+            {
+                if (!ConfigRunners.ContainsKey(config.GetName()))
+                {
+                    validated = false;
+                    break;
+                }
+            }
+            foreach (var configName in Templates.Keys)
+            {
+                if (!ConfigRunners.ContainsKey(configName) || !Templates[configName]
+                    .Equals(((SkylineBatchConfig)ConfigRunners[configName].GetConfig()).RefineSettings
+                        .OutputFilePath))
+                {
+                    validated = false;
+                    break;
+                }
+            }
+            if (!validated)
+                throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
+        }
+
+        public SkylineBatchConfigManagerState Copy()
+        {
+            return new SkylineBatchConfigManagerState(BaseState.Copy(), Templates, ConfigRunners, FileSources, _mainLogger);
+        }
+
+        // State methods
+        
+        #region Load
+
+        public SkylineBatchConfigManagerState LoadConfigList(IMainUiControl uiControl)
+        {
+            BaseState.LoadConfigList();
+            UpdateFromBaseState(uiControl);
+            DisableInvalidConfigs();
+            return this;
+        }
+
+        #endregion
+
+        #region Add / Remove Configs
+
+        public SkylineBatchConfigManagerState UserAddConfig(IConfig iconfig, IMainUiControl uiControl)
+        {
+            return UserInsertConfig(BaseState.ConfigList.Count, iconfig, uiControl);
+        }
+
+        private SkylineBatchConfigManagerState UserInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
+        {
+            var newConfig = ((SkylineBatchConfig)iconfig).UpdateRemoteFileSet(FileSources,
+                out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+            BaseState.UserInsertConfig(index, newConfig);
+            AddConfig(newConfig, uiControl);
+            FileSources = newRemoteFileSources;
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
+        {
+            var newConfig = ((SkylineBatchConfig)iconfig).UpdateRemoteFileSet(FileSources,
+                out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+            BaseState.ProgramaticallyInsertConfig(index, newConfig);
+            AddConfig(iconfig, uiControl);
+            FileSources = newRemoteFileSources;
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)
+        {
+            var config = (SkylineBatchConfig)iconfig;
+            if (ConfigRunners.ContainsKey(config.GetName()))
+                return this; // this will fail state validation
+            var runner = new ConfigRunner(config, _mainLogger, uiControl);
+            ConfigRunners = ConfigRunners.Add(config.GetName(), runner);
+            if (config.RefineSettings.WillRefine())
+                Templates = Templates.Add(config.Name, config.RefineSettings.OutputFilePath);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ProgramaticallyRemoveAt(int index)
+        {
+            RemoveConfig(BaseState.ConfigList[index]);
+            BaseState.ProgramaticallyRemoveAt(index);
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState RemoveConfig(IConfig iconfig)
+        {
+            var config = (SkylineBatchConfig)iconfig;
+            if (!ConfigRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner does not exist.");
+            ConfigRunners = ConfigRunners.Remove(config.Name);
+            if (Templates.ContainsKey(config.Name))
+                Templates = Templates.Remove(config.Name);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState UserReplaceSelected(IConfig iConfig, IMainUiControl uiControl)
+        {
+            var index = BaseState.Selected;
+            var config = GetSelectedConfig();
+            var newConfig = (SkylineBatchConfig)iConfig;
+            var oldDependencies = GetDependencies();
+
+            var nameChanged = !config.Name.Equals(newConfig.Name);
+            var refineFileChanged =
+                !config.RefineSettings.OutputFilePath.Equals(newConfig.RefineSettings.OutputFilePath);
+            if (oldDependencies.ContainsKey(config.Name) && (nameChanged || refineFileChanged))
+            {
+                var runningConfigs = ConfigsBusy();
+                var runningDependentConfigs = oldDependencies[config.Name].Where(x => runningConfigs.Contains(x)).ToList();
+                if (runningDependentConfigs.Any())
+                {
+                    ConfigManager.DisplayWarning(uiControl,
+                        Resources.SkylineBatchConfigManager_UserReplaceSelected_Could_not_update_the_configuration_name_or_the_refined_output_file_path_while_the_following_dependent_configurations_are_running_ +
+                        Environment.NewLine +
+                        TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
+                        Resources.SkylineBatchConfigManager_UserReplaceSelected_Please_wait_until_the_dependent_configurations_have_stopped_to_change_these_values_);
+                    var newRefineSettings = RefineSettings.GetPathChanged(newConfig.RefineSettings, config.RefineSettings.OutputFilePath);
+                    newConfig = new SkylineBatchConfig(config.Name, newConfig.Enabled, newConfig.LogTestFormat, DateTime.Now,
+                        newConfig.MainSettings,
+                        newConfig.FileSettings, newRefineSettings, newConfig.ReportSettings,
+                        newConfig.SkylineSettings);
+                    nameChanged = refineFileChanged = false;
+                }
+            }
+
+            ProgramaticallyRemoveAt(index);
+            UserInsertConfig(index, newConfig, uiControl); // can throw ArgumentException
+
+            if ((nameChanged || refineFileChanged) && oldDependencies.ContainsKey(config.Name))
+            {
+                foreach (var dependent in oldDependencies[config.Name])
+                    DependencyReplace(dependent, newConfig.Name, newConfig.RefineSettings.OutputFilePath, uiControl);
+            }
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState UserRemoveSelected(IMainUiControl uiControl)
+        {
+            BaseState.AssertConfigSelected();
+            var index = BaseState.Selected;
+            var removingConfigName = BaseState.ConfigList[index].GetName();
+            if (ConfigRunners[removingConfigName].IsBusy())
+            {
+                ConfigManager.DisplayWarning(uiControl, string.Format(
+                    Resources.ConfigManager_RemoveSelected___0___is_still_running__Please_stop_the_current_run_before_deleting___0___,
+                    removingConfigName));
+                return this;
+            }
+            var configDependencies = GetDependencies();
+            if (configDependencies.ContainsKey(removingConfigName))
+            {
+                var runningConfigs = ConfigsBusy();
+                var runningDependentConfigs = configDependencies[removingConfigName].Where(x => runningConfigs.Contains(x)).ToList();
+
+                if (runningDependentConfigs.Any())
+                {
+                    ConfigManager.DisplayError(uiControl, string.Format(
+                                              Resources.SkylineBatchConfigManager_UserRemoveSelected_Cannot_delete___0___while_the_following_configurations_are_running_, removingConfigName) + Environment.NewLine +
+                                          TextUtil.LineSeparate(runningDependentConfigs) + Environment.NewLine + Environment.NewLine +
+                                          Resources.SkylineBatchConfigManager_UserRemoveSelected_Please_wait_until_these_configurations_have_finished_running_);
+                    return this;
+                }
+                var answer = ConfigManager.DisplayQuestion(uiControl,
+                    string.Format(
+                        Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_,
+                        removingConfigName) +
+                    Environment.NewLine +
+                    TextUtil.LineSeparate(configDependencies[removingConfigName]) + Environment.NewLine +
+                    string.Format(Resources.SkylineBatchConfigManager_UserRemoveSelected_Are_you_sure_you_want_to_delete___0___, removingConfigName));
+
+                if (answer != DialogResult.Yes)
+                {
+                    //BaseState.ModelUnchanged();
+                    return this;
+                }
+                foreach (var dependentName in configDependencies[removingConfigName])
+                    DependencyRemove(dependentName, uiControl);
+            }
+
+            RemoveConfig(BaseState.ConfigList[index]);
+            BaseState.UserRemoveAt(index);
+            return this;
+        }
+
+
+        #endregion
+
+        #region Import/Export
+
+        public SkylineBatchConfigManagerState Import(string filePath, IMainUiControl uiControl, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm)
+        {
+            BaseState.ImportFrom(SkylineBatchConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, showDownloadedFileForm, out _);
+            UpdateFromBaseState(uiControl);
+            return DisableInvalidConfigs();
+        }
+
+        public SkylineBatchConfigManagerState UpdateFromBaseState(IMainUiControl uiControl)
+        {
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var name = iconfig.GetName();
+                if (ConfigRunners.ContainsKey(name))
+                {
+                    if (!ConfigRunners[name].GetConfig().Equals(iconfig))
+                        ConfigRunners = ConfigRunners.Remove(name).Add(name, new ConfigRunner((SkylineBatchConfig)iconfig, _mainLogger, uiControl));
+                }
+                else
+                {
+                    ConfigRunners = ConfigRunners.Add(name, new ConfigRunner((SkylineBatchConfig)iconfig, _mainLogger, uiControl));
+                }
+            }
+            foreach (var config in ConfigRunners.Keys)
+            {
+                if (BaseState.GetConfigIndex(config) < 0)
+                    ConfigRunners = ConfigRunners.Remove(config);
+            }
+            UpdateDependencies(uiControl);
+            UpdateRemoteFileSources(uiControl);
+            return this;
+        }
+
+        #endregion
+
+        #region Config Template Dependencies
+
+        private SkylineBatchConfigManagerState UpdateTemplates()
+        {
+            Templates = ImmutableDictionary<string, string>.Empty;
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                if (config.RefineSettings.WillRefine())
+                    Templates = Templates.Add(config.Name, config.RefineSettings.OutputFilePath);
+            }
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState UpdateDependencies(IMainUiControl uiControl)
+        {
+            UpdateTemplates();
+            var errorConfigs = new List<string>();
+
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                var dependentName = config.MainSettings.Template.DependentConfigName;
+                if (!string.IsNullOrEmpty(dependentName))
+                {
+                    var index = BaseState.GetConfigIndex(config.Name);
+                    var oldConfigRunner = ConfigRunners[config.Name];
+                    var oldTemplatePath = config.MainSettings.Template.FilePath;
+                    ProgramaticallyRemoveAt(index);
+                    string templatePath;
+                    try
+                    {
+                        templatePath = Templates[dependentName];
+                    }
+                    catch (Exception)
+                    {
+                        errorConfigs.Add(config.Name);
+                        ProgramaticallyInsertConfig(index, config.WithoutDependency(), uiControl);
+                        continue;
+                    }
+                    ProgramaticallyInsertConfig(index, config.DependentChanged(dependentName, templatePath), uiControl);
+                    if (oldTemplatePath.Equals(templatePath))
+                        ConfigRunners = ConfigRunners.Remove(config.Name).Add(config.Name, oldConfigRunner);
+                }
+            }
+
+            if (errorConfigs.Count != 0)
+                ConfigManager.DisplayWarning(uiControl, Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
+                               TextUtil.LineSeparate(errorConfigs) + Environment.NewLine +
+                               Resources.SkylineBatchConfigManager_AssignDependencies_You_may_want_to_update_the_template_file_paths_);
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState DependencyRemove(string configName, IMainUiControl uiControl)
+        {
+            var index = BaseState.GetConfigIndex(configName);
+            var config = (SkylineBatchConfig) BaseState.ConfigList[index];
+            ProgramaticallyRemoveAt(index);
+            var newConfig = config.WithoutDependency();
+            ProgramaticallyInsertConfig(index, newConfig, uiControl);
+            DisableInvalidConfigs();
+            return this;
+        }
+
+        public Dictionary<string, List<string>> GetDependencies()
+        {
+            var dependencies = new Dictionary<string, List<string>>();
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                var dependentConfigName = config.MainSettings.Template.DependentConfigName;
+                if (!string.IsNullOrEmpty(dependentConfigName))
+                {
+                    if (!dependencies.ContainsKey(dependentConfigName))
+                        dependencies.Add(dependentConfigName, new List<string>());
+                    dependencies[dependentConfigName].Add(config.Name);
+                }
+            }
+            return dependencies;
+        }
+
+        private SkylineBatchConfigManagerState DependencyReplace(string configName, string dependentName, string templateFile, IMainUiControl uiControl)
+        {
+            var index = BaseState.GetConfigIndex(configName);
+            var config = (SkylineBatchConfig) BaseState.ConfigList[index];
+            ProgramaticallyRemoveAt(index);
+            var newConfig = config.DependentChanged(dependentName, templateFile);
+            ProgramaticallyInsertConfig(index, newConfig, uiControl);
+            DisableInvalidConfigs();
+            return this;
+        }
+
+        #endregion
+
+        #region Update All Configs
+
+        public SkylineBatchConfigManagerState ReplaceSkylineSettings(SkylineSettings skylineSettings, IMainUiControl uiControl, out bool? replaced)
+        {
+            var runningConfigs = ConfigsBusy();
+            BaseState.AskToReplaceAllSkylineVersions(skylineSettings, runningConfigs, uiControl, out replaced);
+            UpdateFromBaseState(uiControl);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState RootReplaceConfigs(string oldRoot, string newRoot, IMainUiControl uiControl)
+        {
+            BaseState.GetRootReplacedConfigs(oldRoot, newRoot);
+            return UpdateFromBaseState(uiControl);
+        }
+
+        public SkylineBatchConfigManagerState UpdateConfigValidation()
+        {
+            BaseState.UpdateConfigValidation();
+            //BaseState.ModelUnchanged();
+            return this;
+        }
+
+        #endregion
+
+        #region Change Config Enabled
+
+        public SkylineBatchConfigManagerState CheckConfigAtIndex(int index, IMainUiControl uiControl, out string errorMessage)
+        {
+            errorMessage = null;
+            var config = (SkylineBatchConfig) BaseState.ConfigList[index];
+            var runner = ConfigRunners[config.Name];
+            if (!BaseState.IsConfigValid(index))
+            {
+                errorMessage =
+                    string.Format(
+                        Resources.MainForm_listViewConfigs_ItemCheck_Cannot_enable___0___while_it_is_invalid_,
+                        config.Name) +
+                    Environment.NewLine +
+                    string.Format(Resources.ConfigManager_RunAll_Please_edit___0___to_enable_running_, config.Name);
+                return this;
+            }
+            if (runner.IsRunning() || runner.IsCanceling())
+            {
+                errorMessage =
+                    string.Format(Resources.ConfigManager_CheckConfigAtIndex_Cannot_disable___0___while_it_has_status___1_,
+                        config.Name, runner.GetStatus()) +
+                    Environment.NewLine +
+                    string.Format(Resources.ConfigManager_CheckConfigAtIndex_Please_wait_until___0___has_finished_running_, config.Name);
+                return this;
+            }
+            UpdateConfigEnabled(config, !config.Enabled, uiControl);
+            if (runner.IsWaiting())
+                runner.Cancel();
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState DisableInvalidConfigs()
+        {
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                if (!BaseState.ConfigValidation[iconfig.GetName()])
+                {
+                    var config = (SkylineBatchConfig)iconfig;
+                    UpdateConfigEnabled(config, false);
+                }
+            }
+            return this;
+        }
+
+        private SkylineBatchConfigManagerState UpdateConfigEnabled(SkylineBatchConfig config, bool enabled, IMainUiControl uiControl = null)
+        {
+            var index = BaseState.GetConfigIndex(config.Name);
+            var newConfig = new SkylineBatchConfig(config.GetName(), enabled, config.LogTestFormat,
+                config.Modified, config.MainSettings, config.FileSettings, config.RefineSettings,
+                config.ReportSettings, config.SkylineSettings);
+            ProgramaticallyRemoveAt(index);
+            ProgramaticallyInsertConfig(index, newConfig, uiControl);
+            //BaseState.ModelUnchanged();
+            return this;
+        }
+
+        #endregion
+
+        #region Root Replacement
+
+        public SkylineBatchConfigManagerState AddRootReplacement(string oldPath, string newPath, bool askAboutRootReplacement, IMainUiControl uiControl,
+            out bool addedRootReplacement, out string oldRoot, out bool askedAboutRootReplacement)
+        {
+            BaseState.AddRootReplacement(oldPath, newPath, askAboutRootReplacement, uiControl, out oldRoot,
+                out askedAboutRootReplacement, out addedRootReplacement);
+            return this;
+        }
+
+
+        #endregion
+
+        #region Information About State
+
+        public HashSet<string> RVersionsUsed()
+        {
+            var RVersions = new HashSet<string>();
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                RVersions.UnionWith(config.ReportSettings.RVersions());
+            }
+
+            return RVersions;
+        }
+
+        public SkylineBatchConfig GetSelectedConfig()
+        {
+            return (SkylineBatchConfig)BaseState.GetSelectedConfig();
+        }
+
+        public Dictionary<string, string> GetRefinedTemplates()
+        {
+            return Templates.ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        public bool WillRefine()
+        {
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                if (config.Enabled && config.RefineSettings.WillRefine())
+                    return true;
+            }
+            return false;
+        }
+
+        public ConfigRunner GetSelectedConfigRunner()
+        {
+            return (ConfigRunner) ConfigRunners[BaseState.GetSelectedConfig().GetName()];
+        }
+
+        public List<string> GetEnabledConfigNames()
+        {
+            var enabledConfigNames = new List<string>();
+            var enabledConfigs = GetEnabledConfigs();
+            foreach (var config in enabledConfigs)
+                enabledConfigNames.Add(config.Name);
+            return enabledConfigNames;
+        }
+
+        public List<SkylineBatchConfig> GetEnabledConfigs()
+        {
+            var enabledConfigs = new List<SkylineBatchConfig>();
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig)iconfig;
+                if (config.Enabled) enabledConfigs.Add(config);
+            }
+            return enabledConfigs;
+        }
+
+        public SkylineBatchConfig ConfigFromName(string name)
+        {
+            return (SkylineBatchConfig) ConfigRunners[name].GetConfig();
+        }
+
+        public List<string> ConfigsBusy()
+        {
+            var configsRunning = new List<string>();
+            foreach (var runner in ConfigRunners.Values)
+            {
+                if (runner.IsBusy())
+                    configsRunning.Add(runner.GetConfigName());
+            }
+            return configsRunning;
+        }
+
+        public string GetNextWaitingConfig()
+        {
+            foreach (var config in BaseState.ConfigList)
+            {
+                if (ConfigRunners[config.GetName()].GetStatus() == RunnerStatus.Waiting)
+                {
+                    return config.GetName();
+                }
+            }
+            return null;
+        }
+
+        public bool ConfigRunning()
+        {
+            foreach (var runner in ConfigRunners.Values)
+            {
+                if (runner.IsRunning())
+                    return true;
+            }
+            return false;
+        }
+
+        public void CancelRunners()
+        {
+            foreach (var configRunner in ConfigRunners.Values)
+            {
+                configRunner.Cancel();
+            }
+        }
+
+        #endregion
+
+        #region Wrappers for BaseSate Methods
+
+        public SkylineBatchConfigManagerState SelectIndex(int index)
+        {
+            BaseState.SelectIndex(index);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState MoveSelectedConfig(bool moveUp)
+        {
+            BaseState.MoveSelectedConfig(moveUp);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ModelUnchanged()
+        {
+            BaseState.ModelUnchanged();
+            return this;
+        }
+
+        #endregion
+
+        #region Override Equals
+
+        protected bool Equals(SkylineBatchConfigManagerState other)
+        {
+            if (Templates.Count != other.Templates.Count)
+                return false;
+            foreach (var config in Templates.Keys)
+            {
+                if (!other.Templates.ContainsKey(config) || !Equals(Templates[config], other.Templates[config]))
+                    return false;
+            }
+            if (ConfigRunners.Count != other.ConfigRunners.Count)
+                return false;
+            foreach (var config in ConfigRunners.Keys)
+            {
+                if (!other.ConfigRunners.ContainsKey(config))
+                    return false;
+                if ((ConfigRunners[config].IsBusy() || other.ConfigRunners[config].IsBusy()) &&
+                    !ReferenceEquals(ConfigRunners[config], other.ConfigRunners[config]))
+                    return false;
+                if (!Equals(ConfigRunners[config].GetConfig(), other.ConfigRunners[config].GetConfig()))
+                    return false;
+            }
+            return Equals(BaseState, other.BaseState);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SkylineBatchConfigManagerState)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return BaseState.GetHashCode() +
+                   Templates.GetHashCode() +
+                   ConfigRunners.GetHashCode();
+        }
+
+        #endregion
+
+        #region Remote File Sources
+
+        public SkylineBatchConfigManagerState UserAddRemoteFileSource(RemoteFileSource remoteFileSource, bool preferPanorama, IMainUiControl uiControl)
+        {
+            if (FileSources.ContainsKey(remoteFileSource.Name))
+                ConfigManager.DisplayError(uiControl, string.Format(Resources.SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_, remoteFileSource.Name));
+            else
+            {
+                if (preferPanorama && remoteFileSource.FtpSource)
+                {
+                    if (DialogResult.No == ConfigManager.DisplayQuestion(uiControl, Resources.SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_))
+                        return this;
+                }
+                FileSources = FileSources.Add(remoteFileSource.Name, remoteFileSource);
+            }
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ProgramaticallyAddRemoteFileSource(RemoteFileSource remoteFileSource)
+        {
+            if (FileSources.ContainsKey(remoteFileSource.Name))
+            {
+                var name = remoteFileSource.Name;
+                if (Equals(FileSources[name]))
+                    return this;
+                var duplicateIndexRegex = new Regex("\\(([1-9][0-9]*)\\)$");
+                var regexMatches = duplicateIndexRegex.Match(name).Groups;
+                string newName;
+                if (regexMatches.Count > 0)
+                {
+                    var lastIndex = int.Parse(regexMatches[0].Value);
+                    newName = duplicateIndexRegex.Replace(name, $"({lastIndex + 1})");
+                }
+                else
+                {
+                    newName = name + "(2)";
+                }
+                remoteFileSource = new RemoteFileSource(newName, remoteFileSource.URI, remoteFileSource.Username, remoteFileSource.Password, remoteFileSource.Encrypt);
+            }
+            FileSources = FileSources.Add(remoteFileSource.Name, remoteFileSource);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState RemoveRemoteFileSource(string name)
+        {
+            if (!FileSources.ContainsKey(name))
+                return this;
+            FileSources = FileSources.Remove(name);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState ReplaceRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, IMainUiControl uiControl, string editingConfigName = null)
+        {
+            if (!FileSources.ContainsKey(existingSource.Name))
+                return this;
+            var replacedConfigs = new List<IConfig>();
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                var newConfig = config.ReplacedRemoteFileSource(existingSource, newSource, out bool replaced);
+                if (replaced)
+                    replacedConfigs.Add(newConfig);
+            }
+
+            var replacedConfigsString = string.Empty;
+            foreach (var config in replacedConfigs)
+            {
+                if (!config.GetName().Equals(editingConfigName))
+                    replacedConfigsString += config.GetName() + Environment.NewLine;
+            }
+            
+            if (replacedConfigsString.Length > 0 && !existingSource.Equivalent(newSource))
+            {
+                var message = Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
+                              Environment.NewLine + Environment.NewLine +
+                              replacedConfigsString + Environment.NewLine +
+                    Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
+                if (DialogResult.OK != ConfigManager.DisplayLargeOkCancel(uiControl, message))
+                    return this;
+            }
+
+            FileSources = FileSources.Remove(existingSource.Name);
+            foreach (var config in replacedConfigs)
+            {
+                var index = BaseState.GetConfigIndex(config.GetName());
+                ProgramaticallyRemoveAt(index);
+                ProgramaticallyInsertConfig(index, config, uiControl);
+            }
+            FileSources = FileSources.Remove(existingSource.Name).Add(newSource.Name, newSource);
+            return this;
+        }
+
+        public SkylineBatchConfigManagerState UpdateRemoteFileSources(IMainUiControl uiControl)
+        {
+            FileSources = ImmutableDictionary<string, RemoteFileSource>.Empty;
+            int i = 0;
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var config = (SkylineBatchConfig) iconfig;
+                var newConfig = config.UpdateRemoteFileSet(FileSources,
+                    out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources);
+                if (!Equals(config, newConfig))
+                {
+                    ProgramaticallyRemoveAt(i);
+                    ProgramaticallyInsertConfig(i, newConfig, uiControl);
+                }
+                FileSources = newRemoteFileSources;
+            }
+            return this;
+        }
+
+
+        #endregion
+
     }
 
     public enum RunBatchOptions

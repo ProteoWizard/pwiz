@@ -157,13 +157,13 @@
     <value>在创建方法时忽略蛋白质边界。</value>
   </data>
   <data name="_exp_isolationlist_instrument" xml:space="preserve">
-    <value>导出隔离列表。导出隔离列表时必须选择此选项，并且没有默认值。此选项不能与“-–exp-translist-instrument”或“-–exp-method-instrument”参数一起使用，因为您无法同时导出隔离列表和离子对列表或方法。</value>
+    <value>导出分离列表。导出分离列表时必须选择此选项，并且没有默认值。此选项不能与“-–exp-translist-instrument”或“-–exp-method-instrument”参数一起使用，因为您无法同时导出分离列表和离子对列表或方法。</value>
   </data>
   <data name="_exp_max_trans" xml:space="preserve">
     <value>导出策略“蛋白质”和“存储桶”的每次进样的最大离子对数目，或预定方法的最大同时离子对数目。默认为 100。</value>
   </data>
   <data name="_exp_method_instrument" xml:space="preserve">
-    <value>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolationlist-instrument”或“--exp-translist-instrument”参数一起使用，因为您无法同时导出方法和隔离/离子对列表。</value>
+    <value>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolationlist-instrument”或“--exp-translist-instrument”参数一起使用，因为您无法同时导出方法和分离/离子对列表。</value>
   </data>
   <data name="_exp_method_type" xml:space="preserve">
     <value>设置标准、预定或触发方法。默认为“标准”。</value>
@@ -187,7 +187,7 @@
     <value>方法模板的路径。可以是文件或目录，具体取决于您的仪器。导出方法时必须选择此选项。</value>
   </data>
   <data name="_exp_translist_instrument" xml:space="preserve">
-    <value>导出离子对列表。导出离子对列表时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolation-list”或“--exp-method-instrument”参数一起使用，因为您无法同时导出离子对列表和隔离列表或方法。</value>
+    <value>导出离子对列表。导出离子对列表时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolation-list”或“--exp-method-instrument”参数一起使用，因为您无法同时导出离子对列表和分离列表或方法。</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>显示此文本。</value>
@@ -412,7 +412,7 @@
     <value>正在导入肽段搜索</value>
   </data>
   <data name="CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists" xml:space="preserve">
-    <value>正在导出隔离/离子对列表</value>
+    <value>正在导出分离/离子对列表</value>
   </data>
   <data name="CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods" xml:space="preserve">
     <value>正在导出本机仪器方法</value>

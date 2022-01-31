@@ -34,7 +34,7 @@ namespace AutoQC
 
         public readonly string Name;
 
-        public bool IsEnabled;
+        public readonly bool IsEnabled;
 
         public readonly DateTime Created;
 
@@ -116,14 +116,19 @@ namespace AutoQC
 
         #region XML
 
-        public static AutoQcConfig ReadXml(XmlReader reader)
+        public static AutoQcConfig ReadXml(XmlReader reader, decimal version)
         {
-            return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXml);
-        }
-
-        public static AutoQcConfig ReadXml_v21_1_0_158(XmlReader reader)
-        {
-            return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, ReadSkylineSettings_v21_1_0_158);
+            switch (version)
+            {
+                case 21.1M:
+                    return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXml);
+                case 20.2M:
+                    return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXmlVersion_20_2);
+                default:
+                    throw new ArgumentException(string.Format(
+                        Resources.AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_,
+                        version));
+            }
         }
 
         private static AutoQcConfig ReadXml(XmlReader reader, Func<XmlReader, MainSettings> mainSettingsReader,
@@ -174,7 +179,7 @@ namespace AutoQC
             }
             
             // Old configurations did not have Skyline settings. Create default SkylineSettings.
-            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline);
+            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline, null);
 
             // finish reading config before exception is thrown so following configs aren't messed up
             if (exceptionMessage != null)
@@ -189,7 +194,7 @@ namespace AutoQC
         {
             var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Old_Attr.Type), false);
             var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Old_Attr.CmdPath));
-            return new SkylineSettings(type, cmdPath);
+            return new SkylineSettings(type, null, cmdPath);
         }
         // Attributes that were used in version 21.1.0.158 of AutoQC Loader
         private enum Old_Attr

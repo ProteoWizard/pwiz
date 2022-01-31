@@ -78,16 +78,6 @@ rule vendor-api-usage-requirements ( properties * )
     return $(result) ;
 }
 
-rule msvc-shimadzu-requirement ( properties * )
-{
-    # Must be msvc
-    if ! <toolset>msvc in $(properties) { return <build>no ; }
-    if ! [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express" "11.0" "11.0express" "12.0" "12.0express" "14.0" "14.1" "14.2"
-    {
-        return <build>no ;
-    }
-}
-
 lib pwiz_vendor_api_shimadzu
     : # sources
     : # requirements
@@ -103,11 +93,11 @@ lib pwiz_vendor_api_shimadzu
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-shimadzu-requirement
+        <conditional>@msvc-dotnet-requirement
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
-        <conditional>@msvc-shimadzu-requirement
+        <conditional>@msvc-dotnet-requirement
     ;
 
 
@@ -126,7 +116,6 @@ rule install-requirements ( properties * )
     local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
-        result += <source>$(dll_location)/DataReader.dll ; # not used by pwiz, but used by Shimadzu's method exporter from Skyline
         result += <source>$(dll_location)/CLFIO32.dll ;
         result += <source>$(dll_location)/CRHAKEI2.dll ;
         result += <source>$(dll_location)/IOModuleQTFL.dll ;
@@ -139,7 +128,6 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/../Google.Protobuf.dll ;
         result += <source>$(dll_location)/../QTFLProtoCS.dll ;
         result += <source>$(dll_location)/../Shimadzu.LabSolutions.IO.IoModule.dll ;
-        result += <source>EULA.SFCS ;
     }
     return $(result) ;
 }

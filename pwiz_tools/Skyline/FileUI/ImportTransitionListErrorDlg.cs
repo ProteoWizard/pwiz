@@ -89,6 +89,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
+        }
+
         private void cbShowText_CheckedChanged(object sender, System.EventArgs e)
         {
             LineText.Visible = cbShowText.Checked;

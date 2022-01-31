@@ -390,6 +390,8 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.xml
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.txt
 /pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.xml
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.xml
@@ -408,6 +410,7 @@ SkylineTester Results
 /bs32.bat
 /bso64.bat
 /bso32.bat
+/SignAfterPublishPW.bat
 /OnyxTOFMS.试验.wiff.scan
 /160109_Mix1_calcurve_074_raw.skyl
 /160109_Mix1_calcurve_074_raw.skyd

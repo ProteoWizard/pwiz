@@ -79,10 +79,17 @@ namespace SharedBatch
         public void Finish()
         {
             Completed = true;
-            Invoke(new Action(() =>
+            try
             {
-                if (Visible) Close();
-            }));
+                Invoke(new Action(() =>
+                {
+                    if (Visible) Close();
+                }));
+            }
+            catch (ObjectDisposedException)
+            {
+                // pass
+            }
         }
     }
 }

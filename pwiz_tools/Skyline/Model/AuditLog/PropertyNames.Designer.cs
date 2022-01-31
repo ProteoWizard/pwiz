@@ -655,11 +655,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS2 analyzer.
+        /// </summary>
+        public static string DdaSearchSettings_Ms2Analyzer {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_Ms2Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor tolerance.
         /// </summary>
         public static string DdaSearchSettings_PrecursorTolerance {
             get {
                 return ResourceManager.GetString("DdaSearchSettings_PrecursorTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search Engine.
+        /// </summary>
+        public static string DdaSearchSettings_SearchEngine {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_SearchEngine", resourceCulture);
             }
         }
         
@@ -4296,6 +4314,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionIntegration_IsIntegrateAll {
             get {
                 return ResourceManager.GetString("TransitionIntegration_IsIntegrateAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration All.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationAll {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration Group By.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationGroupBy {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationGroupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Synchronized Integration Targets.
+        /// </summary>
+        public static string TransitionIntegration_SynchronizedIntegrationTargets {
+            get {
+                return ResourceManager.GetString("TransitionIntegration_SynchronizedIntegrationTargets", resourceCulture);
             }
         }
         

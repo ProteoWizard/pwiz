@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,17 +29,20 @@ using File = System.IO.File;
 
 namespace SkylineBatch
 {
-    [XmlRoot("main_settings")]
+    [XmlRoot("file_settings")]
     public class MainSettings
     {
+        public const string XML_EL = "file_settings";
+        public const string OLD_XML_EL = "main_settings";
 
         // IMMUTABLE - all fields are readonly strings/objects
 
-        public MainSettings(SkylineTemplate skylineTemplate, string analysisFolderPath, string dataFolderPath,
+        public MainSettings(SkylineTemplate skylineTemplate, string analysisFolderPath, bool useAnalysisFolderName, string dataFolderPath,
             DataServerInfo server, string annotationsFilePath, PanoramaFile annotationsDownload, string replicateNamingPattern)
         {
             Template = skylineTemplate;
             AnalysisFolderPath = analysisFolderPath;
+            UseAnalysisFolderName = useAnalysisFolderName;
             DataFolderPath = dataFolderPath;
             Server = server;
             AnnotationsFilePath = annotationsFilePath ?? string.Empty;
@@ -50,6 +54,8 @@ namespace SkylineBatch
         public readonly SkylineTemplate Template;
 
         public readonly string AnalysisFolderPath;
+
+        public readonly bool UseAnalysisFolderName;
 
         public readonly string DataFolderPath;
 
@@ -75,13 +81,16 @@ namespace SkylineBatch
 
         public string GetResultsFilePath()
         {
-            return Path.Combine(AnalysisFolderPath, Template.FileName());
+            if (UseAnalysisFolderName)
+                return Path.Combine(AnalysisFolderPath, Path.GetFileName(AnalysisFolderPath) + TextUtil.EXT_SKY);
+            else
+                return Path.Combine(AnalysisFolderPath, Template.FileName());
         }
 
         public MainSettings WithoutDependency()
         {
             var independentTemplate = SkylineTemplate.ExistingTemplate(Template.FilePath);
-            return new MainSettings(independentTemplate, AnalysisFolderPath, DataFolderPath, Server,
+            return new MainSettings(independentTemplate, AnalysisFolderPath, UseAnalysisFolderName, DataFolderPath, Server,
                 AnnotationsFilePath, AnnotationsDownload, ReplicateNamingPattern);
         }
 
@@ -89,7 +98,7 @@ namespace SkylineBatch
         {
             if (string.IsNullOrEmpty(newFilePath)) return WithoutDependency();
             var newTemplate = SkylineTemplate.DependentTemplate(newFilePath, newName);
-            return new MainSettings(newTemplate, AnalysisFolderPath, DataFolderPath, Server,
+            return new MainSettings(newTemplate, AnalysisFolderPath, UseAnalysisFolderName, DataFolderPath, Server,
                  AnnotationsFilePath, AnnotationsDownload, ReplicateNamingPattern);
         }
 
@@ -206,15 +215,15 @@ namespace SkylineBatch
             var dataReplaced =
                 TextUtil.SuccessfulReplace(dataValidator, oldRoot, newRoot, DataFolderPath,
                     Server != null || preferReplace, out string replacedDataPath);
-            var dataServer = Server != null ? new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, replacedDataPath) : null;
+            var dataServer = Server != null ? new DataServerInfo(Server.FileSource, Server.RelativePath, Server.DataNamingPattern, replacedDataPath) : null;
             var annotationsValidator = AnnotationsDownload != null
                 ? ValidateAnnotationsWithServer
                 : (Validator)ValidateAnnotationsWithoutServer;
             var annotationsReplaced =
                 TextUtil.SuccessfulReplace(annotationsValidator, oldRoot, newRoot, AnnotationsFilePath, preferReplace, out string replacedAnnotationsPath);
-            var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? new PanoramaFile(AnnotationsDownload, Path.GetDirectoryName(replacedAnnotationsPath), AnnotationsDownload.FileName) : null;
+            var annotationsDownload = AnnotationsDownload != null && !string.IsNullOrEmpty(replacedAnnotationsPath) ? AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(replacedAnnotationsPath)) : null;
 
-            pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, replacedDataPath,
+            pathReplacedMainSettings = new MainSettings(replacedTemplate, replacedAnalysisPath, UseAnalysisFolderName, replacedDataPath,
                 dataServer, replacedAnnotationsPath, annotationsDownload, ReplicateNamingPattern);
             return templateReplaced || analysisReplaced || dataReplaced || annotationsReplaced;
         }
@@ -224,14 +233,36 @@ namespace SkylineBatch
             var skylineTemplate = Template.ForcePathReplace(oldRoot, newRoot);
             var analysisFolderPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnalysisFolderPath);
             var dataPath = FileUtil.ForceReplaceRoot(oldRoot, newRoot, DataFolderPath);
-            var dataServer = new DataServerInfo(Server.URI, Server.Username, Server.Password, Server.Encrypt, Server.DataNamingPattern, dataPath);
+            var dataServer = new DataServerInfo(Server.FileSource, Server.RelativePath, Server.DataNamingPattern, dataPath);
             var annotationsPath = !string.IsNullOrEmpty(AnnotationsFilePath) ? FileUtil.ForceReplaceRoot(oldRoot, newRoot, AnnotationsFilePath) : string.Empty;
 
            var annotationsDownload = AnnotationsDownload != null
                ? AnnotationsDownload.ReplaceFolder(Path.GetDirectoryName(annotationsPath)) : null;
 
-            return new MainSettings(skylineTemplate, analysisFolderPath, dataPath,
+            return new MainSettings(skylineTemplate, analysisFolderPath, UseAnalysisFolderName, dataPath,
                 dataServer, annotationsPath, annotationsDownload, ReplicateNamingPattern);
+        }
+
+        public MainSettings UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newTemplate = Template.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            var newDataServer = Server != null ? Server.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources) : null;
+            var newAnnotationsDownload = AnnotationsDownload != null ? AnnotationsDownload.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources) : null;
+            return new MainSettings(newTemplate, AnalysisFolderPath, UseAnalysisFolderName, DataFolderPath,
+                newDataServer, AnnotationsFilePath, newAnnotationsDownload, ReplicateNamingPattern);
+        }
+
+        public MainSettings ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newTemplate = Template.ReplacedRemoteFileSource(existingSource, newSource, out bool templateReplaced);
+            var dataReplaced = false;
+            var newDataServer = Server != null ? Server.ReplacedRemoteFileSource(existingSource, newSource, out dataReplaced) : null;
+            var annotationsReplaced = false;
+            var newAnnotationsDownload = AnnotationsDownload != null ? AnnotationsDownload.ReplacedRemoteFileSource(existingSource, newSource, out annotationsReplaced) : null;
+            replaced = templateReplaced || dataReplaced || annotationsReplaced;
+            return new MainSettings(newTemplate, AnalysisFolderPath, UseAnalysisFolderName, DataFolderPath,
+                newDataServer, AnnotationsFilePath, newAnnotationsDownload, ReplicateNamingPattern);
         }
 
         public bool RunWillOverwrite(RunBatchOptions runOption, string configHeader, out StringBuilder message)
@@ -264,6 +295,7 @@ namespace SkylineBatch
         public static MainSettings ReadXml(XmlReader reader)
         {
             var analysisFolderPath = reader.GetAttribute(XML_TAGS.analysis_folder_path);
+            var useAnalysisFolderName = reader.GetBoolAttribute(XML_TAGS.use_analysis_folder_name);
             var replicateNamingPattern = reader.GetAttribute(XML_TAGS.replicate_naming_pattern);
             reader.ReadToDescendant(XMLElements.TEMPLATE_FILE);
             var template = SkylineTemplate.ReadXml(reader);
@@ -273,14 +305,65 @@ namespace SkylineBatch
             reader.ReadToFollowing(XMLElements.ANNOTATIONS_FILE);
             var annotationsFilePath = reader.GetAttribute(XML_TAGS.path);
             var annotationsDownload = PanoramaFile.ReadXml(reader, annotationsFilePath);
-            return new MainSettings(template, analysisFolderPath, dataFolderPath, server,
+            return new MainSettings(template, analysisFolderPath, useAnalysisFolderName, dataFolderPath, server,
                 annotationsFilePath, annotationsDownload, replicateNamingPattern);
+        }
+
+        public static MainSettings ReadXmlVersion_21_1(XmlReader reader)
+        {
+            var analysisFolderPath = reader.GetAttribute(XML_TAGS.analysis_folder_path);
+            var replicateNamingPattern = reader.GetAttribute(XML_TAGS.replicate_naming_pattern);
+            reader.ReadToDescendant(XMLElements.TEMPLATE_FILE);
+            var template = SkylineTemplate.ReadXmlVersion_21_1(reader);
+            reader.ReadToFollowing(XMLElements.DATA_FOLDER);
+            var dataFolderPath = reader.GetAttribute(XML_TAGS.path);
+            var server = DataServerInfo.ReadXmlVersion_21_1(reader, dataFolderPath);
+            reader.ReadToFollowing(XMLElements.ANNOTATIONS_FILE);
+            var annotationsFilePath = reader.GetAttribute(XML_TAGS.path);
+            var annotationsDownload = PanoramaFile.ReadXmlVersion_21_1(reader, annotationsFilePath);
+            return new MainSettings(template, analysisFolderPath, false, dataFolderPath, server,
+                annotationsFilePath, annotationsDownload, replicateNamingPattern);
+        }
+
+        public static MainSettings ReadXmlVersion_20_2(XmlReader reader)
+        {
+            var mainSettingsReader = reader.ReadSubtree();
+            mainSettingsReader.Read();
+            var templateFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.TemplateFilePath);
+            string zippedFilePath = null;
+            var dependentConfigName = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DependentConfigName);
+            PanoramaFile templatePanoramaFile = null;
+            var analysisFolderPath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.AnalysisFolderPath);
+            var dataFolderPath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DataFolderPath);
+            var annotationsFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.AnnotationsFilePath);
+            var replicateNamingPattern = mainSettingsReader.GetAttribute(OLD_XML_TAGS.ReplicateNamingPattern);
+
+            var server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+            //ReadDataServerXmlFields(mainSettingsReader, out Server dataServer, out string dataNamingPattern);
+
+            if (templateFilePath == null)
+            {
+                XmlUtil.ReadNextElement(mainSettingsReader, "template_file");
+                templateFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.FilePath);
+                zippedFilePath = mainSettingsReader.GetAttribute(OLD_XML_TAGS.ZipFilePath);
+                dependentConfigName = mainSettingsReader.GetAttribute(OLD_XML_TAGS.DependentConfigName);
+                templatePanoramaFile = PanoramaFile.ReadXmlVersion_20_2(mainSettingsReader); //ReadOldPanoramaFile(mainSettingsReader);
+            }
+            if (XmlUtil.ReadNextElement(mainSettingsReader, "data_server"))
+            {
+                server = DataServerInfo.ReadXmlVersion_20_2(mainSettingsReader, dataFolderPath);
+                //ReadDataServerXmlFields(mainSettingsReader, out dataServer, out dataNamingPattern);
+            }
+            var template = new SkylineTemplate(templateFilePath, zippedFilePath, dependentConfigName, templatePanoramaFile);
+            return new MainSettings(template, analysisFolderPath, false, dataFolderPath, server,
+                annotationsFilePath, null, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement(XMLElements.MAIN_SETTINGS);
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(XML_TAGS.analysis_folder_path, AnalysisFolderPath);
+            writer.WriteAttribute(XML_TAGS.use_analysis_folder_name, UseAnalysisFolderName);
             writer.WriteAttributeIfString(XML_TAGS.replicate_naming_pattern, ReplicateNamingPattern);
             Template.WriteXml(writer);
 
@@ -342,6 +425,7 @@ namespace SkylineBatch
         {
             return Equals(Template, other.Template)
                    && Equals(AnalysisFolderPath, other.AnalysisFolderPath)
+                   && Equals(UseAnalysisFolderName, other.UseAnalysisFolderName)
                    && Equals(DataFolderPath, other.DataFolderPath)
                    && Equals(ReplicateNamingPattern, other.ReplicateNamingPattern)
                    && Equals(AnnotationsFilePath, other.AnnotationsFilePath);

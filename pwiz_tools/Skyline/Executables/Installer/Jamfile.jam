@@ -53,21 +53,36 @@ rule setup_templates ( targets + : sources * : properties * )
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
     OUTPUT_PATH on $(targets) = [ path.native $(PWIZ_BUILD_PATH)/SkylineDeploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 
 rule msbuild_deploy ( targets + : sources * : properties * )
 {
     setup_templates $(targets) : $(sources) : $(properties) ;
+    
+    local .artifact-name = [ on $(targets) return $(ARTIFACT_NAME) ] ;
+    local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
+
+    if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+    {
+        echo "NOTE: signing Skyline MSI with key at: $(PFX_PATH)" ;
+        SIGNTOOL_COMMAND on $(targets) = "if %ERRORLEVEL% EQU 0 signtool sign /f \"$(PFX_PATH)\" /p $(.pfx-password) /tr http://timestamp.digicert.com /v \"$(.artifact-name).msi\"" ;
+    }
+    else
+    {
+        echo "NOTE: not signing Skyline MSI because $(PFX_PATH) does not exist or --pfx-password not set." ;
+    }
 }
 
 actions msbuild_deploy
 {
     pushd "$(LOCATION)"
     "%WIX%\bin\candle.exe" $(ARTIFACT_NAME).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dSkyline.TargetName=$(TARGET_NAME) -dSkyline.ProjectDir=$(SKYLINE_PATH) -dSkyline.TargetDir=$(SKYLINE_PATH)\bin\$(ARCH)\$(CONFIGURATION)
-    "%WIX%\bin\light.exe" $(ARTIFACT_NAME).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
-    set EXIT=%ERRORLEVEL%
-    if %EXIT% NEQ 0 exit %EXIT%
+    if %ERRORLEVEL% EQU 0 "%WIX%\bin\light.exe" $(ARTIFACT_NAME).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
+    if %ERRORLEVEL% EQU 0 $(MSVC_CURRENT_SETUP_SCRIPT)
+    $(SIGNTOOL_COMMAND)
+    if %ERRORLEVEL% NEQ 0 exit %ERRORLEVEL%
     echo Built $(ARTIFACT_NAME).msi > setup.exe
     popd
 }
@@ -126,7 +141,7 @@ actions test_msi
     echo Installing $(ARTIFACT_NAME)...
     set TEMP=%LOCALAPPDATA%\Temp
     copy "$(LOCATION)\$(ARTIFACT_NAME).msi" "%TEMP%"
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 60000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-install.log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-install.log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
     set status=%EXIT%
@@ -138,11 +153,12 @@ actions test_msi
       exit %EXIT%
     )
 
+    chcp 437
     set PATH_TMP=%PATH%
     set PATH=
-    copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)"
-    copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)"
-    copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)"
+    copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)" >nul
+    copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)" >nul
+    copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)" >nul
     $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
     set TEST_EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
@@ -152,9 +168,8 @@ actions test_msi
     $(TEST_PRECOMMAND)
 
     echo Uninstalling $(ARTIFACT_NAME)...
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 60000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
-    rmdir /s /q "$(INSTALL_PATH)"
     IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
     IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
 
@@ -164,8 +179,8 @@ actions test_msi
     IF %TEST_EXIT% EQU 0 echo Deployment test passed. > "$(LOCATION)\Test.passed"
 
     rmdir /s /q "$(INSTALL_PATH)"
-    copy "%TEMP%\$(ARTIFACT_NAME)-install.log" "$(LOCATION)"
-    copy "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" "$(LOCATION)"
+    copy "%TEMP%\$(ARTIFACT_NAME)-install.log" "$(LOCATION)" >nul
+    copy "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" "$(LOCATION)" >nul
     del "%TEMP%\$(ARTIFACT_NAME).msi"
 
     IF %TEST_EXIT% NEQ 0 exit 1

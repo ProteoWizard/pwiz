@@ -74,40 +74,24 @@ namespace SharedBatch.Properties
             private set => this["InstallationId"] = value;
         }
 
-        [ApplicationScopedSetting]
-        public Dictionary<string,string> RVersions
-        {
-            get
-            {
-                var dict = (Dictionary<string, string>)this["RVersions"]; // Not L10N
-                if (dict == null)
-                {
-                    dict = new Dictionary<string,string>();
-                    RVersions = dict;
-                }
-                return dict;
-            }
-            set => this["RVersions"] = value; // Not L10N
-        }
-
         // Upgrades the settings from the previous version and rewrites the XML to the current version
-        public void Update(string oldXmlPath, string newVersion, string appName, XmlUpdater updater)
+        public void Update(string xmlFile, decimal currentXmlVersion, string appName)
         {
-            Upgrade();
-            var newXmlPath = string.Empty;
             try
             {
-                newXmlPath = updater(oldXmlPath, newVersion);
-                if (newXmlPath == null)
+                if (!File.Exists(xmlFile))
                     return;
+                ProgramLog.Info(string.Format(Resources.Settings_Update_Saved_configurations_were_found_in___0_, xmlFile));
+                
                 var configList = new ConfigList();
-                using (var stream = new FileStream(newXmlPath, FileMode.Open))
+                using (var stream = new FileStream(xmlFile, FileMode.Open))
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
                         while (reader.Read())
                         {
-                            if (!reader.IsStartElement("config_list")) continue;
+                            if (!reader.IsStartElement("config_list") && !reader.IsStartElement("ConfigList")) continue;
+
                             configList.ReadXml(reader);
                             break;
                         }
@@ -121,12 +105,10 @@ namespace SharedBatch.Properties
                 ProgramLog.Error(e.Message, e);
                 var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
                 var newFileName = Path.Combine(folderToCopy, "error-user.config");
-                var message = string.Format(
-                    Resources
-                        .Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
-                    appName);
-                File.Copy(oldXmlPath, newFileName, true);
-                File.Delete(oldXmlPath);
+                var message = string.Format(Resources.Settings_Update_There_was_an_error_reading_the_saved__0__configurations_,
+                    appName) + Environment.NewLine + e.Message;
+                File.Copy(xmlFile, newFileName, true);
+                File.Delete(xmlFile);
                 message += Environment.NewLine + Environment.NewLine +
                            string.Format(
                                Resources
@@ -137,11 +119,6 @@ namespace SharedBatch.Properties
 
                 MessageBox.Show(message);
             }
-            finally
-            {
-                if (newXmlPath != null && File.Exists(newXmlPath))
-                    File.Delete(newXmlPath);
-            }
         }
     }
 
@@ -151,8 +128,7 @@ namespace SharedBatch.Properties
 
         public static Importer Importer;
 
-        public static string Version;
-        public const string DUMMY_VER = "0.0.0.0";
+        public static decimal XmlVersion = -1;
 
         public XmlSchema GetSchema()
         {
@@ -162,6 +138,17 @@ namespace SharedBatch.Properties
         public void ReadXml(XmlReader reader)
         {
             var isEmpty = reader.IsEmptyElement;
+
+            decimal importingXmlVersion;
+            try
+            {
+                importingXmlVersion = ReadXmlVersion(reader);
+            }
+            catch (ArgumentException e)
+            {
+                MessageBox.Show(e.Message);
+                return;
+            }
 
             // Read past the property element
             reader.Read();
@@ -181,7 +168,7 @@ namespace SharedBatch.Properties
                 {
                     try
                     {
-                        list.Add(Importer(reader));
+                        list.Add(Importer(reader, importingXmlVersion));
                     }
                     catch (ArgumentException e)
                     {
@@ -208,8 +195,26 @@ namespace SharedBatch.Properties
 
         }
 
+        public static decimal ReadXmlVersion(XmlReader reader)
+        {
+            if (!reader.Name.Equals("ConfigList") && !reader.Name.Equals("config_list"))
+                throw new ArgumentException(Resources.ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_);
+            var xmlVersion = reader.GetAttribute(Attr.xml_version) != null
+                ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version))
+                : -1;
+            var importingVersion = reader.GetAttribute(Attr.version);
+
+            // if the xml version is not set, AutoQC and SkylineBatch are on the same version numbers
+            if (xmlVersion < 0)
+                xmlVersion = importingVersion != null ? 21.1M : 20.2M;
+            return xmlVersion;
+        }
+
         enum Attr
         {
+            xml_version,
+
+            // deprecated
             version
         }
 
@@ -223,7 +228,7 @@ namespace SharedBatch.Properties
             // The version should never be blank but if it is write a dummy version "0.0.0.0". An exception thrown here while
             // running the program will not be caught, and any existing configurations will not be written to user.config. 
             // As a result, the user will not see any saved configurations next time they start the application.
-            writer.WriteAttributeString(Attr.version, string.IsNullOrEmpty(Version) ? DUMMY_VER : Version);
+            writer.WriteAttribute(Attr.xml_version, XmlVersion);
             foreach (var config in this)
             {
                 config.WriteXml(writer);

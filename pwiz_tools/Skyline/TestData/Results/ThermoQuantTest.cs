@@ -260,55 +260,6 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.InstrumentSerialNumber == "TQU00490"));
                 Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.SampleId == "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid"));
 
-                // Make sure all groups have at least 5 transitions (of 6) with ratios
-                int ratioGroupMissingCount = 0;
-                foreach (var nodeGroup in docResults.MoleculeTransitionGroups)
-                {
-                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                    {
-                        foreach (var result in nodeGroup.Results)
-                            Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");
-                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                        {
-                            foreach (var resultTran in nodeTran.Results)
-                                Assert.IsFalse(resultTran[0].Ratio.HasValue, "Light transition found with a ratio");
-                        }
-                    }
-                    else
-                    {
-                        bool missingRatio = false;
-                        foreach (ChromInfoList<TransitionGroupChromInfo> chromInfoList in nodeGroup.Results)
-                        {
-                            var ratioHeavy = chromInfoList[0].Ratio;
-                            if (!ratioHeavy.HasValue)
-                                missingRatio = true;
-                        }
-                        int ratioCount1 = 0;
-                        int ratioCount2 = 0;
-                        foreach (TransitionDocNode nodeTranHeavy in nodeGroup.Children)
-                        {
-                            float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount1++;
-                            }
-                            ratioHeavy = nodeTranHeavy.Results[1][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount2++;
-                            }
-                        }
-                        Assert.AreEqual(3, ratioCount1);
-                        if (ratioCount2 < 2)
-                            ratioGroupMissingCount++;
-                        else
-                            Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
-                    }
-                }
-                // 3 groups with less than 2 transition ratios
-                Assert.AreEqual(0, ratioGroupMissingCount);
 
                 // Remove the first light transition, checking that this removes the ratio
                 // from the corresponding heavy transition, but not the entire group, until
@@ -318,40 +269,20 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(2, nodePep.Children.Count);
                 var nodeGroupLight = (TransitionGroupDocNode)nodePep.Children[0];
                 IdentityPath pathGroupLight = new IdentityPath(pathFirstPep, nodeGroupLight.TransitionGroup);
-                Assert.IsNull(nodeGroupLight.Results[0][0].Ratio, "Light group has ratio");
                 var nodeGroupHeavy = (TransitionGroupDocNode)nodePep.Children[1];
                 IdentityPath pathGroupHeavy = new IdentityPath(pathFirstPep, nodeGroupHeavy.TransitionGroup);
-                float? ratioStart = nodeGroupHeavy.Results[0][0].Ratio;
-                Assert.IsTrue(ratioStart.HasValue, "No starting heavy group ratio");
                 var expectedValues = new[] { 1.403414, 1.38697791, 1.34598482 };
                 for (int i = 0; i < 3; i++)
                 {
                     var pathLight = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 0);
                     var pathHeavy = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 3);
                     TransitionDocNode nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    float? ratioTran = nodeTran.Results[0][0].Ratio;
-                    Assert.IsTrue(ratioTran.HasValue, "Expected transition ratio not found");
-                    Assert.AreEqual(ratioTran.Value, expectedValues[i], 1.0e-5);
                     docResults = (SrmDocument)docResults.RemoveChild(pathLight.Parent, docResults.FindNode(pathLight));
-                    nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
                     Assert.AreEqual(pathGroupHeavy, pathHeavy.Parent, "Transition found outside expected group");
                     //                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
                     nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
                     //                Assert.AreEqual(nodePep.Results[0][0].RatioToStandard, nodeGroupHeavy.Results[0][0].Ratio,
                     //                                "Peptide and group ratios not equal");
-                    if (i < 2)
-                    {
-                        float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
-                        Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
-                        Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
-                                        "Unexpected group ratio change by more than 0.1");
-                    }
-                    else
-                    {
-                        Assert.IsFalse(nodeGroupHeavy.Results[0][0].Ratio.HasValue,
-                                       "Group ratio still present with no transition ratios");
-                    }
                 }
                 bool asSmallMolecules = (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
                 if (!asSmallMolecules) // GetTransitions() doesn't work the same way for small molecules - it only lists existing ones
@@ -368,14 +299,8 @@ namespace pwiz.SkylineTestData.Results
                         // Add the first transition, and then the original transitions
                         docResults = (SrmDocument)docResults.Add(pathGroupLight, nodeTran);
                         nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
-                        if (firstAdd)
-                            Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
-                        else
-                            Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
-                                "Heavy ratio null after adding light children");
                         firstAdd = false;
                     }
-                    Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
                 }
             }
             testFilesDir.Dispose();
@@ -450,18 +375,18 @@ namespace pwiz.SkylineTestData.Results
                                                                              })
                                         };
             var docResults = docMixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            SrmDocument docMixedUnmixed;
             using (var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath))
             {
                 Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
                 docContainerMixed.AssertComplete();
                 docMixed = docContainerMixed.Document;
+                docMixedUnmixed = (SrmDocument)docMixed.ChangeChildren(new DocNode[0]);
+                docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
+                    out _, out _);
+                docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             }
-            SrmDocument docMixedUnmixed = (SrmDocument) docMixed.ChangeChildren(new DocNode[0]);
-            IdentityPath tempPath;
-            docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
-                out tempPath, out tempPath);
 
-            docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             using (var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath))
             {
                 Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));

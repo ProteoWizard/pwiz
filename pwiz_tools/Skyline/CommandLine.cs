@@ -366,6 +366,11 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            if (!string.IsNullOrEmpty(commandArgs.ImportPeakBoundariesPath) && !ImportPeakBoundaries(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Refinement != null && !RefineDocument(commandArgs))
             {
                 return false;
@@ -508,6 +513,25 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool ImportPeakBoundaries (CommandArgs commandArgs)
+        {
+            try
+            {
+                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
+                long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
+                PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                ModifyDocument(d => importer.Import(commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount));
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1895,7 +1919,7 @@ namespace pwiz.Skyline
                 return false;
 
             // Add iRTs
-            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            if (import.IrtStandard != null && !import.IrtStandard.IsEmpty)
             {
                 ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
                     out var irtProviders, out var autoStandards, out var cirtPeptides);
@@ -1909,7 +1933,7 @@ namespace pwiz.Skyline
                     }
                     numCirt = commandArgs.NumCirts.Value;
                 }
-                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                else if (import.IrtStandard.IsAuto)
                 {
                     switch (autoStandards.Count)
                     {
@@ -2005,7 +2029,7 @@ namespace pwiz.Skyline
                 try
                 {
                     IdentityPath firstAdded, nextAdd;
-                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, progressMonitor, null,
+                    doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, import.IrtStandard, progressMonitor, null,
                         out firstAdded, out nextAdd, out peptideGroupsNew);
                 }
                 catch (Exception x)
@@ -2351,7 +2375,7 @@ namespace pwiz.Skyline
 
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
-            var importer = _doc.PreImportMassList(inputs, progressMonitor, false);
+            var importer = _doc.PreImportMassList(inputs, progressMonitor, false, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
             var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
                 out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
 
@@ -2548,7 +2572,7 @@ namespace pwiz.Skyline
 
             public LibraryReference(Library reference)
             {
-                Reference = Reference;
+                Reference = reference;
             }
 
             public void Dispose()
@@ -2889,14 +2913,14 @@ namespace pwiz.Skyline
                         return false; // Dont add.
                     }
                     // Skip conflicts
-                    if (resolveToolConflictsBySkipping == true)
+                    else if (resolveToolConflictsBySkipping == true)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, tool.Title);
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
                         return true;
                     }
-                    // Ovewrite conflicts
-                    if (resolveToolConflictsBySkipping == false)
+                    // Overwrite conflicts
+                    else
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__the_tool__0__was_overwritten, tool.Title);
 //                      _out.WriteLine("         tool {0} was modified.", tool.Title);
@@ -3734,11 +3758,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public const string ERROR_MESSAGE_HINT = @"Error:";
+
         private bool IsErrorMessage(string message)
         {
             if (message != null && !IsErrorReported)
             {
-                return message.StartsWith(@"Error:", StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
+                return message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||  // In Skyline-daily any message might not be localized
                        message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_,
                            StringComparison.CurrentCulture);
             }

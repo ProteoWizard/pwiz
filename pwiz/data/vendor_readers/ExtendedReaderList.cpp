@@ -28,6 +28,7 @@
 #include "ABI/T2D/Reader_ABI_T2D.hpp"
 #include "Agilent/Reader_Agilent.hpp"
 #include "Bruker/Reader_Bruker.hpp"
+#include "Mobilion/Reader_Mobilion.hpp"
 #include "Shimadzu/Reader_Shimadzu.hpp"
 #include "Thermo/Reader_Thermo.hpp"
 #include "UIMF/Reader_UIMF.hpp"
@@ -52,6 +53,9 @@ PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
     push_back(ReaderPtr(new Reader_Bruker_YEP));
     push_back(ReaderPtr(new Reader_Bruker_U2));
 #endif
+#if defined(PWIZ_READER_MOBILION)
+	push_back(ReaderPtr(new Reader_Mobilion));
+#endif	
     push_back(ReaderPtr(new Reader_Shimadzu));
     push_back(ReaderPtr(new Reader_Thermo));
     push_back(ReaderPtr(new Reader_UIMF));

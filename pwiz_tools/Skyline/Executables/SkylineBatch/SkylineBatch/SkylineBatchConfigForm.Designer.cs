@@ -50,10 +50,13 @@
             this.label8 = new System.Windows.Forms.Label();
             this.checkBoxRemoveDecoys = new System.Windows.Forms.CheckBox();
             this.checkBoxRemoveData = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.textAnalysisPath = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabFiles = new System.Windows.Forms.TabPage();
+            this.checkBoxUseFolderName = new System.Windows.Forms.CheckBox();
+            this.textAnalysisFileName = new System.Windows.Forms.TextBox();
             this.comboTemplateFile = new System.Windows.Forms.ComboBox();
             this.textReplicateNamingPattern = new System.Windows.Forms.TextBox();
             this.textConfigName = new System.Windows.Forms.TextBox();
@@ -211,10 +214,17 @@
             this.toolTip1.SetToolTip(this.checkBoxRemoveData, resources.GetString("checkBoxRemoveData.ToolTip"));
             this.checkBoxRemoveData.UseVisualStyleBackColor = true;
             // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            this.toolTip1.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
+            // 
             // textAnalysisPath
             // 
             resources.ApplyResources(this.textAnalysisPath, "textAnalysisPath");
             this.textAnalysisPath.Name = "textAnalysisPath";
+            this.textAnalysisPath.TextChanged += new System.EventHandler(this.textAnalysisPath_TextChanged);
             // 
             // splitContainer1
             // 
@@ -247,6 +257,9 @@
             // tabFiles
             // 
             this.tabFiles.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.tabFiles.Controls.Add(this.checkBoxUseFolderName);
+            this.tabFiles.Controls.Add(this.textAnalysisFileName);
+            this.tabFiles.Controls.Add(this.label1);
             this.tabFiles.Controls.Add(this.comboTemplateFile);
             this.tabFiles.Controls.Add(this.textReplicateNamingPattern);
             this.tabFiles.Controls.Add(this.linkLabelRegex);
@@ -261,6 +274,19 @@
             resources.ApplyResources(this.tabFiles, "tabFiles");
             this.tabFiles.Name = "tabFiles";
             this.tabFiles.Enter += new System.EventHandler(this.TabEnter);
+            // 
+            // checkBoxUseFolderName
+            // 
+            resources.ApplyResources(this.checkBoxUseFolderName, "checkBoxUseFolderName");
+            this.checkBoxUseFolderName.Name = "checkBoxUseFolderName";
+            this.checkBoxUseFolderName.UseVisualStyleBackColor = true;
+            this.checkBoxUseFolderName.CheckedChanged += new System.EventHandler(this.checkBoxUseFolderName_CheckedChanged);
+            // 
+            // textAnalysisFileName
+            // 
+            resources.ApplyResources(this.textAnalysisFileName, "textAnalysisFileName");
+            this.textAnalysisFileName.Name = "textAnalysisFileName";
+            this.textAnalysisFileName.ReadOnly = true;
             // 
             // comboTemplateFile
             // 
@@ -622,5 +648,8 @@
         private System.Windows.Forms.Panel panelTemplate;
         private System.Windows.Forms.Panel panelData;
         private System.Windows.Forms.CheckBox checkBoxLogTestFormat;
+        public System.Windows.Forms.CheckBox checkBoxUseFolderName;
+        public System.Windows.Forms.TextBox textAnalysisFileName;
+        private System.Windows.Forms.Label label1;
     }
 }

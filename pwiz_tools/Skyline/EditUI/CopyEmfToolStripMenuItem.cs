@@ -20,9 +20,11 @@ using System;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -30,6 +32,8 @@ namespace pwiz.Skyline.EditUI
     /// Menu item which copies a metafile to the clipboard.
     /// CONSIDER(nicksh): it would be nice if this also copied CF_BITMAP format to the clipboard,
     /// but I haven't been able to get that to work.
+    /// This class makes direct calls to the clipboard functions in user32.dll, because I have not
+    /// been able to figure out how to get metafiles to work with DataObject.
     /// </summary>
     public sealed class CopyEmfToolStripMenuItem : ToolStripMenuItem
     {
@@ -47,12 +51,11 @@ namespace pwiz.Skyline.EditUI
         {
             ZedGraphControl = zedGraphControl;
             Text = Resources.CopyEmfToolStripMenuItem_CopyEmfToolStripMenuItem_Copy_Metafile;
-            Click += CopyEmfToolStripMenuItem_Click;
         }
 
         public ZedGraphControl ZedGraphControl { get; private set; }
 
-        void CopyEmfToolStripMenuItem_Click(object sender, EventArgs e)
+        protected override void OnClick(EventArgs e)
         {
             CopyEmf(ZedGraphControl);
         }
@@ -71,33 +74,19 @@ namespace pwiz.Skyline.EditUI
                     CloseClipboard();
                 }
             }
-            if (zedGraphControl.IsShowCopyMessage)
-            {
-                MessageDlg.Show(zedGraphControl,
-                                success
-                                    ? Resources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard
-                                    : Resources.CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard);
-            }
-        }
 
-        /// <summary>
-        /// Adds a new "copy metafile" and "copy graph data" menu items right below the existing "copy" command
-        /// on the context menu.
-        /// </summary>
-        public static void AddToContextMenu(ZedGraphControl zedGraphControl, ContextMenuStrip contextMenuStrip)
-        {
-            int index = contextMenuStrip.Items.Count;
-            for (int i = 0; i < contextMenuStrip.Items.Count; i++)
+            if (!success)
             {
-                var item = contextMenuStrip.Items[i];
-                if (item.Text == Resources.CopyEmfToolStripMenuItem_AddToContextMenu_Copy)
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(zedGraphControl), ClipboardHelper.GetCopyErrorMessage());
+            }
+            else
+            {
+                if (zedGraphControl.IsShowCopyMessage)
                 {
-                    index = i + 1;
-                    break;
+                    MessageDlg.Show(zedGraphControl,
+                        Resources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard);
                 }
             }
-            contextMenuStrip.Items.Insert(index, new CopyGraphDataToolStripMenuItem(zedGraphControl));
-            contextMenuStrip.Items.Insert(index, new CopyEmfToolStripMenuItem(zedGraphControl));
         }
-	}
+    }
 }

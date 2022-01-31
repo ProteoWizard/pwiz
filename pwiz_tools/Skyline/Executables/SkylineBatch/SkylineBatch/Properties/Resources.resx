@@ -691,6 +691,12 @@
   <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
     <value>Please choose a unique name.</value>
   </data>
+  <data name="Edit_Redo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Redo.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Edit_Undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Edit_Undo.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_" xml:space="preserve">
     <value>The URL cannot be empty. Please enter a URL.</value>
   </data>
@@ -840,5 +846,44 @@
   </data>
   <data name="AddServerForm_GetServerFromUi_The_server_cannot_be_empty__Please_enter_the_server_information_" xml:space="preserve">
     <value>The server cannot be empty. Please enter the server information.</value>
+  </data>
+  <data name="XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_" xml:space="preserve">
+    <value>The version of the imported file {0} was not recognized. No configurations will be imported.</value>
+  </data>
+  <data name="SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_changed_while_a_run_is_being_started__Please_try_again_" xml:space="preserve">
+    <value>The state of the configuration list cannot be changed while a run is being started. Please try again.</value>
+  </data>
+  <data name="Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_" xml:space="preserve">
+    <value>No remote file source was specified. Please choose a remote file source.</value>
+  </data>
+  <data name="RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_" xml:space="preserve">
+    <value>Another remote file location with the name {0} already exists. Please choose a unique name.</value>
+  </data>
+  <data name="SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_" xml:space="preserve">
+    <value>A remote file source named "{0}" already exists. Please choose a different name.</value>
+  </data>
+  <data name="DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_" xml:space="preserve">
+    <value>A remote file source is required. Please select a remote file source.</value>
+  </data>
+  <data name="SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_" xml:space="preserve">
+    <value>Changing this file source will impact the following configurations:</value>
+  </data>
+  <data name="SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Add____" xml:space="preserve">
+    <value>&lt;Add...&gt;</value>
+  </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Edit_current____" xml:space="preserve">
+    <value>&lt;Edit current...&gt;</value>
+  </data>
+  <data name="RemoteFileControl_UpdateRemoteSourceList__Edit_list____" xml:space="preserve">
+    <value>&lt;Edit list...&gt;</value>
+  </data>
+  <data name="SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_" xml:space="preserve">
+    <value>This file type must be downloaded from Panorama instead of an FTP source. Do you want to add this FTP file source anyway?</value>
+  </data>
+  <data name="RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_" xml:space="preserve">
+    <value>This file type does not support downloads from an FTP file source. Please download this file from Panorama.</value>
   </data>
 </root>

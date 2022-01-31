@@ -80,9 +80,9 @@ namespace AutoQCTest
             if (SkylineInstallations.FindSkyline())
             {
                 if (SkylineInstallations.HasSkyline)
-                    return new SkylineSettings(SkylineType.Skyline);
+                    return new SkylineSettings(SkylineType.Skyline, null);
                 if (SkylineInstallations.HasSkylineDaily)
-                    return new SkylineSettings(SkylineType.SkylineDaily);
+                    return new SkylineSettings(SkylineType.SkylineDaily, null);
             }
 
             return null;
@@ -129,8 +129,9 @@ namespace AutoQCTest
                 };
             }
 
-            foreach(var config in configs)
-                testConfigManager.UserAddConfig(config);
+            foreach (var config in configs)
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(config, null));
             
             return testConfigManager;
         }
@@ -149,8 +150,7 @@ namespace AutoQCTest
         public static void InitializeSettingsImportExport()
         {
             ConfigList.Importer = AutoQcConfig.ReadXml;
-            AutoQC.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
-            // ConfigList.Version = "1000.0.0.0"; // Don't set this here.  We expect this to get set when AutoQcConfigManager is initialized
+            ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
     }
     

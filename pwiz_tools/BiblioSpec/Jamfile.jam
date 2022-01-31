@@ -122,7 +122,7 @@ tar.create bibliospec-bin.tar.bz2
     $(PWIZ_LIBRARIES_PATH)/predef
     $(PWIZ_LIBRARIES_PATH)/libsvm-3.0
     $(PWIZ_LIBRARIES_PATH)/SQLite
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 expat*.tar.bz2 ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 expat*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     "path-anchor:$(BOOST_SUBSET_PATH)"
@@ -142,6 +142,6 @@ tar.create bibliospec-bin.tar.bz2
 
 .common-requirements = <location>$(.common-location) <dependency>$(PWIZ_ROOT_PATH)//boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>VERSION ;
 
-tar.create bibliospec-src.tar.bz2             : $(.blib-sources) $(.l) : $(.common-requirements) <name>bibliospec-src-$(version-tag:J=_).tar.bz2 ;
-tar.create bibliospec-src-without-t.tar.bz2   : $(.no-t) $(.blib-sources) $(.l) : $(.common-requirements) <name>bibliospec-src-without-t-$(version-tag:J=_).tar.bz2 ;
+tar.create bibliospec-src.tar.bz2             : $(.l) $(.blib-sources) : $(.common-requirements) <name>bibliospec-src-$(version-tag:J=_).tar.bz2 ;
+tar.create bibliospec-src-without-t.tar.bz2   : $(.no-t) $(.l) $(.blib-sources) : $(.common-requirements) <name>bibliospec-src-without-t-$(version-tag:J=_).tar.bz2 ;
 explicit bibliospec-src.tar.bz2 bibliospec-src-without-t.tar.bz2 ;

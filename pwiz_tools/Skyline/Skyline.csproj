@@ -33,7 +33,7 @@
     <!-- Make the assembly name configurable -->
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>105</ApplicationRevision>
-    <ApplicationVersion>21.0.9.105</ApplicationVersion>
+    <ApplicationRevision>298</ApplicationRevision>
+    <ApplicationVersion>21.1.1.298</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -148,12 +148,6 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodConverter">
-      <HintPath>Method\Shimadzu\x86\MethodConverter.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
-      <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
@@ -162,12 +156,6 @@
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodWriter">
-      <HintPath>Method\Shimadzu\x86\MethodWriter.dll</HintPath>
-    </Reference>
-    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodWriter">
-      <HintPath>Method\Shimadzu\x64\MethodWriter.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
@@ -222,6 +210,12 @@
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
+    <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MsFraggerDownloadDlg.Designer.cs">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\NoModeUIDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -315,6 +309,7 @@
     <Compile Include="Alerts\DetailedReportErrorDlg.Designer.cs">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\SimpleFileDownloaderDlg.cs" />
     <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -420,6 +415,13 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.Designer.cs">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\ZedGraphClipboard.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -434,6 +436,13 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\InsertTransitionListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
@@ -548,6 +557,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
@@ -598,6 +608,18 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -695,11 +717,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
@@ -2054,6 +2071,15 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.zh-CHS.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2537,6 +2563,15 @@
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.ja.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.zh-CHS.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2570,6 +2605,12 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.ja.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.ja.resx">
       <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2589,6 +2630,9 @@
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.zh-CHS.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -3163,6 +3207,19 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.ja.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FeatureTooltips.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.zh-CHS.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -3244,18 +3301,6 @@
       <Link>grpc_csharp_ext.x86.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\Lib\Microsoft.VC140.CRT\$(Platform)\msvcp140.dll">
-      <Link>percolator\msvcp140.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Shared\Lib\Microsoft.VC140.CRT\$(Platform)\vcomp140.dll">
-      <Link>percolator\vcomp140.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Shared\Lib\Microsoft.VC140.CRT\$(Platform)\vcruntime140.dll">
-      <Link>percolator\vcruntime140.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3276,6 +3321,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Instruments.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.pdb" />
+    <Content Include="Method\Shimadzu\MethodConverter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\MethodWriter.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Thermo\BuildThermoMethod.exe">
@@ -3322,6 +3380,9 @@
     </Content>
     <Content Include="..\..\pwiz\data\common\unimod.obo">
       <Link>unimod.obo</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config">
@@ -3437,10 +3498,19 @@
     <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start-zh-CHS.png" />
     <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start.png" />
     <EmbeddedResource Include="Resources\LogoAmanda_32.bmp" />
+    <Content Include="percolator\msvcp140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="percolator\percolator.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="percolator\qvality.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="percolator\vcomp140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="percolator\vcruntime140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="percolator\xerces-c_3_1.dll">
@@ -4824,6 +4894,10 @@
       <Link>vcruntime140.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140_1.dll">
+      <Link>vcruntime140_1.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll">
       <Link>cdt.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5381,6 +5455,36 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PublishFile Include="BaseCommon">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BaseDataAccess">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BaseTof">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
       <Visible>False</Visible>
       <Group>
@@ -5545,7 +5649,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>

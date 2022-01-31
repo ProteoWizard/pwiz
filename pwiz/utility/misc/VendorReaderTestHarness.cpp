@@ -76,14 +76,17 @@ void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& 
     BOOST_FOREACH(SourceFilePtr& sourceFilePtr, sourceFiles)
     {
         // if the sourceName or newSourceName is in the location, preserve it (erase everything preceding it)
-        size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
-        if (sourceNameInLocation != string::npos)
+        if (!isHTTP(sourceFilePtr->location))
         {
-            sourceFilePtr->location.erase(0, sourceNameInLocation);
-            sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
+            size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
+            if (sourceNameInLocation != string::npos)
+            {
+                sourceFilePtr->location.erase(0, sourceNameInLocation);
+                sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
+            }
+            else
+                sourceFilePtr->location = "file:///";
         }
-        else
-            sourceFilePtr->location = "file:///";
 
         if (!newSourceName.empty())
         {
@@ -312,10 +315,13 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent
         }
       
+        // use mzML reference file instead of remote API for the following tests
+        auto& vendorMsd = isHTTP(rawpath) ? targetResult : msd;
+
         // test that non-IMS peak picked data have unique m/z values
-        if (config.peakPicking && !config.combineIonMobilitySpectra && msd.run.spectrumListPtr)
+        if (config.peakPicking && !config.combineIonMobilitySpectra && vendorMsd.run.spectrumListPtr)
         {
-            const auto& sl = *msd.run.spectrumListPtr;
+            const auto& sl = *vendorMsd.run.spectrumListPtr;
             ostringstream ss;
 
             for (size_t i = 0; i < sl.size(); ++i)
@@ -364,12 +370,12 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 MSData msd_mz5;
                 Serializer_mz5 serializer_mz5;
-                serializer_mz5.write(targetResultFilename_mz5, msd);
+                serializer_mz5.write(targetResultFilename_mz5, vendorMsd);
                 serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
                 DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
-                Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
+                Diff<MSData, DiffConfig> diff_mz5(vendorMsd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
             }
@@ -402,11 +408,12 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bal::contains(fileType, "MassHunter") ||
             fileType == "Bruker FID" ||
             fileType == "Bruker TDF" ||
+            fileType == "Mobilion MBI" ||
             fileType == "UIMF" ||
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;
 
-        if (msd.run.spectrumListPtr)
+        if (vendorMsd.run.spectrumListPtr)
         {
             // mzML <-> mzXML
             MSData msd_mzXML;
@@ -417,11 +424,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 config_mzXML.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
             }
             Serializer_mzXML serializer_mzXML(config_mzXML);
-            serializer_mzXML.write(*stringstreamPtr, msd);
+            serializer_mzXML.write(*stringstreamPtr, vendorMsd);
             if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
             serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
 
-            Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
+            Diff<MSData, DiffConfig> diff_mzXML(vendorMsd, msd_mzXML, diffConfig_non_mzML);
             if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
             if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
             unit_assert(!diff_mzXML);
@@ -434,15 +441,15 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (msd.run.spectrumListPtr)
         {
             // mzML <-> MGF
-            msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(msd.run.spectrumListPtr));
+            vendorMsd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(vendorMsd.run.spectrumListPtr));
             MSData msd_MGF;
             Serializer_MGF serializer_MGF;
-            serializer_MGF.write(*stringstreamPtr, msd);
+            serializer_MGF.write(*stringstreamPtr, vendorMsd);
             if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
             serializer_MGF.read(serializedStreamPtr, msd_MGF);
 
             diffConfig_non_mzML.ignoreIdentity = true;
-            Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
+            Diff<MSData, DiffConfig> diff_MGF(vendorMsd, msd_MGF, diffConfig_non_mzML);
             if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
             if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
             unit_assert(!diff_MGF);
@@ -451,23 +458,24 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     msds.clear();
 
-    // test reverse iteration of metadata on a fresh document;
+    // test reverse iteration of metadata on a fresh document; remote APIs excluded (e.g. UNIFI);
     // this tests that caching optimization for forward iteration doesn't hide problems;
     // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
-    for (auto runItr = runRange; runItr.first < runItr.second; ++runItr.first)
-    {
-        MSData msd_reverse;
-        reader.read(rawpath, rawheader, msd_reverse, runItr.first, readerConfig);
-        if (os_) (*os_) << "Reverse iteration test of " << config.resultFilename(msd_reverse.run.id + ".mzML") << endl;
+    if (!isHTTP(rawpath))
+        for (auto runItr = runRange; runItr.first < runItr.second; ++runItr.first)
+        {
+            MSData msd_reverse;
+            reader.read(rawpath, rawheader, msd_reverse, runItr.first, readerConfig);
+            if (os_) (*os_) << "Reverse iteration test of " << config.resultFilename(msd_reverse.run.id + ".mzML") << endl;
 
-        if (msd_reverse.run.spectrumListPtr.get())
-            for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
-                msd_reverse.run.spectrumListPtr->spectrum(end - j - 1);
+            if (msd_reverse.run.spectrumListPtr.get())
+                for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
+                    msd_reverse.run.spectrumListPtr->spectrum(end - j - 1);
 
-        if (msd_reverse.run.chromatogramListPtr.get())
-            for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
-                msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
-    }
+            if (msd_reverse.run.chromatogramListPtr.get())
+                for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
+                    msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
+        }
 
     // no unicode test for HTTP paths
     if (isHTTP(rawpath))
@@ -728,6 +736,12 @@ PWIZ_API_DECL
 string ReaderTestConfig::resultFilename(const string& baseFilename) const
 {
     string result = baseFilename;
+
+    string illegalFilename = "\\/*:?<>|\"";
+    for (char& c : result)
+        if (illegalFilename.find(c) != string::npos)
+            c = '_';
+
     if (simAsSpectra) bal::replace_all(result, ".mzML", "-simSpectra.mzML");
     if (srmAsSpectra) bal::replace_all(result, ".mzML", "-srmSpectra.mzML");
     if (acceptZeroLengthSpectra) bal::replace_all(result, ".mzML", "-acceptZeroLength.mzML");

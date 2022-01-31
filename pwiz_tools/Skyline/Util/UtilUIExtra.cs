@@ -417,6 +417,19 @@ EndSelection:<<<<<<<3
             }
         }
 
+        public static void SetClipboardData(Control owner, DataObject data, bool copy)
+        {
+            try
+            {
+                ClipboardEx.Clear();
+                ClipboardEx.SetDataObject(data, copy);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetCopyErrorMessage());
+            }
+        }
+
         public static string GetClipboardText(Control owner)
         {
             try

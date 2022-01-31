@@ -87,7 +87,10 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_20_22 = new DocumentFormat(20.22); // Flat crosslinks
         public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
         public static readonly DocumentFormat VERSION_21_1 = new DocumentFormat(21.1); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_21_1;
+        public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Import Time
+        public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration, auto-train peak scoring model
+        public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2); // Release format
+        public static readonly DocumentFormat CURRENT = VERSION_21_2;
 
 
         private readonly double _versionNumber;

@@ -1,20 +1,27 @@
 <?xml version="1.0"?>
 <views>
-  <view name="MSstats Input" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
-    <column name="Precursor.Peptide.Protein.Name" />
-    <column name="Precursor.Peptide.ModifiedSequence" />
+  <view name="MSstatsInput4" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*" uimode="proteomic">
+    <column name="Precursor.Peptide.Protein" />
+    <column name="Precursor.Peptide.Protein.Locator" />
+    <column name="Precursor.Peptide" />
+    <column name="Precursor.Peptide.Locator" />
+    <column name="Precursor.Peptide.StandardType" />
     <column name="Precursor.Charge" />
+    <column name="Precursor.IsotopeLabelType" />
+    <column name="Precursor.Locator" />
     <column name="FragmentIon" />
     <column name="ProductCharge" />
-    <column name="Precursor.IsotopeLabelType" />
+    <column name="Locator" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate" />
     <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Condition&quot;" />
     <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_BioReplicate&quot;" />
-    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
-    <column name="Results!*.Value.Area" />
-    <column name="Precursor.Peptide.StandardType" />
-    <column name="Results!*.Value.Truncated" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Locator" />
     <column name="Results!*.Value.PrecursorResult.DetectionQValue" />
-    <filter column="Results!*.Value" opname="isnotnullorblank" />
+    <column name="Results!*.Value.Area" />
+    <column name="Results!*.Value.Truncated" />
+    <column name="Results!*.Value.TransitionResultIsMs1" />
+    <column name="Results!*.Value.Locator" />
     <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
+    <filter column="Results!*.Value.TransitionResultIsQuantitative" opname="equals" operand="True" />
   </view>
 </views>

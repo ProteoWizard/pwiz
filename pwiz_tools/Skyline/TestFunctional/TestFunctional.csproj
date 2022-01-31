@@ -163,8 +163,18 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="StartPageInsertTransitionListTest.cs" />
+    <Compile Include="LibraryCacheTest.cs" />
+    <Compile Include="PermuteIsotopeModificationsTest.cs" />
+    <Compile Include="NewDocumentLoadLibrariesTest.cs" />
+    <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
     <Compile Include="CrosslinkChromatogramTest.cs" />
@@ -178,6 +188,7 @@
     <Compile Include="DuplicateSmallMoleculePrecursorTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="InstrumentMinMaxTimeTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LegacyCrosslinkTest.cs" />
@@ -191,10 +202,12 @@
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
+    <Compile Include="PrmAcquisitionMethodTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
     <Compile Include="QuantitativePeakAreaTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
+    <Compile Include="ReimportResultsTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
     <Compile Include="SettingsChangeReimportTest.cs" />
@@ -348,8 +361,10 @@
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
     <Compile Include="SummaryGraphVisibilityTest.cs" />
+    <Compile Include="SureQuantAcquisitionMethodSettingTest.cs" />
     <Compile Include="SureQuantScanDescriptionTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
+    <Compile Include="SynchronizedIntegrationTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
@@ -431,10 +446,12 @@
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
+    <None Include="AreaNormalizeOptionTest.zip" />
     <None Include="AssayLibraryImportTest.zip" />
     <None Include="AssociateProteinVariantTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="AuditLogValidationTest.zip" />
+    <None Include="AutoTrainModelTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="BatchCalibrationTest.zip" />
     <None Include="BlibMoleculeListsTest.zip" />
@@ -495,6 +512,7 @@
     <None Include="LegacyCrosslinkTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryCacheTest.zip" />
     <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
@@ -512,6 +530,7 @@
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
@@ -519,6 +538,7 @@
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
+    <None Include="PermuteIsotopeModificationsTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="PrositSkylineIntegrationTest.zip" />
@@ -529,6 +549,7 @@
     <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
+    <None Include="ReimportResultsTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameProteinsTest.zip" />
@@ -556,6 +577,7 @@
     <None Include="SummaryGraphVisibilityTest.zip" />
     <None Include="SureQuantScanDescriptionTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
+    <None Include="SynchronizedIntegrationTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
@@ -571,6 +593,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

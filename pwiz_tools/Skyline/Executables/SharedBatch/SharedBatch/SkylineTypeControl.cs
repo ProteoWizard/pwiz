@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using SharedBatch.Properties;
@@ -16,11 +17,17 @@ namespace SharedBatch
         private readonly IMainUiControl _mainUiControl;
         private readonly string _initialSkylineCmdPath;
 
-        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path)
+        private readonly List<string> _runningConfigs;
+
+        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path, List<string> runningConfigs, ConfigManagerState baseState)
         {
             InitializeComponent();
             _mainUiControl = mainUiControl;
             _initialSkylineCmdPath = path;
+
+            _runningConfigs = runningConfigs;
+
+            BaseState = baseState;
 
             radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
             radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
@@ -38,9 +45,14 @@ namespace SharedBatch
             }
         }
 
+        public ConfigManagerState BaseState;
+
         public SkylineTypeControl()
         {
             InitializeComponent();
+
+            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
 
             // Chooses the first enabled option between Skyline, Skyline-daily, and custom path
             radioButtonSpecifySkylinePath.Checked = true;
@@ -71,17 +83,19 @@ namespace SharedBatch
         public string CommandPath => textSkylineInstallationPath.Text;
 
 
-        public object GetVariable() => new SkylineSettings(Type, CommandPath);
+        public object GetVariable() => new SkylineSettings(Type, null, CommandPath);
 
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
             try
             {
-                var newSettings = new SkylineSettings(Type, CommandPath);
+                var newSettings = new SkylineSettings(Type, null, CommandPath);
                 newSettings.Validate();
                 if (!newSettings.CmdPath.Equals(_initialSkylineCmdPath))
-                    _mainUiControl.ReplaceAllSkylineVersions(newSettings);
+                {
+                    BaseState.AskToReplaceAllSkylineVersions(newSettings, _runningConfigs, _mainUiControl, out _);
+                }
                 return true;
             } catch (ArgumentException e)
             {

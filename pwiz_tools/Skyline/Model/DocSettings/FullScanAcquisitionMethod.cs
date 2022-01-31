@@ -29,25 +29,33 @@ namespace pwiz.Skyline.Model.DocSettings
     public struct FullScanAcquisitionMethod : IAuditLogObject
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
-        public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod(@"Targeted",
-            ()=>EnumNames.FullScanAcquisitionMethod_Targeted);
-
         public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod(@"DIA",
-            () => EnumNames.FullScanAcquisitionMethod_DIA);
+            () => EnumNames.FullScanAcquisitionMethod_DIA, () => Resources.FullScanAcquisitionMethod_DIA_TOOLTIP);
+        public static readonly FullScanAcquisitionMethod PRM = new FullScanAcquisitionMethod(@"PRM",
+            () => EnumNames.FullScanAcquisitionMethod_PRM, () => Resources.FullScanAcquisitionMethod_PRM_TOOLTIP);
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod(@"DDA",
-            ()=> EnumNames.FullScanAcquisitionMethod_DDA);
-
+            () => EnumNames.FullScanAcquisitionMethod_DDA, () => Resources.FullScanAcquisitionMethod_DDA_TOOLTIP);
+        public static readonly FullScanAcquisitionMethod SureQuant = new FullScanAcquisitionMethod(@"SureQuant",
+            () => EnumNames.FullScanAcquisitionMethod_SureQuant,
+            () => Resources.FullScanAcquisitionMethod_SureQuant_TOOLTIP);
+        public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod(@"Targeted",
+            () => EnumNames.FullScanAcquisitionMethod_Targeted,
+            () => Resources.FullScanAcquisitionMethod_Targeted_TOOLTIP);
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
-            ImmutableList.ValueOf(new[] {None, Targeted, DIA, DDA});
+            ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, SureQuant, Targeted });
 
+        public static readonly ImmutableList<FullScanAcquisitionMethod> AVAILABLE =
+            ImmutableList.ValueOf(new[] { None, DIA, PRM, DDA, SureQuant });
         private readonly Func<string> _getLabelFunc;
+        private readonly Func<string> _getTooltipFunc;
         private readonly string _name;
 
-        private FullScanAcquisitionMethod(string name, Func<string> getLabelFunc)
+        private FullScanAcquisitionMethod(string name, Func<string> getLabelFunc, Func<string> getTooltipFunc)
         {
             _name = name;
             _getLabelFunc = getLabelFunc;
+            _getTooltipFunc = getTooltipFunc;
         }
 
         public string Name
@@ -64,6 +72,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None;
                 }
                 return _getLabelFunc();
+            }
+        }
+
+        public string Tooltip
+        {
+            get
+            {
+                return _getTooltipFunc?.Invoke() ?? string.Empty;
             }
         }
 

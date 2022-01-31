@@ -92,24 +92,24 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(7, SkylineWindow.Document.PeptideCount);
             CollectionAssert.AreEqual(new[]
             {
-                "-.PEPTIDEK.P [0, 7]",
-                "K.PEPTIDECK.P [8, 16]",
-                "K.PEPTIDEMK.P [17, 25]",
-                "K.PEPTIDEMK.P [17, 25]",
-                "K.PEPTIDECMK.P [26, 35]",
-                "K.PEPTIDECMK.P [26, 35]",
-                "K.PEPTIDER.- [36, 43]",
+                "-.PEPTIDEK.P [1, 8]",
+                "K.PEPTIDECK.P [9, 17]",
+                "K.PEPTIDEMK.P [18, 26]",
+                "K.PEPTIDEMK.P [18, 26]",
+                "K.PEPTIDECMK.P [27, 36]",
+                "K.PEPTIDECMK.P [27, 36]",
+                "K.PEPTIDER.- [37, 44]",
             }, GetPeptideDisplayTexts());
             RunUI(()=>SkylineWindow.SetModifiedSequenceDisplayOption(DisplayModificationOption.THREE_LETTER_CODE));
             CollectionAssert.AreEqual(new[]
             {
-                "-.PEPTIDEK.P [0, 7]",
-                "K.PEPTIDEC[CAM]K.P [8, 16]",
-                "K.PEPTIDEMK.P [17, 25]",
-                "K.PEPTIDEM[Oxi]K.P [17, 25]",
-                "K.PEPTIDEC[CAM]MK.P [26, 35]",
-                "K.PEPTIDEC[CAM]M[Oxi]K.P [26, 35]",
-                "K.PEPTIDER.- [36, 43]",
+                "-.PEPTIDEK.P [1, 8]",
+                "K.PEPTIDEC[CAM]K.P [9, 17]",
+                "K.PEPTIDEMK.P [18, 26]",
+                "K.PEPTIDEM[Oxi]K.P [18, 26]",
+                "K.PEPTIDEC[CAM]MK.P [27, 36]",
+                "K.PEPTIDEC[CAM]M[Oxi]K.P [27, 36]",
+                "K.PEPTIDER.- [37, 44]",
             }, GetPeptideDisplayTexts());
             RunUI(()=>SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 5));
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, editPepModsDlg =>
@@ -120,14 +120,14 @@ namespace pwiz.SkylineTestFunctional
             });
             CollectionAssert.AreEqual(new[]
             {
-                "-.PEPTIDEK.P [0, 7]",
-                "K.PEPTIDEC[CAM]K.P [8, 16]",
-                "K.PEPTIDEMK.P [17, 25]",
-                "K.PEPTIDEM[Oxi]K.P [17, 25]",
-                "K.PEPTIDEC[CAM]MK.P [26, 35]",
-                "K.PEPTIDEC[CAM]M[Oxi]K.P [26, 35]",
-                "K.PEPT[Pho]IDEC[CAM]M[Oxi]K.P [26, 35]",
-                "K.PEPTIDER.- [36, 43]",
+                "-.PEPTIDEK.P [1, 8]",
+                "K.PEPTIDEC[CAM]K.P [9, 17]",
+                "K.PEPTIDEMK.P [18, 26]",
+                "K.PEPTIDEM[Oxi]K.P [18, 26]",
+                "K.PEPTIDEC[CAM]MK.P [27, 36]",
+                "K.PEPTIDEC[CAM]M[Oxi]K.P [27, 36]",
+                "K.PEPT[Pho]IDEC[CAM]M[Oxi]K.P [27, 36]",
+                "K.PEPTIDER.- [37, 44]",
             }, GetPeptideDisplayTexts());
 
         }
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         var textSequences = PeptideTreeNode.CreateTextSequences(node.DocNode,
                             SkylineWindow.Document.Settings, node.Text, g, modFontHolder);
-                        var text = string.Join(string.Empty, textSequences.Select(seq => seq.Text));
+                        var text = string.Concat(textSequences.Select(seq => seq.Text));
                         texts.Add(text);
                     }
                 }

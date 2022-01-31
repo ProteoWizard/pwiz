@@ -26,7 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -104,45 +103,34 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List, p. 3
             {
                 var doc = SkylineWindow.Document;
-
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.IsMolecule = true;
-                    pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                    pasteDlg.Height = 290;
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in molecule mode", 3);
-
-                var columnsOrdered = new[]
-                {
-                    // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.labelType
-                }.ToList();
+                
+                var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog3.Size = new Size(600, 300));
+                string impliedLabeled = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                 if (_inferredLabels)
                 {
-                    columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
+                    // Remove the explicit ",heavy" and ",label" from the text
+                    var lines = impliedLabeled.Split('\n').Where(l => ! string.IsNullOrEmpty(l));
+                    var altered = lines.Select(l => l.Substring(0,l.LastIndexOf(TextUtil.CsvSeparator))).ToArray();
+                    impliedLabeled = TextUtil.LineSeparate(altered);
                 }
-                RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns - show columns checklist", 5);
+                PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = impliedLabeled);
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
+                    if (!_inferredLabels)
+                    {
+                        var comboBoxes = col4Dlg.ComboBoxes;
+                        comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    }
+                });
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected", 6);
 
-                SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
-                RunUI(pasteDlg.PasteTransitions);
-                RunUI(pasteDlg.ValidateCells);
-                RunUI(() => pasteDlg.Height = 428);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
 
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
+
+
+
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 6, 12, 19, 21);
@@ -154,7 +142,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Size = new Size(957, 654);
                 });
                 RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 6);
 
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Amino Acid Metabolism.sky")));
 
@@ -168,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 6);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 7);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -177,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 9);
 
                 var docResults = SkylineWindow.Document;
 
@@ -216,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 if (!string.IsNullOrEmpty(msg))
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 10);
 
                 if (IsCoverShotMode)
                 {
@@ -230,21 +218,13 @@ namespace pwiz.SkylineTestTutorial
 
                     RestoreCoverViewOnScreen();
 
-                    var pasteCoverDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                    SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
-                    RunUI(() =>
-                    {
-                        pasteCoverDlg.Size = new Size(810, 375);
-                        pasteCoverDlg.Left = SkylineWindow.Left + 8;
-                        pasteCoverDlg.Top = SkylineWindow.Bottom - pasteCoverDlg.Height - 8;
-                        pasteCoverDlg.PasteTransitions();
-                        pasteCoverDlg.ValidateCells();
-                        columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
-                        pasteCoverDlg.SetSmallMoleculeColumns(columnsOrdered);
-                    });
+                    var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                    string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
+                    var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
+
                     TakeCoverShot();
 
-                    OkDialog(pasteCoverDlg, pasteCoverDlg.CancelDialog);
+                    OkDialog(colDlg, colDlg.CancelDialog);
                 }
             }
         }

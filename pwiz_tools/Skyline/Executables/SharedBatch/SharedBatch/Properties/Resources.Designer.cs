@@ -143,6 +143,16 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The XML reader is not at the correct position to read the XML version..
+        /// </summary>
+        public static string ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_ {
+            get {
+                return ResourceManager.GetString("ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_t" +
+                        "he_XML_version_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration selected..
         /// </summary>
         public static string ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_ {
@@ -329,11 +339,31 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to use this Skyline version for all configurations?.
+        /// </summary>
+        public static string ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_f" +
+                        "or_all_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is no configuration at index: {0}.
         /// </summary>
         public static string ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_ {
             get {
                 return ResourceManager.GetString("ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The state of the configuration list has changed since this operation started. Please try again..
+        /// </summary>
+        public static string ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_ {
+            get {
+                return ResourceManager.GetString("ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this" +
+                        "_operation_started__Please_try_again_", resourceCulture);
             }
         }
         
@@ -353,6 +383,25 @@ namespace SharedBatch.Properties {
         public static string ConfigManager_TryOperation_Please_choose_a_unique_name_ {
             get {
                 return ResourceManager.GetString("ConfigManager_TryOperation_Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following configurations are running and could not be updated:.
+        /// </summary>
+        public static string ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_running_and_could_not_be_updated_ {
+            get {
+                return ResourceManager.GetString("ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_run" +
+                        "ning_and_could_not_be_updated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No log at index: .
+        /// </summary>
+        public static string ConfigManagerState_SelectLog_No_log_at_index__ {
+            get {
+                return ResourceManager.GetString("ConfigManagerState_SelectLog_No_log_at_index__", resourceCulture);
             }
         }
         
@@ -801,11 +850,39 @@ namespace SharedBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Saved configurations were found in: {0}.
+        /// </summary>
+        public static string Settings_Update_Saved_configurations_were_found_in___0_ {
+            get {
+                return ResourceManager.GetString("Settings_Update_Saved_configurations_were_found_in___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the saved {0} configurations:.
+        /// </summary>
+        public static string Settings_Update_There_was_an_error_reading_the_saved__0__configurations_ {
+            get {
+                return ResourceManager.GetString("Settings_Update_There_was_an_error_reading_the_saved__0__configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No parsable Skyline version found..
         /// </summary>
         public static string SkylineSettings_GetVersion_No_parsable_Skyline_version_found_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_GetVersion_No_parsable_Skyline_version_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WARNING: Could not parse Skyline version. Running earliest supported Skyline commands..
+        /// </summary>
+        public static string SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_earliest_supported_Skyline_commands_ {
+            get {
+                return ResourceManager.GetString("SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_e" +
+                        "arliest_supported_Skyline_commands_", resourceCulture);
             }
         }
         
@@ -871,6 +948,15 @@ namespace SharedBatch.Properties {
         public static string SkylineSettings_Validate_Please_try_a_different_Skyline_option_ {
             get {
                 return ResourceManager.GetString("SkylineSettings_Validate_Please_try_a_different_Skyline_option_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to latest.
+        /// </summary>
+        public static string SkylineSettings_WriteXml_latest {
+            get {
+                return ResourceManager.GetString("SkylineSettings_WriteXml_latest", resourceCulture);
             }
         }
         

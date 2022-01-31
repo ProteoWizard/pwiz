@@ -411,6 +411,9 @@
   <data name="Files">
     <value>Files</value>
   </data>
+  <data name="FirstPosition">
+    <value>First Position</value>
+  </data>
   <data name="FoldChange">
     <value>Fold Change</value>
   </data>
@@ -528,6 +531,9 @@
   </data>
   <data name="Key">
     <value>Key</value>
+  </data>
+  <data name="LastPosition">
+    <value>Last Position</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>Library Collision Cross Section</value>

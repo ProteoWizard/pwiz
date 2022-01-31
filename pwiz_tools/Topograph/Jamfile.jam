@@ -48,6 +48,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
     }
     
     rule do_topograph_build ( targets + : sources * : properties * )

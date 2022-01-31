@@ -161,8 +161,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 result.Add(TIC);
             }
 
-            var modificationTypes = document.Settings.PeptideSettings.Modifications.GetModificationTypes().ToList();
-            if (modificationTypes.Count > 1)
+            if (document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes)
                 {
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public RatioToLabel(IsotopeLabelType isotopeLabelType) : base(ratio_prefix + isotopeLabelType.Name, null)
             {
-                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, 0);
+                _isotopeLabelType = new IsotopeLabelType(isotopeLabelType.Name, isotopeLabelType.SortOrder);
             }
 
             public override string Label
@@ -210,21 +209,20 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public string IsotopeLabelTypeName { get { return _isotopeLabelType.Name; } }
 
+            public bool Matches(IsotopeLabelType labelType)
+            {
+                return Equals(_isotopeLabelType.Name, labelType?.Name);
+            }
+
             public static bool Matches(NormalizationMethod normalizationMethod, IsotopeLabelType isotopeLabelType)
             {
-                if (isotopeLabelType == null)
-                {
-                    return false;
-                }
-                RatioToLabel ratioToLabel = normalizationMethod as RatioToLabel;
-                return ratioToLabel != null && Equals(ratioToLabel.Name, isotopeLabelType.Name);
+                return (normalizationMethod as RatioToLabel)?.Matches(isotopeLabelType) ?? false;
             }
 
             public IsotopeLabelType FindIsotopeLabelType(SrmSettings settings)
             {
                 return settings.PeptideSettings.Modifications.HeavyModifications
-                           .FirstOrDefault(mods => mods.LabelType.Name == IsotopeLabelTypeName)?.LabelType ??
-                       _isotopeLabelType;
+                    .FirstOrDefault(mods => Matches(mods.LabelType))?.LabelType ?? _isotopeLabelType;
             }
         }
 

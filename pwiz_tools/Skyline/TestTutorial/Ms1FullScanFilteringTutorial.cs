@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -44,6 +45,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -54,7 +56,6 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -404,7 +405,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
-                Settings.Default.ShowDotProductPeakArea = true;
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 Settings.Default.ShowLibraryPeakArea = true;
             });
             RunUI(() =>
@@ -517,6 +518,25 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("MS1 spectrum graph 37.32 minutes", 28);
             ClickChromatogram(TIP_NAME, 33.2, 328.1);
             PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
+
+            if (PreferWiff)
+            {
+                RunUI(() =>
+                {
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(75656, pointCount);
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
+                });
+                WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
+
+                RunUI(() =>
+                {
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(3575, pointCount);
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
+                });
+            }
+
             RunUI(() => SkylineWindow.HideFullScanGraph());
 
             RunUI(() =>
@@ -698,6 +718,25 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private int GetTotalPointCount(GraphPane msGraphPane)
+        {
+            int total = 0;
+            foreach (var curve in msGraphPane.CurveList)
+            {
+                var pointList = curve.Points;
+                if (pointList is MSPointList msPointList)
+                {
+                    total += msPointList.FullCount;
+                }
+                else
+                {
+                    total += pointList.Count;
+                }
+            }
+
+            return total;
         }
 
         private GraphChromatogram GetGraphChromatogram(int chromIndex)

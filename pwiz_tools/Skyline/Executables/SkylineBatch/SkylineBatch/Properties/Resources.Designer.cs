@@ -521,6 +521,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A remote file source is required. Please select a remote file source..
+        /// </summary>
+        public static string DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_remote_file_source_ {
+            get {
+                return ResourceManager.GetString("DataServerForm_GetServerFromUi_A_remote_file_source_is_required__Please_select_a_" +
+                        "remote_file_source_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing the URL. Please correct the URL and try again..
         /// </summary>
         public static string DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_ {
@@ -662,6 +672,26 @@ namespace SkylineBatch.Properties {
         public static System.Drawing.Bitmap downtriangle1 {
             get {
                 object obj = ResourceManager.GetObject("downtriangle1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Redo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1453,6 +1483,53 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Add...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Add____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Add____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;Edit current...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Edit_current____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Edit_current____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;Edit list...&gt;.
+        /// </summary>
+        public static string RemoteFileControl_UpdateRemoteSourceList__Edit_list____ {
+            get {
+                return ResourceManager.GetString("RemoteFileControl_UpdateRemoteSourceList__Edit_list____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file type does not support downloads from an FTP file source. Please download this file from Panorama..
+        /// </summary>
+        public static string RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_ {
+            get {
+                return ResourceManager.GetString("RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FT" +
+                        "P_file_source__Please_download_this_file_from_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Another remote file location with the name {0} already exists. Please choose a unique name..
+        /// </summary>
+        public static string RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_ {
+            get {
+                return ResourceManager.GetString("RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__alr" +
+                        "eady_exists__Please_choose_a_unique_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refined.
         /// </summary>
         public static string ReportInfo_AsObjectArray_Refined {
@@ -1766,6 +1843,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No remote file source was specified. Please choose a remote file source..
+        /// </summary>
+        public static string Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_ {
+            get {
+                return ResourceManager.GetString("Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote" +
+                        "_file_source_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Two different files are both being saved to {0}.
         /// </summary>
         public static string ServerFilesManager_GetSize_Two_different_files_are_both_being_saved_to__0_ {
@@ -1940,6 +2027,16 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManager_RunAsync_An_unexpected_error_occurred_while_running__0_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The state of the configuration list cannot be changed while a run is being started. Please try again..
+        /// </summary>
+        public static string SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_changed_while_a_run_is_being_started__Please_try_again_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManager_SetState_The_state_of_the_configuration_list_cannot_be_" +
+                        "changed_while_a_run_is_being_started__Please_try_again_", resourceCulture);
             }
         }
         
@@ -2187,6 +2284,46 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing this file source will impact the following configurations:.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_" +
+                        "will_impact_the_following_configurations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A remote file source named &quot;{0}&quot; already exists. Please choose a different name..
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named___0___already_exists__Please_choose_a_different_name_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named" +
+                        "___0___already_exists__Please_choose_a_different_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file type must be downloaded from Panorama instead of an FTP source. Do you want to add this FTP file source anyway?.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_dow" +
+                        "nloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file" +
+                        "_source_anyway_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap SkylineData {
@@ -2310,6 +2447,16 @@ namespace SkylineBatch.Properties {
         public static string WebDownloadClient_DownloadAsync_Operation_timed_out_ {
             get {
                 return ResourceManager.GetString("WebDownloadClient_DownloadAsync_Operation_timed_out_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The version of the imported file {0} was not recognized. No configurations will be imported..
+        /// </summary>
+        public static string XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_ {
+            get {
+                return ResourceManager.GetString("XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized_" +
+                        "_No_configurations_will_be_imported_", resourceCulture);
             }
         }
     }

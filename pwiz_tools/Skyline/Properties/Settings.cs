@@ -127,6 +127,18 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// Clears internal cache of original serialized settings values and resets all settings to their default value.
+        /// </summary>
+        public new void Reset()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reset();
+            }
+        }
+
+        /// <summary>
         /// Reload settings that may have been changed by other instances of Skyline, but preserve
         /// the values of any settings that have been modified by this instance.
         /// </summary>
@@ -540,7 +552,7 @@ namespace pwiz.Skyline.Properties
 
         [UserScopedSettingAttribute]
         // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
-        // on to the next transition list
+        // on to the next transition list. Normally these are saved in invariant language (en) but we can read localized for backward compatibility
         public List<string> CustomImportTransitionListColumnTypesList
         {
             get
@@ -2495,7 +2507,7 @@ namespace pwiz.Skyline.Properties
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
-            return new MeasuredIon(name, formula, null, null, Adduct.SINGLY_PROTONATED);
+            return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }

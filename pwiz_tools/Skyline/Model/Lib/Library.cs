@@ -68,9 +68,8 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
+                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -233,14 +232,18 @@ namespace pwiz.Skyline.Model.Lib
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
-                        catch (InvalidDataException x)
-                        {
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
                         catch (OperationCanceledException)
                         {
                             docNew = docCurrent;    // Just continue
+                        }
+                        catch (Exception x)
+                        {
+                            if (ExceptionUtil.IsProgrammingDefect(x))
+                            {
+                                throw;
+                            }
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                            break;
                         }
                     }
                 }
@@ -426,7 +429,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
                     if (iRTCapableBuilder.IrtStandard != null &&
-                        !iRTCapableBuilder.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                        !iRTCapableBuilder.IrtStandard.IsEmpty)
                     {
                         buildState.IrtStandard = iRTCapableBuilder.IrtStandard;
                     }
@@ -2167,7 +2170,9 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 if (!string.IsNullOrEmpty(OtherKeys))
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs, OtherKeys.Replace('\t','\n')));
+                    // Add a separate line for each molecule accession number
+                    var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(OtherKeys);
+                    smallMolLines.AddRange(accessionNumDict);
                 }
                 return smallMolLines;
             }
@@ -2379,6 +2384,10 @@ namespace pwiz.Skyline.Model.Lib
     public class SpectrumInfoLibrary : SpectrumInfo
     {
         private Library _library;
+        // Cache peaks and chromatograms to avoid loading every time
+        // CONSIDER: Synchronization required?
+        private SpectrumPeaksInfo _peaksInfo;
+        private LibraryChromGroup _chromGroup;
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, object spectrumKey):
             this(library, labelType, null, null, null, null, true, spectrumKey)
@@ -2408,12 +2417,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public override SpectrumPeaksInfo SpectrumPeaksInfo
         {
-            get { return _library.LoadSpectrum(SpectrumKey); }
+            get { return _peaksInfo = _peaksInfo ?? _library.LoadSpectrum(SpectrumKey); }
         }
 
         public override LibraryChromGroup ChromatogramData
         {
-            get { return _library.LoadChromatogramData(SpectrumKey); }
+            get { return _chromGroup = _chromGroup ?? _library.LoadChromatogramData(SpectrumKey); }
         }
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }

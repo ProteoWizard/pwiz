@@ -94,15 +94,18 @@ namespace AutoQC
         private void btnAdd_Click(object sender, EventArgs e)
         {
             ProgramLog.Info("Creating a new configuration");
-            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)_configManager.GetLastModified(), ConfigAction.Add);
-            configForm.ShowDialog();
+            var initialState = _configManager.State;
+            var configForm = new AutoQcConfigForm(this, (AutoQcConfig)initialState.BaseState.GetLastModified(), ConfigAction.Add, initialState.Copy());
+            if (DialogResult.OK == configForm.ShowDialog())
+                _configManager.SetState(initialState, configForm.State);
         }
 
         private void HandleEditEvent(object sender, EventArgs e)
         {
-            var configRunner = _configManager.GetSelectedConfigRunner();
+            var initialState = _configManager.State;
+            var configRunner = initialState.GetSelectedConfigRunner();
             var config = configRunner.Config;
-            if (!_configManager.IsSelectedConfigValid())
+            if (!initialState.BaseState.IsSelectedConfigValid())
             {
                 if (configRunner.IsRunning())
                 {
@@ -110,79 +113,36 @@ namespace AutoQC
                     DisplayError(Resources.MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_, config.Name);
                     return;
                 }
-                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this);
+                var validateConfigForm = new InvalidConfigSetupForm(config, _configManager, this, initialState.Copy());
                 if (validateConfigForm.ShowDialog() != DialogResult.OK)
                     return;
+                _configManager.SetState(initialState, validateConfigForm.State);
+                initialState = validateConfigForm.State;
             }
-            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Edit, configRunner.GetStatus());
+            var configForm = new AutoQcConfigForm(this, initialState.GetSelectedConfig(), ConfigAction.Edit, initialState.Copy(), initialState.GetSelectedConfigRunner().GetStatus());
             configForm.ShowDialog();
+            if (configForm.DialogResult == DialogResult.OK)
+                _configManager.SetState(initialState, configForm.State);
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new AutoQcConfigForm(this, _configManager.GetSelectedConfig(), ConfigAction.Copy);
+            var initialState = _configManager.State;
+            var configForm = new AutoQcConfigForm(this, initialState.GetSelectedConfig(), ConfigAction.Copy, initialState.Copy());
             configForm.ShowDialog();
+            if (configForm.DialogResult == DialogResult.OK)
+                _configManager.SetState(initialState, configForm.State);
         }
-
-        public void AssertUniqueConfigName(string newName, bool replacing)
-        {
-            _configManager.AssertUniqueName(newName, replacing);
-        }
-
-        public void AddConfiguration(IConfig config)
-        {
-            _configManager.UserAddConfig(config);
-            UpdateUiConfigurations();
-            ListViewSizeChanged();
-            UpdateUiLogFiles();
-            _configManager.SaveConfigList();
-        }
-
-        public void ReplaceSelectedConfig(IConfig config)
-        {
-            _configManager.ReplaceSelectedConfig(config);
-            UpdateUiConfigurations();
-            UpdateUiLogFiles();
-            _configManager.SaveConfigList();
-        }
-
+        
         public void SetConfigInvalid(IConfig config)
         {
             _configManager.SetConfigInvalid(config);
         }
 
-        public bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings)
-        {
-            try
-            {
-                skylineSettings.Validate();
-            }
-            catch (ArgumentException)
-            {
-                // Only ask to replace Skyline settings if new settings are valid
-                return null;
-            }
-            if (DialogResult.Yes ==
-                DisplayQuestion(Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
-            {
-                try
-                {
-                    _configManager.ReplaceSkylineSettings(skylineSettings);
-                }
-                catch (ArgumentException e)
-                {
-                    DisplayError(e.Message);
-                }
-                UpdateUiConfigurations();
-                return true;
-            }
-
-            return false;
-        }
-
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            var selectedConfig = _configManager.GetSelectedConfig();
+            var initialState = _configManager.State;
+            var selectedConfig = initialState.GetSelectedConfig();
             if (selectedConfig == null)
             {
                 return;
@@ -191,12 +151,14 @@ namespace AutoQC
                 Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___,
                 selectedConfig.Name)))
             {
-                if (_configManager.UserRemoveSelected())
+                var state = initialState.Copy().UserRemoveSelected(this, out bool removed);
+                if (removed)
                 {
-                    UpdateUiConfigurations();
-                    ListViewSizeChanged();
-                    UpdateUiLogFiles();
-                    _configManager.SaveConfigList();
+                    if (_configManager.SetState(initialState, state))
+                    {
+                        ListViewSizeChanged();
+                        UpdateUiLogFiles();
+                    }
                 }
             }
         }
@@ -243,13 +205,14 @@ namespace AutoQC
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            var shareForm = new ShareConfigsForm(this, _configManager, Program.Icon());
+            var state = _configManager.State;
+            var shareForm = new ShareConfigsForm(this, state.BaseState, Program.Icon());
             if (shareForm.ShowDialog(this) != DialogResult.OK)
                 return;
             var dialog = new SaveFileDialog {Filter = TextUtil.FILTER_QCFG};
             if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
-            _configManager.ExportConfigs(dialog.FileName, Settings.Default.InstalledVersion, shareForm.IndiciesToSave);
+            state.BaseState.ExportConfigs(dialog.FileName, Settings.Default.XmlVersion, shareForm.IndiciesToSave);
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -261,6 +224,15 @@ namespace AutoQC
                 UpdateUiConfigurations();
         }
 
+        public void DisableConfig(IConfig iconfig)
+        {
+            var initialState = _configManager.State;
+
+            var state = initialState.Copy()
+                .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
+            _configManager.SetState(initialState, state);
+        }
+
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             // Disable automatic item selection - selected configuration set through _configManager
@@ -268,7 +240,7 @@ namespace AutoQC
             listViewConfigs.SelectedIndices.Clear();
         }
 
-        private void listViewConfigs_MouseDown(object sender, MouseEventArgs e)
+        private void listViewConfigs_MouseUp(object sender, MouseEventArgs e)
         {
             // Select configuration through _configManager
             var item = listViewConfigs.GetItemAt(e.X, e.Y);
@@ -295,7 +267,7 @@ namespace AutoQC
 
         private void btnOpenResults_Click(object sender, EventArgs e)
         {
-            var config = _configManager.GetSelectedConfig();
+            var config = _configManager.State.GetSelectedConfig();
             if (config != null && File.Exists(config.MainSettings.SkylineFilePath))
             {
                 SkylineInstallations.OpenSkylineFile(config.MainSettings.SkylineFilePath, config.SkylineSettings);
@@ -309,8 +281,8 @@ namespace AutoQC
 
         private void btnOpenPanoramaFolder_Click(object sender, EventArgs e)
         {
-            var config = _configManager.GetSelectedConfig();
-            if (MainFormUtils.CanOpen(config.Name, _configManager.IsSelectedConfigValid(), 
+            var config = _configManager.State.GetSelectedConfig();
+            if (MainFormUtils.CanOpen(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(), 
                 string.Empty, Resources.MainForm_btnOpenPanoramaFolder_Click_Panorama_folder, this))
             {
                 var uri = new Uri(config.PanoramaSettings.PanoramaServerUri + config.PanoramaSettings.PanoramaFolder);
@@ -325,17 +297,17 @@ namespace AutoQC
 
         private void toolStripFolderToWatch_Click(object sender, EventArgs e)
         {
-            var config = _configManager.GetSelectedConfig();
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+            var config = _configManager.State.GetSelectedConfig();
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(),
                 config.MainSettings.FolderToWatch,
                 Resources.MainForm_toolStripFolderToWatch_Click_folder_to_watch, this);
         }
 
         private void toolStripLogFolder_Click(object sender, EventArgs e)
         {
-            var config = _configManager.GetSelectedConfig();
-            var logger = _configManager.GetLogger(config.Name);
-            MainFormUtils.OpenFileExplorer(config.Name, _configManager.IsSelectedConfigValid(),
+            var config = _configManager.State.GetSelectedConfig();
+            var logger = _configManager.State.GetLogger(config.Name);
+            MainFormUtils.OpenFileExplorer(config.Name, _configManager.State.BaseState.IsSelectedConfigValid(),
                 logger.LogDirectory, 
                 Resources.MainForm_toolStripLogFolder_Click_log_folder, this);
         }
@@ -346,11 +318,11 @@ namespace AutoQC
 
         public void UpdateUiConfigurations()
         {
+            if (!_loaded) return;
+            var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
             RunUi(() =>
             {
-                if (!_loaded) return;
                 var topItemIndex = listViewConfigs.TopItem != null ? listViewConfigs.TopItem.Index : -1;
-                var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
                 listViewConfigs.Items.Clear();
                 listViewConfigs.ItemCheck -= listViewConfigs_ItemCheck;
                 foreach (var lvi in listViewItems)
@@ -358,21 +330,22 @@ namespace AutoQC
                 listViewConfigs.ItemCheck += listViewConfigs_ItemCheck;
                 if (topItemIndex != -1 && listViewConfigs.Items.Count > topItemIndex)
                     listViewConfigs.TopItem = listViewConfigs.Items[topItemIndex];
-                UpdateLabelVisibility();
-                UpdateButtonsEnabled();
             });
+            UpdateLabelVisibility();
+            UpdateButtonsEnabled();
         }
 
         public void UpdateButtonsEnabled()
         {
+            var configSelected = _configManager.State.BaseState.HasSelectedConfig();
+            var config = configSelected ? _configManager.State.GetSelectedConfig() : null;
             RunUi(() =>
             {
-                var configSelected = _configManager.HasSelectedConfig();
-                var config = configSelected ? _configManager.GetSelectedConfig() : null;
                 btnDelete.Enabled = configSelected;
                 btnOpenResults.Enabled = configSelected;
                 btnOpenPanoramaFolder.Enabled = configSelected && config.PanoramaSettings.PublishToPanorama;
                 btnOpenFolder.Enabled = configSelected;
+                
 
                 btnEdit.Enabled = configSelected;
                 btnCopy.Enabled = configSelected;
@@ -382,21 +355,30 @@ namespace AutoQC
 
         public void UpdateUiLogFiles()
         {
+            if (!_loaded)
+                return;
             RunUi(() =>
             {
                 comboConfigs.Items.Clear();
-                comboConfigs.Items.AddRange(_configManager.GetLogList());
+                comboConfigs.Items.AddRange(_configManager.GetLogNameList());
                 comboConfigs.SelectedIndex = _configManager.SelectedLog;
             });
         }
 
         private void UpdateLabelVisibility()
         {
-            lblNoConfigs.Hide();
-            if (!_configManager.HasConfigs())
+            var hasConfigs = _configManager.State.BaseState.HasConfigs();
+            RunUi(() =>
             {
-                lblNoConfigs.Show();
-            }
+                if (hasConfigs)
+                {
+                    lblNoConfigs.Hide();
+                }
+                else
+                {
+                    lblNoConfigs.Show();
+                }
+            });
         }
 
         #endregion
@@ -532,7 +514,7 @@ namespace AutoQC
             // Set the focus on the combobox.
             // If the focus is on the textbox we will see a lot of scrolling for big log files.
             comboConfigs.Focus();
-            var config = _configManager.GetSelectedConfig();
+            var config = _configManager.State.GetSelectedConfig();
             // Switch the displayed log only if it is for a different configuration than the one already displayed
             if (config != null && !string.Equals(config.Name, _configManager.GetSelectedLogger()?.Name))
             {

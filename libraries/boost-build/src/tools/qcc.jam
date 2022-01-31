@@ -4,8 +4,8 @@
 #  Copyright (c) 2020 Alexander Karzhenkov.
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import "class" : new ;
 import common ;
@@ -63,11 +63,13 @@ toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>64 : -Vgc
 
 # Combinations supported by QNX 6.5.0
 toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbe ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsle ;
 toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsle ;
 
 # There are also excluded alternatives (supported by QNX 6.5.0)
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>32 : -Vgcc_ntoarmle ;
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbespe ;
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsbe ;
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsbe ;
 
 local rule check-target-platform

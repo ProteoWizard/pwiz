@@ -95,8 +95,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
                     Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(f, pair.NodePep, pair.NodeGroup,
-                        tolerance,
-                        true, out chromGroupInfo));
+                        tolerance, out chromGroupInfo));
                 }
             }
 

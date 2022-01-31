@@ -368,10 +368,11 @@ void  checkFileExtensions(string specFileName, vector<string> libraryNames){
         !BiblioSpec::hasExtension(specFileName, ".mzML") &&
         !BiblioSpec::hasExtension(specFileName, ".mzXML") &&
         !BiblioSpec::hasExtension(specFileName, ".MGF") &&
-        !BiblioSpec::hasExtension(specFileName, ".wiff")
-        ) {
+        !BiblioSpec::hasExtension(specFileName, ".mz5") &&
+        !BiblioSpec::hasExtension(specFileName, ".wiff") &&
+        !BiblioSpec::hasExtension(specFileName, ".wiff2")) {
         BiblioSpec::Verbosity::error("Spectrum file '%s' must be of type .ms2,"
-                         " .cms2, .bms2, .mzML, .mzXML, .MGF, or .wiff.",
+                         " .cms2, .bms2, .mzML, .mzXML, .MGF, .mz5, or .wiff/.wiff2.",
                          specFileName.c_str());
     }
 

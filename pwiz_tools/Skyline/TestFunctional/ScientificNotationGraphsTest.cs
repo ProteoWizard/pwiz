@@ -71,11 +71,11 @@ namespace pwiz.SkylineTestFunctional
             var graph = FindOpenForm<GraphChromatogram>();
             RunUI(() =>
             {
-                Assert.AreEqual(graph.GraphItem.YAxis.Scale.Mag, 0);
+                Assert.AreEqual(graph.GraphPane.YAxis.Scale.Mag, 0);
                 if (scientificNotationOn)
-                    Assert.AreEqual(graph.GraphItem.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
+                    Assert.AreEqual(graph.GraphPane.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
                 else
-                    Assert.AreNotEqual(graph.GraphItem.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
+                    Assert.AreNotEqual(graph.GraphPane.YAxis.Scale.Format, GraphHelper.SCIENTIFIC_NOTATION_FORMAT_STRING);
             });
         }
     }

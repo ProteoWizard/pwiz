@@ -577,8 +577,9 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        private byte[] CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
+            byte[] cacheBytes = null;
             var sm = loader.StreamManager;
             EnsureConnections(sm);
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -586,20 +587,6 @@ namespace pwiz.Skyline.Model.Lib
                 int rows;
                 string lsid;
                 int dataRev, schemaVer;
-
-                // check what columns exist in LibInfo
-                var libInfoCols = new HashSet<string>();
-                using (var cmd = _sqliteConnection.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"PRAGMA table_info(LibInfo)";
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            libInfoCols.Add(reader.GetString(1).ToLower());
-                        }
-                    }
-                }
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
@@ -707,7 +694,7 @@ namespace pwiz.Skyline.Model.Lib
                             if (loader.IsCanceled)
                             {
                                 loader.UpdateProgress(status.Cancel());
-                                return false;
+                                return null;
                             }
 
                             // If not cancelled, update progress.
@@ -816,102 +803,110 @@ namespace pwiz.Skyline.Model.Lib
 
                 }
 
-                using (FileSaver fs = new FileSaver(CachePath, sm))
-                using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                var outStream = new MemoryStream();
+                foreach (var info in libraryEntries)
                 {
-                    foreach (var info in libraryEntries)
+                    // Write the spectrum header - order must match enum SpectrumCacheHeader
+                    info.Key.Write(outStream);
+                    outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
+
+                    // Optional protein name or molecule list name
+                    if (string.IsNullOrEmpty(info.Protein))
                     {
-                        // Write the spectrum header - order must match enum SpectrumCacheHeader
-                        info.Key.Write(outStream);
-                        outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
-
-                        // Optional protein name or molecule list name
-                        if (string.IsNullOrEmpty(info.Protein))
-                        {
-                            const int len = 0;
-                            outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-                        }
-                        else
-                        {
-                            var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
-                            outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
-                            outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
-                        }
-
-                        if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
-                        {
-                            scoreType = -1;
-                        }
-                        outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
-                        outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
-                        info.RetentionTimesByFileId.Write(outStream);
-                        info.IonMobilitiesByFileId.Write(outStream);
-                        WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
+                        const int len = 0;
+                        outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+                    }
+                    else
+                    {
+                        var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
+                        outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
+                        outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
                     }
 
-                    long sourcePosition = 0;
-                    if (librarySourceFiles.Count > 0)
+                    if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
                     {
-                        // Write all source files
-                        sourcePosition = outStream.Position;
-                        foreach (var librarySourceFile in librarySourceFiles)
-                        {
-                            outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
-                            // Spectra source filename
-                            var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
-                            // ID source (e.g. Mascot search results) filename
-                            var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
-                            outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
-                            outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
-                        }
-                        // Terminate with zero ID and zero name length
-                        var zeroBytes = BitConverter.GetBytes(0);
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        scoreType = -1;
                     }
+                    outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
+                    info.RetentionTimesByFileId.Write(outStream);
+                    info.IonMobilitiesByFileId.Write(outStream);
+                    WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
+                }
 
-                    long scoreTypesPosition = 0;
-                    if (scoreTypesById.Count > 0)
+                long sourcePosition = 0;
+                if (librarySourceFiles.Count > 0)
+                {
+                    // Write all source files
+                    sourcePosition = outStream.Position;
+                    foreach (var librarySourceFile in librarySourceFiles)
                     {
-                        scoreTypesPosition = outStream.Position;
-                        foreach (var score in scoreTypesById.OrderBy(kvp => kvp.Key))
-                        {
-                            outStream.Write(BitConverter.GetBytes(score.Key), 0, sizeof(int));
-                            var scoreTypeNameBytes = Encoding.UTF8.GetBytes(score.Value);
-                            outStream.Write(BitConverter.GetBytes(scoreTypeNameBytes.Length), 0, sizeof(int));
-                            outStream.Write(scoreTypeNameBytes, 0, scoreTypeNameBytes.Length);
-                        }
-                        // Terminate with zero ID and zero name length
-                        var zeroBytes = BitConverter.GetBytes(0);
-                        outStream.Write(zeroBytes, 0, sizeof(int));
-                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
+                        // Spectra source filename
+                        var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
+                        // ID source (e.g. Mascot search results) filename
+                        var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
+                        outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
+                        outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
                     }
+                    // Terminate with zero ID and zero name length
+                    var zeroBytes = BitConverter.GetBytes(0);
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                }
 
-                    byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
-                    outStream.Write(lsidBytes, 0, lsidBytes.Length);
-                    outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
-                    outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
+                long scoreTypesPosition = 0;
+                if (scoreTypesById.Count > 0)
+                {
+                    scoreTypesPosition = outStream.Position;
+                    foreach (var score in scoreTypesById.OrderBy(kvp => kvp.Key))
+                    {
+                        outStream.Write(BitConverter.GetBytes(score.Key), 0, sizeof(int));
+                        var scoreTypeNameBytes = Encoding.UTF8.GetBytes(score.Value);
+                        outStream.Write(BitConverter.GetBytes(scoreTypeNameBytes.Length), 0, sizeof(int));
+                        outStream.Write(scoreTypeNameBytes, 0, scoreTypeNameBytes.Length);
+                    }
+                    // Terminate with zero ID and zero name length
+                    var zeroBytes = BitConverter.GetBytes(0);
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.Write(zeroBytes, 0, sizeof(int));
+                }
 
-                    sm.Finish(outStream);
-                    fs.Commit();
-                    sm.SetCache(FilePath, CachePath);
+                byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
+                outStream.Write(lsidBytes, 0, lsidBytes.Length);
+                outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
+                outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
+                outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
+                cacheBytes = outStream.ToArray();
+                try
+                {
+                    using (FileSaver fs = new FileSaver(CachePath, sm))
+                    using (Stream cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                    {
+                        cacheFileStream.Write(cacheBytes, 0, cacheBytes.Length);
+                        sm.Finish(cacheFileStream);
+                        fs.Commit();
+                        sm.SetCache(FilePath, CachePath);
+                    }
+                }
+                catch
+                {
+                    // ignore
                 }
             }
 
             loader.UpdateProgress(status.Complete());
-
-            return true;
+            return cacheBytes;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -948,7 +943,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached, out var failureException))
+            if (Load(loader, status, cached))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -960,7 +955,7 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false, out failureException))
+                if (Load(loader, status, false))
                     return true;
             }
 
@@ -968,18 +963,16 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
 
-            if (failureException != null)
-                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                failureException = null;
+                byte[] cacheBytes = null;
                 if (!cached)
                 {
                     // Building the cache will take 95% of the load time.
@@ -989,16 +982,12 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    try
+                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                    if (cacheBytes == null)
                     {
-                        if (!CreateCache(loader, status, 100 - loadPercent))
-                            return false;
-                    }
-                    catch (Exception e)
-                    {
-                        failureException = new Exception(FormatErrorMessage(e), e);
                         return false;
                     }
+
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -1006,7 +995,16 @@ namespace pwiz.Skyline.Model.Lib
                 loader.UpdateProgress(status);
 
                 var sm = loader.StreamManager;
-                using (Stream stream = sm.CreateStream(CachePath, FileMode.Open, true))
+                Stream stream;
+                if (cacheBytes != null)
+                {
+                    stream = new MemoryStream(cacheBytes, false);
+                }
+                else
+                {
+                    stream = sm.CreateStream(CachePath, FileMode.Open, true);
+                }
+                using (stream)
                 {
                     // Read library header from the end of the cache
                     int countHeader = (int) LibHeaders.count*sizeof (int);
@@ -1128,29 +1126,20 @@ namespace pwiz.Skyline.Model.Lib
 
                 return true;
             }
-            catch (InvalidDataException x)
-            {
-                failureException = new InvalidDataException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
-            catch (IOException x)
-            {
-                failureException = new IOException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
+
             catch (Exception x)
             {
-                failureException = new Exception(FormatErrorMessage(x), x);
+                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
+                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
+                // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
+                    var failureException = new Exception(FormatErrorMessage(x), x);
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw failureException; // We want this to show up in ExceptionWeb
+                    }
+                    // This will show the user the error message after which the operation can be treated as canceled.
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
@@ -1871,9 +1860,9 @@ namespace pwiz.Skyline.Model.Lib
                             var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
-                                var ionMobility = reader.GetDouble(iIonMobility);
-                                var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                                var ionMobilityHighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
+                                var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
+                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
+                                var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
                                 if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
@@ -2032,7 +2021,7 @@ namespace pwiz.Skyline.Model.Lib
                 return 0;
             }
             return Convert.ToInt32(value);
-        } 
+        }
 
         #region Implementation of IXmlSerializable
         

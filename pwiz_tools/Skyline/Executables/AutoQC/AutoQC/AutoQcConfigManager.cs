@@ -15,8 +15,7 @@ namespace AutoQC
         // Extension of ConfigManager, handles more specific AutoQC functionality
         // The UI should reflect the configs, runners, and log files from this class
 
-        private ImmutableDictionary<string, IConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
-        private int _sortedColumn; // column index the configurations were last sorted by
+        private AutoQcConfigManagerState _state;
 
         // Shared variables with ConfigManager:
         //  Protected -
@@ -38,46 +37,15 @@ namespace AutoQC
 
         public AutoQcConfigManager(IMainUiControl uiControl = null)
         {
-            importer = AutoQcConfig.ReadXml;
-            getUpdatedXml = XmlUpdater.GetUpdatedXml;
             SelectedLog = -1;
-            _sortedColumn = -1;
-            _configRunners = ImmutableDictionary.Create<string, IConfigRunner>();
             _uiControl = uiControl;
-            _runningUi = uiControl != null;
+            _state = AutoQcConfigManagerState.Empty();
             LoadConfigList();
 
-            Init();
         }
 
-        private void SetState(AutoQcConfigManagerState newState)
-        {
-            lock (_lock)
-            {
-                newState.ValidateState();
-                base.SetState(newState.baseState);
-                _configRunners = newState.configRunners;
-                _uiControl?.UpdateUiConfigurations();
-            }
-        }
+        public AutoQcConfigManagerState State => GetState();
 
-        private void LoadConfigList()
-        {
-            var configs = base.LoadConfigList(Settings.Default.InstalledVersion);
-            foreach (var iconfig in configs)
-            {
-                var config = (AutoQcConfig)iconfig;
-                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
-                {
-                    // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
-                    // automatically starting configs on startup, change its IsEnabled state
-                    config.IsEnabled = false;
-                }
-                var state = new AutoQcConfigManagerState(this);
-                state = ProgramaticallyAddConfig(iconfig, state);
-                SetState(state);
-            }
-        }
 
         public void ChangeKeepRunningState(bool enable)
         {
@@ -91,303 +59,136 @@ namespace AutoQC
             }
         }
 
-        public void ReplaceSelectedConfig(IConfig newConfig)
-        {
-            var state = new AutoQcConfigManagerState(this);
-            var index = state.baseState.selected;
-            var config = state.baseState.configList[index];
-            state = ProgramaticallyRemoveAt(index, state);
-            state = UserInsertConfig(newConfig, index, state);
-            SetState(state);
-        }
 
-        #region Add Configs
+        #region Manipulate State
 
-        public void UserAddConfig(IConfig iconfig)
-        {
-            SetState(UserInsertConfig(iconfig, _configList.Count, new AutoQcConfigManagerState(this)));
-        }
-
-        protected AutoQcConfigManagerState UserInsertConfig(IConfig iconfig, int index, AutoQcConfigManagerState state)
-        {
-            state.baseState = base.UserInsertConfig(iconfig, index, state.baseState);
-            state = AddConfig(iconfig, state);
-            state.baseState.selected = index;
-            return state;
-        }
-
-        private AutoQcConfigManagerState ProgramaticallyAddConfig(IConfig iconfig, AutoQcConfigManagerState state)
-        {
-            return ProgramaticallyInsertConfig(iconfig, state.baseState.configList.Count, state);
-        }
-
-        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(IConfig iconfig, int index, AutoQcConfigManagerState state)
-        {
-            state.baseState = base.ProgramaticallyInsertConfig(iconfig, index, state.baseState);
-            state = AddConfig(iconfig, state);
-            return state;
-        }
-
-        private AutoQcConfigManagerState AddConfig(IConfig iconfig, AutoQcConfigManagerState state)
-        {
-            var config = (AutoQcConfig)iconfig;
-            if (state.configRunners.ContainsKey(config.Name))
-            {
-                // TODO: Should the config be programatically removed if this exception is thrown?
-                // If the config has just been added, there should not be another config with this name, and there should not be a config runner
-                // with this name. Should we just replace the existing config runner if this ever happens? 
-                throw new Exception(
-                    string.Format("Config runner already exists for configuration with name '{0}'", config.Name));
-            }
-
-            var logFile = config.getConfigFilePath("AutoQC.log");
-
-            var logger = new Logger(logFile, config.Name, false);  // Do not initialize the logger in the constructor; it will be initialized when we start the config.
-            _logList.Add(logger);
-            var runner = new ConfigRunner(config, logger, _uiControl);
-            state.configRunners = state.configRunners.Add(config.Name, runner);
-            return state;
-        }
-
-        #endregion
-
-        #region Remove Configs
-
-        public bool UserRemoveSelected()
-        {
-            var state = new AutoQcConfigManagerState(this);
-            AssertConfigSelected(state.baseState);
-            return UserRemoveAt(SelectedConfig);
-        }
-
-        public new bool UserRemoveAt(int index)
+        public new AutoQcConfigManagerState GetState()
         {
             lock (_lock)
             {
-                var state = new AutoQcConfigManagerState(this);
-                var configRunner = (ConfigRunner)_configRunners[_configList[index].GetName()];
-                if (configRunner.IsBusy()) // Not stopped or error
+                return _state.Copy();
+            }
+        }
+
+        public bool SetState(AutoQcConfigManagerState expectedState, AutoQcConfigManagerState newState)
+        {
+            string errorMessage = null;
+            lock (_lock)
+            {
+                try
                 {
-                    string message;
-                    
-                    if (configRunner.IsPending()) // Stopping / Starting / Loading
+                    if (!Equals(expectedState, State))
                     {
-                        message =
-                            (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_, configRunner.GetConfigName(), configRunner.GetStatus().ToString()));
+                        throw new ArgumentException(SharedBatch.Properties.Resources
+                            .ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_);
                     }
-                    else
-                    {
-                        message =
-                            (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_, configRunner.GetConfigName()));
-                    }
-                    DisplayWarning(message);
-                    return false;
+
+                    newState.ValidateState();
+                    base.SetState(expectedState.BaseState, newState.BaseState);
                 }
-                // remove config
-                state.baseState = base.UserRemoveAt(index, state.baseState);
-                state = RemoveConfig(configRunner.Config, state);
-                SetState(state);
-                return true;
+                catch (Exception e)
+                {
+                    errorMessage = e.Message;
+                }
+                if (errorMessage == null)
+                {
+                    var selectedLogName = SelectedLog > 0 ? GetSelectedLogger().Name : null;
+                    _state = newState.Copy();
+                    _logList = _state.LogList;
+                    SelectedLog = -1;
+                    for (int i = 0; i < _logList.Count; i++)
+                    {
+                        if (_logList[i].Name.Equals(selectedLogName))
+                            SelectedLog = i;
+                    }
+                    _uiControl?.UpdateUiConfigurations();
+                    _uiControl?.UpdateUiLogFiles();
+                }
             }
-        }
-        
-        private AutoQcConfigManagerState ProgramaticallyRemoveAt(int index, AutoQcConfigManagerState state)
-        {
-            var config = state.baseState.configList[index];
-            state.baseState = base.ProgramaticallyRemoveAt(index, state.baseState);
-            state = RemoveConfig(config, state);
-            return state;
-        }
-
-        private AutoQcConfigManagerState RemoveConfig(IConfig iconfig, AutoQcConfigManagerState state)
-        {
-            var config = (AutoQcConfig) iconfig;
-            if (!state.configRunners.ContainsKey(config.Name))
-                throw new Exception("Config runner does not exist.");
-            int i = 0;
-            while (i < _logList.Count)
-            {
-                if (_logList[i].Name.Equals(config.Name)) break;
-                i++;
-            }
-            _logList.RemoveAt(i);
-            // TODO: what happens here?
-            //_uiControl?.ClearLog();
-            var configRunners = new Dictionary<string, IConfigRunner>(_configRunners);
-            configRunners.Remove(config.Name);
-            state.configRunners = ImmutableDictionary<string, IConfigRunner>.Empty.AddRange(configRunners);
-            return state;
+            if (errorMessage != null)
+                DisplayError(_uiControl, errorMessage);
+            return errorMessage != null;
         }
 
         #endregion
-        
-        #region Configs
 
-        public new AutoQcConfig GetSelectedConfig()
+        #region State Method Wrappers
+
+        private void LoadConfigList()
         {
-            return (AutoQcConfig)base.GetSelectedConfig();
+            if (_uiControl == null)
+                return; // don't load configs in test mode
+            var initialState = State;
+            var state = initialState.Copy();
+            state.LoadConfigList(_uiControl);
+            SetState(initialState, state);
         }
 
-        public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
+        public void SelectConfig(int index)
         {
-            return ConfigsListViewItems(_configRunners, graphics, new ConfigManagerState(this));
+            var initialState = State;
+            var state = initialState.Copy();
+            state.BaseState.SelectIndex(index);
+            SetState(initialState, state);
         }
 
-        public void ReplaceSkylineSettings(SkylineSettings skylineSettings)
+        public void DeselectConfig()
         {
-            var state = new AutoQcConfigManagerState(this);
-            var runningConfigs = GetRunningConfigs(state);
-            var replacedConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
-            foreach (var indexAndConfig in replacedConfigs)
-            {
-                state = ProgramaticallyRemoveAt(indexAndConfig.Item1, state);
-                state = ProgramaticallyInsertConfig(indexAndConfig.Item2, indexAndConfig.Item1, state);
-            }
-            if (runningConfigs.Count > 0)
-                throw new ArgumentException(Resources.AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_
-                                            + Environment.NewLine +
-                                            TextUtil.LineSeparate(runningConfigs));
-        }
-
-        #endregion
-        
-        #region Sort configs
-
-        public enum SortColumn
-        {
-            Name,
-            User,
-            Created,
-            RunnerStatus
+            var initialState = State;
+            var state = initialState.Copy();
+            state.BaseState.SelectIndex(-1);
+            SetState(initialState, state);
         }
 
         public void SortByValue(int columnIndex)
         {
-            lock (_lock)
-            {
-                List<int> newIndexOrder = null;
-                switch (columnIndex)
-                {
-                    case (int)SortColumn.Name:
-                        var nameTuples = new List<Tuple<string, int>>();
-                        for (int i = 0; i < _configList.Count; i++)
-                            nameTuples.Add(new Tuple<string, int>(((AutoQcConfig)_configList[i]).Name, i));
-                        nameTuples.Sort((a, b) => String.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
-                        newIndexOrder = nameTuples.Select(t => t.Item2).ToList();
-                        break;
-
-                    case (int)SortColumn.User:
-                        var userTuples = new List<Tuple<string, int>>();
-                        for (int i = 0; i < _configList.Count; i++)
-                            userTuples.Add(new Tuple<string, int>(((AutoQcConfig)_configList[i]).User, i));
-                        userTuples.Sort((((a, b) =>
-                        {
-                            if (string.IsNullOrEmpty(a.Item1) && string.IsNullOrEmpty(a.Item1)) return 1;
-                            if (string.IsNullOrEmpty(b.Item1)) return -1;
-                            return String.Compare(a.Item1, b.Item1, StringComparison.Ordinal);
-                        })));
-                        newIndexOrder = userTuples.Select(t => t.Item2).ToList();
-                        break;
-
-                    case (int)SortColumn.Created:
-                        var createdTuples = new List<Tuple<DateTime, int>>();
-                        for (int i = 0; i < _configList.Count; i++)
-                            createdTuples.Add(new Tuple<DateTime, int>(((AutoQcConfig)_configList[i]).Created, i));
-                        createdTuples.Sort((a, b) => b.Item1.CompareTo(a.Item1));
-                        newIndexOrder = createdTuples.Select(t => t.Item2).ToList();
-                        break;
-
-                    case (int)SortColumn.RunnerStatus:
-                        var statusTuples = new List<Tuple<RunnerStatus, int>>();
-                        for (int i = 0; i < _configList.Count; i++)
-                            statusTuples.Add(new Tuple<RunnerStatus, int>(_configRunners[_configList[i].GetName()].GetStatus(), i));
-                        statusTuples.Sort((a, b) => a.Item1.CompareTo(b.Item1));
-                        newIndexOrder = statusTuples.Select(t => t.Item2).ToList();
-                        break;
-                }
-
-                if (newIndexOrder == null)
-                    return;
-                var state = ReorderConfigs(newIndexOrder, _sortedColumn == columnIndex, new AutoQcConfigManagerState(this));
-                SetState(state);
-                _sortedColumn = columnIndex;
-            }
+            var initialState = State;
+            var state = initialState.Copy().SortByValue(columnIndex);
+            SetState(initialState, state);
         }
 
-        private AutoQcConfigManagerState ReorderConfigs(List<int> newIndexOrder, bool sameColumn, AutoQcConfigManagerState state)
+        public void SetConfigInvalid(IConfig config)
         {
-            if (sameColumn && IsSorted(newIndexOrder))
-                return ReverseConfigList(state);
-            var selectedName = state.baseState.selected >= 0 ? state.baseState.configList[state.baseState.selected].GetName() : null;
-            var newConfigList = new List<IConfig>();
-            foreach (var index in newIndexOrder)
-                newConfigList.Add(state.baseState.configList[index]);
-            state.baseState.configList = ImmutableList<IConfig>.Empty.AddRange(newConfigList);
-            if (selectedName != null)
-                state.baseState.selected = GetConfigIndex(selectedName, state.baseState);
-            return state;
+            var initialState = State;
+            var state = initialState.Copy().SetConfigInvalid(config);
+            SetState(initialState, state);
         }
 
-        private bool IsSorted(List<int> list)
+        public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
         {
-            if (list.Count == 0) return true;
-            var lastValue = list[0];
-            foreach (var value in list)
-            {
-                if (value < lastValue)
-                    return false;
-            }
-            return true;
+            var state = State;
+            return state.BaseState.ConfigsAsListViewItems(state.ConfigRunners, graphics);
+
         }
-
-        /*private AutoQcConfig[] CutConfigList()
-        {
-            var configListHolder = new AutoQcConfig[_configList.Count];
-            for (int i = 0; i < _configList.Count; i++)
-                configListHolder[i] = (AutoQcConfig) _configList[i];
-            _configList.Clear();
-            return configListHolder;
-        }*/
-
-        private AutoQcConfigManagerState ReverseConfigList(AutoQcConfigManagerState state)
-        {
-            var selectedName = HasSelectedConfig(state.baseState) ? state.baseState.configList[state.baseState.selected].GetName() : null;
-            //var configListHolder = CutConfigList();
-            var newConfigList = new List<IConfig>();
-            foreach (var config in state.baseState.configList)
-                newConfigList.Insert(0, config);
-            state.baseState.configList = ImmutableList<IConfig>.Empty.AddRange(newConfigList);
-            if (selectedName != null)
-                state.baseState.selected = GetConfigIndex(selectedName, state.baseState);
-            return state;
-        }
-
 
         #endregion
-        
+
+        #region Import
+
+        public void Import(string filePath, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm)
+        {
+            var initialState = State;
+            var state = initialState.Copy();
+            state.Import(filePath, _uiControl, showDownloadedFileForm, out List<int> addedIndicies);
+            var addedConfigs = new List<IConfig>();
+            foreach (var index in addedIndicies)
+                addedConfigs.Add(state.BaseState.ConfigList[index]);
+            if (SetState(initialState, state))
+                // Do server validation
+                DoServerValidation(state.BaseState, addedConfigs.ToImmutableList());
+        }
+
+        #endregion
+
         #region Run Configs
 
-        public ConfigRunner GetSelectedConfigRunner()
-        {
-            return (ConfigRunner)_configRunners[GetSelectedConfig().GetName()];
-        }
-
-        public ConfigRunner GetConfigRunner(IConfig config)
-        {
-            if (_configRunners.TryGetValue(config.GetName(), out var configRunner))
-            {
-                return (ConfigRunner) configRunner;
-            }
-
-            return null;
-        }
 
         public void RunEnabled()
         {
             IList<string> failedToStart = new List<string>();
             lock (_lock)
             {
-                foreach (var config in _configList)
+                foreach (var config in State.BaseState.ConfigList)
                 {
                     var autoQcConfig = (AutoQcConfig) config;
                     if (!autoQcConfig.IsEnabled)
@@ -409,17 +210,17 @@ namespace AutoQC
 
         public void DoServerValidation()
         {
-            DoServerValidation(_configList);
+            DoServerValidation(State.BaseState, State.BaseState.ConfigList);
         }
 
-        public void DoServerValidation(ImmutableList<IConfig> configs)
+        public void DoServerValidation(ConfigManagerState baseState, ImmutableList<IConfig> configs)
         {
             lock (_lock)
             {
                 foreach (var config in configs)
                 {
                     var autoQcConfig = (AutoQcConfig)config;
-                    if (autoQcConfig.IsEnabled || !IsConfigValid(GetConfigIndex(autoQcConfig.Name)))
+                    if (autoQcConfig.IsEnabled || !baseState.IsConfigValid(baseState.GetConfigIndex(autoQcConfig.Name)))
                     {
                         continue; // Config is either running, or is already marked as invalid
                     }
@@ -436,7 +237,7 @@ namespace AutoQC
             AutoQcConfig config = (AutoQcConfig) e.Argument;
             if (config != null && config.PanoramaSettings.PublishToPanorama)
             {
-                ConfigRunner configRunner = GetConfigRunner(config);
+                ConfigRunner configRunner = State.GetConfigRunner(config);
                 if (configRunner != null)
                 {
                     try
@@ -449,7 +250,7 @@ namespace AutoQC
                     }
                     catch (ArgumentException)
                     {
-                        SetConfigInvalid(config);
+                        SetState(State, State.SetConfigInvalid(config));
                     }
                     finally
                     {
@@ -461,36 +262,38 @@ namespace AutoQC
 
         public bool StopConfiguration()
         {
-            lock (_lock)
+            var initialState = State;
+            var selectedConfig = initialState.GetSelectedConfig();
+            if (!selectedConfig.IsEnabled) // TODO: Do we need this?
+                return false;
+
+            var configRunner = initialState.GetSelectedConfigRunner();
+            if (configRunner.IsPending())
             {
-                var selectedConfig = GetSelectedConfig();
-                if (!selectedConfig.IsEnabled) // TODO: Do we need this?
-                    return false;
-                
-                var configRunner = GetSelectedConfigRunner();
-                if (configRunner.IsPending())
-                {
-                    var action = configRunner.GetStatus().ToString();
-                    var message =
-                        string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
+                var action = configRunner.GetStatus().ToString();
+                var message =
+                    string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
-                    DisplayWarning(message);
-                    return false;
-                }
-
-                var doChange = DisplayQuestion(string.Format(
-                    Resources.AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___,
-                    configRunner.GetConfigName()));
-
-                if (doChange == DialogResult.Yes)
-                {
-                    selectedConfig.IsEnabled = false;
-                    configRunner.Stop();
-                    return true;
-                }
-
+                ConfigManager.DisplayWarning(_uiControl, message);
                 return false;
             }
+
+            var doChange = ConfigManager.DisplayQuestion(_uiControl, string.Format(
+                Resources.AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___,
+                configRunner.GetConfigName()));
+
+            if (doChange == DialogResult.Yes)
+            {
+                configRunner.Stop();
+                if (configRunner.IsStopped())
+                {
+                    var state = initialState.Copy().SelectedConfigEnabled(false, _uiControl);
+                    SetState(initialState, state);
+                }
+                return true;
+            }
+
+            return false;
         }
 
         public bool UpdateSelectedEnabled(bool newIsEnabled)
@@ -502,18 +305,18 @@ namespace AutoQC
         {
             lock (_lock)
             {
-                var selectedConfig = GetSelectedConfig();
+                var selectedConfig = State.GetSelectedConfig();
                 if (selectedConfig.IsEnabled) // TODO: Do we need this?
                     return false;
 
-                var configRunner = GetSelectedConfigRunner();
+                var configRunner = State.GetSelectedConfigRunner();
                 if (configRunner.IsPending())
                 {
                     var action = configRunner.GetStatus().ToString();
                     var message =
                         string.Format(Resources.AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
-                    DisplayWarning(message);
+                    DisplayWarning(_uiControl, message);
                     return false;
                 }
 
@@ -523,11 +326,10 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    DisplayErrorWithException(
+                    DisplayErrorWithException(_uiControl,
                         TextUtil.LineSeparate(string.Format(Resources.AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___, selectedConfig.Name), e.Message), e);
                     return false;
                 }
-                
                 return true;
             }
         }
@@ -550,23 +352,32 @@ namespace AutoQC
 
         private void StartConfig(AutoQcConfig config)
         {
-            _configRunners.TryGetValue(config.Name, out var configRunner);
+            //State.ConfigRunners.TryGetValue(config.Name, out var configRunner);
+            
+            var initialState = State;
+            var state = initialState.Copy();
+            var configIndex = state.BaseState.GetConfigIndex(config.Name);
 
+            state.ConfigRunners.TryGetValue(config.Name, out var configRunner);
             if (configRunner == null)
             {
-                config.IsEnabled = false;
-                _uiControl?.UpdateUiConfigurations();
+                state.SetConfigEnabled(configIndex, false, _uiControl);
+                SetState(initialState, state);
                 throw new ConfigRunnerException(string.Format(Resources.AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___, config.Name));
             }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
-            config.IsEnabled = true;
+            state.SetConfigEnabled(configIndex, true, _uiControl);
+            SetState(initialState, state);
+            state.ConfigRunners.TryGetValue(config.Name, out configRunner);
             try
             {
                 ((ConfigRunner)configRunner).Start();
             }
             catch (Exception)
             {
-                config.IsEnabled = false;
+                state.SetConfigEnabled(configIndex, false, _uiControl);
+                SetState(initialState, state);
+                state.ConfigRunners.TryGetValue(config.Name, out configRunner);
                 ((ConfigRunner)configRunner).ChangeStatus(RunnerStatus.Error);
                 throw;
             }
@@ -574,16 +385,461 @@ namespace AutoQC
 
         public void StopRunners()
         {
-            foreach (var configRunner in _configRunners.Values)
+            foreach (var configRunner in State.ConfigRunners.Values)
             {
                 ((ConfigRunner)configRunner).Stop();
             }
         }
+        #endregion
+        
+        #region Logging
 
-        private List<string> GetRunningConfigs(AutoQcConfigManagerState state)
+        public void SelectLog(int selected)
+        {
+            if (selected < 0 || selected >= State.LogList.Count)
+                throw new IndexOutOfRangeException("No log at index: " + selected);
+            SelectedLog = selected;
+        }
+
+        public void SelectLogOfSelectedConfig()
+        {
+            var state = State;
+            SelectedLog = state.GetLoggerIndex(state.GetSelectedConfig().Name);
+        }
+
+
+        #endregion
+        
+        #region Tests
+
+        public bool ConfigListEquals(List<AutoQcConfig> otherConfigs)
+        {
+            var state = State;
+            if (otherConfigs.Count != state.BaseState.ConfigList.Count) return false;
+
+            for (int i = 0; i < state.BaseState.ConfigList.Count; i++)
+            {
+                if (!Equals(otherConfigs[i], state.BaseState.ConfigList[i])) return false;
+            }
+
+            return true;
+        }
+
+        public bool ConfigOrderEquals(string[] configNames)
+        {
+            var state = State;
+            if (configNames.Length != state.BaseState.ConfigList.Count) return false;
+
+            for (int i = 0; i < state.BaseState.ConfigList.Count; i++)
+            {
+                if (!Equals(configNames[i], state.BaseState.ConfigList[i].GetName())) return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
+    }
+
+    public class AutoQcConfigManagerState
+    {
+        public readonly ConfigManagerState BaseState;
+        public ImmutableDictionary<string, IConfigRunner> ConfigRunners { get; private set; }
+        public ImmutableList<Logger> LogList { get; private set; }
+        public int SortedColumn { get; private set; }
+
+        public static AutoQcConfigManagerState Empty()
+        {
+            return new AutoQcConfigManagerState(ConfigManagerState.Empty(), ImmutableDictionary<string, IConfigRunner>.Empty, ImmutableList<Logger>.Empty);
+        }
+
+        public AutoQcConfigManagerState(ConfigManagerState baseState, ImmutableDictionary<string, IConfigRunner> configRunners, ImmutableList<Logger> logList, int sortedColumn = 0)
+        {
+            BaseState = baseState;
+            ConfigRunners = configRunners;
+            LogList = logList;
+            SortedColumn = sortedColumn;
+        }
+
+        public AutoQcConfigManagerState Copy()
+        {
+            return new AutoQcConfigManagerState(BaseState.Copy(), ConfigRunners, LogList, SortedColumn);
+        }
+
+        public void ValidateState()
+        {
+            var validated = ConfigRunners.Count == BaseState.ConfigList.Count;
+            foreach (var config in BaseState.ConfigList)
+            {
+                if (!validated) break;
+                if (!ConfigRunners.ContainsKey(config.GetName()))
+                    validated = false;
+            }
+            if (!validated)
+                throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
+        }
+
+
+        public AutoQcConfig GetSelectedConfig()
+        {
+            return (AutoQcConfig)BaseState.GetSelectedConfig();
+        }
+
+        public AutoQcConfigManagerState SelectedConfigEnabled(bool enabled, IMainUiControl uiControl)
+        {
+            return SetConfigEnabled(BaseState.Selected, enabled, uiControl);
+        }
+
+        public AutoQcConfigManagerState SetConfigEnabled(int index, bool enabled, IMainUiControl uiControl)
+        {
+            var config = (AutoQcConfig) BaseState.GetConfig(index);
+            if (GetConfigRunner(config).IsStarting())
+            {
+                ConfigManager.DisplayError(uiControl, "Cannot change config enabled while it is busy.");
+                return this;
+            }
+            ProgramaticallyRemoveAt(index);
+            ProgramaticallyInsertConfig(index,
+                new AutoQcConfig(config.Name, enabled, config.Created, config.Modified, config.MainSettings,
+                    config.PanoramaSettings, config.SkylineSettings), uiControl);
+            BaseState.ModelHasChanged();
+            return this;
+        }
+
+        public AutoQcConfigManagerState DisableConfigProgramatically(int index, IMainUiControl uiControl)
+        {
+            var config = (AutoQcConfig)BaseState.GetConfig(index);
+
+            BaseState.ProgramaticallyRemoveAt(index);
+            BaseState.ProgramaticallyInsertConfig(index,
+                 new AutoQcConfig(config.Name, false, config.Created, config.Modified, config.MainSettings,
+                    config.PanoramaSettings, config.SkylineSettings));
+            BaseState.ModelHasChanged();
+            return this;
+        }
+
+
+        #region Add Configs
+
+        public AutoQcConfigManagerState LoadConfigList(IMainUiControl uiControl)
+        {
+            BaseState.LoadConfigList();
+            UpdateFromBaseState(uiControl);
+            for (int i = 0; i < BaseState.ConfigList.Count; i++)
+            {
+                var config = (AutoQcConfig)BaseState.ConfigList[i];
+                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
+                {
+                    // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
+                    // automatically starting configs on startup, change its IsEnabled state
+                    SetConfigEnabled(i, false, uiControl);
+                }
+            }
+            return this;
+        }
+
+        public AutoQcConfigManagerState ReplaceSelectedConfig(IConfig newConfig, IMainUiControl uiControl)
+        {
+            var index = BaseState.Selected;
+            ProgramaticallyRemoveAt(index);
+            UserInsertConfig(index, newConfig, uiControl);
+            return this;
+        }
+
+        public AutoQcConfigManagerState UserAddConfig(IConfig iconfig, IMainUiControl uiControl)
+        {
+            UserInsertConfig(BaseState.ConfigList.Count, iconfig, uiControl);
+            return this;
+        }
+
+        protected AutoQcConfigManagerState UserInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
+        {
+            BaseState.UserInsertConfig(index, iconfig);
+            AddConfig(iconfig, uiControl);
+            //UpdateValues(selected: index);
+            return this;
+        }
+
+        private AutoQcConfigManagerState ProgramaticallyAddConfig(IConfig iconfig, IMainUiControl uiControl)
+        {
+            return ProgramaticallyInsertConfig(BaseState.ConfigList.Count, iconfig, uiControl);
+        }
+
+        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
+        {
+            BaseState.ProgramaticallyInsertConfig(index, iconfig);
+            AddConfig(iconfig, uiControl);
+            return this;
+        }
+
+        private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)
+        {
+            var config = (AutoQcConfig)iconfig;
+            if (ConfigRunners.ContainsKey(config.Name))
+            {
+                // TODO: Should the config be programatically removed if this exception is thrown?
+                // If the config has just been added, there should not be another config with this name, and there should not be a config runner
+                // with this name. Should we just replace the existing config runner if this ever happens? 
+                throw new Exception(
+                    string.Format("Config runner already exists for configuration with name '{0}'", config.Name));
+            }
+
+            var logFile = config.getConfigFilePath("AutoQC.log");
+
+            var logger = new Logger(logFile, config.Name, false);  // Do not initialize the logger in the constructor; it will be initialized when we start the config.
+            LogList = LogList.Add(logger);
+            var runner = new ConfigRunner(config, logger, uiControl);
+            ConfigRunners = ConfigRunners.Add(config.Name, runner);
+            return this;
+        }
+
+
+        #endregion
+
+        #region Remove Configs
+
+        public AutoQcConfigManagerState UserRemoveSelected(IMainUiControl uiControl, out bool removed)
+        {
+            BaseState.AssertConfigSelected();
+            UserRemoveAt(BaseState.Selected, uiControl, out removed);
+            return this;
+        }
+
+        public AutoQcConfigManagerState UserRemoveAt(int index, IMainUiControl uiControl, out bool removed)
+        {
+            var configRunner = (ConfigRunner)ConfigRunners[BaseState.ConfigList[index].GetName()];
+            removed = false;
+            if (configRunner.IsBusy()) // Not stopped or error
+            {
+                string message;
+
+                if (configRunner.IsPending()) // Stopping / Starting / Loading
+                {
+                    message =
+                        (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_, configRunner.GetConfigName(), configRunner.GetStatus().ToString()));
+                }
+                else
+                {
+                    message =
+                        (string.Format(Resources.AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_, configRunner.GetConfigName()));
+                }
+                ConfigManager.DisplayWarning(uiControl, message);
+                return this;
+            }
+            // remove config
+            BaseState.UserRemoveAt(index);
+            RemoveConfig(configRunner.Config);
+            removed = true;
+            return this;
+        }
+
+        private AutoQcConfigManagerState ProgramaticallyRemoveAt(int index)
+        {
+            var config = BaseState.ConfigList[index];
+            BaseState.ProgramaticallyRemoveAt(index);
+            RemoveConfig(config);
+            return this;
+        }
+
+        private AutoQcConfigManagerState RemoveConfig(IConfig iconfig)
+        {
+            var config = (AutoQcConfig)iconfig;
+            if (!ConfigRunners.ContainsKey(config.Name))
+                throw new Exception("Config runner does not exist.");
+            int i = 0;
+            while (i < LogList.Count)
+            {
+                if (LogList[i].Name.Equals(config.Name)) break;
+                i++;
+            }
+            LogList = LogList.RemoveAt(i);
+            // TODO: what happens here?
+            //_uiControl?.ClearLog();
+            ConfigRunners = ConfigRunners.Remove(config.Name);
+            return this;
+        }
+
+        #endregion
+
+        #region Update Configs
+
+        public AutoQcConfigManagerState ReplaceSkylineSettings(SkylineSettings skylineSettings, IMainUiControl uiControl, out bool? replaced)
+        {
+            var runningConfigs = GetRunningConfigs();
+            BaseState.AskToReplaceAllSkylineVersions(skylineSettings, runningConfigs, uiControl, out replaced);
+            UpdateFromBaseState(uiControl);
+            return this;
+        }
+
+        public AutoQcConfigManagerState SetConfigInvalid(IConfig config)
+        {
+            BaseState.SetConfigInvalid(config);
+            return this;
+        }
+
+        private AutoQcConfigManagerState UpdateFromBaseState(IMainUiControl uiControl)
+        {
+            foreach (var iconfig in BaseState.ConfigList)
+            {
+                var name = iconfig.GetName();
+                Logger configLogger = null;
+                foreach (var logger in LogList)
+                {
+                    if (logger.Name.Equals(iconfig.GetName()))
+                        configLogger = logger;
+                }
+                var logFile = ((AutoQcConfig)iconfig).getConfigFilePath("AutoQC.log");
+                var newLogger = configLogger ?? new Logger(logFile, iconfig.GetName(), false);
+                if (ConfigRunners.ContainsKey(name))
+                {
+                    if (!ConfigRunners[name].GetConfig().Equals(iconfig))
+                        ConfigRunners = ConfigRunners.Remove(name).Add(name,
+                            new ConfigRunner((AutoQcConfig)iconfig, newLogger, uiControl));
+                }
+                else
+                {
+                    ConfigRunners = ConfigRunners.Add(name, new ConfigRunner((AutoQcConfig)iconfig, newLogger, uiControl));
+                    LogList = LogList.Add(newLogger);
+                }
+            }
+            foreach (var config in ConfigRunners.Keys)
+            {
+                if (BaseState.GetConfigIndex(config) < 0)
+                    ConfigRunners = ConfigRunners.Remove(config);
+            }
+
+            var deletingLoggerIndicies = new List<int>();
+            int i = 0;
+            foreach (var logger in LogList)
+            {
+                if (!ConfigRunners.ContainsKey(logger.Name))
+                    deletingLoggerIndicies.Add(i);
+                i++;
+            }
+
+            deletingLoggerIndicies.Reverse();
+            foreach (var index in deletingLoggerIndicies)
+                LogList = LogList.RemoveAt(index);
+            return this;
+        }
+
+
+        #endregion
+
+        #region Sort configs
+
+        public enum SortColumn
+        {
+            Name,
+            User,
+            Created,
+            RunnerStatus
+        }
+
+        public AutoQcConfigManagerState SortByValue(int columnIndex)
+        {
+            List<int> newIndexOrder = null;
+            switch (columnIndex)
+            {
+                case (int)SortColumn.Name:
+                    var nameTuples = new List<Tuple<string, int>>();
+                    for (int i = 0; i < BaseState.ConfigList.Count; i++)
+                        nameTuples.Add(new Tuple<string, int>(((AutoQcConfig)BaseState.ConfigList[i]).Name, i));
+                    nameTuples.Sort((a, b) => String.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+                    newIndexOrder = nameTuples.Select(t => t.Item2).ToList();
+                    break;
+
+                case (int)SortColumn.User:
+                    var userTuples = new List<Tuple<string, int>>();
+                    for (int i = 0; i < BaseState.ConfigList.Count; i++)
+                        userTuples.Add(new Tuple<string, int>(((AutoQcConfig)BaseState.ConfigList[i]).User, i));
+                    userTuples.Sort((((a, b) =>
+                    {
+                        if (string.IsNullOrEmpty(a.Item1) && string.IsNullOrEmpty(a.Item1)) return 1;
+                        if (string.IsNullOrEmpty(b.Item1)) return -1;
+                        return String.Compare(a.Item1, b.Item1, StringComparison.Ordinal);
+                    })));
+                    newIndexOrder = userTuples.Select(t => t.Item2).ToList();
+                    break;
+
+                case (int)SortColumn.Created:
+                    var createdTuples = new List<Tuple<DateTime, int>>();
+                    for (int i = 0; i < BaseState.ConfigList.Count; i++)
+                        createdTuples.Add(new Tuple<DateTime, int>(((AutoQcConfig)BaseState.ConfigList[i]).Created, i));
+                    createdTuples.Sort((a, b) => b.Item1.CompareTo(a.Item1));
+                    newIndexOrder = createdTuples.Select(t => t.Item2).ToList();
+                    break;
+
+                case (int)SortColumn.RunnerStatus:
+                    var statusTuples = new List<Tuple<RunnerStatus, int>>();
+                    for (int i = 0; i < BaseState.ConfigList.Count; i++)
+                        statusTuples.Add(new Tuple<RunnerStatus, int>(ConfigRunners[BaseState.ConfigList[i].GetName()].GetStatus(), i));
+                    statusTuples.Sort((a, b) => a.Item1.CompareTo(b.Item1));
+                    newIndexOrder = statusTuples.Select(t => t.Item2).ToList();
+                    break;
+            }
+
+            if (newIndexOrder == null)
+                return this;
+            ReorderConfigs(newIndexOrder, columnIndex == SortedColumn);
+            SortedColumn = columnIndex;
+            return this;
+        }
+
+        private AutoQcConfigManagerState ReorderConfigs(List<int> newIndexOrder, bool sameColumn)
+        {
+            if (sameColumn && IsSorted(newIndexOrder))
+                return ReverseConfigList();
+            BaseState.ReorderConfigs(newIndexOrder);
+            return this;
+        }
+
+        private bool IsSorted(List<int> list)
+        {
+            if (list.Count == 0) return true;
+            var lastValue = list[0];
+            foreach (var value in list)
+            {
+                if (value < lastValue)
+                    return false;
+            }
+            return true;
+        }
+
+        private AutoQcConfigManagerState ReverseConfigList()
+        {
+            var newIndexOrder = new List<int>();
+            for(int i = 0; i < BaseState.ConfigList.Count; i++)
+                newIndexOrder.Insert(0, i);
+            BaseState.ReorderConfigs(newIndexOrder);
+            return this;
+        }
+
+
+        #endregion
+
+        #region Config Runners
+
+        public ConfigRunner GetSelectedConfigRunner()
+        {
+            return (ConfigRunner)ConfigRunners[GetSelectedConfig().GetName()];
+        }
+
+        public ConfigRunner GetConfigRunner(IConfig config)
+        {
+            if (ConfigRunners.TryGetValue(config.GetName(), out var configRunner))
+            {
+                return (ConfigRunner)configRunner;
+            }
+
+            return null;
+        }
+
+        public List<string> GetRunningConfigs()
         {
             var runningConfigs = new List<string>();
-            foreach (var configRunner in state.configRunners.Values)
+            foreach (var configRunner in ConfigRunners.Values)
             {
                 if (configRunner.IsBusy())
                     runningConfigs.Add(configRunner.GetConfigName());
@@ -592,36 +848,19 @@ namespace AutoQC
         }
 
         #endregion
-        
+
         #region Logging
-
-        public void SelectLog(int selected)
-        {
-            if (selected < 0 || selected >= _logList.Count)
-                throw new IndexOutOfRangeException("No log at index: " + selected);
-            //GetSelectedLogger()?.DisableUiLogging();
-            SelectedLog = selected;
-            //GetSelectedLogger().LogToUi(_uiControl);
-        }
-
-        public void SelectLogOfSelectedConfig()
-        {
-            lock (_lock)
-            {
-                SelectedLog = GetLoggerIndex(GetSelectedConfig().Name);
-            }
-        }
 
         public Logger GetLogger(string name)
         {
-            return _logList[GetLoggerIndex(name)];
+            return LogList[GetLoggerIndex(name)];
         }
 
-        private int GetLoggerIndex(string name)
+        public int GetLoggerIndex(string name)
         {
-            for (int i = 0; i < _logList.Count; i++)
+            for (int i = 0; i < LogList.Count; i++)
             {
-                if (_logList[i].Name.Equals(name))
+                if (LogList[i].Name.Equals(name))
                     return i;
             }
             return -1;
@@ -631,88 +870,57 @@ namespace AutoQC
 
         #region Import/Export
 
-        public void Import(string filePath, ShowDownloadedFileForm showDownloadedFileForm)
+        public AutoQcConfigManagerState Import(string filePath, IMainUiControl uiControl, ConfigManagerState.ShowDownloadedFileForm showDownloadedFileForm, out List<int> addedIndicies)
         {
-            var addedConfigs = ImportFrom(filePath, Settings.Default.InstalledVersion, showDownloadedFileForm);
-            var state = new AutoQcConfigManagerState(this);
-            foreach (var config in addedConfigs)
-            {
-                if (config is AutoQcConfig qcConfig)
-                {
-                    qcConfig.IsEnabled = false;
-                }
-                // Handle overwritten duplicate configs
-                if (state.configRunners.ContainsKey(config.GetName()))
-                    state = ProgramaticallyRemoveAt(GetConfigIndex(config.GetName(), state.baseState), state);
-                state = ProgramaticallyAddConfig(config, state);
-            }
-            SetState(state);
-            // Do server validation
-            DoServerValidation(addedConfigs.ToImmutableList());
-        }
-
-        #endregion
-        
-        #region Tests
-
-        public bool ConfigListEquals(List<AutoQcConfig> otherConfigs)
-        {
-            if (otherConfigs.Count != _configList.Count) return false;
-
-            for (int i = 0; i < _configList.Count; i++)
-            {
-                if (!Equals(otherConfigs[i], _configList[i])) return false;
-            }
-
-            return true;
-        }
-
-        public bool ConfigOrderEquals(string[] configNames)
-        {
-            if (configNames.Length != _configList.Count) return false;
-
-            for (int i = 0; i < _configList.Count; i++)
-            {
-                if (!Equals(configNames[i], _configList[i].GetName())) return false;
-            }
-
-            return true;
+            BaseState.ImportFrom(AutoQcConfig.ReadXml, filePath, Settings.Default.XmlVersion, uiControl, showDownloadedFileForm, out addedIndicies);
+            UpdateFromBaseState(uiControl);
+            return this;
         }
 
         #endregion
 
+        #region Override Equals
 
-
-        protected class AutoQcConfigManagerState
+        protected bool Equals(AutoQcConfigManagerState other)
         {
-            public ConfigManagerState baseState;
-            public ImmutableDictionary<string, IConfigRunner> configRunners;
-
-            public AutoQcConfigManagerState(AutoQcConfigManager configManager)
+            if (LogList.Count != other.LogList.Count)
+                return false;
+            for (int i = 0; i < LogList.Count; i++)
             {
-                baseState = new ConfigManagerState(configManager);
-                configRunners = configManager._configRunners;
+                if (!Equals(LogList[i], other.LogList[i]))
+                    return false;
             }
-
-            public AutoQcConfigManagerState(AutoQcConfigManagerState state)
+            if (ConfigRunners.Count != other.ConfigRunners.Count)
+                return false;
+            foreach (var config in ConfigRunners.Keys)
             {
-                baseState = new ConfigManagerState(state.baseState);
-                configRunners = state.configRunners;
+                if (!other.ConfigRunners.ContainsKey(config))
+                    return false;
+                if ((ConfigRunners[config].IsBusy() || other.ConfigRunners[config].IsBusy()) &&
+                    !Equals(ConfigRunners[config], other.ConfigRunners[config]))
+                    return false;
+                if (!Equals(ConfigRunners[config].GetConfig(), other.ConfigRunners[config].GetConfig()))
+                    return false;
             }
-
-            public void ValidateState()
-            {
-                var validated = configRunners.Count == baseState.configList.Count;
-                foreach (var config in baseState.configList)
-                {
-                    if (!validated) break;
-                    if (!configRunners.ContainsKey(config.GetName()))
-                        validated = false;
-                }
-                if (!validated)
-                    throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
-            }
-
+            return Equals(BaseState, other.BaseState) && SortedColumn == other.SortedColumn;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AutoQcConfigManagerState)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return BaseState.GetHashCode() +
+                   LogList.GetHashCode() +
+                   ConfigRunners.GetHashCode();
+        }
+
+        #endregion
+
     }
 }

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -123,18 +122,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     transitionGroupDocNodes = transitionGroups[iHeader];
                 }
-                
-                if (readChromatograms)
-                {
-                    try
-                    {
-                        chromGroupInfo.ReadChromatogram(ChromatogramCache, true);
-                    }
-                    catch (Exception exception)
-                    {
-                        Trace.TraceWarning(@"Unable to read chromatogram {0}", exception);
-                    }
-                }
 
                 if (minimizer.Exception != null)
                     break;
@@ -176,8 +163,6 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MinimizedChromGroup MinimizeChromGroup(Settings settings, ChromatogramGroupInfo chromatogramGroupInfo, IList<TransitionGroupDocNode> transitionGroups)
         {
-            chromatogramGroupInfo.EnsureDecompressed();
-
             var fileIndexes = new List<int>();
             for (int fileIndex = 0; fileIndex < Document.Settings.MeasuredResults.Chromatograms.Count; fileIndex++)
             {
@@ -326,6 +311,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var header = _chromatogramGroupInfo.Header;
                 int numPeaks = header.NumPeaks;
+                var groupPeaks = cache.ReadPeaks(header);
                 var retainedPeakIndexes = new HashSet<int>();
                 if (!OptimizedStartTime.HasValue || !OptimizedEndTime.HasValue)
                 {
@@ -341,9 +327,7 @@ namespace pwiz.Skyline.Model.Results
                             if (!RetainedTransitionIndexes.Contains(transitionIndex))
                                 continue;
 
-                            var peak = cache.GetPeak(header.StartPeakIndex +
-                                                       transitionIndex * header.NumPeaks +
-                                                       iPeak);
+                            var peak = groupPeaks[transitionIndex * header.NumPeaks + iPeak];
                             if (peak.StartTime < OptimizedStartTime.Value || peak.EndTime > OptimizedEndTime.Value)
                             {
                                 outsideRange = true;
@@ -364,13 +348,14 @@ namespace pwiz.Skyline.Model.Results
                     MaxPeakIndex = -1;
 
                 var peakScores = new List<float>();
+                var groupScores = cache.ReadScores(header);
                 for (int iPeak = 0; iPeak < numPeaks; iPeak++)
                 {
                     if (!retainedPeakIndexes.Contains(iPeak))
                         continue;
 
-                    int iScores = header.StartScoreIndex + iPeak * cache.ScoreTypesCount;
-                    peakScores.AddRange(cache.GetCachedScores(iScores));
+                    int iScores = iPeak * cache.ScoreTypesCount;
+                    peakScores.AddRange(Enumerable.Range(iScores, cache.ScoreTypesCount).Select(i => groupScores[i]));
                 }
                 PeakScores = peakScores.ToArray();
                 var peaks = new List<ChromPeak>();
@@ -383,7 +368,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!retainedPeakIndexes.Contains(iPeak))
                             continue;
 
-                        var originalPeak = cache.GetPeak(header.StartPeakIndex + originalIndex*numPeaks + iPeak);
+                        var originalPeak = groupPeaks[originalIndex*numPeaks + iPeak];
                         peaks.Add(originalPeak);
                         TotalPeakCount++;
                     }
@@ -753,7 +738,8 @@ namespace pwiz.Skyline.Model.Results
                                                _textIdBytes,
                                                _scoreTypes,
                                                _scoreCount,
-                                               _peakCount);
+                                               _peakCount,
+                                               out _);
             }
 
             public ImmutableList<byte> GetNewTextId(ChromGroupHeaderInfo chromGroupHeaderInfo)

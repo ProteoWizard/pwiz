@@ -423,4 +423,31 @@ with:
   <data name="SkylineSettings_ParseVersionFromString_Error_parsing_Skyline_version_" xml:space="preserve">
     <value>Error parsing Skyline version.</value>
   </data>
+  <data name="SkylineSettings_HigherVersion_WARNING__Could_not_parse_Skyline_version__Running_earliest_supported_Skyline_commands_" xml:space="preserve">
+    <value>WARNING: Could not parse Skyline version. Running earliest supported Skyline commands.</value>
+  </data>
+  <data name="Settings_Update_Saved_configurations_were_found_in___0_" xml:space="preserve">
+    <value>Saved configurations were found in: {0}</value>
+  </data>
+  <data name="ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_" xml:space="preserve">
+    <value>The XML reader is not at the correct position to read the XML version.</value>
+  </data>
+  <data name="Settings_Update_There_was_an_error_reading_the_saved__0__configurations_" xml:space="preserve">
+    <value>There was an error reading the saved {0} configurations:</value>
+  </data>
+  <data name="SkylineSettings_WriteXml_latest" xml:space="preserve">
+    <value>latest</value>
+  </data>
+  <data name="ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_" xml:space="preserve">
+    <value>The state of the configuration list has changed since this operation started. Please try again.</value>
+  </data>
+  <data name="ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_" xml:space="preserve">
+    <value>Do you want to use this Skyline version for all configurations?</value>
+  </data>
+  <data name="ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_running_and_could_not_be_updated_" xml:space="preserve">
+    <value>The following configurations are running and could not be updated:</value>
+  </data>
+  <data name="ConfigManagerState_SelectLog_No_log_at_index__" xml:space="preserve">
+    <value>No log at index: </value>
+  </data>
 </root>

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -117,9 +116,8 @@ namespace pwiz.Skyline.Model.Results
                         inStream.TransferBytes(_fsScans.Stream, rawData.CountBytesScanIds);
                     }
 
-                    _peakCount += rawData.ChromatogramPeaks.Length;
-                    var chromPeakSerializer = CacheFormat.ChromPeakSerializer();
-                    rawData.ChromatogramPeaks.WriteArray(block => chromPeakSerializer.WriteItems(_fsPeaks.FileStream, block));
+                    _peakCount += rawData.NumPeaks;
+                    rawData.TransferPeaks(inStream, CacheFormat, 0, rawData.NumPeaks, _fsPeaks.FileStream);
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)
@@ -133,9 +131,9 @@ namespace pwiz.Skyline.Model.Results
                         if (_listScoreTypes.Intersect(rawData.ScoreTypes).Count() != _listScoreTypes.Count)
                             throw new InvalidDataException(@"Data cache files with different score types cannot be joined.");
                     }
-                    _scoreCount += rawData.Scores.Length;
-                    rawData.Scores.WriteArray(block => PrimitiveArrays.Write(_fsScores.Stream, block));
-
+                    _scoreCount += rawData.NumScores;
+                    inStream.Seek(rawData.LocationScoreValues, SeekOrigin.Begin);
+                    inStream.TransferBytes(_fsScores.FileStream, rawData.NumScores * ChromatogramCache.SCORE_VALUE_SIZE);
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {
                         _listGroups.Add(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,

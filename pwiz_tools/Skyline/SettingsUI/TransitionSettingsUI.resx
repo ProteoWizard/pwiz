@@ -2850,16 +2850,16 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
@@ -3377,31 +3377,31 @@ with predicted transition m/z values.
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblMethodMatchTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblMethodMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 108</value>
   </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblMethodMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 13</value>
   </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblMethodMatchTolerance.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="label16.Text" xml:space="preserve">
+  <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
     <value>Method match &amp;tolerance m/z:</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">

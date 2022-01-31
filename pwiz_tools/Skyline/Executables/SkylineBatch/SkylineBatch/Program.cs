@@ -86,9 +86,9 @@ namespace SkylineBatch
                         Application.Exit();
                     }
                 });
-                SendAnalyticsHit();
             }
 
+            var restart = false;
             using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
@@ -102,51 +102,61 @@ namespace SkylineBatch
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
-                string configFile = null;
+                string xmlFile = null;
                 try
                 {
-                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    configFile = config.FilePath;
-                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, config.FilePath));
-                    if (!InitSkylineSettings()) return;
-                    RInstallations.FindRDirectory();
-                }
-                catch (ConfigurationException e)
-                {
-                    ProgramLog.Error(e.Message, e);
-                    var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
-                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
-                    var message = string.Format(
-                        SharedBatch.Properties.Resources.Program_Main_There_was_an_error_reading_the_saved_configurations_from_an_earlier_version_of__0___,
-                        AppName());
-                    if (configFile != null)
+                    xmlFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal)
+                        .FilePath;
+                    if (!File.Exists(xmlFile))
                     {
-                        File.Copy(configFile, newFileName, true);
-                        File.Delete(configFile);
+                        Settings.Default.Upgrade();
+                        _ = SharedBatch.Properties.Settings.Default.InstallationId;
+                    }
+                    ProgramLog.Info(string.Format(Resources.Program_Main_Saved_configurations_were_found_in___0_, xmlFile));
+                }
+                catch (Exception e)
+                {
+                    restart = true;
+                    if (xmlFile == null && (e is ConfigurationErrorsException))
+                        xmlFile = ((ConfigurationErrorsException)e).Filename;
+                    ProgramLog.Error(e.Message, e);
+                    var folderToCopy = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    var message = string.Format("Opening the {0} saved settings file caused the following error: {1}", AppName(), e.Message);
+                    if (!string.IsNullOrEmpty(xmlFile))
+                    {
+                        File.Copy(xmlFile, newFileName, true);
+                        File.Delete(xmlFile);
+                        //Directory.Delete(Path.GetDirectoryName(xmlFile));
                         message += Environment.NewLine + Environment.NewLine +
                                    string.Format(
-                                       SharedBatch.Properties.Resources.Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
+                                       SharedBatch.Properties.Resources
+                                           .Program_Main_To_help_improve__0__in_future_versions__please_post_the_configuration_file_to_the_Skyline_Support_board_,
                                        AppName()) +
                                    Environment.NewLine +
                                    newFileName;
                     }
-                    
                     MessageBox.Show(message);
-                    Application.Restart();
-                    return;
                 }
-                
 
+                if (!restart)
+                {
+                    if (!FunctionalTest) SendAnalyticsHit();
+                    if (!InitSkylineSettings()) return;
+                    Settings.Default.UpdateIfNecessary();
+                    RInstallations.FindRDirectory();
 
-                AddFileTypesToRegistry();
-                var openFile = GetFirstArg(args);
+                    AddFileTypesToRegistry();
+                    var openFile = GetFirstArg(args);
 
-                MainWindow = new MainForm(openFile);
-                MainWindow.Text = Version();
-                Application.Run(MainWindow);
+                    MainWindow = new MainForm(openFile);
+                    MainWindow.Text = Version();
+                    Application.Run(MainWindow);
+                }
 
                 mutex.ReleaseMutex();
             }
+            if (restart) Application.Restart();
         }
 
         private static void InitializeVersion()
@@ -187,7 +197,6 @@ namespace SkylineBatch
             }
             if (FunctionalTest)
                 _version = TEST_VERSION;
-            Settings.Default.UpdateIfNecessary(_version);
         }
 
         private static string GetFirstArg(string[] args)

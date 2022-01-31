@@ -108,6 +108,16 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The version of the imported file {0} was not recognized. No configurations will be imported..
+        /// </summary>
+        internal static string AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_ {
+            get {
+                return ResourceManager.GetString("AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_" +
+                        "configurations_will_be_imported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please enter a name for the configuration..
         /// </summary>
         internal static string AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_ {

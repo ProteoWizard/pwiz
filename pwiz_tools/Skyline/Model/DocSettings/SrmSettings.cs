@@ -743,6 +743,44 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+
+        /// <summary>
+        /// Returns true if the settings have changed in a way that might require
+        /// all of the results text in the SequenceTree to be updated.
+        /// </summary>
+        public bool IsGlobalRatioChange(SrmSettings other)
+        {
+            if (PeptideSettings.Quantification.SimpleRatios != other.PeptideSettings.Quantification.SimpleRatios)
+            {
+                return true;
+            }
+
+            if (_cachedPeptideStandards == null)
+            {
+                return other._cachedPeptideStandards != null;
+            }
+
+            if (other._cachedPeptideStandards == null)
+            {
+                return true;
+            }
+
+            foreach (var entry in _cachedPeptideStandards)
+            {
+                if (!other._cachedPeptideStandards.TryGetValue(entry.Key, out var otherValue))
+                {
+                    return true;
+                }
+
+                if (!Equals(entry.Value, otherValue))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool HasGlobalStandardArea
         {
             get
@@ -1981,6 +2019,10 @@ namespace pwiz.Skyline.Model.DocSettings
                         MeasuredResults.Chromatograms.Select(c => c.RestoreLegacyUriParameters()).ToArray()));
                 }
             }
+            if (documentFormat < DocumentFormat.VERSION_21_11)
+            {
+                result = result.ChangeMeasuredResults(result.MeasuredResults?.ClearImportTimes());
+            }
             if (documentFormat < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY &&
                 !TransitionIonMobilityFiltering.IsNullOrEmpty(result.TransitionSettings.IonMobilityFiltering))
             {
@@ -2730,6 +2772,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (!ArrayUtil.EqualsDeep(measuredResultsNew.CachedFilePaths.ToArray(),
                                       measuredResultsOld.CachedFilePaths.ToArray()))
+            {
+                return false;
+            }
+            if (!measuredResultsNew.CachedFileInfos.Select(info => info.ImportTime)
+                .SequenceEqual(measuredResultsOld.CachedFileInfos.Select(info => info.ImportTime)))
             {
                 return false;
             }

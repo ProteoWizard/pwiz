@@ -62,6 +62,8 @@ Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
         faparm.setCache(mds_nelemts, rdcc_nelmts, rdcc_nbytes, rdcc_w0);
     }
 
+    H5E_BEGIN_TRY
+
     unsigned int openFlag = H5F_ACC_TRUNC;
     switch (op)
     {
@@ -87,6 +89,8 @@ Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
         break;
     }
     closed_ = false;
+
+    H5E_END_TRY
 }
 
 Connection_mz5::~Connection_mz5()

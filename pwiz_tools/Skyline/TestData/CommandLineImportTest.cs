@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -174,6 +175,37 @@ namespace pwiz.SkylineTestData
             var doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.AreEqual(2, doc.MoleculeGroupCount);
             Assert.AreEqual(4, doc.MoleculeCount);
+
+            // Test how we categorize transition lists as small molecule or peptide in command line context
+            // when those transition lists do not contain defining features such as a peptide sequence column or small molecule headers
+            // Load a proteomic document
+            docPath = testFilesDir.GetTestPath("proteomics.sky");
+            var ambiguousListPath = testFilesDir.GetTestPath("DrugX.txt");
+
+            // Import a transition list that cannot be read either way
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-transition-list=" + ambiguousListPath);
+
+            // We should rely on the type of the document and categorize it as a proteomics transition list
+            // so verify that we get a proteomics error message
+            AssertEx.Contains(output, Resources.MassListImporter_Import_Failed_to_find_peptide_column);
+
+            // Load a small molecule document
+            docPath = testFilesDir.GetTestPath("smallmolecule.sky");
+
+            // Import the same transition list that cannot be read either way
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-transition-list=" + ambiguousListPath);
+
+            // We should rely on the type of the document and categorize it as a small molecule transition list
+            // so verify that we get a small molecule error message
+            var smallMoleculeErrorMessage = string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
+                TextUtil.LineSeparate(new[] { "DrugX","Drug","light","283.04","1","129.96","1","26","16","2.7", string.Empty
+                }),
+                TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys));
+            AssertEx.Contains(output, smallMoleculeErrorMessage);
         }
     }
 }
