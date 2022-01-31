@@ -186,11 +186,6 @@ namespace TestPerf
             });
             RestoreViewOnScreen(20);
 
-            // TODO: Remove this after Nick fixes Targets view ratios
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings)));
-            WaitForGraphs();
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
-            WaitForGraphs();
             RunUI(() =>
             {
                 string lightNodeText = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Text;
