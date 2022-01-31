@@ -95,3 +95,22 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
+Undo Redo : 已从“heavy-PRM.mzXML”导入结果
+Summary   : 已从“heavy-PRM.mzXML”导入结果
+All Info  :
+已从“heavy-PRM.mzXML”导入结果
+导入结果设置 > 文件名称 : 包含 "heavy-PRM.mzXML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "heavy-PRM.mzXML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已删除缺失结果
+Summary   : 已删除缺失结果
+All Info  :
+已删除缺失结果
+

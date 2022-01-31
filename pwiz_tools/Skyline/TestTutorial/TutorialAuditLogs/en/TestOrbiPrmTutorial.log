@@ -95,3 +95,22 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
+Undo Redo : Imported results from "heavy-PRM.mzXML"
+Summary   : Imported results from "heavy-PRM.mzXML"
+All Info  :
+Imported results from "heavy-PRM.mzXML"
+Import results settings > File names : contains "heavy-PRM.mzXML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "heavy-PRM.mzXML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Removed missing results
+Summary   : Removed missing results
+All Info  :
+Removed missing results
+
