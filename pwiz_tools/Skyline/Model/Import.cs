@@ -344,8 +344,10 @@ namespace pwiz.Skyline.Model
             {
                 var inputLines = new List<string>();
                 string line;
-                while ((line = reader.ReadLine()?.Trim()) != null)
+                char[] whitespace = { ' ', '\r', '\n', '\f' }; //The usual whitespace characters, except tab which may be a separator
+                while ((line = reader.ReadLine()) != null)
                 {
+                    line = line.Trim(whitespace);
                     if (line.Length > 0)
                         inputLines.Add(line);
                 }
@@ -1860,7 +1862,7 @@ namespace pwiz.Skyline.Model
                     foreach (var line in lines)
                     {
                         var fieldsNext = line.ParseDsvFields(separator);
-                        if (!RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i]))
+                        if ((i >= fieldsNext.Length) || !RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i])) // Beware of short lines
                         {
                             allGood = false;
                             break;

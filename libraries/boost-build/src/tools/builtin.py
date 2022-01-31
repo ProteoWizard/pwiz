@@ -262,7 +262,7 @@ def register_globals ():
         'power',
 
         # MIPS/SGI
-        'mips1', 'mips2', 'mips3', 'mips4', 'mips32', 'mips32r2', 'mips64',
+        'mips', 'mips1', 'mips2', 'mips3', 'mips4', 'mips32', 'mips32r2', 'mips64',
 
         # HP/PA-RISC
         'parisc',
@@ -312,11 +312,17 @@ def register_globals ():
         'rios1', 'rsc', 'rios2', 'rs64a',
 
         # MIPS
-        '4kc', '4kp', '5kc', '20kc', 'm4k', 'r2000', 'r3000', 'r3900', 'r4000',
-        'r4100', 'r4300', 'r4400', 'r4600', 'r4650',
-        'r6000', 'r8000', 'rm7000', 'rm9000', 'orion', 'sb1', 'vr4100',
-        'vr4111', 'vr4120', 'vr4130', 'vr4300',
-        'vr5000', 'vr5400', 'vr5500',
+        '4kc', '4km', '4kp', '4ksc', '4kec', '4kem', '4kep', '4ksd', '5kc',
+        '5kf', '20kc', '24kc', '24kf2_1', '24kf1_1', '24kec', '24kef2_1',
+        '24kef1_1', '34kc', '34kf2_1', '34kf1_1', '34kn', '74kc', '74kf2_1',
+        '74kf1_1', '74kf3_2', '1004kc', '1004kf2_1', '1004kf1_1', 'i6400',
+        'i6500', 'interaptiv', 'loongson2e', 'loongson2f', 'loongson3a',
+        'gs464', 'gs464e', 'gs264e', 'm4k', 'm14k', 'm14kc', 'm14ke', 'm14kec',
+        'm5100', 'm5101', 'octeon', 'octeon+', 'octeon2', 'octeon3', 'orion',
+        'p5600', 'p6600', 'r2000', 'r3000', 'r3900', 'r4000', 'r4400', 'r4600', 'r4650',
+        'r4700', 'r5900', 'r6000', 'r8000', 'rm7000', 'rm9000', 'r10000', 'r12000',
+        'r14000', 'r16000', 'sb1', 'sr71000', 'vr4100', 'vr4111', 'vr4120', 'vr4130',
+        'vr4300', 'vr5000', 'vr5400', 'vr5500', 'xlr', 'xlp',
 
         # HP/PA-RISC
         '700', '7100', '7100lc', '7200', '7300', '8000',

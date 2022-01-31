@@ -507,12 +507,19 @@ void PepXMLreader::endElement(const XML_Char* name)
         // no prob for spectrum mill
         // if prob not found for pep proph or mascot, default value is -1 and the psm will quietly be ignored
         // mascot has spectra with no peptides, but could report warning if spectrum mill or peptide prophet don't have a peptide sequence
-        if( scorePasses(pepProb) && (int)strlen(pepSeq) > 0) {
+        size_t pepSeqLen = strlen(pepSeq);
+        if( scorePasses(pepProb) && pepSeqLen > 0) {
             curPSM_ = new PSM();
             
             
             curPSM_->charge = charge;
-            curPSM_->unmodSeq = pepSeq;
+
+            // workaround for invalid spectrum_query@peptide values that have modification annotations in them (should always be unmodified)
+            curPSM_->unmodSeq.reserve(pepSeqLen);
+            for (size_t i = 0; i < pepSeqLen; ++i)
+                if (pepSeq[i] >= 'A' && pepSeq[i] <= 'Z')
+                    curPSM_->unmodSeq.push_back(pepSeq[i]);
+
             if (scanIndex >= 0) {
                 curPSM_->specIndex = scanIndex;
             }
