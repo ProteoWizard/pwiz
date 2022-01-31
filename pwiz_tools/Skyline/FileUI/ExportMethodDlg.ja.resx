@@ -1037,7 +1037,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>5</value>
   </data>
   <data name="textIntensityThresholdMin.ToolTip" xml:space="preserve">
-    <value>この最小値よりも低い強度しきい値が最小値に設定されます。</value>
+    <value>この最小値よりも低い強度閾値が最小値に設定されます。</value>
   </data>
   <data name="&gt;&gt;textIntensityThresholdMin.Name" xml:space="preserve">
     <value>textIntensityThresholdMin</value>
@@ -1571,7 +1571,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>4</value>
   </data>
   <data name="lblIntensityThresholdMin.Text" xml:space="preserve">
-    <value>最小強度しきい値</value>
+    <value>最小強度閾値</value>
   </data>
   <data name="&gt;&gt;lblIntensityThresholdMin.Name" xml:space="preserve">
     <value>lblIntensityThresholdMin</value>
@@ -1625,7 +1625,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>1</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>相対強度しきい値</value>
+    <value>相対強度閾値</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>

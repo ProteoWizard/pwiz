@@ -144,10 +144,10 @@
     <value>保留时间模型“{0}”不存在</value>
   </data>
   <data name="PrositPredictingException_PrositPredictingException_Making_predictions___" xml:space="preserve">
-    <value>进行预测......</value>
+    <value>进行预测...</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">
-    <value>查询服务器......</value>
+    <value>查询服务器...</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_None" xml:space="preserve">
     <value>无</value>

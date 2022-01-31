@@ -889,6 +889,7 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_SCIEX_TOF_TOF_T2D_format:
         case MS_Waters_raw_format:
         case MS_Micromass_PKL_format:
+        case MS_mzML_format:
             return MS_scan_number_only_nativeID_format;
 
         // in other cases, assume the source file doesn't contain instrument data

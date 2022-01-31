@@ -26,7 +26,7 @@ namespace SkylineBatch
             _dataFolder = folder;
             _serverRequired = serverRequired;
 
-            remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired);
+            remoteFileControl = new RemoteFileControl(mainControl, state, editingServerInfo, folder, serverRequired, false);
             remoteFileControl.Dock = DockStyle.Fill;
             remoteFileControl.Show();
             panelRemoteFile.Controls.Add(remoteFileControl);

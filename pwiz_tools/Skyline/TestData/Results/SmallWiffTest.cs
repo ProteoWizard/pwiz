@@ -46,6 +46,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FileTypeTest()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(FileTypeTest)))
+                return;
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // wiff1
@@ -82,6 +84,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void Wiff2ResultsTest()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(Wiff2ResultsTest)))
+                return;
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath = testFilesDir.GetTestPath("OnyxTOFMS.sky");
