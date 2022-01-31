@@ -98,13 +98,13 @@ targets['SkylineRelease'] = \
     {
         "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
         ,"bt209": "Skyline master and PRs (Windows x86_64)"
-        ,"bt19": "Skyline master and PRs (Windows x86)"
+        #,"bt19": "Skyline master and PRs (Windows x86)"
     },
     'release':
     {
         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
         ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
-        ,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
+        #,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
     }
 }
 
