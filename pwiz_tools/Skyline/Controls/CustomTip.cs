@@ -26,12 +26,12 @@ using System.Runtime.InteropServices;
 
 namespace pwiz.Skyline.Controls
 {
-    /// <summary>
-    /// Represents a floating native window with shadow, transparency and the ability to 
-    /// move and be resized with the mouse.
-    /// </summary>
-    public class CustomTip : NativeWindow, IDisposable
-    {
+	/// <summary>
+	/// Represents a floating native window with shadow, transparency and the ability to 
+	/// move and be resized with the mouse.
+	/// </summary>
+	public class CustomTip : NativeWindow, IDisposable
+	{
         private const int SHADOW_LENGTH = 4;
 
         private bool _isMouseIn;
@@ -39,42 +39,42 @@ namespace pwiz.Skyline.Controls
         private bool _onMouseDown;
         private bool _onMouseUp;
         private bool _captured;
-        private bool _disposed;
-        private bool _hasShadow = true;
-        private Point _location = new Point(0,0);
-        private Size _size = new Size(200, 100);
-        private byte _alpha = 0xff;
-        private Control _parent;
+		private bool _disposed;
+		private bool _hasShadow = true;
+		private Point _location = new Point(0,0);
+		private Size _size = new Size(200, 100);
+		private byte _alpha = 0xff;
+		private Control _parent;
         private Point _lastMouseDown = Point.Empty;
         private readonly bool _supportsLayered;
         private readonly Color _borderColor = Color.Black;
-        private readonly Color _backColor = Color.LightYellow; // color of tooltip box background (MS tooltip yellow);
+        private readonly Color _backColor = Color.LightYellow; // color of tootlip box background (MS tooltip yellow);
 
-        public CustomTip()
-        {
+		public CustomTip()
+		{
             // The layered window support was causing a GDI handle leak
-            _supportsLayered = false; // OSFeature.Feature.GetVersionPresent(OSFeature.LayeredWindows) != null;
-        }
+		    _supportsLayered = false; // OSFeature.Feature.GetVersionPresent(OSFeature.LayeredWindows) != null;
+		}
 
-        ~CustomTip()
-        {
-            Dispose(false);
-        }
+		~CustomTip()
+		{
+			Dispose(false);
+		}
 
-        #region #  Methods  #
+		#region #  Methods  #
 
-        #region == Painting ==
+		#region == Painting ==
 
-        /// <summary>
-        /// Paints the shadow for the window.
-        /// </summary>
-        /// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
-        protected void PaintShadow(NcPaintEventArgs e)
-        {
-            if (_hasShadow)
-            {
-                Color color1 = Color.FromArgb(0x30, 0, 0, 0);
-                Color color2 = Color.FromArgb(0, 0, 0, 0);
+		/// <summary>
+		/// Paints the shadow for the window.
+		/// </summary>
+		/// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
+		protected void PaintShadow(NcPaintEventArgs e)
+		{
+			if (_hasShadow)
+			{
+				Color color1 = Color.FromArgb(0x30, 0, 0, 0);
+				Color color2 = Color.FromArgb(0, 0, 0, 0);
                 using (GraphicsPath path1 = new GraphicsPath())
                 {
                     Rectangle rectShadow = GetShadowRectangle(e.Bounds);
@@ -88,10 +88,10 @@ namespace pwiz.Skyline.Controls
                         brush2.CenterPoint = new Point(rectShadow.X + rectShadow.Width / 2,
                             rectShadow.Y + rectShadow.Height / 2);
                         ColorBlend cb = new ColorBlend
-                        {
-                            Colors = new[] {color1, color2},
-                            Positions = new[] {0.0f, 1.0f}
-                        };
+                            {
+                                Colors = new[] {color1, color2},
+                                Positions = new[] {0.0f, 1.0f}
+                            };
                         brush2.InterpolationColors = cb;
                         using (Region region = e.Graphics.Clip)
                         {
@@ -102,8 +102,8 @@ namespace pwiz.Skyline.Controls
                     }
                     e.Graphics.EndContainer(container1);
                 }
-            }
-        }
+			}
+		}
 
         protected void PaintBorder(NcPaintEventArgs e)
         {
@@ -123,68 +123,68 @@ namespace pwiz.Skyline.Controls
         }
 
         /// <summary>
-        /// Performs the painting of the window.
-        /// </summary>
-        /// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
-        protected virtual void PaintClient(PaintEventArgs e)
-        {
-            using (SolidBrush br = new SolidBrush(Color.FromArgb(255, _backColor)))
-            {
+		/// Performs the painting of the window.
+		/// </summary>
+		/// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
+		protected virtual void PaintClient(PaintEventArgs e)
+		{
+			using (SolidBrush br = new SolidBrush(Color.FromArgb(255, _backColor)))
+			{
                 e.Graphics.FillRectangle(br, ClientRectangle);
-            }
-        }
+			}
+		}
 
-        /// <summary>
-        /// Raises the <see cref="Paint"/> event.
-        /// </summary>
-        /// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
-        public virtual void OnPaint(PaintEventArgs e)
-        {
-            PaintClient(e);
-            if (Paint != null)
-            {
-                Paint(this, e);
-            }
-        }
+		/// <summary>
+		/// Raises the <see cref="Paint"/> event.
+		/// </summary>
+		/// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
+		public virtual void OnPaint(PaintEventArgs e)
+		{
+			PaintClient(e);
+			if (Paint != null)
+			{
+				Paint(this, e);
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region == Updating ==
+		#region == Updating ==
 
-        protected internal void Invalidate()
-        {
-            UpdateLayeredWindow();
-        }
+		protected internal void Invalidate()
+		{
+			UpdateLayeredWindow();
+		}
 
         private void UpdateLayeredWindow()
-        {
-            UpdateLayeredWindow(_location, _size, _alpha);
-        }
+		{
+			UpdateLayeredWindow(_location, _size, _alpha);
+		}
 
         private void UpdateLayeredWindowAnimate()
-        {
-            UpdateLayeredWindow(true);
-        }
-        
-        private void UpdateLayeredWindow(bool animate)
-        {
-            if (animate)
-            {
-                for (int num1 = 128; num1 < _alpha; num1 = num1 << 1)
-                {
-                    UpdateLayeredWindow(_location, _size, (byte) num1);
-                }
-            }
-            UpdateLayeredWindow(_location, _size, _alpha);
-        }
+		{
+			UpdateLayeredWindow(true);
+		}
+		
+		private void UpdateLayeredWindow(bool animate)
+		{
+			if (animate)
+			{
+				for (int num1 = 128; num1 < _alpha; num1 = num1 << 1)
+				{
+					UpdateLayeredWindow(_location, _size, (byte) num1);
+				}
+			}
+			UpdateLayeredWindow(_location, _size, _alpha);
+		}
 
-        private void UpdateLayeredWindow(byte alpha)
-        {
-            UpdateLayeredWindow(_location, _size, alpha);
-        }
+		private void UpdateLayeredWindow(byte alpha)
+		{
+			UpdateLayeredWindow(_location, _size, alpha);
+		}
 
-        private void UpdateLayeredWindow(Point point, Size size, byte alpha)
-        {
+		private void UpdateLayeredWindow(Point point, Size size, byte alpha)
+		{
             using (Bitmap bmp = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb))
             {
                 using (Graphics g = Graphics.FromImage(bmp))
@@ -219,131 +219,131 @@ namespace pwiz.Skyline.Controls
                     point2.x = 0;
                     point2.y = 0;
                     BLENDFUNCTION blendfunction1 = new BLENDFUNCTION
-                    {
-                        BlendOp = 0,
-                        BlendFlags = 0,
-                        SourceConstantAlpha = alpha,
-                        AlphaFormat = 1
-                    };
+                        {
+                            BlendOp = 0,
+                            BlendFlags = 0,
+                            SourceConstantAlpha = alpha,
+                            AlphaFormat = 1
+                        };
                     User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
                     Gdi32.SelectObject(ptr2, ptr4);
                     User32.ReleaseDC(IntPtr.Zero, ptr1);
                     Gdi32.DeleteDC(ptr2);
                 }
             }
-        }
-        
-        #endregion
+		}
+		
+		#endregion
 
-        #region == Show / Hide ==
-        
-        /// <summary>
-        /// Shows the window.
-        /// </summary>
-        /// <remarks>
-        /// Showing is done with animation.
-        /// </remarks>
-        public virtual void Show()
-        {
-            Show(X, Y);
-        }
+		#region == Show / Hide ==
+		
+		/// <summary>
+		/// Shows the window.
+		/// </summary>
+		/// <remarks>
+		/// Showing is done with animation.
+		/// </remarks>
+		public virtual void Show()
+		{
+			Show(X, Y);
+		}
 
-        /// <summary>
-        /// Shows the window at the specified location.
-        /// </summary>
-        /// <param name="x">The horizontal coordinate.</param>
-        /// <param name="y">The vertical coordinate.</param>
-        /// <remarks>
-        /// Showing is done with animation.
-        /// </remarks>
-        public virtual void Show(int x, int y)
-        {
-            Show(x, y, true);
-        }
+		/// <summary>
+		/// Shows the window at the specified location.
+		/// </summary>
+		/// <param name="x">The horizontal coordinate.</param>
+		/// <param name="y">The vertical coordinate.</param>
+		/// <remarks>
+		/// Showing is done with animation.
+		/// </remarks>
+		public virtual void Show(int x, int y)
+		{
+			Show(x, y, true);
+		}
 
-        /// <summary>
-        /// Shows the window at the specified location.
-        /// </summary>
-        /// <param name="x">The horizontal coordinate.</param>
-        /// <param name="y">The vertical coordinate.</param>
-        /// <param name="animate"><b>true</b> if the showing should be done with animation; otherwise, <b>false</b>.</param>
-        public virtual void Show(int x, int y, bool animate)
-        {
-            _location = new Point(x, y);
-            if (Handle == IntPtr.Zero)
-                CreateHandle(CreateParams);
+		/// <summary>
+		/// Shows the window at the specified location.
+		/// </summary>
+		/// <param name="x">The horizontal coordinate.</param>
+		/// <param name="y">The vertical coordinate.</param>
+		/// <param name="animate"><b>true</b> if the showing should be done with animation; otherwise, <b>false</b>.</param>
+		public virtual void Show(int x, int y, bool animate)
+		{
+			_location = new Point(x, y);
+			if (Handle == IntPtr.Zero)
+				CreateHandle(CreateParams);
 
             if (_supportsLayered)
-            {
-                if (animate)
-                {
-                    User32.ShowWindow(Handle, 4);
-                    Thread thread1 = new Thread(UpdateLayeredWindowAnimate)
+			{
+				if (animate)
+				{
+					User32.ShowWindow(Handle, 4);
+					Thread thread1 = new Thread(UpdateLayeredWindowAnimate)
                         {IsBackground = true};
-                    thread1.Start();
-                }
-                else
-                {
-                    UpdateLayeredWindow();
-                }
-            }
-            User32.ShowWindow(Handle, 4);
-        }
+				    thread1.Start();
+				}
+				else
+				{
+					UpdateLayeredWindow();
+				}
+			}
+			User32.ShowWindow(Handle, 4);
+		}
 
-        /// <summary>
-        /// Shows the window with a specific animation.
-        /// </summary>
-        /// <param name="x">The horizontal coordinate.</param>
-        /// <param name="y">The vertical coordinate.</param>
-        /// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
-        public virtual void ShowAnimate(int x, int y, AnimateMode mode)
-        {
-            uint flag = AnimateWindow.AW_CENTER;
-            switch (mode)
-            {
-                case AnimateMode.Blend:
-                    Show(x, y, true);
-                    return;
-                case AnimateMode.ExpandCollapse:
-                    flag = AnimateWindow.AW_CENTER;
-                    break;
-                case AnimateMode.SlideLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
-                    break;
-                case AnimateMode.SlideRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
-                    break;
+		/// <summary>
+		/// Shows the window with a specific animation.
+		/// </summary>
+		/// <param name="x">The horizontal coordinate.</param>
+		/// <param name="y">The vertical coordinate.</param>
+		/// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
+		public virtual void ShowAnimate(int x, int y, AnimateMode mode)
+		{
+			uint flag = AnimateWindow.AW_CENTER;
+			switch (mode)
+			{
+				case AnimateMode.Blend:
+					Show(x, y, true);
+					return;
+				case AnimateMode.ExpandCollapse:
+					flag = AnimateWindow.AW_CENTER;
+					break;
+				case AnimateMode.SlideLeftToRight:
+					flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+					break;
+				case AnimateMode.SlideRightToLeft:
+					flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+					break;
                 case AnimateMode.SlideTopToBottom:
                     flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
                     break;
                 case AnimateMode.SlideBottomToTop:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
-                    break;
-                case AnimateMode.RollLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE);
-                    break;
-                case AnimateMode.RollRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE);
-                    break;
-                case AnimateMode.RollBottomToTop:
-                    flag = (AnimateWindow.AW_VER_POSITIVE);
-                    break;
-                case AnimateMode.RollTopToBottom:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE);
-                    break;
-            }
-            if (_supportsLayered)
-            {
+					flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
+					break;
+				case AnimateMode.RollLeftToRight:
+					flag = (AnimateWindow.AW_HOR_POSITIVE);
+					break;
+				case AnimateMode.RollRightToLeft:
+					flag = (AnimateWindow.AW_HOR_NEGATIVE);
+					break;
+				case AnimateMode.RollBottomToTop:
+					flag = (AnimateWindow.AW_VER_POSITIVE);
+					break;
+				case AnimateMode.RollTopToBottom:
+					flag = (AnimateWindow.AW_VER_NEGATIVE);
+					break;
+			}
+			if (_supportsLayered)
+			{
                 if (Handle == IntPtr.Zero)
                     CreateHandle(CreateParams);
                 UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
-            }
-            else
-            {
-                Show(x, y);
-            }
-        }
+				User32.AnimateWindow(Handle, 100, flag);
+			}
+			else
+			{
+				Show(x, y);
+			}
+		}
 
         /// <summary>
         /// Hides the window.
@@ -371,57 +371,57 @@ namespace pwiz.Skyline.Controls
         }
 
         /// <summary>
-        /// Hides the window with a specific animation.
-        /// </summary>
-        /// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
-        public virtual void HideAnimate(AnimateMode mode)
-        {
-            uint flag = AnimateWindow.AW_CENTER;
-            switch (mode)
-            {
-                case AnimateMode.Blend:
-                    HideWindowWithAnimation();
-                    return;
-                case AnimateMode.ExpandCollapse:
-                    flag = AnimateWindow.AW_CENTER;
-                    break;
-                case AnimateMode.SlideLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
-                    break;
-                case AnimateMode.SlideRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
-                    break;
-                case AnimateMode.SlideTopToBottom:
-                    flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
-                    break;
+		/// Hides the window with a specific animation.
+		/// </summary>
+		/// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
+		public virtual void HideAnimate(AnimateMode mode)
+		{
+			uint flag = AnimateWindow.AW_CENTER;
+			switch (mode)
+			{
+				case AnimateMode.Blend:
+					HideWindowWithAnimation();
+					return;
+				case AnimateMode.ExpandCollapse:
+					flag = AnimateWindow.AW_CENTER;
+					break;
+				case AnimateMode.SlideLeftToRight:
+					flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+					break;
+				case AnimateMode.SlideRightToLeft:
+					flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+					break;
+				case AnimateMode.SlideTopToBottom:
+					flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
+					break;
                 case AnimateMode.SlideBottomToTop:
                     flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
                     break;
                 case AnimateMode.RollLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE);
-                    break;
-                case AnimateMode.RollRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE);
-                    break;
-                case AnimateMode.RollBottomToTop:
-                    flag = (AnimateWindow.AW_VER_POSITIVE);
-                    break;
-                case AnimateMode.RollTopToBottom:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE);
-                    break;
-            }
-            flag |= AnimateWindow.AW_HIDE;
-            if (_supportsLayered)
-            {
-                UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
-            }
-            Hide();
-        }
+					flag = (AnimateWindow.AW_HOR_POSITIVE);
+					break;
+				case AnimateMode.RollRightToLeft:
+					flag = (AnimateWindow.AW_HOR_NEGATIVE);
+					break;
+				case AnimateMode.RollBottomToTop:
+					flag = (AnimateWindow.AW_VER_POSITIVE);
+					break;
+				case AnimateMode.RollTopToBottom:
+					flag = (AnimateWindow.AW_VER_NEGATIVE);
+					break;
+			}
+			flag |= AnimateWindow.AW_HIDE;
+			if (_supportsLayered)
+			{
+				UpdateLayeredWindow();
+				User32.AnimateWindow(Handle, 100, flag);
+			}
+			Hide();
+		}
 
-        #endregion
+		#endregion
 
-        #region == Mouse ==
+		#region == Mouse ==
 
         public Point PointToClient(Point ptScreen)
         {
@@ -441,9 +441,47 @@ namespace pwiz.Skyline.Controls
             return new Point(pnt.x, pnt.y);
         }
 
-        private static void PerformWmMouseDown(ref Message m)
-        {
-        }
+/*
+        private POINT MousePositionToClient(POINT point)
+		{
+			POINT point1;
+			point1.x = point.x;
+			point1.y = point.y;
+			User32.ScreenToClient(Handle, ref point1);
+			return point1;
+		}
+*/
+
+/*
+		private POINT MousePositionToScreen(POINT point)
+		{
+			POINT point1;
+			point1.x = point.x;
+			point1.y = point.y;
+			User32.ClientToScreen(Handle, ref point1);
+			return point1;
+		}
+*/
+
+/*
+		private POINT MousePositionToScreen(Message msg)
+		{
+			POINT point1;
+			point1.x = (short) (((int) msg.LParam) & 0xffff);
+			point1.y = (short) ((((int) msg.LParam) & -65536) >> 0x10);
+			if ((((msg.Msg != 0xa2) && (msg.Msg != 0xa8)) && ((msg.Msg != 0xa5) && (msg.Msg != 0xac))) && (((msg.Msg != 0xa1) && (msg.Msg != 0xa7)) && ((msg.Msg != 0xa4) && (msg.Msg != 0xab))))
+			{
+				User32.ClientToScreen(msg.HWnd, ref point1);
+			}
+			return point1;
+		}
+*/
+
+// ReSharper disable UnusedParameter.Local
+		private static void PerformWmMouseDown(ref Message m)
+// ReSharper restore UnusedParameter.Local
+		{
+		}
 
         protected virtual void OnMouseDown(MouseEventArgs e)
         {
@@ -454,9 +492,11 @@ namespace pwiz.Skyline.Controls
             _onMouseDown = true;
         }
 
+// ReSharper disable UnusedParameter.Local
         private static void PerformWmMouseMove(ref Message m)
-        {
-        }
+// ReSharper restore UnusedParameter.Local
+		{
+		}
 
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
@@ -471,8 +511,8 @@ namespace pwiz.Skyline.Controls
 // ReSharper disable UnusedParameter.Local
         private static void PerformWmMouseUp(ref Message m)
 // ReSharper restore UnusedParameter.Local
-        {
-        }
+		{
+		}
 
         protected virtual void OnMouseUp(MouseEventArgs e)
         {
@@ -484,40 +524,40 @@ namespace pwiz.Skyline.Controls
         }
 
         private static void PerformWmMouseActivate(ref Message m)
-        {
-            m.Result = (IntPtr) 3;
-        }
+		{
+			m.Result = (IntPtr) 3;
+		}
 
-        protected virtual void OnMouseEnter()
-        {
-            if (MouseEnter != null)
-            {
-                MouseEnter(this, EventArgs.Empty);
-            }
-        }
-        protected virtual void OnMouseLeave()
-        {
-            if (MouseLeave != null)
-            {
-                MouseLeave(this, EventArgs.Empty);
-            }
-        }
+		protected virtual void OnMouseEnter()
+		{
+			if (MouseEnter != null)
+			{
+				MouseEnter(this, EventArgs.Empty);
+			}
+		}
+		protected virtual void OnMouseLeave()
+		{
+			if (MouseLeave != null)
+			{
+				MouseLeave(this, EventArgs.Empty);
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region == Other messages ==
+		#region == Other messages ==
 
-        private static bool PerformWmNcHitTest(ref Message m)
-        {
+		private static bool PerformWmNcHitTest(ref Message m)
+		{
 //			POINT point1;
 //			Point p = Control.MousePosition;
 //			point1.x = p.X;
 //			point1.y = p.Y;
 //			point1 = MousePositionToClient(point1);
 
-            m.Result = (IntPtr) (-1);
-            return true;
-        }
+			m.Result = (IntPtr) (-1);
+			return true;
+		}
 
         private void PerformWmNcPaint(ref Message m)
         {
@@ -580,16 +620,16 @@ namespace pwiz.Skyline.Controls
 // ReSharper disable UnusedParameter.Local
         private static void PerformWmSetCursor(ref Message m)
 // ReSharper restore UnusedParameter.Local
-        {
-        }
+		{
+		}
 
-        private void PerformWmPaint(ref Message m)
-        {
+		private void PerformWmPaint(ref Message m)
+		{
             PAINTSTRUCT ps = new PAINTSTRUCT();
-            Rectangle rectClient = ClientRectangle;
-            IntPtr hDC = User32.BeginPaint(m.HWnd, ref ps);
-            using (Graphics g = Graphics.FromHdc(hDC))
-            {
+			Rectangle rectClient = ClientRectangle;
+			IntPtr hDC = User32.BeginPaint(m.HWnd, ref ps);
+			using (Graphics g = Graphics.FromHdc(hDC))
+			{
                 using (Bitmap bitmap1 = new Bitmap(rectClient.Width, rectClient.Height))
                 {
                     using (Graphics graphics2 = Graphics.FromImage(bitmap1))
@@ -598,48 +638,48 @@ namespace pwiz.Skyline.Controls
                     }
                     g.DrawImageUnscaled(bitmap1, 0, 0);
                 }
-            }
-            User32.EndPaint(m.HWnd, ref ps);
-        }
+			}
+			User32.EndPaint(m.HWnd, ref ps);
+		}
 
-        protected override void WndProc(ref Message m)
-        {
-            int num1 = m.Msg;
-            switch (num1)
-            {
+		protected override void WndProc(ref Message m)
+		{
+			int num1 = m.Msg;
+			switch (num1)
+			{
                 case (int) WinMsg.WM_PAINT:
                 {
                     PerformWmPaint(ref m);
                     return;
                 }
                 case (int) WinMsg.WM_ERASEBKGND:
-                {
+		        {
                     m.Result = IntPtr.Zero;
                     return;
-                }
+		        }
                 case (int) WinMsg.WM_SETCURSOR:
-                {
-                    PerformWmSetCursor(ref m);
-                    return;
-                }
-                case (int) WinMsg.WM_MOUSEACTIVATE:
-                {
-                    PerformWmMouseActivate(ref m);
-                    return;
-                }
+				{
+					PerformWmSetCursor(ref m);
+					return;
+				}
+				case (int) WinMsg.WM_MOUSEACTIVATE:
+				{
+					PerformWmMouseActivate(ref m);
+					return;
+				}
                 case (int) WinMsg.WM_CALCSIZE:
                 {
                     PerformWmNcCalcSize(ref m);
                     return;
                 }
                 case (int) WinMsg.WM_NCHITTEST:
-                {
-                    if (!PerformWmNcHitTest(ref m))
-                    {
-                        WndProc(ref m);
-                    }
-                    return;
-                }
+				{
+					if (!PerformWmNcHitTest(ref m))
+					{
+						WndProc(ref m);
+					}
+					return;
+				}
                 case (int) WinMsg.WM_NCPAINT:
                 {
                     PerformWmNcPaint(ref m);
@@ -662,130 +702,130 @@ namespace pwiz.Skyline.Controls
                     }
                     break;
                 }
-                case (int) WinMsg.WM_LBUTTONDOWN:
-                {
-                    _lastMouseDown = new Point(m.LParam.ToInt32());
-                    OnMouseDown(new MouseEventArgs(Control.MouseButtons, 1, _lastMouseDown.X, _lastMouseDown.Y, 0));
-                    if (_onMouseDown)
-                    {
-                        PerformWmMouseDown(ref m);
-                        _onMouseDown = false;
-                    }
+				case (int) WinMsg.WM_LBUTTONDOWN:
+				{
+					_lastMouseDown = new Point(m.LParam.ToInt32());
+				    OnMouseDown(new MouseEventArgs(Control.MouseButtons, 1, _lastMouseDown.X, _lastMouseDown.Y, 0));
+					if (_onMouseDown)
+					{
+						PerformWmMouseDown(ref m);
+						_onMouseDown = false;
+					}
 
-                    return;
-                }
-                case (int) WinMsg.WM_LBUTTONUP:
-                {
-                    Point p = new Point(m.LParam.ToInt32());
-                    OnMouseUp(new MouseEventArgs(Control.MouseButtons, 1, p.X, p.Y, 0));
-                    if (_onMouseUp)
-                    {
-                        PerformWmMouseUp(ref m);
-                        _onMouseUp = false;
-                    }
-                    return;
-                }
-                case (int) WinMsg.WM_MOUSELEAVE:
-                {
-                    if (_isMouseIn)
-                    {
-                        OnMouseLeave();
-                        _isMouseIn = false;
-                    }
-                    break;
-                }
-            }
+					return;
+				}
+				case (int) WinMsg.WM_LBUTTONUP:
+				{
+					Point p = new Point(m.LParam.ToInt32());
+					OnMouseUp(new MouseEventArgs(Control.MouseButtons, 1, p.X, p.Y, 0));
+					if (_onMouseUp)
+					{
+						PerformWmMouseUp(ref m);
+						_onMouseUp = false;
+					}
+					return;
+				}
+				case (int) WinMsg.WM_MOUSELEAVE:
+				{
+					if (_isMouseIn)
+					{
+						OnMouseLeave();
+						_isMouseIn = false;
+					}
+					break;
+				}
+			}
 
             base.WndProc(ref m);
-        }
+		}
 
-        #endregion
+		#endregion
 
-        #region == Event Methods ==
+		#region == Event Methods ==
 
-        protected virtual void OnLocationChanged(EventArgs e)
-        {
-            OnMove(EventArgs.Empty);
-            if (LocationChanged != null)
-            {
-                LocationChanged(this, e);
-            }
-        }
+		protected virtual void OnLocationChanged(EventArgs e)
+		{
+			OnMove(EventArgs.Empty);
+			if (LocationChanged != null)
+			{
+				LocationChanged(this, e);
+			}
+		}
 
-        protected virtual void OnSizeChanged(EventArgs e)
-        {
-            OnResize(EventArgs.Empty);
-            if (SizeChanged != null)
-            {
-                SizeChanged(this, e);
-            }
-        }
+		protected virtual void OnSizeChanged(EventArgs e)
+		{
+			OnResize(EventArgs.Empty);
+			if (SizeChanged != null)
+			{
+				SizeChanged(this, e);
+			}
+		}
 
-        protected virtual void OnMove(EventArgs e)
-        {
-            if (Move != null)
-            {
-                Move(this, e);
-            }
-        }
+		protected virtual void OnMove(EventArgs e)
+		{
+			if (Move != null)
+			{
+				Move(this, e);
+			}
+		}
 
-        protected virtual void OnResize(EventArgs e)
-        {
-            if (Resize != null)
-            {
-                Resize(this, e);
-            }
-        }
+		protected virtual void OnResize(EventArgs e)
+		{
+			if (Resize != null)
+			{
+				Resize(this, e);
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region == Size and Location ==
+		#region == Size and Location ==
 
-        protected virtual void SetBoundsCore(int x, int y, int width, int height)
-        {
-            if (width < (11+11+4+4))
+		protected virtual void SetBoundsCore(int x, int y, int width, int height)
+		{
+			if (width < (11+11+4+4))
                 width = 11+11+4+4;
 
-            if (((X != x) || (Y != y)) || ((Width != width) || (Height != height)))
-            {
-                if (Handle != IntPtr.Zero)
-                {
-                    int num1 = 20;
-                    if ((X == x) && (Y == y))
-                    {
-                        num1 |= 2;
-                    }
-                    if ((Width == width) && (Height == height))
-                    {
-                        num1 |= 1;
-                    }
-                    User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
-                }
-                else
-                {
-                    UpdateBounds(x, y, width, height);
-                }
-            }
-        }
+			if (((X != x) || (Y != y)) || ((Width != width) || (Height != height)))
+			{
+				if (Handle != IntPtr.Zero)
+				{
+					int num1 = 20;
+					if ((X == x) && (Y == y))
+					{
+						num1 |= 2;
+					}
+					if ((Width == width) && (Height == height))
+					{
+						num1 |= 1;
+					}
+					User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
+				}
+				else
+				{
+					UpdateBounds(x, y, width, height);
+				}
+			}
+		}
 
 /*
-        private void UpdateBounds()
-        {
-            RECT rect1 = new RECT();
-            User32.GetWindowRect(Handle, ref rect1);
-            if (User32.GetParent(Handle)!=IntPtr.Zero)
-            {
-                User32.MapWindowPoints(IntPtr.Zero, User32.GetParent(Handle), ref rect1, 2);
-            }
-            UpdateBounds(rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
-        }
+		private void UpdateBounds()
+		{
+		    RECT rect1 = new RECT();
+			User32.GetWindowRect(Handle, ref rect1);
+			if (User32.GetParent(Handle)!=IntPtr.Zero)
+			{
+				User32.MapWindowPoints(IntPtr.Zero, User32.GetParent(Handle), ref rect1, 2);
+			}
+			UpdateBounds(rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
+		}
 */
 
-        private void UpdateBounds(int x, int y, int width, int height)
-        {
-            RECT rect1 = new RECT();
-            CreateParams params1 = CreateParams;
-            User32.AdjustWindowRectEx(ref rect1, params1.Style, false, params1.ExStyle);
+		private void UpdateBounds(int x, int y, int width, int height)
+		{
+			RECT rect1 = new RECT();
+		    CreateParams params1 = CreateParams;
+			User32.AdjustWindowRectEx(ref rect1, params1.Style, false, params1.ExStyle);
 
             bool locationChanged = (X != x) || (Y != y);
             bool sizeChanged = (((Width != width) || (Height != height)));
@@ -801,72 +841,72 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        #endregion
+		#endregion
 
-        #region == Various ==
+		#region == Various ==
 
-        private void CustomTip_HandleDestroyed(object sender, EventArgs e)
-        {
-            _parent.HandleDestroyed -= CustomTip_HandleDestroyed;
-            Hide();
-        }
+		private void CustomTip_HandleDestroyed(object sender, EventArgs e)
+		{
+			_parent.HandleDestroyed -= CustomTip_HandleDestroyed;
+			Hide();
+		}
 
-        public void Destroy()
-        {
-            Hide();
-            Dispose();
-        }
-        
-        #endregion
+		public void Destroy()
+		{
+			Hide();
+			Dispose();
+		}
+		
+		#endregion
 
-        #endregion
+		#endregion
 
-        #region #  Properties  #
+		#region #  Properties  #
 
-        protected virtual CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams params1 = new CreateParams();
-                Size size1 = _size;
-                Point point1 = _location;
-                params1.X = _location.X;
-                params1.Y = _location.Y;
-                params1.Height = size1.Height;
-                params1.Width = size1.Width;
-                params1.Parent = _parent != null ? _parent.Handle : IntPtr.Zero;
-                params1.Style = -2147483648;
+	    protected virtual CreateParams CreateParams
+	    {
+	        get
+	        {
+	            CreateParams params1 = new CreateParams();
+	            Size size1 = _size;
+	            Point point1 = _location;
+	            params1.X = _location.X;
+	            params1.Y = _location.Y;
+	            params1.Height = size1.Height;
+	            params1.Width = size1.Width;
+	            params1.Parent = _parent != null ? _parent.Handle : IntPtr.Zero;
+	            params1.Style = -2147483648;
                 params1.ExStyle = 0x88;      // WS_EX_TOOLWINDOW | WS_EX_TOPMOST
-                if (_supportsLayered)
-                {
-                    params1.ExStyle += 0x80000; // WS_EX_LAYERED
-                }
-                _size = size1;
-                _location = point1;
-                return params1;
-            }
-        }
+	            if (_supportsLayered)
+	            {
+	                params1.ExStyle += 0x80000; // WS_EX_LAYERED
+	            }
+	            _size = size1;
+	            _location = point1;
+	            return params1;
+	        }
+	    }
 
-        public Control Parent
-        {
-            get { return _parent; }
-            set
-            {
-                if (value == _parent)
+		public Control Parent
+		{
+			get { return _parent; }
+			set
+			{
+				if (value == _parent)
                     return;
 
-                if (_parent != null)
-                {
+				if (_parent != null)
+				{
                     _parent.HandleDestroyed -= CustomTip_HandleDestroyed;
-                }
+				}
 
-                _parent = value;
+				_parent = value;
                 if (_parent != null)
                 {
                     _parent.HandleDestroyed += CustomTip_HandleDestroyed;
-                }
-            }
-        }
+				}
+			}
+		}
 
         public Rectangle Bounds
         {
