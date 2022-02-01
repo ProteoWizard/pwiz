@@ -41,6 +41,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using Environment = System.Environment;
@@ -223,6 +224,82 @@ namespace pwiz.SkylineTest
             }
 
             return missing;
+        }
+
+        /// <summary>
+        /// This test enforces this proper relationship between DocumentFormat.CURRENT and the Skyline schema xsd files.
+        /// 
+        /// Our versioning convention since 2019 is a double yy.n where yy is a two digit year, and"n is the release count. So
+        /// if the second release in 2021 involved a schema change, we'd expect to find a file Skyline_21_2.xsd, and a value
+        /// declared in the DocumentFormat.cs as "public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2);".
+        ///
+        /// Starting in 2021 any development changes to the schema are always in a file "current.xsd", and we copy that to a newly
+        /// created "Skyline_yy_n.xsd" file when we make a release.
+        /// 
+        /// So if we find an xsd file whose name indicates that it represents the same version as DocumentFormat.CURRENT
+        /// we expect that it has exactly the same contents as current.xsd. If not, that probably means someone forgot to
+        /// declare a new document version, and to set DocumentFormat.CURRENT to be that new value.
+        ///
+        /// Also, if we find an older DocumentFormat.VERSION_yy_n without a corresponding Skyline_yy_n.xsd file in source
+        /// control, that means that somebody neglected to copy current.xsd to a newly created Skyline_yy_n.xsd file.
+        ///
+        /// </summary>
+        void InspectSchemaFiles(List<string> errors)
+        {
+            // Note the current set of xsd files known to the project
+            var codeBaseRoot = GetCodeBaseRoot(out _);
+            var csProjText = File.ReadAllText(codeBaseRoot + "\\TestUtil\\TestUtil.csproj");
+
+            // Use reflection to find every declared DocumentFormat value.
+            var typeDocumentFormat = typeof(DocumentFormat);
+            var members = typeDocumentFormat.GetMembers();
+            foreach (var member in members.Where(m=> m.Name.Contains("VERSION")))
+            {
+                var versionString = member.Name.Replace("VERSION_", string.Empty).Replace("_", ".");
+                var version = double.Parse(versionString, CultureInfo.InvariantCulture);
+                var xsdVersionedFileName = string.Format("Skyline_{0}.xsd", versionString);
+                var xsdVersionedFilePath = codeBaseRoot + "\\TestUtil\\Schemas\\" + xsdVersionedFileName;
+                var xsdVersionedFileExists = File.Exists(xsdVersionedFilePath);
+                bool expectCsprojEntry;
+                if (Equals(version, DocumentFormat.CURRENT.AsDouble())) 
+                {
+                    // Current version, may or may not have an XSD file in project yet
+                    expectCsprojEntry = xsdVersionedFileExists; // If a versioned XSD file does exist, we'd expect to see it in the project file
+                    if (xsdVersionedFileExists)
+                    {
+                        // We've apparently released with this document version, so if we're going to
+                        // change the current schema then we need to bump the version number
+                        var xsdCurrentFilePath = codeBaseRoot + "\\TestUtil\\Schemas\\current.xsd";
+                        var xsdCurrentText = File.ReadAllText(xsdCurrentFilePath);
+                        var xsdVersionedText = File.ReadAllText(xsdVersionedFilePath);
+                        if (!Equals(xsdCurrentText, xsdVersionedText))
+                        {
+                            errors.Add(string.Format("Contents of {0} and {1} do not agree (DocumentFormat.CURRENT is still set as {2}, so they should). Probably you need to create a new VERSION_yy_n value in DocumentFormat.cs, and set DocumentFormat.CURRENT as that new value.",
+                                xsdCurrentFilePath, xsdVersionedFilePath, version.ToString(CultureInfo.InvariantCulture)));
+                        }
+                    }
+                }
+                else if (version >= 21) // Recent versions must have an XSD file in the project, per our "current.xsd" process adopted in 2021
+                {
+                    expectCsprojEntry = true;
+                    if (!xsdVersionedFileExists)
+                    {
+                        errors.Add(string.Format("Did not find schema file {0}. Did someone forget to create it (as a copy of current.xsd) when they changed the value of DocumentFormat.CURRENT?", xsdVersionedFilePath));
+                    }
+                }
+                else
+                {
+                    expectCsprojEntry = false; // Some early versions don't have XSDs
+                }
+
+                if (expectCsprojEntry)
+                {
+                    if (!csProjText.Contains(xsdVersionedFileName))
+                    {
+                        errors.Add(string.Format("Did not find mention of xsd file {0} in TestUtil.csproj", xsdVersionedFileName));
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -443,6 +520,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Verify consistent handling of Skyline schema files
+            InspectSchemaFiles(results);
 
             // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
             InspectConsistentErrorMessages(results);
