@@ -19,7 +19,7 @@ namespace SkylineBatch
             path = path ?? string.Empty;
             _mainControl = mainControl;
             
-            remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false);
+            remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false, true);
             remoteFileControl.Dock = DockStyle.Fill;
             remoteFileControl.Show();
             panelRemoteFile.Controls.Add(remoteFileControl);
@@ -40,6 +40,14 @@ namespace SkylineBatch
         
         private void btnSave_Click(object sender, EventArgs e)
         {
+            // Remove this when FTP sources supported
+            if (remoteFileControl.ServerFromUI().FileSource.FtpSource)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), 
+                    Resources.RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_);
+                return;
+            }
+            
             _cancelSource = new CancellationTokenSource();
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;

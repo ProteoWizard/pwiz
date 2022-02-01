@@ -93,7 +93,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 3);
 
                 var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
-                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
 
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();

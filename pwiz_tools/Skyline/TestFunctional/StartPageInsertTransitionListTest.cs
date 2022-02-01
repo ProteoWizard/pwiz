@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
                     "H2O10", "[M+]", "HO10", "1"));
             var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
             {
-                insertTransitionListDlg.textBox1.Text = clipboardText;
+                insertTransitionListDlg.TransitionListText = clipboardText;
             });
             OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionCount);
