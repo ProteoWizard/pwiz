@@ -931,68 +931,68 @@ namespace pwiz.Skyline.Controls
         }
 
         public virtual Size Size
-        {
-            get { return _size; }
-            set
-            {
+		{
+			get { return _size; }
+			set
+			{
                 Bounds = new Rectangle(Location, value);
-            }
-        }
+			}
+		}
 
-        public virtual Point Location
-        {
-            get { return _location; }
-            set
-            {
+		public virtual Point Location
+		{
+			get { return _location; }
+			set
+			{
                 Bounds = new Rectangle(value, Size);
-            }
-        }
+			}
+		}
 
-        public int Height
-        {
-            get { return _size.Height; }
-            set
-            {
-                Size = new Size(_size.Width, value);
-            }
-        }
+		public int Height
+		{
+			get { return _size.Height; }
+			set
+			{
+				Size = new Size(_size.Width, value);
+			}
+		}
 
-        public int Width
-        {
-            get { return _size.Width; }
-            set
-            {
-                Size = new Size(value, _size.Height);
-            }
-        }
+		public int Width
+		{
+			get { return _size.Width; }
+			set
+			{
+				Size = new Size(value, _size.Height);
+			}
+		}
 
-        public int X
-        {
-            get { return _location.X; }
-            set
-            {
-                Location = new Point(value, _location.Y);
-            }
-        }
+		public int X
+		{
+			get { return _location.X; }
+			set
+			{
+				Location = new Point(value, _location.Y);
+			}
+		}
 
-        public int Y
-        {
-            get { return _location.Y; }
-            set
-            {
-                Location = new Point(_location.X, value);
-            }
-        }
+		public int Y
+		{
+			get { return _location.Y; }
+			set
+			{
+				Location = new Point(_location.X, value);
+			}
+		}
 
-        public Rectangle ClientRectangle
-        {
-            get
-            {
+		public Rectangle ClientRectangle
+		{
+			get
+			{
                 Rectangle rectClient = GetClientRectangle(Bounds);
                 rectClient.Offset(-rectClient.Left, -rectClient.Top);
                 return rectClient;
-            }
-        }
+			}
+		}
 
         public Size ClientSize
         {
@@ -1018,14 +1018,14 @@ namespace pwiz.Skyline.Controls
         }
 
         protected Rectangle GetShadowRectangle(Rectangle bounds)
-        {
+		{
             if (!_hasShadow)
                 return Rectangle.Empty;
 
             Rectangle rectShadow = GetBorderRectangle(bounds);
             rectShadow.Offset(SHADOW_LENGTH, SHADOW_LENGTH);
-            return rectShadow;
-        }
+			return rectShadow;
+		}
 
         public bool Visible
         {
@@ -1042,30 +1042,30 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public bool HasShadow
-        {
-            get { return _hasShadow; }
-            set
-            {
-                _hasShadow = value;
-                Invalidate();
-            }
-        }
+		public bool HasShadow
+		{
+			get { return _hasShadow; }
+			set
+			{
+				_hasShadow = value;
+				Invalidate();
+			}
+		}
 
-        public int Alpha
-        {
-            get { return _alpha; }
-            set
-            {
-                if (_alpha == value) return;
-                if (value < 0 || value > 255)
-                {
+		public int Alpha
+		{
+			get { return _alpha; }
+			set
+			{
+				if (_alpha == value) return;
+				if (value < 0 || value > 255)
+				{
                     throw new ArgumentException(@"Alpha must be between 0 and 255");
-                }
-                _alpha = (byte)value;
-                UpdateLayeredWindow(_alpha);
-            }
-        }
+				}
+				_alpha = (byte)value;
+				UpdateLayeredWindow(_alpha);
+			}
+		}
 
         public bool Capture
         {
@@ -1083,51 +1083,51 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        #endregion
+		#endregion
 
-        #region #  Events  #
+		#region #  Events  #
 
 // ReSharper disable EventNeverSubscribedTo.Global
-        public event PaintEventHandler Paint;
-        public event EventHandler SizeChanged;
-        public event EventHandler LocationChanged;
-        public event EventHandler Move;
-        public event EventHandler Resize;
-        public event MouseEventHandler MouseDown;
-        public event MouseEventHandler MouseUp;
-        public event MouseEventHandler MouseMove;
-        public event EventHandler MouseEnter;
-        public event EventHandler MouseLeave;
+		public event PaintEventHandler Paint;
+		public event EventHandler SizeChanged;
+		public event EventHandler LocationChanged;
+		public event EventHandler Move;
+		public event EventHandler Resize;
+		public event MouseEventHandler MouseDown;
+		public event MouseEventHandler MouseUp;
+		public event MouseEventHandler MouseMove;
+		public event EventHandler MouseEnter;
+		public event EventHandler MouseLeave;
 // ReSharper restore EventNeverSubscribedTo.Global
 
-        #endregion
+		#endregion
 
-        #region IDisposable Members
+		#region IDisposable Members
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    if (_parent != null)
-                    {
-                        _parent.HandleDestroyed -= CustomTip_HandleDestroyed;
-                    }
-                }
-                DestroyHandle();
-                _disposed = true;
-            }
-        }
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposed)
+			{
+				if (disposing)
+				{
+					if (_parent != null)
+					{
+						_parent.HandleDestroyed -= CustomTip_HandleDestroyed;
+					}
+				}
+				DestroyHandle();
+				_disposed = true;
+			}
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 
     public class NcPaintEventArgs
     {
@@ -1141,34 +1141,34 @@ namespace pwiz.Skyline.Controls
         public Rectangle Bounds { get; private set; }
     }
 
-    #region #  Win32  #
+	#region #  Win32  #
 
     // ReSharper disable InconsistentNaming
     internal struct PAINTSTRUCT
-    {
+	{
         // ReSharper disable UnusedField.Compiler
 #pragma warning disable 649
-        public IntPtr hdc;
+		public IntPtr hdc;
         public int fErase;
         public Rectangle rcPaint;
-        public int fRestore;
-        public int fIncUpdate;
-        public int Reserved1;
-        public int Reserved2;
-        public int Reserved3;
-        public int Reserved4;
-        public int Reserved5;
-        public int Reserved6;
-        public int Reserved7;
-        public int Reserved8;
+		public int fRestore;
+		public int fIncUpdate;
+		public int Reserved1;
+		public int Reserved2;
+		public int Reserved3;
+		public int Reserved4;
+		public int Reserved5;
+		public int Reserved6;
+		public int Reserved7;
+		public int Reserved8;
 #pragma warning restore 649
 // ReSharper restore UnusedField.Compiler
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct POINT
-    {
-        public int x;
-        public int y;
+	internal struct POINT
+	{
+		public int x;
+		public int y;
 
         public Point Point
         {
@@ -1177,15 +1177,15 @@ namespace pwiz.Skyline.Controls
                 return new Point(x, y);
             }
         }
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct RECT
-    {
+	}
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct RECT
+	{
 // ReSharper disable FieldCanBeMadeReadOnly.Global
-        public int left;
-        public int top;
-        public int right;
-        public int bottom;
+		public int left;
+		public int top;
+		public int right;
+		public int bottom;
 // ReSharper restore FieldCanBeMadeReadOnly.Global
 
         public RECT(int left, int top, int right, int bottom)
@@ -1209,11 +1209,11 @@ namespace pwiz.Skyline.Controls
             return new RECT(rect.Left, rect.Top, rect.Right, rect.Bottom);
         }
     }
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct SIZE
-    {
-        public int cx;
-        public int cy;
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct SIZE
+	{
+		public int cx;
+		public int cy;
 
         public Size Size
         {
@@ -1222,7 +1222,7 @@ namespace pwiz.Skyline.Controls
                 return new Size(cx, cy);
             }
         }
-    }
+	}
     [StructLayout(LayoutKind.Sequential)]
     internal struct NCCALCSIZE_PARAMS
     {
@@ -1233,23 +1233,23 @@ namespace pwiz.Skyline.Controls
     }
     [StructLayout(LayoutKind.Sequential)]
     //[CLSCompliant(false)]
-    internal struct TRACKMOUSEEVENTS
-    {
+	internal struct TRACKMOUSEEVENTS
+	{
 // ReSharper disable FieldCanBeMadeReadOnly.Global
-        public uint cbSize;
-        public uint dwFlags;
-        public IntPtr hWnd;
-        public uint dwHoverTime;
+		public uint cbSize;
+		public uint dwFlags;
+		public IntPtr hWnd;
+		public uint dwHoverTime;
 // ReSharper restore FieldCanBeMadeReadOnly.Global
     }
-    [StructLayout(LayoutKind.Sequential, Pack=1)]
-    internal struct BLENDFUNCTION
-    {
-        public byte BlendOp;
-        public byte BlendFlags;
-        public byte SourceConstantAlpha;
-        public byte AlphaFormat;
-    }
+	[StructLayout(LayoutKind.Sequential, Pack=1)]
+	internal struct BLENDFUNCTION
+	{
+		public byte BlendOp;
+		public byte BlendFlags;
+		public byte SourceConstantAlpha;
+		public byte AlphaFormat;
+	}
     [StructLayout(LayoutKind.Sequential)]
     //[CLSCompliant(false)]
     public struct LOGBRUSH
@@ -1262,10 +1262,10 @@ namespace pwiz.Skyline.Controls
     }
 // ReSharper disable once ClassNeverInstantiated.Global
     internal class AnimateWindow
-    {
-        private AnimateWindow() 
-        {
-        }
+	{
+		private AnimateWindow() 
+		{
+		}
 
         public const int AW_HOR_POSITIVE = 0x1;
         public const int AW_HOR_NEGATIVE = 0x2;
@@ -1276,121 +1276,121 @@ namespace pwiz.Skyline.Controls
         public const int AW_ACTIVATE = 0x20000;
         public const int AW_SLIDE = 0x40000;
         public const int AW_BLEND = 0x80000;
-    }
-    public enum AnimateMode
-    {
-        SlideRightToLeft,
-        SlideLeftToRight,
-        SlideTopToBottom,
-        SlideBottomToTop,
-        RollRightToLeft,
-        RollLeftToRight,
-        RollTopToBottom,
-        RollBottomToTop,
-        Blend,
-        ExpandCollapse
-    }
+	}
+	public enum AnimateMode
+	{
+		SlideRightToLeft,
+		SlideLeftToRight,
+		SlideTopToBottom,
+		SlideBottomToTop,
+		RollRightToLeft,
+		RollLeftToRight,
+		RollTopToBottom,
+		RollBottomToTop,
+		Blend,
+		ExpandCollapse
+	}
     internal enum WinMsg
     {
         WM_PAINT = 0x000F,
         WM_ERASEBKGND = 0x0014,
         WM_SETCURSOR = 0x0020,
-        WM_MOUSEACTIVATE = 0x0021,
+		WM_MOUSEACTIVATE = 0x0021,
         WM_CALCSIZE = 0x0083,
         WM_NCHITTEST = 0x0084,
         WM_NCPAINT = 0x0085,
         WM_CHAR = 0x0102,
         WM_TIMER = 0x0113,
         WM_MOUSEMOVE = 0x0200, 
-        WM_LBUTTONDOWN = 0x0201,
-        WM_LBUTTONUP = 0x0202,
-        WM_MOUSELEAVE = 0x02A3
+		WM_LBUTTONDOWN = 0x0201,
+		WM_LBUTTONUP = 0x0202,
+		WM_MOUSELEAVE = 0x02A3
     }
-    internal static class User32
-    {
+	internal static class User32
+	{
         public static IntPtr FALSE = new IntPtr(0);
         public static IntPtr TRUE = new IntPtr(1);
 
         // Methods
 
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool DrawFocusRect(IntPtr hWnd, ref RECT rect);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr GetDC(IntPtr hWnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool DrawFocusRect(IntPtr hWnd, ref RECT rect);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr GetDC(IntPtr hWnd);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr GetWindowDC(IntPtr hWnd);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr GetFocus();
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern ushort GetKeyState(int virtKey);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr GetParent(IntPtr hWnd);
-        [DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
-        public static extern bool GetClientRect(IntPtr hWnd, [In, Out] ref RECT rect);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr GetWindow(IntPtr hWnd, int cmd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool HideCaret(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool InvalidateRect(IntPtr hWnd, ref RECT rect, bool erase);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr LoadCursor(IntPtr hInstance, uint cursor);
-        [DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
-        public static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In, Out] ref RECT rect, int cPoints);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool PostMessage(IntPtr hWnd, int Msg, uint wParam, uint lParam);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ReleaseCapture();
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern uint SendMessage(IntPtr hWnd, int Msg, uint wParam, uint lParam);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr SetCursor(IntPtr hCursor);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr SetFocus(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int newLong);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool redraw);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ShowCaret(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool SetCapture(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int ShowWindow(IntPtr hWnd, short cmdShow);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref int bRetValue, uint fWinINI);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENTS tme);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool UpdateWindow(IntPtr hwnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool WaitMessage();
-        [DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
-        public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
+		internal static extern IntPtr GetFocus();
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern ushort GetKeyState(int virtKey);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr GetParent(IntPtr hWnd);
+		[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
+		public static extern bool GetClientRect(IntPtr hWnd, [In, Out] ref RECT rect);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr GetWindow(IntPtr hWnd, int cmd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool HideCaret(IntPtr hWnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool InvalidateRect(IntPtr hWnd, ref RECT rect, bool erase);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr LoadCursor(IntPtr hInstance, uint cursor);
+		[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
+		public static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, [In, Out] ref RECT rect, int cPoints);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool PostMessage(IntPtr hWnd, int Msg, uint wParam, uint lParam);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool ReleaseCapture();
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern uint SendMessage(IntPtr hWnd, int Msg, uint wParam, uint lParam);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr SetCursor(IntPtr hCursor);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr SetFocus(IntPtr hWnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int newLong);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool redraw);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool ShowCaret(IntPtr hWnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool SetCapture(IntPtr hWnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern int ShowWindow(IntPtr hWnd, short cmdShow);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref int bRetValue, uint fWinINI);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENTS tme);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool UpdateWindow(IntPtr hwnd);
+		[DllImport("User32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool WaitMessage();
+		[DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
+		public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern bool IsWindowVisible(IntPtr hwnd);
 
@@ -1415,32 +1415,32 @@ namespace pwiz.Skyline.Controls
         DCX_CLIPSIBLINGS = 0x0010,
         DCX_INTERSECTRGN = 0x0080
     }
-    internal static class Gdi32
-    {
-        // Methods
+	internal static class Gdi32
+	{
+		// Methods
 
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateBrushIndirect(ref LOGBRUSH brush);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateCompatibleDC(IntPtr hDC);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateRectRgnIndirect(ref RECT rect);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool DeleteDC(IntPtr hDC);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr DeleteObject(IntPtr hObject);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int GetClipBox(IntPtr hDC, ref RECT rectBox);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool PatBlt(IntPtr hDC, int x, int y, int width, int height, uint flags);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int SelectClipRgn(IntPtr hDC, IntPtr hRgn);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
-    }
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr CreateBrushIndirect(ref LOGBRUSH brush);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr CreateRectRgnIndirect(ref RECT rect);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool DeleteDC(IntPtr hDC);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr DeleteObject(IntPtr hObject);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern int GetClipBox(IntPtr hDC, ref RECT rectBox);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern bool PatBlt(IntPtr hDC, int x, int y, int width, int height, uint flags);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern int SelectClipRgn(IntPtr hDC, IntPtr hRgn);
+		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
+		internal static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+	}
     // ReSharper restore InconsistentNaming
 
-    #endregion
+	#endregion
 }
