@@ -3402,16 +3402,6 @@ namespace pwiz.Skyline.Model
                 return hashCode;
             }
         }
-
-        public static bool operator ==(TransitionImportErrorInfo left, TransitionImportErrorInfo right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(TransitionImportErrorInfo left, TransitionImportErrorInfo right)
-        {
-            return !Equals(left, right);
-        }
     }
 
     class TransitionGroupLibraryIrtTriple
