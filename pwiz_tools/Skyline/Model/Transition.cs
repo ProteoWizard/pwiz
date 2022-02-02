@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model
 
     public static class IonTypeExtension
     {
-        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z", @"zH", @"zH2" };
+        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z", @"z" + '\u2022', @"z'" };
 
         private static readonly Color COLOR_A = Color.YellowGreen;
         private static readonly Color COLOR_X = Color.Green;
