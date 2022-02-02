@@ -42,8 +42,18 @@ namespace pwiz.SkylineTest
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
         {
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
-            var actual = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
-            Assert.AreEqual(expectedFormula, actual, "unexpected formula for adduct "+adduct);
+            var actualFormula = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
+            if (!Equals(expectedFormula, actualFormula))
+            {
+                // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
+                var dictExpected = IonInfo.ApplyAdductToMoleculeAsDictionary(expectedFormula, Adduct.EMPTY);
+                var dictActual = IonInfo.ApplyAdductToMoleculeAsDictionary(PENTANE, adduct);
+                if (dictExpected.Count != dictActual.Count || 
+                    !dictExpected.All(kvp => dictActual.TryGetValue(kvp.Key, out var v) && v == kvp.Value))
+                {
+                    Assert.AreEqual(expectedFormula, actualFormula, "unexpected formula for adduct " + adduct);
+                }
+            }
             Assert.AreEqual(expectedCharge, adduct.AdductCharge, "unexpected charge for adduct " + adduct);
             coverage.Add(adduct.AsFormula());
         }
