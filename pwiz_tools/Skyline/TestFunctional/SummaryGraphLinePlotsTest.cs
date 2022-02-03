@@ -18,10 +18,12 @@
  */
 
 using System.Linq;
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -40,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(@"Rat_plasma.sky");
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
 
             RunUI(SkylineWindow.ShowRTReplicateGraph);
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
