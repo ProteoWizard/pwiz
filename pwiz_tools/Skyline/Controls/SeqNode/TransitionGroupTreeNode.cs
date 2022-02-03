@@ -103,6 +103,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Make sure children are up to date
             OnUpdateChildren(SequenceTree.ExpandPrecursors);
+            // Refresh the text on the TransitionTreeNodes.
+            foreach (var child in Nodes.OfType<TransitionTreeNode>())
+            {
+                child.Model = child.Model;
+            }
         }
 
         public int TypeImageIndex
