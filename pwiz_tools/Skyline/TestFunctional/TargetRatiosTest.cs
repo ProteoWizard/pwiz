@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
@@ -23,16 +25,39 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Verifies that ratios displayed on the Sequence Tree are correct.
+    /// There are two different variants of this test: one of which uses the Expand Peptides
+    /// menu item so that the precursors are displayed, and one which uses the Expand Precursors
+    /// menu item so that the ratios on TransitionTreeNodes can be verified.
+    /// </summary>
     [TestClass]
     public class TargetRatiosTest : AbstractFunctionalTest
     {
+        private bool _testingTransitions;
+        /// <summary>
+        /// Tests that the ratios displayed on TransitionGroupTreeNodes are correct.
+        /// </summary>
         [TestMethod]
-        public void TestTargetRatios()
+        public void TestTargetRatiosOnPrecursors()
         {
+            _testingTransitions = false;
+            TestFilesZip = @"TestFunctional\TargetRatiosTest.zip";
+            RunFunctionalTest();
+        }
+
+        /// <summary>
+        /// Tests that the ratios displayed on TransitionTreeNodes are correct.
+        /// </summary>
+        [TestMethod]
+        public void TestTargetRatiosOnTransitions()
+        {
+            _testingTransitions = true;
             TestFilesZip = @"TestFunctional\TargetRatiosTest.zip";
             RunFunctionalTest();
         }
@@ -78,11 +103,20 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(normalizationMethod, SkylineWindow.SequenceTree.NormalizeOption?.NormalizationMethod);
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             int transitionGroupCount = 0;
+            int transitionCount = 0;
             string strTotalRatio = string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
                 string.Empty);
+            string strTransitionRatio = GetUnchangingTransitionRatioText();
             RunUI(() =>
             {
-                SkylineWindow.ExpandPeptides();
+                if (_testingTransitions)
+                {
+                    SkylineWindow.ExpandPrecursors();
+                }
+                else
+                {
+                    SkylineWindow.ExpandPeptides();
+                }
                 foreach (var peptideGroupTreeNode in SkylineWindow.SequenceTree.Nodes.OfType<PeptideGroupTreeNode>())
                 {
                     foreach (var peptideTreeNode in peptideGroupTreeNode.Nodes.OfType<PeptideTreeNode>())
@@ -114,22 +148,86 @@ namespace pwiz.SkylineTestFunctional
                                 }
                             }
 
-                            string nodeText = transitionGroupTreeNode.Text;
+                            string transitionGroupNodeText = transitionGroupTreeNode.Text;
                             if (expectedRatio == null)
                             {
-                                Assert.IsFalse(nodeText.Contains(strTotalRatio), "{0} should not contains {1}", nodeText, strTotalRatio);
+                                AssertNotContains(transitionGroupNodeText, strTotalRatio);
                             }
                             else
                             {
-                                Assert.IsTrue(nodeText.Contains(strTotalRatio), "{0} should contain {1}", nodeText, strTotalRatio);
+                                StringAssert.Contains(transitionGroupNodeText, strTotalRatio);
                                 string ratioText = TransitionGroupTreeNode.FormatRatioValue(expectedRatio);
-                                Assert.IsTrue(nodeText.Contains(ratioText), "{0} should contain {1}", nodeText, ratioText);
+                                StringAssert.Contains(transitionGroupNodeText, ratioText);
+                            }
+
+                            if (!_testingTransitions)
+                            {
+                                continue;
+                            }
+
+                            foreach (var transitionTreeNode in
+                                     transitionGroupTreeNode.Nodes.OfType<TransitionTreeNode>())
+                            {
+                                transitionCount++;
+                                var transitionChromInfo = transitionTreeNode.DocNode
+                                    .GetChromInfo(SkylineWindow.SelectedResultsIndex, null);
+                                double? expectedRatioValue = null;
+                                if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
+                                {
+                                    expectedRatioValue =
+                                        normalizedValueCalculator.GetTransitionValue(
+                                            NormalizationMethod.GLOBAL_STANDARDS, peptideTreeNode.DocNode, transitionTreeNode.DocNode,
+                                            transitionChromInfo);
+                                }
+                                else if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                                {
+                                    if (!Equals(ratioToLabel.IsotopeLabelTypeName, transitionGroup.LabelType.Name))
+                                    {
+                                        expectedRatioValue = normalizedValueCalculator.GetTransitionValue(ratioToLabel,
+                                            peptideTreeNode.DocNode, transitionTreeNode.DocNode, transitionChromInfo);
+                                    }
+                                }
+
+                                string transitionNodeText = transitionTreeNode.Text;
+                                if (expectedRatioValue.HasValue)
+                                {
+                                    StringAssert.Contains(transitionNodeText, strTransitionRatio);
+                                    string expectedRatioText =
+                                        string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__,
+                                            string.Empty, MathEx.RoundAboveZero((float) expectedRatioValue, 2, 4));
+                                    StringAssert.Contains(transitionNodeText, expectedRatioText);
+                                }
+                                else
+                                {
+                                    AssertNotContains(transitionNodeText, strTransitionRatio);
+                                }
                             }
                         }
                     }
                 }
             });
             Assert.AreEqual(transitionGroupCount, SkylineWindow.Document.MoleculeTransitionGroupCount);
+            if (_testingTransitions)
+            {
+                Assert.AreEqual(transitionCount, SkylineWindow.Document.MoleculeTransitionCount);
+            }
+        }
+
+        private void AssertNotContains(string value, string substring)
+        {
+            Assert.IsFalse(value.Contains(substring), "{0} should not contain {1}", value, substring);
+        }
+
+        /// <summary>
+        /// Returns the text which is expected to be found on a Transition Tree Node whenever it is displaying
+        /// a ratio.
+        /// </summary>
+        private string GetUnchangingTransitionRatioText()
+        {
+            string templateText = Resources.TransitionTreeNode_GetResultsText__0__ratio__1__;
+            int firstCloseBrace = templateText.IndexOf("}", StringComparison.Ordinal) + 1;
+            int lastOpenBrace = templateText.LastIndexOf("{", StringComparison.Ordinal);
+            return templateText.Substring(firstCloseBrace, lastOpenBrace - firstCloseBrace);
         }
     }
 }
