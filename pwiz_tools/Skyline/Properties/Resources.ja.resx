@@ -487,9 +487,6 @@
   <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
     <value>作成(&amp;C)...</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致許容誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
-  </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
   </data>
@@ -1344,9 +1341,6 @@
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>ファイル{0}が開けませんでした。{1}</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プロダクトm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致許容誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>iRTカルキュレータのデータベースファイルにはフルパスを使用してください。</value>
   </data>
@@ -1753,9 +1747,6 @@
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
     <value>スペクトルライブラリを検索</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサーイオン式とm/z値が任意の電荷状態と一致しません。</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>トレインモデルに失敗しました：</value>
@@ -2928,9 +2919,6 @@
   <data name="EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection" xml:space="preserve">
     <value>無効なモデル選択。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクトイオン式とm/z値が任意の電荷状態と一致しません。</value>
-  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>選択したフォルダにBruker TOFメソッドテンプレートが含まれていないようです。フォルダは、.m拡張子が付き、submethods.xmlファイルを含むと予測されています。</value>
   </data>
@@ -2960,9 +2948,6 @@
   </data>
   <data name="CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_" xml:space="preserve">
     <value>エラー： ファイル{0}はサポートされているスペクトルライブラリファイル形式ではありません。</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサーには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>1つ以上の繰り返し測定を選択しなければなりません</value>
@@ -7919,9 +7904,6 @@
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>初期化成功前の予期せぬiRTカルキュレータの使用。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクトには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
     <value>Skyline共有ドキュメント</value>
   </data>
@@ -8563,12 +8545,6 @@
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
     <value>分子トランジションリストを挿入</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>エラー：行 {0}、列 {1}：{2}</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
-    <value>{0}行のエラー：{1}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>分子列ヘッダーを読み取り中のエラー。次を認識しません：
