@@ -437,18 +437,29 @@ namespace TestPerf
             });
             RestoreViewOnScreen(20);
 
-            // TODO: Remove this after Nick fixes Targets view ratios
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings)));
-            WaitForGraphs();
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
-            WaitForGraphs();
             RunUI(() =>
             {
-                string lightNodeText = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Text;
+                var lightPrecursorNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
+                string lightNodeText = lightPrecursorNode.Text;
                 AssertEx.Contains(lightNodeText, "rdotp",
                     string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__, 0.0002));
-                string heavyNodeText = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[1].Text;
+                var transitionRatios = new[] { 0, 0, 0.0001, 0.0002, 0.0001, 0.0003, 0, 0 };
+                Assert.AreEqual(transitionRatios.Length, lightPrecursorNode.Nodes.Count);
+                for (int i = 0; i < transitionRatios.Length; i++)
+                {
+                    AssertEx.Contains(lightPrecursorNode.Nodes[i].Text,
+                        string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__,
+                            string.Empty, transitionRatios[i]));
+                }
+
+                var heavyPrecursorNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[1];
+                string heavyNodeText = heavyPrecursorNode.Text;
                 Assert.IsFalse(heavyNodeText.Contains("rdotp"));
+                foreach (TreeNode transitionTreeNode in heavyPrecursorNode.Nodes)
+                {
+                    Assert.IsFalse(transitionTreeNode.Text.Contains(
+                        string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, string.Empty, string.Empty)));
+                }
             });
 
             PauseForScreenShot<SkylineWindow>("Skyline main window", 20);
@@ -667,8 +678,7 @@ namespace TestPerf
             {
                 var quantColumn = documentGridForm.FindColumn(quantPath);
                 documentGridForm.DataGridView.AutoResizeColumn(quantColumn.Index);
-                string expectedPrefix = string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, 0);
-                expectedPrefix = expectedPrefix.Split('0')[0];
+                string expectedPrefix = string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, string.Empty);
 
                 foreach (DataGridViewRow row in documentGridForm.DataGridView.Rows)
                     AssertEx.Contains(row.Cells[quantColumn.Index].Value.ToString(), expectedPrefix);
