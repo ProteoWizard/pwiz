@@ -92,6 +92,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Parameter structure for the model, including weights and bias
         /// </summary>
         LinearModelParams Parameters { get;  }
+
+        bool AllowUnknownScores { get; }
     }
 
 
@@ -146,6 +148,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
+
+        public abstract bool AllowUnknownScores { get; }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);

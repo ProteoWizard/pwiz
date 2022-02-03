@@ -30,6 +30,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class TargetDecoyGenerator
     {
+        private bool _allowUnknownScores;
         public bool[] EligibleScores { get; private set; }
 
         public IList<IPeakFeatureCalculator> FeatureCalculators { get; private set; }
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public TargetDecoyGenerator(IPeakScoringModel scoringModel, PeakTransitionGroupFeatureSet featureScores)
         {
+            _allowUnknownScores = scoringModel.AllowUnknownScores;
             // Determine which calculators will be used to score peaks in this document.
             FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
             _peakTransitionGroupFeaturesList = featureScores;
@@ -283,7 +285,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     double value = peakGroupFeatures.Features[calculatorIndex];
                     if (IsUnknown(value))
+                    {
+                        if (_allowUnknownScores)
+                        {
+                            continue;
+                        }
                         return false;
+                    }
                     maxValue = Math.Max(value, maxValue);
                     minValue = Math.Min(value, minValue);
                 }

@@ -542,6 +542,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             trainData[row, j] = category;
         }
+        public override bool AllowUnknownScores => false;
 
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)
