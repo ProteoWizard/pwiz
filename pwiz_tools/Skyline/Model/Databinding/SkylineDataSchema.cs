@@ -51,7 +51,6 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
         private readonly CachedValue<ElementRefs> _elementRefCache;
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
-        private readonly CachedValue<PeakScoreCache> _detailScores;
         private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
 
         private SrmDocument _batchChangesOriginalDocument;
@@ -68,7 +67,6 @@ namespace pwiz.Skyline.Model.Databinding
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
             _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
             _annotationCalculator = CachedValue.Create(this, () => new AnnotationCalculator(this));
-            _detailScores = CachedValue.Create(this, () => new PeakScoreCache(Document));
             _normalizedValueCalculator = CachedValue.Create(this, () => new NormalizedValueCalculator(Document));
         }
 
@@ -284,10 +282,6 @@ namespace pwiz.Skyline.Model.Databinding
             get { return _annotationCalculator.Value; }
         }
 
-        public PeakScoreCache PeakScoreCache
-        {
-            get { return _detailScores.Value; }
-        }
         public NormalizedValueCalculator NormalizedValueCalculator
         {
             get { return _normalizedValueCalculator.Value; }

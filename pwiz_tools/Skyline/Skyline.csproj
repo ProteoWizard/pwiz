@@ -618,6 +618,7 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
     <Compile Include="Model\Results\OnDemandScoreCalculator.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
@@ -634,7 +635,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\Scoring\DetailScores.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />

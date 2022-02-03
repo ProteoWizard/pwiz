@@ -1,161 +1,168 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public class CandidatePeakGroups : SkylineObjectList<CandidatePeakGroups.PeakKey, CandidatePeakGroup>
+    public class CandidatePeakGroups : AbstractRowSource
     {
-        private ImmutableList<Precursor> _precursors;
-        private Replicate _replicate;
+        private IdentityPath _precursorIdentityPath;
+        private int _replicateIndex;
+        private ChromFileInfoId _chromFileInfoId;
+        private SkylineDataSchema _dataSchema;
+        private readonly IDocumentChangeListener _documentChangeListener;
 
 
-        public CandidatePeakGroups(SkylineDataSchema dataSchema) : base(dataSchema)
+        public CandidatePeakGroups(SkylineDataSchema dataSchema)
         {
+            _dataSchema = dataSchema;
+            _documentChangeListener = new DocumentChangeListener(this);
         }
 
-        public IList<Precursor> Precursors
+        protected override void BeforeFirstListenerAdded()
         {
-            get
-            {
-                return _precursors;
-            }
+            base.BeforeFirstListenerAdded();
+            _dataSchema.Listen(_documentChangeListener);
+        }
+
+        protected override void AfterLastListenerRemoved()
+        {
+            _dataSchema.Unlisten(_documentChangeListener);
+            base.AfterLastListenerRemoved();
+        }
+
+        public IdentityPath PrecursorIdentityPath
+        {
+            get { return _precursorIdentityPath; }
             set
             {
-                var newValue = ImmutableList.ValueOf(value);
-                if (Equals(Precursors, newValue))
+                if (Equals(PrecursorIdentityPath, value))
                 {
                     return;
                 }
 
-                _precursors = newValue;
+                _precursorIdentityPath = value;
                 FireListChanged();
             }
         }
 
-        public void SetSelectedIdentityPaths(IEnumerable<IdentityPath> identityPaths)
-        {
-            var precursorPaths = PathsToMaxLevel(SrmDocument.Level.TransitionGroups, identityPaths);
-            var peptidePaths = PathsToMaxLevel(SrmDocument.Level.Molecules, precursorPaths);
-            var peptides = new Peptides(DataSchema, peptidePaths.ToList());
-            var precursors = new List<Precursor>();
-            foreach (Entities.Peptide peptide in peptides.GetItems())
-            {
-                var comparableGroups = PeakFeatureEnumerator.ComparableGroups(peptide.DocNode)
-                    .Select(group=>group.ToList()).ToList();
-                bool containsAllGroups = comparableGroups.Count == 1
-                                         || peptidePaths.Contains(peptide.IdentityPath)
-                                         || peptidePaths.Contains(peptide.IdentityPath.Parent);
-                foreach (var comparableGroup in comparableGroups)
-                {
-                    if (containsAllGroups || comparableGroup.Any(nodeGroup =>
-                        precursorPaths.Contains(new IdentityPath(peptide.IdentityPath, nodeGroup.Id))))
-                    {
-                        precursors.Add(new Precursor(DataSchema, new IdentityPath(peptide.IdentityPath, comparableGroup[0].Id)));
-                    }
-                }
-            }
-
-            Precursors = precursors;
-        }
-
-        private HashSet<IdentityPath> PathsToMaxLevel(SrmDocument.Level level, IEnumerable<IdentityPath> identityPaths)
-        {
-            return identityPaths.Select(path => path.Length > (int) level + 1 ? path.GetPathTo((int) level) : path)
-                .ToHashSet();
-        }
-
-
-        public Replicate Replicate
+        public int ReplicateIndex
         {
             get
             {
-                return _replicate;
+                return _replicateIndex;
             }
             set
             {
-                if (Equals(Replicate, value))
+                if (ReplicateIndex == value)
                 {
                     return;
                 }
 
-                _replicate = value;
+                _replicateIndex = value;
                 FireListChanged();
             }
         }
 
-        protected override IEnumerable<PeakKey> ListKeys()
+        public ChromFileInfoId ChromFileInfoId
         {
-            if (_precursors == null)
+            get
             {
-                yield break;
+                return _chromFileInfoId;
             }
-            foreach (var precursor in _precursors)
+            set
             {
-                foreach (var entry in precursor.Results)
+                if (ReferenceEquals(ChromFileInfoId, value))
                 {
-                    if (Replicate != null && entry.Key.ReplicateIndex != Replicate.ReplicateIndex)
-                    {
-                        continue;
-                    }
-
-                    var precursorResult = entry.Value;
-                    int peakCount = precursorResult.GetCandidatePeakGroupCount();
-                    for (int peakIndex = 0; peakIndex < peakCount; peakIndex++)
-                    {
-                        yield return new PeakKey(precursorResult, peakIndex);
-                    }
+                    return;
                 }
+
+                _chromFileInfoId = value;
+                FireListChanged();
             }
         }
 
-        protected override CandidatePeakGroup ConstructItem(PeakKey key)
+        public override IEnumerable GetItems()
         {
-            var candidatePeakGroups = key.PrecursorResult.CandidatePeakGroups;
-            if (key.PeakIndex < 0 || key.PeakIndex >= candidatePeakGroups.Count)
+            var candidatePeakGroups = new List<CandidatePeakGroup>();
+            var featureCalculator = GetFeatureCalculator();
+            if (featureCalculator == null)
+            {
+                return candidatePeakGroups;
+            }
+
+            var precursor = new Precursor(_dataSchema, PrecursorIdentityPath);
+            var precursorResult = new PrecursorResult(precursor,
+                new ResultFile(new Replicate(_dataSchema, ReplicateIndex), _chromFileInfoId, 0));
+
+            var transitionGroup = (TransitionGroup) PrecursorIdentityPath.Child;
+            foreach (var peakGroupData in featureCalculator.GetCandidatePeakGroups(transitionGroup))
+            {
+                candidatePeakGroups.Add(new CandidatePeakGroup(precursorResult, peakGroupData));
+            }
+
+            if (!candidatePeakGroups.Any(peak => peak.Chosen))
+            {
+                var chosenPeak = featureCalculator.GetChosenPeakGroupData(transitionGroup);
+                if (chosenPeak != null)
+                {
+                    candidatePeakGroups.Add(new CandidatePeakGroup(precursorResult, chosenPeak));
+                }
+            }
+
+            return candidatePeakGroups.OrderBy(peak => Tuple.Create(peak.PeakGroupStartTime, peak.PeakGroupEndTime));
+        }
+
+        private OnDemandFeatureCalculator GetFeatureCalculator()
+        {
+            var document = _dataSchema.Document;
+            if (!document.Settings.HasResults || ReplicateIndex < 0 ||
+                ReplicateIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
             {
                 return null;
             }
-            return candidatePeakGroups[key.PeakIndex];
+
+            if (_precursorIdentityPath == null)
+            {
+                return null;
+            }
+
+            var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[ReplicateIndex];
+            var chromFileInfo = chromatogramSet.GetFileInfo(ChromFileInfoId);
+            if (chromFileInfo == null)
+            {
+                chromFileInfo = chromatogramSet.MSDataFileInfos.First();
+                _chromFileInfoId = chromFileInfo.FileId;
+            }
+            var peptideDocNode = (PeptideDocNode) document.FindNode(_precursorIdentityPath.Parent);
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+
+            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document, peptideDocNode, ReplicateIndex,
+                chromFileInfo);
         }
 
-        public class PeakKey
+        private class DocumentChangeListener : IDocumentChangeListener
         {
-            private Tuple<IdentityPath, ResultFileKey, int> _key;
-            public PeakKey(PrecursorResult precursorResult, int peakIndex)
+            private readonly CandidatePeakGroups _candidatePeakGroups;
+            public DocumentChangeListener(CandidatePeakGroups candidatePeakGroups)
             {
-                PrecursorResult = precursorResult;
-                PeakIndex = peakIndex;
-                _key = Tuple.Create(precursorResult.Precursor.IdentityPath, precursorResult.GetResultFile().ToFileKey(),
-                    PeakIndex);
-            }
-            public PrecursorResult PrecursorResult { get; private set; }
-            public int PeakIndex { get; private set; }
-
-            protected bool Equals(PeakKey other)
-            {
-                return Equals(_key, other._key);
+                _candidatePeakGroups = candidatePeakGroups;
             }
 
-            public override bool Equals(object obj)
+            public void DocumentOnChanged(object sender, DocumentChangedEventArgs args)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((PeakKey) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return _key.GetHashCode();
-                }
+                _candidatePeakGroups.FireListChanged();
             }
         }
+
     }
 }

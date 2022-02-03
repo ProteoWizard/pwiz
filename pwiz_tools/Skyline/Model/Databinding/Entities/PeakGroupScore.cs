@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [OneToMany(ItemDisplayName = "WeightedFeature")]
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
-        public static PrecursorCandidatePeakScores MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
+        public static PeakGroupScore MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
         {
             var weightedFeatures = new Dictionary<string, WeightedFeature>();
             double? modelScore = 0;
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
             }
 
-            return new PrecursorCandidatePeakScores(featureValues, modelScore, weightedFeatures);
+            return new PeakGroupScore(featureValues, modelScore, weightedFeatures);
         }
 
         public override string ToString()

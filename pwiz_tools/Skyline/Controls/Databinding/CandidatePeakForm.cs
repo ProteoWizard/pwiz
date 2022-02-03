@@ -98,23 +98,70 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void SetReplicateIndex(int replicateIndex)
         {
-            if (replicateIndex == _peakGroups.Replicate?.ReplicateIndex)
-            {
-                return;
-            }
-
-            _peakGroups.Replicate = new Replicate(_dataSchema, replicateIndex);
+            _peakGroups.ReplicateIndex = replicateIndex;
         }
 
         private void UpdateRowSource()
         {
-            _peakGroups.Replicate = new Replicate(_dataSchema, SkylineWindow.SelectedResultsIndex);
-            _peakGroups.SetSelectedIdentityPaths(SelectedIdentityPaths);
+            _peakGroups.ReplicateIndex = SkylineWindow.SelectedResultsIndex;
+            _peakGroups.PrecursorIdentityPath = GetPrecursorIdentityPath();
         }
 
-        private HashSet<IdentityPath> GetPrecursorIdentityPaths(SrmDocument document, IEnumerable<IdentityPath> identityPaths)
+        private IdentityPath GetPrecursorIdentityPath()
         {
-            return identityPaths.Where(path => path.Length >= 3).Select(path => path.GetPathTo(2)).ToHashSet();
+            var document = SkylineWindow.DocumentUI;
+            foreach (var identityPath in _sequenceTree.SelectedPaths.OrderByDescending(path=>path.Length))
+            {
+                if (identityPath.Length >= 3)
+                {
+                    return identityPath.GetPathTo(2);
+                }
+
+                PeptideGroupDocNode peptideGroupDocNode;
+                if (identityPath.Length >= 1)
+                {
+                    peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(identityPath.GetIdentity(0));
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (peptideGroupDocNode == null)
+                {
+                    continue;
+                }
+
+                PeptideDocNode peptideDocNode;
+                if (identityPath.Length >= 2)
+                {
+                    peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(identityPath.GetIdentity(1));
+                }
+                else
+                {
+                    if (peptideGroupDocNode.Children.Count > 1)
+                    {
+                        continue;
+                    }
+                    peptideDocNode = peptideGroupDocNode.Molecules.FirstOrDefault();
+                }
+
+                if (peptideDocNode == null)
+                {
+                    continue;
+                }
+
+                var transitionGroupDocNode = peptideDocNode.TransitionGroups.FirstOrDefault();
+                if (transitionGroupDocNode == null)
+                {
+                    continue;
+                }
+
+                return new IdentityPath(peptideGroupDocNode.PeptideGroup, peptideDocNode.Peptide,
+                    transitionGroupDocNode.TransitionGroup);
+            }
+
+            return null;
         }
 
         private ViewSpec GetDefaultViewSpec()
@@ -131,5 +178,7 @@ namespace pwiz.Skyline.Controls.Databinding
             });
             return viewSpec;
         }
+
+
     }
 }
