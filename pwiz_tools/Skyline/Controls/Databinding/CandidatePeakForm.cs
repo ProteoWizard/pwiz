@@ -8,6 +8,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -16,8 +17,8 @@ namespace pwiz.Skyline.Controls.Databinding
     {
         private readonly SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
-        private CandidatePeakGroups _peakGroups;
         private IList<IdentityPath> _selectedIdentityPaths = ImmutableList.Empty<IdentityPath>();
+        private CandidatePeakGroups _peakGroups;
 
         public CandidatePeakForm(SkylineWindow skylineWindow)
         {
@@ -25,7 +26,7 @@ namespace pwiz.Skyline.Controls.Databinding
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
-            _peakGroups = new CandidatePeakGroups(_dataSchema);
+            _peakGroups = new CandidatePeakGroups();
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup));
             var rowSourceInfo = new RowSourceInfo(_peakGroups,
                 new ViewInfo(rootColumn, GetDefaultViewSpec()));
@@ -39,11 +40,18 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             base.OnHandleCreated(e);
             SkylineWindow.DocumentUIChangedEvent += SkylineWindow_DocumentUIChangedEvent;
+            SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
             OnDocumentChanged();
+        }
+
+        private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateRowSource();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
             SkylineWindow.DocumentUIChangedEvent -= SkylineWindow_DocumentUIChangedEvent;
             SetSequenceTree(null);
             base.OnHandleDestroyed(e);
@@ -57,6 +65,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private void OnDocumentChanged()
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
+            UpdateRowSource();
         }
 
         private void SetSequenceTree(SequenceTree sequenceTree)
@@ -96,15 +105,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public void SetReplicateIndex(int replicateIndex)
-        {
-            _peakGroups.ReplicateIndex = replicateIndex;
-        }
-
         private void UpdateRowSource()
         {
-            _peakGroups.ReplicateIndex = SkylineWindow.SelectedResultsIndex;
-            _peakGroups.PrecursorIdentityPath = GetPrecursorIdentityPath();
+            _peakGroups.List = ImmutableList.ValueOf(GetCandidatePeakGroups(SkylineWindow.DocumentUI, GetPrecursorIdentityPath(), SkylineWindow.SelectedResultsIndex, null));
         }
 
         private IdentityPath GetPrecursorIdentityPath()
@@ -179,6 +182,39 @@ namespace pwiz.Skyline.Controls.Databinding
             return viewSpec;
         }
 
+        public IList<CandidatePeakGroup> GetCandidatePeakGroups(SrmDocument document, IdentityPath precursorIdentityPath, int replicateIndex, ChromFileInfoId chromFileInfoId)
+        {
+            var candidatePeakGroups = new List<CandidatePeakGroup>();
+            if (precursorIdentityPath == null)
+            {
+                return null;
+            }
+            var featureCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(document,
+                precursorIdentityPath.GetPathTo(1), replicateIndex, chromFileInfoId);
+            if (featureCalculator == null)
+            {
+                return candidatePeakGroups;
+            }
+            var precursor = new Precursor(_dataSchema, precursorIdentityPath);
+            var precursorResult = new PrecursorResult(precursor,
+                new ResultFile(new Replicate(_dataSchema, replicateIndex), chromFileInfoId, 0));
 
+            var transitionGroup = (TransitionGroup)precursorIdentityPath.Child;
+            foreach (var peakGroupData in featureCalculator.GetCandidatePeakGroups(transitionGroup))
+            {
+                candidatePeakGroups.Add(new CandidatePeakGroup(precursorResult, peakGroupData));
+            }
+
+            if (!candidatePeakGroups.Any(peak => peak.Chosen))
+            {
+                var chosenPeak = featureCalculator.GetChosenPeakGroupData(transitionGroup);
+                if (chosenPeak != null)
+                {
+                    candidatePeakGroups.Add(new CandidatePeakGroup(precursorResult, chosenPeak));
+                }
+            }
+
+            return candidatePeakGroups.OrderBy(peak => Tuple.Create(peak.PeakGroupStartTime, peak.PeakGroupEndTime)).ToList();
+        }
     }
 }

@@ -320,7 +320,10 @@ namespace pwiz.Skyline.Model.Results
                     var rawTimeIntensities = chromatogramInfo.TimeIntensities;
                     chromatogramInfo.Transform(TransformChrom.interpolated);
                     var interpolatedTimeIntensities = chromatogramInfo.TimeIntensities;
-                    chromDatas.Add(new ChromData(transition, rawTimeIntensities, interpolatedTimeIntensities));
+                    var chromKey = new ChromKey(PeptideDocNode.ModifiedTarget, transitionGroup.PrecursorMz, null,
+                        transition.Mz, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
+                        ChromExtractor.summed, true, false);
+                    chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, interpolatedTimeIntensities));
                 }
 
                 if (!chromDatas.Any())
@@ -367,6 +370,40 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return null;
+        }
+
+        public static OnDemandFeatureCalculator GetFeatureCalculator(SrmDocument document, IdentityPath peptideIdentityPath, int replicateIndex, ChromFileInfoId chromFileInfoId)
+        {
+            var peptideDocNode = document.FindNode(peptideIdentityPath) as PeptideDocNode;
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+
+            if (!document.Settings.HasResults || replicateIndex < 0 ||
+                replicateIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+
+            var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
+            ChromFileInfo chromFileInfo;
+            if (chromFileInfoId != null)
+            {
+                chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
+            }
+            else
+            {
+                chromFileInfo = chromatogramSet.MSDataFileInfos.FirstOrDefault();
+            }
+
+            if (chromFileInfo == null)
+            {
+                return null;
+            }
+
+            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document, peptideDocNode, replicateIndex,
+                chromFileInfo);
         }
     }
 }

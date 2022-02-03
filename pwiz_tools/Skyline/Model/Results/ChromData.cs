@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
             MaxPeakIndex = -1;
         }
 
-        public ChromData(TransitionDocNode transitionDocNode, TimeIntensities rawTimeIntensities, TimeIntensities timeIntensities) : this(ChromKey.EMPTY, -1)
+        public ChromData(ChromKey chromKey, TransitionDocNode transitionDocNode, TimeIntensities rawTimeIntensities, TimeIntensities timeIntensities) : this(chromKey, -1)
         {
             DocNode = transitionDocNode;
             RawTimeIntensities = rawTimeIntensities;
