@@ -114,3 +114,290 @@ Summary   : 欠損している結果が削除されました
 All Info  :
 欠損している結果が削除されました
 
+Undo Redo : ターゲットを定義し直しました
+Summary   : ターゲットを定義し直しました
+All Info  :
+ターゲットを定義し直しました
+最適化の詳細設定>標識タイプを削除は"Light"です
+Extra Info: 標識タイプを削除 = "Light"
+
+Undo Redo : ターゲットを定義し直しました
+Summary   : ターゲットを定義し直しました
+All Info  :
+ターゲットを定義し直しました
+最適化の詳細設定>標識タイプを追加は"Light"です
+Extra Info: 標識タイプを追加 = "Light"
+
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
+All Info  :
+結果が管理されました
+すべての繰り返し測定が削除されました
+
+Undo Redo : 9個のファイルから結果がインポートされました
+Summary   : 9個のファイルから結果がインポートされました
+All Info  :
+9個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："G1_rep1.mzXML"が含まれています
+結果設定をインポート>ファイル名："G1_rep2.mzXML"が含まれています
+結果設定をインポート>ファイル名："G1_rep3.mzXML"が含まれています
+結果設定をインポート>ファイル名："G2M_rep1.mzXML"が含まれています
+結果設定をインポート>ファイル名："G2M_rep2.mzXML"が含まれています
+結果設定をインポート>ファイル名："G2M_rep3.mzXML"が含まれています
+結果設定をインポート>ファイル名："S_rep1.mzXML"が含まれています
+結果設定をインポート>ファイル名："S_rep2.mzXML"が含まれています
+結果設定をインポート>ファイル名："S_rep3.mzXML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "G1_rep1.mzXML",
+    "G1_rep2.mzXML",
+    "G1_rep3.mzXML",
+    "G2M_rep1.mzXML",
+    "G2M_rep2.mzXML",
+    "G2M_rep3.mzXML",
+    "S_rep1.mzXML",
+    "S_rep2.mzXML",
+    "S_rep3.mzXML"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+
+Undo Redo : sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++に対する5のプロダクトイオンが選択されました
+Summary   : sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++に対する5のプロダクトイオンが選択されました
+All Info  :
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++に対する5のプロダクトイオンが選択されました
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++のプロダクトイオンQ [y7] - 847.4156+ (ランク4)が選択されました
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++のプロダクトイオンE [y6] - 719.3570+ (ランク2)が選択されました
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++のプロダクトイオンV [y5] - 590.3144+ (ランク3)が選択されました
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++のプロダクトイオンS [y4] - 491.2460+ (ランク1)が選択されました
+sp|Q61687|ATRX_MOUSE>K.GVDCQEVSQEK.N [594, 604]>639.7852++のプロダクトイオンQ [y3] - 404.2140+ (ランク5)が選択されました
+
+Undo Redo : ターゲットを定義し直しました
+Summary   : ターゲットを定義し直しました
+All Info  :
+ターゲットを定義し直しました
+最適化の詳細設定>最小ピーク検出率は"0.5"です
+Extra Info: 最小ピーク検出率 = "0.5"
+
+Undo Redo : ターゲットsp|Q6P9P6|KIF11_MOUSE>R.EAGNINQSLLTLGR.V [283, 296]>743.4046++>N [b4] - 372.1514+ (ランク10)が削除されました
+Summary   : ターゲットsp|Q6P9P6|KIF11_MOUSE>R.EAGNINQSLLTLGR.V [283, 296]>743.4046++>N [b4] - 372.1514+ (ランク10)が削除されました
+All Info  :
+ターゲットsp|Q6P9P6|KIF11_MOUSE>R.EAGNINQSLLTLGR.V [283, 296]>743.4046++>N [b4] - 372.1514+ (ランク10)が削除されました
+
+Undo Redo : ドキュメントグリッドに31個の値が貼り付けられました
+Summary   : ドキュメントグリッドに31個の値が貼り付けられました
+All Info  :
+ドキュメントグリッドに31個の値が貼り付けられました
+ドキュメントグリッド>レポート名は"ペプチド定量化"です
+GVDC[+57.021464]QEVSQEKの内部標準濃度が"10"に設定されました
+VVEATNSMTAVRの内部標準濃度が"10"に設定されました
+TSQSGLNTLSQRの内部標準濃度が"10"に設定されました
+IADFGWSVHAPSLRの内部標準濃度が"20"に設定されました
+AMQAVQQEGAGGQQEEKの内部標準濃度が"10"に設定されました
+SPATGGPQVLNAQRの内部標準濃度が"10"に設定されました
+DAGSALLSLHQEDQENVNPEKの内部標準濃度が"10"に設定されました
+QLEEEQSVRPKの内部標準濃度が"2"に設定されました
+LSGKPQNAPEGYQNRの内部標準濃度が"2"に設定されました
+GSISENEAQGASTQDTAKの内部標準濃度が"2"に設定されました
+FIQPNIGELPTALKの内部標準濃度が"100"に設定されました
+LDDIFEPVLIPEPKの内部標準濃度が"20"に設定されました
+FYTQQWEDYRの内部標準濃度が"10"に設定されました
+ESFESQFLADTERの内部標準濃度が"20"に設定されました
+SPLAELGVLKの内部標準濃度が"10"に設定されました
+ASLGPNLDLQDSVVLYHRの内部標準濃度が"20"に設定されました
+AQGLDLLQAVLTRの内部標準濃度が"20"に設定されました
+EVAQAATPQNPVNQGKの内部標準濃度が"10"に設定されました
+GSQSDVLQDKPSTAPDAASRの内部標準濃度が"10"に設定されました
+LAASASTQQFQEVKの内部標準濃度が"10"に設定されました
+TPTC[+57.021464]QSSTDSSPYARの内部標準濃度が"2"に設定されました
+LNLVDLAGSENIGRの内部標準濃度が"20"に設定されました
+EAGNINQSLLTLGRの内部標準濃度が"20"に設定されました
+LTDDHVQFLIYQILRの内部標準濃度が"100"に設定されました
+SLAPVELLLRの内部標準濃度が"20"に設定されました
+KLEEEEEGSAPATSRの内部標準濃度が"10"に設定されました
+NVTQAEPFSLETDKの内部標準濃度が"10"に設定されました
+EVTTLTADPPDGIKの内部標準濃度が"20"に設定されました
+LLTEIHGGAC[+57.021464]STSSGRの内部標準濃度が"10"に設定されました
+LAEQFAAGEVLTDMSRの内部標準濃度が"100"に設定されました
+SVESQGAIHGSMSQPAAGC[+57.021464]SSSDSSRの内部標準濃度が"10"に設定されました
+Extra Info: 10
+10
+10
+20
+10
+10
+10
+2
+2
+2
+100
+20
+10
+20
+10
+20
+20
+10
+10
+10
+2
+20
+20
+100
+20
+10
+10
+20
+10
+100
+10
+
+レポート名 = "ペプチド定量化"
+
+Undo Redo : 注釈が変更されました
+Summary   : 設定>ドキュメント設定－注釈が変更されました
+All Info  :
+注釈が変更されました
+設定>ドキュメント設定－注釈："Condition"が追加されました
+設定>ドキュメント設定－注釈>"Condition">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"Condition">タイプは"値のリスト"です
+設定>ドキュメント設定－注釈>"Condition">値："G1"が含まれています
+設定>ドキュメント設定－注釈>"Condition">値："G2M"が含まれています
+設定>ドキュメント設定－注釈>"Condition">値："S"が含まれています
+設定>ドキュメント設定－注釈："BioReplicate"が追加されました
+設定>ドキュメント設定－注釈>"BioReplicate">適用先は"replicate"です
+設定>ドキュメント設定－注釈>"BioReplicate">タイプは"数字"です
+
+Undo Redo : G1_rep1のBioReplicateが"0"に設定されました
+Summary   : G1_rep1のBioReplicateが"0"に設定されました
+All Info  :
+G1_rep1のBioReplicateが"0"に設定されました
+
+Undo Redo : G1_rep1のConditionが"G1"に設定されました
+Summary   : G1_rep1のConditionが"G1"に設定されました
+All Info  :
+G1_rep1のConditionが"G1"に設定されました
+
+Undo Redo : G1_rep2のBioReplicateが"1"に設定されました
+Summary   : G1_rep2のBioReplicateが"1"に設定されました
+All Info  :
+G1_rep2のBioReplicateが"1"に設定されました
+
+Undo Redo : G1_rep2のConditionが"G1"に設定されました
+Summary   : G1_rep2のConditionが"G1"に設定されました
+All Info  :
+G1_rep2のConditionが"G1"に設定されました
+
+Undo Redo : G1_rep3のBioReplicateが"2"に設定されました
+Summary   : G1_rep3のBioReplicateが"2"に設定されました
+All Info  :
+G1_rep3のBioReplicateが"2"に設定されました
+
+Undo Redo : G1_rep3のConditionが"G1"に設定されました
+Summary   : G1_rep3のConditionが"G1"に設定されました
+All Info  :
+G1_rep3のConditionが"G1"に設定されました
+
+Undo Redo : G2M_rep1のBioReplicateが"3"に設定されました
+Summary   : G2M_rep1のBioReplicateが"3"に設定されました
+All Info  :
+G2M_rep1のBioReplicateが"3"に設定されました
+
+Undo Redo : G2M_rep1のConditionが"G2M"に設定されました
+Summary   : G2M_rep1のConditionが"G2M"に設定されました
+All Info  :
+G2M_rep1のConditionが"G2M"に設定されました
+
+Undo Redo : G2M_rep2のBioReplicateが"4"に設定されました
+Summary   : G2M_rep2のBioReplicateが"4"に設定されました
+All Info  :
+G2M_rep2のBioReplicateが"4"に設定されました
+
+Undo Redo : G2M_rep2のConditionが"G2M"に設定されました
+Summary   : G2M_rep2のConditionが"G2M"に設定されました
+All Info  :
+G2M_rep2のConditionが"G2M"に設定されました
+
+Undo Redo : G2M_rep3のBioReplicateが"5"に設定されました
+Summary   : G2M_rep3のBioReplicateが"5"に設定されました
+All Info  :
+G2M_rep3のBioReplicateが"5"に設定されました
+
+Undo Redo : G2M_rep3のConditionが"G2M"に設定されました
+Summary   : G2M_rep3のConditionが"G2M"に設定されました
+All Info  :
+G2M_rep3のConditionが"G2M"に設定されました
+
+Undo Redo : S_rep1のBioReplicateが"6"に設定されました
+Summary   : S_rep1のBioReplicateが"6"に設定されました
+All Info  :
+S_rep1のBioReplicateが"6"に設定されました
+
+Undo Redo : S_rep1のConditionが"S"に設定されました
+Summary   : S_rep1のConditionが"S"に設定されました
+All Info  :
+S_rep1のConditionが"S"に設定されました
+
+Undo Redo : S_rep2のBioReplicateが"7"に設定されました
+Summary   : S_rep2のBioReplicateが"7"に設定されました
+All Info  :
+S_rep2のBioReplicateが"7"に設定されました
+
+Undo Redo : S_rep2のConditionが"S"に設定されました
+Summary   : S_rep2のConditionが"S"に設定されました
+All Info  :
+S_rep2のConditionが"S"に設定されました
+
+Undo Redo : S_rep3のBioReplicateが"8"に設定されました
+Summary   : S_rep3のBioReplicateが"8"に設定されました
+All Info  :
+S_rep3のBioReplicateが"8"に設定されました
+
+Undo Redo : S_rep3のConditionが"S"に設定されました
+Summary   : S_rep3のConditionが"S"に設定されました
+All Info  :
+S_rep3のConditionが"S"に設定されました
+
+Undo Redo : グループ比較が変更されました
+Summary   : 設定>ドキュメント設定－グループ比較が変更されました
+All Info  :
+グループ比較が変更されました
+設定>ドキュメント設定－グループ比較："G2M-vs-G1"が追加されました
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">対照群の注釈は"Condition"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">対照群の値は"G1"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">次に対して比較する値は"G2M"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">同一注釈は"BioReplicate"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">正規化メソッドは"Heavyに対する比率"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">要約手法は"Tukeyの中央値分散分析"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">信頼度は"95"です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">タンパク質適用範囲は真です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">欠損しているピークはゼロを使用するは偽です
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">Q値のカットオフは見つかりませんです
+設定>ドキュメント設定－グループ比較>"G2M-vs-G1">フォーマット行は空です
+設定>ドキュメント設定－グループ比較："S-vs-G1"が追加されました
+設定>ドキュメント設定－グループ比較>"S-vs-G1">対照群の注釈は"Condition"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">対照群の値は"G1"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">次に対して比較する値は"S"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">同一注釈は"BioReplicate"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">正規化メソッドは"Heavyに対する比率"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">要約手法は"Tukeyの中央値分散分析"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">信頼度は"95"です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">タンパク質適用範囲は真です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">欠損しているピークはゼロを使用するは偽です
+設定>ドキュメント設定－グループ比較>"S-vs-G1">Q値のカットオフは見つかりませんです
+設定>ドキュメント設定－グループ比較>"S-vs-G1">フォーマット行は空です
+
+Undo Redo : レポートする："PRM-Quant"が追加されました
+Summary   : 設定>ドキュメント設定>レポート："PRM-Quant"が追加されました
+All Info  :
+レポートする："PRM-Quant"が追加されました
+設定>ドキュメント設定>レポート："PRM-Quant"が追加されました
+設定>ドキュメント設定>レポート>"PRM-Quant">列："Name"が含まれています
+設定>ドキュメント設定>レポート>"PRM-Quant">列："修飾シークエンス"が含まれています
+設定>ドキュメント設定>レポート>"PRM-Quant">列："標準に対する比率"が含まれています
+設定>ドキュメント設定>レポート>"PRM-Quant">列："計算濃度"が含まれています
+設定>ドキュメント設定>レポート>"PRM-Quant">フィルタは空です
+設定>ドキュメント設定>レポート>"PRM-Quant">デフォルトレイアウト名は見つかりませんです
+

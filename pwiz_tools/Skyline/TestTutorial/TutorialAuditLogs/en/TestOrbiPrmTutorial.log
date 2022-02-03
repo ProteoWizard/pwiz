@@ -114,3 +114,290 @@ Summary   : Removed missing results
 All Info  :
 Removed missing results
 
+Undo Redo : Refined targets
+Summary   : Refined targets
+All Info  :
+Refined targets
+Advanced refinement settings > Remove label type is "Light"
+Extra Info: Remove label type = "Light"
+
+Undo Redo : Refined targets
+Summary   : Refined targets
+All Info  :
+Refined targets
+Advanced refinement settings > Add label type is "Light"
+Extra Info: Add label type = "Light"
+
+Undo Redo : Managed results
+Summary   : Managed results
+All Info  :
+Managed results
+Removed all replicates
+
+Undo Redo : Imported results from 9 files
+Summary   : Imported results from 9 files
+All Info  :
+Imported results from 9 files
+Import results settings > File names : contains "G1_rep1.mzXML"
+Import results settings > File names : contains "G1_rep2.mzXML"
+Import results settings > File names : contains "G1_rep3.mzXML"
+Import results settings > File names : contains "G2M_rep1.mzXML"
+Import results settings > File names : contains "G2M_rep2.mzXML"
+Import results settings > File names : contains "G2M_rep3.mzXML"
+Import results settings > File names : contains "S_rep1.mzXML"
+Import results settings > File names : contains "S_rep2.mzXML"
+Import results settings > File names : contains "S_rep3.mzXML"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Extra Info: File names = 
+[
+    "G1_rep1.mzXML",
+    "G1_rep2.mzXML",
+    "G1_rep3.mzXML",
+    "G2M_rep1.mzXML",
+    "G2M_rep2.mzXML",
+    "G2M_rep3.mzXML",
+    "S_rep1.mzXML",
+    "S_rep2.mzXML",
+    "S_rep3.mzXML"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many"
+
+Undo Redo : Picked 5 children for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Summary   : Picked 5 children for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+All Info  :
+Picked 5 children for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Picked child Q [y7] - 847.4156+ (rank 4) for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Picked child E [y6] - 719.3570+ (rank 2) for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Picked child V [y5] - 590.3144+ (rank 3) for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Picked child S [y4] - 491.2460+ (rank 1) for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+Picked child Q [y3] - 404.2140+ (rank 5) for sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++
+
+Undo Redo : Refined targets
+Summary   : Refined targets
+All Info  :
+Refined targets
+Advanced refinement settings > Min peak found ratio is "0.5"
+Extra Info: Min peak found ratio = "0.5"
+
+Undo Redo : Deleted target sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (rank 10)
+Summary   : Deleted target sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (rank 10)
+All Info  :
+Deleted target sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (rank 10)
+
+Undo Redo : Pasted 31 values into the document grid
+Summary   : Pasted 31 values into the document grid
+All Info  :
+Pasted 31 values into the document grid
+Document grid > Report name is "Peptide Quantification"
+Set Internal Standard Concentration of GVDC[+57.021464]QEVSQEK to "10"
+Set Internal Standard Concentration of VVEATNSMTAVR to "10"
+Set Internal Standard Concentration of TSQSGLNTLSQR to "10"
+Set Internal Standard Concentration of IADFGWSVHAPSLR to "20"
+Set Internal Standard Concentration of AMQAVQQEGAGGQQEEK to "10"
+Set Internal Standard Concentration of SPATGGPQVLNAQR to "10"
+Set Internal Standard Concentration of DAGSALLSLHQEDQENVNPEK to "10"
+Set Internal Standard Concentration of QLEEEQSVRPK to "2"
+Set Internal Standard Concentration of LSGKPQNAPEGYQNR to "2"
+Set Internal Standard Concentration of GSISENEAQGASTQDTAK to "2"
+Set Internal Standard Concentration of FIQPNIGELPTALK to "100"
+Set Internal Standard Concentration of LDDIFEPVLIPEPK to "20"
+Set Internal Standard Concentration of FYTQQWEDYR to "10"
+Set Internal Standard Concentration of ESFESQFLADTER to "20"
+Set Internal Standard Concentration of SPLAELGVLK to "10"
+Set Internal Standard Concentration of ASLGPNLDLQDSVVLYHR to "20"
+Set Internal Standard Concentration of AQGLDLLQAVLTR to "20"
+Set Internal Standard Concentration of EVAQAATPQNPVNQGK to "10"
+Set Internal Standard Concentration of GSQSDVLQDKPSTAPDAASR to "10"
+Set Internal Standard Concentration of LAASASTQQFQEVK to "10"
+Set Internal Standard Concentration of TPTC[+57.021464]QSSTDSSPYAR to "2"
+Set Internal Standard Concentration of LNLVDLAGSENIGR to "20"
+Set Internal Standard Concentration of EAGNINQSLLTLGR to "20"
+Set Internal Standard Concentration of LTDDHVQFLIYQILR to "100"
+Set Internal Standard Concentration of SLAPVELLLR to "20"
+Set Internal Standard Concentration of KLEEEEEGSAPATSR to "10"
+Set Internal Standard Concentration of NVTQAEPFSLETDK to "10"
+Set Internal Standard Concentration of EVTTLTADPPDGIK to "20"
+Set Internal Standard Concentration of LLTEIHGGAC[+57.021464]STSSGR to "10"
+Set Internal Standard Concentration of LAEQFAAGEVLTDMSR to "100"
+Set Internal Standard Concentration of SVESQGAIHGSMSQPAAGC[+57.021464]SSSDSSR to "10"
+Extra Info: 10
+10
+10
+20
+10
+10
+10
+2
+2
+2
+100
+20
+10
+20
+10
+20
+20
+10
+10
+10
+2
+20
+20
+100
+20
+10
+10
+20
+10
+100
+10
+
+Report name = "Peptide Quantification"
+
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "Condition" was added
+Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "G1"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "G2M"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "S"
+Settings > Document Settings -- Annotations : "BioReplicate" was added
+Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Number"
+
+Undo Redo : Set BioReplicate of G1_rep1 to "0"
+Summary   : Set BioReplicate of G1_rep1 to "0"
+All Info  :
+Set BioReplicate of G1_rep1 to "0"
+
+Undo Redo : Set Condition of G1_rep1 to "G1"
+Summary   : Set Condition of G1_rep1 to "G1"
+All Info  :
+Set Condition of G1_rep1 to "G1"
+
+Undo Redo : Set BioReplicate of G1_rep2 to "1"
+Summary   : Set BioReplicate of G1_rep2 to "1"
+All Info  :
+Set BioReplicate of G1_rep2 to "1"
+
+Undo Redo : Set Condition of G1_rep2 to "G1"
+Summary   : Set Condition of G1_rep2 to "G1"
+All Info  :
+Set Condition of G1_rep2 to "G1"
+
+Undo Redo : Set BioReplicate of G1_rep3 to "2"
+Summary   : Set BioReplicate of G1_rep3 to "2"
+All Info  :
+Set BioReplicate of G1_rep3 to "2"
+
+Undo Redo : Set Condition of G1_rep3 to "G1"
+Summary   : Set Condition of G1_rep3 to "G1"
+All Info  :
+Set Condition of G1_rep3 to "G1"
+
+Undo Redo : Set BioReplicate of G2M_rep1 to "3"
+Summary   : Set BioReplicate of G2M_rep1 to "3"
+All Info  :
+Set BioReplicate of G2M_rep1 to "3"
+
+Undo Redo : Set Condition of G2M_rep1 to "G2M"
+Summary   : Set Condition of G2M_rep1 to "G2M"
+All Info  :
+Set Condition of G2M_rep1 to "G2M"
+
+Undo Redo : Set BioReplicate of G2M_rep2 to "4"
+Summary   : Set BioReplicate of G2M_rep2 to "4"
+All Info  :
+Set BioReplicate of G2M_rep2 to "4"
+
+Undo Redo : Set Condition of G2M_rep2 to "G2M"
+Summary   : Set Condition of G2M_rep2 to "G2M"
+All Info  :
+Set Condition of G2M_rep2 to "G2M"
+
+Undo Redo : Set BioReplicate of G2M_rep3 to "5"
+Summary   : Set BioReplicate of G2M_rep3 to "5"
+All Info  :
+Set BioReplicate of G2M_rep3 to "5"
+
+Undo Redo : Set Condition of G2M_rep3 to "G2M"
+Summary   : Set Condition of G2M_rep3 to "G2M"
+All Info  :
+Set Condition of G2M_rep3 to "G2M"
+
+Undo Redo : Set BioReplicate of S_rep1 to "6"
+Summary   : Set BioReplicate of S_rep1 to "6"
+All Info  :
+Set BioReplicate of S_rep1 to "6"
+
+Undo Redo : Set Condition of S_rep1 to "S"
+Summary   : Set Condition of S_rep1 to "S"
+All Info  :
+Set Condition of S_rep1 to "S"
+
+Undo Redo : Set BioReplicate of S_rep2 to "7"
+Summary   : Set BioReplicate of S_rep2 to "7"
+All Info  :
+Set BioReplicate of S_rep2 to "7"
+
+Undo Redo : Set Condition of S_rep2 to "S"
+Summary   : Set Condition of S_rep2 to "S"
+All Info  :
+Set Condition of S_rep2 to "S"
+
+Undo Redo : Set BioReplicate of S_rep3 to "8"
+Summary   : Set BioReplicate of S_rep3 to "8"
+All Info  :
+Set BioReplicate of S_rep3 to "8"
+
+Undo Redo : Set Condition of S_rep3 to "S"
+Summary   : Set Condition of S_rep3 to "S"
+All Info  :
+Set Condition of S_rep3 to "S"
+
+Undo Redo : Group Comparisons changed
+Summary   : Settings > Document Settings -- Group Comparisons changed
+All Info  :
+Group Comparisons changed
+Settings > Document Settings -- Group Comparisons : "G2M-vs-G1" was added
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Control group annotation is "Condition"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Control group value is "G1"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Value to compare against is "G2M"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Identity Annotation is "BioReplicate"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Normalization method is "Ratio to Heavy"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Confidence level is "95"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Protein scope is True
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Q-value cutoff is Missing
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Formatting rows is Empty
+Settings > Document Settings -- Group Comparisons : "S-vs-G1" was added
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Control group annotation is "Condition"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Control group value is "G1"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Value to compare against is "S"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Identity Annotation is "BioReplicate"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Normalization method is "Ratio to Heavy"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Confidence level is "95"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Protein scope is True
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Q-value cutoff is Missing
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Formatting rows is Empty
+
+Undo Redo : Report : "PRM-Quant" was added
+Summary   : Settings > Document Settings > Reports : "PRM-Quant" was added
+All Info  :
+Report : "PRM-Quant" was added
+Settings > Document Settings > Reports : "PRM-Quant" was added
+Settings > Document Settings > Reports > "PRM-Quant" > Columns : contains "Name"
+Settings > Document Settings > Reports > "PRM-Quant" > Columns : contains "Modified Sequence"
+Settings > Document Settings > Reports > "PRM-Quant" > Columns : contains "Ratio To Standard"
+Settings > Document Settings > Reports > "PRM-Quant" > Columns : contains "Calculated Concentration"
+Settings > Document Settings > Reports > "PRM-Quant" > Filters is Empty
+Settings > Document Settings > Reports > "PRM-Quant" > Default Layout Name is Missing
+
