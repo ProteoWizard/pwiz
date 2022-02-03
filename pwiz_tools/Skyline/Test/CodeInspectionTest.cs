@@ -229,7 +229,7 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// This test enforces this proper relationship between DocumentFormat.CURRENT and the Skyline schema xsd files.
         /// 
-        /// Our versioning convention since 2019 is a double yy.n where yy is a two digit year, and"n is the release count. So
+        /// Our versioning convention since 2019 is a double yy.n where yy is a two digit year, and n is the release count. So
         /// if the second release in 2021 involved a schema change, we'd expect to find a file Skyline_21_2.xsd, and a value
         /// declared in the DocumentFormat.cs as "public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2);".
         ///
