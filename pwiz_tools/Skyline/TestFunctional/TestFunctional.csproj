@@ -174,6 +174,7 @@
     <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
+    <Compile Include="TestPeakAreaDotpGraph.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />

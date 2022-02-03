@@ -135,5 +135,33 @@ namespace pwiz.Skyline.EditUI
         {
             dataGridDotpCutoffValues.Enabled = cbShowDotpCutoff.Checked;
         }
+
+        #region Test Support
+
+        public void SetDotpDisplayProperty(DotProductDisplayOption displayType)
+        {
+            comboDotpDisplayType.SelectedItem = displayType.GetLocalizedString();
+        }
+
+        public void SetShowCutoffProperty(bool showCutoff)
+        {
+            cbShowDotpCutoff.Checked = showCutoff;
+        }
+
+        public void SetRdotpCutoffValue(string stringValue)
+        {
+            var dotpRow = dataGridDotpCutoffValues.Rows.OfType<DataGridViewRow>()
+                .First(row => @"rdotp".Equals(row.Cells[0].Value));
+            dotpRow.Cells[1].Value = stringValue;
+        }
+
+        public string GetRdotpErrorText()
+        {
+            var dotpRow = dataGridDotpCutoffValues.Rows.OfType<DataGridViewRow>()
+                .First(row => @"rdotp".Equals(row.Cells[0].Value));
+            return dotpRow.ErrorText;
+        }
+        #endregion
+
     }
 }

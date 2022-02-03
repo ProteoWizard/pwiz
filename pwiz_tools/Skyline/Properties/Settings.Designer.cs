@@ -3168,7 +3168,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("label")]
+        [global::System.Configuration.DefaultSettingValueAttribute("line")]
         public string PeakAreaDotpDisplay {
             get {
                 return ((string)(this["PeakAreaDotpDisplay"]));

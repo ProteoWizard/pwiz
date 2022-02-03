@@ -792,7 +792,7 @@
       <Value Profile="(Default)">Default</Value>
     </Setting>
     <Setting Name="PeakAreaDotpDisplay" Type="System.String" Scope="User">
-      <Value Profile="(Default)">label</Value>
+      <Value Profile="(Default)">line</Value>
     </Setting>
     <Setting Name="PeakAreaDotpCutoffValue" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.9</Value>

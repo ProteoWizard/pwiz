@@ -427,5 +427,14 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return _axisLabelScaler.IsRepeatRemovalAllowed; }
             set { _axisLabelScaler.IsRepeatRemovalAllowed = value; }
         }
+
+        #region Test Support Methods
+        public string[] GetOriginalXAxisLabels()
+        {
+            return _axisLabelScaler.OriginalTextLabels ?? XAxis.Scale.TextLabels;
+        }
+
+        #endregion
+
     }
 }
