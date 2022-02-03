@@ -543,7 +543,6 @@
     <Compile Include="Model\Crosslinking\PeptideStructure.cs" />
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
-    <Compile Include="Model\Databinding\Collections\CandidatePeakGroups.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
@@ -630,6 +629,7 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

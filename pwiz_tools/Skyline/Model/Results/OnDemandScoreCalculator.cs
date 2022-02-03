@@ -14,6 +14,8 @@ namespace pwiz.Skyline.Model.Results
     {
         private Dictionary<TransitionGroup, ChromatogramGroupInfo> _chromatogramGroupInfos =
             new Dictionary<TransitionGroup, ChromatogramGroupInfo>(new IdentityEqualityComparer<TransitionGroup>());
+
+        private ScoreQValueMap _scoreQValueMap;
         public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmDocument document, PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo)
         {
             Calculators = calculators;
@@ -21,6 +23,7 @@ namespace pwiz.Skyline.Model.Results
             PeptideDocNode = peptideDocNode;
             ChromFileInfo = chromFileInfo;
             ReplicateIndex = replicateIndex;
+            _scoreQValueMap = ScoreQValueMap.FromDocument(document);
         }
 
         public FeatureCalculators Calculators { get; }
@@ -235,7 +238,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
             }
-            return PeakGroupScore.MakePeakScores(featureValues, model);
+            return PeakGroupScore.MakePeakScores(featureValues, model, _scoreQValueMap);
         }
 
         internal IEnumerable<FeatureValues> CalculateChromatogramGroupScores(

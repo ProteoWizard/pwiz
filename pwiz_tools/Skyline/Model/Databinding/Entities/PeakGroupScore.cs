@@ -13,11 +13,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class PeakGroupScore
     {
-        public PeakGroupScore(FeatureValues scores, double? modelScore, IDictionary<string, WeightedFeature> weightedFeatures)
+        public PeakGroupScore(FeatureValues scores, double? modelScore, double? qValue, IDictionary<string, WeightedFeature> weightedFeatures)
         {
             Features = new Features(scores);
             WeightedFeatures = weightedFeatures;
             ModelScore = modelScore;
+            PeakQValue = qValue;
         }
 
         public Features Features
@@ -25,11 +26,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get;
         }
         [Format(Formats.PEAK_SCORE, NullValue = TextUtil.EXCEL_NA)]
-        public double? ModelScore { get; } 
+        public double? ModelScore { get; }
+        [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
+        public double? PeakQValue { get; }
+
         [OneToMany(ItemDisplayName = "WeightedFeature")]
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
-        public static PeakGroupScore MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model)
+        public static PeakGroupScore MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model, ScoreQValueMap scoreQValueMap)
         {
             var weightedFeatures = new Dictionary<string, WeightedFeature>();
             double? modelScore = 0;
@@ -56,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
             }
 
-            return new PeakGroupScore(featureValues, modelScore, weightedFeatures);
+            return new PeakGroupScore(featureValues, modelScore, scoreQValueMap.GetQValue(modelScore), weightedFeatures);
         }
 
         public override string ToString()

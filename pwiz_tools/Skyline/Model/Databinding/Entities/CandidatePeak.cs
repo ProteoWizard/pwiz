@@ -36,7 +36,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-
         public bool Chosen
         {
             get { return _data.Chosen; }

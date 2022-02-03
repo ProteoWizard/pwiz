@@ -1269,7 +1269,7 @@ namespace pwiz.Skyline.Model.Results
         TRUE,   // SET by manual integration
         FALSE,  // Best peak picked during results import
         IMPORTED,   // Import peak boundaries
-        REINTEGRATED,   // Edit > Refine > Reintagrate
+        REINTEGRATED,   // Edit > Refine > Reintegrate
         MATCHED // Forced by peak matching when adding missing label type precursors
     }
 

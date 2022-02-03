@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -17,8 +19,10 @@ namespace pwiz.Skyline.Controls.Databinding
     {
         private readonly SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
-        private IList<IdentityPath> _selectedIdentityPaths = ImmutableList.Empty<IdentityPath>();
-        private CandidatePeakGroups _peakGroups;
+        private Selector _selector;
+        private BindingList<CandidatePeakGroup> _bindingList;
+        private List<CandidatePeakGroup> _candidatePeakGroups;
+
 
         public CandidatePeakForm(SkylineWindow skylineWindow)
         {
@@ -26,9 +30,10 @@ namespace pwiz.Skyline.Controls.Databinding
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
-            _peakGroups = new CandidatePeakGroups();
+            _candidatePeakGroups = new List<CandidatePeakGroup>();
+            _bindingList = new BindingList<CandidatePeakGroup>(_candidatePeakGroups);
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup));
-            var rowSourceInfo = new RowSourceInfo(_peakGroups,
+            var rowSourceInfo = new RowSourceInfo(BindingListRowSource.Create(_bindingList),
                 new ViewInfo(rootColumn, GetDefaultViewSpec()));
             var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
@@ -46,7 +51,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void ComboResults_OnSelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateRowSource();
+            QueueUpdateRowSource();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -65,7 +70,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private void OnDocumentChanged()
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
-            UpdateRowSource();
+            QueueUpdateRowSource();
         }
 
         private void SetSequenceTree(SequenceTree sequenceTree)
@@ -82,32 +87,31 @@ namespace pwiz.Skyline.Controls.Databinding
             if (null != _sequenceTree)
             {
                 _sequenceTree.AfterSelect += SequenceTreeOnAfterSelect;
-                SelectedIdentityPaths = _sequenceTree.SelectedPaths;
             }
         }
 
         private void SequenceTreeOnAfterSelect(object sender, TreeViewEventArgs args)
         {
-            SelectedIdentityPaths = _sequenceTree.SelectedPaths;
+            QueueUpdateRowSource();
         }
 
-        public IList<IdentityPath> SelectedIdentityPaths
+        private void QueueUpdateRowSource()
         {
-            get { return _selectedIdentityPaths; }
-            set
-            {
-                if (_selectedIdentityPaths.SequenceEqual(value))
-                {
-                    return;
-                }
-                _selectedIdentityPaths = ImmutableList.ValueOf(value);
-                UpdateRowSource();
-            }
+            BeginInvoke(new Action(UpdateRowSource));
         }
 
         private void UpdateRowSource()
         {
-            _peakGroups.List = ImmutableList.ValueOf(GetCandidatePeakGroups(SkylineWindow.DocumentUI, GetPrecursorIdentityPath(), SkylineWindow.SelectedResultsIndex, null));
+            var newSelector = GetSelector();
+            if (Equals(newSelector, _selector))
+            {
+                return;
+            }
+
+            _selector = newSelector;
+            _candidatePeakGroups.Clear();
+            _candidatePeakGroups.AddRange(GetCandidatePeakGroups(newSelector));
+            _bindingList.ResetBindings();
         }
 
         private IdentityPath GetPrecursorIdentityPath()
@@ -177,27 +181,32 @@ namespace pwiz.Skyline.Controls.Databinding
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
                     .Property(nameof(PeakGroupScore.ModelScore))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
+                    .Property(nameof(PeakGroupScore.PeakQValue))),
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
                     .Property(nameof(PeakGroupScore.WeightedFeatures)).DictionaryValues())
             });
             return viewSpec;
         }
 
-        public IList<CandidatePeakGroup> GetCandidatePeakGroups(SrmDocument document, IdentityPath precursorIdentityPath, int replicateIndex, ChromFileInfoId chromFileInfoId)
+        private IList<CandidatePeakGroup> GetCandidatePeakGroups(Selector selector)
         {
             var candidatePeakGroups = new List<CandidatePeakGroup>();
-            if (precursorIdentityPath == null)
+            if (selector == null)
             {
-                return null;
+                return candidatePeakGroups;
             }
-            var featureCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(document,
-                precursorIdentityPath.GetPathTo(1), replicateIndex, chromFileInfoId);
+            var featureCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(selector.Document,
+                selector.PeptideIdentityPath, selector.ReplicateIndex, selector.ChromFileInfoId);
             if (featureCalculator == null)
             {
                 return candidatePeakGroups;
             }
+
+            var precursorIdentityPath =
+                new IdentityPath(selector.PeptideIdentityPath, selector.TransitionGroups.First());
             var precursor = new Precursor(_dataSchema, precursorIdentityPath);
             var precursorResult = new PrecursorResult(precursor,
-                new ResultFile(new Replicate(_dataSchema, replicateIndex), chromFileInfoId, 0));
+                new ResultFile(new Replicate(_dataSchema, selector.ReplicateIndex), selector.ChromFileInfoId, 0));
 
             var transitionGroup = (TransitionGroup)precursorIdentityPath.Child;
             foreach (var peakGroupData in featureCalculator.GetCandidatePeakGroups(transitionGroup))
@@ -215,6 +224,94 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             return candidatePeakGroups.OrderBy(peak => Tuple.Create(peak.PeakGroupStartTime, peak.PeakGroupEndTime)).ToList();
+        }
+
+        private Selector GetSelector()
+        {
+            var precursorIdentityPath = GetPrecursorIdentityPath();
+            if (precursorIdentityPath == null)
+            {
+                return null;
+            }
+            var peptideIdentityPath = precursorIdentityPath.Parent;
+            var transitionGroup = (TransitionGroup) precursorIdentityPath.Child;
+            var document = SkylineWindow.DocumentUI;
+            if (!document.Settings.HasResults)
+            {
+                return null;
+            }
+            var peptideDocNode = (PeptideDocNode)document.FindNode(peptideIdentityPath);
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+            int replicateIndex = SkylineWindow.SelectedResultsIndex;
+            if (replicateIndex < 0 || replicateIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+
+            var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
+            var chromFileInfoId = chromatogramSet.MSDataFileInfos.First().FileId;
+            foreach (var comparableGroup in peptideDocNode.GetComparableGroups())
+            {
+                var transitionGroups = ImmutableList.ValueOf(comparableGroup.Select(tg => tg.TransitionGroup));
+                if (transitionGroups.Any(precursor => ReferenceEquals(transitionGroup, precursor)))
+                {
+                    return new Selector(document, peptideIdentityPath, transitionGroups,
+                        replicateIndex, chromFileInfoId);
+                }
+            }
+
+            return null;
+        }
+
+        private class Selector
+        {
+            public Selector(SrmDocument document, IdentityPath peptideIdentityPath,
+                IEnumerable<TransitionGroup> transitionGroups, int replicateIndex, ChromFileInfoId chromFileInfoId)
+            {
+                Document = document;
+                PeptideIdentityPath = peptideIdentityPath;
+                TransitionGroups = ImmutableList.ValueOf(transitionGroups);
+                ReplicateIndex = replicateIndex;
+                ChromFileInfoId = chromFileInfoId;
+            }
+
+            public SrmDocument Document { get; }
+            public IdentityPath PeptideIdentityPath { get; }
+            public ImmutableList<TransitionGroup> TransitionGroups { get; }
+            public int ReplicateIndex { get; }
+            public ChromFileInfoId ChromFileInfoId { get; }
+
+            protected bool Equals(Selector other)
+            {
+                return ReferenceEquals(Document, other.Document)
+                       && Equals(PeptideIdentityPath, other.PeptideIdentityPath)
+                       && ArrayUtil.ReferencesEqual(TransitionGroups, other.TransitionGroups)
+                       && ReplicateIndex == other.ReplicateIndex
+                       && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Selector) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = RuntimeHelpers.GetHashCode(Document);
+                    hashCode = (hashCode * 397) ^ PeptideIdentityPath.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ReplicateIndex;
+                    hashCode = (hashCode * 397) ^ RuntimeHelpers.GetHashCode(ChromFileInfoId);
+                    return hashCode;
+                }
+            }
         }
     }
 }
