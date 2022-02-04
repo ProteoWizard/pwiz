@@ -1,0 +1,403 @@
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
+All Info  :
+肽段设置 已更改
+设置 > 肽段设置 -- 酶解 > 最大的漏切酶解位点数 从 "0" 更改到 "1"
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "mouse-proteome"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "mouse-proteome.protdb"
+设置 > 肽段设置 -- 预测 > 时间窗口 从 "2" 更改到 "5"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端氨基酸 从 "25" 更改到 "0"
+设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "7"
+设置 > 肽段设置 -- 过滤器 > 最大长度 从 "25" 更改到 "26"
+设置 > 肽段设置 -- 过滤器 > 肽段独特性 从 "无" 更改到 "蛋白质"
+设置 > 肽段设置 -- 库 > 库 : "shotgun" 已添加
+设置 > 肽段设置 -- 库 > 库 > "shotgun" > 路径 是 "shotgun.blib"
+设置 > 肽段设置 -- 库 > 库 : "heavy" 已添加
+设置 > 肽段设置 -- 库 > 库 > "heavy" > 路径 是 "heavy.blib"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 肽段设置 -- 定量 > MS 级别 从 缺失 更改到 "2"
+设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "fmol"
+
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 过滤器 > 肽段母离子电荷 从 "2" 更改到 "2, 3"
+设置 > 离子对设置 -- 过滤器 > 肽段离子电荷 从 "1" 更改到 "1, 2"
+设置 > 离子对设置 -- 过滤器 > 离子类型 从 "y" 更改到 "y, b"
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 1"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+设置 > 离子对设置 -- 过滤器 > 母离子质荷比排除窗口 从 "0" 更改到 "5"
+设置 > 离子对设置 -- 库 > 离子匹配耐受性 从 "0.5" 更改到 "0.05"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "3"
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "10"
+设置 > 离子对设置 -- 库 > 选择 从 "从已过滤的离子电荷和类型" 更改到 "从已过滤的子离子"
+设置 > 离子对设置 -- 仪器 > 最小质荷比 从 "50" 更改到 "340"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1200"
+设置 > 离子对设置 -- 全扫描 > 采集方法 从 "无" 更改到 "PRM"
+设置 > 离子对设置 -- 全扫描 > 子离子质量分析仪 从 "无" 更改到 "棒状图形式"
+设置 > 离子对设置 -- 全扫描 > 质量准确度 从 缺失 更改到 "10"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤类型 从 "仅使用 MS/MS ID 时间范围内的扫描" 更改到 "包含所有匹配的扫描"
+设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "5" 更改到 "0"
+
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
+All Info  :
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
+
+Undo Redo : 已插入 31 肽段
+Summary   : 已插入 31 肽段
+All Info  :
+已插入 31 肽段
+Extra Info: 肽段序列	蛋白质名称	蛋白质描述
+GVDC[+57]QEVSQEK	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+VVEATNSMTAVR	sp|Q61687|ATRX_MOUSE	Transcriptional regulator ATRX OS=Mus musculus GN=Atrx PE=1 SV=3
+TSQSGLNTLSQR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+IADFGWSVHAPSLR	sp|O70126|AURKB_MOUSE	Aurora kinase B OS=Mus musculus GN=Aurkb PE=1 SV=2
+AMQAVQQEGAGGQQEEK	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+SPATGGPQVLNAQR	sp|Q9Z1S0|BUB1B_MOUSE	Mitotic checkpoint serine/threonine-protein kinase BUB1 beta OS=Mus musculus GN=Bub1b PE=1 SV=2
+DAGSALLSLHQEDQENVNPEK	sp|P51943|CCNA2_MOUSE	Cyclin-A2 OS=Mus musculus GN=Ccna2 PE=1 SV=2
+QLEEEQSVRPK	sp|P24860|CCNB1_MOUSE	G2/mitotic-specific cyclin-B1 OS=Mus musculus GN=Ccnb1 PE=1 SV=3
+LSGKPQNAPEGYQNR	sp|Q9JJ66|CDC20_MOUSE	Cell division cycle protein 20 homolog OS=Mus musculus GN=Cdc20 PE=1 SV=2
+GSISENEAQGASTQDTAK	sp|Q6RT24|CENPE_MOUSE	Centromere-associated protein E OS=Mus musculus GN=Cenpe PE=1 SV=1
+FIQPNIGELPTALK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+LDDIFEPVLIPEPK	sp|A2AGT5|CKAP5_MOUSE	Cytoskeleton-associated protein 5 OS=Mus musculus GN=Ckap5 PE=1 SV=1
+FYTQQWEDYR	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+ESFESQFLADTER	sp|Q9WTX6|CUL1_MOUSE	Cullin-1 OS=Mus musculus GN=Cul1 PE=1 SV=1
+SPLAELGVLK	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+ASLGPNLDLQDSVVLYHR	sp|Q8BHK9|ERC6L_MOUSE	DNA excision repair protein ERCC-6-like OS=Mus musculus GN=Ercc6l PE=1 SV=1
+AQGLDLLQAVLTR	sp|P60330|ESPL1_MOUSE	Separin OS=Mus musculus GN=Espl1 PE=1 SV=1
+EVAQAATPQNPVNQGK	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+GSQSDVLQDKPSTAPDAASR	sp|Q8R080|GTSE1_MOUSE	G2 and S phase-expressed protein 1 OS=Mus musculus GN=Gtse1 PE=1 SV=2
+LAASASTQQFQEVK	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+TPTC[+57]QSSTDSSPYAR	sp|P97329|KI20A_MOUSE	Kinesin-like protein KIF20A OS=Mus musculus GN=Kif20a PE=2 SV=1
+LNLVDLAGSENIGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+EAGNINQSLLTLGR	sp|Q6P9P6|KIF11_MOUSE	Kinesin-like protein KIF11 OS=Mus musculus GN=Kif11 PE=1 SV=1
+LTDDHVQFLIYQILR	sp|P47811|MK14_MOUSE	Mitogen-activated protein kinase 14 OS=Mus musculus GN=Mapk14 PE=1 SV=3
+SLAPVELLLR	sp|P70268|PKN1_MOUSE	Serine/threonine-protein kinase N1 OS=Mus musculus GN=Pkn1 PE=1 SV=3
+KLEEEEEGSAPATSR	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+NVTQAEPFSLETDK	sp|A2APB8|TPX2_MOUSE	Targeting protein for Xklp2 OS=Mus musculus GN=Tpx2 PE=1 SV=1
+EVTTLTADPPDGIK	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LLTEIHGGAC[+57]STSSGR	sp|Q921J4|UBE2S_MOUSE	Ubiquitin-conjugating enzyme E2 S OS=Mus musculus GN=Ube2s PE=1 SV=1
+LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
+		
+
+Undo Redo : 已从“heavy-PRM.mzXML”导入结果
+Summary   : 已从“heavy-PRM.mzXML”导入结果
+All Info  :
+已从“heavy-PRM.mzXML”导入结果
+导入结果设置 > 文件名称 : 包含 "heavy-PRM.mzXML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "heavy-PRM.mzXML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已删除缺失结果
+Summary   : 已删除缺失结果
+All Info  :
+已删除缺失结果
+
+Undo Redo : 已调整目标
+Summary   : 已调整目标
+All Info  :
+已调整目标
+高级调整设置 > 删除标签类型 是 "Light"
+Extra Info: 删除标签类型 = "Light"
+
+Undo Redo : 已调整目标
+Summary   : 已调整目标
+All Info  :
+已调整目标
+高级调整设置 > 添加标记类型 是 "Light"
+Extra Info: 添加标记类型 = "Light"
+
+Undo Redo : 已管理结果
+Summary   : 已管理结果
+All Info  :
+已管理结果
+已删除所有重复测定
+
+Undo Redo : 已从 9 文件导入结果
+Summary   : 已从 9 文件导入结果
+All Info  :
+已从 9 文件导入结果
+导入结果设置 > 文件名称 : 包含 "G1_rep1.mzXML"
+导入结果设置 > 文件名称 : 包含 "G1_rep2.mzXML"
+导入结果设置 > 文件名称 : 包含 "G1_rep3.mzXML"
+导入结果设置 > 文件名称 : 包含 "G2M_rep1.mzXML"
+导入结果设置 > 文件名称 : 包含 "G2M_rep2.mzXML"
+导入结果设置 > 文件名称 : 包含 "G2M_rep3.mzXML"
+导入结果设置 > 文件名称 : 包含 "S_rep1.mzXML"
+导入结果设置 > 文件名称 : 包含 "S_rep2.mzXML"
+导入结果设置 > 文件名称 : 包含 "S_rep3.mzXML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "G1_rep1.mzXML",
+    "G1_rep2.mzXML",
+    "G1_rep3.mzXML",
+    "G2M_rep1.mzXML",
+    "G2M_rep2.mzXML",
+    "G2M_rep3.mzXML",
+    "S_rep1.mzXML",
+    "S_rep2.mzXML",
+    "S_rep3.mzXML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择 5 子离子
+Summary   : 已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择 5 子离子
+All Info  :
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择 5 子离子
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择子离子 Q [y7] - 847.4156+ (排名 4)
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择子离子 E [y6] - 719.3570+ (排名 2)
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择子离子 V [y5] - 590.3144+ (排名 3)
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择子离子 S [y4] - 491.2460+ (排名 1)
+已为 sp|Q61687|ATRX_MOUSE > K.GVDCQEVSQEK.N [594, 604] > 639.7852++ 选择子离子 Q [y3] - 404.2140+ (排名 5)
+
+Undo Redo : 已调整目标
+Summary   : 已调整目标
+All Info  :
+已调整目标
+高级调整设置 > 最小峰值检出比 是 "0.5"
+Extra Info: 最小峰值检出比 = "0.5"
+
+Undo Redo : 已删除目标 sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (排名 10)
+Summary   : 已删除目标 sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (排名 10)
+All Info  :
+已删除目标 sp|Q6P9P6|KIF11_MOUSE > R.EAGNINQSLLTLGR.V [283, 296] > 743.4046++ > N [b4] - 372.1514+ (排名 10)
+
+Undo Redo : 已将 31 值粘贴到文档网格
+Summary   : 已将 31 值粘贴到文档网格
+All Info  :
+已将 31 值粘贴到文档网格
+文档网格 > 报告名称 是 "肽段定量"
+将 GVDC[+57.021464]QEVSQEK 的 内标浓度 设定为 "10"
+将 VVEATNSMTAVR 的 内标浓度 设定为 "10"
+将 TSQSGLNTLSQR 的 内标浓度 设定为 "10"
+将 IADFGWSVHAPSLR 的 内标浓度 设定为 "20"
+将 AMQAVQQEGAGGQQEEK 的 内标浓度 设定为 "10"
+将 SPATGGPQVLNAQR 的 内标浓度 设定为 "10"
+将 DAGSALLSLHQEDQENVNPEK 的 内标浓度 设定为 "10"
+将 QLEEEQSVRPK 的 内标浓度 设定为 "2"
+将 LSGKPQNAPEGYQNR 的 内标浓度 设定为 "2"
+将 GSISENEAQGASTQDTAK 的 内标浓度 设定为 "2"
+将 FIQPNIGELPTALK 的 内标浓度 设定为 "100"
+将 LDDIFEPVLIPEPK 的 内标浓度 设定为 "20"
+将 FYTQQWEDYR 的 内标浓度 设定为 "10"
+将 ESFESQFLADTER 的 内标浓度 设定为 "20"
+将 SPLAELGVLK 的 内标浓度 设定为 "10"
+将 ASLGPNLDLQDSVVLYHR 的 内标浓度 设定为 "20"
+将 AQGLDLLQAVLTR 的 内标浓度 设定为 "20"
+将 EVAQAATPQNPVNQGK 的 内标浓度 设定为 "10"
+将 GSQSDVLQDKPSTAPDAASR 的 内标浓度 设定为 "10"
+将 LAASASTQQFQEVK 的 内标浓度 设定为 "10"
+将 TPTC[+57.021464]QSSTDSSPYAR 的 内标浓度 设定为 "2"
+将 LNLVDLAGSENIGR 的 内标浓度 设定为 "20"
+将 EAGNINQSLLTLGR 的 内标浓度 设定为 "20"
+将 LTDDHVQFLIYQILR 的 内标浓度 设定为 "100"
+将 SLAPVELLLR 的 内标浓度 设定为 "20"
+将 KLEEEEEGSAPATSR 的 内标浓度 设定为 "10"
+将 NVTQAEPFSLETDK 的 内标浓度 设定为 "10"
+将 EVTTLTADPPDGIK 的 内标浓度 设定为 "20"
+将 LLTEIHGGAC[+57.021464]STSSGR 的 内标浓度 设定为 "10"
+将 LAEQFAAGEVLTDMSR 的 内标浓度 设定为 "100"
+将 SVESQGAIHGSMSQPAAGC[+57.021464]SSSDSSR 的 内标浓度 设定为 "10"
+Extra Info: 10
+10
+10
+20
+10
+10
+10
+2
+2
+2
+100
+20
+10
+20
+10
+20
+20
+10
+10
+10
+2
+20
+20
+100
+20
+10
+10
+20
+10
+100
+10
+
+报告名称 = "肽段定量"
+
+Undo Redo : 注释 已更改
+Summary   : 设置 > 文档设置 -- 注释 已更改
+All Info  :
+注释 已更改
+设置 > 文档设置 -- 注释 : "Condition" 已添加
+设置 > 文档设置 -- 注释 > "Condition" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "Condition" > 类型 是 "值列表"
+设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "G1"
+设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "G2M"
+设置 > 文档设置 -- 注释 > "Condition" > 值 : 包含 "S"
+设置 > 文档设置 -- 注释 : "BioReplicate" 已添加
+设置 > 文档设置 -- 注释 > "BioReplicate" > 应用于 是 "replicate"
+设置 > 文档设置 -- 注释 > "BioReplicate" > 类型 是 "编号"
+
+Undo Redo : 将 G1_rep1 的 BioReplicate 设定为 "0"
+Summary   : 将 G1_rep1 的 BioReplicate 设定为 "0"
+All Info  :
+将 G1_rep1 的 BioReplicate 设定为 "0"
+
+Undo Redo : 将 G1_rep1 的 Condition 设定为 "G1"
+Summary   : 将 G1_rep1 的 Condition 设定为 "G1"
+All Info  :
+将 G1_rep1 的 Condition 设定为 "G1"
+
+Undo Redo : 将 G1_rep2 的 BioReplicate 设定为 "1"
+Summary   : 将 G1_rep2 的 BioReplicate 设定为 "1"
+All Info  :
+将 G1_rep2 的 BioReplicate 设定为 "1"
+
+Undo Redo : 将 G1_rep2 的 Condition 设定为 "G1"
+Summary   : 将 G1_rep2 的 Condition 设定为 "G1"
+All Info  :
+将 G1_rep2 的 Condition 设定为 "G1"
+
+Undo Redo : 将 G1_rep3 的 BioReplicate 设定为 "2"
+Summary   : 将 G1_rep3 的 BioReplicate 设定为 "2"
+All Info  :
+将 G1_rep3 的 BioReplicate 设定为 "2"
+
+Undo Redo : 将 G1_rep3 的 Condition 设定为 "G1"
+Summary   : 将 G1_rep3 的 Condition 设定为 "G1"
+All Info  :
+将 G1_rep3 的 Condition 设定为 "G1"
+
+Undo Redo : 将 G2M_rep1 的 BioReplicate 设定为 "3"
+Summary   : 将 G2M_rep1 的 BioReplicate 设定为 "3"
+All Info  :
+将 G2M_rep1 的 BioReplicate 设定为 "3"
+
+Undo Redo : 将 G2M_rep1 的 Condition 设定为 "G2M"
+Summary   : 将 G2M_rep1 的 Condition 设定为 "G2M"
+All Info  :
+将 G2M_rep1 的 Condition 设定为 "G2M"
+
+Undo Redo : 将 G2M_rep2 的 BioReplicate 设定为 "4"
+Summary   : 将 G2M_rep2 的 BioReplicate 设定为 "4"
+All Info  :
+将 G2M_rep2 的 BioReplicate 设定为 "4"
+
+Undo Redo : 将 G2M_rep2 的 Condition 设定为 "G2M"
+Summary   : 将 G2M_rep2 的 Condition 设定为 "G2M"
+All Info  :
+将 G2M_rep2 的 Condition 设定为 "G2M"
+
+Undo Redo : 将 G2M_rep3 的 BioReplicate 设定为 "5"
+Summary   : 将 G2M_rep3 的 BioReplicate 设定为 "5"
+All Info  :
+将 G2M_rep3 的 BioReplicate 设定为 "5"
+
+Undo Redo : 将 G2M_rep3 的 Condition 设定为 "G2M"
+Summary   : 将 G2M_rep3 的 Condition 设定为 "G2M"
+All Info  :
+将 G2M_rep3 的 Condition 设定为 "G2M"
+
+Undo Redo : 将 S_rep1 的 BioReplicate 设定为 "6"
+Summary   : 将 S_rep1 的 BioReplicate 设定为 "6"
+All Info  :
+将 S_rep1 的 BioReplicate 设定为 "6"
+
+Undo Redo : 将 S_rep1 的 Condition 设定为 "S"
+Summary   : 将 S_rep1 的 Condition 设定为 "S"
+All Info  :
+将 S_rep1 的 Condition 设定为 "S"
+
+Undo Redo : 将 S_rep2 的 BioReplicate 设定为 "7"
+Summary   : 将 S_rep2 的 BioReplicate 设定为 "7"
+All Info  :
+将 S_rep2 的 BioReplicate 设定为 "7"
+
+Undo Redo : 将 S_rep2 的 Condition 设定为 "S"
+Summary   : 将 S_rep2 的 Condition 设定为 "S"
+All Info  :
+将 S_rep2 的 Condition 设定为 "S"
+
+Undo Redo : 将 S_rep3 的 BioReplicate 设定为 "8"
+Summary   : 将 S_rep3 的 BioReplicate 设定为 "8"
+All Info  :
+将 S_rep3 的 BioReplicate 设定为 "8"
+
+Undo Redo : 将 S_rep3 的 Condition 设定为 "S"
+Summary   : 将 S_rep3 的 Condition 设定为 "S"
+All Info  :
+将 S_rep3 的 Condition 设定为 "S"
+
+Undo Redo : 群组比较 已更改
+Summary   : 设置 > 文档设置 -- 群组比较 已更改
+All Info  :
+群组比较 已更改
+设置 > 文档设置 -- 群组比较 : "G2M-vs-G1" 已添加
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 控制群组注释 是 "Condition"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 控制群组值 是 "G1"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 比较值 是 "G2M"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 身份注释 是 "BioReplicate"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 归一化方法 是 "相对于重的比率"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 总结方法 是 "Turkey 中位数平滑"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 置信水平 是 "95"
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 蛋白质范围 是 真
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 用零作为缺失峰值 是 假
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > Q 值截止 是 缺失
+设置 > 文档设置 -- 群组比较 > "G2M-vs-G1" > 格式化行 是 空
+设置 > 文档设置 -- 群组比较 : "S-vs-G1" 已添加
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 控制群组注释 是 "Condition"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 控制群组值 是 "G1"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 比较值 是 "S"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 身份注释 是 "BioReplicate"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 归一化方法 是 "相对于重的比率"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 总结方法 是 "Turkey 中位数平滑"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 置信水平 是 "95"
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 蛋白质范围 是 真
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 用零作为缺失峰值 是 假
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > Q 值截止 是 缺失
+设置 > 文档设置 -- 群组比较 > "S-vs-G1" > 格式化行 是 空
+
+Undo Redo : 报告 : "PRM-Quant" 已添加
+Summary   : 设置 > 文档设置 > 报告 : "PRM-Quant" 已添加
+All Info  :
+报告 : "PRM-Quant" 已添加
+设置 > 文档设置 > 报告 : "PRM-Quant" 已添加
+设置 > 文档设置 > 报告 > "PRM-Quant" > 列 : 包含 "Name"
+设置 > 文档设置 > 报告 > "PRM-Quant" > 列 : 包含 "修改的序列"
+设置 > 文档设置 > 报告 > "PRM-Quant" > 列 : 包含 "相对于标准品比率"
+设置 > 文档设置 > 报告 > "PRM-Quant" > 列 : 包含 "计算的浓度"
+设置 > 文档设置 > 报告 > "PRM-Quant" > 过滤器 是 空
+设置 > 文档设置 > 报告 > "PRM-Quant" > 默认布局名称 是 缺失
+
