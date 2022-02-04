@@ -890,6 +890,20 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.PrecursorConcentration = precursorConcentration);
         }
 
+        public TransitionGroupDocNode ChangePeptide(Peptide peptide)
+        {
+            var newId = new TransitionGroup(peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, true,
+                TransitionGroup.DecoyMassShift);
+            return ChangeTransitionGroupId(newId, Transitions.Select(t => t.ChangeTransitionGroup(newId)));
+        }
+
+        public TransitionGroupDocNode ChangeTransitionGroupId(TransitionGroup newId, IEnumerable<TransitionDocNode> newTransitions)
+        {
+            var node = (TransitionGroupDocNode)ChangeId(newId);
+            node = (TransitionGroupDocNode)node.ChangeChildren(newTransitions.Cast<DocNode>().ToList());
+            return node;
+        }
+
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;

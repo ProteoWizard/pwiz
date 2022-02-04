@@ -1124,5 +1124,15 @@ namespace pwiz.Skyline.Model
             get { return TransitionTreeNode.GetLabel(this, string.Empty); }
         }
 
+        public TransitionDocNode ChangeTransitionGroup(TransitionGroup newTransitionGroup)
+        {
+            return ChangeTransitionId(new Transition(newTransitionGroup, Transition.IonType, Transition.CleavageOffset,
+                Transition.MassIndex, Transition.Adduct, Transition.DecoyMassShift, Transition.CustomIon));
+        }
+
+        public TransitionDocNode ChangeTransitionId(Transition transition)
+        {
+            return (TransitionDocNode)ChangeId(transition);
+        }
     }
 }

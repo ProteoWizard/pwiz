@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_list saved_path_root="REPLACE_TEXT\BcfgTestFiles" xml_version="21.12">
+  <skylinebatch_config name="Basic" modified="01/12/2022 14:37:51">
+    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Basic" replicate_naming_pattern="Tester">
+      <template_file path="REPLACE_TEXT\emptyTemplate.sky" />
+      <data_folder path="REPLACE_TEXT\EmptyData" />
+      <annotations_file />
+    </file_settings>
+    <import_settings />
+    <refine_settings />
+    <report_settings />
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+</config_list>
