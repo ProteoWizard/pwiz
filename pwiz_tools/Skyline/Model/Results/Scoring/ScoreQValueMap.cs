@@ -5,7 +5,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class ScoreQValueMap
     {
-        private ImmutableSortedList<float, float> _sortedList;
+        public static readonly ScoreQValueMap EMPTY = new ScoreQValueMap(ImmutableSortedList<float, float>.EMPTY);
+        private readonly ImmutableSortedList<float, float> _sortedList;
         public ScoreQValueMap(ImmutableSortedList<float, float> sortedList)
         {
             _sortedList = sortedList;
@@ -26,7 +27,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             index = ~index;
             if (index <= 0)
             {
-                return _sortedList.Values[0];
+                return 1;
             }
 
             if (index >= _sortedList.Count)

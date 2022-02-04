@@ -46,10 +46,9 @@ namespace pwiz.Skyline.Model.Results
 
         public CandidatePeakGroupData GetChosenPeakGroupData(TransitionGroup transitionGroup)
         {
-            foreach (var groupScores in CalculateAllComparableGroupScores())
+            foreach (var groupScores in GetChosenPeakGroupDataForAllComparableGroups())
             {
-                if (groupScores.Item1.Any(tg =>
-                    ReferenceEquals(tg.TransitionGroup, transitionGroup)))
+                if (groupScores.Item1.Any(tg => ReferenceEquals(tg.TransitionGroup, transitionGroup)))
                 {
                     return groupScores.Item2;
                 }
@@ -58,7 +57,8 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public List<Tuple<ImmutableList<TransitionGroupDocNode>, CandidatePeakGroupData>> CalculateAllComparableGroupScores()
+        public List<Tuple<ImmutableList<TransitionGroupDocNode>, CandidatePeakGroupData>>
+            GetChosenPeakGroupDataForAllComparableGroups()
         {
             var list = new List<Tuple<ImmutableList<TransitionGroupDocNode>, CandidatePeakGroupData>>();
             var peptideChromDataSets = MakePeptideChromDataSets();
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var scores = CalculateComparableGroupScores(peptideChromDataSets, comparableSet).FirstOrDefault();
+                var scores = CalculateScoresForComparableGroup(peptideChromDataSets, comparableSet).FirstOrDefault();
                 if (scores == null)
                 {
                     continue;
@@ -81,7 +81,9 @@ namespace pwiz.Skyline.Model.Results
                 double maxEndTime = double.MinValue;
                 foreach (var groupNode in groupNodes)
                 {
-                    var transitionGroupChromInfo = groupNode.GetSafeChromInfo(ReplicateIndex).FirstOrDefault(chromInfo=>0 == chromInfo.OptimizationStep && ReferenceEquals(chromInfo.FileId, ChromFileInfo.FileId));
+                    var transitionGroupChromInfo = groupNode.GetSafeChromInfo(ReplicateIndex)
+                        .FirstOrDefault(chromInfo =>
+                            0 == chromInfo.OptimizationStep && ReferenceEquals(chromInfo.FileId, ChromFileInfo.FileId));
                     if (transitionGroupChromInfo?.StartRetentionTime != null)
                     {
                         minStartTime = Math.Min(minStartTime, transitionGroupChromInfo.StartRetentionTime.Value);
@@ -93,14 +95,15 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                var candidatePeakData = new CandidatePeakGroupData(null, minStartTime, maxEndTime, true, MakePeakScore(scores));
+                var candidatePeakData =
+                    new CandidatePeakGroupData(null, minStartTime, maxEndTime, true, MakePeakScore(scores));
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
             }
 
             return list;
         }
 
-        internal IEnumerable<FeatureValues> CalculateComparableGroupScores(PeptideChromDataSets peptideChromDataSets,
+        internal IEnumerable<FeatureValues> CalculateScoresForComparableGroup(PeptideChromDataSets peptideChromDataSets,
             IList<ChromDataSet> comparableSet)
         {
             var transitionGroups = comparableSet.Select(dataSet => dataSet.NodeGroup).ToList();
@@ -291,7 +294,6 @@ namespace pwiz.Skyline.Model.Results
 
             return null;
         }
-
         public IEnumerable<float> ScorePeak(double startTime, double endTime, IEnumerable<DetailedPeakFeatureCalculator> calculators)
         {
             var peptideChromDataSets = MakePeptideChromDataSets();

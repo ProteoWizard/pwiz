@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             var weightedFeatures = new Dictionary<string, WeightedFeature>();
             double? modelScore = 0;
+            double? qValue = null;
             if (model?.Parameters != null)
             {
                 Assume.AreEqual(model.PeakFeatureCalculators.Count, model.Parameters.Weights.Count);
@@ -58,9 +59,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     modelScore += weightedFeature.WeightedScore;
                     weightedFeatures[featureCalc.HeaderName] = weightedFeature;
                 }
+                qValue = scoreQValueMap.GetQValue(modelScore + model.Parameters.Bias);
             }
-
-            return new PeakGroupScore(featureValues, modelScore, scoreQValueMap.GetQValue(modelScore), weightedFeatures);
+            return new PeakGroupScore(featureValues, modelScore, qValue, weightedFeatures);
         }
 
         public override string ToString()

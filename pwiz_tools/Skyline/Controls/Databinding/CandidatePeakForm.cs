@@ -56,7 +56,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
+            if (SkylineWindow.ComboResults != null)
+            {
+                SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
+            }
             SkylineWindow.DocumentUIChangedEvent -= SkylineWindow_DocumentUIChangedEvent;
             SetSequenceTree(null);
             base.OnHandleDestroyed(e);
