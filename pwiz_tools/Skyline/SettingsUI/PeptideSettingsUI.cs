@@ -177,12 +177,6 @@ namespace pwiz.Skyline.SettingsUI
 
             IsShowLibraryExplorer = false;
             FormUtil.RemoveTabPage(tabIntegration, helpTip);
-            comboNormalizationMethod.Items.AddRange(
-                NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
-            if (!comboNormalizationMethod.Items.Contains(_peptideSettings.Quantification.NormalizationMethod))
-            {
-                comboNormalizationMethod.Items.Add(_peptideSettings.Quantification.NormalizationMethod);
-            }
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
@@ -197,6 +191,7 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
+            UpdateComboNormalizationMethod();
         }
 
         /// <summary>
@@ -1124,6 +1119,59 @@ namespace pwiz.Skyline.SettingsUI
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
         }
 
+        /// <summary>
+        /// Update the Items in comboNormalizationMethod to include not only the options that were available when this dialog
+        /// first came up, but also those options that would be available if the user were to OK the dialog right now.
+        /// </summary>
+        private void UpdateComboNormalizationMethod()
+        {
+            var currentNormalizationMethod = 
+                comboNormalizationMethod.SelectedItem as NormalizationMethod 
+                ?? _parent.DocumentUI.Settings.PeptideSettings.Quantification.NormalizationMethod
+                ?? NormalizationMethod.NONE;
+
+            IEnumerable<NormalizationMethod> availableNormalizationMethods = NormalizationMethod.ListNormalizationMethods(_parent.DocumentUI);
+
+            // If the user has checked any isotope modifications, then some new ratio to label options may be available
+            if (_driverLabelType != null && _driverLabelType.GetHeavyModifications().Any(mods=>mods.Modifications.Count > 0))
+            {
+                IEnumerable<IsotopeLabelType> ratioInternalStandardTypes = SmallMoleculeLabelsTabEnabled
+                    ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
+                    : _driverLabelType.InternalStandardTypes;
+                if (!ratioInternalStandardTypes.Any())
+                {
+                    // Duplicate the logic of "PeptideModifications.RatioInternalStandardTypes": if none of the isotope label types are internal standards,
+                    // then all heavy label types are available for normalization
+                    ratioInternalStandardTypes = _driverLabelType.GetHeavyModifications().Select(mods => mods.LabelType);
+                }
+
+                availableNormalizationMethods = availableNormalizationMethods.Concat(
+                    ratioInternalStandardTypes.Select(NormalizationMethod.GetNormalizationMethod));
+            }
+
+            var newComboItems = availableNormalizationMethods.Distinct().ToList();
+            if (!newComboItems.Contains(currentNormalizationMethod))
+            {
+                newComboItems.Add(currentNormalizationMethod);
+            }
+
+            if (newComboItems.SequenceEqual(comboNormalizationMethod.Items.OfType<object>()))
+            {
+                return;
+            }
+
+            comboNormalizationMethod.Items.Clear();
+            comboNormalizationMethod.Items.AddRange(newComboItems.ToArray());
+            comboNormalizationMethod.SelectedItem = currentNormalizationMethod;
+        }
+
+        private void tabControl1_TabIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedTab == tabQuantification)
+            {
+                UpdateComboNormalizationMethod();
+            }
+        }
         #region Functional testing support
 
         public IFormView ShowingFormView
