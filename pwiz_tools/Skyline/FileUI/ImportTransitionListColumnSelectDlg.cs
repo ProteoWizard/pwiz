@@ -60,8 +60,9 @@ namespace pwiz.Skyline.FileUI
         private AssociateProteinsMode _associateProteinsMode;
         private int _originalProteinIndex;
         private int _originalPeptideIndex;
-        private int[] _originalColumnIDs;
-        private int[] _columnIDsAtSuccessfulAssociateProteins; // State of headers at last associate proteins success
+        private string[] _originalColumnIDs;
+        private string[] _columnDropdownNamesAtSuccessfulAssociateProteins; // State of headers at last associate proteins success
+        private string[] _currentColumnDropdownNames => ComboBoxes.Select(c => c.Text).ToArray();
         // Protein name, FASTA sequence pairs for importing peptides into protein groups
         private Dictionary<string, FastaSequence> _dictNameSeq;
         // Stores the position of proteins for _proteinTip
@@ -139,6 +140,7 @@ namespace pwiz.Skyline.FileUI
             _proteinTip = new NodeTip(this) { Parent = this };
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
             _originalPeptideIndex = Importer.RowReader.Indices.PeptideColumn;
+            _associateProteinsMode = AssociateProteinsMode.preview;
 
             InitializeComponent();
 
@@ -200,7 +202,7 @@ namespace pwiz.Skyline.FileUI
                 false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
-                filterDlg.Text = checkBoxAssociateProteins.Text; // This title makes more sense in this context
+                filterDlg.Text = Resources.ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins; // This title makes more sense in this context
                 if (filterDlg.ShowDialog(this) != DialogResult.OK)
                 {
                     // If they cancel do not change the document or the transition list
@@ -208,7 +210,7 @@ namespace pwiz.Skyline.FileUI
                 } else
                 {
                     // Redo the association with the new filter settings, but do not show this dialog again
-                    return AssociateProteins(AssociateProteinsMode.finalize, out canceled);
+                    return AssociateProteins(AssociateProteinsMode.all_silent, out canceled);
                 }
             }
             return null;
@@ -218,8 +220,8 @@ namespace pwiz.Skyline.FileUI
         private enum AssociateProteinsMode
         {
             preview, // Operate on just the handful of visible lines, no error checking
-            all, // Operate on everything, trigger a dialog if there are peptides with multiple matches, peptides without matches, or peptides not meeting filter settings
-            finalize // Operate on everything, don't show any dialog if trouble is encountered
+            all_interactive, // Operate on everything, trigger a dialog if there are peptides with multiple matches, peptides without matches, or peptides not meeting filter settings
+            all_silent // Operate on everything, don't show any dialog if trouble is encountered
         };
 
         /// <summary>
@@ -247,7 +249,8 @@ namespace pwiz.Skyline.FileUI
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
                     // If there are headers, add one describing the protein name column we will add - if we haven't already
-                    if (Importer.RowReader.Indices.Headers != null && Equals(_associateProteinsMode, AssociateProteinsMode.preview))
+                    var hasHeaders = Importer.RowReader.Indices.Headers != null;
+                    if (hasHeaders && Equals(_associateProteinsMode, AssociateProteinsMode.preview))
                     {
                         // Add a header we should recognize
                         var newHeaders = new string[_originalColumnIDs.Length + 1];
@@ -260,7 +263,7 @@ namespace pwiz.Skyline.FileUI
                     }
 
                     // Get a dictionary of peptides under consideration and the proteins they're associated with
-                    peptides.AddRange(_originalLines.Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[_originalPeptideIndex]));
+                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[_originalPeptideIndex]));
                     foreach (var pep in peptides)
                     {
                         if (!stripped.ContainsKey(pep))
@@ -317,7 +320,7 @@ namespace pwiz.Skyline.FileUI
 
             // If there are any peptides that don't meet the filter setting, have multiple matches or no matches,
             // show the user a dialog to resolve it. 
-            if (associateHelper.numFiltered + associateHelper.numUnmatched + associateHelper.numMultipleMatches > 0 && Equals(_associateProteinsMode, AssociateProteinsMode.all))
+            if (associateHelper.numFiltered + associateHelper.numUnmatched + associateHelper.numMultipleMatches > 0 && Equals(_associateProteinsMode, AssociateProteinsMode.all_interactive))
             {
                 var resolved = ResolveMatchedProteins(associateHelper.numMultipleMatches, 
                     associateHelper.numUnmatched, associateHelper.numFiltered, out canceled);
@@ -945,11 +948,20 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
+            var isAssociateProteins = checkBoxAssociateProteins.Checked;
+            // Check for errors is expensive with associate proteins, so don't re-run if associate proteins is known good
+            if (InsertionParams == null || // Haven't checked yet
+                _associateProteinsMode == AssociateProteinsMode.preview || // Either no associate proteins, or we didn't do the full input set
+                !_currentColumnDropdownNames.SequenceEqual(_columnDropdownNamesAtSuccessfulAssociateProteins)) // Something changed in headers selection since last association
+            {
+                if (CheckForErrors(true)) // Look for errors, be silent on success
+                    return;
+            }
 
-            if (CheckForErrors(true)) // Look for errors, be silent on success
-                return;
-
-            Assume.IsNotNull(InsertionParams);
+            if (InsertionParams == null && isAssociateProteins && !checkBoxAssociateProteins.Checked)
+            {
+                return; // User canceled out of associate proteins dialog, wait and see what they do next
+            }
             DialogResult = DialogResult.OK;
         }
 
@@ -1141,7 +1153,7 @@ namespace pwiz.Skyline.FileUI
 
             if (checkBoxAssociateProteins.Checked)
             {
-                UpdateProteinAssociationState(AssociateProteinsMode.all, out var canceled);
+                UpdateProteinAssociationState(AssociateProteinsMode.all_interactive, out var canceled);
                 if (canceled)
                 {
                     _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
@@ -1178,7 +1190,6 @@ namespace pwiz.Skyline.FileUI
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
-            _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
 
             var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
 
@@ -1192,11 +1203,13 @@ namespace pwiz.Skyline.FileUI
 
             if (errorCheckCanceled)
             {
+                _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
                 return true; // User cancelled, we can't say that there are no errors
             }
 
             if (testErrorList != null && testErrorList.Any())
             {
+                _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
                 // There are errors, show them to user
                 if (MissingEssentialColumns.Count != 0)
                 {
@@ -1353,7 +1366,7 @@ namespace pwiz.Skyline.FileUI
             // Show the original transition list without the protein names we have added
             Importer.RowReader.Lines = _originalLines;
             Importer.RowReader.Indices.Headers = _originalColumnIDs;
-            _columnIDsAtSuccessfulAssociateProteins = new string[0];
+            _columnDropdownNamesAtSuccessfulAssociateProteins = Array.Empty<string>();
             isAssociated = false;
 
             UpdateForm();
@@ -1396,7 +1409,7 @@ namespace pwiz.Skyline.FileUI
                     return;
                 }
 
-                if (isAssociated && Equals(_columnIDsAtSuccessfulAssociateProteins, Importer.RowReader.Indices.Headers) && Equals(mode, AssociateProteinsMode.preview))
+                if (isAssociated && Equals(mode, AssociateProteinsMode.preview) && Equals(_columnDropdownNamesAtSuccessfulAssociateProteins, _currentColumnDropdownNames))
                 {
                     return; // We have already handled the first bunch of visible peptides
                 }
@@ -1404,7 +1417,7 @@ namespace pwiz.Skyline.FileUI
                 if (mode == AssociateProteinsMode.preview)
                 {
                     // Newly ticked checkbox
-                    _columnIDsAtSuccessfulAssociateProteins = new string[0];
+                    _columnDropdownNamesAtSuccessfulAssociateProteins = Array.Empty<string>();
                     _originalColumnIDs = Importer.RowReader.Indices.Headers;
                     _originalProteinIndex = Importer.RowReader.Indices.ProteinColumn;
                 }
@@ -1454,7 +1467,7 @@ namespace pwiz.Skyline.FileUI
                     SetColumnPositions(oldPositions);
                     if (mode != AssociateProteinsMode.preview)
                     {
-                        _columnIDsAtSuccessfulAssociateProteins = Importer.RowReader.Indices.Headers;
+                        _columnDropdownNamesAtSuccessfulAssociateProteins = _currentColumnDropdownNames;
                     }
                     isAssociated = true;
                 }

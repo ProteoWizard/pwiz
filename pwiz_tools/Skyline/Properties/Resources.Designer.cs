@@ -16471,6 +16471,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A transition contained an error..
         /// </summary>
         public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ {

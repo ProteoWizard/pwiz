@@ -11645,4 +11645,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
 	  <value>Finding peptides in FASTA file</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
+	  <value>Associate Proteins</value>
+  </data>
 </root>
