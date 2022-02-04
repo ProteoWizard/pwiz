@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigList SavedConfigsFilePath="REPLACE_TEXT\BcfgTestFiles\20_2_0_464_basic.bcfg">
+  <skylinebatch_config Name="Basic" Modified="1/12/2022 12:12 PM">
+    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\EmptyData" />
+    <file_settings />
+    <refine_settings RemoveDecoys="true" RemoveResults="true" />
+    <report_settings />
+    <config_skyline_settings Type="Skyline" CmdPath="C:\Users\alimarsh\Documents\Application Files\SkylineBatch_20_2_0_464\SkylineRunner.exe" />
+  </skylinebatch_config>
+</ConfigList>

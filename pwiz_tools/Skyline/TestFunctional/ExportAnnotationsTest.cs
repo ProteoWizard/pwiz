@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
                 "C8H10N4O2\t1\tC6H7N3O\t1",
                 "C9H13N\t1\tC9H11\t1"
             );
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = text1);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = text1);
 
             RunUI(() => {
                 colDlg.radioMolecule.PerformClick();

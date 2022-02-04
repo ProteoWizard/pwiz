@@ -17,84 +17,78 @@
  * limitations under the License.
  */
 using System;
-using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace MSStatArgsCollector
 {
     public partial class QualityControlUI : Form
     {
-        private enum Args {normalize_to, allow_missing_peaks, feature_selection, remove_interfered_proteins, width, height, max_arg}
-
         public string[] Arguments { get; private set; }
-        public QualityControlUI(string[] oldArgs)
+
+        public QualityControlUI(DataSetInfo dataSetInfo, Arguments arguments)
         {
             InitializeComponent();
-            comboBoxNormalizeTo.SelectedIndex = 1;
-
-            try
+            commonOptionsControl1.InitializeOptions(dataSetInfo, arguments);
+            tbxWidth.Text = (arguments.GetInt(Arg.width) ?? 10).ToString();
+            tbxHeight.Text = (arguments.GetInt(Arg.height) ?? 10).ToString();
+        }
+        private Arguments GenerateArguments()
+        {
+            var arguments = new Arguments();
+            if (!commonOptionsControl1.GetArguments(arguments))
             {
-                if (oldArgs != null && oldArgs.Length == (int) Args.max_arg)
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(tbxWidth.Text))
+            {
+                if (!Util.ValidateInteger(tbxWidth, out int width))
                 {
-                    comboBoxNormalizeTo.SelectedIndex = int.Parse(oldArgs[(int) Args.normalize_to],
-                        CultureInfo.InvariantCulture);
-                    cboxAllowMissingPeaks.Checked = TRUESTRING == oldArgs[(int) Args.allow_missing_peaks];
-                    cbxSelectHighQualityFeatures.Checked = TRUESTRING == oldArgs[(int) Args.feature_selection];
-                    cbxRemoveInterferedProteins.Checked = TRUESTRING == oldArgs[(int) Args.remove_interfered_proteins];
-                    tbxWidth.Text = oldArgs[(int) Args.width];
-                    tbxHeight.Text = oldArgs[(int) Args.height];
+                    return null;
                 }
+
+                arguments.Set(Arg.width, width);
             }
-            catch
+
+            if (!string.IsNullOrEmpty(tbxHeight.Text))
             {
-                // ignore
+                if (!Util.ValidateInteger(tbxHeight, out int height))
+                {
+                    return null;
+                }
+                arguments.Set(Arg.height, height);
             }
-        }
 
-        private const string TRUESTRING = "TRUE"; // Not L10N
-        private const string FALSESTRING = "FALSE"; // Not L10N
-        private void GenerateArguments()
-        {
-            Arguments = new string[(int) Args.max_arg];
-            Arguments[(int)Args.normalize_to] = (comboBoxNormalizeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-            Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;
-            Arguments[(int) Args.feature_selection] =
-                cbxSelectHighQualityFeatures.Checked ? TRUESTRING : FALSESTRING;
-            Arguments[(int)Args.remove_interfered_proteins] = 
-                cbxRemoveInterferedProteins.Checked ? TRUESTRING : FALSESTRING;
-            Arguments[(int)Args.width] = tbxWidth.Text;
-            Arguments[(int) Args.height] = tbxHeight.Text;
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-          DialogResult = DialogResult.Cancel;        
+            return arguments;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            GenerateArguments();
+            var arguments = GenerateArguments();
+            if (arguments == null)
+            {
+                return;
+            }
+
+            Arguments = arguments.ToArgumentList().ToArray();
             DialogResult = DialogResult.OK;
         }
-
-        private void cbxSelectHighQualityFeatures_CheckedChanged(object sender, EventArgs e)
-        {
-            cbxRemoveInterferedProteins.Enabled = cbxSelectHighQualityFeatures.Checked;
-        }
-
     }
     public class MSstatsQualityControlCollector
     {
-
-        public static string[] CollectArgs(IWin32Window parent, string report, string[] args)
+        public static string[] CollectArgs(IWin32Window parent, TextReader report, string[] args)
         {
-            using (var dlg = new QualityControlUI(args))
+            var dataSetInfo = DataSetInfo.ReadDataSet(report);
+            using (var dlg = new QualityControlUI(dataSetInfo, Arguments.FromArgumentList(args)))
             {
-                if (parent != null)
+                if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
-                    return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
+                    return dlg.Arguments;
                 }
-                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
+
+                return null;
             }
         }
     }   

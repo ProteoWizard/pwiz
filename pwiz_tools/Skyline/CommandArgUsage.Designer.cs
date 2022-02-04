@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class CommandArgUsage {
@@ -579,6 +579,15 @@ namespace pwiz.Skyline {
         internal static string _import_optimizing {
             get {
                 return ResourceManager.GetString("_import_optimizing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Read peak boundaries from a comma or tab separated file.
+        /// </summary>
+        internal static string _import_peak_boundaries {
+            get {
+                return ResourceManager.GetString("_import_peak_boundaries", resourceCulture);
             }
         }
         

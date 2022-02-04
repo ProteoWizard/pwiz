@@ -12,8 +12,9 @@ namespace SkylineBatch
         private int _lastStelectedIndex;
         private readonly string _downloadFolder;
         private readonly bool _fileRequired;
+        private readonly bool _preferPanoramaSource;
 
-        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired)
+        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource)
         {
             InitializeComponent();
 
@@ -22,6 +23,7 @@ namespace SkylineBatch
             _lastStelectedIndex = -1;
             _downloadFolder = downloadFolder;
             _fileRequired = fileRequired;
+            _preferPanoramaSource = preferPanoramaSource;
             UpdateRemoteSourceList();
 
             if (editingServer != null)
@@ -106,7 +108,7 @@ namespace SkylineBatch
                 // Edit list...
                 if (selectedItem.Equals(Resources.RemoteFileControl_UpdateRemoteSourceList__Edit_list____))
                 {
-                    var editSourceForm = new EditRemoteFileSourcesForm(_mainControl, State, _lastStelectedIndex);
+                    var editSourceForm = new EditRemoteFileSourcesForm(_mainControl, State, _lastStelectedIndex, _preferPanoramaSource);
                     var dialogResult = editSourceForm.ShowDialog(this);
                     State = editSourceForm.State;
                     UpdateRemoteSourceList();
@@ -131,7 +133,7 @@ namespace SkylineBatch
                         editingFileSource =
                             State.FileSources[(string) comboRemoteFileSource.Items[_lastStelectedIndex]];
                     }
-                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State);
+                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource);
                     var dialogResult = remoteSourceForm.ShowDialog(this);
                     State = remoteSourceForm.State;
                     UpdateRemoteSourceList();

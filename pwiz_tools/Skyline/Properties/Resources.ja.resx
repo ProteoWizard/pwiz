@@ -487,9 +487,6 @@
   <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
     <value>作成(&amp;C)...</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致許容誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
-  </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
   </data>
@@ -1344,9 +1341,6 @@
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>ファイル{0}が開けませんでした。{1}</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プロダクトm/z {1}は、イオン式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致許容誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>iRTカルキュレータのデータベースファイルにはフルパスを使用してください。</value>
   </data>
@@ -1753,9 +1747,6 @@
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
     <value>スペクトルライブラリを検索</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサーイオン式とm/z値が任意の電荷状態と一致しません。</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>トレインモデルに失敗しました：</value>
@@ -2928,9 +2919,6 @@
   <data name="EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection" xml:space="preserve">
     <value>無効なモデル選択。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクトイオン式とm/z値が任意の電荷状態と一致しません。</value>
-  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>選択したフォルダにBruker TOFメソッドテンプレートが含まれていないようです。フォルダは、.m拡張子が付き、submethods.xmlファイルを含むと予測されています。</value>
   </data>
@@ -2960,9 +2948,6 @@
   </data>
   <data name="CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_" xml:space="preserve">
     <value>エラー： ファイル{0}はサポートされているスペクトルライブラリファイル形式ではありません。</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プリカーサーには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>1つ以上の繰り返し測定を選択しなければなりません</value>
@@ -7919,9 +7904,6 @@
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>初期化成功前の予期せぬiRTカルキュレータの使用。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>{0}行目のエラー： プロダクトには次の任意の2つに対する値が必要です： 式、m/zまたは電荷。</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
     <value>Skyline共有ドキュメント</value>
   </data>
@@ -8563,12 +8545,6 @@
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
     <value>分子トランジションリストを挿入</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>エラー：行 {0}、列 {1}：{2}</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
-    <value>{0}行のエラー：{1}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>分子列ヘッダーを読み取り中のエラー。次を認識しません：
@@ -11316,19 +11292,19 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
-    <value>エラー：パノラマサーバー情報を検証できません。
+    <value>エラー：パノラマサーバー情報を確認できません。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_Exception_" xml:space="preserve">
-    <value>エラー：パノラマサーバー情報を検証しようとして不明なエラーが発生しました。
+    <value>エラー：パノラマサーバー情報を確認しようとして不明なエラーが発生しました。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
-    <value>エラー：パノラマフォルダーへのアクセスを検証できません。
+    <value>エラー：パノラマフォルダーへのアクセスを確認できません。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
-    <value>エラー：サーバー{1}にあるパノラマフォルダー「{0}」へのアクセスを検証しようとして不明なエラーが発生しました。
+    <value>エラー：サーバー{1}にあるパノラマフォルダー「{0}」へのアクセスを確認しようとして不明なエラーが発生しました。
 {2}</value>
   </data>
   <data name="GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range" xml:space="preserve">
@@ -11366,7 +11342,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>エラー：インポートするファイルが残っていません。</value>
   </data>
   <data name="CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>エラー：所与のドキュメントには繰り返し測定{0}がすでに存在し、--import-appendオプションが指定されていません。この繰り返し測定はドキュメントに追加されません。</value>
+    <value>エラー：指定のドキュメントには繰り返し測定{0}がすでに存在し、--import-appendオプションが指定されていません。この繰り返し測定はドキュメントに追加されません。</value>
   </data>
   <data name="PeptideTipProvider_RenderTip_Ion_Mobility" xml:space="preserve">
     <value>イオン移動度</value>
@@ -11393,7 +11369,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>列 {0}</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
-    <value>MaxQuant入力ファイル「{0}」のスペクトルファイルを探している間に、サポートされているファイル拡張子（{3}）を持つ以下のベース名を見つけられませんでした。
+    <value>MaxQuant入力ファイル「{0}」のスペクトルファイルを検索中に、サポートされているファイル拡張子（{3}）を持つ以下のベース名を見つけられませんでした。
 
 {1}
 
@@ -11404,7 +11380,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
 オリジナルファイルがない場合は、入力ファイルから埋め込みスペクトルを使用してライブラリを構築できますが、MaxQuant埋め込みスペクトル内のフラグメントイオンは、荷電状態がデコンボリュートされており、1価のフラグメントイオンしか含まれず、これは質量分析計が測定する強度を表すものではない可能性があります。</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError" xml:space="preserve">
-    <value>MaxQuant入力ファイル「{0}」のスペクトルファイルを探している間に、サポートされているファイル拡張子（{3}）を持つ以下のベース名を見つけられませんでした。
+    <value>MaxQuant入力ファイル「{0}」のスペクトルファイルを検索中に、サポートされているファイル拡張子（{3}）を持つ以下のベース名を見つけられませんでした。
 
 {1}
 
@@ -11418,10 +11394,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>明示的な衝突断面積（Aの2乗）</value>
   </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
-    <value>強度しきい値として使用するピーク最大高さの割合です。</value>
+    <value>強度閾値として使用するピーク最大高さの割合です。</value>
   </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_" xml:space="preserve">
-    <value>絶対的および相対的強度しきい値です。</value>
+    <value>絶対的および相対的強度閾値です。</value>
   </data>
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>このデータファイルでは、{0}スペクトルは利用できません。代わりに{1}を表示しています。</value>
@@ -11460,10 +11436,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>分子式やプリカーサーm/z</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
-    <value>プリカーサー添加物やプリカーサー電荷</value>
+    <value>プリカーサー付加物やプリカーサー電荷</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
-    <value>タンパク質名列を再割り当てすると、ペプチドがバックグラウンドプロテオームからのペプチドと関連しなくなります。</value>
+    <value>タンパク質名列を再割り当てすると、ペプチドがバックグラウンドプロテオームからのタンパク質と関連しなくなります。</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
     <value>これらのフィルターは、空のトランジションリストとなるため、適用できません。</value>
@@ -11481,7 +11457,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>繰り返し測定</value>
   </data>
   <data name="FullScanAcquisitionMethod_DIA_TOOLTIP">
-    <value xml:space="preserve">データに依存しない取得：MS2スペクトルは、m/z値が単離ウィンドウ内にあるすべてのプリカーサーのクロマトグラムに寄与します。</value>
+    <value xml:space="preserve">データ非依存性取得：MS2スペクトルは、m/z値が単離ウィンドウ内にあるすべてのプリカーサーのクロマトグラムに寄与します。</value>
   </data>
   <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
     <value xml:space="preserve">並列反応モニタリング：MS2スペクトルは、m/zが選択されたイオンの「メソッド許容範囲」内にあるプリカーサーに寄与します。</value>
@@ -11580,7 +11556,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>最も可能性の高いデコイプレフィクスとして{0}を使用しています。</value>
   </data>
   <data name="EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__" xml:space="preserve">
-    <value>デコイプレフィクスとして十分に頻繁なプレフィクスがありませんでした（エントリーの40%以上に存在）。</value>
+    <value>デコイプレフィクスとして十分に頻繁なプレフィクスがありませんでした（少なくともエントリーの40%に存在）。</value>
   </data>
   <data name="EnsureFastaHasDecoys_No_common_prefixes_were_found_" xml:space="preserve">
     <value>共通のプレフィクスが見つかりませんでした。</value>

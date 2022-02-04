@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigList>
+  <skylinebatch_config Name="Basic" Modified="1/12/2022 12:12 PM">
+    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\EmptyData" />
+    <file_settings />
+    <refine_settings RemoveDecoys="true" RemoveResults="true" />
+    <report_settings />
+    <config_skyline_settings Type="Skyline" CmdPath="C:\Users\alimarsh\Documents\Application Files\SkylineBatch_20_2_0_453\SkylineRunner.exe" />
+  </skylinebatch_config>
+  <skylinebatch_config Name="Complex" Enabled="true" Modified="1/12/2022 12:17 PM">
+    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\EmptyData" AnnotationsFilePath="REPLACE_TEXT\fakeAnnotations.csv" ReplicateNamingPattern="Tester" />
+    <file_settings MsOneResolvingPower="1" MsMsResolvingPower="1000" RetentionTime="100" AddDecoys="true" ShuffleDecoys="true" TrainMProphet="true" />
+    <refine_settings RemoveDecoys="true" RemoveResults="true" OutputFilePath="REPLACE_TEXT\refinedTemplate.sky">
+      <command_value>(min_peptides, 1)</command_value>
+      <command_value>(remove_repeats, )</command_value>
+      <command_value>(remove_duplicates, )</command_value>
+      <command_value>(missing_library, )</command_value>
+      <command_value>(min_transitions, 1)</command_value>
+      <command_value>(label_type, hello)</command_value>
+      <command_value>(add_label_type, )</command_value>
+      <command_value>(auto_select_peptides, )</command_value>
+      <command_value>(auto_select_precursors, )</command_value>
+      <command_value>(auto_select_transitions, )</command_value>
+      <command_value>(min_peak_found_ratio, 2)</command_value>
+      <command_value>(max_peak_found_ratio, 2)</command_value>
+      <command_value>(max_peptide_peak_rank, 1)</command_value>
+      <command_value>(max_transition_peak_rank, 1)</command_value>
+      <command_value>(max_precursor_only, )</command_value>
+      <command_value>(prefer_larger_products, )</command_value>
+      <command_value>(missing_results, )</command_value>
+      <command_value>(min_time_correlation, 1.1)</command_value>
+      <command_value>(min_dotp, 0.5)</command_value>
+      <command_value>(min_idotp, 1)</command_value>
+      <command_value>(use_best_result, )</command_value>
+      <command_value>(cv_remove_above_cutoff, 4)</command_value>
+      <command_value>(cv_reference_normalize, heavy)</command_value>
+      <command_value>(cv_transitions_count, 3)</command_value>
+      <command_value>(qvalue_cutoff, 4.4)</command_value>
+      <command_value>(minimum_detections, 2)</command_value>
+      <command_value>(gc_p_value_cutoff, 3)</command_value>
+      <command_value>(gc_fold_change_cutoff, 1)</command_value>
+      <command_value>(gc_ms_level, 2)</command_value>
+      <command_value>(gc_name, 1)</command_value>
+      <command_value>(cv_global_normalize, global_standards)</command_value>
+      <command_value>(cv_transitions, best)</command_value>
+      <command_value>(cv_ms_level, products)</command_value>
+    </refine_settings>
+    <report_settings>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr">
+        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      </report_info>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr" UseRefineFile="true">
+        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings Type="Custom" CmdPath="C:\Program Files\Skyline\SkylineCmd.exe" />
+  </skylinebatch_config>
+</ConfigList>
