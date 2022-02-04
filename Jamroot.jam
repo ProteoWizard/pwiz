@@ -324,6 +324,7 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on
@@ -937,7 +938,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.2 in $(properties) )
+       ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.3 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -945,7 +947,8 @@ rule secure-scl-throws ( properties * )
 }
 
 # newer OS/GCC versions have PIE enabled by default, but msparser was compiled without PIE, so we must also compile without PIE
-exe has-pie : Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
+obj has-pie : $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
+explicit has-pie ;
 
 if [ check-target-builds has-pie "GCC has -no-pie" : <cflags>-no-pie <cxxflags>-no-pie <linkflags>-no-pie ]
 {
