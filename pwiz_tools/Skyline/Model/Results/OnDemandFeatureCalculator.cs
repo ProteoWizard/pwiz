@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
@@ -12,11 +13,17 @@ namespace pwiz.Skyline.Model.Results
 {
     public class OnDemandFeatureCalculator
     {
+        public delegate IList<ChromatogramGroupInfo> ChromatogramLoader(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode);
         private Dictionary<TransitionGroup, ChromatogramGroupInfo> _chromatogramGroupInfos =
             new Dictionary<TransitionGroup, ChromatogramGroupInfo>(new IdentityEqualityComparer<TransitionGroup>());
 
+        private ChromatogramLoader _chromatogramLoader;
+
         private ScoreQValueMap _scoreQValueMap;
-        public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmDocument document, PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo)
+
+        public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmDocument document,
+            PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo,
+            ChromatogramLoader chromatogramLoader)
         {
             Calculators = calculators;
             Document = document;
@@ -24,6 +31,7 @@ namespace pwiz.Skyline.Model.Results
             ChromFileInfo = chromFileInfo;
             ReplicateIndex = replicateIndex;
             _scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
+            _chromatogramLoader = chromatogramLoader;
         }
 
         public FeatureCalculators Calculators { get; }
@@ -355,16 +363,27 @@ namespace pwiz.Skyline.Model.Results
             return LoadChromatogramGroupInfo(transitionGroupDocNode);
         }
 
-        private ChromatogramGroupInfo LoadChromatogramGroupInfo(TransitionGroupDocNode transitionGroup)
+        private IList<ChromatogramGroupInfo> LoadChromatogramGroupInfos(TransitionGroupDocNode transitionGroup)
         {
+            if (_chromatogramLoader != null)
+            {
+                return _chromatogramLoader(ReplicateIndex, transitionGroup);
+            }
             var measuredResults = Document.Settings.MeasuredResults;
+            ChromatogramGroupInfo[] infoSet;
             if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[ReplicateIndex], PeptideDocNode,
                     transitionGroup,
-                    MzMatchTolerance, out var infos))
+                    MzMatchTolerance, out infoSet))
             {
-                return null;
+                return ImmutableList.Empty<ChromatogramGroupInfo>();
             }
 
+            return infoSet;
+        }
+
+        private ChromatogramGroupInfo LoadChromatogramGroupInfo(TransitionGroupDocNode transitionGroup)
+        {
+            var infos = LoadChromatogramGroupInfos(transitionGroup);
             foreach (var chromatogramInfo in infos)
             {
                 if (Equals(chromatogramInfo.FilePath, ChromFileInfo.FilePath))
@@ -408,7 +427,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document, peptideDocNode, replicateIndex,
-                chromFileInfo);
+                chromFileInfo, null);
         }
     }
 }

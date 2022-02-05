@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var nodeGroup = (TransitionGroupDocNode)DocNode.ChangeChildrenChecked(listChildrenNew);
             var diff = new SrmSettingsDiff(DocSettings, true);
             // Update results on the group to correctly handle user set peak boundaries
-            nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, nodePep, DocNode);
+            nodeGroup = nodeGroup.UpdateResults(new PeptideSettingsDiff(DocSettings, nodePep, diff), DocNode);
 
             // Make sure any properties that depend on peptide relationships,
             // like ratios get updated.

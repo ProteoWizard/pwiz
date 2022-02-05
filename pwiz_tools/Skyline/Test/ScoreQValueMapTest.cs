@@ -12,7 +12,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestScoreQValueMap()
         {
-            var sortedList = ImmutableSortedList.FromValues(new Dictionary<float, float>
+            var sortedList = ImmutableSortedList.FromValues(new Dictionary<double, double>
             {
                 {1, 2},
                 {2, 4},

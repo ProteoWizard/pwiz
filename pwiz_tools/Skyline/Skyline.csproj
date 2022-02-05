@@ -616,10 +616,11 @@
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
+    <Compile Include="Model\PeptideSettingsDiff.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
-    <Compile Include="Model\Results\OnDemandScoreCalculator.cs" />
+    <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\Scoring\CandidatePeakScoreCalculator.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />

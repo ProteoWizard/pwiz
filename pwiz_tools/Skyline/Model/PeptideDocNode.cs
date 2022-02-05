@@ -899,6 +899,7 @@ namespace pwiz.Skyline.Model
                     nodeResult = nodeResult.ChangeStandardType(null);
                 }
             }
+            var peptideSettingsDiff = new PeptideSettingsDiff(settingsNew, nodeResult, diff);
 
             if (diff.DiffTransitionGroups && settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren)
             {
@@ -952,7 +953,7 @@ namespace pwiz.Skyline.Model
                         if (recurse)
                         {
                             nodeGroups = nodeGroups.Select(nodeGroup =>
-                                nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)).ToList();
+                                nodeGroup.UpdateSettings(peptideSettingsDiff.ChangeSettingsDiff(diffNode))).ToList();
                         }
                         foreach (var nodeGroup in nodeGroups)
                         {
@@ -980,7 +981,7 @@ namespace pwiz.Skyline.Model
                             if (existing.Count == 1)
                             {
                                 childrenNew[i] = existing.First()
-                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                                    .UpdateSettings(peptideSettingsDiff);
                             }
                         }
                     }
@@ -1015,7 +1016,7 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.UpdateSettings(peptideSettingsDiff);
                         // Skip if the node can no longer be measured on the target instrument
                         if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
                             continue;
@@ -1040,7 +1041,9 @@ namespace pwiz.Skyline.Model
             }
 
             if (diff.DiffResults || ChangedResults(nodeResult))
-                nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
+            {
+                nodeResult = nodeResult.UpdateResults(peptideSettingsDiff);
+            }
 
             return nodeResult;
         }
@@ -1215,8 +1218,14 @@ namespace pwiz.Skyline.Model
             return tranGroup.GetMatchingTransitions(settings, nodeGroupMatching, explicitMods);
         }
 
-        private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
+        private PeptideDocNode UpdateResults(SrmSettings settingsNew)
         {
+            return UpdateResults(new PeptideSettingsDiff(settingsNew, this));
+        }
+
+        private PeptideDocNode UpdateResults(PeptideSettingsDiff peptideSettingsDiff)
+        {
+            var settingsNew = peptideSettingsDiff.SettingsNew;
             // First check whether any child results are present
             if (!settingsNew.HasResults || Children.Count == 0)
             {

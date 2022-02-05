@@ -58,7 +58,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 .ChangeChromInfo(docNode.Results, newChromInfo)));
         }
         [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
-        public double? DetectionQValue { get { return ChromInfo.QValue; } }
+        public double? DetectionQValue {
+            get
+            {
+                if (ChromInfo.QValue.HasValue)
+                {
+                    return ChromInfo.QValue;
+                }
+
+                return SrmDocument.Settings.PeptideSettings.Integration.ScoreQValueMap.GetQValue(ChromInfo.ZScore);
+            }
+        }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionZScore { get { return ChromInfo.ZScore; } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
@@ -287,8 +297,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private CandidatePeakGroupData GetMyPeakScore()
         {
-            var onDemandScoreCalculator = new OnDemandFeatureCalculator(FeatureCalculators.ALL, SrmDocument,
-                Precursor.Peptide.DocNode, GetResultFile().Replicate.ReplicateIndex, GetResultFile().ChromFileInfo);
+            var onDemandScoreCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(SrmDocument,
+                Precursor.Peptide.IdentityPath, GetResultFile().Replicate.ReplicateIndex,
+                GetResultFile().ChromFileInfo.FileId);
             var featureScores = onDemandScoreCalculator.GetChosenPeakGroupData(Precursor.DocNode.TransitionGroup);
             return featureScores;
         }

@@ -13,13 +13,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             _sortedList = sortedList;
         }
 
-        public double? GetQValue(double? score)
+        public double? GetQValue(double? zScore)
         {
-            if (_sortedList.Count == 0 || !score.HasValue)
+            if (_sortedList.Count == 0 || !zScore.HasValue)
             {
                 return null;
             }
-            int index = _sortedList.BinarySearch(score.Value, true);
+            int index = _sortedList.BinarySearch(zScore.Value, true);
             if (index >= 0)
             {
                 return _sortedList.Values[index];
@@ -36,8 +36,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return _sortedList.Values[_sortedList.Count - 1];
             }
 
-            double leftDifference = score.Value - _sortedList.Keys[index - 1];
-            double rightDifference = _sortedList.Keys[index] - score.Value;
+            double leftDifference = zScore.Value - _sortedList.Keys[index - 1];
+            double rightDifference = _sortedList.Keys[index] - zScore.Value;
             double totalDifference = _sortedList.Keys[index] - _sortedList.Keys[index - 1];
             if (totalDifference == 0)
             {
