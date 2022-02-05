@@ -80,6 +80,8 @@ namespace pwiz.Skyline.Model
         public bool OverrideManual { get; set; }
         public bool IncludeDecoys { get; set; }
 
+        public ScoreQValueMap ScoreQValueMap { get; private set; }
+
         /// <summary>
         /// Forces the release of memory by breaking immutability to avoid doubling
         /// the document size in memory during command-line processing
@@ -174,8 +176,8 @@ namespace pwiz.Skyline.Model
                 : null;
             using (settingsChangeMonitor)
             {
-                var settingsNew = Document.Settings.ChangePeptideIntegration(integraion =>
-                    integraion.ChangeResultsHandler(this));
+                var settingsNew = Document.Settings.ChangePeptideIntegration(integration =>
+                    integration.ChangeResultsHandler(this));
                 // Only update the document if anything has changed
                 var docNew = Document.ChangeSettings(settingsNew, settingsChangeMonitor);
                 if (!Equals(docNew.Settings.PeptideSettings.Integration, Document.Settings.PeptideSettings.Integration) ||

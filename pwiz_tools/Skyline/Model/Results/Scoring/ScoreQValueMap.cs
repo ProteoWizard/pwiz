@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class ScoreQValueMap
     {
-        public static readonly ScoreQValueMap EMPTY = new ScoreQValueMap(ImmutableSortedList<float, float>.EMPTY);
-        private readonly ImmutableSortedList<float, float> _sortedList;
-        public ScoreQValueMap(ImmutableSortedList<float, float> sortedList)
+        public static readonly ScoreQValueMap EMPTY = new ScoreQValueMap(ImmutableSortedList<double, double>.EMPTY);
+        private readonly ImmutableSortedList<double, double> _sortedList;
+        public ScoreQValueMap(ImmutableSortedList<double, double> sortedList)
         {
             _sortedList = sortedList;
         }
@@ -18,7 +19,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 return null;
             }
-            int index = _sortedList.BinarySearch((float) score, true);
+            int index = _sortedList.BinarySearch(score.Value, true);
             if (index >= 0)
             {
                 return _sortedList.Values[index];
@@ -47,11 +48,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
                    totalDifference;
         }
 
+        public static ScoreQValueMap FromMoleculeGroups(IEnumerable<PeptideGroupDocNode> moleculeGroups)
+        {
+            return FromTransitionGroups(moleculeGroups.SelectMany(moleculeGroup => moleculeGroup.Molecules)
+                .SelectMany(molecule => molecule.TransitionGroups));
+}
+
         public static ScoreQValueMap FromDocument(SrmDocument document)
         {
-            var uniqueScores = new HashSet<float>();
-            var entries = new List<KeyValuePair<float, float>>();
-            foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
+            return FromTransitionGroups(document.MoleculeTransitionGroups);
+        }
+
+        private static ScoreQValueMap FromTransitionGroups(IEnumerable<TransitionGroupDocNode> transitionGroups)
+        {
+            var uniqueScores = new HashSet<double>();
+            var entries = new List<KeyValuePair<double, double>>();
+            foreach (var transitionGroupDocNode in transitionGroups)
             {
                 if (transitionGroupDocNode.Results == null)
                 {
@@ -71,12 +83,48 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         {
                             continue;
                         }
-                        entries.Add(new KeyValuePair<float, float>(chromInfo.ZScore.Value, chromInfo.QValue.Value));
+                        entries.Add(new KeyValuePair<double, double>(chromInfo.ZScore.Value, chromInfo.QValue.Value));
                     }
                 }
             }
 
             return new ScoreQValueMap(ImmutableSortedList.FromValues(entries));
+        }
+
+        public static ScoreQValueMap FromScoreQValues(IEnumerable<KeyValuePair<double, double>> entries)
+        {
+            return new ScoreQValueMap(ImmutableSortedList.FromValues(UniqueEntries(entries)));
+        }
+
+        private static IEnumerable<KeyValuePair<double, double>> UniqueEntries(
+            IEnumerable<KeyValuePair<double, double>> entries)
+        {
+            var uniqueScores = new HashSet<double>();
+            foreach (var entry in entries)
+            {
+                if (uniqueScores.Add(entry.Key))
+                {
+                    yield return entry;
+                }
+            }
+        }
+
+        protected bool Equals(ScoreQValueMap other)
+        {
+            return Equals(_sortedList, other._sortedList);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ScoreQValueMap) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_sortedList != null ? _sortedList.GetHashCode() : 0);
         }
     }
 }

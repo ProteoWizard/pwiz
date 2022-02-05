@@ -18,7 +18,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CandidatePeakTest.sky"));
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CandidatePeakTestTargetsOnly.sky"));
                 SkylineWindow.ShowCandidatePeaks();
             });
             SelectPeptide("SLDLIESLLR");

@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model.Results
             PeptideDocNode = peptideDocNode;
             ChromFileInfo = chromFileInfo;
             ReplicateIndex = replicateIndex;
-            _scoreQValueMap = ScoreQValueMap.FromDocument(document);
+            _scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
         }
 
         public FeatureCalculators Calculators { get; }
