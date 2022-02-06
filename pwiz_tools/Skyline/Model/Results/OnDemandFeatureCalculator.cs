@@ -12,17 +12,13 @@ namespace pwiz.Skyline.Model.Results
 {
     public class OnDemandFeatureCalculator
     {
-        public delegate IList<ChromatogramGroupInfo> ChromatogramLoader(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode);
         private Dictionary<TransitionGroup, ChromatogramGroupInfo> _chromatogramGroupInfos =
             new Dictionary<TransitionGroup, ChromatogramGroupInfo>(new IdentityEqualityComparer<TransitionGroup>());
-
-        private ChromatogramLoader _chromatogramLoader;
 
         private ScoreQValueMap _scoreQValueMap;
 
         public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmSettings settings,
-            PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo,
-            ChromatogramLoader chromatogramLoader)
+            PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo)
         {
             Calculators = calculators;
             Settings = settings;
@@ -30,7 +26,6 @@ namespace pwiz.Skyline.Model.Results
             ChromFileInfo = chromFileInfo;
             ReplicateIndex = replicateIndex;
             _scoreQValueMap = settings.PeptideSettings.Integration.ScoreQValueMap;
-            _chromatogramLoader = chromatogramLoader;
         }
 
         public FeatureCalculators Calculators { get; }
@@ -368,10 +363,6 @@ namespace pwiz.Skyline.Model.Results
 
         private IList<ChromatogramGroupInfo> LoadChromatogramGroupInfos(TransitionGroupDocNode transitionGroup)
         {
-            if (_chromatogramLoader != null)
-            {
-                return _chromatogramLoader(ReplicateIndex, transitionGroup);
-            }
             var measuredResults = Settings.MeasuredResults;
             ChromatogramGroupInfo[] infoSet;
             if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[ReplicateIndex], PeptideDocNode,
@@ -429,8 +420,8 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document.Settings, peptideDocNode, replicateIndex,
-                chromFileInfo, null);
+            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document.Settings, peptideDocNode,
+                replicateIndex, chromFileInfo);
         }
     }
 }

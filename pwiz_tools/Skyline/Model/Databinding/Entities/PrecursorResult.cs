@@ -58,17 +58,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 .ChangeChromInfo(docNode.Results, newChromInfo)));
         }
         [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
-        public double? DetectionQValue {
-            get
-            {
-                if (ChromInfo.QValue.HasValue)
-                {
-                    return ChromInfo.QValue;
-                }
-
-                return SrmDocument.Settings.PeptideSettings.Integration.ScoreQValueMap.GetQValue(ChromInfo.ZScore);
-            }
-        }
+        public double? DetectionQValue { get { return ChromInfo.QValue; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionZScore { get { return ChromInfo.ZScore; } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]

@@ -904,18 +904,8 @@ namespace pwiz.Skyline.Model
             return node;
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods,
-            SrmSettingsDiff diff)
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
         {
-            return UpdateSettings(new PeptideSettingsDiff(settingsNew, nodePep, mods, diff));
-        }
-
-        public TransitionGroupDocNode UpdateSettings(PeptideSettingsDiff peptideSettingsDiff)
-        {
-            var diff = peptideSettingsDiff.SrmSettingsDiff;
-            var settingsNew = peptideSettingsDiff.SettingsNew;
-            var mods = peptideSettingsDiff.ExplicitMods;
-            var nodePep = peptideSettingsDiff.NodePep;
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
             RelativeRT relativeRT = RelativeRT;
@@ -1128,7 +1118,7 @@ namespace pwiz.Skyline.Model
             // A change in the precursor m/z may impact which results match this node
             // Or if the dot-product may need to be recalculated
             if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || dotProductChange)
-                nodeResult = nodeResult.UpdateResults(peptideSettingsDiff, this);
+                nodeResult = nodeResult.UpdateResults(settingsNew, diff, nodePep, this);
 
             return nodeResult;
         }
@@ -1210,11 +1200,11 @@ namespace pwiz.Skyline.Model
 
         private static readonly IDictionary<int, int> EMPTY_RESULTS_LOOKUP = new Dictionary<int, int>();
 
-        public TransitionGroupDocNode UpdateResults(PeptideSettingsDiff peptideSettingsDiff, TransitionGroupDocNode nodePrevious)
+        public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew,
+                                                    SrmSettingsDiff diff,
+                                                    PeptideDocNode nodePep,
+                                                    TransitionGroupDocNode nodePrevious)
         {
-            var settingsNew = peptideSettingsDiff.SettingsNew;
-            var diff = peptideSettingsDiff.SrmSettingsDiff;
-            var nodePep = peptideSettingsDiff.NodePep;
             if (!settingsNew.HasResults)
             {
                 // Make sure no results are present, if the new settings has no results
@@ -1263,18 +1253,22 @@ namespace pwiz.Skyline.Model
 
             var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
+            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
+            if (MustReadAllChromatograms(settingsNew, diff))
+            {
+                allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
+                    (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list=>list), false);
+            }
             for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
-                CalcResultsForReplicate(resultsCalc, chromIndex, peptideSettingsDiff, nodePrevious, setTranPrevious);
+                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
 
-        private void CalcResultsForReplicate(TransitionGroupResultsCalculator resultsCalc, int chromIndex, PeptideSettingsDiff peptideSettingsDiff, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious)
+        private void CalcResultsForReplicate(TransitionGroupResultsCalculator resultsCalc, int chromIndex, SrmSettings settingsNew, SrmSettingsDiff diff, PeptideDocNode nodePep, TransitionGroupDocNode nodePrevious, HashSet<TransitionLossKey> setTranPrevious, IList<ChromatogramGroupInfo> chromGroupInfos)
         {
-            var settingsNew = peptideSettingsDiff.SettingsNew;
-            var diff = peptideSettingsDiff.SrmSettingsDiff;
-            var nodePep = peptideSettingsDiff.NodePep;
             var measuredResults = settingsNew.MeasuredResults;
             var settingsOld = diff.SettingsOld;
             var dictChromIdIndex = settingsOld?.MeasuredResults?.IdToIndexDictionary;
@@ -1308,7 +1302,7 @@ namespace pwiz.Skyline.Model
             // Check whether we can reuse the existing information without having to look at the ChromatogramInfo
             if (iResultOld != -1 && resultsHandler == null)
             {
-                if (CanUseOldResults(peptideSettingsDiff, nodePrevious, chromIndex, iResultOld))
+                if (CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld))
                 {
                     for (int iTran = 0; iTran < Children.Count; iTran++)
                     {
@@ -1347,7 +1341,12 @@ namespace pwiz.Skyline.Model
                     dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
             }
             float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
-            IList<ChromatogramGroupInfo> chromGroupInfos = peptideSettingsDiff.LoadChromatograms(chromIndex, this);
+            if (chromGroupInfos == null)
+            {
+                measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
+                    out var arrayChromGroupInfo);
+                chromGroupInfos = arrayChromGroupInfo ?? Array.Empty<ChromatogramGroupInfo>();
+            }
             if (chromGroupInfos.Count == 0)
             {
                 bool useOldResults = iResultOld != -1 && !chromatograms.IsLoadedAndAvailable(measuredResults);
@@ -1533,18 +1532,37 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private bool MustReadAllChromatograms(SrmSettings settingsNew, SrmSettingsDiff settingsDiff)
+        {
+            if (null != settingsNew.PeptideSettings.Integration.ResultsHandler)
+            {
+                return true;
+            }
+
+            var settingsOld = settingsDiff.SettingsOld;
+            if (settingsOld == null)
+            {
+                return true;
+            }
+
+            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance !=
+                settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Returns true if the area values in the TransitionChromInfo's can be trusted so that the data from the .skyd does not need to be examined.
         /// </summary>
-        private bool CanUseOldResults(PeptideSettingsDiff peptideSettingsDiff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
+        private bool CanUseOldResults(SrmSettings settingsNew, SrmSettingsDiff diff, TransitionGroupDocNode nodePrevious, int chromIndex, int iResultOld)
         {
-            if (peptideSettingsDiff.MustReadAllChromatograms())
+            if (MustReadAllChromatograms(settingsNew, diff))
             {
                 return false;
             }
-
-            var settingsNew = peptideSettingsDiff.SettingsNew;
-            var diff = peptideSettingsDiff.SrmSettingsDiff;
             var measuredResults = settingsNew.MeasuredResults;
             var chromatograms = settingsNew.MeasuredResults.Chromatograms[chromIndex];
             var settingsOld = diff.SettingsOld;
@@ -2941,7 +2959,7 @@ namespace pwiz.Skyline.Model
             // Update properties so that the next settings change will update results correctly
             nodeResult = nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.PROPS);
             var diff = new SrmSettingsDiff(settings, true);
-            return nodeResult.UpdateResults(new PeptideSettingsDiff(settings, nodePep, diff), this);
+            return nodeResult.UpdateResults(settings, diff, nodePep, this);
         }
 
         /// <summary>
@@ -2993,7 +3011,7 @@ namespace pwiz.Skyline.Model
             var resultsInfo = MergeResultsUserInfo(settings, nodeGroupMerge.Results);
             if (!ReferenceEquals(resultsInfo, Results))
                 result = result.ChangeResults(resultsInfo);
-            return result.UpdateResults(new PeptideSettingsDiff(settings, nodePep, diff), this);
+            return result.UpdateResults(settings, diff, nodePep, this);
         }
 
         private Results<TransitionGroupChromInfo> MergeResultsUserInfo(
