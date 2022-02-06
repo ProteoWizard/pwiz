@@ -1036,7 +1036,11 @@ namespace pwiz.Skyline.Model
                         childrenNew.Add(nodeChanged);
                     }
 
-                    nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                    if (!ArrayUtil.ReferencesEqual(nodeResult.Children, childrenNew))
+                    {
+                        nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                        nodeResult = peptideSettingsDiff.RecalculateScores(nodeResult);
+                    }
                 }                
             }
 

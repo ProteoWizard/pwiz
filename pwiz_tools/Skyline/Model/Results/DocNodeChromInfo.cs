@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.LibraryDotProduct = prop);
         }
 
-        public TransitionGroupChromInfo ChangeScore(float qvalue, float score)
+        public TransitionGroupChromInfo ChangeScore(float? qvalue, float? score)
         {
             return ChangeProp(ImClone(this), im =>
             {

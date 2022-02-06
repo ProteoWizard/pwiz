@@ -2338,7 +2338,8 @@ namespace pwiz.Skyline.Model.Results
             int scoreIndex;
             if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
                 return float.NaN;
-            return ReadScores()[peakIndex*_scoreTypeIndices.Count + scoreIndex];
+            var scores = ReadScores();
+            return scores[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets

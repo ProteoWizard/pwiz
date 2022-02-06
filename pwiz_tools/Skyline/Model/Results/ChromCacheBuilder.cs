@@ -650,7 +650,7 @@ namespace pwiz.Skyline.Model.Results
             if (peptidePrecursorMz == null)
             {
                 pepDataSets = new PeptideChromDataSets(null,
-                    _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
+                    _document.Settings, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
                 pepDataSets.DataSets.Add(chromDataSet);
                 listChromData.Add(pepDataSets);
                 return;
@@ -664,7 +664,7 @@ namespace pwiz.Skyline.Model.Results
             if (!dictPeptideChromData.TryGetValue(key, out pepDataSets))
             {
                 pepDataSets = new PeptideChromDataSets(nodePep,
-                    _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
+                    _document.Settings, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
                 dictPeptideChromData.Add(key, pepDataSets);
             }
 

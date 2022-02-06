@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
@@ -21,34 +20,34 @@ namespace pwiz.Skyline.Model.Results
 
         private ScoreQValueMap _scoreQValueMap;
 
-        public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmDocument document,
+        public OnDemandFeatureCalculator(FeatureCalculators calculators, SrmSettings settings,
             PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfo chromFileInfo,
             ChromatogramLoader chromatogramLoader)
         {
             Calculators = calculators;
-            Document = document;
+            Settings = settings;
             PeptideDocNode = peptideDocNode;
             ChromFileInfo = chromFileInfo;
             ReplicateIndex = replicateIndex;
-            _scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
+            _scoreQValueMap = settings.PeptideSettings.Integration.ScoreQValueMap;
             _chromatogramLoader = chromatogramLoader;
         }
 
         public FeatureCalculators Calculators { get; }
-        public SrmDocument Document { get; }
+        public SrmSettings Settings { get; }
         public PeptideDocNode PeptideDocNode { get; }
         public int ReplicateIndex { get; }
         public ChromFileInfo ChromFileInfo { get; }
         public ChromatogramSet ChromatogramSet
         {
-            get { return Document.Settings.MeasuredResults.Chromatograms[ReplicateIndex]; }
+            get { return Settings.MeasuredResults.Chromatograms[ReplicateIndex]; }
         }
 
         public float MzMatchTolerance
         {
             get
             {
-                return (float) Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                return (float) Settings.TransitionSettings.Instrument.MzMatchTolerance;
             }
         }
 
@@ -116,6 +115,10 @@ namespace pwiz.Skyline.Model.Results
         {
             var transitionGroups = comparableSet.Select(dataSet => dataSet.NodeGroup).ToList();
             var chromatogramGroupInfos = peptideChromDataSets.MakeChromatogramGroupInfos(comparableSet).ToList();
+            if (chromatogramGroupInfos.Count == 0)
+            {
+                return Array.Empty<FeatureValues>();
+            }
             return CalculateChromatogramGroupScores(transitionGroups, chromatogramGroupInfos);
         }
 
@@ -157,7 +160,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                var otherChromatogramGroupInfo = Document.Settings.LoadChromatogramGroup(
+                var otherChromatogramGroupInfo = Settings.LoadChromatogramGroup(
                     ChromatogramSet, ChromFileInfo.FilePath, PeptideDocNode, otherTransitionGroup);
                 if (otherChromatogramGroupInfo != null)
                 {
@@ -234,7 +237,7 @@ namespace pwiz.Skyline.Model.Results
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
                 }
             }
-            var model = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            var model = Settings.PeptideSettings.Integration.PeakScoringModel;
             if (model == null || !model.IsTrained)
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
@@ -244,7 +247,7 @@ namespace pwiz.Skyline.Model.Results
 
         private PeakGroupScore MakePeakScore(FeatureValues featureValues)
         {
-            var model = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            var model = Settings.PeptideSettings.Integration.PeakScoringModel;
             if (model == null || !model.IsTrained)
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
@@ -255,9 +258,9 @@ namespace pwiz.Skyline.Model.Results
         internal IEnumerable<FeatureValues> CalculateChromatogramGroupScores(
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
-            var context = new PeakScoringContext(Document);
+            var context = new PeakScoringContext(Settings);
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(
-                Document, PeptideDocNode, transitionGroups, Document.MeasuredResults.Chromatograms[ReplicateIndex],
+                Settings, PeptideDocNode, transitionGroups, Settings.MeasuredResults.Chromatograms[ReplicateIndex],
                 ChromFileInfo, chromatogramGroupInfos);
             while (summaryData.NextPeakIndex())
             {
@@ -270,7 +273,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (calculator is DetailedPeakFeatureCalculator)
                     {
-                        scores.Add(chromatogramGroupInfos[0].GetScore(calculator.GetType(), summaryData.PeakIndex));
+                        scores.Add(chromatogramGroupInfos[0].GetScore(calculator.GetType(), summaryData.UsedBestPeakIndex ? summaryData.BestPeakIndex : summaryData.PeakIndex));
                     }
                 }
 
@@ -312,7 +315,7 @@ namespace pwiz.Skyline.Model.Results
 
         internal PeptideChromDataSets MakePeptideChromDataSets()
         {
-            var peptideChromDataSets = new PeptideChromDataSets(PeptideDocNode, Document, ChromFileInfo,
+            var peptideChromDataSets = new PeptideChromDataSets(PeptideDocNode, Settings, ChromFileInfo,
                 Calculators.Detailed, false);
             foreach (var transitionGroup in PeptideDocNode.TransitionGroups)
             {
@@ -345,7 +348,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var chromDataSet = new ChromDataSet(true, PeptideDocNode, transitionGroup,
-                    Document.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromDatas.ToArray());
+                    Settings.TransitionSettings.FullScan.AcquisitionMethod, chromDatas.ToArray());
                 peptideChromDataSets.Add(PeptideDocNode, chromDataSet);
             }
 
@@ -369,7 +372,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return _chromatogramLoader(ReplicateIndex, transitionGroup);
             }
-            var measuredResults = Document.Settings.MeasuredResults;
+            var measuredResults = Settings.MeasuredResults;
             ChromatogramGroupInfo[] infoSet;
             if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[ReplicateIndex], PeptideDocNode,
                     transitionGroup,
@@ -426,7 +429,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document, peptideDocNode, replicateIndex,
+            return new OnDemandFeatureCalculator(FeatureCalculators.ALL, document.Settings, peptideDocNode, replicateIndex,
                 chromFileInfo, null);
         }
     }

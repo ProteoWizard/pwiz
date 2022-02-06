@@ -714,15 +714,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private readonly Dictionary<Type, object> _dictInfo = new Dictionary<Type, object>();
 
-        public PeakScoringContext(SrmDocument document)
+        public PeakScoringContext(SrmSettings settings)
         {
-            Document = document;
+            Settings = settings;
         }
 
         /// <summary>
         /// The document in which the peaks are being scored
         /// </summary>
-        public SrmDocument Document { get; private set; }
+        public SrmSettings Settings { get; private set; }
 
         /// <summary>
         /// Stores information that can be used by other <see cref="IPeakFeatureCalculator"/> objects.
