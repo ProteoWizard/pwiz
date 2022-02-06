@@ -80,17 +80,15 @@ namespace pwiz.Skyline.Model
         public bool OverrideManual { get; set; }
         public bool IncludeDecoys { get; set; }
 
-        public ScoreQValueMap ScoreQValueMap { get; private set; }
-
         /// <summary>
         /// Forces the release of memory by breaking immutability to avoid doubling
         /// the document size in memory during command-line processing
         /// </summary>
         public bool FreeImmutableMemory { get; set; }
 
-        public PeakFeatureStatistics GetPeakFeatureStatistics(int pepIndex, int fileIndex)
+        public PeakFeatureStatistics GetPeakFeatureStatistics(Peptide peptide, ChromFileInfoId fileId)
         {
-            var key = new PeakTransitionGroupIdKey(pepIndex, fileIndex);
+            var key = new PeakTransitionGroupIdKey(peptide, fileId);
             PeakFeatureStatistics peakStatistics;
             if (_featureDictionary.TryGetValue(key, out peakStatistics))
             {

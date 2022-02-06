@@ -1395,8 +1395,7 @@ namespace pwiz.Skyline.Model
 
                 if (resultsHandler != null)
                 {
-                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(
-                        nodePep.Peptide.GlobalIndex, fileId.GlobalIndex);
+                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, fileId);
                 }
             }
             resultsCalc.AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
@@ -660,7 +661,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             RawTextId = nodePep.ModifiedTarget.ToString();
             RawUnmodifiedTextId = nodePep.Target.ToString();
             IsDecoy = nodePep.IsDecoy;
-            Key = new PeakTransitionGroupIdKey(nodePep.Id.GlobalIndex, FileId.GlobalIndex);
+            Key = new PeakTransitionGroupIdKey(nodePep.Peptide, FileId);
         }
 
         public PeptideGroupDocNode NodePepGroup { get; private set; }
@@ -697,18 +698,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public struct PeakTransitionGroupIdKey
     {
-        public PeakTransitionGroupIdKey(int pepIndex, int fileIndex) : this()
+        public PeakTransitionGroupIdKey(Peptide peptide, ChromFileInfoId fileId) : this()
         {
-            PepIndex = pepIndex;
-            FileIndex = fileIndex;
+            Peptide = peptide;
+            FileId = fileId;
         }
 
-        public int PepIndex { get; private set; }
-        public int FileIndex { get; private set; }
+        public Peptide Peptide { get; }
+        public ChromFileInfoId FileId { get; }
 
         public bool Equals(PeakTransitionGroupIdKey other)
         {
-            return PepIndex == other.PepIndex && FileIndex == other.FileIndex;
+            return ReferenceEquals(Peptide, other.Peptide) && ReferenceEquals(FileId, other.FileId);
         }
 
         public override bool Equals(object obj)
@@ -721,7 +722,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             unchecked
             {
-                return (PepIndex*397) ^ FileIndex;
+                return (RuntimeHelpers.GetHashCode(Peptide)*397) ^ RuntimeHelpers.GetHashCode(FileId);
             }
         }
     }
