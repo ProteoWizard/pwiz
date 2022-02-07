@@ -90,9 +90,9 @@ namespace pwiz.SkylineTest
                                                documentFormat);
                 if (isCurrent)
                 {
-                    // We have created a schema file for the current version, any further changes to the idea of "current" should involve an updated version number
                     if (versionedSchemaText != null)
                     {
+                        // We have created a schema file for the current version, any further changes to the idea of "current" should involve an updated version number
                         var xsdCurrentFileName = typeof(SchemaDocuments).Namespace + @".Skyline_Current.xsd";
                         var currentText = GetXsdResourceText(xsdCurrentFileName);
                         Assert.AreEqual(versionedSchemaText, currentText, 
