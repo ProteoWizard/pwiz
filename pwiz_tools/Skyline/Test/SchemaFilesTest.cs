@@ -19,6 +19,7 @@
 
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Serialization;
@@ -28,15 +29,15 @@ using pwiz.SkylineTestUtil.Schemas;
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Verfies existence of Skyline schema files
+    /// Verifies existence of Skyline schema files
     /// </summary>
     [TestClass]
-    public class DocumentFormatTest : AbstractUnitTest
+    public class SchemaDocumentsTest : AbstractUnitTest
     {
         /// <summary>
         /// This test enforces this proper relationship between DocumentFormat.CURRENT and the Skyline schema xsd files.
         /// 
-        /// Our versioning convention since 2019 is a double yy.n where yy is a two digit year, and n is the release count. So
+        /// Our version number convention since 2019 is a double yy.n where yy is a two digit year, and n is the release count. So
         /// if the second release in 2021 involved a schema change, we'd expect to find a file Skyline_21_2.xsd, and a value
         /// declared in the DocumentFormat.cs as "public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2);".
         ///
@@ -54,11 +55,34 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestDocumentFormatSchemaFiles()
         {
+            string explicitCurrentResourceName = GetVersionSpecificXsdResourceName(DocumentFormat.CURRENT);
+            var explicitCurrentXsdContents =
+                GetResourceText(GetVersionSpecificXsdResourceName(DocumentFormat.CURRENT));
+            if (IsOfficialBuild())
+            {
+                // When we are releasing a new Skyline or Skyline-Daily, we expect that there will exist
+                // a "Skyline_X.Y.xsd" file with the current version.
+                // That way, the next times someone wants to modify Skyline_Current.xsd, they will know that they
+                // also have to increment the current version number.
+                Assert.IsNotNull(explicitCurrentXsdContents,
+                    "Resource {0} should exist for official Daily or Release build\r\n" +
+                    "Copy pwiz_tools/Skyline/TestUtil/Schemas/Skyline_Current.xsd to {1} and mark it as an embedded resource.",
+                    explicitCurrentResourceName, Path.GetFileName(explicitCurrentXsdContents));
+            }
+
+            var currentXsdContents =
+                GetResourceText(SchemaDocuments.GetSkylineSchemaResourceName(DocumentFormat.CURRENT.ToString()));
+            Assert.IsNotNull(currentXsdContents);
+            if (explicitCurrentXsdContents != null)
+            {
+                Assert.AreEqual(currentXsdContents, explicitCurrentXsdContents);
+            }
+
             // List all the historical values of VERSION_* (located in DocumentFormat.cs)
-            var fields = typeof(DocumentFormat).GetFields(BindingFlags.Static | BindingFlags.Public);
-            Assert.AreNotEqual(0, fields.Length);
+            var documentFormatPublicStaticFields = typeof(DocumentFormat).GetFields(BindingFlags.Static | BindingFlags.Public);
+            Assert.AreNotEqual(0, documentFormatPublicStaticFields.Length);
             int versionsFound = 0;
-            foreach (var field in fields)
+            foreach (var field in documentFormatPublicStaticFields)
             {
                 if (field.FieldType != typeof(DocumentFormat))
                 {
@@ -76,39 +100,14 @@ namespace pwiz.SkylineTest
                     continue;
                 }
 
-                var versionedSchemaText = GetXsdResourceText(SchemaDocuments.GetSkylineSchemaResourceName(documentFormat.ToString()));
-                var isCurrent = Equals(documentFormat, DocumentFormat.CURRENT);
-
-                if (!isCurrent) // Older version, insist on a proper xsd file
-                {
-                    Assert.IsNotNull(versionedSchemaText, "Missing XSD embedded resource for version {0}", documentFormat);
-                }
-                // TODO(nicksh) add a check for "is this a release", and insist on a skyline_yy_n.xsd
-
-                var xsdVersionedFileName = typeof(SchemaDocuments).Namespace + @"." +
-                                           string.Format(CultureInfo.InvariantCulture, @"Skyline_{0}.xsd",
-                                               documentFormat);
-                if (isCurrent)
-                {
-                    if (versionedSchemaText != null)
-                    {
-                        // We have created a schema file for the current version, any further changes to the idea of "current" should involve an updated version number
-                        var xsdCurrentFileName = typeof(SchemaDocuments).Namespace + @".Skyline_Current.xsd";
-                        var currentText = GetXsdResourceText(xsdCurrentFileName);
-                        Assert.AreEqual(versionedSchemaText, currentText, 
-                            string.Format("Contents of {0} and {1} are not identical - did you forget to declare a new DocumentFormat.VERSION_yy_n (and change DocumentFormat.CURRENT to match) before changing contents of {1}?",
-                                xsdVersionedFileName, xsdCurrentFileName));
-                    }
-                }
-                else 
-                {
-                    Assert.AreEqual(SchemaDocuments.GetSkylineSchemaResourceName(documentFormat.ToString()), xsdVersionedFileName);
-                }
+                var versionedSchemaText =
+                    GetResourceText(SchemaDocuments.GetSkylineSchemaResourceName(documentFormat.ToString()));
+                Assert.IsNotNull(versionedSchemaText, "Missing XSD embedded resource for version {0}", documentFormat);
             }
             Assert.AreNotEqual(0, versionsFound);
         }
 
-        private string GetXsdResourceText(string resourceName)
+        private string GetResourceText(string resourceName)
         {
             using (var resourceStream = typeof(SchemaDocuments).Assembly.GetManifestResourceStream(resourceName))
             {
@@ -120,6 +119,45 @@ namespace pwiz.SkylineTest
                 return new StreamReader(resourceStream).ReadToEnd();
             }
         }
+        /// <summary>
+        /// Returns the location of the embedded reasource "Skyline_X.Y.xsd" file in TestUtil.dll.
+        /// This is the same as what <see cref="SchemaDocuments.GetSkylineSchemaResourceName"/> returns,
+        /// except that the other function returns the string "Skyline_Current.xsd" if you ask for
+        /// the schema file for the current version.
+        /// </summary>
+        private string GetVersionSpecificXsdResourceName(DocumentFormat documentFormat)
+        {
+            string resourceName =
+                typeof(SchemaDocuments).Namespace + @"." +
+                string.Format(CultureInfo.InvariantCulture, @"Skyline_{0}.xsd", documentFormat);
+            if (!Equals(documentFormat, DocumentFormat.CURRENT))
+            {
+                Assert.AreEqual(SchemaDocuments.GetSkylineSchemaResourceName(documentFormat.ToString()), resourceName);
+            }
 
+            return resourceName;
+        }
+
+        /// <summary>
+        /// Returns true if Skyline was built with the "--official" command line flag.
+        /// </summary>
+        private static bool IsOfficialBuild()
+        {
+            // Get the version attribute from the Skyline.exe assembly.
+            var versionAttribute = typeof(Skyline.Program).Assembly.GetCustomAttributes()
+                .OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault();
+            if (versionAttribute == null)
+            {
+                return false;
+            }
+
+            if (versionAttribute.InformationalVersion.Contains("(developer build)") ||
+                versionAttribute.InformationalVersion.Contains("(automated build)"))
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }
