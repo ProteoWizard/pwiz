@@ -157,6 +157,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "StartPageSettingsUI";
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.groupBox1.ResumeLayout(false);
