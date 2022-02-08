@@ -253,13 +253,9 @@ namespace pwiz.Skyline.FileUI
                     if (hasHeaders && Equals(_associateProteinsMode, AssociateProteinsMode.preview))
                     {
                         // Add a header we should recognize
-                        var newHeaders = new string[_originalColumnIDs.Length + 1];
-                        newHeaders[0] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
-                        for (int i = 0; i < _originalColumnIDs.Length; i++)
-                        {
-                            newHeaders[i + 1] = _originalColumnIDs[i];
-                        }
-                        Importer.RowReader.Indices.Headers = newHeaders;
+                        Importer.RowReader.Indices.Headers = _originalColumnIDs
+                            .Prepend(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
+                            .ToArray();
                     }
 
                     // Get a dictionary of peptides under consideration and the proteins they're associated with
@@ -1154,9 +1150,9 @@ namespace pwiz.Skyline.FileUI
 
             if (checkBoxAssociateProteins.Checked)
             {
-                UpdateProteinAssociationState(AssociateProteinsMode.all_interactive, out var canceled);
-                if (canceled)
+                if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
                 {
+                    // User canceled
                     _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
                     return false;
                 }
@@ -1393,25 +1389,30 @@ namespace pwiz.Skyline.FileUI
 
         private void checkBoxAssociateProteins_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateProteinAssociationState(AssociateProteinsMode.preview, out _);
+            UpdateProteinAssociationState(AssociateProteinsMode.preview);
         }
 
-        private void UpdateProteinAssociationState(AssociateProteinsMode mode, out bool canceled)
+        /// <summary>
+        /// Performs the associate proteins action, to the degree indicated by mode argument
+        /// </summary>
+        /// <param name="mode">Determines completeness and interactivity of asscociate proteins action</param>
+        /// <returns>True if not canceled by user</returns>
+        private bool UpdateProteinAssociationState(AssociateProteinsMode mode)
         {
             var oldPositions = CurrentColumnPositions();
             var proteinName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
-            canceled = false;
+            var canceled = false;
             if (checkBoxAssociateProteins.Checked)
             {
                 if (Importer.RowReader.Indices.PeptideColumn == -1)
                 {
                     checkBoxAssociateProteins.Checked = false; // Can't associate peptides to proteins without peptides
-                    return;
+                    return true; // Not canceled
                 }
 
                 if (isAssociated && Equals(mode, AssociateProteinsMode.preview) && Equals(_columnDropdownNamesAtSuccessfulAssociateProteins, _currentColumnDropdownNames))
                 {
-                    return; // We have already handled the first bunch of visible peptides
+                    return true; // We have already handled the first bunch of visible peptides
                 }
 
                 if (mode == AssociateProteinsMode.preview)
@@ -1482,6 +1483,8 @@ namespace pwiz.Skyline.FileUI
             {
                 ReverseAssociateProteins();
             }
+
+            return !canceled;
         }
     }
 }  
