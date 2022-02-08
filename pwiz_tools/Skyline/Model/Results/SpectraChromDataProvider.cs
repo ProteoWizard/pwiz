@@ -864,7 +864,7 @@ namespace pwiz.Skyline.Model.Results
                 get
                 {
                     // If the data file has been disposed, then count this as 100% complete
-                    if (_currentInfo.IsLast)
+                    if (_currentInfo == null || _currentInfo.IsLast)
                         return 100;
                     return Math.Max(0, CurrentIndex)*100/_countSpectra;
                 }
