@@ -218,9 +218,9 @@ namespace BuildAnalystFullScanMethod
                     throw new IOException("Failed to initialize. Analyst may need to be started.");
                 }
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException x)
             {
-                throw new IOException("Failed to initialize. Analyst may need to be started, or it may be conflicting with a SCIEX OS installation.");
+                throw new IOException("Failed to initialize. Analyst may need to be started, or it may be conflicting with a SCIEX OS installation.", x);
             }
 
             object acqMethodObj;
@@ -230,7 +230,7 @@ namespace BuildAnalystFullScanMethod
             }
             catch (COMException x)
             {
-                throw new IOException(string.Format("Failed to initialize. Analyst may need to be started. ({0})", x.Message));
+                throw new IOException("Failed to initialize. Analyst may need to be started.", x);
             }
             IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
 
