@@ -19,10 +19,10 @@
 
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using pwiz.SkylineTestUtil.Schemas;
 
@@ -145,21 +145,7 @@ namespace pwiz.SkylineTest
         /// </summary>
         private static bool IsOfficialBuild()
         {
-            // Get the version attribute from the Skyline.exe assembly.
-            var versionAttribute = typeof(Skyline.Program).Assembly.GetCustomAttributes()
-                .OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault();
-            if (versionAttribute == null)
-            {
-                return false;
-            }
-
-            if (versionAttribute.InformationalVersion.Contains("(developer build)") ||
-                versionAttribute.InformationalVersion.Contains("(automated build)"))
-            {
-                return false;
-            }
-
-            return true;
+            return !Install.IsDeveloperInstall && !Install.IsAutomatedBuild;
         }
     }
 }
