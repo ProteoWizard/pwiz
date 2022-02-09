@@ -786,18 +786,18 @@ namespace pwiz.Skyline.Util
                 return shareType;
             }
 
-            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
-            CacheFormatVersion supportedVersion = supportedVersions.Item1;
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
+            CacheFormatVersion supportedVersion = supportedSkylineVersion.CacheFormatVersion;
             if (supportedVersion >= cacheVersion.Value)
             {
                 return shareType;
             }
             
-            return shareType.ChangeSkylineVersion(supportedVersions.Item2);
+            return shareType.ChangeSkylineVersion(supportedSkylineVersion);
         }
 
 
-        private Tuple<CacheFormatVersion, SkylineVersion> GetSupportedVersionsForCacheFormat(FolderInformation folderInfo, CacheFormatVersion? cacheVersion)
+        private SkylineVersion GetSupportedVersionForCacheFormat(FolderInformation folderInfo, CacheFormatVersion? cacheVersion)
         {
             var skydVersion = GetSupportedSkydVersion(folderInfo);
             SkylineVersion skylineVersion;
@@ -825,7 +825,7 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            return new Tuple<CacheFormatVersion, SkylineVersion>(skydVersion, skylineVersion);
+            return skylineVersion;
         }
 
         private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
@@ -838,10 +838,9 @@ namespace pwiz.Skyline.Util
         public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
             var cacheVersion = GetDocumentCacheVersion(document);
-            var supportedVersions = GetSupportedVersionsForCacheFormat(folderInfo, cacheVersion);
-            var skylineVersion = supportedVersions.Item2;
-
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, skylineVersion))
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
+            
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, supportedSkylineVersion))
             {
                 if (dlgType.ShowDialog(parent) == DialogResult.Cancel)
                 {
