@@ -543,7 +543,8 @@ namespace pwiz.Skyline.FileUI
             List<TransitionImportErrorInfo> testErrorList1 = null;
             insertionParams.Document = _docCurrent.ImportMassList(input, Importer, null,
                 _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                out insertionParams.LibrarySpectra, out testErrorList1, out insertionParams.PeptideGroups);
+                out insertionParams.LibrarySpectra, out testErrorList1, out insertionParams.PeptideGroups,
+                null, SrmDocument.DOCUMENT_TYPE.none, false);
 
             var allError = ReferenceEquals(insertionParams.Document, _docCurrent);
             // If all transitions are errors, reset the columns to the detected columns

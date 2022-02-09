@@ -487,9 +487,6 @@
   <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
     <value>&amp;Create...</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>Error on line {0}: Precursor m/z {1} does not agree with value {2} as calculated from ion formula and charge state (delta = {3}, Transition Settings | Instrument | Method match tolerance m/z = {4}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
-  </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
   </data>
@@ -1344,9 +1341,6 @@
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>The file {0} could not be opened. {1}</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>Error on line {0}: Product m/z {1} does not agree with value {2} as calculated from ion formula and charge state (delta = {3}, Transition Settings | Instrument | Method match tolerance m/z = {4}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>Please use a full path to a database file for the iRT calculator.</value>
   </data>
@@ -1753,9 +1747,6 @@
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
     <value>Find Spectral Library</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>Error on line {0}: Precursor formula and m/z value do not agree for any charge state.</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>Failed training the model:</value>
@@ -2928,9 +2919,6 @@ Are you sure you want to continue?</value>
   <data name="EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection" xml:space="preserve">
     <value>Invalid model selection.</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>Error on line {0}: Product formula and m/z value do not agree for any charge state.</value>
-  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>The chosen folder does not appear to contain a Bruker TOF method template. The folder is expected to have a .m extension, and contain the file submethods.xml.</value>
   </data>
@@ -2960,9 +2948,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_" xml:space="preserve">
     <value>Error: The file {0} is not a supported spectral library file format.</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>Error on line {0}: Precursor needs values for any two of: Formula, m/z or Charge.</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>You must choose at least one replicate</value>
@@ -7919,9 +7904,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>Unexpected use of iRT calculator before successful initialization.</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>Error on line {0}: Product needs values for any two of: Formula, m/z or Charge.</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
     <value>Skyline Shared Documents</value>
   </data>
@@ -8563,12 +8545,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
     <value>Insert Molecule Transition List</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>Error on line {0}, column {1}: {2}</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
-    <value>Error on line {0}: {1}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>Error reading molecule column headers, did not recognize:
@@ -11644,5 +11620,23 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
 	  <value>Finding peptides in FASTA file</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
+	  <value>Precursor m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
+	  <value>Product m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+	  <value>Precursor formula and m/z value do not agree for any charge state.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+	  <value>Product formula and m/z value do not agree for any charge state.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+	  <value>Precursor needs values for any two of: Formula, m/z or Charge.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+	  <value>Product needs values for any two of: Formula, m/z or Charge.</value>
   </data>
 </root>
