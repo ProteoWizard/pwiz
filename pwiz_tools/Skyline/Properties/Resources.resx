@@ -11639,4 +11639,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
 	  <value>Product needs values for any two of: Formula, m/z or Charge.</value>
   </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Quantification" xml:space="preserve">
+	  <value>Molecule Quantification</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
+	  <value>Molecule Ratio Results</value>
+  </data>
 </root>

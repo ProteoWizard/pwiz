@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 10; } }
+        public int RevisionIndexCurrent { get { return 11; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -166,6 +166,11 @@ namespace pwiz.Skyline.Model
                 reportStrings.Add(REPORTS_V10);
             }
 
+            if (revisionIndex >= 11)
+            {
+                reportStrings.Add(REPORTS_V11);
+            }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -182,6 +187,8 @@ namespace pwiz.Skyline.Model
                 {"Peptide Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List)},
                 {"Mixed Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List)},
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
+                {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
+                {"Molecule Ratio Results", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
             };
             // ReSharper restore LocalizableElement
@@ -506,6 +513,29 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
+
+        private const string REPORTS_V11 = @"<views>
+  <view name='Molecule Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='StandardType' />
+    <column name='InternalStandardConcentration' />
+    <column name='ConcentrationMultiplier' />
+    <column name='NormalizationMethod' />
+    <column name='CalibrationCurve' />
+    <column name='Note' />
+  </view>
+  <view name='Molecule Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='Results!*.Value.ResultFile.Replicate' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.RatioToStandard' />
+    <column name='Results!*.Value.Quantification' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+</views>";
 
         // ReSharper restore LocalizableElement
 
