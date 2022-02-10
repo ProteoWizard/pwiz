@@ -6775,9 +6775,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
     <value>{0} existing</value>
   </data>
-  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
-    <value>Mixed Transition List</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>Opt Declustering Potential</value>
   </data>

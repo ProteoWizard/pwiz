@@ -185,7 +185,6 @@ namespace pwiz.Skyline.Model
                 {"Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Transition_Results)},
                 {"Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries)},
                 {"Peptide Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List)},
-                {"Mixed Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List)},
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
                 {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
                 {"Molecule Ratio Results", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results)},
@@ -297,40 +296,6 @@ namespace pwiz.Skyline.Model
     <column name='ProductMz' />
     <column name='ProductCharge' />
     <column name='FragmentIon' />
-    <column name='FragmentIonType' />
-    <column name='FragmentIonOrdinal' />
-    <column name='CleavageAa' />
-    <column name='LossNeutralMass' />
-    <column name='Losses' />
-    <column name='LibraryRank' />
-    <column name='LibraryIntensity' />
-    <column name='IsotopeDistIndex' />
-    <column name='IsotopeDistRank' />
-    <column name='IsotopeDistProportion' />
-    <column name='FullScanFilterWidth' />
-    <column name='IsDecoy' />
-    <column name='ProductDecoyMzShift' />
-  </view>
-  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
-    <column name='Precursor.Peptide.Protein.Name' />
-    <column name='Precursor.Peptide.ModifiedSequence' />
-    <column name='Precursor.Peptide.MoleculeName' />
-    <column name='Precursor.Peptide.MoleculeFormula' />
-    <column name='Precursor.IonFormula' />
-    <column name='Precursor.NeutralFormula' />
-    <column name='Precursor.Adduct' />
-    <column name='Precursor.Mz' />
-    <column name='Precursor.Charge' />
-    <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
-    <column name='Precursor.Peptide.ExplicitRetentionTime' />
-    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
-    <column name='ProductMz' />
-    <column name='ProductCharge' />
-    <column name='FragmentIon' />
-    <column name='ProductIonFormula' />
-    <column name='ProductNeutralFormula' />
-    <column name='ProductAdduct' />
     <column name='FragmentIonType' />
     <column name='FragmentIonOrdinal' />
     <column name='CleavageAa' />
@@ -458,40 +423,6 @@ namespace pwiz.Skyline.Model
         // There is no REPORTS_V9 in order to work around a problem where V4 was changed.
 
         private const string REPORTS_V10 = @"<views>
-  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='mixed'>
-    <column name='Precursor.Peptide.Protein.Name' />
-    <column name='Precursor.Peptide.ModifiedSequence' />
-    <column name='Precursor.Peptide.MoleculeName' />
-    <column name='Precursor.Peptide.MoleculeFormula' />
-    <column name='Precursor.IonFormula' />
-    <column name='Precursor.NeutralFormula' />
-    <column name='Precursor.Adduct' />
-    <column name='Precursor.Mz' />
-    <column name='Precursor.Charge' />
-    <column name='Precursor.CollisionEnergy' />
-    <column name='ExplicitCollisionEnergy' />
-    <column name='Precursor.Peptide.ExplicitRetentionTime' />
-    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
-    <column name='ProductMz' />
-    <column name='ProductCharge' />
-    <column name='FragmentIon' />
-    <column name='ProductIonFormula' />
-    <column name='ProductNeutralFormula' />
-    <column name='ProductAdduct' />
-    <column name='FragmentIonType' />
-    <column name='FragmentIonOrdinal' />
-    <column name='CleavageAa' />
-    <column name='LossNeutralMass' />
-    <column name='Losses' />
-    <column name='LibraryRank' />
-    <column name='LibraryIntensity' />
-    <column name='IsotopeDistIndex' />
-    <column name='IsotopeDistRank' />
-    <column name='IsotopeDistProportion' />
-    <column name='FullScanFilterWidth' />
-    <column name='IsDecoy' />
-    <column name='ProductDecoyMzShift' />
-  </view>
   <view name='Small Molecule Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='small_molecules'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.MoleculeName' />
