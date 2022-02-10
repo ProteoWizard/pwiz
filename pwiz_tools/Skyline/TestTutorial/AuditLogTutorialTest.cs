@@ -454,7 +454,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.AuditLogForm.Parent.Parent.Height += 10); // Extra for 2-line headers
             PauseForScreenShot<AuditLogForm>("Audit Log with custom view.", 18);
 
-            var registrationDialog = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(null));
+            var confirmSaveDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(null));
+            Assert.AreEqual(Resources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes, confirmSaveDlg.Message);
+            // Consider(nicksh): Do we need to add a screenshot of the confirm save dialog to the tutorial document?
+            var registrationDialog = ShowDialog<MultiButtonMsgDlg>(confirmSaveDlg.ClickYes);
             PauseForScreenShot<MultiButtonMsgDlg>("Upload confirmation dialog.", 19);
 
             var loginDialog = ShowDialog<EditServerDlg>(registrationDialog.ClickNo);
