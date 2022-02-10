@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
             // for sharing should be listed as options in the ShareTypeDlg.
             var supportedVersions = new List<string> { savedFileVersion };
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
-            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
             // Server supports the document's cache version. Even though this version (skyd 9) is not associated with
             // any of the Skyline versions supported for sharing we should see all of them in the available options since 
             // the cache format of the document does not change when it is shared.
-            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
             // Server supports a higher version than the document. 
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "13";
             // The current saved file format and all the Skyline versions supported for sharing should be available as options.
-            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
 
             // Document should be published even if an invalid version is returned by the server -- Success 
@@ -179,12 +179,17 @@ namespace pwiz.SkylineTestFunctional
             // If there is an error in getting a response from the server or an error in parsing the version returned by the server
             // PanoramaPublishClient.GetSupportedSkydVersion() returns CacheFormatVersion.CURRENT. So the available options in the 
             // ShareTypeDlg will include the current saved file format and all versions supported for sharing.
-            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
 
             // After a document has been published, it is "dirty" because a "panorama_publish_uri" is added.
-            // The share type dialog will no longer show the "Current file version..." as the selected option
-            supportedVersions = new List<string>(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
-            CheckPublishSuccess(WRITE_TARGETED, true, true, supportedVersions);
+            // Attempting to publish it again will save the document. Now the selected "Current file version..." option
+            // will be the Skyline version that corresponds to the latest document format.
+            documentFormat = DocumentFormat.CURRENT;
+            savedFileVersion = string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__,
+                documentFormat.Value.GetDescription());
+            supportedVersions = new List<string> { savedFileVersion };
+            supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
+            CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions);
 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd15.sky")));
             WaitForDocumentLoaded();
@@ -194,34 +199,24 @@ namespace pwiz.SkylineTestFunctional
             supportedVersions = SkylineVersion.SupportedForSharing()
                 .Where(ver => ver.CacheFormatVersion <= CacheFormatVersion.Fourteen)
                 .Select(v => v.ToString()).ToList();
-            CheckPublishSuccess(WRITE_TARGETED, false, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
 
             TestPanoramaServerUrls();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
         {
-            CheckPublishSuccess(nodeSelection, expectingSavedUri, false, null);
+            CheckPublishSuccess(nodeSelection, expectingSavedUri, null);
         }
 
-        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, bool hasUnsavedChanges, IList<string> supportedVersions)
+        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, IList<string> supportedVersions)
         {
             bool hasSavedUri = SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri != null;
             Assert.AreEqual(expectingSavedUri, hasSavedUri);
             if (hasSavedUri)
             {
                 // Test click don't use saved uri
-                MultiButtonMsgDlg publishToSavedUri;
-                if (hasUnsavedChanges)
-                {
-                    var saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-                    OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-                    publishToSavedUri = WaitForOpenForm<MultiButtonMsgDlg>();
-                }
-                else
-                {
-                    publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-                }
+                MultiButtonMsgDlg publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
 
                 OkDialog(publishToSavedUri, publishToSavedUri.ClickYes);
                 var shareTypeDlg = WaitForOpenForm<ShareTypeDlg>();
@@ -258,18 +253,6 @@ namespace pwiz.SkylineTestFunctional
         {
             var availableItems = shareTypeDlg.GetAvailableVersionItems();
             AssertEx.AreEqualDeep(supportedVersions, availableItems);
-        }
-
-        public void CheckPublishFailureNoVersions(string failureMessage)
-        {
-            var saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
-            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-            var publishToSavedUri = WaitForOpenForm<MultiButtonMsgDlg>();
-            RunDlg<MessageDlg>(publishToSavedUri.ClickYes, messageDlg =>
-            {
-                Assert.AreEqual(messageDlg.Message, failureMessage);
-                messageDlg.OkDialog();
-            });
         }
 
         public void CheckPublishFailure(string nodeSelection, string failureMessage)
