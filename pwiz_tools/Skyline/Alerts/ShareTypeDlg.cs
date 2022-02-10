@@ -23,6 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using System.Linq;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -33,11 +34,15 @@ namespace pwiz.Skyline.Alerts
     public partial class ShareTypeDlg : FormEx
     {
         private List<SkylineVersion> _skylineVersionOptions;
-        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat)
+        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
+        {
+        }
+
+        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion)
         {
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
-            if (savedFileFormat.HasValue)
+            if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
                 _skylineVersionOptions.Add(null);
                 comboSkylineVersion.Items.Add(string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__, savedFileFormat.Value.GetDescription()));
@@ -45,8 +50,12 @@ namespace pwiz.Skyline.Alerts
 
             foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
             {
-                _skylineVersionOptions.Add(skylineVersion);
-                comboSkylineVersion.Items.Add(skylineVersion.ToString());
+                // Show only those versions supported by the Panorama server.
+                if (skylineVersion.CompareTo(maxSupportedVersion) <= 0)
+                {
+                    _skylineVersionOptions.Add(skylineVersion);
+                    comboSkylineVersion.Items.Add(skylineVersion.ToString());
+                }
             }
             comboSkylineVersion.SelectedIndex = 0;
             radioComplete.Checked = true;
@@ -101,6 +110,12 @@ namespace pwiz.Skyline.Alerts
                     radioMinimal.Checked = true;
                 }
             }
+        }
+
+        // Added for functional tests
+        public IList<string> GetAvailableVersionItems()
+        {
+            return comboSkylineVersion.Items.OfType<string>().ToList();
         }
     }
 }
