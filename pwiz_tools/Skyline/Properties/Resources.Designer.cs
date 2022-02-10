@@ -3133,6 +3133,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of score thresholds does not match number of rows in grid..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_" +
+                        "not_match_number_of_rows_in_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading block from file..
         /// </summary>
         public static string BulkReadException_BulkReadException_Failed_reading_block_from_file {

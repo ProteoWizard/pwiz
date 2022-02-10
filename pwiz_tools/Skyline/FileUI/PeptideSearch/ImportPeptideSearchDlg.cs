@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -753,6 +754,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
+                    BuildPepSearchLibControl.ScoreThresholds = ImportPeptideSearch.SearchFilenames.Select(f =>
+                        Tuple.Create(BiblioSpecScoreType.GenericQValue, (double?)(1 - BuildPepSearchLibControl.CutOffScore)));
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
                         return;
@@ -1088,9 +1091,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private bool BuildPeptideSearchLibrary(CancelEventArgs e)
+        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings = true)
         {
-            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e);
+            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings);
             if (result)
             {
                 SkylineWindow.ModifyDocument(

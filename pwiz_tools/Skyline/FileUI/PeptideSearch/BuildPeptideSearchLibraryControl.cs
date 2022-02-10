@@ -476,21 +476,50 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public IEnumerable<Tuple<BiblioSpecScoreType, double?>> ScoreThresholds
+        {
+            get
+            {
+                lock (_gridFilesLock)
+                {
+                    foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>())
+                        yield return Tuple.Create(ScoreTypeCellValue.Get(row, columnScoreType).ScoreType, ThresholdCell.Get(row, columnThreshold).Threshold);
+                }
+            }
+
+            set
+            {
+                var thresholdArr = value.ToArray();
+                lock (_gridFilesLock)
+                {
+                    if (thresholdArr.Length != gridSearchFiles.RowCount)
+                        throw new Exception(Resources.BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_);
+                    for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                    {
+                        var row = gridSearchFiles.Rows[i];
+                        var values = thresholdArr[i];
+                        ScoreTypeCellValue.Get(row, columnScoreType).ScoreType = values.Item1;
+                        ThresholdCell.Get(row, columnThreshold).Threshold = values.Item2;
+                    }
+                }
+            }
+        }
+
         public bool IncludeAmbiguousMatches
         {
             get { return cbIncludeAmbiguousMatches.Checked; }
             set { cbIncludeAmbiguousMatches.Checked = value; }
         }
 
-        public bool BuildOrUsePeptideSearchLibrary(CancelEventArgs e)
+        public bool BuildOrUsePeptideSearchLibrary(CancelEventArgs e, bool showWarnings)
         {
-            return UseExistingLibrary ? AddExistingLibrary(e) : BuildPeptideSearchLibrary(e);
+            return UseExistingLibrary ? AddExistingLibrary(e) : BuildPeptideSearchLibrary(e, showWarnings);
         }
 
         public string LastBuildCommandArgs { get; private set; }
         public string LastBuildOutput { get; private set; }
 
-        private bool BuildPeptideSearchLibrary(CancelEventArgs e)
+        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings)
         {
             // Nothing to build, if now search files were specified
             if (!SearchFilenames.Any())
@@ -533,32 +562,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
-                foreach (var pair in thresholdsByScoreType)
+                if (showWarnings)
                 {
-                    var scoreType = pair.Key;
-                    var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
-                    var threshold = pair.Value;
-                    if (threshold < suggestedMin || threshold > suggestedMax)
+                    foreach (var pair in thresholdsByScoreType)
                     {
-                        var warning = string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_, threshold, scoreType.DisplayName);
-                        if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
-                            warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
-                        else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
-                            warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
-                        warnings.Add(warning);
+                        var scoreType = pair.Key;
+                        var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
+                        var threshold = pair.Value;
+                        if (threshold < suggestedMin || threshold > suggestedMax)
+                        {
+                            var warning =
+                                string.Format(
+                                    Resources
+                                        .BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_,
+                                    threshold, scoreType.DisplayName);
+                            if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
+                                warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                    scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
+                            else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
+                                warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                    scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
+                            warnings.Add(warning);
+                        }
                     }
-                }
-                if (warnings.Any())
-                {
-                    warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
-                    if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+
+                    if (warnings.Any())
                     {
-                        e.Cancel = true;
-                        return false;
+                        warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
+                        if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                        {
+                            e.Cancel = true;
+                            return false;
+                        }
                     }
                 }
             }
@@ -934,7 +971,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private class ScoreTypeCellValue
         {
-            public BiblioSpecScoreType ScoreType { get; }
+            public BiblioSpecScoreType ScoreType { get; set; }
             public string NameInvariant => ScoreType?.NameInvariant;
             public double MinValue => ScoreType?.ValidRange.Item1 ?? 0;
             public double MaxValue => ScoreType?.ValidRange.Item2 ?? 1;
@@ -976,6 +1013,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             return double.TryParse(Value.ToString(), out var threshold) ? (double?)threshold : null;
                     }
                 }
+
+                set => Value = value;
             }
 
             public ThresholdCell(double? threshold = null)

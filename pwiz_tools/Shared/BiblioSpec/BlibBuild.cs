@@ -106,6 +106,8 @@ namespace pwiz.BiblioSpec
         public string NameInvariant { get; }
         public EnumProbabilityType ProbabilityType { get; }
 
+        public static BiblioSpecScoreType GenericQValue => new BiblioSpecScoreType(GENERIC_QVALUE, PROBABILITY_INCORRECT);
+
         public BiblioSpecScoreType(string name, string probabilityType)
         {
             NameInvariant = name;
