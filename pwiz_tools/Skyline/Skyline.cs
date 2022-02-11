@@ -4329,7 +4329,7 @@ namespace pwiz.Skyline
                 }
                 return;
             }
-            var bookmark = new Bookmark();
+            var bookmark = Bookmark.ROOT;
             var resultRef = elementRef as ResultRef;
             if (resultRef != null)
             {

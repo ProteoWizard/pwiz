@@ -37,7 +37,7 @@ namespace pwiz.SkylineTest
         {
             var assembly = Assembly.GetAssembly(typeof (BookmarkEnumeratorTest));
             var stream = assembly.GetManifestResourceStream(
-                typeof (BookmarkEnumeratorTest).Namespace + ".BookmarkEnumeratorTest.sky");
+                typeof(BookmarkEnumeratorTest), "BookmarkEnumeratorTest.sky");
             Assert.IsNotNull(stream);
             var document = (SrmDocument) new XmlSerializer(typeof (SrmDocument)).Deserialize(stream);
             Assert.IsNotNull(document);
@@ -48,8 +48,7 @@ namespace pwiz.SkylineTest
             Assert.AreNotEqual(0, forwardList.Count);
             Assert.AreEqual(forwardList.Count, backwardList.Count);
             
-            // The very last location is the same for both the forwards and backwards enumerators.
-            backwardList.Reverse(0, backwardList.Count - 1);
+            backwardList.Reverse();
             CollectionAssert.AreEqual(forwardList, backwardList);
 
             var forwardSet = new HashSet<Bookmark>(forwardList);
