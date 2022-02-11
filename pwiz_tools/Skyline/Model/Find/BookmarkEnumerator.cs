@@ -109,26 +109,28 @@ namespace pwiz.Skyline.Model.Find
             {
                 return false;
             }
-            var currentFileIdOptStep = GetFileIdOptStep(current);
+            var currentResultPosition = GetResultPosition(current);
             for (int replicateIndex = ResultsIndex;
                  replicateIndex < (Document.Settings.MeasuredResults?.Chromatograms.Count ?? 0);
                  replicateIndex++)
             {
-                foreach (var fileIdOpt in GetFileIdOptSteps(currentDocNode, replicateIndex))
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, replicateIndex))
                 {
-                    if (currentFileIdOptStep == null)
+                    if (currentResultPosition == null)
                     {
-                        SetPosition(current.ChangeResult(replicateIndex, fileIdOpt.Item1.ChromFileInfoId,
-                            fileIdOpt.Item1.OptimizationStep), currentDocNode, fileIdOpt.Item2);
+                        var resultPosition = chromInfoPosition.ResultPosition;
+                        SetPosition(
+                            current.ChangeResult(replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep),
+                            currentDocNode, chromInfoPosition.ChromInfo);
                         return true;
                     }
-                    else if (Equals(currentFileIdOptStep, fileIdOpt.Item1))
+                    else if (Equals(currentResultPosition, chromInfoPosition.ResultPosition))
                     {
-                        currentFileIdOptStep = null;
+                        currentResultPosition = null;
                     }
                 }
 
-                currentFileIdOptStep = null;
+                currentResultPosition = null;
             }
 
             current = current.ClearResult();
@@ -166,19 +168,21 @@ namespace pwiz.Skyline.Model.Find
             {
                 return false;
             }
-            var currentFileIdOptStep = GetFileIdOptStep(current);
+            var currentFileIdOptStep = GetResultPosition(current);
             bool onResult = currentFileIdOptStep != null;
             for (int resultsIndex = ResultsIndex; resultsIndex >= 0; resultsIndex--)
             {
-                foreach (var fileIdOptTuple in GetFileIdOptSteps(currentDocNode, resultsIndex).Reverse())
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, resultsIndex).Reverse())
                 {
-                    var fileIdOpt = fileIdOptTuple.Item1;
+                    var resultPosition = chromInfoPosition.ResultPosition;
                     if (currentFileIdOptStep == null)
                     {
-                        SetPosition(current.ChangeResult(resultsIndex, fileIdOpt.ChromFileInfoId, fileIdOpt.OptimizationStep), currentDocNode, fileIdOptTuple.Item2);
+                        SetPosition(current.ChangeResult(resultsIndex, resultPosition.ChromFileInfoId,
+                                resultPosition.OptimizationStep),
+                            currentDocNode, chromInfoPosition.ChromInfo);
                         return true;
                     }
-                    else if (Equals(currentFileIdOptStep, fileIdOpt))
+                    else if (Equals(currentFileIdOptStep, resultPosition))
                     {
                         currentFileIdOptStep = null;
                     }
@@ -228,11 +232,11 @@ namespace pwiz.Skyline.Model.Find
         {
             for (int replicateIndex = GetReplicateCount(node) - 1; replicateIndex >= 0; replicateIndex--)
             {
-                var fileIdOptTuple = GetFileIdOptSteps(node, replicateIndex).Last();
-                if (fileIdOptTuple != null)
+                var chromInfoPosition = GetChromInfoPositions(node, replicateIndex).LastOrDefault();
+                if (chromInfoPosition.ResultPosition != null)
                 {
-                    var fileIdOpt = fileIdOptTuple.Item1;
-                    SetPosition(new Bookmark(identityPath, replicateIndex, fileIdOpt.ChromFileInfoId, fileIdOpt.OptimizationStep), node, fileIdOptTuple.Item2);
+                    var resultPosition = chromInfoPosition.ResultPosition;
+                    SetPosition(new Bookmark(identityPath, replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep), node, chromInfoPosition.ChromInfo);
                 }
             }
 
@@ -277,16 +281,23 @@ namespace pwiz.Skyline.Model.Find
 
         public bool IsValid { get; private set; }
 
+        /// <summary>
+        /// Returns true if this bookmark enumerator has wrapped back around to the start again.
+        /// </summary>
         public bool AtStart
         {
             get
             {
                 if (!IsValid)
                 {
+                    // If the bookmark enumerator is invalid, then we always return true
+                    // so that iteration stops.
                     return true;
                 }
+                
                 if (Start.IsRoot)
                 {
+                    // Checking "IsRoot" is faster than performing "Equals"
                     return Current.IsRoot;
                 }
                 return Equals(Start, Current);
@@ -313,7 +324,7 @@ namespace pwiz.Skyline.Model.Find
             return measuredResults.Chromatograms[resultsIndex];
         }
 
-        private FileIdOptStep GetFileIdOptStep(Bookmark bookmark)
+        private ResultPosition GetResultPosition(Bookmark bookmark)
         {
             if (bookmark?.ChromFileInfoId == null)
             {
@@ -325,7 +336,7 @@ namespace pwiz.Skyline.Model.Find
                 return null;
             }
 
-            return new FileIdOptStep(chromatogramSet, bookmark.ChromFileInfoId, bookmark.OptStep);
+            return new ResultPosition(chromatogramSet, bookmark.ChromFileInfoId, bookmark.OptStep);
         }
 
         public int ResultsIndex
@@ -454,50 +465,51 @@ namespace pwiz.Skyline.Model.Find
             return 0;
         }
 
-        private IEnumerable<Tuple<FileIdOptStep, ChromInfo>> GetFileIdOptSteps(DocNode docNode, int replicateIndex)
+        private IEnumerable<ChromInfoPosition> GetChromInfoPositions(DocNode docNode, int replicateIndex)
         {
             var measuredResults = Document.Settings.MeasuredResults;
             if (measuredResults == null || replicateIndex < 0 || replicateIndex >= measuredResults.Chromatograms.Count)
             {
-                return Array.Empty<Tuple<FileIdOptStep, ChromInfo>>();
+                return Array.Empty<ChromInfoPosition>();
             }
 
             var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
             if (docNode is TransitionDocNode transitionDocNode)
             {
-                return MakeFileIdOptSteps(transitionDocNode.GetSafeChromInfo(replicateIndex),
-                    chromInfo => new FileIdOptStep(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
+                return MakeChromInfoPositions(transitionDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
             if (docNode is TransitionGroupDocNode transitionGroupDocNode)
             {
-                return MakeFileIdOptSteps(transitionGroupDocNode.GetSafeChromInfo(replicateIndex),
-                    chromInfo => new FileIdOptStep(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
+                return MakeChromInfoPositions(transitionGroupDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
             }
 
             if (docNode is PeptideDocNode peptideDocNode)
             {
-                return MakeFileIdOptSteps(peptideDocNode.GetSafeChromInfo(replicateIndex),
-                    chromInfo => new FileIdOptStep(chromatogramSet, chromInfo.FileId, 0));
+                return MakeChromInfoPositions(peptideDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, 0));
             }
 
-            return Array.Empty<Tuple<FileIdOptStep, ChromInfo>>();
+            return Array.Empty<ChromInfoPosition>();
         }
 
-        private IEnumerable<Tuple<FileIdOptStep, ChromInfo>> MakeFileIdOptSteps<T>(ChromInfoList<T> chromInfoList,
-            Func<T, FileIdOptStep> converter) where T : ChromInfo
+        private IEnumerable<ChromInfoPosition> MakeChromInfoPositions<T>(ChromInfoList<T> chromInfoList,
+            Func<T, ResultPosition> converter) where T : ChromInfo
         {
             if (chromInfoList.Count == 0)
             {
-                return Array.Empty<Tuple<FileIdOptStep, ChromInfo>>();
+                return Array.Empty<ChromInfoPosition>();
             }
 
             if (chromInfoList.Count == 1)
             {
-                return new[] {Tuple.Create(converter(chromInfoList[0]), (ChromInfo) chromInfoList[0])};
+                return new[] {new ChromInfoPosition(converter(chromInfoList[0]), chromInfoList[0])};
             }
 
-            return chromInfoList.Select(chromInfo=>Tuple.Create(converter(chromInfo), (ChromInfo) chromInfo)).OrderBy(tuple=>tuple.Item1);
+            return chromInfoList.Select(chromInfo=>new ChromInfoPosition(converter(chromInfo), chromInfo))
+                .OrderBy(kvp=>kvp.ResultPosition);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -514,9 +526,9 @@ namespace pwiz.Skyline.Model.Find
                 yield return enumerator.Current;
             } while (!enumerator.AtStart);
         }
-        private class FileIdOptStep : IComparable<FileIdOptStep>
+        private class ResultPosition : IComparable<ResultPosition>
         {
-            public FileIdOptStep(ChromatogramSet chromatogramSet, ChromFileInfoId fileId, int optimizationStep)
+            public ResultPosition(ChromatogramSet chromatogramSet, ChromFileInfoId fileId, int optimizationStep)
             {
                 ChromFileInfoId = fileId;
                 FileIndex = chromatogramSet.FileCount == 1 ? 0 : chromatogramSet.IndexOfId(fileId);
@@ -530,7 +542,7 @@ namespace pwiz.Skyline.Model.Find
             public int FileIndex { get; }
             public int OptimizationStep { get; }
 
-            protected bool Equals(FileIdOptStep other)
+            protected bool Equals(ResultPosition other)
             {
                 return FileIndex == other.FileIndex && OptimizationStep == other.OptimizationStep;
             }
@@ -540,7 +552,7 @@ namespace pwiz.Skyline.Model.Find
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((FileIdOptStep)obj);
+                return Equals((ResultPosition)obj);
             }
 
             public override int GetHashCode()
@@ -551,7 +563,7 @@ namespace pwiz.Skyline.Model.Find
                 }
             }
 
-            public int CompareTo(FileIdOptStep other)
+            public int CompareTo(ResultPosition other)
             {
                 int result = FileIndex.CompareTo(other.FileIndex);
                 if (result == 0)
@@ -560,6 +572,18 @@ namespace pwiz.Skyline.Model.Find
                 }
                 return result;
             }
+        }
+
+        private struct ChromInfoPosition
+        {
+            public ChromInfoPosition(ResultPosition resultPosition, ChromInfo chromInfo)
+            {
+                ResultPosition = resultPosition;
+                ChromInfo = chromInfo;
+            }
+
+            public ResultPosition ResultPosition { get; }
+            public ChromInfo ChromInfo { get; }
         }
     }
 }
