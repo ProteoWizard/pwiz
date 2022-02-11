@@ -129,29 +129,28 @@ namespace pwiz.Skyline.Model.Find
                 bookmark = bookmark.ChangeIdentityPath(identityPath);
             }
 
-            if (documentLocation.ReplicateIndex.HasValue)
+            if (!documentLocation.ChromFileId.HasValue)
             {
-                var measuredResults = document.Settings.MeasuredResults;
-                if (measuredResults == null || documentLocation.ReplicateIndex < 0 ||
-                    documentLocation.ReplicateIndex >= measuredResults.Chromatograms.Count)
-                {
-                    throw new ArgumentException(
-                        string.Format(@"No such replicate {0}", documentLocation.ReplicateIndex));
-                }
-
-                var chromatogramSet = measuredResults.Chromatograms[documentLocation.ReplicateIndex.Value];
-                var chromFileInfo =
-                    chromatogramSet.MSDataFileInfos.FirstOrDefault(
-                        fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
-                if (null == chromFileInfo)
-                {
-                    throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
-                }
-
-                bookmark = bookmark.ChangeResult(documentLocation.ReplicateIndex.Value, chromFileInfo.FileId,
-                    documentLocation.OptStep ?? 0);
+                return bookmark;
             }
-            return bookmark;
+            var measuredResults = document.Settings.MeasuredResults;
+            if (measuredResults != null)
+            {
+                for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+                {
+                    var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                    var chromFileInfo =
+                        chromatogramSet.MSDataFileInfos.FirstOrDefault(
+                            fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
+                    if (null != chromFileInfo)
+                    {
+                        return bookmark.ChangeResult(replicateIndex, chromFileInfo.FileId,
+                            documentLocation.OptStep ?? 0);
+                    }
+
+                }
+            }
+            throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
         }
     }
 }
