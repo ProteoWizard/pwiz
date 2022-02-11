@@ -18,8 +18,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using SkylineTool;
@@ -75,8 +75,9 @@ namespace pwiz.Skyline.Model.Find
 
         public bool IsRoot
         {
-            get { return IdentityPath.IsRoot && ChromFileInfoId == null; }
+            get { return IdentityPath.IsRoot && !ReplicateIndex.HasValue; }
         }
+        [NotNull]
         public IdentityPath IdentityPath { get; private set; }
         public Bookmark ChangeIdentityPath(IdentityPath value)
         {
@@ -89,13 +90,13 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public ChromFileInfoId ChromFileInfoId { get; private set;}
-        public Bookmark ChangeChromFileInfoId(ChromFileInfoId value)
-        {
-            return ChangeProp(ImClone(this), im => im.ChromFileInfoId = value);
-        }
 
-        public Bookmark ChangeResult(int replicateIndex, ChromFileInfoId fileId, int optStep)
+        public Bookmark ChangeResult(int replicateIndex, [NotNull] ChromFileInfoId fileId, int optStep)
         {
+            if (fileId == null)
+            {
+                throw new ArgumentNullException(nameof(fileId));
+            }
             return ChangeProp(ImClone(this), im =>
             {
 
@@ -115,11 +116,6 @@ namespace pwiz.Skyline.Model.Find
             });
         }
         public int OptStep { get; private set; }
-        public Bookmark ChangeOptStep(int value)
-        {
-            return ChangeProp(ImClone(this), im => im.OptStep = value);
-        }
-
         public static Bookmark ToBookmark(DocumentLocation documentLocation, SrmDocument document)
         {
             Bookmark bookmark = ROOT;
@@ -132,31 +128,28 @@ namespace pwiz.Skyline.Model.Find
                 }
                 bookmark = bookmark.ChangeIdentityPath(identityPath);
             }
-            if (documentLocation.ChromFileId.HasValue)
+
+            if (documentLocation.ReplicateIndex.HasValue)
             {
-                ChromFileInfoId chromFileInfoId = null;
-                if (document.Settings.HasResults)
+                var measuredResults = document.Settings.MeasuredResults;
+                if (measuredResults == null || documentLocation.ReplicateIndex < 0 ||
+                    documentLocation.ReplicateIndex >= measuredResults.Chromatograms.Count)
                 {
-                    foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
-                    {
-                        var chromFileInfo =
-                            chromatogramSet.MSDataFileInfos.FirstOrDefault(
-                                fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
-                        if (null != chromFileInfo)
-                        {
-                            chromFileInfoId = chromFileInfo.FileId;
-                        }
-                    }
+                    throw new ArgumentException(
+                        string.Format(@"No such replicate {0}", documentLocation.ReplicateIndex));
                 }
-                if (null == chromFileInfoId)
+
+                var chromatogramSet = measuredResults.Chromatograms[documentLocation.ReplicateIndex.Value];
+                var chromFileInfo =
+                    chromatogramSet.MSDataFileInfos.FirstOrDefault(
+                        fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
+                if (null == chromFileInfo)
                 {
                     throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
                 }
-                bookmark = bookmark.ChangeChromFileInfoId(chromFileInfoId);
-            }
-            if (documentLocation.OptStep.HasValue)
-            {
-                bookmark = bookmark.ChangeOptStep(documentLocation.OptStep.Value);
+
+                bookmark = bookmark.ChangeResult(documentLocation.ReplicateIndex.Value, chromFileInfo.FileId,
+                    documentLocation.OptStep ?? 0);
             }
             return bookmark;
         }
