@@ -51,6 +51,9 @@ namespace pwiz.Skyline.Model.Find
             : this(document, Bookmark.ROOT)
         {
         }
+        /// <summary>
+        /// Constructs a copy of a BookmarkEnumerator
+        /// </summary>
         public BookmarkEnumerator(BookmarkEnumerator bookmarkEnumerator)
         {
             Document = bookmarkEnumerator.Document;
@@ -61,26 +64,46 @@ namespace pwiz.Skyline.Model.Find
             CurrentChromInfo = bookmarkEnumerator.CurrentChromInfo;
             IsValid = bookmarkEnumerator.IsValid;
         }
-        public SrmDocument Document { get; private set; }
+        public SrmDocument Document { get; }
+
         [NotNull]
         public Bookmark Current
         {
             get; private set;
         }
+        /// <summary>
+        /// Whether this enumerator iterates forwards (true) or backwards (false) through
+        /// the document
+        /// </summary>
         public bool Forward { get; set; }
+        
+        /// <summary>
+        /// The node in the document that <see cref="Current"/> points to.
+        /// </summary>
         public DocNode CurrentDocNode
         {
             get; private set;
         }
+        /// <summary>
+        /// The result that <see cref="Current"/> points to, or null if the current bookmark
+        /// is not positioned on a result.
+        /// </summary>
         public ChromInfo CurrentChromInfo
         {
             get; private set;
         }
-        public Bookmark Start { get; private set; }
+        /// <summary>
+        /// The initial bookmark that this BookmarkEnumerator was positioned at when this was
+        /// constructed.
+        /// </summary>
+        public Bookmark Start { get; }
         
         /// <summary>
         /// Move to the next (or previous if !Forward) location in the document.
         /// Wraps around if moving beyond the end or beginning of the document.
+        /// After calling this function, the caller should check <see cref="AtStart"/> to
+        /// see whether the iteration has reached the starting point again and the loop
+        /// should be exited.
         /// </summary>
         public void MoveNext()
         {
@@ -159,6 +182,11 @@ namespace pwiz.Skyline.Model.Find
             return SetPosition(Bookmark.ROOT, Document, null);
         }
 
+        /// <summary>
+        /// Move one position backwards through the iteration. If positioned on a result,
+        /// moves the the next earlier result. If not positioned on a result, then moves to
+        /// the last result of the previous node in the tree order.
+        /// </summary>
         // ReSharper disable once UnusedMethodReturnValue.Local
         private bool MoveBackward()
         {
@@ -373,6 +401,9 @@ namespace pwiz.Skyline.Model.Find
             }
         }
 
+        /// <summary>
+        /// Returns a description of this bookmark location for display in the Find Results window.
+        /// </summary>
         public string GetLocationName(DisplaySettings displaySettings)
         {
             if (ResultsIndex >= 0)
@@ -396,6 +427,9 @@ namespace pwiz.Skyline.Model.Find
             return CurrentDocNode.GetDisplayText(displaySettings);
         }
 
+        /// <summary>
+        /// Returns the string to display in the "Type" column of the Find Results window.
+        /// </summary>
         public string GetLocationType()
         {
             string nodeType = GetNodeTypeName(CurrentDocNode);
@@ -427,6 +461,10 @@ namespace pwiz.Skyline.Model.Find
             return Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
         }
 
+        /// <summary>
+        /// Constructs a BookmarkEnumerator positioned at the specific location in the
+        /// document. Returns null if the location does not exist in the document.
+        /// </summary>
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(document, bookmark);
@@ -438,7 +476,7 @@ namespace pwiz.Skyline.Model.Find
         }
 
         /// <summary>
-        /// Returns then number of replicates for the particular DocNode
+        /// Returns the number of replicates for the particular DocNode
         /// which might have results (i.e. ChromInfo's).
         /// Currently, only TransitionDocNode, TransitionGroupDocNode, and PeptideDocNode
         /// have results.
@@ -507,7 +545,8 @@ namespace pwiz.Skyline.Model.Find
             {
                 return new[] {new ChromInfoPosition(converter(chromInfoList[0]), chromInfoList[0])};
             }
-
+            // Consider: Is it really necessary to call "OrderBy" here, or can the ChromInfoList already be assumed to
+            // be ordered by FileInfo and Optimization Step
             return chromInfoList.Select(chromInfo=>new ChromInfoPosition(converter(chromInfo), chromInfo))
                 .OrderBy(kvp=>kvp.ResultPosition);
         }
@@ -526,6 +565,12 @@ namespace pwiz.Skyline.Model.Find
                 yield return enumerator.Current;
             } while (!enumerator.AtStart);
         }
+        
+        /// <summary>
+        /// Represents the sort order of a ChromInfo in a ChromInfoList for a particular Replicate.
+        /// ChromInfos are sorted by FileId (specifically, the position of the FileId in the replicates <see cref="ChromatogramSet.MSDataFileInfos"/>)
+        /// and the Optimization Step.
+        /// </summary>
         private class ResultPosition : IComparable<ResultPosition>
         {
             public ResultPosition(ChromatogramSet chromatogramSet, ChromFileInfoId fileId, int optimizationStep)
