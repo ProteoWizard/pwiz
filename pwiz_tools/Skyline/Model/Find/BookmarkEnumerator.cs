@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Find
     /// Handles iterating through all possible locations in a Skyline Document.
     /// 
     /// </summary>
-    public class BookmarkEnumerator : IEnumerator<Bookmark>, IEnumerable<Bookmark>
+    public class BookmarkEnumerator : IEnumerable<Bookmark>
     {
         /// <summary>
         /// Constructor for a BookmarkEnumerator initially positioned 
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Find
             Document = document;
             Start = bookmark;
             Forward = true;
-            FindAndSetPosition(bookmark);
+            IsValid = FindAndSetPosition(bookmark);
             Assume.IsNotNull(Current);
         }
         public BookmarkEnumerator(SrmDocument document)
@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model.Find
             Forward = bookmarkEnumerator.Forward;
             CurrentDocNode = bookmarkEnumerator.CurrentDocNode;
             CurrentChromInfo = bookmarkEnumerator.CurrentChromInfo;
+            IsValid = bookmarkEnumerator.IsValid;
         }
         public SrmDocument Document { get; private set; }
         [NotNull]
@@ -81,28 +82,16 @@ namespace pwiz.Skyline.Model.Find
         /// Move to the next (or previous if !Forward) location in the document.
         /// Wraps around if moving beyond the end or beginning of the document.
         /// </summary>
-        public bool MoveNext()
+        public void MoveNext()
         {
             if (Forward)
             {
-                if (!MoveForward())
-                {
-                    return false;
-                }
+                MoveForward();
             }
             else
             {
-                if (!MoveBackward())
-                {
-                    return false;
-                }
+                MoveBackward();
             }
-
-            if (Start.IsRoot)
-            {
-                return !Current.IsRoot;
-            }
-            return !Equals(Current, Start);
         }
 
         /// <summary>
@@ -111,6 +100,7 @@ namespace pwiz.Skyline.Model.Find
         /// Within DocNodes, the BookmarkEnumerator iterates over the ChromInfo's.
         /// </summary>
         /// <returns>false if the current position of this enumerator cannot be found in the document</returns>
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool MoveForward()
         {
             var current = Current;
@@ -167,6 +157,7 @@ namespace pwiz.Skyline.Model.Find
             return SetPosition(Bookmark.ROOT, Document, null);
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool MoveBackward()
         {
             var current = Current;
@@ -260,56 +251,48 @@ namespace pwiz.Skyline.Model.Find
         {
             var node = Document.FindNode(bookmark.IdentityPath);
             ChromInfo currentChromInfo = null;
-            if (node is TransitionDocNode transitionDocNode)
+            if (bookmark.ReplicateIndex.HasValue)
             {
-                currentChromInfo = transitionDocNode.GetSafeChromInfo(ResultsIndex).FirstOrDefault(chromInfo =>
-                    ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
-                    chromInfo.OptimizationStep == bookmark.OptStep);
-            }
-            else if (node is TransitionGroupDocNode transitionGroupDocNode)
-            {
-                currentChromInfo = transitionGroupDocNode.GetSafeChromInfo(ResultsIndex).FirstOrDefault(chromInfo =>
-                    ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
-                    chromInfo.OptimizationStep == bookmark.OptStep);
-            }
-            else if (node is PeptideDocNode peptideDocNode)
-            {
-                currentChromInfo = peptideDocNode.GetSafeChromInfo(ResultsIndex).FirstOrDefault(chromInfo =>
-                    ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId));
+                if (node is TransitionDocNode transitionDocNode)
+                {
+                    currentChromInfo = transitionDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
+                        chromInfo.OptimizationStep == bookmark.OptStep);
+                }
+                else if (node is TransitionGroupDocNode transitionGroupDocNode)
+                {
+                    currentChromInfo = transitionGroupDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
+                        chromInfo.OptimizationStep == bookmark.OptStep);
+                }
+                else if (node is PeptideDocNode peptideDocNode)
+                {
+                    currentChromInfo = peptideDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId));
+                }
             }
 
             return SetPosition(bookmark, node, currentChromInfo);
         }
 
-        public bool IsValid()
+        public bool IsValid { get; private set; }
+
+        public bool AtStart
         {
-            if (CurrentDocNode == null)
+            get
             {
-                return false;
+                if (!IsValid)
+                {
+                    return true;
+                }
+                if (Start.IsRoot)
+                {
+                    return Current.IsRoot;
+                }
+                return Equals(Start, Current);
             }
-
-            if (Current.ReplicateIndex.HasValue && CurrentChromInfo == null)
-            {
-                return false;
-            }
-
-            return true;
         }
 
-        public void Reset()
-        {
-            FindAndSetPosition(Start);
-        }
-
-
-        public void Dispose()
-        {
-        }
-
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
         private ChromatogramSet GetChromatogramSet(Bookmark bookmark)
         {
             if (null == bookmark?.ReplicateIndex)
@@ -436,7 +419,7 @@ namespace pwiz.Skyline.Model.Find
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(document, bookmark);
-            if (bookmarkEnumerator.IsValid())
+            if (bookmarkEnumerator.IsValid)
             {
                 return bookmarkEnumerator;
             }
@@ -524,7 +507,12 @@ namespace pwiz.Skyline.Model.Find
 
         public IEnumerator<Bookmark> GetEnumerator()
         {
-            return (BookmarkEnumerator) MemberwiseClone();
+            var enumerator = (BookmarkEnumerator) MemberwiseClone();
+            do
+            {
+                enumerator.MoveNext();
+                yield return enumerator.Current;
+            } while (!enumerator.AtStart);
         }
         private class FileIdOptStep : IComparable<FileIdOptStep>
         {

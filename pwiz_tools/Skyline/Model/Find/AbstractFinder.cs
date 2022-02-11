@@ -37,25 +37,31 @@ namespace pwiz.Skyline.Model.Find
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
         public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator)
         {
-            while (bookmarkEnumerator.MoveNext())
+            do
             {
+                bookmarkEnumerator.MoveNext();
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
                 {
                     return findMatch;
                 }
-            }
+            } while (!bookmarkEnumerator.AtStart);
             return null;
         }
 
         public virtual IEnumerable<Bookmark> FindAll(SrmDocument document)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(document);
-            while (bookmarkEnumerator.MoveNext())
+            while (true)
             {
+                bookmarkEnumerator.MoveNext();
                 if (Match(bookmarkEnumerator) != null)
                 {
                     yield return bookmarkEnumerator.Current;
+                }
+                if (bookmarkEnumerator.AtStart)
+                {
+                    yield break;
                 }
             }
         }

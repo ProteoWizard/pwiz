@@ -58,8 +58,9 @@ namespace pwiz.Skyline.Model.Find
             {
                 return null;
             }
-            while (bookmarkEnumerator.MoveNext())
+            do
             {
+                bookmarkEnumerator.MoveNext();
                 if (allBookmarks.Contains(bookmarkEnumerator.Current))
                 {
                     var findMatch = Match(bookmarkEnumerator);
@@ -68,7 +69,7 @@ namespace pwiz.Skyline.Model.Find
                         return findMatch;
                     }
                 }
-            }
+            } while (!bookmarkEnumerator.AtStart);
             return null;
         }
 

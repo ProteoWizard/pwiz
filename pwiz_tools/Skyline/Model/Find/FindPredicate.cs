@@ -141,8 +141,9 @@ namespace pwiz.Skyline.Model.Find
                 }
                 customMatches.Add(customEnumerator.Current, nextMatch);
             }
-            while (bookmarkEnumerator.MoveNext())
+            do
             {
+                bookmarkEnumerator.MoveNext();
                 FindMatch findMatch;
                 if (customMatches.TryGetValue(bookmarkEnumerator.Current, out findMatch))
                 {
@@ -153,7 +154,7 @@ namespace pwiz.Skyline.Model.Find
                 {
                     return new FindResult(this, bookmarkEnumerator, findMatch);
                 }
-            }
+            } while (!bookmarkEnumerator.AtStart);
             return null;
         }
 
@@ -178,8 +179,9 @@ namespace pwiz.Skyline.Model.Find
             }
             var bookmarkEnumerator = new BookmarkEnumerator(document);
             int matchCount = 0;
-            while (bookmarkEnumerator.MoveNext())
+            do
             {
+                bookmarkEnumerator.MoveNext();
                 if (longWaitBroker.IsCanceled)
                 {
                     yield break;
@@ -201,7 +203,7 @@ namespace pwiz.Skyline.Model.Find
                                                  : string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount);
                     yield return new FindResult(this, bookmarkEnumerator, findMatch);
                 }
-            }
+            } while (!bookmarkEnumerator.AtStart);
         }
 
         static Annotations GetAnnotations(ChromInfo chromInfo)
