@@ -53,22 +53,39 @@ namespace pwiz.Skyline.SettingsUI
         public bool IsIntegrateAll 
         {
             get { return radioBtnQuant.Checked; }
+            set { radioBtnQuant.Checked = value; }
         }
 
         private void peptideSettingsBtn_Click(object sender, EventArgs e)
         {
-            showPeptideSettingsUI();
+            ShowPeptideSettingsUI();
+        }
+
+        public void ShowPeptideSettingsUI()
+        {
+            _skylineWindow.ShowPeptideSettingsUI(this);
         }
 
         private void transitionSettingsBtn_Click(object sender, EventArgs e)
         {
-            showTransitionSettingsUI();
+            ShowTransitionSettingsUI();
+        }
+
+        public void ShowTransitionSettingsUI()
+        {
+            _skylineWindow.ShowTransitionSettingsUI(this);
         }
 
         private void btnResetDefaults_Click(object sender, EventArgs e)
         {
+            ResetDefaults();
+        }
+
+        public void ResetDefaults()
+        {
             _skylineWindow.ResetDefaultSettings();
-            MessageDlg.Show(this, Resources.StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_);
+            MessageDlg.Show(this,
+                Resources.StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_);
         }
 
         private void radioBtnQuant_CheckedChanged(object sender, EventArgs e)
@@ -78,16 +95,9 @@ namespace pwiz.Skyline.SettingsUI
                 : integrateAllOffText;
         }
 
-        // Test Methods
-
-        public void showPeptideSettingsUI()
+        public void OkDialog()
         {
-            _skylineWindow.ShowPeptideSettingsUI(this);
-        }
-
-        public void showTransitionSettingsUI()
-        {
-            _skylineWindow.ShowTransitionSettingsUI(this);
+            AcceptButton.PerformClick();    // CONSIDER: Not the way we normally do things
         }
     }
 }
