@@ -481,7 +481,7 @@
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Display Type:</value>
+    <value>Display &amp;Type:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -508,7 +508,7 @@
     <value>9</value>
   </data>
   <data name="cbShowDotpCutoff.Text" xml:space="preserve">
-    <value>Show cutoff value</value>
+    <value>&amp;Show cutoff value</value>
   </data>
   <data name="&gt;&gt;cbShowDotpCutoff.Name" xml:space="preserve">
     <value>cbShowDotpCutoff</value>
@@ -541,7 +541,7 @@
     <value>8</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>Dotp Cutoff Values:</value>
+    <value>Cutoff &amp;Values:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -613,7 +613,7 @@
     <value>11</value>
   </data>
   <data name="groupBox2.Text" xml:space="preserve">
-    <value>Dot Product Display:</value>
+    <value>Dot &amp;Product Display:</value>
   </data>
   <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
     <value>groupBox2</value>
@@ -631,13 +631,13 @@
     <value>True</value>
   </metadata>
   <data name="DotpType.HeaderText" xml:space="preserve">
-    <value>Dotp Type</value>
+    <value>Type</value>
   </data>
   <metadata name="DotpCutoff.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="DotpCutoff.HeaderText" xml:space="preserve">
-    <value>Dotp Cutoff</value>
+    <value>Cutoff</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

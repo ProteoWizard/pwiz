@@ -187,6 +187,7 @@ namespace pwiz.Skyline.EditUI
             this.comboDotpDisplayType.FormattingEnabled = true;
             resources.ApplyResources(this.comboDotpDisplayType, "comboDotpDisplayType");
             this.comboDotpDisplayType.Name = "comboDotpDisplayType";
+            this.comboDotpDisplayType.SelectedIndexChanged += this.comboDotpDisplayType_SelectedIndexChanged;
             // 
             // AreaChartPropertyDlg
             // 

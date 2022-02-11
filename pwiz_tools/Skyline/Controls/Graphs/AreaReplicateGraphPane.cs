@@ -666,7 +666,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
             {
-                var cutoff = Settings.Default.PeakAreaDotpCutoffValue;
+                var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
                 var highlightValues = new PointPairList(graphData.DotpData.Select(point => point.Y < cutoff ? point : new PointPair(){X = point.X, Y = float.NaN}).ToList());
                 var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
                 {

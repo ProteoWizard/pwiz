@@ -43,7 +43,8 @@ namespace pwiz.Skyline.EditUI
             if (Settings.Default.PeakAreaMaxCv != 0)
                 textMaxCv.Text = Settings.Default.PeakAreaMaxCv.ToString(LocalizationHelper.CurrentCulture);
             GraphFontSize.PopulateCombo(textSizeComboBox, Settings.Default.AreaFontSize);
-            cbShowDotpCutoff.Checked = dataGridDotpCutoffValues.Enabled = Settings.Default.PeakAreaDotpCutoffShow;
+            cbShowDotpCutoff.Checked = Settings.Default.PeakAreaDotpCutoffShow;
+            SetDisplayType();
 
             foreach (var expectedValue in new[]
                 {AreaExpectedValue.library, AreaExpectedValue.isotope_dist, AreaExpectedValue.ratio_to_label})
@@ -133,7 +134,20 @@ namespace pwiz.Skyline.EditUI
         }
         private void cbShowDotpCutoff_CheckedChanged(object sender, EventArgs e)
         {
-            dataGridDotpCutoffValues.Enabled = cbShowDotpCutoff.Checked;
+            
+            dataGridDotpCutoffValues.Enabled = label4.Enabled = cbShowDotpCutoff.Checked;
+        }
+
+        private void comboDotpDisplayType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetDisplayType();
+        }
+
+        private void SetDisplayType()
+        {
+            var enableCutoff =
+                DotProductDisplayOption.line.GetLocalizedString().Equals(comboDotpDisplayType.SelectedItem);
+            cbShowDotpCutoff.Enabled = dataGridDotpCutoffValues.Enabled = label4.Enabled = enableCutoff;
         }
 
         #region Test Support
@@ -148,10 +162,10 @@ namespace pwiz.Skyline.EditUI
             cbShowDotpCutoff.Checked = showCutoff;
         }
 
-        public void SetRdotpCutoffValue(string stringValue)
+        public void SetDotpCutoffValue(AreaExpectedValue dotpType, string stringValue)
         {
             var dotpRow = dataGridDotpCutoffValues.Rows.OfType<DataGridViewRow>()
-                .First(row => @"rdotp".Equals(row.Cells[0].Value));
+                .First(row => dotpType.GetDotpLabel().Equals(row.Cells[0].Value));
             dotpRow.Cells[1].Value = stringValue;
         }
 

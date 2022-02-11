@@ -47,40 +47,66 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
             FindNode((600.8278).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
-            var expectedDotp1 = new[] {0.62, 1.00, 0.61, 0.53};
+            var expectedRDotp1 = new[] {0.62, 1.00, 0.61, 0.53};
             RunUI(() =>
             {
-                VerifyDotpLine(replicates, expectedDotp1);
+                VerifyDotpLine(replicates, expectedRDotp1, @"rdotp");
                 AssertCutoffLine(false);
             });
 
             var propertyDialog = ShowDialog<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
             RunUI(() =>
             {
-                propertyDialog.SetRdotpCutoffValue("asdf");
+                propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, "asdf");
                 propertyDialog.OkDialog();
                 Assert.IsNotNull(propertyDialog.GetRdotpErrorText());
                 propertyDialog.SetShowCutoffProperty(true);
-                propertyDialog.SetRdotpCutoffValue("0.9");
+                propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, "0.9");
                 propertyDialog.OkDialog();
             });
 
             FindNode((529.2855).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
-            var expectedDotp2 = new[] {0.72, 0.98, 0.88, 0.92};
+            var expectedRDotp2 = new[] {0.72, 0.98, 0.88, 0.92};
             RunUI(() =>
             {
-                VerifyDotpLine(replicates, expectedDotp2);
+                VerifyDotpLine(replicates, expectedRDotp2, @"rdotp");
                 AssertCutoffLine(true, 2);
             });
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
-            RunUI(() => { VerifyRdotPLabels(replicates, expectedDotp2); });
+            RunUI(() => { VerifydotPLabels(replicates, expectedRDotp2, @"rdotp"); });
 
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             RunUI(SkylineWindow.UpdatePeakAreaGraph);
-            RunUI(AssertNoDotp);
-            
+            RunUI(() => AssertNoDotp());
+
+
+            RunUI(() => SkylineWindow.OpenFile(
+                TestFilesDir.GetTestPath("DIA-QE-tutorial.sky")));
+            SkylineWindow.ShowSplitChromatogramGraph(true);
+            replicates = new[]{"1-A", "2-B", "3-A","4-B", "5-A", "6-B"};
+            var expectedIDotp = new[] {0.93, 0.82, 0.95, 0.92, 0.95, 0.74};
+            var expectedDotp = new[] {0.87, 0.74, 0.89, 0.88, 1.00, 0.83};
+            propertyDialog = ShowDialog<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
+            RunUI(() =>
+            {
+                propertyDialog.SetDotpDisplayProperty(DotProductDisplayOption.line);
+                propertyDialog.SetShowCutoffProperty(true);
+                propertyDialog.SetDotpCutoffValue(AreaExpectedValue.isotope_dist, "0.94");
+                propertyDialog.SetDotpCutoffValue(AreaExpectedValue.library, "0.85");
+                propertyDialog.OkDialog();
+            });
+            FindNode((873.9438).ToString(LocalizationHelper.CurrentCulture) + "++");
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                VerifyDotpLine(replicates, expectedIDotp, @"idotp");
+                AssertCutoffLine(true, 4);
+                VerifyDotpLine(replicates, expectedDotp, @"dotp", 1);
+                AssertCutoffLine(true, 2, 1);
+            });
+
         }
 
         private static void NormalizeGraphToHeavy()
@@ -90,31 +116,31 @@ namespace pwiz.SkylineTestFunctional
             SkylineWindow.UpdatePeakAreaGraph();
         }
 
-        private void VerifyRdotPLabels(string[] replicates, double[] rdotps)
+        private void VerifydotPLabels(string[] replicates, double[] dotps, string dotpLabel, int paneIndex = 0)
         {
-            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.GraphPane;
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
             if (!Program.SkylineOffscreen)
             {
                 var rdotpLabels = pane.GraphObjList.OfType<TextObj>().ToList()
-                    .FindAll(txt => txt.Text.StartsWith(@"rdotp")).Select((obj) => obj.Text).ToArray();
+                    .FindAll(txt => txt.Text.StartsWith(dotpLabel)).Select((obj) => obj.Text).ToArray();
 
                 for (var i = 0; i < replicates.Length; i++)
                 {
                     var repIndex = pane.GetOriginalXAxisLabels().ToList()
                         .FindIndex(label => replicates[i].Equals(label));
                     Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
-                    var expectedLabel = TextUtil.LineSeparate("rdotp",
-                        string.Format(CultureInfo.CurrentCulture, "{0:F02}", rdotps[i]));
+                    var expectedLabel = TextUtil.LineSeparate(dotpLabel,
+                        string.Format(CultureInfo.CurrentCulture, "{0:F02}", dotps[i]));
                     Assert.AreEqual(expectedLabel, rdotpLabels[repIndex],
                         "Dotp labels of the peak area graph are incorrect.");
                 }
             }
         }
 
-        private void VerifyDotpLine(string[] replicates, double[] dotps)
+        private void VerifyDotpLine(string[] replicates, double[] dotps, string dotpLabel, int paneIndex = 0)
         {
-            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.GraphPane;
-            var dotpLine = pane.CurveList.OfType<LineItem>().First(line => line.Label.Text.Equals("rdotp"));
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
+            var dotpLine = pane.CurveList.OfType<LineItem>().First(line => line.Label.Text.Equals(dotpLabel));
             for (var i = 0; i < replicates.Length; i++)
             {
                 var repIndex = pane.GetOriginalXAxisLabels().ToList().FindIndex(label => replicates[i].Equals(label));
@@ -123,9 +149,9 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void AssertCutoffLine(bool isPresent, int pointsBelowCutoff = 0)
+        private void AssertCutoffLine(bool isPresent, int pointsBelowCutoff = 0, int paneIndex = 0)
         {
-            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.GraphPane;
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
             var dotpLine = pane.CurveList.OfType<LineItem>().FirstOrDefault(line => line.Label.Text.IsNullOrEmpty());
             if (isPresent)
             {
@@ -140,10 +166,10 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void AssertNoDotp()
+        private void AssertNoDotp(int paneIndex = 0)
         {
             //Make sure there is no labels and no line
-            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.GraphPane;
+            var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
             if (!Program.SkylineOffscreen)
                 Assert.IsFalse(pane.GraphObjList.OfType<TextObj>().Any(txt => txt.Text.StartsWith(@"rdotp")));
             Assert.IsFalse(pane.CurveList.OfType<LineItem>().ToList().Any(line => line.Label.Text.Equals("rdotp")));
