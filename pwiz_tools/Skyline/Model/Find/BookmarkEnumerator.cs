@@ -21,7 +21,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -66,7 +65,6 @@ namespace pwiz.Skyline.Model.Find
         }
         public SrmDocument Document { get; }
 
-        [NotNull]
         public Bookmark Current
         {
             get; private set;
@@ -119,7 +117,7 @@ namespace pwiz.Skyline.Model.Find
 
         /// <summary>
         /// Move the enumerator forward to the next location in the document.
-        /// DocNodes are enumerated in depth-first preorder (parent before children).
+        /// DocNodes are enumerated in depth-first pre-order (parent before children).
         /// Within DocNodes, the BookmarkEnumerator iterates over the ChromInfo's.
         /// </summary>
         /// <returns>false if the current position of this enumerator cannot be found in the document</returns>
