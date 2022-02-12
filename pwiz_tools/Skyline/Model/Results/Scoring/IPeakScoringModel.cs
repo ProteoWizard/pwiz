@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         LinearModelParams Parameters { get;  }
 
-        bool AllowUnknownScores { get; }
+        bool ReplaceInvalidFeatureScores { get; }
     }
 
 
@@ -149,17 +149,32 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
 
-        public abstract bool AllowUnknownScores { get; }
+        public abstract bool ReplaceInvalidFeatureScores { get; }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
-        public virtual double Score(IList<float> features)
+
+        protected IList<float> ReplaceInvalidScores(IList<float> features)
         {
-            return Parameters.Score(features);
+            if (!ReplaceInvalidFeatureScores || !features.Any(IsScoreInvalid))
+            {
+                return features;
+            }
+
+            return features.Select(feature => IsScoreInvalid(feature) ? 0 : feature).ToList();
         }
-        public virtual string ScoreText(IList<float> features)
+        protected static bool IsScoreInvalid(float score)
         {
-            return Parameters.ScoreText(features);
+            return float.IsNaN(score) || float.IsInfinity(score);
+        }
+
+        public double Score(IList<float> features)
+        {
+            return Parameters.Score(ReplaceInvalidScores(features));
+        }
+        public string ScoreText(IList<float> features)
+        {
+            return Parameters.ScoreText(ReplaceInvalidScores(features));
         }
         [Track]
         public bool UsesDecoys { get; protected set; }
@@ -255,6 +270,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public double Bias { get; set; }
 
+        public static double Score(IList<float> features, IList<double> weights, double bias,
+            bool replaceUnknownFeatureScores)
+        {
+            if (replaceUnknownFeatureScores)
+            {
+                features = ReplaceUnknownFeatureScores(features);
+            }
+
+            return Score(features, weights, bias);
+        }
+
         public static double Score(IList<float> features, IList<double> weights, double bias)
         {
             if (features.Count != weights.Count)
@@ -271,14 +297,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return score;
         }
 
-        public static double Score(IList<float> features, LinearModelParams parameters)
+        public static IList<float> ReplaceUnknownFeatureScores(IList<float> features)
         {
-            return parameters.Score(features);
+            if (features.Any(IsUnknownFeatureScore))
+            {
+                return features.Select(feature => IsUnknownFeatureScore(feature) ? 0 : feature).ToList();
+            }
+            return features;
+        }
+
+        private static bool IsUnknownFeatureScore(float feature)
+        {
+            return float.IsNaN(feature) || float.IsInfinity(feature);
         }
 
         public double Score(IList<float> features)
         {
-            return Score(features, Weights, Bias);
+            return Score(features, false);
+        }
+
+        public double Score(IList<float> features, bool replaceUnknownFeatureScores)
+        {
+            return Score(features, Weights, Bias, replaceUnknownFeatureScores);
         }
 
         public static string ScoreText(IList<float> features, IList<double> weights, double bias)

@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var parameters = new LinearModelParams(weights);
                     ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys, decoys.Count);
                     ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets, targets.Count);
-                    targetTransitionGroups.ScorePeaks(parameters.Weights);
+                    targetTransitionGroups.ScorePeaks(parameters.Weights, true);
 
                     if (includeSecondBest)
                     {
@@ -144,7 +143,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             decoyTransitionGroups.Add(secondBestGroup);
                         }
                     }
-                    decoyTransitionGroups.ScorePeaks(parameters.Weights);
+                    decoyTransitionGroups.ScorePeaks(parameters.Weights, true);
                     im.UsesDecoys = decoys.Count > 0;
                     im.UsesSecondBest = includeSecondBest;
                     im.Parameters = parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
@@ -152,32 +151,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             });
         }
 
-        /// <summary>
-        /// Special type of scoring model which is tolerant of missing features.
-        /// This is the scoring model which gets used by PeptideChromDataPeakList.ScorePeptideSets.
-        /// If any features are missing (NaN), they get replaced with zero before scoring.
-        /// </summary>
-        public override double Score(IList<float> features)
-        {
-            if (features.Any(float.IsNaN))
-            {
-                // Replace any NaN's with 0 so that we behave the same as PeptideChromDataPeakList.ScorePeptideSets
-                features = features.Select(feature => float.IsNaN(feature) ? 0 : feature).ToArray();
-            }
-            return base.Score(features);
-        }
-
-        public override string ScoreText(IList<float> features)
-        {
-            if (features.Any(float.IsNaN))
-            {
-                // Replace any NaN's with 0 so that we behave the same as PeptideChromDataPeakList.ScorePeptideSets
-                features = features.Select(feature => float.IsNaN(feature) ? 0 : feature).ToArray();
-            }
-            return base.ScoreText(features);
-        }
-
-        public override bool AllowUnknownScores => true;
+        public override bool ReplaceInvalidFeatureScores => true;
 
         #region object overrides
 
