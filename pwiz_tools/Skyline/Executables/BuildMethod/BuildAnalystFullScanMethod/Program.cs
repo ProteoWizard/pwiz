@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Interop.Analyst;
 using BuildAnalystMethod;
 using Interop.AcqMethodSvr;
@@ -205,17 +206,32 @@ namespace BuildAnalystFullScanMethod
 
         internal static IAcqMethod GetAcqMethod(string methodFilePath, out MassSpecMethod templateMsMethod)
         {
-            ApplicationClass analyst = new ApplicationClass();
-
-            // Make sure that Analyst is fully started
-            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
-            if (acqMethodDir == null)
+            IAcqMethodDirConfig acqMethodDir;
+            try
             {
-                throw new IOException("Failed to initialize.  Analyst may need to be started.");
+                ApplicationClass analyst = new ApplicationClass();
+
+                // Make sure that Analyst is fully started
+                acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
+                if (acqMethodDir == null)
+                {
+                    throw new IOException("Failed to initialize. Analyst may need to be started.");
+                }
+            }
+            catch (InvalidCastException x)
+            {
+                throw new IOException("Failed to initialize. Analyst may need to be started, or it may be conflicting with a SCIEX OS installation.", x);
             }
 
             object acqMethodObj;
-            acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
+            try
+            {
+                acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
+            }
+            catch (COMException x)
+            {
+                throw new IOException("Failed to initialize. Analyst may need to be started.", x);
+            }
             IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
 
             templateMsMethod = ExtractMsMethod(templateAcqMethod);
