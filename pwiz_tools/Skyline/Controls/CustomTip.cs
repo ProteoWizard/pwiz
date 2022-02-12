@@ -897,13 +897,13 @@ namespace pwiz.Skyline.Controls
 
 				if (_parent != null)
 				{
-					value.HandleDestroyed -= CustomTip_HandleDestroyed;
+                    _parent.HandleDestroyed -= CustomTip_HandleDestroyed;
 				}
 
 				_parent = value;
-				if (value != null)
-				{
-					value.HandleDestroyed += CustomTip_HandleDestroyed;
+                if (_parent != null)
+                {
+                    _parent.HandleDestroyed += CustomTip_HandleDestroyed;
 				}
 			}
 		}
