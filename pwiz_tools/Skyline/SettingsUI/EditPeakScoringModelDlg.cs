@@ -339,6 +339,11 @@ namespace pwiz.Skyline.SettingsUI
             Program.MainWindow.FindAll(this, findOptions);
         }
 
+        public bool SelectedCalculatorHasUnknownScores
+        {
+            get { return _hasUnknownScores; }
+        }
+
         /// <summary>
         /// Close and accept the dialog.
         /// </summary>
