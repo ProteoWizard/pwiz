@@ -341,7 +341,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                     var headerResult = new DbProteinName();
                     string searchterm = null; // assume no webservice lookup unless told otherwise
                     int dbColumnsFound = 0;
-                    for (var n = regexOutputs.Length; n-- > 0;)
+                    var failedParse = false;
+                    for (var n = regexOutputs.Length; n-- > 0 && !failedParse;)
                     {
                         var split = regexOutputs[n].Split(new[] {':'}, 2); // split on first colon only
                         if (split.Length == 2)
@@ -380,20 +381,20 @@ namespace pwiz.ProteomeDatabase.Fasta
                                         searchterm = val;
                                         break;
                                     default:
-                                        throw new ArgumentOutOfRangeException(
-                                            // ReSharper disable LocalizableElement
-                                            String.Format("Unknown Fasta RegEx output formatter type \'{0}\'",
-                                            // ReSharper restore LocalizableElement
-                                                regexOutputs[n]));
+                                        failedParse = true; // Unusual format, or this regex isn't quite the right one for this expression
+                                        break;
                                 }
 
                             }
                         }
                         else
                         {
-                            throw new ArgumentOutOfRangeException(
-                                $@"Fasta RegEx failure in '{line}'");
+                            failedParse = true; // Unusual format, or this regex isn't quite the right one for this expression
                         }
+                    }
+                    if (failedParse)
+                    {
+                        continue;  // Experience has shown no value in complaining to users about unusual formats, just move on
                     }
                     if (headerResult.GetProteinMetadata().HasMissingMetadata())
                     {
