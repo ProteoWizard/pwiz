@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var parameters = new LinearModelParams(weights);
                     ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys, decoys.Count);
                     ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets, targets.Count);
-                    targetTransitionGroups.ScorePeaks(parameters.Weights, true);
+                    targetTransitionGroups.ScorePeaks(parameters.Weights, ReplaceUnknownFeatureScores);
 
                     if (includeSecondBest)
                     {
@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                             decoyTransitionGroups.Add(secondBestGroup);
                         }
                     }
-                    decoyTransitionGroups.ScorePeaks(parameters.Weights, true);
+                    decoyTransitionGroups.ScorePeaks(parameters.Weights, ReplaceUnknownFeatureScores);
                     im.UsesDecoys = decoys.Count > 0;
                     im.UsesSecondBest = includeSecondBest;
                     im.Parameters = parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             });
         }
 
-        public override bool ReplaceInvalidFeatureScores => true;
+        public override bool ReplaceUnknownFeatureScores => true;
 
         #region object overrides
 

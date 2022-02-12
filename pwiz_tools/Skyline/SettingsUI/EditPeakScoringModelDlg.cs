@@ -339,11 +339,6 @@ namespace pwiz.Skyline.SettingsUI
             Program.MainWindow.FindAll(this, findOptions);
         }
 
-        public bool SelectedCalculatorHasUnknownScores
-        {
-            get { return _hasUnknownScores; }
-        }
-
         /// <summary>
         /// Close and accept the dialog.
         /// </summary>
@@ -778,8 +773,8 @@ namespace pwiz.Skyline.SettingsUI
             scoreHistograms = new HistogramGroup(scoreGroups);
             if (selectedCalculator == -1)
             {
-                var pValueGroups = scoreGroups.Select(group
-                    => group.Select(score => 1 - Statistics.PNorm(score)).ToList()).ToList();
+                var pValueGroups = scoreGroups.Select(group => 
+                                                  group.Select(score => 1 - Statistics.PNorm(score)).ToList()).ToList();
                 // Compute q values for targets only
                 var pStats = new Statistics(pValueGroups[0]);
                 var qValueGroup = pStats.Qvalues(MProphetPeakScoringModel.DEFAULT_R_LAMBDA, MProphetPeakScoringModel.PI_ZERO_MIN).ToList();
@@ -1240,6 +1235,10 @@ namespace pwiz.Skyline.SettingsUI
             return decoyGroups.Count;
         }
 
+        public bool SelectedCalculatorHasUnknownScores
+        {
+            get { return _hasUnknownScores; }
+        }
         #endregion
 
         private class PeakCalculatorGridViewDriver : SimpleGridViewDriver<PeakCalculatorWeight>
