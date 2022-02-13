@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 features = LinearModelParams.ReplaceUnknownFeatureScores(features);
             }
-            return new ScoredPeak(Features, LinearModelParams.Score(Features, weights, 0));
+            return new ScoredPeak(Features, LinearModelParams.Score(features, weights, 0));
         }
     }
 }
