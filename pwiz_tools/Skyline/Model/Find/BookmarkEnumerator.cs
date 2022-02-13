@@ -16,10 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
@@ -34,60 +34,74 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public class BookmarkEnumerator : IEnumerable<Bookmark>
     {
-        readonly List<int> _nodeIndexPath = new List<int>();
-        readonly List<ChromInfo> _chromInfos = new List<ChromInfo>();
-        int _chromInfoIndex;
-
         /// <summary>
         /// Constructor for a BookmarkEnumerator initially positioned 
         /// at a particular Bookmark.
         /// </summary>
-        /// <exception cref="InvalidBookmarkLocation">If the bookmark
-        /// location does not exist in the document.</exception>
         public BookmarkEnumerator(SrmDocument document, Bookmark bookmark)
         {
             Document = document;
             Start = bookmark;
-            Current = bookmark;
             Forward = true;
+            IsValid = FindAndSetPosition(bookmark);
+            Assume.IsNotNull(Current);
         }
         public BookmarkEnumerator(SrmDocument document)
             : this(document, Bookmark.ROOT)
         {
         }
+        /// <summary>
+        /// Constructs a copy of a BookmarkEnumerator
+        /// </summary>
         public BookmarkEnumerator(BookmarkEnumerator bookmarkEnumerator)
         {
             Document = bookmarkEnumerator.Document;
             Start = bookmarkEnumerator.Start;
             Current = bookmarkEnumerator.Current;
             Forward = bookmarkEnumerator.Forward;
+            CurrentDocNode = bookmarkEnumerator.CurrentDocNode;
+            CurrentChromInfo = bookmarkEnumerator.CurrentChromInfo;
+            IsValid = bookmarkEnumerator.IsValid;
         }
+        public SrmDocument Document { get; }
 
-        /// <summary>
-        /// Called after the BookmarkEnumerator has moved to a different DocNode. 
-        /// If enumerating nodes in the document forwards, the BookmarkEnumerator will
-        /// be positioned before the first ChromInfo.
-        /// If enumerating nodes backwards, the BookmarkEnumerator will be positioned
-        /// on the last ChromInfo (if any).
-        /// </summary>
-        void MovedToNewDocNode(bool forward)
+        public Bookmark Current
         {
-            var docNode = CurrentDocNode;
-            _chromInfos.Clear();
-            _chromInfos.AddRange(ListChromInfos(docNode));
-            if (forward)
-            {
-                _chromInfoIndex = -1;
-            }
-            else
-            {
-                _chromInfoIndex = _chromInfos.Count - 1;
-            }
+            get; private set;
         }
-
+        /// <summary>
+        /// Whether this enumerator iterates forwards (true) or backwards (false) through
+        /// the document
+        /// </summary>
+        public bool Forward { get; set; }
+        
+        /// <summary>
+        /// The node in the document that <see cref="Current"/> points to.
+        /// </summary>
+        public DocNode CurrentDocNode
+        {
+            get; private set;
+        }
+        /// <summary>
+        /// The result that <see cref="Current"/> points to, or null if the current bookmark
+        /// is not positioned on a result.
+        /// </summary>
+        public ChromInfo CurrentChromInfo
+        {
+            get; private set;
+        }
+        /// <summary>
+        /// The initial bookmark that this BookmarkEnumerator was positioned at when this was
+        /// constructed.
+        /// </summary>
+        public Bookmark Start { get; }
+        
         /// <summary>
         /// Move to the next (or previous if !Forward) location in the document.
         /// Wraps around if moving beyond the end or beginning of the document.
+        /// After calling this function, the caller should check <see cref="AtStart"/> to
+        /// see whether the iteration has reached the starting point again and the loop
+        /// should be exited.
         /// </summary>
         public void MoveNext()
         {
@@ -103,192 +117,267 @@ namespace pwiz.Skyline.Model.Find
 
         /// <summary>
         /// Move the enumerator forward to the next location in the document.
-        /// DocNodes are enumerated in depth-first preorder (parent before children).
+        /// DocNodes are enumerated in depth-first pre-order (parent before children).
         /// Within DocNodes, the BookmarkEnumerator iterates over the ChromInfo's.
         /// </summary>
-        void MoveForward()
+        /// <returns>false if the current position of this enumerator cannot be found in the document</returns>
+        // ReSharper disable once UnusedMethodReturnValue.Local
+        private bool MoveForward()
         {
-            if (_chromInfoIndex + 1 < _chromInfos.Count)
+            var current = Current;
+            var currentDocNode = CurrentDocNode;
+            if (currentDocNode == null)
             {
-                _chromInfoIndex++;
-                return;
+                return false;
             }
-            _chromInfoIndex = -1;
-            var docNodeParent = CurrentDocNode as DocNodeParent;
-            if (docNodeParent != null && docNodeParent.Children.Count > 0)
+            var currentResultPosition = GetResultPosition(current);
+            for (int replicateIndex = ResultsIndex;
+                 replicateIndex < (Document.Settings.MeasuredResults?.Chromatograms.Count ?? 0);
+                 replicateIndex++)
             {
-                _nodeIndexPath.Add(0);
-            }
-            else
-            {
-                while (_nodeIndexPath.Count > 0)
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, replicateIndex))
                 {
-                    int index = _nodeIndexPath[_nodeIndexPath.Count - 1];
-                    _nodeIndexPath.RemoveAt(_nodeIndexPath.Count - 1);
-                    if (index + 1 < ((DocNodeParent)CurrentDocNode).Children.Count)
+                    if (currentResultPosition == null)
                     {
-                        _nodeIndexPath.Add(index + 1);
-                        break;
+                        var resultPosition = chromInfoPosition.ResultPosition;
+                        SetPosition(
+                            current.ChangeResult(replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep),
+                            currentDocNode, chromInfoPosition.ChromInfo);
+                        return true;
+                    }
+                    else if (Equals(currentResultPosition, chromInfoPosition.ResultPosition))
+                    {
+                        currentResultPosition = null;
                     }
                 }
-            }
-            MovedToNewDocNode(true);
-        }
 
-        void MoveBackward()
-        {
-            if (_chromInfoIndex >= 0)
-            {
-                _chromInfoIndex--;
-                return;
+                currentResultPosition = null;
             }
-            if (_nodeIndexPath.Count > 0)
+
+            current = current.ClearResult();
+            var identityPath = current.IdentityPath;
+            if (currentDocNode is DocNodeParent docNodeParent && docNodeParent.Children.Count > 0)
             {
-                int index = _nodeIndexPath[_nodeIndexPath.Count - 1];
-                if (index == 0)
+                var child = docNodeParent.Children[0];
+                return SetPosition(current.ChangeIdentityPath(new IdentityPath(identityPath, child.Id)), child, null);
+            }
+
+            while (identityPath.Length > 0)
+            {
+                var parentIdentityPath = identityPath.Parent;
+                docNodeParent = (DocNodeParent) Document.FindNode(parentIdentityPath);
+                var childIndex = docNodeParent.FindNodeIndex(identityPath.Child);
+                if (childIndex + 1 < docNodeParent.Children.Count)
                 {
-                    // We are visiting the parent
-                    _nodeIndexPath.RemoveAt(_nodeIndexPath.Count - 1);
-                    MovedToNewDocNode(false);
-                    return;
+                    var child = docNodeParent.Children[childIndex + 1];
+                    return SetPosition(current.ChangeIdentityPath(new IdentityPath(parentIdentityPath,
+                        child.Id)), child, null);
                 }
-                _nodeIndexPath[_nodeIndexPath.Count - 1] = index - 1;
+
+                identityPath = identityPath.Parent;
             }
-            // We are now going to drill down into the very last descendant of the node we are now on
-            var docNode = CurrentDocNode;
-            while (docNode is DocNodeParent)
-            {
-                var docNodeParent = (DocNodeParent)CurrentDocNode;
-                int childCount = docNodeParent.Children.Count;
-                if (childCount == 0)
-                {
-                    break;
-                }
-                _nodeIndexPath.Add(childCount - 1);
-                docNode = docNodeParent.Children[childCount - 1];
-                Debug.Assert(ReferenceEquals(docNode, CurrentDocNode));
-            }
-            MovedToNewDocNode(false);
+
+            return SetPosition(Bookmark.ROOT, Document, null);
         }
 
         /// <summary>
-        /// Returns true if the BookmarkEnumerator is positioned at its
-        /// starting location.
+        /// Move one position backwards through the iteration. If positioned on a result,
+        /// moves the the next earlier result. If not positioned on a result, then moves to
+        /// the last result of the previous node in the tree order.
         /// </summary>
-        public bool AtStart { get { return Equals(Start, Current); } }
-
-        public void Reset()
+        // ReSharper disable once UnusedMethodReturnValue.Local
+        private bool MoveBackward()
         {
-            Current = Start;
-        }
-
-        public bool Forward { get; set; }
-
-        public Bookmark Current
-        {
-            get
+            var current = Current;
+            var currentDocNode = CurrentDocNode;
+            if (currentDocNode == null)
             {
-                var chromInfo = CurrentChromInfo;
-                if (chromInfo == null)
-                {
-                    return new Bookmark(IdentityPath);
-                }
-                return new Bookmark(IdentityPath, chromInfo.FileId, GetOptStep(chromInfo));
+                return false;
             }
-            set
+            var currentFileIdOptStep = GetResultPosition(current);
+            bool onResult = currentFileIdOptStep != null;
+            for (int resultsIndex = ResultsIndex; resultsIndex >= 0; resultsIndex--)
             {
-                _nodeIndexPath.Clear();
-                DocNode docNode = Document;
-                for (int i = 0; i < value.IdentityPath.Length; i++)
+                foreach (var chromInfoPosition in GetChromInfoPositions(currentDocNode, resultsIndex).Reverse())
                 {
-                    var docNodeParent = (DocNodeParent)docNode;
-                    int index = docNodeParent.FindNodeIndex(value.IdentityPath.GetIdentity(i));
-                    if (index < 0)
+                    var resultPosition = chromInfoPosition.ResultPosition;
+                    if (currentFileIdOptStep == null)
                     {
-                        throw new InvalidBookmarkLocation(string.Format(Resources.BookmarkEnumerator_Current_No_such_node__0__,
-                                                                        value.IdentityPath.GetPathTo(i)));
+                        SetPosition(current.ChangeResult(resultsIndex, resultPosition.ChromFileInfoId,
+                                resultPosition.OptimizationStep),
+                            currentDocNode, chromInfoPosition.ChromInfo);
+                        return true;
                     }
-                    _nodeIndexPath.Add(index);
-                    docNode = docNodeParent.Children[index];
-                }
-                MovedToNewDocNode(true);
-                if (value.ChromFileInfoId != null)
-                {
-                    _chromInfoIndex = _chromInfos.IndexOf(ci => ReferenceEquals(value.ChromFileInfoId, ci.FileId) &&
-                                                                value.OptStep == GetOptStep(ci));
-                    if (_chromInfoIndex < 0)
+                    else if (Equals(currentFileIdOptStep, resultPosition))
                     {
-                        throw new InvalidBookmarkLocation(string.Format(Resources.BookmarkEnumerator_Current_No_such_chrominfo__0__,
-                                                                        value.ChromFileInfoId));
+                        currentFileIdOptStep = null;
                     }
                 }
             }
-        }
-        public SrmDocument Document { get; private set; }
-        public Bookmark Start { get; private set; }
-        public IdentityPath IdentityPath
-        {
-            get
+
+            if (onResult)
             {
-                return new IdentityPath(NodePath.Select(n => n.Id));
+                SetPosition(current.ClearResult(), currentDocNode, null);
+                return true;
             }
+
+            var identityPath = current.IdentityPath;
+            if (IdentityPath.ROOT.Equals(identityPath))
+            {
+                return MoveToLastDescendentAndResult(IdentityPath.ROOT, Document);
+            }
+            while (identityPath.Length > 0)
+            {
+                var identityPathParent = identityPath.Parent;
+                var docNodeParent = (DocNodeParent) Document.FindNode(identityPathParent);
+                int childIndex = docNodeParent.FindNodeIndex(identityPath.Child);
+                if (childIndex == 0)
+                {
+                    return MoveToLastResult(docNodeParent, identityPathParent);
+                }
+
+                var child = docNodeParent.Children[childIndex - 1];
+                return MoveToLastDescendentAndResult(new IdentityPath(identityPathParent, child.Id), child);
+            }
+
+            return SetPosition(Bookmark.ROOT, Document, null);
         }
-        public ChromInfo CurrentChromInfo
+
+        private bool MoveToLastDescendentAndResult(IdentityPath identityPath, DocNode node)
+        {
+            while (node is DocNodeParent docNodeParent && docNodeParent.Children.Count > 0)
+            {
+                node = docNodeParent.Children[docNodeParent.Children.Count - 1];
+                identityPath = new IdentityPath(identityPath, node.Id);
+            }
+
+            return MoveToLastResult(node, identityPath);
+        }
+
+        private bool MoveToLastResult(DocNode node, IdentityPath identityPath)
+        {
+            for (int replicateIndex = GetReplicateCount(node) - 1; replicateIndex >= 0; replicateIndex--)
+            {
+                var chromInfoPosition = GetChromInfoPositions(node, replicateIndex).LastOrDefault();
+                if (chromInfoPosition.ResultPosition != null)
+                {
+                    var resultPosition = chromInfoPosition.ResultPosition;
+                    SetPosition(new Bookmark(identityPath, replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep), node, chromInfoPosition.ChromInfo);
+                }
+            }
+
+            return SetPosition(new Bookmark(identityPath), node, null);
+        }
+
+        private bool SetPosition(Bookmark bookmark, DocNode docNode, ChromInfo chromInfo)
+        {
+            Current = bookmark;
+            CurrentDocNode = docNode;
+            CurrentChromInfo = chromInfo;
+            return true;
+        }
+
+        private bool FindAndSetPosition(Bookmark bookmark)
+        {
+            var node = Document.FindNode(bookmark.IdentityPath);
+            ChromInfo currentChromInfo = null;
+            if (bookmark.ReplicateIndex.HasValue)
+            {
+                if (node is TransitionDocNode transitionDocNode)
+                {
+                    currentChromInfo = transitionDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
+                        chromInfo.OptimizationStep == bookmark.OptStep);
+                }
+                else if (node is TransitionGroupDocNode transitionGroupDocNode)
+                {
+                    currentChromInfo = transitionGroupDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId) &&
+                        chromInfo.OptimizationStep == bookmark.OptStep);
+                }
+                else if (node is PeptideDocNode peptideDocNode)
+                {
+                    currentChromInfo = peptideDocNode.GetSafeChromInfo(bookmark.ReplicateIndex.Value).FirstOrDefault(chromInfo =>
+                        ReferenceEquals(chromInfo.FileId, bookmark.ChromFileInfoId));
+                }
+            }
+
+            return SetPosition(bookmark, node, currentChromInfo);
+        }
+
+        public bool IsValid { get; private set; }
+
+        /// <summary>
+        /// Returns true if this bookmark enumerator has wrapped back around to the start again.
+        /// </summary>
+        public bool AtStart
         {
             get
             {
-                return _chromInfoIndex == -1 ? null : _chromInfos[_chromInfoIndex];
+                if (!IsValid)
+                {
+                    // If the bookmark enumerator is invalid, then we always return true
+                    // so that iteration stops.
+                    return true;
+                }
+                
+                if (Start.IsRoot)
+                {
+                    // Checking "IsRoot" is faster than performing "Equals"
+                    return Current.IsRoot;
+                }
+                return Equals(Start, Current);
             }
         }
 
-        public ChromFileInfoId ChromFileInfoId
+        private ChromatogramSet GetChromatogramSet(Bookmark bookmark)
         {
-            get
+            if (null == bookmark?.ReplicateIndex)
             {
-                var chromInfo = CurrentChromInfo;
-                return chromInfo == null ? null : chromInfo.FileId;
+                return null;
             }
+            var measuredResults = Document.Settings.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return null;
+            }
+            
+            int resultsIndex = bookmark.ReplicateIndex.Value;
+            if (resultsIndex < 0 || resultsIndex >= measuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+            return measuredResults.Chromatograms[resultsIndex];
         }
-        public int OptStep
+
+        private ResultPosition GetResultPosition(Bookmark bookmark)
         {
-            get
+            if (bookmark?.ChromFileInfoId == null)
             {
-                return GetOptStep(CurrentChromInfo);
+                return null;
             }
-        }
-        public DocNode CurrentDocNode
-        {
-            get
+            var chromatogramSet = GetChromatogramSet(bookmark);
+            if (chromatogramSet == null)
             {
-                DocNode result = Document;
-                foreach (DocNode docNode in NodePath)
-                {
-                    result = docNode;
-                }
-                return result;
+                return null;
             }
+
+            return new ResultPosition(chromatogramSet, bookmark.ChromFileInfoId, bookmark.OptStep);
         }
+
         public int ResultsIndex
         {
             get
             {
-                var chromInfo = CurrentChromInfo;
-                if (chromInfo == null)
-                {
-                    return -1;
-                }
-                var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
-                for (int resultsIndex = 0; resultsIndex < chromatogramSets.Count; resultsIndex++)
-                {
-                    var chromatogramSet = chromatogramSets[resultsIndex];
-                    var foundMsDataFileInfo = chromatogramSet.MSDataFileInfos.FirstOrDefault(
-                        msDataFileInfo => ReferenceEquals(chromInfo.FileId, msDataFileInfo.FileId));
-                    if (foundMsDataFileInfo != null)
-                    {
-                        return resultsIndex;
-                    }
-                }
-                return -1;
+                return Current.ReplicateIndex ?? -1;
+            }
+        }
+
+        public IdentityPath IdentityPath
+        {
+            get
+            {
+                return Current.IdentityPath;
             }
         }
         IEnumerable<DocNode> NodePath
@@ -296,90 +385,26 @@ namespace pwiz.Skyline.Model.Find
             get
             {
                 DocNode docNode = Document;
-                foreach (var index in _nodeIndexPath)
+                var identityPath = IdentityPath;
+                for (int i = 0; i < identityPath.Length; i++)
                 {
-                    docNode = ((DocNodeParent)docNode).Children[index];
+                    docNode = ((DocNodeParent) docNode).FindNode(identityPath.GetIdentity(i));
+                    if (docNode == null)
+                    {
+                        yield break;
+                    }
+
                     yield return docNode;
                 }
             }
         }
 
-        static IEnumerable<ChromInfo> ListChromInfos(DocNode docNode)
-        {
-            var peptideDocNode = docNode as PeptideDocNode;
-            if (peptideDocNode != null)
-            {
-                return ListChromInfos(peptideDocNode.Results);
-            }
-            var transitionGroupDocNode = docNode as TransitionGroupDocNode;
-            if (transitionGroupDocNode != null)
-            {
-                return ListChromInfos(transitionGroupDocNode.Results);
-            }
-            var transitionDocNode = docNode as TransitionDocNode;
-            if (transitionDocNode != null)
-            {
-                return ListChromInfos(transitionDocNode.Results);
-            }
-            return new ChromInfo[0];
-        }
-// ReSharper disable ParameterTypeCanBeEnumerable.Local
-        static IEnumerable<ChromInfo> ListChromInfos<TChromInfo>(Results<TChromInfo> results) where TChromInfo : ChromInfo
-// ReSharper restore ParameterTypeCanBeEnumerable.Local
-        {
-            if (results == null)
-            {
-                return new ChromInfo[0];
-            }
-            var list = new List<ChromInfo>();
-            foreach (var chromInfoList in results)
-            {
-                if (chromInfoList.IsEmpty)
-                {
-                    continue;
-                }
-                foreach (var chromInfo in chromInfoList)
-                {
-                    list.Add(chromInfo);
-                }
-            }
-            return list;
-        }
-        static int GetOptStep(ChromInfo chromInfo)
-        {
-            var transitionChromInfo = chromInfo as TransitionChromInfo;
-            if (transitionChromInfo != null)
-            {
-                return transitionChromInfo.OptimizationStep;
-            }
-            var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
-            if (transitionGroupChromInfo != null)
-            {
-                return transitionGroupChromInfo.OptimizationStep;
-            }
-            return 0;
-        }
-        public IEnumerator<Bookmark> GetEnumerator()
-        {
-            var enumerator = new BookmarkEnumerator(this);
-            while(true)
-            {
-                enumerator.MoveNext();
-                yield return enumerator.Current;
-                if (enumerator.AtStart)
-                {
-                    break;
-                }
-            }
-        }
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
+        /// <summary>
+        /// Returns a description of this bookmark location for display in the Find Results window.
+        /// </summary>
         public string GetLocationName(DisplaySettings displaySettings)
         {
-            if (_chromInfoIndex >= 0)
+            if (ResultsIndex >= 0)
             {
                 int resultsIndex = ResultsIndex;
                 var peptideDocNode = NodePath.OfType<PeptideDocNode>().FirstOrDefault();
@@ -400,10 +425,13 @@ namespace pwiz.Skyline.Model.Find
             return CurrentDocNode.GetDisplayText(displaySettings);
         }
 
+        /// <summary>
+        /// Returns the string to display in the "Type" column of the Find Results window.
+        /// </summary>
         public string GetLocationType()
         {
             string nodeType = GetNodeTypeName(CurrentDocNode);
-            if (_chromInfoIndex >= 0)
+            if (ResultsIndex >= 0)
             {
                 return nodeType + @" " + Resources.BookmarkEnumerator_GetLocationType_Results;
             }
@@ -431,23 +459,174 @@ namespace pwiz.Skyline.Model.Find
             return Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
         }
 
+        /// <summary>
+        /// Constructs a BookmarkEnumerator positioned at the specific location in the
+        /// document. Returns null if the location does not exist in the document.
+        /// </summary>
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
         {
-            try
+            var bookmarkEnumerator = new BookmarkEnumerator(document, bookmark);
+            if (bookmarkEnumerator.IsValid)
             {
-                return new BookmarkEnumerator(document, bookmark);
+                return bookmarkEnumerator;
             }
-            catch (InvalidBookmarkLocation)
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the number of replicates for the particular DocNode
+        /// which might have results (i.e. ChromInfo's).
+        /// Currently, only TransitionDocNode, TransitionGroupDocNode, and PeptideDocNode
+        /// have results.
+        /// One could imagine wanting Bookmark's to be able to represent ChromatogramSet's, but
+        /// that is not supported yet.
+        /// </summary>
+        private int GetReplicateCount(DocNode docNode)
+        {
+            if (docNode is TransitionDocNode transitionDocNode)
             {
-                return null;
+                return transitionDocNode.Results?.Count ?? 0;
+            }
+
+            if (docNode is TransitionGroupDocNode transitionGroupDocNode)
+            {
+                return transitionGroupDocNode.Results?.Count ?? 0;
+            }
+
+            if (docNode is PeptideDocNode peptideDocNode)
+            {
+                return peptideDocNode.Results?.Count ?? 0;
+            }
+
+            return 0;
+        }
+
+        private IEnumerable<ChromInfoPosition> GetChromInfoPositions(DocNode docNode, int replicateIndex)
+        {
+            var measuredResults = Document.Settings.MeasuredResults;
+            if (measuredResults == null || replicateIndex < 0 || replicateIndex >= measuredResults.Chromatograms.Count)
+            {
+                return Array.Empty<ChromInfoPosition>();
+            }
+
+            var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+            if (docNode is TransitionDocNode transitionDocNode)
+            {
+                return MakeChromInfoPositions(transitionDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
+            }
+
+            if (docNode is TransitionGroupDocNode transitionGroupDocNode)
+            {
+                return MakeChromInfoPositions(transitionGroupDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, chromInfo.OptimizationStep));
+            }
+
+            if (docNode is PeptideDocNode peptideDocNode)
+            {
+                return MakeChromInfoPositions(peptideDocNode.GetSafeChromInfo(replicateIndex),
+                    chromInfo => new ResultPosition(chromatogramSet, chromInfo.FileId, 0));
+            }
+
+            return Array.Empty<ChromInfoPosition>();
+        }
+
+        private IEnumerable<ChromInfoPosition> MakeChromInfoPositions<T>(ChromInfoList<T> chromInfoList,
+            Func<T, ResultPosition> converter) where T : ChromInfo
+        {
+            if (chromInfoList.Count == 0)
+            {
+                return Array.Empty<ChromInfoPosition>();
+            }
+
+            if (chromInfoList.Count == 1)
+            {
+                return new[] {new ChromInfoPosition(converter(chromInfoList[0]), chromInfoList[0])};
+            }
+            // Consider: Is it really necessary to call "OrderBy" here, or can the ChromInfoList already be assumed to
+            // be ordered by FileInfo and Optimization Step
+            return chromInfoList.Select(chromInfo=>new ChromInfoPosition(converter(chromInfo), chromInfo))
+                .OrderBy(kvp=>kvp.ResultPosition);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<Bookmark> GetEnumerator()
+        {
+            var enumerator = (BookmarkEnumerator) MemberwiseClone();
+            do
+            {
+                enumerator.MoveNext();
+                yield return enumerator.Current;
+            } while (!enumerator.AtStart);
+        }
+        
+        /// <summary>
+        /// Represents the sort order of a ChromInfo in a ChromInfoList for a particular Replicate.
+        /// ChromInfos are sorted by FileId (specifically, the position of the FileId in the replicates <see cref="ChromatogramSet.MSDataFileInfos"/>)
+        /// and the Optimization Step.
+        /// </summary>
+        private class ResultPosition : IComparable<ResultPosition>
+        {
+            public ResultPosition(ChromatogramSet chromatogramSet, ChromFileInfoId fileId, int optimizationStep)
+            {
+                ChromFileInfoId = fileId;
+                FileIndex = chromatogramSet.FileCount == 1 ? 0 : chromatogramSet.IndexOfId(fileId);
+                OptimizationStep = optimizationStep;
+            }
+
+            public ChromFileInfoId ChromFileInfoId { get; }
+            /// <summary>
+            /// The index of the ChromFileInfoId within the <see cref="ChromatogramSet.MSDataFileInfos"/>.
+            /// </summary>
+            public int FileIndex { get; }
+            public int OptimizationStep { get; }
+
+            protected bool Equals(ResultPosition other)
+            {
+                return FileIndex == other.FileIndex && OptimizationStep == other.OptimizationStep;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ResultPosition)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (FileIndex * 397) ^ OptimizationStep;
+                }
+            }
+
+            public int CompareTo(ResultPosition other)
+            {
+                int result = FileIndex.CompareTo(other.FileIndex);
+                if (result == 0)
+                {
+                    result = OptimizationStep.CompareTo(other.OptimizationStep);
+                }
+                return result;
             }
         }
 
-        private class InvalidBookmarkLocation : ApplicationException
+        private struct ChromInfoPosition
         {
-            public InvalidBookmarkLocation(string message) : base(message)
+            public ChromInfoPosition(ResultPosition resultPosition, ChromInfo chromInfo)
             {
+                ResultPosition = resultPosition;
+                ChromInfo = chromInfo;
             }
+
+            public ResultPosition ResultPosition { get; }
+            public ChromInfo ChromInfo { get; }
         }
     }
 }
