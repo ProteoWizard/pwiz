@@ -19,6 +19,8 @@
 
 using System;
 using System.Linq;
+using JetBrains.Annotations;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using SkylineTool;
 
@@ -27,25 +29,16 @@ namespace pwiz.Skyline.Model.Find
     /// <summary>
     /// Remembers a document location in a Skyline Document
     /// </summary>
-    public class Bookmark
+    public class Bookmark : Immutable
     {
-        public static readonly Bookmark ROOT = new Bookmark();
-        public Bookmark()
+        public static readonly Bookmark ROOT = new Bookmark(IdentityPath.ROOT);
+        public Bookmark(IdentityPath identityPath) : this(identityPath, null, null, 0)
         {
-            IdentityPath = IdentityPath.ROOT;
         }
-        public Bookmark(Bookmark bookmark)
-        {
-            IdentityPath = bookmark.IdentityPath;
-            ChromFileInfoId = bookmark.ChromFileInfoId;
-        }
-        public Bookmark(IdentityPath identityPath) : this(identityPath, null, 0)
-        {
-            
-        }
-        public Bookmark(IdentityPath identityPath, ChromFileInfoId chromFileInfoId, int optStep)
+        public Bookmark(IdentityPath identityPath, int? replicateIndex, ChromFileInfoId chromFileInfoId, int optStep)
         {
             IdentityPath = identityPath ?? IdentityPath.ROOT;
+            ReplicateIndex = replicateIndex;
             ChromFileInfoId = chromFileInfoId;
             OptStep = optStep;
         }
@@ -55,6 +48,7 @@ namespace pwiz.Skyline.Model.Find
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.IdentityPath, IdentityPath)
+                   && Equals(ReplicateIndex, other.ReplicateIndex)
                    && ReferenceEquals(other.ChromFileInfoId, ChromFileInfoId)
                    && Equals(other.OptStep, OptStep);
         }
@@ -72,7 +66,8 @@ namespace pwiz.Skyline.Model.Find
             unchecked
             {
                 int result = IdentityPath.GetHashCode();
-                result = (result*397) ^ (ChromFileInfoId != null ? ChromFileInfoId.GetHashCode() : 0);
+                result = (result*397) ^ ReplicateIndex.GetHashCode();
+                result = (result * 397) ^ (ChromFileInfoId != null ? ChromFileInfoId.GetHashCode() : 0);
                 result = (result*397) ^ OptStep.GetHashCode();
                 return result;
             }
@@ -80,27 +75,50 @@ namespace pwiz.Skyline.Model.Find
 
         public bool IsRoot
         {
-            get { return IdentityPath.IsRoot && ChromFileInfoId == null; }
+            get { return IdentityPath.IsRoot && !ReplicateIndex.HasValue; }
         }
+        [NotNull]
         public IdentityPath IdentityPath { get; private set; }
         public Bookmark ChangeIdentityPath(IdentityPath value)
         {
-            return new Bookmark(this){IdentityPath = value ?? IdentityPath.ROOT};
-        }
-        public ChromFileInfoId ChromFileInfoId { get; private set;}
-        public Bookmark ChangeChromFileInfoId(ChromFileInfoId value)
-        {
-            return new Bookmark(this){ChromFileInfoId = value};
-        }
-        public int OptStep { get; private set; }
-        public Bookmark ChangeOptStep(int value)
-        {
-            return new Bookmark(this){OptStep = value};
+            return ChangeProp(ImClone(this), im => im.IdentityPath = value);
         }
 
+        public int? ReplicateIndex
+        {
+            get; private set;
+        }
+
+        public ChromFileInfoId ChromFileInfoId { get; private set;}
+
+        public Bookmark ChangeResult(int replicateIndex, [NotNull] ChromFileInfoId fileId, int optStep)
+        {
+            if (fileId == null)
+            {
+                throw new ArgumentNullException(nameof(fileId));
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+
+                im.ReplicateIndex = replicateIndex;
+                im.ChromFileInfoId = fileId;
+                im.OptStep = optStep;
+            });
+        }
+
+        public Bookmark ClearResult()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ReplicateIndex = null;
+                im.ChromFileInfoId = null;
+                im.OptStep = 0;
+            });
+        }
+        public int OptStep { get; private set; }
         public static Bookmark ToBookmark(DocumentLocation documentLocation, SrmDocument document)
         {
-            Bookmark bookmark = new Bookmark();
+            Bookmark bookmark = ROOT;
             if (documentLocation.IdPath.Any())
             {
                 IdentityPath identityPath = IdentityPath.ToIdentityPath(documentLocation.IdPath, document);
@@ -110,33 +128,29 @@ namespace pwiz.Skyline.Model.Find
                 }
                 bookmark = bookmark.ChangeIdentityPath(identityPath);
             }
-            if (documentLocation.ChromFileId.HasValue)
+
+            if (!documentLocation.ChromFileId.HasValue)
             {
-                ChromFileInfoId chromFileInfoId = null;
-                if (document.Settings.HasResults)
+                return bookmark;
+            }
+            var measuredResults = document.Settings.MeasuredResults;
+            if (measuredResults != null)
+            {
+                for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                 {
-                    foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+                    var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                    var chromFileInfo =
+                        chromatogramSet.MSDataFileInfos.FirstOrDefault(
+                            fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
+                    if (null != chromFileInfo)
                     {
-                        var chromFileInfo =
-                            chromatogramSet.MSDataFileInfos.FirstOrDefault(
-                                fileInfo => fileInfo.Id.GlobalIndex == documentLocation.ChromFileId);
-                        if (null != chromFileInfo)
-                        {
-                            chromFileInfoId = chromFileInfo.FileId;
-                        }
+                        return bookmark.ChangeResult(replicateIndex, chromFileInfo.FileId,
+                            documentLocation.OptStep ?? 0);
                     }
+
                 }
-                if (null == chromFileInfoId)
-                {
-                    throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
-                }
-                bookmark = bookmark.ChangeChromFileInfoId(chromFileInfoId);
             }
-            if (documentLocation.OptStep.HasValue)
-            {
-                bookmark = bookmark.ChangeOptStep(documentLocation.OptStep.Value);
-            }
-            return bookmark;
+            throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
         }
     }
 }
