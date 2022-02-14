@@ -123,6 +123,7 @@
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.label16 = new System.Windows.Forms.Label();
+            this.cbHighResolutionTolerance = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -516,6 +517,7 @@
             // 
             // tabLibrary
             // 
+            this.tabLibrary.Controls.Add(this.cbHighResolutionTolerance);
             this.tabLibrary.Controls.Add(this.label9);
             this.tabLibrary.Controls.Add(this.panelPick);
             this.tabLibrary.Controls.Add(this.textTolerance);
@@ -799,6 +801,12 @@
             resources.ApplyResources(this.label16, "label16");
             this.label16.Name = "label16";
             // 
+            // cbHighResolutionTolerance
+            // 
+            resources.ApplyResources(this.cbHighResolutionTolerance, "cbHighResolutionTolerance");
+            this.cbHighResolutionTolerance.Name = "cbHighResolutionTolerance";
+            this.cbHighResolutionTolerance.UseVisualStyleBackColor = true;
+            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -931,5 +939,6 @@
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
         private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.CheckBox cbHighResolutionTolerance;
     }
 }
