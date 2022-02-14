@@ -1072,7 +1072,8 @@ namespace pwiz.Skyline.Util
                 {"C14", BioMassCalc.C14},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
-                {"O18", BioMassCalc.O18}
+                {"O18", BioMassCalc.O18},
+                {"Cu65", BioMassCalc.Cu65},
                 // ReSharper restore LocalizableElement
             };
 
