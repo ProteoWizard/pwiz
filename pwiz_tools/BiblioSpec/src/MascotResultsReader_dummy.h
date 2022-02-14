@@ -39,6 +39,7 @@ class MascotResultsReader : public BuildParser{
   ~MascotResultsReader();
 
   bool parseFile();
+  std::vector<PSM_SCORE_TYPE> getScoreTypes();
 };
 
 } // namespace
