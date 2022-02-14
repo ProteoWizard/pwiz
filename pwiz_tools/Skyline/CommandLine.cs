@@ -798,7 +798,7 @@ namespace pwiz.Skyline
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
                     return panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
-                        commandArgs.PanoramaFolder);
+                        commandArgs.PanoramaFolder, commandArgs.SharedFileType);
                 }
                 else
                 {
@@ -3620,14 +3620,15 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
+            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
             {
-                ShareType shareType;
                 try
                 {
                     WebPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
-                    shareType = publishClient.DecideShareType(new FolderInformation(panoramaServer, true),
-                        document);
+                    // If the Panorama server does not support the skyd version of the document, change the Skyline version to the 
+                    // max version supported by the server.
+                    selectedShareType = publishClient.DecideShareTypeVersion(new FolderInformation(panoramaServer, true),
+                        document, selectedShareType);
                 }
                 catch (PanoramaServerException panoramaServerException)
                 {
@@ -3636,7 +3637,7 @@ namespace pwiz.Skyline
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
                 var published = false;
-                if (ShareDocument(document, documentPath, zipFilePath, shareType, _statusWriter))
+                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter))
                 {
                     published = PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
                 }
