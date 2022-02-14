@@ -754,8 +754,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
-                    BuildPepSearchLibControl.ScoreThresholds = ImportPeptideSearch.SearchFilenames.Select(f =>
-                        Tuple.Create(BiblioSpecScoreType.GenericQValue, (double?)(1 - BuildPepSearchLibControl.CutOffScore)));
+                    BuildPepSearchLibControl.ScoreTypes = ImportPeptideSearch.SearchFilenames.Select(f => BiblioSpecScoreType.GenericQValue).ToArray();
+                    BuildPepSearchLibControl.ScoreThresholds = ImportPeptideSearch.SearchFilenames.Select(f => (double?)(1 - BuildPepSearchLibControl.CutOffScore)).ToArray();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
                         return;

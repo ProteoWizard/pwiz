@@ -86,8 +86,8 @@ namespace pwiz.SkylineTestFunctional
             var import = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() =>
             {
-                import.BuildPepSearchLibControl.CutOffScore = 0.95;
-                import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults });
+                import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults }, false);
+                import.BuildPepSearchLibControl.ScoreThresholds = new double?[] { 0.05 };
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });

@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() =>
             {
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new []{TestFilesDir.GetTestPath("modless.pride.xml")});
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new []{TestFilesDir.GetTestPath("modless.pride.xml")}, false);
                 importPeptideSearchDlg.ClickNextButton();
             });
 
