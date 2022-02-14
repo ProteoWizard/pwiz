@@ -310,7 +310,7 @@ Undo Redo : Added spectral library "BSA_Protea_label_free_meth3"
 Summary   : Added spectral library "BSA_Protea_label_free_meth3"
 All Info  :
 Added spectral library "BSA_Protea_label_free_meth3"
-Build Spectral Library > Cut-off score is "0.99"
+Build Spectral Library > Cut-off score is "0.95"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 Build Spectral Library > iRT standard peptides is None
@@ -318,7 +318,7 @@ Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
 Build Spectral Library > Workflow is "PRM"
 Build Spectral Library > Input File Type is "Search results (build library directly)"
-Extra Info: Cut-off score = "0.99",
+Extra Info: Cut-off score = "0.95",
 Search files = 
 [
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",

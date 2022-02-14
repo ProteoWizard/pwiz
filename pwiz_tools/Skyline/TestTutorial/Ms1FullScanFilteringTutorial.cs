@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles, false);
 
                 // Sanity check here, because of failure getting both files for results import below
                 var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
@@ -190,10 +190,16 @@ namespace pwiz.SkylineTestTutorial
             // Verify input paths sent to BlibBuild
             string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
             string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
-            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var argFiles = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Skip(1).ToArray();
+            for (var i = 0; i < argFiles.Length; i++)
+            {
+                var j = argFiles[i].IndexOf("score_threshold=", StringComparison.InvariantCulture);
+                if (j >= 0)
+                    argFiles[i] = argFiles[i].Substring(0, j).TrimEnd();
+            }
             var dirCommon = PathEx.GetCommonRoot(searchFiles);
             var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
-            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argFiles), buildArgs);
 
             // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];

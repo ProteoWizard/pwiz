@@ -91,10 +91,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var doc = SkylineWindow.Document;
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                  ImportPeptideSearchDlg.Pages.spectra_page);
-                    importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                    importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                    importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles, false);
                     importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
                 });
 
