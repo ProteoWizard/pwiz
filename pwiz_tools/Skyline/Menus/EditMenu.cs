@@ -1170,7 +1170,7 @@ namespace pwiz.Skyline.Menus
                         {
                             throw;
                         }
-                        MessageDlg.Show(this, exception.Message);
+                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
                     }
                 }
                 else
