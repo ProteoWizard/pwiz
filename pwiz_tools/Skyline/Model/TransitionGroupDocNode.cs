@@ -1608,7 +1608,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Returns the <see cref="ChromatogramInfo"/> with the closest m/z value to the given transition.
         /// </summary>
-        private int FindCenterInfo(TransitionDocNode nodeTran, IList<ChromatogramInfo> listChromInfo)
+        public static int FindCenterInfo(TransitionDocNode nodeTran, IList<ChromatogramInfo> listChromInfo)
         {
             // The list is assumed to be sorted by m/z. So, m/z values should get closer and closer
             // until they start getting farther and farther.
