@@ -886,9 +886,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 lock (_gridFilesLock)
                 {
                     return gridSearchFiles.RowCount > 0 &&
-                           gridSearchFiles.Rows.Cast<DataGridViewRow>().All(row =>
-                               !ScoreTypeCellValue.Get(row, columnScoreType).ToString().Equals(CELL_LOADING) &&
-                               !ThresholdCell.Get(row, columnThreshold).ToString().Equals(CELL_LOADING));
+                           (PerformDDASearch || gridSearchFiles.Rows.Cast<DataGridViewRow>().All(row =>
+                           {
+                               var scoreType = ScoreTypeCellValue.Get(row, columnScoreType)?.ToString();
+                               var threshold = ThresholdCell.Get(row, columnThreshold)?.ToString();
+                               return scoreType != null && !Equals(scoreType, CELL_LOADING) && threshold != null && !Equals(threshold, CELL_LOADING);
+                           }));
                 }
             }
         }
