@@ -14,11 +14,11 @@ Extra Info: File names =
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Edited note of K.TCVADESHAGCEK.S [75, 87]
-Summary   : Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed to "Lost in yeast samples"
+Undo Redo : Edited note of K.TCVADESHAGCEK.S [76, 88]
+Summary   : Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [76, 88] > Note changed to "Lost in yeast samples"
 All Info  :
-Edited note of K.TCVADESHAGCEK.S [75, 87]
-Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > Note changed from Missing to "Lost in yeast samples"
+Edited note of K.TCVADESHAGCEK.S [76, 88]
+Targets > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [76, 88] > Note changed from Missing to "Lost in yeast samples"
 
 Undo Redo : Managed results
 Summary   : Managed results
@@ -35,8 +35,8 @@ Settings > Transition Settings -- Full-Scan > Retention time filter length chang
 Settings > Transition Settings -- Ion mobility > Ion mobility library changed from "None" to "BSA"
 Settings > Transition Settings -- Ion mobility > Ion mobility library > File path is "BSA.imsdb"
 Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Items added is "38"
-Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > LSID is "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:297a2b6d-4248-4751-a22d-f5d0d365dc30:1.1"
-Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Timestamp is "2020-07-10T11:00:01-07:00"
+Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > LSID is "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:78abd2e6-08c9-4771-8c51-5a84d60bc5d7:1.1"
+Settings > Transition Settings -- Ion mobility > Ion mobility library > Contents changed > Timestamp is "2021-08-14T06:02:51-07:00"
 Settings > Transition Settings -- Ion mobility > Ion mobility filter window width calculation type changed from "None" to "Resolving power"
 Settings > Transition Settings -- Ion mobility > Resolving power changed from "0" to "50"
 

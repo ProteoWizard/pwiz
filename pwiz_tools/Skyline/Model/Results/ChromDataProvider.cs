@@ -96,6 +96,8 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual bool HasMidasSpectra { get { return false; } }
 
+        public virtual bool HasSonarSpectra { get { return false; } }
+
         // Used for offering hints to user when document transition polarities don't agree with the raw data
         public abstract bool SourceHasPositivePolarityData { get; }
         public abstract bool SourceHasNegativePolarityData { get; }
@@ -211,8 +213,9 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileImpl _dataFile;
         private GlobalChromatogramExtractor _globalChromatogramExtractor;
-        
+
         private readonly bool _hasMidasSpectra;
+        private readonly bool _hasSonarSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
         private readonly eIonMobilityUnits _ionMobilityUnits;
@@ -291,6 +294,8 @@ namespace pwiz.Skyline.Model.Results
 
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
+
+            _hasSonarSpectra = dataFile.IsWatersSonarData();
 
             _ionMobilityUnits = dataFile.IonMobilityUnits;
 
@@ -427,6 +432,11 @@ namespace pwiz.Skyline.Model.Results
         public override bool HasMidasSpectra
         {
             get { return _hasMidasSpectra; }
+        }
+
+        public override bool HasSonarSpectra
+        {
+            get { return _hasSonarSpectra; }
         }
 
         public override bool SourceHasPositivePolarityData

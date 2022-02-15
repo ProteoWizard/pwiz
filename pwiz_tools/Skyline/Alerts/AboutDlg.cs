@@ -32,13 +32,13 @@ namespace pwiz.Skyline.Alerts
             labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
 
             // Designer has problems getting images from resources
-            pictureSkylineIcon.Image = Resources.SkylineImg;
+            pictureSkylineIcon.Image = Program.SkylineImage;
             pictureProteoWizardIcon.Image = Resources.ProteoWizard;
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://skyline.ms");
+            WebHelpers.OpenLink(this, @"https://skyline.ms");
         }
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Alerts
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, @"http://proteome.gs.washington.edu/software/Skyline/funding.html");
+            WebHelpers.OpenLink(this, @"https://skyline.ms/funding.url");
         }
     }
 }

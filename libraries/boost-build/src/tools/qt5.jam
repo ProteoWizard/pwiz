@@ -3,8 +3,8 @@
 # Copyright 2005-2012 Juergen Hunold
 #
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Qt5 library support module
 #
@@ -306,7 +306,6 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
        local usage-requirements =
            <include>$(.incprefix)
            <library-path>$(.libprefix)
-           <threading>multi
            <allow>qt5 ;
 
        if $(link) in shared
@@ -541,7 +540,7 @@ rule initialized ( )
 # This custom generator is needed because in QT5, UI files are translated only
 # into H files, and no C++ files are created. Further, the H files need not be
 # passed via MOC. The header is used only via inclusion. If we define a standard
-# UI -> H generator, Boost.Build will run MOC on H, and then compile the
+# UI -> H generator, B2 will run MOC on H, and then compile the
 # resulting cpp. It will give a warning, since output from moc will be empty.
 #
 # This generator is declared with a UI -> OBJ signature, so it gets invoked when

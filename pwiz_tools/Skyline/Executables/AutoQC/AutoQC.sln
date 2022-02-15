@@ -5,6 +5,7 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQC", "AutoQC\AutoQC.csproj", "{87D6B185-C2D3-48A9-95B3-A0F528F3F446}"
 	ProjectSection(ProjectDependencies) = postProject
+		{91458586-C381-465E-9A63-0341058E0C99} = {91458586-C381-465E-9A63-0341058E0C99}
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A} = {9660E7B1-A0AD-4C2B-A395-350D4055640A}
 	EndProjectSection
 EndProject
@@ -13,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQCStarter", "AutoQCStarter\AutoQCStarter.csproj", "{296123D9-C4D5-4BD7-818E-02283762A636}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedBatch", "..\SharedBatch\SharedBatch\SharedBatch.csproj", "{9660E7B1-A0AD-4C2B-A395-350D4055640A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LaunchBatch", "..\SharedBatch\LaunchBatch\LaunchBatch.csproj", "{91458586-C381-465E-9A63-0341058E0C99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +39,10 @@ Global
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9660E7B1-A0AD-4C2B-A395-350D4055640A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91458586-C381-465E-9A63-0341058E0C99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

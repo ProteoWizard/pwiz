@@ -234,9 +234,6 @@
   <data name="&gt;&gt;lowerPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lowerPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
-  </data>
   <data name="&gt;&gt;lowerPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
@@ -339,9 +336,6 @@
   <data name="&gt;&gt;messageScrollPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;messageScrollPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
-  </data>
   <data name="&gt;&gt;messageScrollPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -386,9 +380,6 @@
   </data>
   <data name="&gt;&gt;tbxDetail.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxDetail.Parent" xml:space="preserve">
-    <value>splitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;tbxDetail.ZOrder" xml:space="preserve">
     <value>0</value>

@@ -1,7 +1,7 @@
 # Copyright Wind River 2017.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import intel ;
 import feature : feature ;
@@ -31,6 +31,8 @@ toolset.inherit-rules intel-vxworks : gcc ;
 toolset.inherit-flags intel-vxworks : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space
           <warnings>off <warnings>all <warnings>on
+          <warnings>extra <warnings>pedantic
+          <warnings-as-errors>off <warnings-as-errors>on
           <architecture>x86/<address-model>32
           <architecture>x86/<address-model>64
         ;
@@ -112,9 +114,13 @@ flags intel-vxworks.compile INCLUDES <include> ;
 .cpu-type-em64t    = prescott nocona core2 corei7 corei7-avx core-avx-i
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
-                     yorksfield nehalem sandy-bridge ivy-bridge haswell ;
+                     yorksfield nehalem sandy-bridge ivy-bridge haswell
+                     broadwell skylake skylake-avx512 cannonlake
+                     icelake-client icelake-server cascadelake cooperlake
+                     tigerlake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
-                     athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 btver1 btver2 ;
+                     athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 btver1 btver2
+                     znver1 znver2 ;
 .cpu-type-x86-64   = $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 
 #flags intel-vxworks.compile OPTIONS <instruction-set>$(.cpu-type-x86-64)/<address-model>32 : -m32 ; # -mcmodel=small ;
@@ -123,10 +129,16 @@ flags intel-vxworks.compile INCLUDES <include> ;
 flags intel-vxworks.compile.c OPTIONS <warnings>off : -w0 ;
 flags intel-vxworks.compile.c OPTIONS <warnings>on : -w1 ;
 flags intel-vxworks.compile.c OPTIONS <warnings>all : -w2 ;
+flags intel-vxworks.compile.c OPTIONS <warnings>extra : -w3 ;
+flags intel-vxworks.compile.c OPTIONS <warnings>pedantic : -w3 -Wcheck ;
+flags intel-vxworks.compile.c OPTIONS <warnings-as-errors>on : -Werror-all ;
 
 flags intel-vxworks.compile.c++ OPTIONS <warnings>off : -w0 ;
 flags intel-vxworks.compile.c++ OPTIONS <warnings>on : -w1 ;
 flags intel-vxworks.compile.c++ OPTIONS <warnings>all : -w2 ;
+flags intel-vxworks.compile.c++ OPTIONS <warnings>extra : -w3 ;
+flags intel-vxworks.compile.c++ OPTIONS <warnings>pedantic : -w3 -Wcheck ;
+flags intel-vxworks.compile.c++ OPTIONS <warnings-as-errors>on : -Werror-all ;
 
 actions compile.c
 {
@@ -144,7 +156,7 @@ flags intel-vxworks ARFLAGS <archiveflags> ;
 
 rule archive ( targets * : sources * : properties * )
 {
-  # Always remove archive and start again. 
+  # Always remove archive and start again.
   # of the archive.
   #
   local clean.a = $(targets[1])(clean) ;
@@ -167,9 +179,6 @@ flags intel-vxworks.link USER_OPTIONS <linkflags> ;
 rule link ( targets * : sources * : properties * )
 {
   SPACE on $(targets) = " " ;
-  # Serialize execution of the 'link' action, since
-  # running N links in parallel is just slower.
-  JAM_SEMAPHORE on $(targets) = <s>intel-vxworks-link-semaphore ;
 }
 
 actions link bind LIBRARIES

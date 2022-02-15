@@ -32,5 +32,18 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
         public virtual char NextAa { get; set; }
         public virtual double CalcNeutralMass { get; set; }
         public virtual int NumMissedCleavages { get; set; }
+
+        /// <summary>
+        /// Schema version 1.3 added small molecule support
+        /// </summary>
+        [UsedImplicitly]
+        public class Format1Dot3 : Peptide
+        {
+            public virtual string ChemicalFormula { get; set; }
+            public virtual string MoleculeName { get; set; }
+            public virtual double MassMonoisotopic { get; set; }
+            public virtual double MassAverage { get; set; }
+            public virtual string MoleculeAccession { get; set; }
+        }
     }
 }

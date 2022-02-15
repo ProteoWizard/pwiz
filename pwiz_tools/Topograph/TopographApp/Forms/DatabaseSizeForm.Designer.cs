@@ -1,4 +1,6 @@
-﻿namespace pwiz.Topograph.ui.Forms
+﻿using pwiz.Topograph.ui.Controls;
+
+namespace pwiz.Topograph.ui.Forms
 {
     partial class DatabaseSizeForm
     {
@@ -38,7 +40,7 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
+            this.recordNavBar1 = new RecordNavBar();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.colTableName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRowCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -197,7 +199,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.DataGridView dataGridView1;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private RecordNavBar recordNavBar1;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTableName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRowCount;

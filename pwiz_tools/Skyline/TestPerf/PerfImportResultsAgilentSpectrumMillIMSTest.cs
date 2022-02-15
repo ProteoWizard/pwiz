@@ -43,7 +43,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillIMSImportTest()
         {
             // RunPerfTests = true;  // Uncomment to force this to run in UI
@@ -119,7 +118,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importResultsNameDlg.NoDialog();
             });
             WaitForClosedForm(importResultsNameDlg);
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             // Enable use of drift times in spectral library
@@ -155,7 +159,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

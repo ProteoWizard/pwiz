@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestData.Results
                     {
                         ChromatogramGroupInfo[] chromGroupInfo;
                         Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                            tolerance, true, out chromGroupInfo));
+                            tolerance, out chromGroupInfo));
                         Assert.AreEqual(1, chromGroupInfo.Length);
                         VerifyMs1Truncated(chromGroupInfo.First());
                     }

@@ -13,9 +13,10 @@ namespace SharedBatch
         public FindSkylineForm(string appName, Icon icon)
         {
             InitializeComponent();
-            Text = appName;
             Icon = icon;
             label1.Text = string.Format(Resources.FindSkylineForm_FindSkylineForm__0__requires_Skyline_to_run__but_did_not_find_an_administrative_or_web_based_installation_, appName);
+
+            Shown += ((sender, args) => { Text = appName; });
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -33,7 +34,7 @@ namespace SharedBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var skylineSettings = new SkylineSettings(SkylineType.Custom, textSkylineInstallPath.Text);
+            var skylineSettings = new SkylineSettings(SkylineType.Custom, null, textSkylineInstallPath.Text);
             try
             {
                 skylineSettings.Validate();

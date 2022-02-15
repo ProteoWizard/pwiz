@@ -1,8 +1,8 @@
 /*
  * Copyright Vladimir Prus 2003.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "class.h"
@@ -13,7 +13,7 @@
 #include "lists.h"
 #include "object.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "variable.h"
 #include "output.h"
 
@@ -129,7 +129,6 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     OBJECT     * name = class_module_name( list_front( xname ) );
     OBJECT   * * pp;
     module_t   * class_module = 0;
-    module_t   * outer_module = frame->module;
     int found;
 
     if ( !classes )
@@ -152,7 +151,7 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
 
     {
         /*
-            Initialize variables that Boost.Build inserts in every object.
+            Initialize variables that B2 inserts in every object.
             We want to avoid creating the object's hash if it isn't needed.
          */
         int num = class_module->num_fixed_variables;

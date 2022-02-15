@@ -54,15 +54,30 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
-        private Target _target;
+        public ChromDataSet(bool isTimeNormalArea, FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromData chromData)
+            :this(isTimeNormalArea, null, null, fullScanAcquisitionMethod, new []{chromData})
+        {
+            OverrideTextId = false;
+        }
 
-        public ChromDataSet(bool isTimeNormalArea, Target target, FullScanAcquisitionMethod fullScanAcquisitionMethod, params ChromData[] arrayChromData)
+        public ChromDataSet(bool isTimeNormalArea, PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode, FullScanAcquisitionMethod fullScanAcquisitionMethod,
+            IEnumerable<ChromData> arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
             FullScanAcquisitionMethod = fullScanAcquisitionMethod;
-                 
-            _listChromData.AddRange(arrayChromData);
-            _target = target;
+
+            AddRange(arrayChromData);
+            if (transitionGroupDocNode != null)
+            {
+                NodeGroups = ImmutableList.Singleton(Tuple.Create(peptideDocNode, transitionGroupDocNode));
+            }
+            else
+            {
+                NodeGroups = ImmutableList<Tuple<PeptideDocNode, TransitionGroupDocNode>>.EMPTY;
+            }
+
+            OverrideTextId = true;
         }
 
         public void ClearDataDocNodes()
@@ -96,7 +111,20 @@ namespace pwiz.Skyline.Model.Results
 
         public void Add(ChromData chromData)
         {
-            _listChromData.Add(chromData);
+            AddRange(new []{chromData});
+        }
+
+        public void Remove(ChromData chromData)
+        {
+            _listChromData.Remove(chromData);
+        }
+
+        public void AddRange(IEnumerable<ChromData> chromDatas)
+        {
+            foreach (var chromData in chromDatas)
+            {
+                _listChromData.Add(chromData.CloneForWrite());
+            }
         }
 
         public void RemovePeak(ChromDataPeakList peakGroup)
@@ -135,21 +163,40 @@ namespace pwiz.Skyline.Model.Results
             if (count < _listPeakSets.Count)
                 _listPeakSets.RemoveRange(count, _listPeakSets.Count - count);
         }
-
-        public TransitionGroupDocNode NodeGroup { get; set; }
+        public TransitionGroupDocNode NodeGroup
+        {
+            get { return NodeGroups.FirstOrDefault()?.Item2; }
+        }
+        public ImmutableList<Tuple<PeptideDocNode, TransitionGroupDocNode>> NodeGroups { get; set; }
+        public IEnumerable<IsotopeLabelType> LabelTypes
+        {
+            get { return NodeGroups.Select(g => g.Item2.LabelType); }
+        }
 
         /// <summary>
         /// True if the transition group is an isotope labeled internal standard
         /// </summary>
         public bool IsStandard { get; set; }
 
+        /// <summary>
+        /// Indicates that this ChromDataSet needs a ChromatogramTextId corresponding to
+        /// the PeptideDocNode. If this is false, then ChromDataSet will use whatever TextId
+        /// is in the ChromKey (which will be blank for SRM files, or will be the same as the PeptideDocNode
+        /// TextId if this was full scan extraction.
+        /// </summary>
+        public bool OverrideTextId { get; }
+
         public Target ModifiedSequence
         {
             get
             {
-                if (_target != null)
+                if (OverrideTextId)
                 {
-                    return _target;
+                    var peptideDocNode = NodeGroups.FirstOrDefault()?.Item1;
+                    if (peptideDocNode != null)
+                    {
+                        return peptideDocNode.ModifiedTarget;
+                    }
                 }
                 return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;
             }
@@ -168,6 +215,11 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
+        }
+
+        public bool IsSonarData
+        {
+            get { return _listChromData.Count > 0 && BestChromatogram.Key.IonMobilityFilter.IonMobilityUnits == eIonMobilityUnits.waters_sonar; }
         }
 
         public ChromExtractor Extractor
@@ -220,13 +272,22 @@ namespace pwiz.Skyline.Model.Results
         public void Merge(ChromDataSet chromDataSet)
         {
             var setKeys = new HashSet<ChromKey>(_listChromData.Select(d => d.Key));
+            bool anyAdded = false;
             foreach (var chromData in chromDataSet._listChromData)
             {
-                if (!setKeys.Contains(chromData.Key))
+                if (setKeys.Add(chromData.Key))
+                {
+                    anyAdded = true;
                     Add(chromData);
+                }
             }
-            // Enforce expected sorting if product ions are coming from different groups
-            _listChromData.Sort();
+
+            if (anyAdded)
+            {
+                // Enforce expected sorting if product ions are coming from different groups
+                _listChromData.Sort();
+                NodeGroups = ImmutableList.ValueOf(NodeGroups.Concat(chromDataSet.NodeGroups));
+            }
         }
 
         public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
@@ -234,7 +295,9 @@ namespace pwiz.Skyline.Model.Results
             foreach (var chromData in _listChromData.ToArray())
             {
                 if (!chromData.Load(provider, modifiedSequence, peptideColor))
-                    _listChromData.Remove(chromData);
+                {
+                    Remove(chromData);
+                }
             }
             return _listChromData.Count > 0;
         }
@@ -1231,16 +1294,52 @@ namespace pwiz.Skyline.Model.Results
 
         private bool IsSameRT(ChromDataSet chromDataSet)
         {
-            return (NodeGroup.RelativeRT == RelativeRT.Matching && chromDataSet.NodeGroup.RelativeRT == RelativeRT.Matching) ||
-                ReferenceEquals(NodeGroup.TransitionGroup.LabelType, chromDataSet.NodeGroup.TransitionGroup.LabelType);
+            return (RelativeRT == RelativeRT.Matching && chromDataSet.RelativeRT == RelativeRT.Matching) ||
+                   LabelTypes.Intersect(chromDataSet.LabelTypes).Any();
         }
 
         private bool IsShiftedRT(ChromDataSet chromDataSet)
         {
-            return NodeGroup.RelativeRT == RelativeRT.Preceding ||
-                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Preceding ||
-                NodeGroup.RelativeRT == RelativeRT.Overlapping ||
-                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Overlapping;
+            return RelativeRT == RelativeRT.Preceding ||
+                chromDataSet.RelativeRT == RelativeRT.Preceding ||
+                RelativeRT == RelativeRT.Overlapping ||
+                chromDataSet.RelativeRT == RelativeRT.Overlapping;
+        }
+
+        public RelativeRT RelativeRT
+        {
+            get
+            {
+                return MergeRelativeRTs(NodeGroups.Select(group => group.Item2.RelativeRT));
+            }
+        }
+
+        /// <summary>
+        /// Return the strongest relativeRT from a list. Returns any RelativeRT in the list
+        /// is "Matching", then returns "Matching". Returns "Unknown" only if all RelativeRTs
+        /// in the list are "Unknown".
+        /// </summary>
+        public static RelativeRT MergeRelativeRTs(IEnumerable<RelativeRT> relativeRts)
+        {
+            var result = RelativeRT.Unknown;
+            foreach (var relativeRT in relativeRts)
+            {
+                if (relativeRT == RelativeRT.Matching)
+                {
+                    return RelativeRT.Matching;
+                }
+
+                if (result == RelativeRT.Unknown)
+                {
+                    result = relativeRT;
+                }
+                else if (result != relativeRT)
+                {
+                    return RelativeRT.Matching;
+                }
+            }
+
+            return result;
         }
 
         public override string ToString()

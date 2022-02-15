@@ -143,6 +143,7 @@ class BlibBuilder : public BlibMaker
   queue<STDIN_LIST> stdinput;
   istream* stdinStream;
 
+  static string parseSequence(const string& sequence, bool modified);
   int readSequences(set<string>** seqSet, bool modified = false);
 };
 

@@ -41,8 +41,8 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     static bool accept(const msdata::SpectrumListPtr& inner);
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
-    // N.B this should agree with the enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
-    enum class IonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
+    // N.B this order starting with none=0 should agree with the enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
+    enum class IonMobilityUnits {waters_sonar = -1, none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2, compensation_V };
 
     virtual IonMobilityUnits getIonMobilityUnits() const;
 
@@ -58,14 +58,19 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     /// returns the ion mobility (units depend on IonMobilityEquipment) associated with the given collisional cross-section
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
-    /// for Waters SONAR data, given a (0-based) function number, a precursor m/z, and a tolerance, return the corresponding start and end "drift" bins
-    virtual std::pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
+    /// returns true if the file is Waters SONAR data, which filters an m/z range using its ion mobility hardware and reports the data as if it were ion mobility
+    virtual bool isWatersSonarData() const;
 
+    /// for Waters SONAR data, given a precursor m/z,return the corresponding start and end "drift" bins. If mz is outside the SONAR range, return value will be <-1,-1>
+    virtual std::pair<int, int> sonarMzToBinRange(double precursorMz, double tolerance) const;
+    /// for Waters SONAR data, given a "drift" bin return the nominal m/z filter value of that bin.  If bin is outside the SONAR range, return value will be 0
+    virtual double sonarBinToPrecursorMz(int bin) const;
 
 private:
-    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift };
+    enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift, MobilIonDrift };
     IonMobilityEquipment equipment_;
     IonMobilityUnits units_;
+    bool has_mzML_combined_ion_mobility_;
     msdata::SpectrumListIonMobilityBase* sl_;
 };
 

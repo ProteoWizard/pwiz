@@ -121,7 +121,7 @@ rule init ( version ? : location : options * )
 
 rule H5pubconf-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <include>$(HDF5_SRC)/src/windows ;
     }
@@ -152,7 +152,7 @@ rule link-requirements ( properties * )
 
 rule hdf5-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <source>$(HDF5_SRC)/src/H5FDwindows.c
                <conditional>@link-requirements ;
@@ -178,7 +178,7 @@ rule hdf5-requirements ( properties * )
 
 rule hdf5-usage-requirements ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <target-os>windows in $(properties)
     {
         return <conditional>@link-requirements ;
     }
@@ -189,26 +189,23 @@ rule hdf5-usage-requirements ( properties * )
     }
 }
 
-actions init_once_workaround_cpp
+rule init_once_workaround_cpp ( targets + : sources * : properties * )
 {
-    @($(STDOUT):E=
-#ifdef _MSC_VER
-
-#include <boost/thread.hpp>
-
-extern "C"
-{
-
-#include "H5pubconf.h"
-#include "H5private.h"
-#include "H5TSprivate.h"
-#include <stdio.h>
-
-void boost_first_thread_init_really() { H5TS_win32_first_thread_init(NULL, NULL, NULL); }
-int boost_first_thread_init() { static struct {boost::once_flag flag;} flag = {BOOST_ONCE_INIT}; boost::call_once(flag.flag, boost_first_thread_init_really); return 1; }
-
+local content = "#ifdef _MSC_VER\n" ;
+content += "#include <boost/thread.hpp>\n" ;
+content += "extern \"C\" {\n" ;
+content += "#include \"H5pubconf.h\"\n" ;
+content += "#include \"H5private.h\"\n" ;
+content += "#include \"H5TSprivate.h\"\n" ;
+content += "#include <stdio.h>\n" ;
+content += "void boost_first_thread_init_really() { H5TS_win32_first_thread_init(NULL, NULL, NULL); }\n" ;
+content += "int boost_first_thread_init() { static struct {boost::once_flag flag;} flag = {BOOST_ONCE_INIT}; boost::call_once(flag.flag, boost_first_thread_init_really); return 1; }\n" ;
+content += "}\n" ;
+content += "#endif // _MSC_VER\n" ;
+    FILE_CONTENTS on $(<[1]) = $(content) ;
 }
 
-#endif // _MSC_VER
-) > "$(<)"
+actions init_once_workaround_cpp
+{
+    @($(STDOUT):E=$(FILE_CONTENTS:J=)) > "$(<)"
 }

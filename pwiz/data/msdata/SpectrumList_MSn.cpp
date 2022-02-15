@@ -239,7 +239,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     double precursor_mz = 0;
     
     // start reading the file
-    if( getline(*is_, lineStr) )	// not end of file
+    if(getlinePortable(*is_, lineStr) )	// not end of file
     {
         // confirm that the first line is an S line
         if (lineStr.find("S") != 0)
@@ -278,7 +278,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     vector< pair<int, double> > chargeMassPairs;
 
     // read in remainder of spectrum
-    while (getline(*is_, lineStr))
+    while (getlinePortable(*is_, lineStr))
     {
         if (lineStr.find("S") == 0) // we are at the next spectrum
         {
@@ -641,7 +641,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     size_t lineCount = 0;
     map<string, size_t>::iterator curIdToIndexItr;
     
-    while (getline(*is_, lineStr))
+    while (std::getline(*is_, lineStr)) // need accurate line length, so do not use pwiz::util convenience wrapper
     {
       ++lineCount;
       if (lineStr.find("S") == 0)

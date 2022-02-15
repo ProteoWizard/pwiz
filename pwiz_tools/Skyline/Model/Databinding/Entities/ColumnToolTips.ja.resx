@@ -103,6 +103,9 @@
   <data name="AbsLog2FoldChange">
     <value>倍率変化の対数基数2の絶対値</value>
   </data>
+  <data name="Abundance">
+    <value>倍率変化の計算に使用されたこの繰り返し測定の値です。数値は正規化メソッドの他、倍率変化がタンパク質レベルで計算されているかペプチドレベルで計算されているかに依存します。</value>
+  </data>
   <data name="AdjustedPValue">
     <value>複数のペプチドまたはタンパク質にわたるこのグループ比較内での複数の比較に対して調整されているP値。Benjamini-Hochberg法を用いて調整が行われています。</value>
   </data>
@@ -170,7 +173,7 @@
     <value>この繰り返し測定と同じバッチ名を持つ外部標準繰り返し測定のサブセットを使用して計算されたターゲット定性イオン比です。</value>
   </data>
   <data name="BeginPos">
-    <value>ペプチドに含まれるタンパク質シークエンス内の最初の（N末端）アミノ酸の位置です。 タンパク質シークエンスがない場合には#N/Aとなります。  </value>
+    <value>ペプチドに含まれるタンパク質シークエンス内の最初の（N末端）アミノ酸のゼロベースの位置です。 タンパク質シークエンスがない場合には#N/Aとなります。</value>
   </data>
   <data name="BestReplicate">
     <value>この繰り返し測定で全体的なペプチドのピークスコアが最も高くなる場合には真となります。</value>
@@ -210,6 +213,9 @@
   <data name="ChromatogramSource">
     <value>クロマトグラムが抽出されたスキャンのタイプで、「fragment（フラグメント）」、「sim」、「ms1」か「unknown（不明）」のいずれかです。</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="CollisionCrossSection">
+    <value>プリカーサーの衝突断面積</value>
   </data>
   <data name="Coeluting">
     <value>このトランジションのピークがピークグループ内で他のトランジションと同様の頂点と幅を有する場合、真となります。</value>
@@ -281,7 +287,7 @@
     <value>mProphetモデルの適用後に選択された各ピーク（ターゲットおよびデコイ）に割り当てられる正規化されたmProphetスコアです。デコイスコアの平均から標準偏差（SD）の数として表現されます。</value>
   </data>
   <data name="EndPos">
-    <value>ペプチドに含まれるタンパク質のシークエンスの最後の（C末端）アミノ酸の 位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
+    <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸のゼロベースの位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
   </data>
   <data name="EndTime">
     <value>トランジションのピークの積分の終了境界における保持時間です。</value>
@@ -354,6 +360,9 @@
   <data name="Files">
     <value>ファイル</value>
   </data>
+  <data name="FirstPosition">
+    <value>ペプチドに含まれるタンパク質シークエンスの最初の（N末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
+  </data>
   <data name="FoldChange">
     <value>倍率変化値。倍率変化とは、対照群の正規化強度に対する治療群の正規化強度の比率です。</value>
   </data>
@@ -420,6 +429,12 @@
   <data name="IonFormula">
     <value>質量分析装置で測定される完全に荷電した（そしておそらくは同位体標識された）イオンの原子化学式です。</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>イオン移動度ライブラリからのプリカーサーの高エネルギーオフセット</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>プリカーサーのイオン移動度</value>
+  </data>
   <data name="IonName">
     <value>プリカーサーの名前です。</value>
   </data>
@@ -443,6 +458,24 @@
   </data>
   <data name="Key">
     <value>キー</value>
+  </data>
+  <data name="LastPosition">
+    <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
+  </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>イオン移動度ライブラリからのプリカーサーのイオン移動度情報</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>イオン移動度ライブラリからのプリカーサーの高エネルギーオフセット</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>ライブラリイオン移動度値の単位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>イオン移動度ライブラリからのプリカーサーのイオン移動度</value>
   </data>
   <data name="LibraryDotProduct">
     <value>プリカーサーの各トランジションのピーク面積と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピークの強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。</value>
@@ -772,6 +805,9 @@
   <data name="PointsAcrossPeak">
     <value>積分されたピークの開始時間と終了時間の間のクロマトグラムの点の数です。</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>積分ピーク全体でのサイクルタイム (秒単位)。</value>
+  </data>
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
@@ -918,6 +954,9 @@
   <data name="ProteinSequence">
     <value>タンパク質をFASTAシークエンスファイルからSkylineにインポート すると、タンパク質のフルシークエンスにアクセスできます。また、ペプチドツリー表示内でタンパク質名に マウスをポイントしてもタンパク質のシークエンスが表示されます。</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>子ペプチドの1つ以上のシークエンスの一部である可能性があるタンパク質シークエンス内のアミノ酸の割合</value>
+  </data>
   <data name="ProteinSpecies">
     <value>タンパク質生物種</value>
   </data>
@@ -977,12 +1016,24 @@
   <data name="Replicate">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>倍率変化の計算に使用された繰り返し測定からの値に関する情報</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>倍率変化の計算に使用された個々の繰り返し測定値のコレクション</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>この繰り返し測定と同じバッチ名を持つ繰り返し測定を用いて作成した検量線です。
 プリカーサー濃度がこのペプチドのプリカーサーで指定されている場合、検量線はアイソトポログ反応曲線となります。</value>
   </data>
   <data name="ReplicateCount">
     <value>有効な強度を持ち、結果に寄与する繰り返し測定の回数</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>繰り返し測定存在度が所属するコホート</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>繰り返し測定存在度の生物学的な繰り返し測定</value>
   </data>
   <data name="ReplicateErrorMessage">
     <value>繰り返し測定の検量線に適合する試みを行う間に発生したエラーメッセージ（ある場合）のテキストです。</value>
@@ -1162,6 +1213,12 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="TransitionResult">
     <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>この結果がMS1スキャンから取得されたかどうかです。</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>ユーザーが変更可能なトランジションの定量プロパティに基づいてこの結果が定量的として扱われるかどうか、またMS/MSフルスキャン取得メソッドがすべてのフラグメントイオンを非定量的として扱うDDAであるかどうかです。</value>
   </data>
   <data name="TransitionResultLocator">
     <value>ドキュメント内のトランジション結果の一意の識別子です。これは「TransitionResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</value>

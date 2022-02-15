@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 
@@ -251,11 +250,6 @@ namespace SharedBatchTest
         }
 
         // ReSharper disable LocalizableElement
-        private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
-        private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
-        private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
         // ReSharper restore LocalizableElement
 
         /// <summary>
@@ -300,8 +294,7 @@ namespace SharedBatchTest
         {
             for (int i = name.Length; i > 0; i--)
             {
-                int num;
-                if (!int.TryParse(name.Substring(i - 1), out num))
+                if (!int.TryParse(name.Substring(i - 1), out _))
                     return i;
             }
             return 0;
@@ -709,18 +702,6 @@ namespace SharedBatchTest
             throw new AssumptionException(error);
         }
 
-        /// <summary>
-        /// This function does two things: it returns the value of a nullable that we assume has a value (this
-        /// avoids Resharper warnings), and it throws an exception if the nullable unexpectedly has no value.
-        /// </summary>
-        /// <param name="value">a nullable int that is expected to have a value</param>
-        /// <returns>the value of the nullable int</returns>
-        public static T Value<T>(T? value) where T : struct
-        {
-            if (!value.HasValue)
-                Fail(@"Nullable_was_expected_to_have_a_value");
-            return value.Value;
-        }
     }
 
 

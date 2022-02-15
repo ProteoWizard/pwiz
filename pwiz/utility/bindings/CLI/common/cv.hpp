@@ -38,9 +38,9 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.1.51
-//   date: 24:03:2021 00:00
-//   saved-by: Eric Deutsch
+//   data-version: 4.1.56
+//   date: 25:06:2021 00:00
+//   saved-by: Chris Bielow
 //   auto-generated-by: OBO-Edit 2.3.1
 //   import: http://ontologies.berkeleybop.org/pato.obo
 //   import: http://ontologies.berkeleybop.org/uo.obo
@@ -58,6 +58,7 @@
 //   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 //   remark: creator: Pierre-Alain Binz <pierre-alain.binz <-at-> chuv.ch>
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
+//   remark: creator: Joshua Klein <jaklein <-at-> bu.edu>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -7898,8 +7899,8 @@ public enum class CVID
     /// <summary>ion mobility drift time: Drift time of an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This time might refer to the central value of a bin into which all ions within a narrow range of drift time have been aggregated.</summary>
     MS_ion_mobility_drift_time = 1002476,
 
-    /// <summary>mean drift time array: Array of drift times, averaged from a matrix of binned m/z and drift time values, corresponding to spectrum of individual peaks encoded with an m/z array.</summary>
-    MS_mean_drift_time_array = 1002477,
+    /// <summary>mean ion mobility drift time array: Array of population mean ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_mean_ion_mobility_drift_time_array = 1002477,
 
     /// <summary>mean charge array: Array of mean charge values where the mean charge is calculated as a weighted mean of the charges of individual peaks that are aggregated into a processed spectrum.</summary>
     MS_mean_charge_array = 1002478,
@@ -8594,6 +8595,15 @@ public enum class CVID
     /// <summary>protein group-level result list statistic: Attrbiute of an entire list of protein groups.</summary>
     MS_protein_group_level_result_list_statistic = 1002706,
 
+    /// <summary>(?=[KR]): Regular expression for LysargiNase.</summary>
+    MS_____KR__ = 1002707,
+
+    /// <summary>LysargiNase: Metalloproteinase found in Methanosarcina acetivorans that cleaves on the N-terminal side of lysine and arginine residues.</summary>
+    MS_LysargiNase = 1002708,
+
+    /// <summary>Tryp-N: Metalloproteinase found in Methanosarcina acetivorans that cleaves on the N-terminal side of lysine and arginine residues.</summary>
+    MS_Tryp_N = MS_LysargiNase,
+
     /// <summary>Pegasus BT: LECO bench-top GC time-of-flight mass spectrometer.</summary>
     MS_Pegasus_BT = 1002719,
 
@@ -8888,7 +8898,7 @@ public enum class CVID
     /// <summary>inverse reduced ion mobility: Ion mobility measurement for an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This might refer to the central value of a bin into which all ions within a narrow range of mobilities have been aggregated.</summary>
     MS_inverse_reduced_ion_mobility = 1002815,
 
-    /// <summary>mean ion mobility array: Array of drift times, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    /// <summary>mean ion mobility array: Array of population mean ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
     MS_mean_ion_mobility_array = 1002816,
 
     /// <summary>Bruker TDF format: Bruker TDF raw file format.</summary>
@@ -9119,7 +9129,7 @@ public enum class CVID
     /// <summary>ion mobility attribute: An attribute describing ion mobility searches.</summary>
     MS_ion_mobility_attribute = 1002892,
 
-    /// <summary>ion mobility array: An array of ion mobility data.</summary>
+    /// <summary>ion mobility array: Abstract array of ion mobility data values. A more specific child term concept should be specified in data files to make precise the nature of the data being provided.</summary>
     MS_ion_mobility_array = 1002893,
 
     /// <summary>InChIKey: Unique chemical structure identifier for chemical compounds.</summary>
@@ -9449,13 +9459,13 @@ public enum class CVID
     /// <summary>timsTOF Pro: Bruker Daltonics' timsTOF Pro.</summary>
     MS_timsTOF_Pro = 1003005,
 
-    /// <summary>mean inverse reduced ion mobility array: Array of inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    /// <summary>mean inverse reduced ion mobility array: Array of population mean ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
     MS_mean_inverse_reduced_ion_mobility_array = 1003006,
 
-    /// <summary>raw ion mobility array: Array of raw drift times.</summary>
+    /// <summary>raw ion mobility array: Array of raw ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
     MS_raw_ion_mobility_array = 1003007,
 
-    /// <summary>raw inverse reduced ion mobility array: Array of raw inverse reduced ion mobilities.</summary>
+    /// <summary>raw inverse reduced ion mobility array: Array of raw ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
     MS_raw_inverse_reduced_ion_mobility_array = 1003008,
 
     /// <summary>Shimadzu Biotech LCD format: Shimadzu Biotech LCD file format.</summary>
@@ -9878,14 +9888,50 @@ public enum class CVID
     /// <summary>PTMProphet mean best probability: PSM-specific average of the m best site probabilities over all potential sites where m is the number of modifications of a specific type, as computed by PTMProphet.</summary>
     MS_PTMProphet_mean_best_probability = 1003148,
 
-    /// <summary>PTMProphet normalized information content:  PTMProphet-computed PSM-specific normalized (0.0 – 1.0) measure of information content across all modifications of a specific type.</summary>
+    /// <summary>PTMProphet normalized information content: PTMProphet-computed PSM-specific normalized (0.0 - 1.0) measure of information content across all modifications of a specific type.</summary>
     MS_PTMProphet_normalized_information_content = 1003149,
 
-    /// <summary>PTMProphet information content:  PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type.</summary>
+    /// <summary>PTMProphet information content: PTMProphet-computed PSM-specific measure of information content per modification type ranging from 0 to m, where m is the number of modifications of a specific type.</summary>
     MS_PTMProphet_information_content = 1003150,
 
     /// <summary>SHA-256: SHA-256 (member of Secure Hash Algorithm-2 family) is a cryptographic hash function designed by the National Security Agency (NSA) and published by the NIST as a U. S. government standard. It is also used to verify file integrity.</summary>
     MS_SHA_256 = 1003151,
+
+    /// <summary>GCMS-QP2010SE: Shimadzu Scientific Instruments GCMS-QP2010SE.</summary>
+    MS_GCMS_QP2010SE = 1003152,
+
+    /// <summary>raw ion mobility drift time array: Array of raw ion mobility values from a drift time device, reported in seconds (or milliseconds), corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_raw_ion_mobility_drift_time_array = 1003153,
+
+    /// <summary>deconvoluted ion mobility array: Array of ion mobility values (K or K0) based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_deconvoluted_ion_mobility_array = 1003154,
+
+    /// <summary>deconvoluted inverse reduced ion mobility array: Array of ion mobility values based on ion separation in gaseous phase due to different ion mobilities under an electric field based on ion size, m/z and shape, normalized for the local conditions and reported in volt-second per square centimeter, as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_deconvoluted_inverse_reduced_ion_mobility_array = 1003155,
+
+    /// <summary>deconvoluted ion mobility drift time array: Array of mean ion mobility values from a drift time device, reported in seconds (or milliseconds), as an average property of an analyte post peak-detection, weighted charge state reduction, and/or adduct aggregation, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_deconvoluted_ion_mobility_drift_time_array = 1003156,
+
+    /// <summary>scanning quadrupole position lower bound m/z array: Array of m/z values representing the lower bound m/z of the quadrupole position at each point in the spectrum.</summary>
+    MS_scanning_quadrupole_position_lower_bound_m_z_array = 1003157,
+
+    /// <summary>scanning quadrupole position upper bound m/z array: Array of m/z values representing the upper bound m/z of the quadrupole position at each point in the spectrum.</summary>
+    MS_scanning_quadrupole_position_upper_bound_m_z_array = 1003158,
+
+    /// <summary>isolation window full range: Indicates an acquisition mode in which the isolation window is a full range, rather than a subset of the full range.</summary>
+    MS_isolation_window_full_range = 1003159,
+
+    /// <summary>mzQC format: Proteomics Standards Initiative mzQC format for quality control data.</summary>
+    MS_mzQC_format = 1003160,
+
+    /// <summary>quality control data format: Grouping term for quality control data formats.</summary>
+    MS_quality_control_data_format = 1003161,
+
+    /// <summary>PTX-QC: Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.</summary>
+    MS_PTX_QC = 1003162,
+
+    /// <summary>PTXQC: Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.</summary>
+    MS_PTXQC = MS_PTX_QC,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 200000000,

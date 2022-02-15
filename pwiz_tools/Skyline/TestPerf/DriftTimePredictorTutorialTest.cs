@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
@@ -52,7 +53,6 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         private const string EXT_ZIP = ".zip";
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // These can take a long time
         public void TestDriftTimePredictorTutorial()
         {
 //            IsPauseForScreenShots = true;
@@ -124,7 +124,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             }
 
             {
-                var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                var importResults = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
                 RunUI(() => importResults.ImportSimultaneousIndex = 2);
 
                 PauseForScreenShot<ImportResultsDlg>("Import results form", 4);

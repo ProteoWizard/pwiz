@@ -259,12 +259,15 @@ namespace pwiz.Skyline
             (c, p) => c.LockmassNegative = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_LOCKMASS_TOLERANCE = new DocArgument(@"import-lockmass-tolerance", NUM_VALUE,
             (c, p) => c.LockmassTolerance = p.ValueDouble);
+        public static readonly Argument ARG_IMPORT_PEAK_BOUNDARIES = new DocArgument(@"import-peak-boundaries", PATH_TO_FILE,
+            (c, p) => c.ImportPeakBoundariesPath = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
             ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
             ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
-            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
+            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE, 
+            ARG_IMPORT_PEAK_BOUNDARIES);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -346,6 +349,7 @@ namespace pwiz.Skyline
         public Regex ImportFileNamePattern { get; private set; }
         public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
+        public string ImportPeakBoundariesPath { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
         public bool ChromatogramsDiscard{ get; private set; }
@@ -2557,10 +2561,33 @@ namespace pwiz.Skyline
                 // ReSharper restore LocalizableElement
             }
 
+            // Regular expression for an argument: a hyphen surrounded by zero or more word characters
+            // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
+            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            /// <summary>
+            /// HTML encodes the string.
+            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that argument names do not get broken across lines.
+            /// </summary>
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
-                return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
+                str = str ?? string.Empty;
+                var result = new StringBuilder();
+                int charIndex = 0;
+                var matchCollection = REGEX_ARGUMENT.Matches(str);
+                foreach (Match match in matchCollection)
+                {
+                    result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex, match.Index - charIndex)));
+                    // ReSharper disable LocalizableElement
+                    result.Append("<nobr>");
+                    result.Append(HttpUtility.HtmlEncode(match.Value));
+                    result.Append("</nobr>");
+                    // ReSharper restore LocalizableElement
+                    charIndex = match.Index + match.Length;
+                }
+
+                result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex)));
+                return result.ToString();
             }
         }
 

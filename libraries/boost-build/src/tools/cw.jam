@@ -1,7 +1,7 @@
 # Copyright (C) Reece H Dunn 2004
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #| tag::doc[]
 
@@ -9,7 +9,7 @@
 = Code Warrior
 
 The `cw` module support CodeWarrior compiler, originally produced by
-Metrowerks and presently developed by Freescale. Boost.Build supports
+Metrowerks and presently developed by Freescale. B2 supports
 only the versions of the compiler that target x86 processors. All such
 versions were released by Metrowerks before acquisition and are not sold
 any longer. The last version known to work is 9.4.
@@ -23,7 +23,7 @@ using cw : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, Boost.Build will search for a binary
+If the command is not specified, B2 will search for a binary
 named `mwcc` in default installation paths and in PATH.
 
 The following options can be provided, using
@@ -87,7 +87,7 @@ nl = "
 rule init ( version ? : command * : options * )
 {
    # TODO: fix the $(command[1]) = $(compiler) issue
-    
+
     setup = [ get-values <setup> : $(options) ] ;
     setup    ?= cwenv.bat ;
     compiler = [ get-values <compiler> : $(options) ] ;
@@ -100,10 +100,10 @@ rule init ( version ? : command * : options * )
 
     command = [ common.get-invocation-command cw : mwcc.exe : $(command) :
         [ default-paths $(version) ] ] ;
-    
+
     common.handle-options cw : $(condition) : $(command) : $(options) ;
 
-    local root = [ feature.get-values <root> : $(options) ] ;    
+    local root = [ feature.get-values <root> : $(options) ] ;
     if $(command)
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
@@ -116,11 +116,11 @@ rule init ( version ? : command * : options * )
 
     other-tools = $(tool-root:D) ;
     root ?= $(other-tools:D) ;
-    
-    flags cw.link RUN_PATH $(condition) : 
+
+    flags cw.link RUN_PATH $(condition) :
         "$(root)\\Win32-x86 Support\\Libraries\\Runtime"
-        "$(root)\\Win32-x86 Support\\Libraries\\Runtime\\Libs\\MSL_All-DLLs" ;      
-    
+        "$(root)\\Win32-x86 Support\\Libraries\\Runtime\\Libs\\MSL_All-DLLs" ;
+
     setup = "set \"CWFOLDER="$(root)"\" && call \""$(setup)"\" > nul " ;
 
    if [ os.name ] = NT
@@ -142,21 +142,21 @@ rule init ( version ? : command * : options * )
    flags cw.link .LD $(condition) : $(prefix)$(linker) ;
    flags cw.archive .LD $(condition) : $(prefix)$(linker) ;
 
-    if [ MATCH "^([89]\\.)" : $(version) ]   
+    if [ MATCH "^([89]\\.)" : $(version) ]
     {
         if [ os.name ] = NT
         {
         # The runtime libraries
         flags cw.compile CFLAGS <runtime-link>static/<threading>single/<runtime-debugging>off : -runtime ss ;
         flags cw.compile CFLAGS <runtime-link>static/<threading>single/<runtime-debugging>on : -runtime ssd ;
-        
+
         flags cw.compile CFLAGS <runtime-link>static/<threading>multi/<runtime-debugging>off : -runtime sm ;
         flags cw.compile CFLAGS <runtime-link>static/<threading>multi/<runtime-debugging>on : -runtime smd ;
-        
+
         flags cw.compile CFLAGS <runtime-link>shared/<runtime-debugging>off : -runtime dm ;
         flags cw.compile CFLAGS <runtime-link>shared/<runtime-debugging>on : -runtime dmd ;
-        }        
-    }    
+        }
+    }
 }
 
 
@@ -225,6 +225,8 @@ flags cw.compile CFLAGS <rtti>off : -RTTI off ;
 flags cw.compile CFLAGS <warnings>on : -w on ;
 flags cw.compile CFLAGS <warnings>off : -w off ;
 flags cw.compile CFLAGS <warnings>all : -w all ;
+flags cw.compile CFLAGS <warnings>extra : -w all ;
+flags cw.compile CFLAGS <warnings>pedantic : -w all ;
 flags cw.compile CFLAGS <warnings-as-errors>on : -w error ;
 
 flags cw.compile USER_CFLAGS <cflags> : ;

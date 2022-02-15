@@ -17,12 +17,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentFTP;
@@ -34,7 +31,7 @@ namespace SkylineBatch
     public class ConfigRunner : IConfigRunner
     {
         public static readonly string ALLOW_NEWLINE_SAVE_VERSION = "20.2.1.454";
-        public static readonly string REPORT_INVARIANT_VERSION = "21.1.0.0"; // TODO(Ali): replace this with release version name
+        public static readonly string REPORT_INVARIANT_VERSION = "21.0.9.118";
 
 
         private readonly IMainUiControl _uiControl;
@@ -52,12 +49,14 @@ namespace SkylineBatch
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
             _uiControl = uiControl;
+            if (uiControl == null)
+                _uiControl = null;
             _logger = logger;
 
             _processRunner = new ProcessRunner()
             {
                 OnDataReceived = DataReceived,
-                OnException = (e, message) => _logger?.LogException(e, message),
+                OnException = (e, message) => _logger?.LogError(message, e.ToString()),
                 OnError = () =>
                 {
                     if (IsRunning())
@@ -106,8 +105,9 @@ namespace SkylineBatch
                 _logger.Log(line);
         }
 
-        public async Task Run(int startStep)
+        public async Task Run(RunBatchOptions runOption, ServerFilesManager serverFiles)
         {
+            _logger.LogTestFormat = Config.LogTestFormat;
             LogToUi(string.Format(Resources.ConfigRunner_Run________________________________Starting_Configuration___0_________________________________, Config.Name));
             try
             {
@@ -117,7 +117,7 @@ namespace SkylineBatch
             {
                 LogToUi("Error: " + e.Message);
                 ChangeStatus(RunnerStatus.Error);
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
                 return;
             }
 
@@ -125,12 +125,29 @@ namespace SkylineBatch
             ChangeStatus(RunnerStatus.Running);
             Config.MainSettings.CreateAnalysisFolderIfNonexistent();
 
-            if (startStep == 1 && Config.MainSettings.WillDownloadData)
+            // Download necessary files
+            if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY && Config.MainSettings.WillDownloadData)
             {
-                await DownloadData();
+                if (Config.MainSettings.Template.PanoramaFile != null)
+                    DownloadPanoramaFile(serverFiles, Config.MainSettings.Template.PanoramaFile);
+                await DownloadData(serverFiles);
+                if (Config.MainSettings.AnnotationsDownload != null)
+                    DownloadPanoramaFile(serverFiles, Config.MainSettings.AnnotationsDownload);
+            }
+            if (Config.ReportSettings.WillDownloadData)
+            {
+                foreach (var report in Config.ReportSettings.Reports)
+                {
+                    foreach (var remoteRScript in report.RScriptServers.Values)
+                        DownloadPanoramaFile(serverFiles, remoteRScript);
+                }
             }
             
-            if (startStep != 5 && IsRunning())
+            if ((runOption == RunBatchOptions.ALL ||
+                 runOption == RunBatchOptions.FROM_TEMPLATE_COPY ||
+                 runOption == RunBatchOptions.FROM_REFINE ||
+                 runOption == RunBatchOptions.FROM_REPORT_EXPORT)
+                && IsRunning())
             {
                 var multiLine = await Config.SkylineSettings.HigherVersion(ALLOW_NEWLINE_SAVE_VERSION, _processRunner);
                 var numberFormat = CultureInfo.CurrentCulture.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -140,7 +157,7 @@ namespace SkylineBatch
                 {
                     // Writes the batch commands for steps 1-4 to a file
                     var commandWriter = new CommandWriter(_logger, multiLine, invariantReport);
-                    WriteBatchCommandsToFile(commandWriter, startStep, invariantReport);
+                    WriteBatchCommandsToFile(commandWriter, runOption, invariantReport);
                     _batchFile = commandWriter.GetCommandFile();
                     // Runs steps 1-4
                     var command = string.Format("--batch-commands=\"{0}\"", _batchFile);
@@ -167,51 +184,67 @@ namespace SkylineBatch
                 }
             }
 
-            // STEP 5: run r scripts using csv files
-            var rScriptsRunInformation = Config.GetScriptArguments();
-            foreach(var rScript in rScriptsRunInformation)
-                if (IsRunning())
-                    await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
-            
+            // STEP 4: run r scripts using csv files
+            if (runOption != RunBatchOptions.DOWNLOAD_DATA && IsRunning())
+            {
+                var rScriptsRunInformation = Config.GetScriptArguments();
+                foreach (var rScript in rScriptsRunInformation)
+                    if (IsRunning())
+                        await _processRunner.Run(rScript[RRunInfo.ExePath], rScript[RRunInfo.Arguments]);
+            }
 
             // Runner is still running if no errors or cancellations
             if (IsRunning()) ChangeStatus(RunnerStatus.Completed);
             if (IsCanceling()) ChangeStatus(RunnerStatus.Canceled);
+            
             var endTime = DateTime.Now;
             // ReSharper disable once PossibleInvalidOperationException - StartTime is always defined here
             var delta = endTime - (DateTime)StartTime;
             RunTime = delta;
             var runTimeString = delta.Hours > 0 ? delta.ToString(@"hh\:mm\:ss") : delta.ToString(@"mm\:ss");
-            if (!IsError())
-                LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
-            else
-                _logger?.LogErrorNoPrefix(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
+            LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, Config.Name, GetStatus()));
             LogToUi(string.Format(Resources.ConfigRunner_Run_________________________________0____1_________________________________, "Runtime", runTimeString));
             _uiControl?.UpdateUiConfigurations();
         }
 
-        public void WriteBatchCommandsToFile(CommandWriter commandWriter, int startStep, bool invariantReport)
+        public void WriteBatchCommandsToFile(CommandWriter commandWriter, RunBatchOptions runOption, bool invariantReport)
         {
-            // STEP 1: open skyline file and save copy to analysis folder
-            if (startStep == 1)
+            // STEP 1: create results document and import data
+            if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
+                // Delete existing .sky and .skyd results files
+                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
+                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
+                    TextUtil.EXT_SKYD));
+                foreach (var file in filesToDelete)
+                    File.Delete(file);
+
+                // Unzip zipped template
+                if (Config.MainSettings.Template.Zipped)
+                {
+                    _logger.Log(string.Format(Resources.ConfigRunner_WriteBatchCommandsToFile_Extracting_Skyline_template_from__0_, Config.MainSettings.Template.ZippedFileName));
+                    var cancellationSource = new CancellationTokenSource();
+                    _runningCancellationToken = cancellationSource;
+                    Config.MainSettings.Template.ExtractTemplate((percent, error) =>
+                    {
+                        if (error == null)
+                            _logger.LogPercent(percent);
+                        else
+                            _logger.StopLogPercent(false);
+                    }, cancellationSource.Token);
+                    _logger.StopLogPercent(true);
+                    _logger.Log(string.Format("{0} extracted.", Config.MainSettings.Template.FileName()));
+                }
+
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
                 Config.WriteMsMsCommand(commandWriter);
                 Config.WriteRetentionTimeCommand(commandWriter);
                 Config.WriteAddDecoysCommand(commandWriter);
                 Config.WriteSaveToResultsFile(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
                 commandWriter.EndCommandGroup();
-            }
-            else if (startStep < 4)
-            {
-                Config.WriteOpenSkylineResultsCommand(commandWriter);
-            }
-
-            // STEP 2: import data to new skyline file
-            if (startStep <= 2)
-            {
-                // import data and train model
+                // import data
                 Config.WriteImportDataCommand(commandWriter);
                 Config.WriteImportNamingPatternCommand(commandWriter);
                 Config.WriteTrainMProphetCommand(commandWriter);
@@ -219,13 +252,18 @@ namespace SkylineBatch
                 Config.WriteSaveCommand(commandWriter);
                 commandWriter.EndCommandGroup();
             }
+            else if (runOption < RunBatchOptions.FROM_REPORT_EXPORT)
+            {
+                Config.WriteOpenSkylineResultsCommand(commandWriter);
+                if (Config.LogTestFormat) commandWriter.Write("--memstamp");
+            }
 
-            // STEP 3: refine file and save to new location
-            if (startStep <= 3)
+            // STEP 2: refine file and save to new location
+            if (runOption <= RunBatchOptions.FROM_REFINE)
                 Config.WriteRefineCommands(commandWriter);
 
-            // STEP 4: output report(s) for completed analysis
-            if (startStep <= 4)
+            // STEP 3: output report(s) for completed analysis
+            if (runOption <= RunBatchOptions.FROM_REPORT_EXPORT)
             {
                 if (Config.ReportSettings.UsesRefinedFile())
                 {
@@ -239,93 +277,166 @@ namespace SkylineBatch
             }
         }
 
-        private async Task DownloadData()
+        private void DownloadPanoramaFile(ServerFilesManager serverFiles, PanoramaFile panoramaFile)
+        {
+            if (!IsRunning()) return;
+            var serverFile = serverFiles.GetFile(panoramaFile);
+            var filePath = Path.Combine(serverFile.DownloadFolder, serverFile.FileName);
+            if (File.Exists(filePath) && new FileInfo(filePath).Length == serverFile.Size) return;
+
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadPanoramaFile_Downloading__0____, filePath));
+            var downloadCancellation = new CancellationTokenSource();
+            _runningCancellationToken = downloadCancellation;
+
+
+            var wc = new WebDownloadClient((percent, error) =>
+            {
+                _logger.LogPercent(percent);
+                if (error != null)
+                    throw error;
+            }, downloadCancellation.Token);
+            
+            var tries = 0;
+            while (tries < 3)
+            {
+                if (tries > 0) _logger.Log(Resources.ConfigRunner_DownloadPanoramaFile_Trying_again___);
+                try
+                {
+                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.FileSource.Username, serverFile.ServerInfo.FileSource.Password, serverFile.Size);
+                    _logger.StopLogPercent(true);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    if (!IsRunning())
+                        break;
+                    _logger.Log(e.Message);
+                    _logger.StopLogPercent(false);
+                    tries++;
+                }
+            }
+
+            if (tries == 3)
+            {
+                _logger.LogError(Resources.ConfigRunner_DownloadPanoramaFile_Error_downloading_file_from_Panorama_);
+                ChangeStatus(RunnerStatus.Error);
+            }
+        }
+
+        private async Task DownloadData(ServerFilesManager serverFiles)
         {
             var mainSettings = Config.MainSettings;
             var server = mainSettings.Server;
-            if (!server.Validated)
-                server.Validate();
+            if (server == null || !IsRunning()) return;
+            Directory.CreateDirectory(mainSettings.DataFolderPath);
 
-            var allFiles = server.GetServerFiles;
-            var fileNames = allFiles.Keys;
-            var existingDataFiles = Directory.GetFiles(mainSettings.DataFolderPath).Length;
-            var dataFilter = new Regex(mainSettings.Server.DataNamingPattern);
-            var downloadingFilesEnum =
-                from name in fileNames
-                where dataFilter.IsMatch(name)
-                select name;
-            var downloadingFiles = downloadingFilesEnum.ToList();
-            var skippingFiles = new List<string>();
-            foreach (var downloadingFile in downloadingFiles)
-            {
-                var fileName = Path.Combine(mainSettings.DataFolderPath, downloadingFile);
-                if (File.Exists(fileName) && allFiles[downloadingFile].Size != new FileInfo(fileName).Length)
-                    skippingFiles.Add(downloadingFile);
-            }
+            var matchingFiles = serverFiles.GetFiles(mainSettings.Server);
+            var downloadingFiles = serverFiles.GetDataFilesToDownload(mainSettings.Server, mainSettings.DataFolderPath);
 
-            if (skippingFiles.Count == downloadingFiles.Count) return;
+            if (downloadingFiles.Count == 0) return;
 
-            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, downloadingFiles.Count, server.GetUrl()));
-            foreach (var file in downloadingFiles)
-                _logger.Log(file);
+            _logger.Log(string.Format(Resources.ConfigRunner_DownloadData_Found__0__matching_data_files_on__1__, matchingFiles.Count, server.GetUrl()));
+            foreach (var file in matchingFiles)
+                _logger.Log(file.FileName);
             _logger.Log(Resources.ConfigRunner_DownloadData_Starting_download___);
-            
+
+            var dataDriveName = mainSettings.DataFolderPath.Substring(0, 3);
             var ftpClient = server.GetFtpClient();
             var source = new CancellationTokenSource();
             CancellationToken token = source.Token;
             _runningCancellationToken = source;
-            var i = 0;
-            int triesOnFile = 0;
-            while ( i < downloadingFiles.Count && IsRunning())
+            var currentFileNumber = 0;
+            foreach (var file in matchingFiles)
             {
-                var fileName = downloadingFiles[i];
-                if (triesOnFile == 0)
+                if (!IsRunning()) return;
+                currentFileNumber++;
+                _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, file.FileName, currentFileNumber, matchingFiles.Count));
+                // 3 tries to download file
+                int i;
+                Exception exception = null;
+                for (i = 0; i < 3; i++)
                 {
-                    _logger.Log(string.Format(Resources.ConfigRunner_DownloadData__0____1__of__2__, fileName, i + 1, downloadingFiles.Count));
-                }
-                
-                if (skippingFiles.Contains(fileName))
-                {
-                    _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
-                    triesOnFile = 0;
-                    i++;
-                    continue;
-                }
-
-                Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
-                {
-                    _logger.LogPercent((int)Math.Floor(p.Progress));
-                });
-                try
-                {
-                    await ftpClient.ConnectAsync(token);
-                    await ftpClient.DownloadFileAsync(Path.Combine(mainSettings.DataFolderPath, fileName),
-                        server.FilePath(fileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
-                    await ftpClient.DisconnectAsync(token);
-                    triesOnFile = 0;
-                    i++;
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogPercent(-1); // Stop logging percent
-                }
-                catch (Exception e)
-                {
-                    _logger.LogPercent(-1);
-                    _logger.Log(e.Message);
-                    if (triesOnFile < 3)
+                    if (!IsRunning()) return;
+                    var filePath = Path.Combine(mainSettings.DataFolderPath, file.FileName);
+                    if (!downloadingFiles.Contains(file))
                     {
+                        _logger.Log(Resources.ConfigRunner_DownloadData_Already_downloaded__Skipping_);
+                        break;
+                    }
+                    if (file.Size + FileUtil.ONE_GB > FileUtil.GetTotalFreeSpace(dataDriveName))
+                    {
+                        _logger.LogError(string.Format(Resources.ConfigRunner_DownloadData_There_is_not_enough_remaining_disk_space_to_download__0___Free_up_some_disk_space_and_try_again_, file.FileName));
+                        ChangeStatus(RunnerStatus.Error);
+                        return;
+                    }
+
+                    if (i > 0)
                         _logger.Log(Resources.ConfigRunner_DownloadData_Trying_again___);
-                        triesOnFile++;
+
+                    Progress<FtpProgress> progress = new Progress<FtpProgress>(p =>
+                    {
+                        _logger.LogPercent((int)Math.Floor(p.Progress));
+                    });
+
+                    if (server.URI.Host.Equals("panoramaweb.org"))
+                    {
+                       
+                        var wc = new WebDownloadClient((percent, error) =>
+                        {
+                            if (error == null)
+                                _logger.LogPercent(percent);
+                            else
+                                throw error;
+                        }, token);
+                        try
+                        {
+                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.FileSource.Username, file.ServerInfo.FileSource.Password, file.Size);
+                            _logger.StopLogPercent(true);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            if (!IsRunning())
+                                break;
+                            _logger.Log(e.Message);
+                            _logger.StopLogPercent(false);
+                            exception = e;
+                        }
                     }
                     else
                     {
-                        _logger.LogException(e,
-                            Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_);
-                        ChangeStatus(RunnerStatus.Error);
+                        try
+                        {
+                            await ftpClient.ConnectAsync(token);
+                            var status = await ftpClient.DownloadFileAsync(filePath,
+                                server.FilePath(file.FileName), token: token, existsMode: FtpLocalExists.Overwrite, progress: progress);
+                            await ftpClient.DisconnectAsync();
+                            if (status != FtpStatus.Success)
+                                throw new Exception(Resources.ConfigRunner_DownloadData_File_download_failed_);
+                            _logger.StopLogPercent(true);
+                            break;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _logger.StopLogPercent(false); // Stop logging percent
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.StopLogPercent(false);
+                            _logger.Log(e.Message);
+                            exception = e;
+                        }
                     }
                 }
+
+                if (i == 3)
+                {
+                    _logger.LogError(
+                        Resources.ConfigRunner_DownloadData_An_error_occurred_while_downloading_the_data_files_, exception?.Message);
+                    ChangeStatus(RunnerStatus.Error);
+                }
             }
+
         }
 
         
@@ -415,6 +526,19 @@ namespace SkylineBatch
         public bool IsWaiting()
         {
             return _runnerStatus == RunnerStatus.Waiting;
+        }
+
+        // config runners are only equal if they are the same reference
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Config.GetHashCode() + _runnerStatus.GetHashCode();
         }
     }
 }

@@ -24,8 +24,9 @@
 
 project
     : requirements 
-        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        #<toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <toolset>gcc:<runtime-link>shared # cannot link shared objects (IdpSqlExtensions) with static runtime
+        <toolset>clang:<runtime-link>shared # cannot link shared objects (IdpSqlExtensions) with static runtime
         #<define>QONVERTER_HAS_NATIVEID
     ;
 
@@ -55,6 +56,7 @@ lib IdpSqlExtensions
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
         <link>shared
+        <toolset>msvc:<define>PWIZ_DYN_LINK
         #<debug-symbols>on
     : # default-build
     : # usage-requirements
@@ -63,7 +65,7 @@ lib IdpSqlExtensions
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
     ;
 
-doctest IdpSqlExtensionsDoctest : SchemaUpdater.cpp : <library>IdpSqlExtensions/<location-prefix>doctest $(TEAMCITY_TEST_DECORATION) ;
+doctest IdpSqlExtensionsDoctest : SchemaUpdater.cpp : <library>IdpSqlExtensions/<location-prefix>doctest <conditional>@gcc-install-dll-path $(TEAMCITY_TEST_DECORATION) ;
 
 lib Qonverter
     : # sources
@@ -122,9 +124,9 @@ obj CoreVersion : CoreVersion.cpp ;
 make gene2protein.db3 : ../gene2protein.db3 : @common.copy : <dependency>CoreVersion ; # dependency on a build target makes all build features relevant (so <location> is calculated properly)
 explicit gene2protein.db3 ;
 
-exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore : <dependency>gene2protein.db3 ;
-exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter ;
-exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp Qonverter /ext/boost//regex ;
+exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore : <dependency>gene2protein.db3 <conditional>@gcc-install-dll-path : : <conditional>@gcc-install-dll-path ;
+exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter : <conditional>@gcc-install-dll-path : : <conditional>@gcc-install-dll-path ;
+exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp Qonverter /ext/boost//regex : <conditional>@gcc-install-dll-path : : <conditional>@gcc-install-dll-path ;
 
 #exe ClusterReporter : ClusterReporter.cpp Qonverter $(IDPICKER_PATH)/../freicore : <toolset>msvc:<cxxflags>/bigobj ;
 #run CommandRunner.cpp : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-no-ids" : ClusterReporter : : ClusterReporter-no-ids ;

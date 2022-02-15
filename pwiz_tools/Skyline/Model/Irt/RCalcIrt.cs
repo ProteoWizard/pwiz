@@ -112,16 +112,19 @@ namespace pwiz.Skyline.Model.Irt
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
-                var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.ModifiedTarget);
+                var dictPeptides = new TargetMap<DbIrtPeptide>(dbPeptides.Where(pep => !pep.Standard)
+                    .Select(pep => new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var uniqueTargets = new HashSet<Target>();
                 foreach (var nodePep in document.Molecules)
                 {
                     var modifiedSeq = document.Settings.GetSourceTarget(nodePep);
                     DbIrtPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {
-                        persistPeptides.Add(NewPeptide(dbPeptide));
-                        // Only add once
-                        dictPeptides.Remove(modifiedSeq);
+                        if (uniqueTargets.Add(dbPeptide.ModifiedTarget)) // Only add once
+                        {
+                            persistPeptides.Add(NewPeptide(dbPeptide));
+                        }
                     }
                 }
 
@@ -151,9 +154,11 @@ namespace pwiz.Skyline.Model.Irt
 
             if (!IsAcceptableStandardCount(databaseCount, returnCount))
             {
-                Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
-                Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
-                throw new IncompleteStandardException(this);
+                var inStandardButNotTargets = new SortedSet<Target>(_database.StandardPeptides);
+                inStandardButNotTargets.ExceptWith(pepArr);
+                //Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
+                //Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
+                throw new IncompleteStandardException(this, databaseCount, inStandardButNotTargets);
             }
 
             minCount = MinStandardCount(databaseCount);
@@ -820,12 +825,18 @@ namespace pwiz.Skyline.Model.Irt
 
         public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
-            var returnStandard = peptides.Where(_dictStandards.ContainsKey).ToArray();
+            var peptideArray = peptides.ToArray();
+            var returnStandard = peptideArray.Where(_dictStandards.ContainsKey).ToArray();
             var returnCount = returnStandard.Length;
             var standardsCount = _dictStandards.Count;
 
             if (!RCalcIrt.IsAcceptableStandardCount(standardsCount, returnCount))
-                throw new IncompleteStandardException(this);
+            {
+                var inStandardButNotTargets = new SortedSet<Target>(_dictStandards.Keys);
+                inStandardButNotTargets.ExceptWith(peptideArray);
+
+                throw new IncompleteStandardException(this, standardsCount, inStandardButNotTargets);
+            }
 
             minCount = RCalcIrt.MinStandardCount(standardsCount);
             return returnStandard;
@@ -840,13 +851,14 @@ namespace pwiz.Skyline.Model.Irt
     public class IncompleteStandardException : CalculatorException
     {
         //This will only be thrown by ChooseRegressionPeptides so it is OK to have an error specific to regressions.
-        private static readonly string ERROR =
-            Resources.IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_;
+        private static string ERROR => Resources
+            .IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__;
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        public IncompleteStandardException(RetentionScoreCalculatorSpec calc)
-            : base(String.Format(ERROR, calc.Name))
+        public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardPeptideCount, ICollection<Target> missingPeptides)
+            : base(String.Format(ERROR, calc.Name, standardPeptideCount, missingPeptides.Count,
+                string.Join(Environment.NewLine, missingPeptides.Select(o => o.Sequence))))
         {
             Calculator = calc;
         }

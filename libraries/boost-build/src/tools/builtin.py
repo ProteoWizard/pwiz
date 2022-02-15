@@ -82,9 +82,9 @@ def variant (name, parents_or_properties, explicit_properties = []):
     feature.compose ("<variant>" + name, explicit_properties.all())
 
 __os_names = """
-    amiga aix appletv bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix unixware
-    vms windows
+    amiga aix appletv bsd cygwin darwin dos emx freebsd hpux hurd iphone linux
+    netbsd openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix
+    unixware vms windows
 """.split()
 
 # Translates from bjam current OS to the os tags used in host-os and target-os,
@@ -262,7 +262,7 @@ def register_globals ():
         'power',
 
         # MIPS/SGI
-        'mips1', 'mips2', 'mips3', 'mips4', 'mips32', 'mips32r2', 'mips64',
+        'mips', 'mips1', 'mips2', 'mips3', 'mips4', 'mips32', 'mips32r2', 'mips64',
 
         # HP/PA-RISC
         'parisc',
@@ -270,8 +270,8 @@ def register_globals ():
         # Advanced RISC Machines
         'arm',
 
-	# z Systems (aka s390x)
-	's390x',
+        # z Systems (aka s390x)
+        's390x',
 
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
@@ -287,9 +287,14 @@ def register_globals ():
         'native', 'i486', 'i586', 'i686', 'pentium', 'pentium-mmx', 'pentiumpro', 'pentium2', 'pentium3',
         'pentium3m', 'pentium-m', 'pentium4', 'pentium4m', 'prescott', 'nocona', 'core2', 'corei7', 'corei7-avx', 'core-avx-i',
         'conroe', 'conroe-xe', 'conroe-l', 'allendale', 'merom', 'merom-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
-        'yorksfield', 'nehalem', 'sandy-bridge', 'ivy-bridge', 'haswell', 'k6', 'k6-2', 'k6-3', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp',
-        'athlon-mp', 'k8', 'opteron', 'athlon64', 'athlon-fx', 'k8-sse3', 'opteron-sse3', 'athlon64-sse3', 'amdfam10', 'barcelona',
-        'bdver1', 'bdver2', 'bdver3', 'btver1', 'btver2', 'winchip-c6', 'winchip2', 'c3', 'c3-2', 'atom',
+        'yorksfield', 'nehalem', 'sandy-bridge', 'ivy-bridge', 'haswell', 'broadwell', 'skylake', 'skylake-avx512', 'cannonlake',
+        'icelake-client', 'icelake-server', 'cascadelake', 'cooperlake', 'tigerlake',
+        'atom',
+        'k6', 'k6-2', 'k6-3', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp', 'athlon-mp', 'k8', 'opteron', 'athlon64', 'athlon-fx',
+        'k8-sse3', 'opteron-sse3', 'athlon64-sse3', 'amdfam10', 'barcelona', 'bdver1', 'bdver2', 'bdver3', 'btver1',
+        'btver2', 'znver1', 'znver2',
+        'winchip-c6', 'winchip2',
+        'c3', 'c3-2', 'c7',
 
         # ia64
         'itanium', 'itanium1', 'merced', 'itanium2', 'mckinley',
@@ -307,11 +312,17 @@ def register_globals ():
         'rios1', 'rsc', 'rios2', 'rs64a',
 
         # MIPS
-        '4kc', '4kp', '5kc', '20kc', 'm4k', 'r2000', 'r3000', 'r3900', 'r4000',
-        'r4100', 'r4300', 'r4400', 'r4600', 'r4650',
-        'r6000', 'r8000', 'rm7000', 'rm9000', 'orion', 'sb1', 'vr4100',
-        'vr4111', 'vr4120', 'vr4130', 'vr4300',
-        'vr5000', 'vr5400', 'vr5500',
+        '4kc', '4km', '4kp', '4ksc', '4kec', '4kem', '4kep', '4ksd', '5kc',
+        '5kf', '20kc', '24kc', '24kf2_1', '24kf1_1', '24kec', '24kef2_1',
+        '24kef1_1', '34kc', '34kf2_1', '34kf1_1', '34kn', '74kc', '74kf2_1',
+        '74kf1_1', '74kf3_2', '1004kc', '1004kf2_1', '1004kf1_1', 'i6400',
+        'i6500', 'interaptiv', 'loongson2e', 'loongson2f', 'loongson3a',
+        'gs464', 'gs464e', 'gs264e', 'm4k', 'm14k', 'm14kc', 'm14ke', 'm14kec',
+        'm5100', 'm5101', 'octeon', 'octeon+', 'octeon2', 'octeon3', 'orion',
+        'p5600', 'p6600', 'r2000', 'r3000', 'r3900', 'r4000', 'r4400', 'r4600', 'r4650',
+        'r4700', 'r5900', 'r6000', 'r8000', 'rm7000', 'rm9000', 'r10000', 'r12000',
+        'r14000', 'r16000', 'sb1', 'sr71000', 'vr4100', 'vr4111', 'vr4120', 'vr4130',
+        'vr4300', 'vr5000', 'vr5400', 'vr5500', 'xlr', 'xlp',
 
         # HP/PA-RISC
         '700', '7100', '7100lc', '7200', '7300', '8000',
@@ -320,8 +331,8 @@ def register_globals ():
         'armv2', 'armv2a', 'armv3', 'armv3m', 'armv4', 'armv4t', 'armv5',
         'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312',
 
-	# z Systems (aka s390x)
-	'z196', 'zEC12', 'z13', 'z13', 'z14'],
+        # z Systems (aka s390x)
+        'z196', 'zEC12', 'z13', 'z13', 'z14', 'z15'],
 
         ['propagated', 'optional'])
 

@@ -171,7 +171,7 @@ int InitProcess( argList_t& args )
 
             ifstream listFile(args[i+1].c_str());
             string line;
-            while (getline(listFile, line))
+            while (getlinePortable(listFile, line))
                 extraFilepaths.push_back(line);
 
             args.erase( args.begin() + i );

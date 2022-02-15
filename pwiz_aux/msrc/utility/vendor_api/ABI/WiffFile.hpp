@@ -240,6 +240,9 @@ class PWIZ_API_DECL WiffFile
     virtual std::string getADCTraceName(int sample, int traceIndex) const = 0;
     virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const = 0;
 
+    /// get total wavelength chromatogram; returned ADCTrace is empty if there is no UV data in the file
+    virtual void getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const = 0;
+
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const = 0;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const = 0;

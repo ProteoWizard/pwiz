@@ -31,9 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ShareConfigsForm));
             this.checkBoxSelectAll = new System.Windows.Forms.CheckBox();
             this.checkedSaveConfigs = new System.Windows.Forms.CheckedListBox();
-            this.textFileName = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -52,23 +49,6 @@
             this.checkedSaveConfigs.FormattingEnabled = true;
             this.checkedSaveConfigs.Name = "checkedSaveConfigs";
             this.checkedSaveConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedSaveConfigs_ItemCheck);
-            // 
-            // textFileName
-            // 
-            resources.ApplyResources(this.textFileName, "textFileName");
-            this.textFileName.Name = "textFileName";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // btnBrowse
-            // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // btnCancel
             // 
@@ -93,9 +73,6 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.btnBrowse);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.textFileName);
             this.Controls.Add(this.checkedSaveConfigs);
             this.Controls.Add(this.checkBoxSelectAll);
             this.MaximizeBox = false;
@@ -111,9 +88,6 @@
 
         private System.Windows.Forms.CheckBox checkBoxSelectAll;
         private System.Windows.Forms.CheckedListBox checkedSaveConfigs;
-        private System.Windows.Forms.TextBox textFileName;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
     }

@@ -27,7 +27,7 @@ namespace SkylineBatch.Properties
 
         
         
-        [ApplicationScopedSetting]
+        [UserScopedSetting]
         public Dictionary<string,string> RVersions
         {
             get
@@ -47,6 +47,25 @@ namespace SkylineBatch.Properties
         {
             base.Reset();
             SharedBatch.Properties.Settings.Default.Reset();
+        }
+
+        public new void Save()
+        {
+            base.Save();
+            SharedBatch.Properties.Settings.Default.Save();
+        }
+
+        public new void Upgrade()
+        {
+            base.Upgrade();
+            SharedBatch.Properties.Settings.Default.Upgrade();
+        }
+
+        public void UpdateIfNecessary()
+        {
+            SharedBatch.Properties.ConfigList.XmlVersion = Default.XmlVersion;
+            SharedBatch.Properties.ConfigList.Importer = SkylineBatchConfig.ReadXml;
+            Save();
         }
 
     }

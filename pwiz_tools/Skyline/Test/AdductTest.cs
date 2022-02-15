@@ -42,8 +42,18 @@ namespace pwiz.SkylineTest
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
         {
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
-            var actual = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
-            Assert.AreEqual(expectedFormula, actual, "unexpected formula for adduct "+adduct);
+            var actualFormula = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
+            if (!Equals(expectedFormula, actualFormula))
+            {
+                // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
+                var dictExpected = IonInfo.ApplyAdductToMoleculeAsDictionary(expectedFormula, Adduct.EMPTY);
+                var dictActual = IonInfo.ApplyAdductToMoleculeAsDictionary(PENTANE, adduct);
+                if (dictExpected.Count != dictActual.Count || 
+                    !dictExpected.All(kvp => dictActual.TryGetValue(kvp.Key, out var v) && v == kvp.Value))
+                {
+                    Assert.AreEqual(expectedFormula, actualFormula, "unexpected formula for adduct " + adduct);
+                }
+            }
             Assert.AreEqual(expectedCharge, adduct.AdductCharge, "unexpected charge for adduct " + adduct);
             coverage.Add(adduct.AsFormula());
         }
@@ -265,6 +275,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
             TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
+            TestPentaneAdduct("[M+2Cu65+2H]", "C5Cu'2H14", 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
             TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
@@ -425,6 +436,7 @@ namespace pwiz.SkylineTest
             mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
+            TestException("", "+M"); // Meaningless, used to cause an exception in our parser
             TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
             TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
             TestException(PENTANE, "M+foo+H"); // Unknown adduct

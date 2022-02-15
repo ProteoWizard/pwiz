@@ -347,4 +347,7 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
     <value>星号</value>
   </data>
+  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
 </root>

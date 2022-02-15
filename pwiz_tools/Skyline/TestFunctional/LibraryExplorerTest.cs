@@ -20,9 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -59,14 +61,17 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private const string HUMANB2MG_LIB = "HumanB2MGLib";
         private const string ANL_COMBINED = "ANL Combined";
         private const string PHOSPHO_LIB = "PhosphoLib";
         private const string YEAST = "Yeast";
         private const string SHIMADZU_MLB = "Shimadzu MLB";
         private const string NIST_SMALL_MOL = "NIST Small Molecules";
+        private const string MULTIPLE_MOL_IDS = "MultipleMolecularIDs";
+        private const string MIXED_LIB = "MixedLib_rev9.clib";
 
         private readonly TestLibInfo[] _testLibs = {
-                                                       new TestLibInfo("HumanB2MGLib", "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
+                                                       new TestLibInfo(HUMANB2MG_LIB, "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
                                                        new TestLibInfo("HumanCRPLib", "human_crp-5-06-2009-it.sptxt", "TDMSR++"), 
                                                        new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
                                                        new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
@@ -76,7 +81,10 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.MSP", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"), // Note .ext is all caps to test case insensitivity
+                                                       new TestLibInfo("mini_x", "mini_x.blib", "YLXEEDEDAYKK++"),
+                                                       new TestLibInfo(MULTIPLE_MOL_IDS, "MultipleMolecularIDs.blib", ""),
+                                                       new TestLibInfo(MIXED_LIB, "MixedLib_rev9.clib", "")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -109,12 +117,13 @@ namespace pwiz.SkylineTestFunctional
             SetUpTestLibraries();
             if (asSmallMolecules)
             {
-                TestSmallMoleculeFunctionality(6, 2, null, 3); // .blib with wonky fragment annotations
-                TestSmallMoleculeFunctionality(5, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
-                TestSmallMoleculeFunctionality(4, 5); // .blib with fragment annotations
-                TestSmallMoleculeFunctionality(2, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
-                TestSmallMoleculeFunctionality(1, 57); // NIST
-                TestSmallMoleculeFunctionality(3, 3); // .blib
+                TestSmallMoleculeFunctionality(5, 2, null, 3); // .blib with wonky fragment annotations
+                TestSmallMoleculeFunctionality(6, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
+                TestSmallMoleculeFunctionality(7, 5); // .blib with fragment annotations
+                TestSmallMoleculeFunctionality(9, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
+                TestSmallMoleculeFunctionality(10, 57); // NIST
+                TestSmallMoleculeFunctionality(8, 3); // .blib
+                TestFilterFunctionality();
             }
             else
             {
@@ -147,6 +156,186 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => PeptideSettingsUI.OkDialog());
             WaitForClosedForm(PeptideSettingsUI);
+        }
+
+        /// <summary>
+        /// Focus on the search box, enter text, and then verify that the specified number of spectra appear
+        /// </summary>
+        private static void FilterListAndVerifyCount(Control filterBox, ListBox spectraList, string filterText, int count)
+        {
+            RunUI(() =>
+            {
+                filterBox.Focus();
+                filterBox.Text = filterText;
+                // Compare expected number of filtered results to actual
+                Assert.AreEqual(count, spectraList.Items.Count);
+
+            });
+        }
+
+        /// <summary>
+        /// Compare the strings in a combo box to a list of expected strings
+        /// </summary>
+        private static void VerifyFilterCategories(ComboBox comboBox, List<string> expectedCategories)
+        {
+            var actualCategories = (from object item in comboBox.Items select item.ToString()).ToList();
+            CollectionAssert.AreEqual(expectedCategories, actualCategories);
+        }
+
+        private void TestFilterFunctionality()
+        {
+            // Launch the Library Explorer dialog
+            _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            OkayAllModificationsDlg();
+            ComboBox libComboBox = null;
+            ListBox pepList = null;
+            TextBox filterTextBox = null;
+            ComboBox filterCategoryComboBox = null;
+            RunUI(() =>
+            {
+                // Find the combo box which controls the selected library
+                libComboBox = (ComboBox) _viewLibUI.Controls.Find("comboLibrary", true)[0];
+                // Select a library of small molecules to test small molecule search
+                libComboBox.SelectedIndex = libComboBox.FindStringExact(SHIMADZU_MLB);
+
+                // Find the peptides list control
+                pepList = (ListBox) _viewLibUI.Controls.Find("listPeptide", true)[0];
+
+                // Find the filter text box
+                filterTextBox = (TextBox) _viewLibUI.Controls.Find("textPeptide", true)[0];
+
+                // Find the filter category combo box
+                filterCategoryComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterCategory", true)[0];
+
+            });
+
+            // Filter category combo box should be set to "Name" by default
+            Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
+
+            // Test filtering by formula
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources
+                        .SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
+            });
+
+            // Entering 'C' should not filter out any spectra as every formula in this library starts with carbon
+            FilterListAndVerifyCount(filterTextBox, pepList, "C", 6);
+
+            // Verify that the entries are in alphabetical order of molecule name, despite being filtered by formula
+            var pepItems = pepList.Items;
+            for (var i = 1; i < pepItems.Count; i++)
+            {
+                var x = (ViewLibraryPepInfo) pepItems[i - 1];
+                var y = (ViewLibraryPepInfo) pepItems[i];
+                Assert.IsTrue(StringComparer.OrdinalIgnoreCase.Compare(x.DisplayText, y.DisplayText) <= 0);
+            }
+
+            // Entering the formula for Midazolam should filter out all other spectra
+            var midazolamFormula = "C18H13ClFN3";
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula, 1);
+
+            // Check case insensitivity
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamFormula.ToLowerInvariant(), 1);
+
+            // Clearing search box should bring up every entry
+            FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
+
+            // Entering 'SD' should filter out all entries as nothing starts with SD
+            FilterListAndVerifyCount(filterTextBox, pepList, "SD", 0);
+
+            // Clearing the filter text box should bring up every entry
+            FilterListAndVerifyCount(filterTextBox, pepList, "", 6);
+
+            // Now test filtering by precursor m/z
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
+            });
+
+            // Use the decimal separator of the culture the test is running in
+            var midazolamMz = 326.0855;
+            var midazolamMzStr = midazolamMz.ToString("G", CultureInfo.CurrentCulture);
+            var inexactMidazolamMzStr = (midazolamMz + 0.05).ToString("G", CultureInfo.CurrentCulture);
+
+            // Entering '32' should filter the list down to three entries
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr.Substring(0, 2), 2);
+
+            // Entering the exact precursor m/z of Midazolam should narrow the list down to only Midazolam
+            FilterListAndVerifyCount(filterTextBox, pepList, midazolamMzStr, 1);
+
+            // An m/z value within our search tolerance but not exactly the precursor m/z of Midazolam should not filter out Midazolam
+            FilterListAndVerifyCount(filterTextBox, pepList,
+                inexactMidazolamMzStr, 1);
+
+            // Test filtering by CAS registry number
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact("cas");
+            });
+            FilterListAndVerifyCount(filterTextBox, pepList, "4928", 1);
+
+            // Now switch to a list with multiple molecular IDs
+            RunUI(() => { libComboBox.SelectedIndex = libComboBox.FindStringExact(MULTIPLE_MOL_IDS); });
+
+            // Do we find all the filter categories?
+
+            var smiles = "SMILES";
+            var categories = new List<string>
+            {
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, Resources.PeptideTipProvider_RenderTip_Precursor_m_z, Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula,
+                Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey,  Resources.TransitionTreeNode_RenderTip_Charge, Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct
+            };
+            var expectedCategories = new List<string>(categories);
+            expectedCategories.AddRange(new List<string> {"cas", "InChi", smiles, "MadeUpFakeKey"});
+
+            VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
+
+            // Test filtering when only some entries have our search field
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact("MadeUpFakeKey");
+            });
+
+            FilterListAndVerifyCount(filterTextBox, pepList, "123", 1);
+
+
+            // Now test search behavior on a peptide list
+            ShowDialog<AddModificationsDlg>(
+                () => libComboBox.SelectedIndex = libComboBox.FindStringExact(HUMANB2MG_LIB));
+            OkayAllModificationsDlg();
+
+
+            // Searching for a peptide sequence should work as well
+            FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
+
+            // Now test filtering by precursor m/z
+            RunUI(() =>
+            {
+                filterCategoryComboBox.SelectedIndex =
+                    filterCategoryComboBox.FindStringExact(Resources.PeptideTipProvider_RenderTip_Precursor_m_z);
+            });
+
+            // Precursor searching should work here as well
+            FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
+
+            // Switch to library with both molecules and peptides
+            ShowDialog<AddModificationsDlg>(
+                () => libComboBox.SelectedIndex = libComboBox.FindStringExact(MIXED_LIB));
+            OkayAllModificationsDlg();
+
+            // Verify that we found all of the filter categories
+            expectedCategories = new List<string>(categories);
+            expectedCategories.AddRange(new List<string>{ Resources.PeptideTipProvider_RenderTip_Ion_Mobility , Resources.PeptideTipProvider_RenderTip_CCS , "InChI", smiles});
+            VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
+
+            // Close the spectral library explorer
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
         }
 
         private void TestBasicFunctionality()
@@ -624,6 +813,10 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.EditDelete();
             });
 
+            // Test library with a modified 'X'.
+            SelectLibWithAllMods(libComboBox, 11);
+            RunUI(() => Assert.IsTrue(_viewLibUI.ChangeSelectedPeptide("YLX[+16.0]EEDEDAYKK++")));
+
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
@@ -647,7 +840,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
         }
 
-        private void TestSmallMoleculeFunctionality(int index, int expectedIonLabelCount1, string expectError = null, int? expectedIonLabelCount2 = null)
+        private void TestSmallMoleculeFunctionality(int libIndex, int expectedIonLabelCount1, string expectError = null, int? expectedIonLabelCount2 = null)
         {
 
             // Launch the Library Explorer dialog
@@ -658,10 +851,9 @@ namespace pwiz.SkylineTestFunctional
             ComboBox libComboBox = null;
             ListBox pepList = null;
             string libSelected = null;
-            var libIndex = _testLibs.Length - index;
-            bool isNIST = (index < 3);
-            bool isLipidCreator = (index == 4);
-            bool isSketchyFragmentAnnotations = (index == 6);
+            bool isNIST = libIndex == 9 || libIndex == 10;
+            bool isLipidCreator = libIndex == 7;
+            bool isSketchyFragmentAnnotations = libIndex == 5;
             if (expectError != null)
             {
                 var errWin = ShowDialog<MessageDlg>(() =>
@@ -676,6 +868,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(_viewLibUI);
                 return;
             }
+
             RunUI(() =>
             {
                 libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
@@ -688,6 +881,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(pepList);
             });
             Assert.AreEqual(_testLibs[libIndex].Name, libSelected);
+
+            // Verify that the color of annotations for ranked ions are being retrieved correctly
+            var graphControl = (MSGraphControl)_viewLibUI.Controls.Find("graphControl", true).First();
+            foreach (var annotation in from item in graphControl.GraphPane.CurveList
+                let info = item.Tag as IMSGraphItemExtended
+                from pt in (MSPointList)
+                    item.Points
+                select info.AnnotatePoint(pt) into annotation
+                where annotation != null
+                where annotation.ZOrder != null
+                select annotation)
+            {
+                Assert.AreEqual(annotation.FontSpec.FontColor,
+                    IonTypeExtension.GetTypeColor(IonType.custom, annotation.ZOrder.Value));
+            }
 
             // Test valid peptide search
             TextBox pepTextBox = null;
@@ -719,7 +927,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // Add all to document, expect to be asked if we want to add library to doc as well
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
-            if (isLipidCreator || isSketchyFragmentAnnotations || index == 1)
+            if (isLipidCreator || isSketchyFragmentAnnotations || libIndex == 10)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
                 var confirmMismatch = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Confirm adding peptides that don't match settings

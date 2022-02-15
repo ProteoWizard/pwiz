@@ -38,9 +38,11 @@ namespace AutoQC
 
                 if (driveInfo.IsMappedNetworkDrive())
                 {
-                    logger.LogProgramError(string.Format(
+                    var errorMessage = string.Format(
                         "Lost connection to network drive. Attempting to reconnect to {0}. Config: {1}", driveInfo,
-                        configName));
+                        configName);
+                    ProgramLog.Error(errorMessage);
+                    logger.LogError(errorMessage);
                     // Attempt to reconnect to a mapped network drive
                     var process = Process.Start("net.exe",
                         @"USE " + driveInfo.DriveLetter + " " + driveInfo.NetworkPath);
@@ -54,9 +56,9 @@ namespace AutoQC
                     if(IsDriveAvailable(driveInfo, configName))
                     {
                         reconnected = true;
-                        logger.Log(
+                        logger.Log(string.Format(
                                 "Network drive was temporarily disconnected. Successfully remapped network drive {0}. Config: {1}",
-                                driveInfo, configName);
+                                driveInfo, configName));
                         return true;
                     }
                 }

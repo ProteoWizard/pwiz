@@ -43,7 +43,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_UNIFI::identify(const std::string
 #ifdef PWIZ_READER_UNIFI
 #include "pwiz_aux/msrc/utility/vendor_api/UNIFI/UnifiData.hpp"
 #include "SpectrumList_UNIFI.hpp"
-//#include "ChromatogramList_UNIFI.hpp"
+#include "ChromatogramList_UNIFI.hpp"
 //#include "Reader_UNIFI_Detail.hpp"
 
 
@@ -73,12 +73,11 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
         else
             msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
     }*/
-
+    auto queryStrBegin = sampleResultUrl.rfind(")?");
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(sampleResultUrl);
     sourceFile->id = "UNIFI";
-    sourceFile->name = p.filename().string();
-    sourceFile->location = p.parent_path().string();
+    sourceFile->location = sampleResultUrl.substr(0, (queryStrBegin != string::npos ? queryStrBegin + 1 : sampleResultUrl.length()));
     //sourceFile->set(MS_WIFF_nativeID_format);
     //sourceFile->set(MS_UNIFI_WIFF_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -86,7 +85,7 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     msd.run.defaultSourceFilePtr = sourceFile;
 
     string sampleName = unifiData->getSampleName();
-    msd.id = sampleName.empty() ? sourceFile->name : sampleName;
+    msd.id = sampleName.empty() ? p.string() : sampleName;
     if (!unifiData->getWellPosition().empty())
     {
         msd.id += "_" + unifiData->getWellPosition();
@@ -94,6 +93,8 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     }
     msd.id += "_" + lexical_cast<string>(unifiData->getReplicateNumber());
     sourceFile->userParams.emplace_back("replicate number", lexical_cast<string>(unifiData->getReplicateNumber()), "xsd:positiveInteger");
+
+    sourceFile->name = msd.id;
 
     SoftwarePtr acquisitionSoftware(new Software);
     acquisitionSoftware->id = "UNIFI";
@@ -118,6 +119,9 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
     //ChromatogramList_UNIFI* cl = dynamic_cast<ChromatogramList_UNIFI*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     //if (cl) cl->setDataProcessingPtr(dpPwiz);
+
+    msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    msd.fileDescription.fileContent.set(MS_MSn_spectrum);
 
     InstrumentConfigurationPtr ic(new InstrumentConfiguration("IC1"));
     ic->set(MS_Waters_instrument_model);
@@ -144,9 +148,9 @@ void Reader_UNIFI::read(const string& sampleResultUrl,
         UnifiDataPtr unifiData(new UnifiData(sampleResultUrl, config.combineIonMobilitySpectra));
 
         SpectrumList_UNIFI* sl = new SpectrumList_UNIFI(result, unifiData, config);
-        //ChromatogramList_UNIFI* cl = new ChromatogramList_UNIFI(result, wifffile, experimentsMap, runIndex);
+        ChromatogramList_UNIFI* cl = new ChromatogramList_UNIFI(result, unifiData, config);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
-        //result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+        result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
         fillInMetadata(sampleResultUrl, result, unifiData, config);
     }

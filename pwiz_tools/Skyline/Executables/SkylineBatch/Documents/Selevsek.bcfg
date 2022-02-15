@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_list saved_path_root="D:\Users\other\Selevsek" xml_version="21.12">
+  <skylinebatch_config name="Selevsek-reps" enabled="true" modified="11/01/2021 16:31:58">
+    <file_settings analysis_folder_path="D:\Users\other\Selevsek\Selevsek-reps" use_analysis_folder_name="true" replicate_naming_pattern="nselevse_(.*)_SW">
+      <template_file zip_path="D:\Users\other\Selevsek\Selevsek.sky.zip">
+        <remote_file relative_path="Selevsek.sky.zip">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </template_file>
+      <data_folder path="D:\Users\other\Selevsek\REP">
+        <remote_file_set relative_path="RawFiles\wiff-rep\">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file />
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings remove_decoys="true" remove_results="true" output_file_path="D:\Users\other\Selevsek\Selevsek-lowcv.sky">
+      <command_argument name="min_peptides" value="1" />
+      <command_argument name="max_precursor_only" value="True" />
+      <command_argument name="cv_remove_above_cutoff" value="20" />
+      <command_argument name="qvalue_cutoff" value="0.01" />
+      <command_argument name="minimum_detections" value="4" />
+      <command_argument name="cv_global_normalize" value="equalize_medians" />
+    </refine_settings>
+    <report_settings>
+      <report_info name="Precursor Peak Areas Scored">
+        <r_script path="D:\Users\other\Selevsek\detection.R" version="4.0.3">
+          <remote_file relative_path="reports\detection.R">
+            <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+          </remote_file>
+        </r_script>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Selevsek-lowcv" enabled="true" modified="11/01/2021 16:31:58">
+    <file_settings analysis_folder_path="D:\Users\other\Selevsek\Selevsek-lowcv" use_analysis_folder_name="true" replicate_naming_pattern="nselevse_(.*)_SW">
+      <template_file path="D:\Users\other\Selevsek\Selevsek-lowcv.sky" dependent_configuration="Selevsek-reps" />
+      <data_folder path="D:\Users\other\Selevsek\OS">
+        <remote_file_set relative_path="RawFiles\wiff-os\">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Selevsek\Selevsek-os-annotations.csv">
+        <remote_file relative_path="reports\Selevsek-os-annotations.csv">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus" />
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Selevsek-all" enabled="true" modified="11/01/2021 16:31:58">
+    <file_settings analysis_folder_path="D:\Users\other\Selevsek\Selevsek-all" use_analysis_folder_name="true" replicate_naming_pattern="nselevse_(.*)_SW">
+      <template_file zip_path="D:\Users\other\Selevsek\Selevsek.sky.zip">
+        <remote_file relative_path="Selevsek.sky.zip">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </template_file>
+      <data_folder path="D:\Users\other\Selevsek\OS">
+        <remote_file_set relative_path="RawFiles\wiff-os\">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Selevsek\Selevsek-os-annotations.csv">
+        <remote_file relative_path="reports\Selevsek-os-annotations.csv">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus" />
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Selevsek-lowcv (MSstats)" modified="11/01/2021 16:31:58">
+    <file_settings analysis_folder_path="D:\Users\other\Selevsek\Selevsek-lowcv" use_analysis_folder_name="true" replicate_naming_pattern="nselevse_(.*)_SW">
+      <template_file path="D:\Users\other\Selevsek\Selevsek-lowcv.sky" dependent_configuration="Selevsek-reps" />
+      <data_folder path="D:\Users\other\Selevsek\OS">
+        <remote_file_set relative_path="RawFiles\wiff-os\">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Selevsek\Selevsek-os-annotations.csv">
+        <remote_file relative_path="reports\Selevsek-os-annotations.csv">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus">
+        <r_script path="D:\Users\other\Selevsek\MSstats_Selevsek_lowcv.R" version="4.0.3">
+          <remote_file relative_path="reports\MSstats_Selevsek_lowcv.R">
+            <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+          </remote_file>
+        </r_script>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Selevsek-all (MSstats)" modified="11/01/2021 16:31:58">
+    <file_settings analysis_folder_path="D:\Users\other\Selevsek\Selevsek-all" use_analysis_folder_name="true" replicate_naming_pattern="nselevse_(.*)_SW">
+      <template_file zip_path="D:\Users\other\Selevsek\Selevsek.sky.zip">
+        <remote_file relative_path="Selevsek.sky.zip">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </template_file>
+      <data_folder path="D:\Users\other\Selevsek\OS">
+        <remote_file_set relative_path="RawFiles\wiff-os\">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Selevsek\Selevsek-os-annotations.csv">
+        <remote_file relative_path="reports\Selevsek-os-annotations.csv">
+          <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus">
+        <r_script path="D:\Users\other\Selevsek\MSstats_Selevsek_all.R" version="4.0.3">
+          <remote_file relative_path="reports/MSstats_Selevsek_all.R">
+            <remote_file_source name="Selevsek Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/" />
+          </remote_file>
+        </r_script>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+</config_list>

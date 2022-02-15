@@ -437,14 +437,14 @@ bool MaxQuantReader::parseFile()
     string line;
     getline(tsvFile_, line);
     parseHeader(line);
+    getFilenamesAndLineCount();
     
-    Verbosity::debug("Collecting PSMs.");
-    collectPsms();
-
     vector<string> dirs, extensions;
     // look in parent and grandparent dirs in addition to cwd
     dirs.push_back("../");   
-    dirs.push_back("../../");
+    dirs.push_back("../../"); 
+    dirs.push_back("../../../"); 
+    dirs.push_back("../../../../");
     
     // look in common open and vendor formats
     extensions.push_back(".mz5");
@@ -460,6 +460,29 @@ bool MaxQuantReader::parseFile()
     extensions.push_back(".ms2");
     extensions.push_back(".mgf");
 
+    // check that files exist before starting the full PSM parsing
+    vector<string> missingFiles;
+    if (!preferEmbeddedSpectra_)
+        for (const auto& filePsmListPair : fileMap_)
+        {
+            try
+            {
+                setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            }
+            catch (BlibException& e)
+            {
+                if (!bal::contains(e.what(), "searching for spectrum file"))
+                    throw;
+                missingFiles.emplace_back(filePsmListPair.first);
+            }
+        }
+
+    if (!missingFiles.empty())
+        throw BlibException(false, "%s\n\nRun with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", filesNotFoundMessage(missingFiles, extensions, dirs).c_str());
+
+    Verbosity::debug("Collecting PSMs.");
+    collectPsms();
+
     Verbosity::debug("Building tables.");
     // add psms by filename
     initSpecFileProgress(fileMap_.size());
@@ -472,17 +495,8 @@ bool MaxQuantReader::parseFile()
             setSpecFileName(filePsmListPair.first.c_str(), false);
         else
         {
-            try
-            {
-                setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
-                specFileName = bfs::path(getSpecFileName()).filename().string();
-            }
-            catch (BlibException& e)
-            {
-                if (bal::contains(e.what(), "Could not find spectrum file"))
-                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
-                throw e;
-            }
+            setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            specFileName = bfs::path(getSpecFileName()).filename().string();
         }
 
         buildTables(MAXQUANT_SCORE, specFileName, false);
@@ -556,6 +570,71 @@ void MaxQuantReader::parseHeader(string& line)
     sort(targetColumns_.begin(), targetColumns_.end());
 }
 
+/// Get filenames from all lines of msms.txt (for checking that they can be found before parsing PSMs) and get line count as well
+void MaxQuantReader::getFilenamesAndLineCount()
+{
+    string line;
+    bool parseSuccess = true;
+    string errorMsg;
+
+    streampos originalPos = tsvFile_.tellg();
+    lineCount_ = 1;
+    //ProgressIndicator progress(lineCount);
+    vector<MaxQuantPSM*> dummyPsmList;
+    string lastFilename;
+
+    try
+    {
+        while (getline(tsvFile_, line))
+        {
+            ++lineCount_;
+            auto lineBegin = line.begin();
+            if (targetColumns_[0].position_ > 0)
+            {
+                auto rawFileItrRange = bal::find_nth(line, "\t", targetColumns_[0].position_+1);
+                if (rawFileItrRange.empty())
+                    throw BlibException(false, ("unable to find raw file column in getFilenamesAndLineCount for line:\n" + line).c_str());
+                lineBegin = rawFileItrRange.begin() + 1;
+            }
+            LineParser lineParser(lineBegin, line.end(), separator_);
+            string filename = *lineParser.begin();
+            if (lastFilename.empty() || lastFilename != filename)
+            {
+                lastFilename = filename;
+                fileMap_.insert(make_pair(filename, dummyPsmList));
+            }
+        }
+        tsvFile_.clear();
+        tsvFile_.seekg(originalPos);
+    }
+    catch (BlibException& e)
+    {
+        parseSuccess = false;
+        errorMsg = e.what();
+    }
+    catch (std::exception& e)
+    {
+        parseSuccess = false;
+        errorMsg = e.what();
+    }
+    catch (string& s)
+    {
+        parseSuccess = false;
+        errorMsg = s;
+    }
+    catch (...)
+    {
+        parseSuccess = false;
+        errorMsg = "Unknown exception";
+    }
+
+    if (!parseSuccess)
+    {
+        throw BlibException(false, "%s caught at line %d",
+            errorMsg.c_str(), lineCount_);
+    }
+}
+
 /**
  * Read the tsv file and parse all psms.
  */
@@ -565,18 +644,13 @@ void MaxQuantReader::collectPsms()
     bool parseSuccess = true;
     string errorMsg;
 
-    // get file size and set progress
-    streampos originalPos = tsvFile_.tellg();
-    int lineCount = count(std::istreambuf_iterator<char>(tsvFile_),
-                          std::istreambuf_iterator<char>(), '\n') + 1;
-    tsvFile_.seekg(originalPos);
-    ProgressIndicator progress(lineCount);
+    ProgressIndicator progress(lineCount_);
 
     // read file
     while (!tsvFile_.eof())
     {
         getline(tsvFile_, line);
-        lineNum_++;
+        ++lineNum_;
 
         size_t colListIdx = 0;  // go through all target columns
         int lineColNumber = 0;  // compare to all file columns
@@ -697,20 +771,8 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     addDoublesToVector(curMaxQuantPSM_->intensities, entry.intensities);
 
     // Save PSM
-    map< string, vector<MaxQuantPSM*> >::iterator mapAccess
-        = fileMap_.find(entry.rawFile);
-    // file not in map yet, add it
-    if (mapAccess == fileMap_.end())
-    {
-        vector<MaxQuantPSM*> tmpPsms;
-        tmpPsms.push_back(curMaxQuantPSM_);
-        fileMap_[entry.rawFile] = tmpPsms;
-    }
-    else
-    {
         fileMap_[entry.rawFile].push_back(curMaxQuantPSM_);
     }
-}
 
 /**
  * Take a string of semicolon separated doubles and add them to the vector.

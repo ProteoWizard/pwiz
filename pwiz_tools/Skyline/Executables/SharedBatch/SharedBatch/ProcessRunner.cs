@@ -5,7 +5,6 @@ using System.IO;
 using System.Management;
 using System.Threading.Tasks;
 using SharedBatch.Properties;
-using SkylineBatch;
 
 namespace SharedBatch
 {
@@ -16,9 +15,9 @@ namespace SharedBatch
         private bool _canceled;
         private bool _running;
 
-        public HandleDataReceived OnDataReceived = null;
-        public HandleException OnException = null;
-        public HandleError OnError = null;
+        public HandleDataReceived OnDataReceived;
+        public HandleException OnException;
+        public HandleError OnError;
 
         public delegate void HandleDataReceived(string data);
         public delegate void HandleException(Exception e, string message);

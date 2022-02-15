@@ -88,6 +88,7 @@ namespace pwiz.Skyline.Alerts
 
         private readonly SrmDocument _document;
         private readonly List<PeptideGroupDocNode> _addedPeptideGroups;
+        private readonly IrtStandard _irtStandard;
 
         public bool DocumentFinalCalculated { get; private set; }
         public SrmDocument DocumentFinal { get; private set; }
@@ -102,11 +103,13 @@ namespace pwiz.Skyline.Alerts
         private readonly string _remaniningText;
         private readonly string _emptyProteinsText;
 
-        public PeptidesPerProteinDlg(SrmDocument doc, List<PeptideGroupDocNode> addedPeptideGroups, string decoyGenerationMethod, double decoysPerTarget)
+        public PeptidesPerProteinDlg(SrmDocument doc, List<PeptideGroupDocNode> addedPeptideGroups,
+            IrtStandard irtStandard, string decoyGenerationMethod, double decoysPerTarget)
         {
             InitializeComponent();
             _document = doc;
             _addedPeptideGroups = addedPeptideGroups;
+            _irtStandard = irtStandard;
             _decoyGenerationMethod = decoyGenerationMethod;
             _decoysPerTarget = decoysPerTarget;
             _remaniningText = lblRemaining.Text;
@@ -160,14 +163,22 @@ namespace pwiz.Skyline.Alerts
 
         public void NewTargetsAll(out int proteins, out int peptides, out int precursors, out int transitions)
         {
+            var pepGroups = new List<PeptideGroupDocNode>(_addedPeptideGroups);
+
             var numDecoys = NumDecoys(_addedPeptideGroups);
-            var pepGroups = _addedPeptideGroups.ToArray();
             if (numDecoys > 0)
             {
                 var decoyGroups = AddDecoys(_document).PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS));
-                pepGroups = pepGroups.Concat(decoyGroups).ToArray();
+                pepGroups.AddRange(decoyGroups);
             }
-            proteins = pepGroups.Length;
+
+            var docWithStandards = ImportPeptideSearch.AddStandardsToDocument(_document, _irtStandard);
+            if (!ReferenceEquals(docWithStandards, _document))
+            {
+                pepGroups.Add(docWithStandards.PeptideGroups.First());
+            }
+
+            proteins = pepGroups.Count;
             peptides = pepGroups.Sum(pepGroup => pepGroup.PeptideCount);
             precursors = pepGroups.Sum(pepGroup => pepGroup.TransitionGroupCount);
             transitions = pepGroups.Sum(pepGroup => pepGroup.TransitionCount);
@@ -309,6 +320,12 @@ namespace pwiz.Skyline.Alerts
 
             // Add decoys
             newDoc = AddDecoys(newDoc);
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            // Add iRT standards if necessary
+            newDoc = ImportPeptideSearch.AddStandardsToDocument(newDoc, _irtStandard);
 
             if (cancellationToken.IsCancellationRequested)
                 return null;

@@ -67,7 +67,7 @@ namespace {
                 optionalColumns_.push_back(optionalColumn);
 
             string line;
-            getline(tsvFile_, line);
+            getlinePortable(tsvFile_, line);
             LineParser headerLine(line, separator_);
             parseHeader(headerLine, targetColumns_, optionalColumns_);
 
@@ -335,7 +335,7 @@ namespace {
                 optionalColumns_.push_back(optionalColumn);
 
             string line;
-            getline(tsvFile_, line);
+            getlinePortable(tsvFile_, line);
             LineParser headerLine(line, separator_);
             parseHeader(headerLine, targetColumns_, optionalColumns_);
         }
@@ -481,7 +481,7 @@ boost::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* t
     string line;
     {
         ifstream tsvFile(tsvName);
-        getline(tsvFile, line);
+        getlinePortable(tsvFile, line);
     }
     LineParser headerLine(line, separator_);
 
@@ -527,12 +527,12 @@ void TSVReader::parseHeader(LineParser& headerLine, vector<TSVColumnTranslator>&
 void TSVReader::collectPsms(map<string, Protein>& proteins) {
     tsvFile_.seekg(0);
     string lineStr;
-    getline(tsvFile_, lineStr);
+    getlinePortable(tsvFile_, lineStr);
 
     ProgressIndicator progress(bfs::file_size(tsvName_) - lineStr.length()+1);
 
     while (!tsvFile_.eof()) {
-        getline(tsvFile_, lineStr);
+        getlinePortable(tsvFile_, lineStr);
         lineNum_++;
 
         TSVLine line;

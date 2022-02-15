@@ -111,7 +111,7 @@ void embedIsobaricSampleMapping(const string& idpDbFilepath, const string& isoba
     bxp::smatch match;
 
     string line;
-    while (getline(isobaricSampleMappingFile, line))
+    while (getlinePortable(isobaricSampleMappingFile, line))
     {
         if (line.empty())
             continue;
@@ -164,7 +164,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
     bxp::smatch match;
 
     string line;
-    while (getline(assembleTxtFile, line))
+    while (getlinePortable(assembleTxtFile, line))
     {
         if (line.empty())
             continue;

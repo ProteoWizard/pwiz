@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get
             {
-                if (!ReferenceEquals(SelectedRegressionType, _originalRegressionType))
+                if (_originalRegressionType != null && !ReferenceEquals(SelectedRegressionType, _originalRegressionType))
                     return true;
 
                 if (_originalPeptides == null)
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var selectedItem = _driverStandards.SelectedItem;
                 return selectedItem != null && Settings.Default.IrtStandardList.GetDefaults()
-                           .Any(standard => ReferenceEquals(standard, selectedItem));
+                           .Any(standard => Equals(standard, selectedItem));
             }
         }
 
@@ -1285,18 +1285,30 @@ namespace pwiz.Skyline.SettingsUI.Irt
             get { return _driverStandards.SelectedItem; }
             set
             {
-                if (value == null)
-                    comboStandards.SelectedIndex = 0;
-
-                for (var i = 0; i < _driverStandards.List.Count; i++)
+                if (value != null)
                 {
-                    if (ReferenceEquals(_driverStandards.List[i], value))
+                    for (var i = 0; i < _driverStandards.List.Count; i++)
                     {
-                        comboStandards.SelectedIndex = i;
-                        return;
+                        if (Equals(_driverStandards.List[i], value))
+                        {
+                            comboStandards.SelectedIndex = i;
+                            return;
+                        }
                     }
                 }
                 comboStandards.SelectedIndex = 0;
+            }
+        }
+
+        public void AddStandard()
+        {
+            foreach (var item in comboStandards.Items)
+            {
+                if (item.ToString().Equals(Resources.SettingsListComboDriver_Add))
+                {
+                    comboStandards.SelectedItem = item;
+                    return;
+                }
             }
         }
 
@@ -1337,7 +1349,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Add) &&
                 StandardPeptideList.Count > 0 &&
-                ReferenceEquals(_driverStandards.List[lastIdx], IrtStandard.EMPTY))
+                _driverStandards.List[lastIdx].IsEmpty)
             {
                 // Offer to create a new standard from the standard peptides currently in the calculator
                 using (var dlg = new UseCurrentCalculatorDlg(_driverStandards.List))
@@ -1393,7 +1405,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     // A built-in standard is selected and standards have changed
                     var newIdx = CurrentStandardIndex;
                     if (newIdx == -1)
-                        newIdx = _driverStandards.List.IndexOf(standard => ReferenceEquals(standard, IrtStandard.EMPTY));
+                        newIdx = _driverStandards.List.IndexOf(standard => standard.IsEmpty);
                     if (newIdx != comboStandards.SelectedIndex)
                     {
                         comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;

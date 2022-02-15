@@ -28,8 +28,8 @@ ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc,
-ECHO ###     gcc-nocygwin, intel-win32, metrowerks, mingw,
-ECHO ###     vc11, vc12, vc14, vc141, vc142
+ECHO ###     gcc-nocygwin, intel-win32, mingw,
+ECHO ###     vc12, vc14, vc141, vc142, vc143
 ECHO ###
 ECHO ### If you have Visual Studio 2017 installed you will need to either update
 ECHO ### the Visual Studio 2017 installer or run from VS 2017 Command Prompt
@@ -170,19 +170,19 @@ set B2_SOURCES=
 set B2_SOURCES=%B2_SOURCES% builtins.cpp class.cpp
 set B2_SOURCES=%B2_SOURCES% command.cpp compile.cpp constants.cpp cwd.cpp
 set B2_SOURCES=%B2_SOURCES% debug.cpp debugger.cpp
-set B2_SOURCES=%B2_SOURCES% execcmd.cpp execnt.cpp filent.cpp filesys.cpp frames.cpp function.cpp
+set B2_SOURCES=%B2_SOURCES% execcmd.cpp execnt.cpp execunix.cpp filent.cpp filesys.cpp fileunix.cpp frames.cpp function.cpp
 set B2_SOURCES=%B2_SOURCES% glob.cpp hash.cpp hcache.cpp hdrmacro.cpp headers.cpp jam.cpp
-set B2_SOURCES=%B2_SOURCES% jambase.cpp jamgram.cpp lists.cpp make.cpp make1.cpp md5.cpp mem.cpp modules.cpp
+set B2_SOURCES=%B2_SOURCES% jamgram.cpp lists.cpp make.cpp make1.cpp md5.cpp mem.cpp modules.cpp
 set B2_SOURCES=%B2_SOURCES% native.cpp object.cpp option.cpp output.cpp parse.cpp pathnt.cpp
-set B2_SOURCES=%B2_SOURCES% pathsys.cpp regexp.cpp rules.cpp scan.cpp search.cpp strings.cpp
-set B2_SOURCES=%B2_SOURCES% subst.cpp sysinfo.cpp timestamp.cpp variable.cpp w32_getreg.cpp
+set B2_SOURCES=%B2_SOURCES% pathsys.cpp pathunix.cpp regexp.cpp rules.cpp scan.cpp search.cpp jam_strings.cpp
+set B2_SOURCES=%B2_SOURCES% startup.cpp subst.cpp sysinfo.cpp
+set B2_SOURCES=%B2_SOURCES% timestamp.cpp variable.cpp w32_getreg.cpp
 set B2_SOURCES=%B2_SOURCES% modules/order.cpp
 set B2_SOURCES=%B2_SOURCES% modules/path.cpp
 set B2_SOURCES=%B2_SOURCES% modules/property-set.cpp
 set B2_SOURCES=%B2_SOURCES% modules/regex.cpp
 set B2_SOURCES=%B2_SOURCES% modules/sequence.cpp
 set B2_SOURCES=%B2_SOURCES% modules/set.cpp
-set B2_SOURCES=%B2_SOURCES% modules/svnrev.cpp
 
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 

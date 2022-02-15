@@ -378,6 +378,7 @@ Version.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
+/pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
 
 # Files that get extracted from vendor reader distros
 Reader*Test.data
@@ -389,6 +390,8 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.xml
+/pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.txt
 /pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.RawFileReader.xml
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.MassPrecisionEstimator.xml
@@ -407,12 +410,7 @@ SkylineTester Results
 /bs32.bat
 /bso64.bat
 /bso32.bat
-/BrowseOnly/pwiz.tlog/unsuccessfulbuild
-/BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
-/BrowseOnly/pwiz.tlog/metagen.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.write.1.tlog
-/BrowseOnly/pwiz.tlog/CL.read.1.tlog
-/BrowseOnly/pwiz.tlog/CL.command.1.tlog
+/SignAfterPublishPW.bat
 /OnyxTOFMS.试验.wiff.scan
 /160109_Mix1_calcurve_074_raw.skyl
 /160109_Mix1_calcurve_074_raw.skyd
@@ -446,3 +444,6 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
+/BrowseOnly
+/x64/BrowseOnly
+/qb64.bat

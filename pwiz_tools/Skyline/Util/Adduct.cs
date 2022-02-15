@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -87,6 +88,14 @@ namespace pwiz.Skyline.Util
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
+        // We tend to see the same strings again and again, save some parsing time by maintaining a threadsafe lookup for each ADDUCT_TYPE
+        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new ConcurrentDictionary<string, Adduct>[]
+        {
+            new ConcurrentDictionary<string, Adduct>(),
+            new ConcurrentDictionary<string, Adduct>(),
+            new ConcurrentDictionary<string, Adduct>()
+        };
+
         //
         // Note constructors are private - use FromCharge and FromString instead, which allow reuse
         //
@@ -153,6 +162,13 @@ namespace pwiz.Skyline.Util
                 var posNext = input.IndexOf('M') + 1;
                 if (posNext > 0 && posNext < input.Length)
                 {
+                    var posClose = input.IndexOf(']');
+                    if (posClose >= 0 && posClose < posNext)
+                    {
+                        // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
+                        throw new InvalidOperationException(
+                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
+                    }
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
                         // No leading + or - : is it because description starts with a label, or because + mode is implied?
@@ -204,7 +220,7 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
-                    if (limit < 0)
+                    if (limit < posNext)
                     {
                         return null;
                     }
@@ -580,10 +596,19 @@ namespace pwiz.Skyline.Util
         {
             if (value == null)
                 return EMPTY;
+
+            // Quick check to see if we've encountered this description before
+            var dict = _knownAdducts[(int)parserMode];
+            if (dict.TryGetValue(value, out var knownAdduct))
+            {
+                return knownAdduct;
+            }
+
             int z;
             if (int.TryParse(value, out z))
             {
-                return FromCharge(z, parserMode);
+                var result = FromCharge(z, parserMode);
+                dict[value] = result; // Cache this on the likely chance that we'll see this representation again
             }
 
             // Reuse the more common non-proteomic adducts
@@ -609,9 +634,11 @@ namespace pwiz.Skyline.Util
             {
                 if (testAdduct.SameEffect(adduct))
                 {
+                    dict[value] = adduct;  // Cache this on the likely chance that we'll see this representation again
                     return adduct;
                 }
             }
+            dict[value] = testAdduct;  // Cache this on the likely chance that we'll see this representation again
             return testAdduct;
         }
 
@@ -1045,7 +1072,8 @@ namespace pwiz.Skyline.Util
                 {"C14", BioMassCalc.C14},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
-                {"O18", BioMassCalc.O18}
+                {"O18", BioMassCalc.O18},
+                {"Cu65", BioMassCalc.Cu65},
                 // ReSharper restore LocalizableElement
             };
 

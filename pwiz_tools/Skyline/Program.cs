@@ -73,6 +73,7 @@ namespace pwiz.Skyline
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
+        public static bool UseOriginalURLs { get; set; }            // Set true to use original URLs for downloading tools instead of our S3 copies
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
@@ -107,7 +108,7 @@ namespace pwiz.Skyline
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
-                string installUrl = Install.Url;
+                string installUrl = Install.Url32;
                 string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
                     string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
@@ -625,6 +626,17 @@ namespace pwiz.Skyline
             }
         }
 
+        public static Image SkylineImage
+        {
+            get
+            {
+                // Dynamically assign the image based on the release type
+                return Install.Type == Install.InstallType.daily
+                    ? Resources.SkylineImg
+                    : Resources.Skyline_Release;
+            }
+        }
+
         /// <summary>
         /// A text writer that writes to the debug console
         /// </summary>
@@ -670,11 +682,11 @@ namespace pwiz.Skyline
             return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
         }
 
-        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
+        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut, bool test = false)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
-                return cmd.Run(inputArgs);
+                return cmd.Run(inputArgs,false, /* withoutUsage */ test); // test set to true when we are running a test
             }
         }
 

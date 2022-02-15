@@ -46,5 +46,31 @@ namespace pwiz.SkylineTest
                 }
             }
         }
+
+        /// <summary>
+        /// Verifies that the R-squared calculated on a set of points are the same
+        /// as what Excel got
+        /// </summary>
+        [TestMethod]
+        public void TestLinearInLogSpaceRSquared()
+        {
+
+            var points = new[]
+            {
+                new WeightedPoint(200, 9127215104),
+                new WeightedPoint(20, 916793344),
+                new WeightedPoint(2, 107822136),
+                new WeightedPoint(.5, 35613772),
+                new WeightedPoint(.125, 10149473)
+            };
+            var calibrationCurve = RegressionFit.LINEAR_IN_LOG_SPACE.Fit(points);
+            Assert.AreEqual(.9174, calibrationCurve.Slope.Value, .0001);
+            
+            // in the Excel spreadsheet, the regression was done on base10 logarithm values, so
+            // the y-intercept needs to be multiplied by natural log(10) to match Skyline's value.
+            Assert.AreEqual(7.8075 * Math.Log(10), calibrationCurve.Intercept.Value, .0001);
+
+            Assert.AreEqual(.9987, calibrationCurve.RSquared.Value, .0001);
+        }
     }
 }

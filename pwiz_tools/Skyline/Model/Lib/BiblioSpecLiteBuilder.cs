@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 catch (IOException x)
                 {
-                    if (IsLibraryMissingExternalSpectraError(x, out string spectrumFilename, out string resultsFilepath))
+                    if (IsLibraryMissingExternalSpectraError(x, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                     {
                         // replace the relative path to the results file (e.g. msms.txt) with the absolute path
                         string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Lib
                     Console.WriteLine(x.Message);
                     progress.UpdateProgress(status.ChangeErrorException(
                         new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
-                                                    redundantLibrary))));
+                                                    redundantLibrary), x)));
                     return false;
                 }
             } while (retry);
@@ -248,24 +248,42 @@ namespace pwiz.Skyline.Model.Lib
         public static bool IsLibraryMissingExternalSpectraError(Exception errorException)
         {
             // ReSharper disable UnusedVariable
-            return IsLibraryMissingExternalSpectraError(errorException, out string s1, out string s2);
+            return IsLibraryMissingExternalSpectraError(errorException, out IList<string> s1, out IList<string> s2, out string s3);
             // ReSharper restore UnusedVariable
         }
 
-        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out string spectrumFilename, out string resultsFilepath)
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath)
         {
-            spectrumFilename = resultsFilepath = null;
+            spectrumFilenames = null;
+            directoriesSearched = null;
+            resultsFilepath = null;
 
             // TODO: this test (and the regex below) will break if BiblioSpec output is translated to other languages
-            if (!errorException.Message.Contains(@"Could not find spectrum file"))
+            if (!errorException.Message.Contains(@"Run with the -E flag"))
                 return false;
-
-            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+            // ReSharper disable once LocalizableElement
+            string rawMessage = errorException.Message.Replace(@"ERROR: ", "");
+            var messageParts = Regex.Match(rawMessage, @"While searching .* results file '([^']+)'.*$\n(?:(.+)\n)+In any of the following directories\:(?:(.+)\n)+Run with the -E flag", RegexOptions.Multiline);
             if (!messageParts.Success)
                 throw new InvalidDataException(@"failed to parse filenames from BiblioSpec error message", errorException);
 
-            spectrumFilename = messageParts.Groups[1].Value;
-            resultsFilepath = messageParts.Groups[2].Value;
+            spectrumFilenames = new List<string>();
+            foreach (Capture line in messageParts.Groups[2].Captures)
+            {
+                var lineTrimmed = line.Value.Trim();
+                if (lineTrimmed.Length > 0)
+                    spectrumFilenames.Add(lineTrimmed);
+            }
+
+            directoriesSearched = new List<string>();
+            foreach (Capture line in messageParts.Groups[3].Captures)
+            {
+                var lineTrimmed = line.Value.Trim();
+                if (lineTrimmed.Length > 0)
+                    directoriesSearched.Add(lineTrimmed);
+            }
+
+            resultsFilepath = messageParts.Groups[1].Value;
 
             return HasEmbeddedSpectra(resultsFilepath);
         }

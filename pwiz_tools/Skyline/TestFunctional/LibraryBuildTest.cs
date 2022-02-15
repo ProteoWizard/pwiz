@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML", null);
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
-            BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
+            BuildLibraryError("missing_mzxml.pep.XML", null, "could not find matches for the following");
 
             // Test trying to build using an existing library (e.g. msp/sptxt)
             EnsurePeptideSettings();
@@ -445,8 +445,35 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryIrt(true, true, true);
             RunUI(() => Assert.IsTrue(PeptideSettingsUI.Prediction.RetentionTime.Name.Equals(_libraryName)));
             var editIrtDlg4 = ShowDialog<EditIrtCalcDlg>(PeptideSettingsUI.EditCalculator);
-            RunUI(() => Assert.IsTrue(ReferenceEquals(editIrtDlg4.IrtStandards, IrtStandard.EMPTY)));
+            RunUI(() => Assert.IsTrue(editIrtDlg4.IrtStandards.IsEmpty));
             OkDialog(editIrtDlg4, editIrtDlg4.CancelDialog);
+
+            // New document
+            var twoStandardLib = TestFilesDir.GetTestPath("two.blib");
+            docNew = new SrmDocument(SrmSettingsList.GetDefault());
+            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            // Build a library with "automatic" iRT and input file with two different standards.
+            BuildLibrary(TestFilesDir.GetTestPath("library_valid"), new[] { "twostandards.blib" }, null, false, false,
+                false, false, IrtStandard.AUTO);
+            var selectIrtStandardDlg = WaitForOpenForm<SelectIrtStandardDlg>();
+            RunUI(() =>
+            {
+                var standards = selectIrtStandardDlg.Standards.ToArray();
+                Assert.AreEqual(2, standards.Length);
+                Assert.IsTrue(standards.Contains(IrtStandard.BIOGNOSYS_11));
+                Assert.IsTrue(standards.Contains(IrtStandard.PIERCE));
+                selectIrtStandardDlg.Selected = IrtStandard.BIOGNOSYS_11;
+            });
+            var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(selectIrtStandardDlg.OkDialog);
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
+            var addPredictorDlg = ShowDialog<AddRetentionTimePredictorDlg>(recalibrateDlg.BtnCancelClick);
+            OkDialog(addPredictorDlg, addPredictorDlg.NoDialog);
+            var twoStandardDb = IrtDb.GetIrtDb(TestFilesDir.GetTestPath(_libraryName) + ".blib", null);
+            var dbStandards = twoStandardDb.StandardPeptides.ToArray();
+            // Check that the created blib has the chosen standards.
+            Assert.AreEqual(dbStandards.Length, IrtStandard.BIOGNOSYS_11.Peptides.Count);
+            foreach (var dbIrtPeptide in IrtStandard.BIOGNOSYS_11.Peptides)
+                Assert.IsTrue(dbStandards.Contains(dbIrtPeptide.ModifiedTarget));
 
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.CancelDialog);
         }
@@ -684,7 +711,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryFilterPeptides = filterPeptides;
                 buildLibraryDlg.LibraryBuildAction = (append ?
                     LibraryBuildAction.Append : LibraryBuildAction.Create);
-                if (irtStandard != null && !irtStandard.Equals(IrtStandard.EMPTY))
+                if (irtStandard != null && !irtStandard.IsEmpty)
                     buildLibraryDlg.IrtStandard = irtStandard;
                 buildLibraryDlg.OkWizardPage();
                 if (inputPaths != null)

@@ -10,6 +10,10 @@ namespace SharedBatch
     public partial class FileOpenedForm : Form
     {
 
+        // Form with two labels and a FilePathControl. Used in AutoQC and SkylineBatch
+        // to allow user to choose a new directory when a configuration file is imported
+        // from the downloads folder.
+
         private FilePathControl _filePathControl;
         private IMainUiControl _mainControl;
 
@@ -19,7 +23,7 @@ namespace SharedBatch
             
             Icon = icon;
             _mainControl = mainControl;
-            _filePathControl = new FilePathControl(Resources.FileOpenedForm_FileOpenedForm_root_folder, FileUtil.GetInitialDirectory(filePath), string.Empty, RootFolderValidator, PathDialogOptions.Folder);
+            _filePathControl = new FilePathControl(Resources.FileOpenedForm_FileOpenedForm_root_folder, FileUtil.GetInitialDirectory(filePath), string.Empty, RootFolderValidator, TextUtil.EXT_BCFG, PathDialogOptions.Folder);
             _filePathControl.label1.Text = string.Format(Resources.FileOpenedForm_FileOpenedForm_Preparing_to_import_configurations_from__0_, Path.GetFileName(filePath));
             _filePathControl.label2.Text = Resources.FileOpenedForm_FileOpenedForm_Please_specify_a_root_folder_for_the_configurations_;
             _filePathControl.Dock = DockStyle.Fill;
@@ -37,6 +41,7 @@ namespace SharedBatch
                 try
                 {
                     valid = Directory.Exists(Path.GetDirectoryName(path));
+                    Directory.CreateDirectory(path);
                 }
                 catch (Exception)
                 {
@@ -66,7 +71,7 @@ namespace SharedBatch
         //for testing only
         public void SetPath(string path)
         {
-            _filePathControl.SetText(path);
+            _filePathControl.SetInput(path);
         }
     }
 

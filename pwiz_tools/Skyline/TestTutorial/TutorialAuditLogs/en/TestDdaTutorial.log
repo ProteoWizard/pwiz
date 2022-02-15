@@ -9,7 +9,7 @@ Summary   : Added spectral library "TestDdaTutorial"
 All Info  :
 Added spectral library "TestDdaTutorial"
 Build Spectral Library > Cut-off score is "0.95"
-Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.pepXML"
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -18,7 +18,7 @@ Build Spectral Library > Input File Type is "DDA raw (search and build library)"
 Extra Info: Cut-off score = "0.95",
 Search files = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+    "QE_140221_01_UPS1_100fmolspiked.pepXML"
 ],
 iRT standard peptides = None,
 Include ambiguous matches = False,
@@ -37,10 +37,11 @@ Import Peptide Search > Add Modifications > Added modifications : contains "Labe
 Import Peptide Search > Add Modifications > Added modifications : contains "Label:13C(6)15N(4) (C-term R) = R[10] (isotopic label)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
 Import Peptide Search > Import FASTA > FASTA file is "2014_01_HUMAN_UPS.fasta"
+Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
 Import Peptide Search > DDA search settings > Precursor tolerance is 5ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is 10ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
-Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
+Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -65,9 +66,10 @@ Import FASTA =
 },
 DDA search settings = 
 {
+    Search Engine = "MSFragger",
     Precursor tolerance = 5ppm,
     Fragment tolerance = 10ppm,
     Max variable mods per peptide = "3",
-    Fragment ion types = "b, y"
+    Fragment ion types = "b,y"
 }
 

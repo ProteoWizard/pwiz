@@ -14,11 +14,11 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 已编辑 K.TCVADESHAGCEK.S [75, 87] 的注释
-Summary   : 目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > 注释 已更改为 "Lost in yeast samples"
+Undo Redo : 已编辑 K.TCVADESHAGCEK.S [76, 88] 的注释
+Summary   : 目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [76, 88] > 注释 已更改为 "Lost in yeast samples"
 All Info  :
-已编辑 K.TCVADESHAGCEK.S [75, 87] 的注释
-目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [75, 87] > 注释 从 缺失 更改到 "Lost in yeast samples"
+已编辑 K.TCVADESHAGCEK.S [76, 88] 的注释
+目标 > gi|1351907|sp|P02769.4|ALBU_BOVIN > K.TCVADESHAGCEK.S [76, 88] > 注释 从 缺失 更改到 "Lost in yeast samples"
 
 Undo Redo : 已管理结果
 Summary   : 已管理结果
@@ -35,8 +35,8 @@ All Info  :
 设置 > 离子对设置 -- 离子迁移 > 离子迁移库 从 "None" 更改到 "BSA"
 设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 文件路径 是 "BSA.imsdb"
 设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 内容已更改 > 项目已添加 是 "38"
-设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 内容已更改 > LSID 是 "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:e5db86eb-52dc-49ec-83ee-f1843b3f79f9:1.1"
-设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 内容已更改 > 时间戳 是 "2020-09-21T11:32:40-07:00"
+设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 内容已更改 > LSID 是 "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:0cf7d8e9-48a5-4259-a4d3-171d16aabcaa:1.1"
+设置 > 离子对设置 -- 离子迁移 > 离子迁移库 > 内容已更改 > 时间戳 是 "2021-08-14T05:49:53-07:00"
 设置 > 离子对设置 -- 离子迁移 > 离子迁移过滤窗口宽度计算类型 从 "无" 更改到 "分辨力"
 设置 > 离子对设置 -- 离子迁移 > 分辨能力 从 "0" 更改到 "50"
 

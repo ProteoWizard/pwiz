@@ -1,12 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
-using SharedBatchTest;
 using SkylineBatch;
-using SkylineBatchTest;
 
 namespace SkylineBatchTest
 {
@@ -32,14 +28,19 @@ namespace SkylineBatchTest
 
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
+            WaitForShownForm(mainForm);
             Assert.IsNotNull(mainForm, "Main program window is not an instance of MainForm.");
             Assert.AreEqual(0, mainForm.ConfigCount());
 
             TestSmallDataDownload(mainForm);
 
+            TestNoSpaceDataDownload(mainForm);
+
+            TestPanoramaDataDownload(mainForm);
+
         }
 
-        private bool ConfigStopped(MainForm mainForm, bool expectedAnswer)
+        private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
             bool worked = false;
             RunUI(() =>
@@ -52,24 +53,79 @@ namespace SkylineBatchTest
         public void TestSmallDataDownload(MainForm mainForm)
         {
             var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
-            Assert.AreEqual(1, Directory.GetFiles(dataDirectory).Length);
-                      var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfiguration.bcfg");
+            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationFTP.bcfg");
             
             RunUI(() =>
             {
                 mainForm.DoImport(configFile);
-                FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
-                mainForm.ClickRun();
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
             });
-            var tenSeconds = new TimeSpan(0,0,10);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, true, tenSeconds, 1000,
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var thirtySeconds = new TimeSpan(0,0,30);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, thirtySeconds, 200,
                 "Config did not start");
             var oneMinute = new TimeSpan(0, 1, 0);
-            FunctionalTestUtil.WaitForCondition(ConfigStopped, mainForm, false, oneMinute, 1000,
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
             Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")));
             Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_003_SW.wiff")).Length);
 
+        }
+
+        public void TestNoSpaceDataDownload(MainForm mainForm)
+        {
+            RunUI(() =>
+            {
+                mainForm.tabMain.SelectedIndex = 0;
+                FunctionalTestUtil.ClearConfigs(mainForm);
+            });
+            var dataDirectory = Path.Combine(CONFIG_FOLDER, "bigData");
+            Assert.AreEqual(false, Directory.Exists(dataDirectory));
+            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationBigData.bcfg");
+
+            RunUI(() => mainForm.DoImport(configFile));
+            Assert.AreEqual(false, Directory.Exists(dataDirectory));
+
+            RunUI(() =>
+            {
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
+            });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var spaceErrorDlg = WaitForOpenForm<AlertDlg>();
+            RunUI(() =>
+            {
+                Assert.IsTrue(spaceErrorDlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
+                spaceErrorDlg.ClickOk();
+                Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
+                Assert.AreEqual(0, mainForm.tabMain.SelectedIndex);
+            });
+            
+        }
+
+        public void TestPanoramaDataDownload(MainForm mainForm)
+        {
+            var dataDirectory = Path.Combine(CONFIG_FOLDER, "emptyData");
+            var configFile = Path.Combine(TEST_FOLDER, "DownloadingConfigurationPanorama.bcfg");
+
+            RunUI(() =>
+            {
+                mainForm.tabMain.SelectedIndex = 0;
+                FunctionalTestUtil.ClearConfigs(mainForm);
+                mainForm.DoImport(configFile);
+                FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
+            });
+            var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
+            WaitForClosedForm(longWaitDialog);
+            var tenSeconds = new TimeSpan(0, 0, 10);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+                "Config did not start");
+            var oneMinute = new TimeSpan(0, 1, 0);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
+                "Config ran past timeout");
+            Assert.AreEqual(true, File.Exists(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")));
+            Assert.AreEqual(12427264, new FileInfo(Path.Combine(dataDirectory, "nselevse_L120412_002_SW.wiff")).Length);
         }
 
     }

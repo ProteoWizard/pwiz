@@ -56,8 +56,11 @@
       <ComponentGroupRef Id="Method_AbSciex_TQ_files"/>
       <ComponentGroupRef Id="Method_Agilent_files"/>
       <ComponentGroupRef Id="Method_Bruker_files"/>
+      <ComponentGroupRef Id="Method_Shimadzu_files"/>
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.CRT_files"/>
       <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
@@ -98,10 +101,12 @@
         </Directory>
         <Directory Id="Method_Agilent_directory" Name="Agilent"/>
         <Directory Id="Method_Bruker_directory" Name="Bruker"/>
+        <Directory Id="Method_Shimadzu_directory" Name="Shimadzu"/>
         <Directory Id="Method_Thermo_directory" Name="Thermo"/>
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="Microsoft.VC90.CRT_directory" Name="Microsoft.VC90.CRT"/>
       <Directory Id="percolator_directory" Name="percolator"/>
     </DirectoryRef>
   </Fragment>
@@ -145,9 +150,6 @@
       </Component>
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
-      </Component>
-      <Component Id="DataReader.dll"> <!-- no longer used by pwiz but required by Shimadzu method export -->
-        <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
       </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
@@ -199,12 +201,6 @@
       </Component>
       <Component Id="MathNet.Numerics.dll">
         <File Source="$(var.Skyline.TargetDir)/MathNet.Numerics.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="MethodConverter.dll">
-        <File Source="$(var.Skyline.TargetDir)/MethodConverter.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="MethodWriter.dll">
-        <File Source="$(var.Skyline.TargetDir)/MethodWriter.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
@@ -480,6 +476,9 @@
       <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_AbSciex_TOF_BuildAnalystMethod.dll">
         <File Source="$(var.Skyline.TargetDir)/Method/AbSciex/TOF/BuildAnalystMethod.dll" Id="Method_AbSciex_TOF_BuildAnalystMethod.dll_file" KeyPath="yes"/>
       </Component>
@@ -527,6 +526,9 @@
       <Component Id="Method_AbSciex_TQ_BuildQTRAPMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\BuildQTRAPMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_AbSciex_TQ_BuildQTRAPMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\BuildQTRAPMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_AbSciex_TQ_Interop.AcqMethodDir.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.AcqMethodDir.dll" KeyPath="yes"/>
       </Component>
@@ -571,6 +573,9 @@
       <Component Id="Method_Agilent_BuildAgilentMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_Agilent_BuildAgilentMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_Agilent_MethodCreator.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MethodCreator.dll" KeyPath="yes"/>
       </Component>
@@ -584,6 +589,26 @@
       </Component>
       <Component Id="Method_Bruker_BuildBrukerMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Bruker_BuildBrukerMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe.config" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Shimadzu_files" Directory="Method_Shimadzu_directory">
+      <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_BuildShimadzuMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\BuildShimadzuMethod.exe.config" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_MethodConverter.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodConverter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_MethodWriter.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\MethodWriter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Shimadzu_Shimadzu.LabSolutions.IO.IoModule.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll" Id="Method_Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Thermo_files" Directory="Method_Thermo_directory">
@@ -611,6 +636,29 @@
         <File Source="$(var.Skyline.TargetDir)/Method\Waters\VerifyESkylineLibrary.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.MFC_files" Directory="Microsoft.VC90.MFC_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_mfc90u.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\mfc90u.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_Microsoft.VC90.MFC.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.CRT_files" Directory="Microsoft.VC90.CRT_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcp90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcp90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcr90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcr90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_Microsoft.VC90.CRT.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+    </ComponentGroup>
     <ComponentGroup Id="percolator_files" Directory="percolator_directory">
       <Component Id="percolator_percolator.exe">
         <File Source="$(var.Skyline.TargetDir)/percolator/percolator.exe" KeyPath="yes" />
@@ -620,6 +668,9 @@
       </Component>
       <Component Id="percolator_xerces_c_3_1.dll">
         <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_msvcr90.dll">
+        <File Id="percolator_msvcr90.dll" Source="$(var.Skyline.TargetDir)/percolator/msvcr90.dll" KeyPath="yes" />
       </Component>
       <Component Id="percolator_vcomp140.dll">
         <File Id="percolator_vcomp140.dll" Source="$(var.Skyline.TargetDir)/vcomp140.dll" KeyPath="yes" />

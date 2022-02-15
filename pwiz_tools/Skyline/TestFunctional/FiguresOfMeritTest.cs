@@ -39,7 +39,6 @@ namespace pwiz.SkylineTestFunctional
     public class FiguresOfMeritTest : AbstractFunctionalTest
     {
         [TestMethod]
-        [Timeout(36000000)]  // These can take a long time in code coverage mode
         public void TestFiguresOfMerit()
         {
             TestFilesZip = @"TestFunctional\FiguresOfMeritTest.zip";

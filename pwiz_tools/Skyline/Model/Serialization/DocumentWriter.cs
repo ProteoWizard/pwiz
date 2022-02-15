@@ -29,7 +29,6 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -590,7 +589,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
-                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings)));
+                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
                 byte[] bytes = transitionData.ToByteArray();
                 writer.WriteBase64(bytes, 0, bytes.Length);
                 writer.WriteEndElement();
@@ -705,52 +704,9 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
             writer.WriteElementString(EL.product_mz, SequenceMassCalc.PersistentMZ(nodeTransition.Mz));
 
-            TransitionPrediction predict = Settings.TransitionSettings.Prediction;
-            var optimizationMethod = predict.OptimizedMethodType;
-            double? ce = null;
-            double? dp = null;
-            var lib = predict.OptimizedLibrary;
-            if (lib != null && !lib.IsNone)
-            {
-                var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,
-                    nodeTransition.FragmentIonName, nodeTransition.Transition.Adduct);
-                if (optimization != null)
-                {
-                    ce = optimization.Value;
-                }
-            }
-
-            double regressionMz = Settings.GetRegressionMz(nodePep, nodeGroup);
-            var ceRegression = predict.CollisionEnergy;
-            var dpRegression = predict.DeclusteringPotential;
-            if (optimizationMethod == OptimizedMethodType.None)
-            {
-                if (ceRegression != null && !ce.HasValue)
-                {
-                    ce = ceRegression.GetCollisionEnergy(nodeGroup.PrecursorAdduct, regressionMz);
-                }
-                if (dpRegression != null)
-                {
-                    dp = dpRegression.GetDeclustringPotential(regressionMz);
-                }
-            }
-            else
-            {
-                if (!ce.HasValue)
-                {
-                    ce = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValue(Settings,
-                        nodePep, nodeGroup, nodeTransition, optimizationMethod, ceRegression,
-                        SrmDocument.GetCollisionEnergy);
-                }
-
-                dp = OptimizationStep<DeclusteringPotentialRegression>.FindOptimizedValue(Settings,
-                    nodePep, nodeGroup, nodeTransition, optimizationMethod, dpRegression,
-                    SrmDocument.GetDeclusteringPotential);
-            }
-
-            if (nodeTransition.ExplicitValues.CollisionEnergy.HasValue)
-                ce = nodeTransition.ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
+            
+            double? ce = nodeTransition.GetCollisionEnergy(Settings, nodePep, nodeGroup);
+            double? dp = nodeTransition.GetDeclusteringPotential(Settings, nodePep, nodeGroup);
 
             if (ce.HasValue)
             {

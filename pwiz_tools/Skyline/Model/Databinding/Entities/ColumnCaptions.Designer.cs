@@ -952,6 +952,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First Position.
+        /// </summary>
+        public static string FirstPosition {
+            get {
+                return ResourceManager.GetString("FirstPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fold Change.
         /// </summary>
         public static string FoldChange {
@@ -1317,6 +1326,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Key {
             get {
                 return ResourceManager.GetString("Key", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Position.
+        /// </summary>
+        public static string LastPosition {
+            get {
+                return ResourceManager.GetString("LastPosition", resourceCulture);
             }
         }
         

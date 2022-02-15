@@ -278,6 +278,7 @@
           <xs:sequence>
             <xs:any minOccurs="1" maxOccurs="1" processContents="skip"/>
           </xs:sequence>
+          <xs:attribute name="auto_train" type="xs:string"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="quantification" minOccurs="0" maxOccurs="1">
@@ -408,6 +409,21 @@
       </xs:element>
       <xs:element name="transition_integration">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="synchronize_integration" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="target" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:attribute name="value" type="xs:string" use="required"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="group_by" type="xs:string"/>
+                <xs:attribute name="all" type="xs:boolean"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
           <xs:attribute name="integrate_all" type="xs:boolean"/>
         </xs:complexType>
       </xs:element>
@@ -532,6 +548,7 @@
                 <xs:attribute name="sample_name" type="xs:string" use="required"/>
                 <xs:attribute name="acquired_time" type="xs:dateTime"/>
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
+                <xs:attribute name="import_time" type="xs:dateTime" />
                 <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
                 <xs:attribute name="tic_area" type="xs:double" />
                 <xs:attribute name="sample_id" type="xs:string" />
@@ -1115,6 +1132,7 @@
               <xs:complexContent>
                 <xs:extension base="spectrum_header_info_type">
                   <xs:attribute name="peak_area" type="xs:double" />
+                  <xs:attribute name="protein" type="xs:string" use="optional"/> <!-- Protein or molecule list name from .clib Protein table when available -->
                 </xs:extension>
               </xs:complexContent>
             </xs:complexType>
@@ -1402,9 +1420,11 @@
   <xs:simpleType name="full_scan_acquisition_method_type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="none"/>
-      <xs:enumeration value="Targeted"/>
       <xs:enumeration value="DIA"/>
       <xs:enumeration value="DDA"/>
+      <xs:enumeration value="PRM"/>
+      <xs:enumeration value="SureQuant"/>
+      <xs:enumeration value="Targeted"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="retention_time_filtering_type">
@@ -1414,14 +1434,9 @@
       <xs:enumeration value="ms2_ids"/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name="atomic_symbol_type">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="H|H'|H&quot;|D|T|C|C'|C&quot;|N|N'|O|O&quot;|O'|P|P'|S|S'|S&quot;|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
-    </xs:restriction>
-  </xs:simpleType>
   <xs:simpleType name="heavy_isotope_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;"/>
+      <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;|Cu'"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="full_scan_mass_analyzer_type">

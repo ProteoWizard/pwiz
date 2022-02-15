@@ -717,11 +717,11 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>call "$(ProjectDir)..\..\..\libraries\msvc_setup_script.bat" &gt;nul
+    <PostBuildEvent>call "%25VSAPPIDDIR%25..\Tools\VsDevCmd.bat" &gt;nul
 IF $(PlatformName) NEQ "x64" editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"
 IF EXIST $(OutDir)setup.exe del $(OutDir)setup.exe
 IF EXIST $(OutDir)Test.passed del $(OutDir)Test.passed</PostBuildEvent>
-    <PreBuildEvent>call "$(ProjectDir)..\..\..\libraries\msvc_setup_script.bat" &gt;nul
+    <PreBuildEvent>call "%25VSAPPIDDIR%25..\Tools\VsDevCmd.bat" &gt;nul
 rc.exe $(ProjectDir)Resources\Resources.rc &gt;nul</PreBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

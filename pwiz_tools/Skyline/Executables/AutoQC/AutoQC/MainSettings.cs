@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -33,6 +32,8 @@ namespace AutoQC
     [XmlRoot("main_settings")]
     public class MainSettings
     {
+        public const string XML_EL = "main_settings";
+
         public const int ACCUM_TIME_WINDOW = 31;
         public const int ACQUISITION_TIME = 75;
         public const string THERMO = "Thermo";
@@ -58,10 +59,6 @@ namespace AutoQC
         public readonly int ResultsWindow;
         public readonly string InstrumentType;
         public readonly int AcquisitionTime;
-
-
-        public DateTime LastAcquiredFileDate; // Not saved to Properties.Settings
-        public DateTime LastArchivalDate; // TODO: finish making readonly
 
 
         public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
@@ -90,7 +87,14 @@ namespace AutoQC
             sb.Append("Include subfolders: ").AppendLine(IncludeSubfolders.ToString());
             sb.AppendLine(QcFileFilter.ToString());
             sb.Append("Instrument: ").AppendLine(InstrumentType);
-            sb.Append("Results window: ").Append(ResultsWindow.ToString()).AppendLine(" days");
+            if (RemoveResults)
+            {
+                sb.Append("Remove results older than: ").Append(ResultsWindow.ToString()).AppendLine(" days");
+            }
+            else
+            {
+                sb.AppendLine("Remove older results: No");
+            }
             sb.Append("Acquisition time: ").Append(AcquisitionTime.ToString()).AppendLine(" minutes");
             return sb.ToString();
         }
@@ -121,8 +125,7 @@ namespace AutoQC
                 var pattern = QcFileFilter.Pattern;
                 if (string.IsNullOrEmpty(pattern))
                 {
-                    var err = Resources.MainSettings_ValidateSettings_The_file_filter_cannot_have_an_empty_pattern_ + Environment.NewLine +
-                              Resources.MainSettings_ValidateSettings_Please_enter_a_pattern_;
+                    var err = string.Format(Resources.MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern__Please_enter_a_pattern_, QcFileFilter.Name());
                     throw new ArgumentException(err);  
                 }
             }
@@ -132,7 +135,7 @@ namespace AutoQC
             {
                 throw new ArgumentException(string.Format(Resources.MainSettings_ValidateSettings__Results_time_window__cannot_be_less_than__0__days_,
                     ACCUM_TIME_WINDOW) + Environment.NewLine + 
-                    string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__, ACCUM_TIME_WINDOW));
+                    string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__, ACCUM_TIME_WINDOW));
             }
             try
             {
@@ -147,7 +150,7 @@ namespace AutoQC
             if (AcquisitionTime < 0)
             {
                 throw new ArgumentException(Resources.MainSettings_ValidateSettings__Expected_acquisition_time__cannot_be_less_than_0_minutes_ +Environment.NewLine +
-                      string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_larger_than__0__, 0));
+                      string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__, 0));
             }
         }
 
@@ -177,110 +180,12 @@ namespace AutoQC
             }
         }
 
-        public virtual string SkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
+        public void Validate()
         {
-            // Get the current results time window
-            var currentDate = DateTime.Today;
-            var accumulationWindow = AccumulationWindow.Get(currentDate, ResultsWindow);
-
-            var args = new StringBuilder();
-            // Input Skyline file
-            args.Append(string.Format(" --in=\"{0}\"", SkylineFilePath));
-
-            string importOnOrAfter = string.Empty;
-            if (importContext.ImportExisting)
-            {
-                // We are importing existing files in the folder.  The import-on-or-after is determined
-                // by the last acquisition date on the files already imported in the Skyline document.
-                // If the Skyline document does not have any results files, we will import all existing
-                // files in the folder.
-                if (LastAcquiredFileDate != DateTime.MinValue)
-                {
-                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
-                }
-            }
-            else
-            {
-                importOnOrAfter = string.Format(" --import-on-or-after={0}",
-                    accumulationWindow.StartDate.ToShortDateString());
-
-                if (RemoveResults)
-                {
-                    // Add arguments to remove files older than the start of the rolling window.   
-                    args.Append(string.Format(" --remove-before={0}",
-                        accumulationWindow.StartDate.ToShortDateString()));
-                }
-            }
-
-            // Add arguments to import the results file
-            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
-
-            // Save the Skyline file
-            args.Append(" --save");
-
-            return args.ToString();
+            ValidateSettings();
         }
 
-        public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
-        {
-            if (currentDate.CompareTo(archiveDate) < 0)
-                return null;
 
-            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
-            {
-                return null;
-            }
-
-            // Return args to archive the file: create a shared zip
-            var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
-                Path.GetFileNameWithoutExtension(SkylineFilePath),
-                archiveDate.Year,
-                archiveDate.Month);
-
-            LastArchivalDate = currentDate;
-
-            // Archive file will be written in the same directory as the Skyline file.
-            return string.Format("--share-zip={0}", archiveFileName);
-        }
-
-        public DateTime GetLastArchivalDate()
-        {
-            return GetLastArchivalDate(new FileSystemUtil());
-        }
-
-        public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
-        {
-            if (!LastArchivalDate.Equals(DateTime.MinValue))
-            {
-                return LastArchivalDate;
-            }
-
-            if (!LastAcquiredFileDate.Equals(DateTime.MinValue))
-            {
-                LastArchivalDate = LastAcquiredFileDate;
-                return LastArchivalDate;
-            }
-
-            var fileName = Path.GetFileNameWithoutExtension(SkylineFilePath);
-            var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
-            var regex = new Regex(pattern);
-
-            var skylineFileDir = Path.GetDirectoryName(SkylineFilePath);
-
-            // Look at any existing .sky.zip files to determine the last archival date
-            // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
-            var archiveFiles =
-                fileUtil.GetSkyZipFiles(skylineFileDir)
-                    .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty))
-                    .OrderBy(filePath => fileUtil.LastWriteTime(filePath))
-                    .ToList();
-
-            LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
-
-            return LastArchivalDate;
-        }
-
-      
         #region Implementation of IXmlSerializable interface
 
         private enum Attr
@@ -319,7 +224,8 @@ namespace AutoQC
             var instrumentType = reader.GetAttribute(Attr.instrument_type);
             var acquisitionTime = reader.GetAttribute(Attr.acquisition_time);
 
-
+            // Return unvalidated settings. Validation can throw an exception that will cause the config to not get read fully and it will not be added to the config list
+            // We want the user to be able to fix invalid configs.
             return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
                 qcFileFilter, removeResults, resultsWindow, instrumentType, 
                 acquisitionTime);
@@ -327,7 +233,7 @@ namespace AutoQC
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("main_settings");
+            writer.WriteStartElement(XML_EL);
             writer.WriteAttributeIfString(Attr.skyline_file_path, SkylineFilePath);
             writer.WriteAttributeIfString(Attr.folder_to_watch, FolderToWatch);
             writer.WriteAttribute(Attr.include_subfolders, IncludeSubfolders);
@@ -345,22 +251,17 @@ namespace AutoQC
 
         protected bool Equals(MainSettings other)
         {
-            return string.Equals(SkylineFilePath, other.SkylineFilePath)
-                   && string.Equals(FolderToWatch, other.FolderToWatch)
-                   && IncludeSubfolders == other.IncludeSubfolders
-                   && Equals(QcFileFilter, other.QcFileFilter)
-                   && ResultsWindow == other.ResultsWindow
-                   && RemoveResults == other.RemoveResults
-                   && string.Equals(InstrumentType, other.InstrumentType)
-                   && AcquisitionTime == other.AcquisitionTime
-                   && LastAcquiredFileDate.Equals(other.LastAcquiredFileDate);
+            return SkylineFilePath == other.SkylineFilePath && FolderToWatch == other.FolderToWatch &&
+                   IncludeSubfolders == other.IncludeSubfolders && Equals(QcFileFilter, other.QcFileFilter) &&
+                   RemoveResults == other.RemoveResults && ResultsWindow == other.ResultsWindow &&
+                   InstrumentType == other.InstrumentType && AcquisitionTime == other.AcquisitionTime;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj.GetType() != this.GetType()) return false;
             return Equals((MainSettings) obj);
         }
 
@@ -369,12 +270,13 @@ namespace AutoQC
             unchecked
             {
                 var hashCode = (SkylineFilePath != null ? SkylineFilePath.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ IncludeSubfolders.GetHashCode();
-                hashCode = (hashCode*397) ^ (QcFileFilter != null ? QcFileFilter.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ ResultsWindow;
-                hashCode = (hashCode*397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ AcquisitionTime;
+                hashCode = (hashCode * 397) ^ (FolderToWatch != null ? FolderToWatch.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ IncludeSubfolders.GetHashCode();
+                hashCode = (hashCode * 397) ^ (QcFileFilter != null ? QcFileFilter.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ RemoveResults.GetHashCode();
+                hashCode = (hashCode * 397) ^ ResultsWindow;
+                hashCode = (hashCode * 397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ AcquisitionTime;
                 return hashCode;
             }
         }

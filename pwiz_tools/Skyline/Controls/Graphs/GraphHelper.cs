@@ -104,9 +104,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _displayState = newDisplayState;
         }
 
-        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false)
+        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false, bool forceLegendDisplay = false)
         {
-            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected));
+            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected, forceLegendDisplay));
         }
 
         public void FinishedAddingChromatograms(double bestPeakStartTime, double bestPeakEndTime, bool forceZoom)
@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly bool _proteinSelected;
 
-            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected) : base(transitionGroups)
+            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected, bool forceLegendDisplay = false) : base(transitionGroups)
             {
                 AutoZoomChrom = GraphChromatogram.AutoZoom;
                 MinIntensity = settings.ChromatogramMinIntensity;
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeakRelativeTime = settings.ChromatogramTimeRangeRelative;
                 AllowSplitPanes = settings.SplitChromatogramGraph;
                 ChromGraphItems = new List<KeyValuePair<PaneKey, ChromGraphItem>>();
-                ShowLegend = settings.ShowChromatogramLegend;
+                ShowLegend = forceLegendDisplay || settings.ShowChromatogramLegend;
                 _proteinSelected = proteinSelected;
             }
             
@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static double GetMaxY(CurveList curveList, GraphPane g)
         {
             var maxY = double.MinValue;
-            foreach (var curve in curveList)
+            foreach (var curve in curveList.FindAll(curve => !curve.IsY2Axis))
             {
                 if (curve is MeanErrorBarItem)
                 {

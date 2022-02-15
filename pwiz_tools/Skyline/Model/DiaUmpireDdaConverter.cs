@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model
         private IProgressStatus _progressStatus;
         private int _currentSourceIndex;
 
-        public DiaUmpireDdaConverter(AbstractDdaSearchEngine searchEngine, IsolationScheme isolationScheme, DiaUmpire.Config diaUmpireConfig) : base(searchEngine)
+        public DiaUmpireDdaConverter(ImportPeptideSearch importPeptideSearch, IsolationScheme isolationScheme, DiaUmpire.Config diaUmpireConfig) : base(importPeptideSearch)
         {
             var isolationWindows = isolationScheme.PrespecifiedIsolationWindows;
             var windowSizes = isolationWindows.Skip(1).Select(w => Math.Round(w.End - w.Start, 1));
@@ -58,12 +58,37 @@ namespace pwiz.Skyline.Model
 
             if (diaUmpireConfig.WindowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
                 Assume.IsTrue(diaUmpireConfig.VariableWindows.Any());
+
+            MsConvertOutputExtension = _diaUmpireConfig.UseMzMlSpillFile ? @".mzML" : @".mz5";
+            MsConvertOutputFormatParam = _diaUmpireConfig.UseMzMlSpillFile ? @"--mzML" : @"--mz5";
         }
 
         public DiaUmpire.Config DiaUmpireConfig => _diaUmpireConfig;
-        public string MsConvertOutputExtension => _diaUmpireConfig.UseMzMlSpillFile ? @".mzML" : @".mz5";
-        public string MsConvertOutputFormatParam => _diaUmpireConfig.UseMzMlSpillFile ? @"--mzML" : @"--mz5";
+        public string MsConvertOutputExtension { get; private set; }
+        public string MsConvertOutputFormatParam { get; private set; }
         public string DiaUmpireFileSuffix => DIAUMPIRE_OUTPUT_SUFFIX + MsConvertOutputExtension;
+
+        public override void SetSpectrumFiles(MsDataFileUri[] spectrumFiles)
+        {
+            OriginalSpectrumSources = spectrumFiles;
+            ConvertedSpectrumSources = new MsDataFileUri[OriginalSpectrumSources.Length];
+
+            for (int i = 0; i < OriginalSpectrumSources.Length; ++i)
+            {
+                // TODO/CONSIDER: source path may not be writable
+                string outputFilepath = Path.Combine(Path.GetDirectoryName(OriginalSpectrumSources[i].GetFilePath()) ?? "",
+                    OriginalSpectrumSources[i].GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
+                ConvertedSpectrumSources[i] = new MsDataFilePath(outputFilepath);
+            }
+        }
+
+        public override void SetRequiredOutputFormat(MsdataFileFormat format)
+        {
+            string formatName = Enum.GetName(typeof(MsdataFileFormat), format);
+            MsConvertOutputExtension = '.' + formatName;
+            MsConvertOutputFormatParam = @"--" + formatName;
+            SetSpectrumFiles(OriginalSpectrumSources);
+        }
 
         public override bool Run(IProgressMonitor progressMonitor, IProgressStatus status)
         {
@@ -72,20 +97,13 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                OriginalSpectrumSources = SearchEngine.SpectrumFileNames;
-                ConvertedSpectrumSources = new MsDataFileUri[OriginalSpectrumSources.Length];
-
                 progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
                 {
                     _currentSourceIndex = sourceIndex;
-
-                    // TODO/CONSIDER: source path may not be writable
-                    string outputFilepath = Path.Combine(Path.GetDirectoryName(spectrumSource.GetFilePath()) ?? "",
-                        spectrumSource.GetFileNameWithoutExtension() + DiaUmpireFileSuffix);
-                    ConvertedSpectrumSources[sourceIndex] = new MsDataFilePath(outputFilepath);
+                    string outputFilepath = ConvertedSpectrumSources[_currentSourceIndex].GetFilePath();
                     ++sourceIndex;
 
                     // CONSIDER: read the file description to see what settings were used to generate the file;
@@ -102,6 +120,10 @@ namespace pwiz.Skyline.Model
                                 break;
                             }
                         }
+
+                        // TODO: The VariableWindows UserParam is being truncated so can't be checked here if it's an mz5 output file; fix mz5 UserParams not able to be longer than 256 bytes?
+                        //if (equivalentConfig && outputFileConfig.WindowScheme == DiaUmpire.WindowScheme.SWATH_Variable)
+                        //    equivalentConfig = outputFileConfig.VariableWindows.SequenceEqual(_diaUmpireConfig.VariableWindows);
 
                         if (equivalentConfig)
                         {
@@ -129,7 +151,8 @@ namespace pwiz.Skyline.Model
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath)} " +
-                            //" --filter \"peakPicking true 1-\"" + 
+                            " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
+                            " --filter \"peakPicking true 1-\"" + 
                             " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
@@ -157,7 +180,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 // tell the search engine to search the converted files instead of the original files
-                SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
+                ImportPeptideSearch.SearchEngine.SetSpectrumFiles(ConvertedSpectrumSources);
                 return true;
             }
             catch (Exception e)

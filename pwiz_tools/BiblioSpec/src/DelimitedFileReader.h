@@ -152,7 +152,7 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
 
         // parse header
         std::string line;
-        getline(delimFile_, line);
+        getlinePortable(delimFile_, line);
         curLineNumber_++;
         parseHeader(line);
 
@@ -235,7 +235,7 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
         std::string errorMsg;
         
         while( ! delimFile_.eof() ){
-            getline(delimFile_, line);
+            getlinePortable(delimFile_, line);
             curLineNumber_++;
 
             if (line.empty() && delimFile_.eof())

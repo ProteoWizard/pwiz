@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,22 +11,23 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_SGI`]
+/* tag::reference[]
+= `BOOST_COMP_SGI`
 
-[@http://en.wikipedia.org/wiki/MIPSpro SGI MIPSpro] compiler.
+http://en.wikipedia.org/wiki/MIPSpro[SGI MIPSpro] compiler.
 Version number available as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__sgi`] [__predef_detection__]]
-    [[`sgi`] [__predef_detection__]]
+| `+__sgi+` | {predef_detection}
+| `sgi` | {predef_detection}
 
-    [[`_SGI_COMPILER_VERSION`] [V.R.P]]
-    [[`_COMPILER_VERSION`] [V.R.P]]
-    ]
- */
+| `+_SGI_COMPILER_VERSION+` | V.R.P
+| `+_COMPILER_VERSION+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_SGI BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -55,13 +56,12 @@ Version number available as major, minor, and patch.
 
 #define BOOST_COMP_SGI_NAME "SGI MIPSpro"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_SGI,BOOST_COMP_SGI_NAME)
 
 #ifdef BOOST_COMP_SGI_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_SGI_EMULATED,BOOST_COMP_SGI_NAME)
-#endif
-
-
 #endif

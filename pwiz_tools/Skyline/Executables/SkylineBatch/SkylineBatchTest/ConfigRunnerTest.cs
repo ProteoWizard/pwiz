@@ -37,7 +37,7 @@ namespace SkylineBatchTest
            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
            var config = testRunner.Config;
            Assert.IsTrue(testRunner.IsStopped());
-           var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.TemplateFilePath,
+           var singleCommand = string.Format("--in=\"{0}\" --out=\"{1}\"", config.MainSettings.Template.FilePath,
                TestUtils.GetTestFilePath("Copy.sky"));
             testRunner.ChangeStatus(RunnerStatus.Running);
            await new ProcessRunner().Run(config.SkylineSettings.CmdPath, singleCommand);
@@ -48,13 +48,13 @@ namespace SkylineBatchTest
         }
 
         [TestMethod]
-        public async Task TestRunFromStepFour()
+        public async Task TestRunFromRScripts()
         {
             TestUtils.InitializeRInstallation();
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
-            await testRunner.Run(4);
+            await testRunner.Run(RunBatchOptions.R_SCRIPTS, new ServerFilesManager());
             logger.Delete();
             Assert.IsTrue(testRunner.IsCompleted(), "Expected runner to have status \"Completed\" but was: " + testRunner.GetStatus());
         }
@@ -66,61 +66,34 @@ namespace SkylineBatchTest
             var logger = TestUtils.GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
+            var runnerDir = Path.GetDirectoryName(testRunner.Config.MainSettings.Template.FilePath);
 
-            // Skyline versions after 21.1.0.0
-            var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_21_1_0_0.txt");
+            // Skyline versions after 21.0.9.118
+            var tempFile1 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_21_0_9_118.txt", "REPLACE_TEXT", runnerDir);
+            var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath(tempFile1);
             var invariantReportWriter = new CommandWriter(logger, true, true);
-            testRunner.WriteBatchCommandsToFile(invariantReportWriter, 1, true);
+            testRunner.WriteBatchCommandsToFile(invariantReportWriter, RunBatchOptions.ALL, true);
             var actualInvariantReportCommandFile = invariantReportWriter.GetCommandFile();
-            CompareFiles(expectedInvariantReportCommandFile, actualInvariantReportCommandFile);
+            TestUtils.CompareFiles(expectedInvariantReportCommandFile, actualInvariantReportCommandFile);
+            File.Delete(tempFile1);
 
             // Skyline versions after 20.2.1.454
-            var expectedMultiLineCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_20_2_1_454.txt");
+            var tempFile2 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_1_454.txt", "REPLACE_TEXT", runnerDir);
+            var expectedMultiLineCommandFile = TestUtils.GetTestFilePath(tempFile2);
             var multiLineWriter = new CommandWriter(logger, true, false);
-            testRunner.WriteBatchCommandsToFile(multiLineWriter, 1, true);
+            testRunner.WriteBatchCommandsToFile(multiLineWriter, RunBatchOptions.ALL, true);
             var actualMultiLineCommandFile = multiLineWriter.GetCommandFile();
-            CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
+            TestUtils.CompareFiles(expectedMultiLineCommandFile, actualMultiLineCommandFile);
+            File.Delete(tempFile2);
 
             // Skyline versions after 20.2.0.0
-            var expectedOldVersionCommandFile = TestUtils.GetTestFilePath("CommandFile_Skyline_20_2_0_0.txt");
+            var tempFile3 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_0_0.txt", "REPLACE_TEXT", runnerDir);
+            var expectedOldVersionCommandFile = TestUtils.GetTestFilePath(tempFile3);
             var oldVersionWriter = new CommandWriter(logger, false, false);
-            testRunner.WriteBatchCommandsToFile(oldVersionWriter, 1, false);
+            testRunner.WriteBatchCommandsToFile(oldVersionWriter, RunBatchOptions.ALL, false);
             var actualOldVersionCommandFile = oldVersionWriter.GetCommandFile();
-            CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
-        }
-
-
-        private void CompareFiles(string expectedFilePath, string actualFilePath)
-        {
-            using (var expectedReader = new StreamReader(expectedFilePath))
-            using (var actualReader = new StreamReader(actualFilePath))
-            {
-                int line = 0;
-                while (line < 1000)
-                {
-                    if (expectedReader.EndOfStream != actualReader.EndOfStream)
-                        Assert.Fail($"Line {line}: Expected end of stream value to be {expectedReader.EndOfStream} but instead was {actualReader.EndOfStream}.");
-                    var expectedLine = expectedReader.ReadLine();
-                    var actualLine = actualReader.ReadLine();
-                    if (expectedLine == null || actualLine == null)
-                    {
-                        Assert.IsTrue(expectedLine == actualLine,
-                            actualFilePath + Environment.NewLine +
-                            $"Line {line}: Expected reached end of file to be {expectedLine == null} but instead was {actualLine == null}.");
-                        return;
-                    }
-
-                    Assert.IsTrue(expectedLine.Equals(actualLine),
-                        actualFilePath + Environment.NewLine +
-                        $"Line {line} does not match" + Environment.NewLine +
-                                                                   "Expected:" + Environment.NewLine +
-                                                                   expectedLine + Environment.NewLine +
-                                                                   "Actual:" + Environment.NewLine +
-                                                                   actualLine);
-                    line++;
-                }
-                throw new Exception("Test Error: should never reach 1000 lines");
-            }
+            TestUtils.CompareFiles(expectedOldVersionCommandFile, actualOldVersionCommandFile);
+            File.Delete(tempFile3);
         }
 
         // CONSIDER: add tests for configRunner.run

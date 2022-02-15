@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
 
                     ChromatogramGroupInfo[] chromatogramGroupInfos;
                     Assert.IsTrue(SkylineWindow.DocumentUI.MeasuredResults.TryLoadChromatogram(replicate.ChromatogramSet,
-                        transition.Precursor.Peptide.DocNode, transition.Precursor.DocNode, 0, true,
+                        transition.Precursor.Peptide.DocNode, transition.Precursor.DocNode, 0,
                         out chromatogramGroupInfos));
                     Assert.AreEqual(1, chromatogramGroupInfos.Length);
                     var chromatogramGroup = chromatogramGroupInfos[0];

@@ -1,7 +1,4 @@
 #
-# $Id$
-#
-#
 # Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
 #                  MacCoss Lab, Department of Genome Sciences, UW
 #
@@ -28,13 +25,14 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
+    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 21 ;
-    constant SKYLINE_ORDINAL : 0 ; # A count of official releases made so far this year
-    constant SKYLINE_BRANCH : 9 ; # 0 - release, 1 - daily, 9 - feature complete daily
+    constant SKYLINE_ORDINAL : 2 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
@@ -62,6 +60,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # generate AssemblyInfo.cs for executables
     generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
+	generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
     #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
@@ -94,11 +93,21 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         local .version = "$(SKYLINE_YEAR).$(SKYLINE_ORDINAL).$(SKYLINE_BRANCH).$(SKYLINE_DOY)" ;
         VERSION on $(targets) = $(.version) ;
 
+        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
+        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        {
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
+            local batch-file-text = "CALL SignAfterPublish.bat $(.pfx-password) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
+        }
+
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
         OUTPUT_PATH_NO_TRAILING_SLASH on $(<[1]) = [ path.native $(location) ] ; # can't pass trailing backslash in quoted path or it gets escaped
         INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
     }
     
     rule do_skyline_build ( targets + : sources * : properties * )
@@ -243,11 +252,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -265,7 +274,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         chcp 437
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
     
@@ -380,11 +389,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     ;
     explicit Skyline.exe ;
 
-    # this is the default target which builds Skyline and then cleans it so the first subsequent build in the IDE doesn't mess up the Content file copies
+    # this is the default target which builds Skyline
     make Build
         : # sources
         : # actions
-            @do_skyline_clean
+            @do_skyline_build
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement

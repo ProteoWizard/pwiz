@@ -372,6 +372,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
+                GraphObjList.Clear();
                 var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
                 var nodePeptide = nodeTree as PeptideTreeNode;
                 while (nodePeptide == null && nodeTree != null)

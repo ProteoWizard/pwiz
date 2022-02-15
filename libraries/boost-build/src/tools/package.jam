@@ -2,8 +2,8 @@
 # Copyright 2006 Rene Rivera.
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Provides mechanism for installing whole packages into a specific directory
 # structure. This is opposed to the 'install' rule, that installs a number of
@@ -191,7 +191,7 @@ rule paths ( package-name : requirements * )
 rule install ( name package-name ? : requirements * : binaries * : libraries * : headers * )
 {
     package-name ?= $(name) ;
-            
+
     # If <install-source-root> is not specified, all headers are installed to
     # prefix/include, no matter what their relative path is. Sometimes that is
     # what is needed.
@@ -223,14 +223,14 @@ rule install ( name package-name ? : requirements * : binaries * : libraries * :
     stage.install $(name)-bin : $(binaries) : $(requirements)
         <location>$(bin-locate) ;
     alias $(name)-lib : $(name)-lib-shared $(name)-lib-static ;
-    
+
     # Since the install location of shared libraries differs on universe
     # and cygwin, use target alternatives to make different targets.
     # We should have used indirection conditioanl requirements, but it's
     # awkward to pass bin-locate and lib-locate from there to another rule.
     alias $(name)-lib-shared : $(name)-lib-shared-universe ;
     alias $(name)-lib-shared : $(name)-lib-shared-cygwin : <target-os>cygwin ;
-    
+
     # For shared libraries, we install both explicitly specified one and the
     # shared libraries that the installed executables depend on.
     stage.install $(name)-lib-shared-universe : $(binaries) $(libraries) : $(requirements)
@@ -248,22 +248,19 @@ rule install ( name package-name ? : requirements * : binaries * : libraries * :
     alias $(name) : $(name)-bin $(name)-lib $(name)-headers ;
 
     local c = [ project.current ] ;
-    local project-module = [ $(c).project-module ] ;
-    module $(project-module)
-    {
-        explicit $(1)-bin $(1)-lib $(1)-headers $(1) $(1)-lib-shared $(1)-lib-static 
-          $(1)-lib-shared-universe $(1)-lib-shared-cygwin ;
-    }
+    modules.call-in [ $(c).project-module ] : explicit $(name) $(name)-bin
+        $(name)-lib $(name)-headers $(name)-lib-shared $(name)-lib-static
+        $(name)-lib-shared-universe $(name)-lib-shared-cygwin ;
 }
 
-rule install-data ( target-name : package-name : data * : requirements * )
+rule install-data ( target-name : package-name ? : data * : requirements * )
 {
-    package-name ?= target-name ;
+    package-name ?= $(target-name) ;
 
     local paths = [ paths $(package-name) : $(requirements) ] ;
     local datadir = [ $(paths).datarootdir ] ;
 
-    stage.install $(target-name) 
+    stage.install $(target-name)
         : $(data)
         : $(requirements) <location>$(datadir)/$(package-name)
         ;

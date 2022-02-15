@@ -144,6 +144,16 @@ enum class PWIZ_API_DECL EnergyLevel
     High = 2
 };
 
+enum class PWIZ_API_DECL DetectorType
+{
+    Unknown = 0,
+    MS = 1,
+    UV = 2,
+    FLR = 3,
+    IR = 4,
+    NMR = 5
+};
+
 struct PWIZ_API_DECL UnifiSpectrum
 {
     double retentionTime;
@@ -155,6 +165,21 @@ struct PWIZ_API_DECL UnifiSpectrum
     size_t arrayLength;
     pwiz::util::BinaryData<double> mzArray;
     pwiz::util::BinaryData<double> intensityArray;
+    pwiz::util::BinaryData<double> driftTimeArray;
+};
+
+struct PWIZ_API_DECL UnifiChromatogramInfo
+{
+    size_t index;
+    std::string id;
+    DetectorType detectorType;
+};
+
+struct PWIZ_API_DECL UnifiChromatogram : public UnifiChromatogramInfo
+{
+    size_t arrayLength;
+    pwiz::util::BinaryData<double> timeArray;
+    pwiz::util::BinaryData<double> intensityArray;
 };
 
 class PWIZ_API_DECL UnifiData
@@ -165,6 +190,9 @@ class PWIZ_API_DECL UnifiData
 
     size_t numberOfSpectra() const;
     void getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData) const;
+
+    const std::vector<UnifiChromatogramInfo>& chromatogramInfo() const;
+    void getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData) const;
     
     //InstrumentModel getInstrumentModel() const;
     //IonSourceType getIonSourceType() const;

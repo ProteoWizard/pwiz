@@ -18,8 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,7 +36,6 @@ namespace SharedBatchTest
     [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractUnitTest
     {
-        private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
         public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
@@ -113,7 +110,6 @@ namespace SharedBatchTest
         }
 
 
-        private string[] _testFilesZips;
         /*public string TestFilesZip
         {
             get
@@ -132,10 +128,10 @@ namespace SharedBatchTest
         /// </summary>
         public string[] TestFilesPersistent { get; set; }
 
-        /// <summary>
+        /*/// <summary>
         /// Tracks which zip files were downloaded this run, and which might possibly be stale
         /// </summary>
-        public Dictionary<string, bool> DictZipFileIsKnownCurrent { get; private set; }
+        public Dictionary<string, bool> DictZipFileIsKnownCurrent { get; private set; }*/
 
         /// <summary>
         /// One bool per TestFilesZipPaths indicating whether to unzip in the root directory (true) or a sub-directory (false or null)
@@ -146,213 +142,5 @@ namespace SharedBatchTest
         {
             return TestFilesZipExtractHere != null && TestFilesZipExtractHere[zipPathIndex];
         }
-
-        /*public string[] TestFilesZipPaths
-        {
-            get { return _testFilesZips; }
-            set
-            {
-                string[] zipPaths = value;
-                _testFilesZips = new string[zipPaths.Length];
-                DictZipFileIsKnownCurrent = new Dictionary<string, bool>();
-                for (int i = 0; i < zipPaths.Length; i++)
-                {
-                    var zipPath = zipPaths[i];
-                    // If the file is on the web, save it to the local disk in the developer's
-                    // Downloads folder for future use
-                    if (zipPath.Substring(0, 8).ToLower().Equals(@"https://") || zipPath.Substring(0, 7).ToLower().Equals(@"http://"))
-                    {
-                        var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
-                        if (!File.Exists(zipFilePath) &&
-                           (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
-                        {
-                            zipPath = DownloadZipFile(targetFolder, zipPath, zipFilePath);
-                            DictZipFileIsKnownCurrent.Add(zipPath, true);
-                        }
-                        else
-                        {
-                            DictZipFileIsKnownCurrent.Add(zipPath, false); // May wish to retry test with a fresh download if it fails
-                        }
-                        zipPath = zipFilePath;
-                    }
-                    _testFilesZips[i] = zipPath;
-                }
-            }
-        }
-
-        /*private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
-        {
-            if (!Directory.Exists(targetFolder))
-                Directory.CreateDirectory(targetFolder);
-
-            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
-            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
-            if (downloadFromS3)
-                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
-
-            WebClient webClient = new WebClient();
-            using (var fs = new FileSaver(zipFilePath))
-            {
-                try
-                {
-                    webClient.DownloadFile(zipPath.Split('\\')[0],
-                        fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
-                }
-                catch (Exception x)
-                {
-                    Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
-                }
-
-                fs.Commit();
-            }
-
-            return zipPath;
-        }
-
-        private static string GetTargetZipFilePath(string zipPath, out string zipFilePath)
-        {
-            var downloadsFolder = PathEx.GetDownloadsPath();
-            var urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
-            var targetFolder =
-                Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
-            var fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-            zipFilePath = Path.Combine(targetFolder, fileName);
-            return targetFolder;
-        }
-
-        public string TestDirectoryName { get; set; }
-        public TestFilesDir TestFilesDir
-        {
-            get
-            {
-                // ReSharper disable LocalizableElement
-                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
-                // ReSharper restore LocalizableElement
-                return TestFilesDirs[0];
-            }
-            set { TestFilesDirs = new[] { value }; }
-        }
-        public TestFilesDir[] TestFilesDirs { get; set; }
-
-        /// <summary>
-        /// If there are any stale downloads, freshen them
-        /// </summary>
-        /// <returns>true if any files are shown to be stale and thus worthy of a retry of the test that uses them</returns>
-        public bool FreshenTestDataDownloads() 
-        {
-            if (DictZipFileIsKnownCurrent == null || DictZipFileIsKnownCurrent.All(kvp => kvp.Value))
-                return false;
-            var knownStale = false;
-            foreach (var zipPath in DictZipFileIsKnownCurrent.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray())
-            {
-                var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
-                var zipFilePathTest = zipFilePath + @".new";
-                DownloadZipFile(targetFolder, zipPath, zipFilePathTest);
-                if (!FileEx.AreIdenticalFiles(zipFilePath, zipFilePathTest))
-                {
-                    knownStale = true;
-                    File.Delete(zipFilePath);
-                    File.Move(zipFilePathTest, zipFilePath);
-                }
-                else
-                {
-                    File.Delete(zipFilePathTest);
-                }
-                DictZipFileIsKnownCurrent[zipPath] = true;
-            }
-
-            return knownStale;
-        }
-        
-        public static int CountInstances(string search, string searchSpace)
-        {
-            if (search.Length == 0)
-                return 0;
-
-            int count = 0;
-            for (int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-                lastIndex != -1;
-                lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
-            {
-                count++;
-            }
-
-            return count;
-        }
-
-        public static int CountErrors(string searchSpace, bool allowUnlocalized = false)
-        {
-            const string enError = "Error";
-            string localError = Resources.CommandLineTest_ConsoleAddFastaTest_Error;
-            int count = CountInstances(localError, searchSpace);
-            if (allowUnlocalized && !Equals(localError, enError))
-                count += CountInstances(enError, searchSpace);
-            return count;
-        }
-
-        /// <summary>
-        /// Called by the unit test framework when a test begins.
-        /// </summary>
-        [TestInitialize]
-        public void MyTestInitialize()
-        {
-
-            Program.UnitTest = true;
-
-            // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
-            DotTraceProfile.Stop(true);
-
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
-
-//            var log = new Log<AbstractUnitTest>();
-//            log.Info(TestContext.TestName + " started");
-
-            Settings.Init();
-
-            STOPWATCH.Restart();
-            Initialize();
-        }
-
-        /// <summary>
-        /// Called by the unit test framework when a test is finished.
-        /// </summary>
-        [TestCleanup]
-        public void MyTestCleanup()
-        {
-            Cleanup();
-
-            // Delete unzipped test files if test otherwise passed to make sure file handles
-            // are not still open. Files may still be open otherwise, and trying this could
-            // mask the original error.
-            if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
-            {
-                foreach (TestFilesDir dir in TestFilesDirs)
-                {
-                    if (dir != null)
-                        dir.Dispose();
-                }
-            }
-
-            STOPWATCH.Stop();
-
-            Settings.Release();
-
-            // Save profile snapshot if we are profiling.
-            DotTraceProfile.Save();
-            Settings.Init();
-
-//            var log = new Log<AbstractUnitTest>();
-//            log.Info(
-//                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
-//                STOPWATCH.ElapsedMilliseconds / 1000.0));
-        }
-
-        protected virtual void Initialize() {}
-        protected virtual void Cleanup() {}
-
-        protected bool IsProfiling
-        {
-            get { return DotTraceProfile.IsProfiling; }
-        }*/
     }
 }

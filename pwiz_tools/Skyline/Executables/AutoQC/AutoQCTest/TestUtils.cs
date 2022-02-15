@@ -18,8 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using AutoQC;
 using SharedBatch;
+using SharedBatch.Properties;
 
 namespace AutoQCTest
 {
@@ -63,14 +65,27 @@ namespace AutoQCTest
             var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
             var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
             var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaFolder = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
 
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
+        }
+
+        public static PanoramaSettings GetNoPublishPanoramaSettings()
+        {
+            return new PanoramaSettings(false, null, null, null, null);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
         {
-            return new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
+            if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                    return new SkylineSettings(SkylineType.Skyline, null);
+                if (SkylineInstallations.HasSkylineDaily)
+                    return new SkylineSettings(SkylineType.SkylineDaily, null);
+            }
+
+            return null;
         }
 
         public static AutoQcConfig GetTestConfig(string name)
@@ -87,7 +102,7 @@ namespace AutoQCTest
         public static Logger GetTestLogger(AutoQcConfig config)
         {
             var logFile = GetTestFilePath("TestLogs\\AutoQC.log");
-            return new Logger(logFile, config.Name);
+            return new Logger(logFile, config.Name, false);
         }
 
         public static List<AutoQcConfig> ConfigListFromNames(string[] names)
@@ -114,12 +129,29 @@ namespace AutoQCTest
                 };
             }
 
-            foreach(var config in configs)
-                testConfigManager.UserAddConfig(config);
+            foreach (var config in configs)
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(config, null));
             
             return testConfigManager;
         }
 
+        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
+        {
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
+            {
+                if (condition()) return;
+                Thread.Sleep(timestep);
+            }
+            throw new Exception(errorMessage);
+        }
+
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = AutoQcConfig.ReadXml;
+            ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
+        }
     }
     
     class TestImportContext : ImportContext

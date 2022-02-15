@@ -1,8 +1,8 @@
 /*
  * Copyright 2005, 2016. Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #ifndef BJAM_DEBUG_H
@@ -45,7 +45,7 @@ typedef struct profile_frame
 
 profile_frame * profile_init( OBJECT * rulename, profile_frame * );
 void profile_enter( OBJECT * rulename, profile_frame * );
-void profile_memory( long mem );
+void profile_memory( size_t mem );
 void profile_exit( profile_frame * );
 void profile_dump();
 double profile_clock();

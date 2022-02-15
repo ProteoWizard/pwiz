@@ -329,9 +329,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
-        ///containing protein sequence, or #N/A if no protein sequence is available.
-        ///    .
+        ///   Looks up a localized string similar to The zero-based position of the first (N-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available..
         /// </summary>
         public static string BeginPos {
             get {
@@ -424,7 +423,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unitys of the chromatogram ion mobility and chromatogram ion mobility extraction width.
+        ///   Looks up a localized string similar to Units of the chromatogram ion mobility and chromatogram ion mobility extraction width.
         /// </summary>
         public static string ChromatogramIonMobilityUnits {
             get {
@@ -748,7 +747,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
+        ///   Looks up a localized string similar to The zero-based position of the last (C-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         /// </summary>
         public static string EndPos {
@@ -973,6 +972,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Files {
             get {
                 return ResourceManager.GetString("Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available..
+        /// </summary>
+        public static string FirstPosition {
+            get {
+                return ResourceManager.GetString("FirstPosition", resourceCulture);
             }
         }
         
@@ -1354,6 +1363,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Key {
             get {
                 return ResourceManager.GetString("Key", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available.
+        /// </summary>
+        public static string LastPosition {
+            get {
+                return ResourceManager.GetString("LastPosition", resourceCulture);
             }
         }
         

@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
         {
             ChromatogramGroupInfo[] infoSet;
             document.Settings.MeasuredResults.TryLoadChromatogram(fileIndex, peptideDocNode, transitionGroupDocNode,
-                                                                  (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, true,
+                                                                  (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE,
                                                                   out infoSet);
             Assert.AreNotEqual(0, infoSet.Length);
             foreach (var chromatogramGroupInfo in infoSet)

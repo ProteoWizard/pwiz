@@ -995,6 +995,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class BlockedArray<TItem> : IReadOnlyList<TItem>
     {
+        public static readonly BlockedArray<TItem> EMPTY = new BlockedArray<TItem>();
         private readonly List<TItem[]> _blocks;
         private readonly int _itemCount;
 
@@ -2126,6 +2127,24 @@ namespace pwiz.Skyline.Util
 
             return stringBuilder.ToString();
         }
+
+        /// <summary>
+        /// Returns true if the exception is not something which could happen while trying to read
+        /// from disk.
+        /// Exception such as these should be displayed to the user with <see cref="Alerts.ReportErrorDlg"/>
+        /// so that they can report them as bugs.
+        /// </summary>
+        public static bool IsProgrammingDefect(Exception exception)
+        {
+            if (exception is InvalidDataException 
+                || exception is IOException 
+                || exception is UnauthorizedAccessException)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
     public class Alarms
@@ -2180,10 +2199,20 @@ namespace pwiz.Skyline.Util
 
     public static class SecurityProtocolInitializer
     {
-        // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
+        // Make sure we can negotiate with HTTPS servers that demand modern TLS levels
+        // The current recommendation from MSFT for future-proofing this https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
+        // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly.
         public static void Initialize()
         {
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+            try
+            {
+                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
+            }
+            catch (NotSupportedException)
+            {
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
+            }
         }
     }
 

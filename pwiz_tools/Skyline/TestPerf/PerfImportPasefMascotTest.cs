@@ -45,7 +45,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class PerfImportBrukerPasefMascotTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPasefMascotImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
@@ -161,7 +160,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() => importPeptideSearchDlg.ClickNextButtonNoCheck());
             }
 
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
             RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page));
 
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
@@ -232,7 +237,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out var chromGroupInfo));
+                    tolerance, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

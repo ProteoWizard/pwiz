@@ -271,6 +271,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     {
         storageMode = spectrumPtr->getMSStorageMode();
         hasProfile = storageMode == MSStorageMode_ProfileSpectrum;
+        if (!hasProfile)
+            scan.scanWindows.back().userParams.emplace_back("centroided min/max");
 
         spectrumPtr->getXArray(xArray);
         spectrumPtr->getYArray(yArray);

@@ -58,15 +58,15 @@ Extra Info: ファイル名 =
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"
 
-Undo Redo : ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
-Summary   : ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
+Undo Redo : ピークNP_036629>K.GILAADESVGSMAK.R [29, 42]>674.8425++がすべてに適用されました
+Summary   : ピークNP_036629>K.GILAADESVGSMAK.R [29, 42]>674.8425++がすべてに適用されました
 All Info  :
-ピークNP_036629>K.GILAADESVGSMAK.R [28, 41]>674.8425++がすべてに適用されました
+ピークNP_036629>K.GILAADESVGSMAK.R [29, 42]>674.8425++がすべてに適用されました
 
-Undo Redo : ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
-Summary   : ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
+Undo Redo : ピークNP_112646>K.LNDGSQITFEK.C [244, 254]>626.3144++がすべてに適用されました
+Summary   : ピークNP_112646>K.LNDGSQITFEK.C [244, 254]>626.3144++がすべてに適用されました
 All Info  :
-ピークNP_112646>K.LNDGSQITFEK.C [243, 253]>626.3144++がすべてに適用されました
+ピークNP_112646>K.LNDGSQITFEK.C [244, 254]>626.3144++がすべてに適用されました
 
 Undo Redo : ピークNP_036620>DLTGFPQGADQR>652.8151++が後に適用されました
 Summary   : ピークNP_036620>DLTGFPQGADQR>652.8151++が後に適用されました
@@ -78,103 +78,103 @@ Summary   : ピークNP_445770>GATYAFSGSHYWR>751.8442++が後に適用されま�
 All Info  :
 ピークNP_445770>GATYAFSGSHYWR>751.8442++が後に適用されました
 
-Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
-Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
 All Info  :
-ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
 
-Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
-Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
 All Info  :
-ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
 
-Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
-Summary   : ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+Undo Redo : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
+Summary   : ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
 All Info  :
-ピークNP_037030>R.LGGEEVSVACK.L [237, 247]>574.7844++がすべてに適用されました
+ピークNP_037030>R.LGGEEVSVACK.L [238, 248]>574.7844++がすべてに適用されました
+
+Undo Redo : ターゲットNP_036629>K.GILAADESVGSMAK.R [29, 42]が削除されました
+Summary   : ターゲットNP_036629>K.GILAADESVGSMAK.R [29, 42]が削除されました
+All Info  :
+ターゲットNP_036629>K.GILAADESVGSMAK.R [29, 42]が削除されました
+
+Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+All Info  :
+NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++の全ピークの開始時間が30.50から30.11に変更されました
+「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++の全ピークの終了時間が31.10から30.43に変更されました
+
+Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+All Info  :
+NP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++のピーク境界が変更されました
+「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++の全ピークの開始時間が33.47から30.11に変更されました
+「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [290, 304]>905.9565++の全ピークの終了時間が33.87から30.50に変更されました
+
+Undo Redo : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+Summary   : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+All Info  :
+繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++からすべてのピークが削除されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの開始時間が33.48から31.93に変更されました
+「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの終了時間が34.29から32.20に変更されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの開始時間が33.63から31.93に変更されました
+「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの終了時間が34.59から32.21に変更されました
+
+Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+Summary   : NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+All Info  :
+NP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++のピーク境界が変更されました
+「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの開始時間が33.72から31.90に変更されました
+「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [379, 391]>710.8752++の全ピークの終了時間が34.79から32.21に変更されました
+
+Undo Redo : ターゲットNP_001012027>R.DIPVNPMCIYR.S [47, 57]が削除されました
+Summary   : ターゲットNP_001012027>R.DIPVNPMCIYR.S [47, 57]が削除されました
+All Info  :
+ターゲットNP_001012027>R.DIPVNPMCIYR.S [47, 57]が削除されました
+
+Undo Redo : NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が変更されました
+Summary   : NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が変更されました
+All Info  :
+NP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++のピーク境界が変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの開始時間が27.79から26.86に変更されました
+「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [36, 46]>614.3164++の全ピークの終了時間が28.72から27.40に変更されました
+
+Undo Redo : ターゲットNP_036870>K.FGLYSDQMR.E [182, 190]が削除されました
+Summary   : ターゲットNP_036870>K.FGLYSDQMR.E [182, 190]が削除されました
+All Info  :
+ターゲットNP_036870>K.FGLYSDQMR.E [182, 190]が削除されました
 
 Undo Redo : トランジションの設定－積分>すべて積分が真に変更されました
 Summary   : 設定>トランジションの設定－積分>すべて積分が真に変更されました
 All Info  :
 トランジションの設定－積分>すべて積分が真に変更されました
 設定>トランジションの設定－積分>すべて積分は偽から真に変更されました
-
-Undo Redo : ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
-Summary   : ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
-All Info  :
-ターゲットNP_036629>K.GILAADESVGSMAK.R [28, 41]が削除されました
-
-Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-All Info  :
-NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの開始時間が30.50から30.11に変更されました
-「D_103_REP3」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの終了時間が31.10から30.43に変更されました
-
-Undo Redo : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-Summary   : NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-All Info  :
-NP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++のピーク境界が変更されました
-「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの開始時間が33.47から30.11に変更されました
-「D_108_REP2」にあるNP_036629>R.CSLPRPWALTFSYGR.A [289, 303]>905.9565++の全ピークの終了時間が33.87から30.50に変更されました
-
-Undo Redo : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-Summary   : 繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-All Info  :
-繰り返し測定「D_103_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-
-Undo Redo : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-Summary   : 繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-All Info  :
-繰り返し測定「D_108_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-
-Undo Redo : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-Summary   : 繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-All Info  :
-繰り返し測定「H_159_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-
-Undo Redo : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-Summary   : 繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-All Info  :
-繰り返し測定「H_162_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++からすべてのピークが削除されました
-
-Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-All Info  :
-NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.48から31.93に変更されました
-「H_148_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.29から32.20に変更されました
-
-Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-All Info  :
-NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.63から31.93に変更されました
-「H_159_REP3」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.59から32.21に変更されました
-
-Undo Redo : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-Summary   : NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-All Info  :
-NP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++のピーク境界が変更されました
-「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの開始時間が33.72から31.90に変更されました
-「H_162_REP2」にあるNP_602308>R.GSYNLQDLLAQAK.L [378, 390]>710.8752++の全ピークの終了時間が34.79から32.21に変更されました
-
-Undo Redo : ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
-Summary   : ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
-All Info  :
-ターゲットNP_001012027>R.DIPVNPMCIYR.S [46, 56]が削除されました
-
-Undo Redo : NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
-Summary   : NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
-All Info  :
-NP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++のピーク境界が変更されました
-「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++の全ピークの開始時間が27.79から26.86に変更されました
-「D_108_REP2」にあるNP_036870>K.DFATVYVDAVK.D [35, 45]>614.3164++の全ピークの終了時間が28.72から27.40に変更されました
-
-Undo Redo : ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
-Summary   : ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
-All Info  :
-ターゲットNP_036870>K.FGLYSDQMR.E [181, 189]が削除されました
 
 Undo Redo : ターゲットNP_001033064>GMYESLPVVAVKが削除されました
 Summary   : ターゲットNP_001033064>GMYESLPVVAVKが削除されました
@@ -718,24 +718,24 @@ All Info  :
 ターゲット：NP_037030が削除されました
 ターゲット：NP_602308が削除されました
 ターゲット：NP_001012027が削除されました
-ターゲット>NP_036870：K.DFATVYVDAVK.D [35, 45]が削除されました
+ターゲット>NP_036870：K.DFATVYVDAVK.D [36, 46]が削除されました
 ターゲット：NP_037244が削除されました
 ターゲット：NP_001010968が削除されました
-ターゲット>NP_444180：K.SLLNSLEEAK.K [67, 76]が削除されました
+ターゲット>NP_444180：K.SLLNSLEEAK.K [68, 77]が削除されました
 ターゲット：NP_872279が削除されました
-ターゲット>NP_001121161：R.HTNNGMICLTSLLR.I [279, 292]が削除されました
-ターゲット>NP_001121161：K.YDCVAMNHHGVIR.H [305, 317]が削除されました
-ターゲット>NP_058716：K.SFSCEVEILEGDK.V [169, 181]が削除されました
-ターゲット>NP_036745：K.ENSSNILDNLLSR.M [802, 814]が削除されました
+ターゲット>NP_001121161：R.HTNNGMICLTSLLR.I [280, 293]が削除されました
+ターゲット>NP_001121161：K.YDCVAMNHHGVIR.H [306, 318]が削除されました
+ターゲット>NP_058716：K.SFSCEVEILEGDK.V [170, 182]が削除されました
+ターゲット>NP_036745：K.ENSSNILDNLLSR.M [803, 815]が削除されました
 ターゲット：NP_446290が削除されました
 ターゲット：NP_037001が削除されました
-ターゲット>NP_150641：R.LTHGDFTWTTK.K [90, 100]が削除されました
+ターゲット>NP_150641：R.LTHGDFTWTTK.K [91, 101]が削除されました
 ターゲット：NP_001101333が削除されました
-ターゲット>NP_062212：K.YGLDLGSLLVR.L [1066, 1076]が削除されました
+ターゲット>NP_062212：K.YGLDLGSLLVR.L [1067, 1077]が削除されました
 ターゲット：NP_036774が削除されました
-ターゲット>NP_001011908：R.FAEDHFAHEATK.T [116, 127]が削除されました
-ターゲット>NP_001011908：R.DVNEAIQWMEEK.E [269, 280]が削除されました
-ターゲット>NP_001011908：K.HQLLEAEMLAR.E [1647, 1657]が削除されました
+ターゲット>NP_001011908：R.FAEDHFAHEATK.T [117, 128]が削除されました
+ターゲット>NP_001011908：R.DVNEAIQWMEEK.E [270, 281]が削除されました
+ターゲット>NP_001011908：K.HQLLEAEMLAR.E [1648, 1658]が削除されました
 ターゲット：NP_758823が削除されました
 ターゲット>NP_036620：DLTGFPQGADQRが削除されました
 ターゲット：NP_036869が削除されました

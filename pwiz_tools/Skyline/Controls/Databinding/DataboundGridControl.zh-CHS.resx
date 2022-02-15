@@ -117,18 +117,273 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>166, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="sortAscendingToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortAscendingToolStripMenuItem.Text" xml:space="preserve">
+    <value>升序排序</value>
+  </data>
+  <data name="sortDescendingToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortDescendingToolStripMenuItem.Text" xml:space="preserve">
+    <value>降序排序</value>
+  </data>
+  <data name="clearSortToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clearSortToolStripMenuItem.Text" xml:space="preserve">
+    <value>清除排序</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 6</value>
+  </data>
+  <data name="filterToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="filterToolStripMenuItem.Text" xml:space="preserve">
+    <value>过滤器…</value>
+  </data>
+  <data name="clearFilterToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clearFilterToolStripMenuItem.Text" xml:space="preserve">
+    <value>清除过滤器</value>
+  </data>
+  <data name="clearAllFiltersToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clearAllFiltersToolStripMenuItem.Text" xml:space="preserve">
+    <value>清除所有过滤器</value>
+  </data>
+  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 6</value>
+  </data>
+  <data name="formatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="formatToolStripMenuItem.Text" xml:space="preserve">
+    <value>数字格式…</value>
+  </data>
+  <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 6</value>
+  </data>
+  <data name="fillDownToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="fillDownToolStripMenuItem.Text" xml:space="preserve">
+    <value>向下填充</value>
+  </data>
+  <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>181, 220</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip.Name" xml:space="preserve">
+    <value>contextMenuStrip</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="splitContainerVertical.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="splitContainerVertical.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 25</value>
+  </data>
+  <data name="rowDendrogram.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="rowDendrogram.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 180</value>
+  </data>
+  <data name="rowDendrogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 176</value>
+  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="navBar.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="rowDendrogram.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Name" xml:space="preserve">
+    <value>rowDendrogram</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.Clustering.DendrogramControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Parent" xml:space="preserve">
+    <value>splitContainerVertical.Panel1</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Name" xml:space="preserve">
+    <value>splitContainerVertical.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="splitContainerHorizontal.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="splitContainerHorizontal.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="splitContainerHorizontal.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="splitContainerHorizontal.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="columnDendrogram.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="columnDendrogram.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="columnDendrogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 100</value>
+  </data>
+  <data name="columnDendrogram.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Name" xml:space="preserve">
+    <value>columnDendrogram</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.Clustering.DendrogramControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel1</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Name" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="bindingListSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="boundDataGridView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="boundDataGridView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 254</value>
+  </data>
+  <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView.Name" xml:space="preserve">
+    <value>boundDataGridView</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel2</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Name" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainerHorizontal.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 356</value>
+  </data>
+  <data name="splitContainerHorizontal.SplitterDistance" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="splitContainerHorizontal.SplitterWidth" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="splitContainerHorizontal.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Name" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Parent" xml:space="preserve">
+    <value>splitContainerVertical.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Name" xml:space="preserve">
+    <value>splitContainerVertical.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainerVertical.Size" type="System.Drawing.Size, System.Drawing">
+    <value>772, 356</value>
+  </data>
+  <data name="splitContainerVertical.SplitterDistance" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="splitContainerVertical.SplitterWidth" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="splitContainerVertical.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Name" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="navBar.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="navBar.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="navBar.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
@@ -150,99 +405,6 @@
   <data name="&gt;&gt;navBar.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>166, 17</value>
-  </metadata>
-  <data name="sortAscendingToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="sortAscendingToolStripMenuItem.Text" xml:space="preserve">
-    <value>升序排序</value>
-  </data>
-  <data name="sortDescendingToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="sortDescendingToolStripMenuItem.Text" xml:space="preserve">
-    <value>降序排序</value>
-  </data>
-  <data name="clearSortToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="clearSortToolStripMenuItem.Text" xml:space="preserve">
-    <value>清除排序</value>
-  </data>
-  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 6</value>
-  </data>
-  <data name="filterToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="filterToolStripMenuItem.Text" xml:space="preserve">
-    <value>过滤器…</value>
-  </data>
-  <data name="clearFilterToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="clearFilterToolStripMenuItem.Text" xml:space="preserve">
-    <value>清除过滤器</value>
-  </data>
-  <data name="clearAllFiltersToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="clearAllFiltersToolStripMenuItem.Text" xml:space="preserve">
-    <value>清除所有过滤器</value>
-  </data>
-  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 6</value>
-  </data>
-  <data name="formatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="formatToolStripMenuItem.Text" xml:space="preserve">
-    <value>数字格式…</value>
-  </data>
-  <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 6</value>
-  </data>
-  <data name="fillDownToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 22</value>
-  </data>
-  <data name="fillDownToolStripMenuItem.Text" xml:space="preserve">
-    <value>向下填充</value>
-  </data>
-  <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 220</value>
-  </data>
-  <data name="&gt;&gt;contextMenuStrip.Name" xml:space="preserve">
-    <value>contextMenuStrip</value>
-  </data>
-  <data name="&gt;&gt;contextMenuStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="boundDataGridView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="boundDataGridView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 25</value>
-  </data>
-  <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>772, 356</value>
-  </data>
-  <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView.Name" xml:space="preserve">
-    <value>boundDataGridView</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -251,12 +413,6 @@
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>772, 381</value>
-  </data>
-  <data name="&gt;&gt;bindingListSource.Name" xml:space="preserve">
-    <value>bindingListSource</value>
-  </data>
-  <data name="&gt;&gt;bindingListSource.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;sortAscendingToolStripMenuItem.Name" xml:space="preserve">
     <value>sortAscendingToolStripMenuItem</value>
@@ -312,17 +468,23 @@
   <data name="&gt;&gt;formatToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
+    <value>toolStripSeparator3</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;fillDownToolStripMenuItem.Name" xml:space="preserve">
     <value>fillDownToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;fillDownToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
-    <value>toolStripSeparator3</value>
+  <data name="&gt;&gt;bindingListSource.Name" xml:space="preserve">
+    <value>bindingListSource</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;bindingListSource.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DataboundGridControl</value>

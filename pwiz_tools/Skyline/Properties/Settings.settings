@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="pwiz.Skyline.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -352,9 +352,6 @@
     </Setting>
     <Setting Name="ReplicateOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
-    </Setting>
-    <Setting Name="ShowDotProductPeakArea" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ShowPeakAreaLegend" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -772,6 +769,33 @@
     </Setting>
     <Setting Name="ShowFullScanAnnotations" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowFullScanMassError" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ExportSureQuant" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IntensityThresholdPercent" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="IntensityThresholdValue" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">100000</Value>
+    </Setting>
+    <Setting Name="IntensityThresholdMin" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="SyncMZScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="FullScanPeakType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Default</Value>
+    </Setting>
+    <Setting Name="PeakAreaDotpDisplay" Type="System.String" Scope="User">
+      <Value Profile="(Default)">label</Value>
+    </Setting>
+    <Setting Name="ChromatogramDisplayRTDigits" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
     </Setting>
   </Settings>
 </SettingsFile>

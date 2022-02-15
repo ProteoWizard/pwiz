@@ -413,9 +413,9 @@ void ScanRankerReader::extractData()
     ifstream reader(srTextFile.c_str());
     
     string input;
-    getline(reader,input);
+    getlinePortable(reader,input);
     while(boost::starts_with(input,"H"))
-        getline(reader,input);
+        getlinePortable(reader,input);
     do
     {
         if(!input.empty())
@@ -453,7 +453,7 @@ void ScanRankerReader::extractData()
             bestTagTics.insert(make_pair(scanInfo, bestTagTIC));
         }
 
-    }while(getline(reader,input));
+    }while(getlinePortable(reader,input));
 }
 
 }

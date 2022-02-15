@@ -5,6 +5,13 @@
  */
 
 /*
+Copyright 2020 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
+
+
+/*
  * pathsys.h - PATHNAME struct
  */
 
@@ -15,7 +22,7 @@
  * same name - it never appears in the bound name of a target.
  *
  * (member) - archive member name: the syntax is arbitrary, but must agree in
- * path_parse(), path_build() and the Jambase.
+ * path_parse(), path_build().
  */
 
 #ifndef PATHSYS_VP_20020211_H
@@ -23,13 +30,15 @@
 
 #include "config.h"
 #include "object.h"
-#include "strings.h"
+#include "jam_strings.h"
+
+#include <string>
 
 
 typedef struct _pathpart
 {
     char const * ptr;
-    int len;
+    int32_t len;
 } PATHPART;
 
 typedef struct _pathname
@@ -83,5 +92,32 @@ OBJECT * path_tmpfile( void );
 char * executable_path( char const * argv0 );
 
 void path_done( void );
+
+namespace b2
+{
+    namespace paths
+    {
+        inline bool is_rooted(const std::string &p)
+        {
+            #if NT
+            return
+                (p.size() >= 1 && (p[0] == '/' || p[0] == '\\')) ||
+                (p.size() >= 3 && p[1] == ':' && (p[2] == '/' || p[2] == '\\'));
+            #else
+            return
+                (p.size() >= 1 && (p[0] == '/' || p[0] == '\\'));
+            #endif
+        }
+        inline bool is_relative(const std::string &p)
+        {
+            return
+                (p.size() >= 3 && (
+                    (p[0] == '.' && p[1] == '.' && (p[2] == '/' || p[2] == '\\')) ||
+                    (p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
+                    ));
+        }
+        std::string normalize(const std::string &p);
+    }
+}
 
 #endif

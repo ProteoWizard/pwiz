@@ -1,4 +1,6 @@
-﻿namespace AutoQC
+﻿using System;
+
+namespace AutoQC
 {
     partial class MainForm
     {
@@ -37,11 +39,12 @@
             this.btnViewLog = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabConfigs = new System.Windows.Forms.TabPage();
-            this.listViewConfigs = new System.Windows.Forms.ListView();
-            this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnUser = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.listViewConfigs = new AutoQC.MyListView();
+            this.columnName2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnUser2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnCreated2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnStatus2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnAdd = new System.Windows.Forms.Button();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
@@ -51,14 +54,12 @@
             this.btnOpenFolder = new System.Windows.Forms.ToolStripButton();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.btnStop = new System.Windows.Forms.Button();
-            this.btnRun = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.btnOpenLogFolder = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
-            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
+            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabSettings = new System.Windows.Forms.TabPage();
             this.groupBoxAutoQcSettings = new System.Windows.Forms.GroupBox();
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
@@ -70,10 +71,11 @@
             this.toolStripLogFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.tabMain.SuspendLayout();
             this.tabConfigs.SuspendLayout();
+            this.panel4.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.tabLog.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.groupBoxAutoQcSettings.SuspendLayout();
             this.openFolderMenuStrip.SuspendLayout();
@@ -96,7 +98,7 @@
             // lblNoConfigs
             // 
             resources.ApplyResources(this.lblNoConfigs, "lblNoConfigs");
-            this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
+            this.lblNoConfigs.ForeColor = System.Drawing.Color.Crimson;
             this.lblNoConfigs.Name = "lblNoConfigs";
             // 
             // labelSavedConfigurations
@@ -123,23 +125,29 @@
             // tabConfigs
             // 
             this.tabConfigs.BackColor = System.Drawing.Color.Transparent;
+            this.tabConfigs.Controls.Add(this.panel4);
             this.tabConfigs.Controls.Add(this.listViewConfigs);
-            this.tabConfigs.Controls.Add(this.labelSavedConfigurations);
             this.tabConfigs.Controls.Add(this.panel1);
-            this.tabConfigs.Controls.Add(this.panel2);
             resources.ApplyResources(this.tabConfigs, "tabConfigs");
             this.tabConfigs.Name = "tabConfigs";
             this.tabConfigs.Enter += new System.EventHandler(this.tabConfigs_Enter);
             // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.labelSavedConfigurations);
+            this.panel4.Controls.Add(this.lblNoConfigs);
+            resources.ApplyResources(this.panel4, "panel4");
+            this.panel4.Name = "panel4";
+            // 
             // listViewConfigs
             // 
             resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
-            this.listViewConfigs.AutoArrange = false;
+            this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnName,
-            this.columnUser,
-            this.columnCreated,
-            this.columnStatus});
+            this.columnName2,
+            this.columnUser2,
+            this.columnCreated2,
+            this.columnStatus2});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HideSelection = false;
             this.listViewConfigs.MultiSelect = false;
@@ -147,29 +155,31 @@
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
+            this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
-            this.listViewConfigs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseDown);
+            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
-            // columnName
+            // columnName2
             // 
-            resources.ApplyResources(this.columnName, "columnName");
+            resources.ApplyResources(this.columnName2, "columnName2");
             // 
-            // columnUser
+            // columnUser2
             // 
-            resources.ApplyResources(this.columnUser, "columnUser");
+            resources.ApplyResources(this.columnUser2, "columnUser2");
             // 
-            // columnCreated
+            // columnCreated2
             // 
-            resources.ApplyResources(this.columnCreated, "columnCreated");
+            resources.ApplyResources(this.columnCreated2, "columnCreated2");
             // 
-            // columnStatus
+            // columnStatus2
             // 
-            resources.ApplyResources(this.columnStatus, "columnStatus");
+            resources.ApplyResources(this.columnStatus2, "columnStatus2");
             // 
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.btnAdd);
             this.panel1.Controls.Add(this.toolStrip);
             this.panel1.Controls.Add(this.btnImportConfigs);
@@ -246,39 +256,22 @@
             this.btnExportConfigs.UseVisualStyleBackColor = true;
             this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
             // 
-            // panel2
-            // 
-            resources.ApplyResources(this.panel2, "panel2");
-            this.panel2.Controls.Add(this.btnStop);
-            this.panel2.Controls.Add(this.btnRun);
-            this.panel2.Controls.Add(this.btnViewLog);
-            this.panel2.Controls.Add(this.lblNoConfigs);
-            this.panel2.Name = "panel2";
-            // 
-            // btnStop
-            // 
-            resources.ApplyResources(this.btnStop, "btnStop");
-            this.btnStop.Name = "btnStop";
-            this.btnStop.UseVisualStyleBackColor = true;
-            this.btnStop.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btnStop_MouseClick);
-            // 
-            // btnRun
-            // 
-            resources.ApplyResources(this.btnRun, "btnRun");
-            this.btnRun.Name = "btnRun";
-            this.btnRun.UseVisualStyleBackColor = true;
-            this.btnRun.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btnRun_MouseClick);
-            // 
             // tabLog
             // 
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
-            this.tabLog.Controls.Add(this.btnOpenLogFolder);
-            this.tabLog.Controls.Add(this.lblConfigSelect);
+            this.tabLog.Controls.Add(this.panel3);
             this.tabLog.Controls.Add(this.textBoxLog);
-            this.tabLog.Controls.Add(this.comboConfigs);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
             this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
+            // 
+            // panel3
+            // 
+            resources.ApplyResources(this.panel3, "panel3");
+            this.panel3.Controls.Add(this.btnOpenLogFolder);
+            this.panel3.Controls.Add(this.lblConfigSelect);
+            this.panel3.Controls.Add(this.comboConfigs);
+            this.panel3.Name = "panel3";
             // 
             // btnOpenLogFolder
             // 
@@ -292,19 +285,19 @@
             resources.ApplyResources(this.lblConfigSelect, "lblConfigSelect");
             this.lblConfigSelect.Name = "lblConfigSelect";
             // 
+            // comboConfigs
+            // 
+            resources.ApplyResources(this.comboConfigs, "comboConfigs");
+            this.comboConfigs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboConfigs.FormattingEnabled = true;
+            this.comboConfigs.Name = "comboConfigs";
+            this.comboConfigs.SelectedIndexChanged += new System.EventHandler(this.comboConfigs_SelectedIndexChanged);
+            // 
             // textBoxLog
             // 
             resources.ApplyResources(this.textBoxLog, "textBoxLog");
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
-            // 
-            // comboConfigs
-            // 
-            this.comboConfigs.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboConfigs.FormattingEnabled = true;
-            resources.ApplyResources(this.comboConfigs, "comboConfigs");
-            this.comboConfigs.Name = "comboConfigs";
-            this.comboConfigs.SelectedIndexChanged += new System.EventHandler(this.comboConfigs_SelectedIndexChanged);
             // 
             // tabSettings
             // 
@@ -373,15 +366,15 @@
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);
             this.tabConfigs.ResumeLayout(false);
-            this.tabConfigs.PerformLayout();
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
-            this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.tabLog.ResumeLayout(false);
-            this.tabLog.PerformLayout();
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.ResumeLayout(false);
             this.groupBoxAutoQcSettings.PerformLayout();
@@ -412,15 +405,7 @@
         private System.Windows.Forms.GroupBox groupBoxAutoQcSettings;
         private System.Windows.Forms.CheckBox cb_keepRunning;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnStop;
-        private System.Windows.Forms.Button btnRun;
-        private System.Windows.Forms.ListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader columnName;
-        private System.Windows.Forms.ColumnHeader columnUser;
-        private System.Windows.Forms.ColumnHeader columnCreated;
-        private System.Windows.Forms.ColumnHeader columnStatus;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton btnDelete;
         private System.Windows.Forms.ToolStripButton btnOpenResults;
@@ -430,5 +415,12 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripFolderToWatch;
         private System.Windows.Forms.ToolStripMenuItem toolStripLogFolder;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
+        private MyListView listViewConfigs;
+        private System.Windows.Forms.ColumnHeader columnName2;
+        private System.Windows.Forms.ColumnHeader columnUser2;
+        private System.Windows.Forms.ColumnHeader columnCreated2;
+        private System.Windows.Forms.ColumnHeader columnStatus2;
     }
 }

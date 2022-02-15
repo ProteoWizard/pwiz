@@ -173,6 +173,7 @@ namespace pwiz.Skyline.SettingsUI
                                           };
             FullScanSettingsControl.IsolationSchemeChangedEvent += IsolationSchemeChanged;
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts small molecule ion settings when full scan settings change
+            FullScanSettingsControl.AcquisitionMethodChanged += FullScanSettingsControl_OnAcquisitionMethodChanged;
             tabFullScan.Controls.Add(FullScanSettingsControl);
 
             // VISUAL:
@@ -193,6 +194,16 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
             cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
+        }
+
+        public const double SureQuantMzMatchTolerance = 0.007;
+        private void FullScanSettingsControl_OnAcquisitionMethodChanged()
+        {
+            if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.SureQuant)
+            {
+                MZMatchTolerance = SureQuantMzMatchTolerance;
+                TriggeredAcquisition = true;
+            }
         }
 
         /// <summary>
@@ -264,6 +275,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return FullScanSettingsControl.AcquisitionMethod; }
             set { FullScanSettingsControl.AcquisitionMethod = value; }
+        }
+
+        public ComboBox ComboAcquisitionMethod
+        {
+            get { return FullScanSettingsControl.ComboAcquisitionMethod; }
         }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer
@@ -1080,7 +1096,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             return !predictedValues.Where((t, i) => _driverIons.CheckedListBox.GetItemCheckState(i) != t).Any();
         }
-
         #endregion
 
         private void listAlwaysAdd_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -1276,6 +1291,24 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbxTriggeredAcquisition.Checked; }
             set { cbxTriggeredAcquisition.Checked = value; }
+        }
+
+        private void cbxTriggeredAcquisition_CheckedChanged(object sender, EventArgs e)
+        {
+            if (AcquisitionMethod == FullScanAcquisitionMethod.SureQuant && !cbxTriggeredAcquisition.Checked)
+            {
+                var message =
+                    Resources.TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_;
+                switch (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK))
+                {
+                    case DialogResult.Cancel:
+                        cbxTriggeredAcquisition.Checked = true;
+                        break;
+                    default:
+                        AcquisitionMethod = FullScanAcquisitionMethod.PRM;
+                        break;
+                }
+            }
         }
     }
 }

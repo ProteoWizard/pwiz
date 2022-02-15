@@ -182,9 +182,8 @@ will be calculated using the subset of external standards with the same batch na
     <value>Target Qualitative Ion Ratio calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
   <data name="BeginPos">
-    <value>The position of the first (N-terminal) amino acid of the peptide within its
-containing protein sequence, or #N/A if no protein sequence is available.
-    </value>
+    <value>The zero-based position of the first (N-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available.</value>
   </data>
   <data name="BestReplicate">
     <value>True if this replicate has the highest overall peptide peak score.</value>
@@ -214,7 +213,7 @@ maximum intensity for the precursor.</value>
     <value>Full width of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
   </data>
   <data name="ChromatogramIonMobilityUnits">
-    <value>Unitys of the chromatogram ion mobility and chromatogram ion mobility extraction width</value>
+    <value>Units of the chromatogram ion mobility and chromatogram ion mobility extraction width</value>
   </data>
   <data name="ChromatogramPrecursorMz">
     <value>Precursor m/z of the chromatogram</value>
@@ -308,7 +307,7 @@ the decoy m/z</value>
     <value>A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</value>
   </data>
   <data name="EndPos">
-    <value>The position of the last (C-terminal) amino acid of the peptide within its
+    <value>The zero-based position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="EndTime">
@@ -382,6 +381,10 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
   </data>
   <data name="Files">
     <value>Files</value>
+  </data>
+  <data name="FirstPosition">
+    <value>The position of the first (N-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available.</value>
   </data>
   <data name="FoldChange">
     <value>The fold change value. The fold change is the ratio of the normalized intensity of the treatment group to the normalized intensity of the control group.</value>
@@ -490,6 +493,10 @@ indicating which isotope modifications are applied</value>
   </data>
   <data name="Key">
     <value>Key</value>
+  </data>
+  <data name="LastPosition">
+    <value>The position of the last (C-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>

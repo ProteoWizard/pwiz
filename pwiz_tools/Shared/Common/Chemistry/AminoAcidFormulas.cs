@@ -53,7 +53,34 @@ namespace pwiz.Common.Chemistry
             {"Thr",'T'},
             {"Trp",'W'},
             {"Tyr",'Y'},
-            {"Val",'V'}
+            {"Val",'V'},
+            {"Sec",'U'},
+            {"Pyl",'O'}
+        });
+        public static readonly IDictionary<char, String> FullNames = new ImmutableDictionary<char, String>(
+            new Dictionary<char, string> {
+            {'A',"Alanine"},
+            {'R', "Arginine"},
+            {'N', "Asparagine"},
+            {'D', "Aspartic acid"},
+            {'C', "Cysteine"},
+            {'E', "Glutamic acid"},
+            {'Q', "Glutamine"},
+            {'G', "Glycine"},
+            {'H', "Histidine"},
+            {'I', "Isoleucine"},
+            {'L', "Leucine"},
+            {'K', "Lysine"},
+            {'M', "Methionine"},
+            {'F', "Phenylalanine"},
+            {'P', "Proline"},
+            {'S', "Serine"},
+            {'T', "Threonine"},
+            {'W', "Tryptophan"},
+            {'Y', "Tyrosine"},
+            {'V', "Valine"},
+            {'U', "Selenocysteine"},
+            {'O', "Pyrrolysine"}
         });
         // ReSharper restore LocalizableElement
 

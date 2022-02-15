@@ -442,7 +442,7 @@ window.onload = submitForm;
                     seenZoom = true;
                 }
             }
-            CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);            
+            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);            
         }
     }
 }

@@ -349,7 +349,7 @@ int BlibBuilder::transferLibrary(int iLib,
     ProgressIndicator* progress =
         parentProgress->newNestedIndicator(getSpectrumCount(schemaTmp));
 
-    sprintf(zSql, "SELECT id FROM %s.RefSpectra ORDER BY id", schemaTmp);
+    sprintf(zSql, "SELECT id, peptideSeq, peptideModSeq FROM %s.RefSpectra ORDER BY id", schemaTmp);
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -361,11 +361,25 @@ int BlibBuilder::transferLibrary(int iLib,
     while(rc==SQLITE_ROW) {
         progress->increment();
 
-        int spectraId = sqlite3_column_int(pStmt, 0);
+        bool skip = false;
+        if (targetSequences != NULL || targetSequencesModified != NULL) {
+            // filtering targets
+            string seqUnmodified = boost::lexical_cast<string>(sqlite3_column_text(pStmt, 1));
+            string seqModified = parseSequence(boost::lexical_cast<string>(sqlite3_column_text(pStmt, 2)), true);
+            skip = !(
+                    // don't filter if targetSequences is not null and it contains the unmodified sequence
+                    (targetSequences != NULL && targetSequences->find(seqUnmodified) != targetSequences->end()) ||
+                    // OR targetSequencesModified is not null and it contains the modified sequence
+                    (targetSequencesModified != NULL && targetSequencesModified->find(seqModified) != targetSequencesModified->end())
+                );
+        }
 
-        // Even if you are transfering from a non-redundant library
-        // you only get credit for one spectrum in a redundant library
-        transferSpectrum(schemaTmp, spectraId, 1, tableVersion);
+        if (!skip) {
+            // Even if you are transfering from a non-redundant library
+            // you only get credit for one spectrum in a redundant library
+            int spectraId = sqlite3_column_int(pStmt, 0);
+            transferSpectrum(schemaTmp, spectraId, 1, tableVersion);
+        }
 
         rc = sqlite3_step(pStmt);
     }
@@ -566,64 +580,7 @@ int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
             break;
         }
 
-        string newSeq;
-        string unexpected;
-        vector<SeqMod> mods;
-        size_t aaPosition = 0;
-        // check that each character is a letter and convert it to uppercase
-        for (size_t i = 0; i < sequence.length(); ++i)
-        {
-            if (isalpha(sequence[i]))
-            {
-                newSeq += toupper(sequence[i]);
-                ++aaPosition;
-            }
-            else if (modified && sequence[i] == '[')
-            {
-                // get modification
-                size_t endIdx = sequence.find(']', i + 1);
-                if (endIdx != string::npos)
-                {
-                    ++i;
-                    istringstream deltaMassExtractor(sequence.substr(i, endIdx - i));
-                    double deltaMass;
-                    deltaMassExtractor >> deltaMass;
-                    if (!deltaMassExtractor.fail())
-                    {
-                        SeqMod newMod(aaPosition, deltaMass);
-                        mods.push_back(newMod);
-                    }
-                    else
-                    {
-                        Verbosity::warn("Could not read '%s' as a mass in target sequence %s, skipping this "
-                                        "modification", deltaMassExtractor.str().c_str(), sequence.c_str());
-                    }
-
-                    // move iterator to end of modification
-                    i = endIdx;
-                }
-                else
-                {
-                    Verbosity::warn("Ignoring opening bracket without closing bracket in target sequence %s",
-                                    sequence.c_str());
-                }
-            }
-            else
-            {
-                unexpected += sequence[i];
-            }
-        }
-        if (!unexpected.empty())
-        {
-            Verbosity::warn("Ignoring unexpected characters %s in target sequence %s",
-                            unexpected.c_str(), sequence.c_str());
-        }
-        if (modified)
-        {
-            // We use the low precision form of the sequence for this list.
-            // This needs to match the logic in BuildParser::filterBySequence
-            newSeq = getLowPrecisionModSeq(newSeq.c_str(), mods);
-        }
+        string newSeq = parseSequence(sequence, modified);
         Verbosity::debug("Adding target sequence %s", newSeq.c_str());
         (*seqSet)->insert(newSeq);
         ++sequencesRead;
@@ -632,6 +589,63 @@ int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
     return sequencesRead;
 }
 
+string BlibBuilder::parseSequence(const string& sequence, bool modified) {
+    string newSeq;
+    string unexpected;
+    vector<SeqMod> mods;
+    size_t aaPosition = 0;
+    // check that each character is a letter and convert it to uppercase
+    for (size_t i = 0; i < sequence.length(); ++i)
+    {
+        if (isalpha(sequence[i]))
+        {
+            newSeq += toupper(sequence[i]);
+            ++aaPosition;
+        }
+        else if (modified && sequence[i] == '[')
+        {
+            // get modification
+            size_t endIdx = sequence.find(']', i + 1);
+            if (endIdx != string::npos)
+            {
+                ++i;
+                string massStr = sequence.substr(i, endIdx - i);
+                try {
+                    double deltaMass = boost::lexical_cast<double>(massStr);
+                    SeqMod newMod(aaPosition, deltaMass);
+                    mods.push_back(newMod);
+                } catch (boost::bad_lexical_cast) {
+                    Verbosity::warn("Could not read '%s' as a mass in target sequence %s, skipping this "
+                                    "modification", massStr.c_str(), sequence.c_str());
+                }
+                // move iterator to end of modification
+                i = endIdx;
+            }
+            else
+            {
+                Verbosity::warn("Ignoring opening bracket without closing bracket in target sequence %s",
+                                sequence.c_str());
+            }
+        }
+        else
+        {
+            unexpected += sequence[i];
+        }
+    }
+    if (!unexpected.empty())
+    {
+        Verbosity::warn("Ignoring unexpected characters %s in target sequence %s",
+                        unexpected.c_str(), sequence.c_str());
+    }
+    if (modified)
+    {
+        // We use the low precision form of the sequence for this list.
+        // This needs to match the logic in BuildParser::filterBySequence
+        newSeq = getLowPrecisionModSeq(newSeq.c_str(), mods);
+    }
+    return newSeq;
+}
+    
 static const char* getModMassFormat(double mass, bool highPrecision) {
     if (!highPrecision) {
         return "[%+.1f]";

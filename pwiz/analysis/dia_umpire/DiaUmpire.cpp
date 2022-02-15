@@ -31,7 +31,7 @@
 //#define DIAUMPIRE_DEBUG_CURVES 1
 //#define DIAUMPIRE_TIMING 1
 
-#include <boost/range/iterator_range_core.hpp>
+//#include <boost/range/iterator_range_core.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/thread.hpp>
@@ -106,9 +106,9 @@ namespace DiaUmpire {
 
         IsotopePatternMap isotopePatternMap_;
 
-        bool PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const std::atomic<int>& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
-        bool PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel, const std::atomic<int>& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
-        bool FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel, const std::atomic<int>& windowsProcessed, const int& windowsTotal,
+        bool PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const std::atomic<size_t>& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
+        bool PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel, const std::atomic<size_t>& windowsProcessed, const int& windowsTotal, bool multithreaded = true);
+        bool FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel, const std::atomic<size_t>& windowsProcessed, const int& windowsTotal,
                                       DiaUmpireStep step = DiaUmpireStep::InlineStep, bool multithreaded = false, const vector<size_t>& scanIndices = vector<size_t>());
         ScanCollectionPtr GetAllScanCollectionByMSLabel(bool MS1Included, bool MS2Included, bool MS1Peak, bool MS2Peak, float startTime, float endTime, DiaUmpireStep step);
         ScanCollectionPtr GetScanCollectionMS1Window(const TargetWindow& MS1Window, bool IncludePeak, float startTime, float endTime);
@@ -124,7 +124,15 @@ namespace DiaUmpire {
             if (!ilr_)
                 return false;
 
-            string msgWithStep = "[step " + lexical_cast<string>(int(step)) + " of " + lexical_cast<string>(int(DiaUmpireStep::Count)-1) + "] " + msg;
+            int stepNum = int(step);
+            int stepCount = int(DiaUmpireStep::Count) - 1;
+
+            if (!config_.multithreadOverWindows)
+            {
+                stepNum += windowsProcessed * 3;
+                stepCount += diaWindows_.size() * 3;
+            }
+            string msgWithStep = "[step " + lexical_cast<string>(stepNum) + " of " + lexical_cast<string>(stepCount) + "] " + msg;
 
             boost::lock_guard<boost::mutex> g(ilrMutex_);
             canceled_ = canceled_ || IterationListener::Status_Cancel == ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(index, size, msgWithStep));
@@ -153,10 +161,15 @@ namespace DiaUmpire {
         const pwiz::util::IterationListenerRegistry* ilr_;
         mutable boost::mutex ilrMutex_;
         mutable std::atomic<bool> canceled_;
+        mutable std::atomic<size_t> windowsProcessed;
+
+        boost::asio::thread_pool pool_;
+        boost::asio::thread_pool nestedPool_;
 
         // timing
         struct Timing
         {
+            double total = 0;
             double readSpectra = 0;
             double buildPeakCurves = 0;
             double smoothPeakCurves = 0;
@@ -169,6 +182,7 @@ namespace DiaUmpire {
             {
 #ifdef DIAUMPIRE_TIMING
                 cout << endl << "Times in seconds" << endl
+                    << "  Total: " << total << endl
                     << "  Read spectra: " << readSpectra << endl
                     << "  Build peak curves: " << buildPeakCurves << endl
                     << "  Smooth peak curves: " << smoothPeakCurves << endl
@@ -191,10 +205,16 @@ namespace DiaUmpire {
 
             ~Timer()
             {
+                stop();
+            }
+
+            void stop()
+            {
                 timerToIncrement += boost::chrono::duration<double>(boost::chrono::system_clock::now() - start).count();
             }
 #else
             Timer(double& timerToIncrement) {}
+            void stop() {}
 #endif
         };
 
@@ -203,8 +223,12 @@ namespace DiaUmpire {
 
 
     DiaUmpire::Impl::Impl(const MSData& msd, const SpectrumListPtr& spectrumList, const Config& config, const IterationListenerRegistry* ilr)
-        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr), canceled_(false)
+        : msd_(msd), slp_(spectrumList), sl_(*slp_), config_(config), ilr_(ilr), canceled_(false), windowsProcessed(0),
+          pool_(config_ .multithreadOverWindows ? config_.maxThreads : 1),
+          nestedPool_(config_.multithreadOverWindows ? config_.maxNestedThreads : config_.maxThreads)
     {
+        Timer total(timing_.total);
+
         isotopePatternMap_ = generateIsotopePatternMap(config_.instrumentParameters);
 
         if (config_.exportSeparateQualityMGFs)
@@ -228,8 +252,15 @@ namespace DiaUmpire {
         if (!MS1PeakDetection()) { if (canceled_) return; else throw runtime_error("error in MS1PeakDetection"); }
         if (!DIAMS2PeakDetection()) { if (canceled_) return; else throw runtime_error("error in DIAMS2PeakDetection"); }
         
-        ms1PeakClusters_.clear();
-        ms1PeakCurves_.clear();
+        //pool_.join();
+        nestedPool_.join();
+
+        // clearing all the curves takes a while, so do it on a background thread
+        boost::asio::post(pool_, [&]()
+        {
+            ms1PeakClusters_.clear();
+            ms1PeakCurves_.clear();
+        });
 
         if (config_.exportSeparateQualityMGFs)
         {
@@ -299,6 +330,9 @@ namespace DiaUmpire {
             if (msLevel == 1)
                 ++ms1Count_;
 
+            if (scanTime > config_.instrumentParameters.EndRT)
+                break;
+
             if (msLevel < 2)
                 continue;
             if (s->precursors.empty())
@@ -348,6 +382,9 @@ namespace DiaUmpire {
             }
         }
 
+        if (iterateAndCheckCancellation(sl_.size(), sl_.size(), progressMessage, DiaUmpireStep::AssignSpectraToWindows))
+            return false;
+
         if (ms1Count_ == 0)
             throw runtime_error("[DiaUmpire::BuildDIAWindows] no MS1 scans detected; they are required for DIA Umpire to work");
 
@@ -358,7 +395,7 @@ namespace DiaUmpire {
 
         // DIA Umpire processes windows in descending order of m/z?
         sort(diaTargetWindows_.begin(), diaTargetWindows_.end(), [&](auto const& lhs, auto const& rhs) { return lhs->mzRange.begin > rhs->mzRange.begin; });
-        for (int i = 0; i + 1 < diaTargetWindows_.size(); ++i)
+        for (size_t i = 0; i + 1 < diaTargetWindows_.size(); ++i)
         {
             auto& window = *diaTargetWindows_[i];
             if (window.spectraInRange.empty())
@@ -375,7 +412,7 @@ namespace DiaUmpire {
     }
 
     bool DiaUmpire::Impl::FindAllMzTracePeakCurves(const ScanCollection& scanCollection, vector<PeakCurvePtr>& peakCurves, float ppmTolerance, int msLevel,
-                                                   const std::atomic<int>& windowsProcessed, const int& windowsTotal, DiaUmpireStep step, bool multithreaded, const vector<size_t>& scanIndices)
+                                                   const std::atomic<size_t>& windowsProcessed, const int& windowsTotal, DiaUmpireStep step, bool multithreaded, const vector<size_t>& scanIndices)
     {
         Timer timer(timing_.buildPeakCurves);
 
@@ -389,7 +426,7 @@ namespace DiaUmpire {
 
         const auto& scansForMsLevel = scanIndices.empty() ? scanCollection.GetScanNoArray(msLevel) : scanIndices;
         //Loop for each scan in the ScanCollection
-        for (int scanIdx = 0; scanIdx < scansForMsLevel.size(); ++scanIdx)
+        for (int scanIdx = 0; scanIdx < (int) scansForMsLevel.size(); ++scanIdx)
         {
             if (msLevel == 1)
             {
@@ -421,7 +458,7 @@ namespace DiaUmpire {
             if (preRT == 0)
                 preRT = scanTime - 0.01f;
 
-            for (int peakIdx = 0; peakIdx < scan.Data.size(); ++peakIdx)
+            for (int peakIdx = 0; peakIdx < (int)scan.Data.size(); ++peakIdx)
             {
                 const auto& peak = scan.get(peakIdx);
 
@@ -477,7 +514,7 @@ namespace DiaUmpire {
                 float bk = 0;
 
                 //Starting from the next scan, find the following peaks given the starting peak
-                for (int scan2Idx = scanIdx + 1; scan2Idx < scansForMsLevel.size() && (missedScan < config_.instrumentParameters.NoMissedScan /*|| (TargetedOnly && Peakcurve.RTWidth()<parameter.MaxCurveRTRange)*/); scan2Idx++)
+                for (int scan2Idx = scanIdx + 1; scan2Idx < (int) scansForMsLevel.size() && (missedScan < config_.instrumentParameters.NoMissedScan /*|| (TargetedOnly && Peakcurve.RTWidth()<parameter.MaxCurveRTRange)*/); scan2Idx++)
                 {
                     const ScanData* scan2Ptr = scanCollection.GetScan(scansForMsLevel[scan2Idx]);
                     if (!scan2Ptr)
@@ -491,6 +528,7 @@ namespace DiaUmpire {
                     float currentmz = 0;
                     float currentint = 0;
 
+
                     //If the scan is empty
                     if (scanData2.PointCount() == 0) {
                         if (config_.instrumentParameters.FillGapByBK) {
@@ -502,7 +540,7 @@ namespace DiaUmpire {
 
                     //Find the m/z index 
                     int mzidx = scanData2.GetLowerIndexOfX(Peakcurve.TargetMz);
-                    for (int pkidx = mzidx; pkidx < scanData2.Data.size(); pkidx++)
+                    for (int pkidx = mzidx; pkidx < (int) scanData2.Data.size(); pkidx++)
                     {
                         XYData currentpeak = scanData2.get(pkidx);
                         if (currentpeak.getX() < config_.instrumentParameters.MinMZ)
@@ -548,7 +586,7 @@ namespace DiaUmpire {
                     peakCurves.push_back(std::move(PeakcurvePtr));
                     //Then check if the peak curve passes the criteria
                 }
-                else if (Peakcurve.GetRawSNR() > SNR && Peakcurve.GetPeakList().size() >= config_.instrumentParameters.MinPeakPerPeakCurve + 2)
+                else if (Peakcurve.GetRawSNR() > SNR && (int) Peakcurve.GetPeakList().size() >= config_.instrumentParameters.MinPeakPerPeakCurve + 2)
                 {
                     peakCurves.push_back(std::move(PeakcurvePtr));
                 }
@@ -597,36 +635,44 @@ namespace DiaUmpire {
 
         auto result = std::make_unique<ScanCollection>();
 
-        boost::asio::thread_pool pool(4); // 4 threads
         boost::mutex m;
         vector<string> msLevels;
         if (MS1Included) msLevels.emplace_back("MS1");
         if (MS2Included) msLevels.emplace_back("MS2");
         string progressMessage = "reading " + bal::join(msLevels, "/") + " spectra into scan collection";
+        std::atomic<size_t> scansRead(0);
+        size_t totalScans = endIndex + 1 - startIndex;
 
         for (size_t index = startIndex; index <= endIndex; ++index)
         {
             auto s = sl_.spectrum(index, true);
-
-            boost::asio::post(pool, [&, index, s]
+            int msLevel = msLevelAndScanTimeByIndex_[s->index].first;
+            if (MS1Included && msLevel == 1 ||
+                MS2Included && msLevel == 2)
             {
-                int msLevel = msLevelAndScanTimeByIndex_[s->index].first;
-                if (MS1Included && msLevel == 1 ||
-                    MS2Included && msLevel == 2)
+                ScanData* scan = &result->AddScan(s);
+                boost::asio::post(nestedPool_, [&, scan]
                 {
-                    ScanData* scan;
-                    {
-                        boost::lock_guard<boost::mutex> g(m);
-                        scan = &result->AddScan(s);
-                    }
                     scan->Preprocessing(config_.instrumentParameters);
+                    ++scansRead;
+                });
+            }
+            else
+                ++scansRead;
 
-                    if (iterateAndCheckCancellation(index, endIndex + 1, progressMessage, step))
-                        return;
-                }
-            });
+            if (iterateAndCheckCancellation(scansRead, endIndex + 1, progressMessage, step))
+                return nullptr;
         }
-        pool.join();
+
+        while (scansRead < totalScans)
+        {
+            if (iterateAndCheckCancellation(scansRead, endIndex + 1, progressMessage, step))
+                return nullptr;
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
+
+        result->sortIndices();
 
         if (iterateAndCheckCancellation(endIndex, endIndex + 1, progressMessage, step))
             return nullptr;
@@ -639,23 +685,18 @@ namespace DiaUmpire {
         return nullptr;
     }
 
-    bool DiaUmpire::Impl::PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const std::atomic<int>& windowsProcessed, const int& windowsTotal, bool multithreaded)
+    bool DiaUmpire::Impl::PeakCurveSmoothing(vector<PeakCurvePtr>& peakCurves, const std::atomic<size_t>& windowsProcessed, const int& windowsTotal, bool multithreaded)
     {
         Timer timer(timing_.smoothPeakCurves);
 
-#ifdef DIAUMPIRE_DEBUG
-        boost::asio::thread_pool pool(1);// multithreaded ? config_.maxThreads : max(4, config_.maxThreads) / 4);
-#else
-        boost::asio::thread_pool pool(multithreaded ? config_.maxThreads : max(4, config_.maxThreads) / 4);
-#endif
         boost::mutex m;
         vector<PeakCurvePtr> resultCurves;
-        std::atomic<int> curvesSmoothed(0);
+        std::atomic<size_t> curvesSmoothed(0);
         string progressMessage = "smoothing peak curves";
 
         for (const PeakCurvePtr& curve : peakCurves)
         {
-            boost::asio::post(pool, [&, curve]() mutable
+            boost::asio::post(nestedPool_, [&, curve]() mutable
             {
                 if (multithreaded)
                 {
@@ -690,7 +731,19 @@ namespace DiaUmpire {
                 return true;
             });
         }
-        pool.join();
+
+        while (curvesSmoothed < peakCurves.size())
+        {
+            if (multithreaded)
+            {
+                if (iterateAndCheckCancellation(curvesSmoothed, peakCurves.size(), progressMessage, DiaUmpireStep::SmoothPeakCurves))
+                    return false;
+            }
+            else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
+                return false;
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
 
         if (multithreaded)
         {
@@ -733,15 +786,15 @@ namespace DiaUmpire {
     }
 
     bool DiaUmpire::Impl::PeakCurveCorrClustering(MzRange mzRange, vector<PeakCurvePtr>& peakCurves, vector<PeakClusterPtr>& peakClusters, int msLevel,
-                                                  const std::atomic<int>& windowsProcessed, const int& windowsTotal, bool multithreaded)
+                                                  const std::atomic<size_t>& windowsProcessed, const int& windowsTotal, bool multithreaded)
     {
         Timer timer(timing_.clusterPeakCurves);
         int MaxNoPeakCluster;
         int MinNoPeakCluster;
         int StartCharge;
         int EndCharge;
-        float MiniIntensity;
-        float SNR;
+        //float MiniIntensity;
+        //float SNR;
 
         if (msLevel == 1)
         {
@@ -749,8 +802,8 @@ namespace DiaUmpire {
             MinNoPeakCluster = config_.instrumentParameters.MinNoPeakCluster;
             StartCharge = config_.instrumentParameters.StartCharge;
             EndCharge = config_.instrumentParameters.EndCharge;
-            MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
-            SNR = config_.instrumentParameters.MS2SN;
+            //MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
+            //SNR = config_.instrumentParameters.MS2SN;
         }
         else
         {
@@ -758,8 +811,8 @@ namespace DiaUmpire {
             MinNoPeakCluster = config_.instrumentParameters.MinMS2NoPeakCluster;
             StartCharge = config_.instrumentParameters.MS2StartCharge;
             EndCharge = config_.instrumentParameters.MS2EndCharge;
-            MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
-            SNR = config_.instrumentParameters.MS2SN;
+            //MiniIntensity = config_.instrumentParameters.MinMSMSIntensity;
+            //SNR = config_.instrumentParameters.MS2SN;
         }
 
         // generate peak curve search tree
@@ -771,11 +824,11 @@ namespace DiaUmpire {
 
         ChiSquareGOF chiSquaredGof(MaxNoPeakCluster);
 
-        boost::asio::thread_pool pool(multithreaded ? config_.maxThreads : max(4, config_.maxThreads) / 4);
         boost::mutex m;
         vector<PeakCurveClusteringCorrKDtree> clusterJobs;
         clusterJobs.reserve(peakCurves.size());
-        std::atomic<int> curvesToCluster(0), curvesClustered(0);
+        size_t curvesToCluster = 0;
+        std::atomic<size_t> curvesClustered(0);
         string progressMessage = "clustering peak curves";
 
         //For each peak curve
@@ -795,13 +848,13 @@ namespace DiaUmpire {
 
             //Create a thread unit for doing isotope clustering given a peak curve as the monoisotope peak
             clusterJobs.emplace_back(peakCurves, targetCurveIndex, peakCurveSearchTree, config_.instrumentParameters, isotopePatternMap_, chiSquaredGof, msd_,
-                                     StartCharge, EndCharge, MaxNoPeakCluster, MinNoPeakCluster);
+                                     StartCharge, EndCharge, MaxNoPeakCluster, MinNoPeakCluster, m);
 
         }
 
         for (size_t i = 0; i < clusterJobs.size(); ++i)
         {
-            boost::asio::post(pool, [&, i]
+            boost::asio::post(nestedPool_, [&, i]
             {
                 if (multithreaded)
                 {
@@ -817,11 +870,23 @@ namespace DiaUmpire {
                 return true;
             });
         }
-        pool.join();
+
+        while (curvesClustered < curvesToCluster)
+        {
+            if (multithreaded)
+            {
+                if (iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
+                    return false;
+            }
+            else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
+                return false;
+
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
 
         if (multithreaded)
         {
-            if (iterateAndCheckCancellation(curvesClustered, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
+            if (iterateAndCheckCancellation(curvesToCluster, curvesToCluster, progressMessage, DiaUmpireStep::ClusterPeakCurves))
                 return false;
         }
         else if (iterateAndCheckCancellation(windowsProcessed, windowsTotal, "processing DIA window", DiaUmpireStep::ProcessDiaWindows))
@@ -862,7 +927,7 @@ namespace DiaUmpire {
         string PeakAreastring = "";
         string Identifiedstring = "0";
 
-        for (int i = 0; i < peakClusters.at(0)->mz.size(); i++) {
+        for (size_t i = 0; i < peakClusters.at(0)->mz.size(); i++) {
             mzstring += ",mz" + lexical_cast<string>(i + 1);
             Idxstring += ",PeakIdx" + lexical_cast<string>(i + 1);
             if (i > 0) {
@@ -897,7 +962,7 @@ namespace DiaUmpire {
             PeakheightRTstring = "";
             PeakAreastring = "";
 
-            for (int i = 0; i < cluster.mz.size(); i++)
+            for (size_t i = 0; i < cluster.mz.size(); i++)
             {
                 mzstring += (boost::format("%.4f") % cluster.mz[i]).str() + ",";
                 Idxstring += lexical_cast<string>(cluster.IsoPeakIndex[i]) + ",";
@@ -997,20 +1062,19 @@ namespace DiaUmpire {
 
         bool multithreadWindows = config_.multithreadOverWindows;
 
-        boost::asio::thread_pool pool(!multithreadWindows ? 1 : config_.maxThreads);
         boost::mutex m;
-        std::atomic<int> windowsProcessed(0);
         string progressMessage = "processing DIA window";
         string progressMessage2 = "generating pseudo-MS/MS spectra";
 
         //vector<shared_ptr<PseudoMSMSProcessing>> ScanList;
-        std::atomic<int> spectraGenerated;
+        //std::atomic<int> spectraGenerated;
+        vector<unique_ptr<PseudoMsMsKey>> unsortedScanKeys;
 
         for (auto& diaWindow : diaWindows_)
         {
-            boost::asio::post(pool, [&]
+            boost::asio::post(pool_, [&]
             {
-                string diaWindowId = (boost::format("MS2:[%.1f-%.1f]") % diaWindow.mzRange.begin % diaWindow.mzRange.end).str();
+                string diaWindowId = "MS2:[" + toString(diaWindow.mzRange.begin) + "-" + toString(diaWindow.mzRange.end) + "]";
 
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
                     return false;
@@ -1047,6 +1111,8 @@ namespace DiaUmpire {
                 {
                     MassDefect MD;
                     //cout << endl << "No. of fragment peaks: " << diaWindow.peakCurves.size() << endl;
+                    vector<PeakCurvePtr> keptCurves;
+                    keptCurves.reserve(diaWindow.peakCurves.size());
                     for (int i = diaWindow.peakCurves.size() - 1; i >= 0; --i)
                     {
                         auto& peakCurve = diaWindow.peakCurves[i];
@@ -1060,9 +1126,10 @@ namespace DiaUmpire {
                                 break;
                             }
                         }
-                        if (remove)
-                            diaWindow.peakCurves.erase(diaWindow.peakCurves.begin() + i);
+                        if (!remove)
+                            keptCurves.emplace_back(peakCurve);
                     }
+                    swap(diaWindow.peakCurves, keptCurves);
                     //cout << "No. of remaining fragment peaks: " << diaWindow.peakCurves.size() << endl;
                 }
 
@@ -1086,9 +1153,9 @@ namespace DiaUmpire {
                 vector<shared_ptr<PseudoMSMSProcessing>> LocalScanList;
 
                 //PreparePseudoMSMS
-                for (PeakClusterPtr& ms1clusterPtr : ms1PeakClusters_)
+                for (const PeakClusterPtr& ms1clusterPtr : ms1PeakClusters_)
                 {
-                    PeakCluster& ms1cluster = *ms1clusterPtr;
+                    const PeakCluster& ms1cluster = *ms1clusterPtr;
                     if (diaWindow.mzRange.begin > ms1cluster.GetMaxMz() || diaWindow.mzRange.end < ms1cluster.TargetMz())
                         continue;
 
@@ -1096,11 +1163,9 @@ namespace DiaUmpire {
                     if (findItr == diaWindow.FragmentsClu2Cur.end())
                         continue;
 
-                    ms1cluster.GroupedFragmentPeaks = findItr->second;
-
                     if (diaWindow.nextWindowMzRange.empty() || diaWindow.nextWindowMzRange.end < ms1cluster.TargetMz())
                     {
-                        auto pseudoScan = boost::make_shared<PseudoMSMSProcessing>(ms1clusterPtr, config_.instrumentParameters, ms1clusterPtr->IsotopeComplete(3) ? QualityLevel::Q1_IsotopeComplete : QualityLevel::Q2_Ms1Group);
+                        auto pseudoScan = boost::make_shared<PseudoMSMSProcessing>(ms1clusterPtr, findItr->second, config_.instrumentParameters, ms1clusterPtr->IsotopeComplete(3) ? QualityLevel::Q1_IsotopeComplete : QualityLevel::Q2_Ms1Group);
                         (*pseudoScan)();
 
                         //boost::lock_guard<boost::mutex> g(m);
@@ -1111,9 +1176,9 @@ namespace DiaUmpire {
                 if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
                     return false;
 
-                for (PeakClusterPtr& ms2clusterPtr : diaWindow.peakClusters)
+                for (const PeakClusterPtr& ms2clusterPtr : diaWindow.peakClusters)
                 {
-                    PeakCluster& ms2cluster = *ms2clusterPtr;
+                    const PeakCluster& ms2cluster = *ms2clusterPtr;
                     if (diaWindow.mzRange.begin > ms2cluster.TargetMz() || diaWindow.mzRange.end < ms2cluster.TargetMz())
                         continue;
 
@@ -1121,9 +1186,7 @@ namespace DiaUmpire {
                     if (findItr == diaWindow.UnFragIonClu2Cur.end())
                         continue;
 
-                    ms2cluster.GroupedFragmentPeaks = findItr->second;
-
-                    auto pseudoScan = boost::make_shared<PseudoMSMSProcessing>(ms2clusterPtr, config_.instrumentParameters, QualityLevel::Q3_UnfragmentedPrecursor);
+                    auto pseudoScan = boost::make_shared<PseudoMSMSProcessing>(ms2clusterPtr, findItr->second, config_.instrumentParameters, QualityLevel::Q3_UnfragmentedPrecursor);
                     (*pseudoScan)();
 
                     //boost::lock_guard<boost::mutex> g(m);
@@ -1144,7 +1207,7 @@ namespace DiaUmpire {
                 spillFile.run.spectrumListPtr = outputScans;
                 auto spillFilepathPtr = boost::make_shared<TemporaryFile>(".tmp_spill");
 
-                vector<PseudoMsMsKey> localPseudoMsMs;
+                vector<unique_ptr<PseudoMsMsKey>> localPseudoMsMs;
                 for (const auto& pseudoScan : LocalScanList)
                 {
                     //if (!multithreadWindows && iterateAndCheckCancellation(spectraGenerated, LocalScanList.size(), progressMessage2, DiaUmpireStep::GeneratePseudoSpectra))
@@ -1209,7 +1272,7 @@ namespace DiaUmpire {
                     s->index = outputScans->spectra.size();
                     s->id = "merged=" + lexical_cast<string>(s->index);
                     outputScans->spectra.emplace_back(s);
-                    localPseudoMsMs.emplace_back(PseudoMsMsKey(precursorCluster.PeakHeightRT.at(0), precursorCluster.TargetMz(), precursorCluster.Charge, spillFilepathPtr.get(), s->index));
+                    localPseudoMsMs.emplace_back(std::make_unique<PseudoMsMsKey>(precursorCluster.PeakHeightRT.at(0), precursorCluster.TargetMz(), precursorCluster.Charge, spillFilepathPtr.get(), s->index));
                 }
 
                 {
@@ -1220,7 +1283,8 @@ namespace DiaUmpire {
                     {
                         boost::lock_guard<boost::mutex> g(m);
                         spillFiles[diaWindowId] = spillFilepathPtr;
-                        outputScanKeys.insert(outputScanKeys.end(), localPseudoMsMs.begin(), localPseudoMsMs.end());
+                        for (auto& key : localPseudoMsMs)
+                            unsortedScanKeys.emplace_back(std::move(key));
                     }
 
                     MSDataFile::write(spillFile, spillFilepathPtr->path().string(), writeConfig);
@@ -1240,25 +1304,35 @@ namespace DiaUmpire {
                 return true;
             });
         }
-        pool.join();
+        
+        while (windowsProcessed < diaWindows_.size())
+        {
+            if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
+                return false;
 
-        if (iterateAndCheckCancellation(windowsProcessed, diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
+
+        if (iterateAndCheckCancellation(diaWindows_.size(), diaWindows_.size(), progressMessage, DiaUmpireStep::ProcessDiaWindows))
             return false;
 
-        sort(outputScanKeys.begin(), outputScanKeys.end(), [](auto&& lhs, auto&& rhs)
+        sort(unsortedScanKeys.begin(), unsortedScanKeys.end(), [](auto&& lhs, auto&& rhs)
         {
-            return lhs.scanTime == rhs.scanTime ?
-                        lhs.targetMz == rhs.targetMz ?
-                            lhs.charge < rhs.charge :
-                            lhs.targetMz < rhs.targetMz :
-                        lhs.scanTime < rhs.scanTime;
+            return lhs->scanTime == rhs->scanTime ?
+                        lhs->targetMz == rhs->targetMz ?
+                            lhs->charge < rhs->charge :
+                            lhs->targetMz < rhs->targetMz :
+                        lhs->scanTime < rhs->scanTime;
         });
 
+        outputScanKeys.resize(unsortedScanKeys.size());
+
         int index = 0;
-        for (auto& key : outputScanKeys)
+        for (auto& key : unsortedScanKeys)
         {
-            key.index = index;
-            key.id = "merged=" + lexical_cast<string>(index);
+            key->index = index;
+            key->id = "merged=" + lexical_cast<string>(index);
+            swap(outputScanKeys[index], *key);
             ++index;
         }
 
@@ -1312,7 +1386,7 @@ namespace DiaUmpire {
             for (PrecursorFragmentPairEdge& fragmentClusterUnit : clusterCurvePair.second)
             {
                 auto& scorelist = FragmentMS1Ranking[fragmentClusterUnit.PeakCurveIndexB];
-                for (int intidx = 0; intidx < scorelist.size(); intidx++)
+                for (size_t intidx = 0; intidx < scorelist.size(); intidx++)
                 {
                     if (scorelist[intidx] <= fragmentClusterUnit.Correlation)
                     {
@@ -1348,8 +1422,8 @@ namespace DiaUmpire {
             for (PrecursorFragmentPairEdge& fragmentClusterUnit : clusterCurvePair.second)
             {
                 int CorrRank = 0;
-                for (int intidx = 0; intidx < CorrArrayList.size(); intidx++) {
-                    if (CorrArrayList.at(intidx) <= ScoreList.at(fragmentClusterUnit))
+                for (int intidx = 0; intidx < (int) CorrArrayList.size(); intidx++) {
+                    if (CorrArrayList[intidx] <= ScoreList[fragmentClusterUnit])
                     {
                         CorrRank = intidx + 1;
                         break;
@@ -1417,7 +1491,7 @@ namespace DiaUmpire {
             for (PrecursorFragmentPairEdge& fragmentClusterUnit : clusterCurvePair.second)
             {
                 auto& scorelist = FragmentUnfragRanking[fragmentClusterUnit.PeakCurveIndexB];
-                for (int intidx = 0; intidx < scorelist.size(); intidx++)
+                for (size_t intidx = 0; intidx < scorelist.size(); intidx++)
                 {
                     if (scorelist[intidx] <= fragmentClusterUnit.Correlation)
                     {
@@ -1453,8 +1527,8 @@ namespace DiaUmpire {
             for (PrecursorFragmentPairEdge& fragmentClusterUnit : clusterCurvePair.second)
             {
                 int CorrRank = 0;
-                for (int intidx = 0; intidx < CorrArrayList.size(); intidx++) {
-                    if (CorrArrayList.at(intidx) <= ScoreList.at(fragmentClusterUnit))
+                for (size_t intidx = 0; intidx < CorrArrayList.size(); intidx++) {
+                    if (CorrArrayList[intidx] <= ScoreList[fragmentClusterUnit])
                     {
                         CorrRank = intidx + 1;
                         break;
@@ -1521,7 +1595,9 @@ namespace DiaUmpire {
         if (paramsFilepath.empty())
         {
             if (maxThreads == 0)
-                maxThreads = boost::thread::hardware_concurrency();
+                maxThreads = boost::thread::hardware_concurrency() / 2;
+            if (maxNestedThreads == 0)
+                maxNestedThreads = boost::thread::hardware_concurrency();
             return;
         }
 
@@ -1529,14 +1605,14 @@ namespace DiaUmpire {
         string line;
         vector<string> tokens;
 
-        while (std::getline(reader, line))
+        while (getlinePortable(reader, line))
         {
             if (line.empty() || line[0] == '#')
                 continue;
 
             if (line == ("==window setting begin"))
             {
-                while (std::getline(reader, line) && line != "==window setting end")
+                while (getlinePortable(reader, line) && line != "==window setting end")
                 {
                     if (line.empty())
                         continue;
@@ -1754,14 +1830,29 @@ namespace DiaUmpire {
             {
                 maxThreads = lexical_cast<int>(value);
             }
+            else if (type == "NestedThreads")
+            {
+                maxNestedThreads = lexical_cast<int>(value);
+            }
             else if (type == "MultithreadOverWindows")
             {
                 multithreadOverWindows = lexical_cast<bool>(value);
             }
+            else if (type == "SpillFileFormat")
+            {
+                if (value == "mzml")
+                    spillFileFormat = MSDataFile::Format_mzML;
+                else if (value == "mz5")
+                    spillFileFormat = MSDataFile::Format_MZ5;
+                else
+                    throw runtime_error("only mzML and mz5 are supported spill file formats");
+            }
         }
 
         if (maxThreads == 0)
-            maxThreads = boost::thread::hardware_concurrency();
+            maxThreads = boost::thread::hardware_concurrency() / 2;
+        if (maxNestedThreads == 0)
+            maxNestedThreads = boost::thread::hardware_concurrency();
     }
 
     PWIZ_API_DECL PseudoMsMsKey::PseudoMsMsKey(float scanTime, float targetMz, int charge, pwiz::util::TemporaryFile* spillFilePtr, size_t spillFileIndex)

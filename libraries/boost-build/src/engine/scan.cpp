@@ -14,7 +14,6 @@
 #include "output.h"
 
 #include "constants.h"
-#include "jambase.h"
 #include "jamgram.hpp"
 
 
@@ -101,10 +100,6 @@ void yyfparse( OBJECT * s )
     i->line = 0;
     i->next = incp;
     incp = i;
-
-    /* If the filename is "+", it means use the internal jambase. */
-    if ( !strcmp( object_str( s ), "+" ) )
-        i->strings = (char**)jambase;
 }
 
 
@@ -171,7 +166,7 @@ int yyline()
         {
             FILE * f = stdin;
             if ( strcmp( object_str( i->fname ), "-" ) && !( f = fopen( object_str( i->fname ), "r" ) ) )
-                perror( object_str( i->fname ) );
+                errno_puts( object_str( i->fname ) );
             i->file = f;
         }
 
@@ -237,7 +232,6 @@ int yypeek()
 #define yyprev() ( incp->string-- )
 
 static int use_new_scanner = 0;
-static int expect_whitespace;
 
 #define yystartkeyword() if(use_new_scanner) break; else token_warning()
 #define yyendkeyword() if(use_new_scanner) break; else if ( 1 ) { expect_whitespace = 1; continue; } else (void)0
