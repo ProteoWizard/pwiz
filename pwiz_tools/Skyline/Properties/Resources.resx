@@ -11642,4 +11642,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
 	  <value>Molecule Ratio Results</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
+	  <value>Associate Proteins</value>
+  </data>
 </root>
