@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
-                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= MzMatchTolerance)
+                        if (MzAndPolarityMatch(precursor, tranGroup))
                         {
                             tranGroupFound = true;
                             var tranFound = false;
@@ -319,6 +319,18 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
+        private bool MzAndPolarityMatch(ParsedIonInfo precursor, TransitionGroupDocNode tranGroup)
+        {
+            return Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= MzMatchTolerance &&
+                   tranGroup.PrecursorMz.IsNegative == precursor.IsNegative;
+        }
+
+        private bool MzAndPolarityMatch(ParsedIonInfo precursor, ParsedIonInfo product)
+        {
+            return Math.Abs(product.Mz - precursor.Mz) <= MzMatchTolerance &&
+                   product.IsNegative == precursor.IsNegative;
+        }
+
         private void FindExistingMolecule(ParsedIonInfo precursor, Adduct adduct, double precursorMonoMz,
             double precursorAverageMz, ref bool pepFound, PeptideDocNode pep)
         {
@@ -353,7 +365,8 @@ namespace pwiz.Skyline.Model
                 // Match existing molecule if similar m/z at the precursor charge
                 pepFound |= Math.Abs(ionMonoMz - precursorMonoMz) <= MzMatchTolerance &&
                             Math.Abs(ionAverageMz - precursorAverageMz) <=
-                            MzMatchTolerance; // (we don't just check mass since we don't have a tolerance value for that)
+                            MzMatchTolerance && // (we don't just check mass since we don't have a tolerance value for that)
+                            (adduct.AdductCharge < 0 == precursor.IsNegative);
                 // Or no formula, and different isotope labels or matching label and mz
                 pepFound |= string.IsNullOrEmpty(pep.CustomMolecule.Formula) &&
                             string.IsNullOrEmpty(precursor.Formula) &&
@@ -362,8 +375,7 @@ namespace pwiz.Skyline.Model
                              pep.TransitionGroups.Any(
                                  t => Equals(t.TransitionGroup.LabelType,
                                           labelType) && // Already seen this label, and
-                                      Math.Abs(precursor.Mz - t.PrecursorMz) <=
-                                      MzMatchTolerance)); // Matches precursor mz of similar labels
+                                      MzAndPolarityMatch(precursor, t))); // Matches precursor mz of similar labels
             }
         }
 
@@ -393,7 +405,7 @@ namespace pwiz.Skyline.Model
 
                     var product =
                         ReadPrecursorOrProductColumns(document, row, precursor, out hasError); // Get product values, if available
-                    if ((product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance)) || hasError)
+                    if ((product != null && !MzAndPolarityMatch(precursor, product)) || hasError)
                     {
                         requireProductInfo = true; // Product list is not completely empty, or not just precursors
                         break;
@@ -734,6 +746,7 @@ namespace pwiz.Skyline.Model
             public string Note { get; private set; }
             public TypedMass Mz { get; private set; } // Not actually a mass, of course, but useful to know if its based on mono vs avg mass
             public Adduct Adduct { get; private set; }
+            public bool IsNegative => Adduct.AdductCharge < 0; 
             public TypedMass MonoMass { get; private set; }
             public TypedMass AverageMass { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
