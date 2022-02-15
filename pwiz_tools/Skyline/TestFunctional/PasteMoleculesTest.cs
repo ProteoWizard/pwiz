@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestNegativeModeLabels();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
             TestImpliedFragmentAdduct();
@@ -1320,6 +1321,21 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestNegativeModeLabels()
+        {
+            // If bug is not fixed, the negative heavy does not appear in the document
+            var text = "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor Charge,Label Type\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M+H]+,1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M+H]+,1,heavy\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M-H]-,-1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M-H]-,-1,heavy";
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 4, 4);
+            NewDocument();
         }
 
         private void TestProductNeutralLoss()
