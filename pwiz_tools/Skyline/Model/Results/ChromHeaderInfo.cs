@@ -1046,7 +1046,6 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
-
             // This is the last available flag
             // The high word of the flags is reserved for delta-mass-error
             mass_error_known =      0x8000,

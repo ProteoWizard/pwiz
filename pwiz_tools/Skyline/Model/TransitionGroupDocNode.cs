@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -2813,7 +2814,6 @@ namespace pwiz.Skyline.Model
 
         public DocNode ChangePeak(SrmSettings settings,
                                   ChromatogramGroupInfo chromGroupInfo,
-                                  double mzMatchTolerance,
                                   int indexSet,
                                   ChromFileInfoId fileId,
                                   OptimizableRegression regression,
@@ -2842,6 +2842,7 @@ namespace pwiz.Skyline.Model
             if (identified == PeakIdentification.ALIGNED)
                 flags |= ChromPeak.FlagValues.used_id_alignment;
             var listChromInfo = new List<ChromatogramInfo>();
+            float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))
@@ -2861,7 +2862,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
+                chromGroupInfo.GetAllTransitionInfo(nodeTran, mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
 
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak
@@ -2886,6 +2887,115 @@ namespace pwiz.Skyline.Model
                 }
             }
             return ChangeChildrenChecked(listChildrenNew);
+        }
+
+        public TransitionGroupDocNode RecalcDdaPeaks(
+            SrmSettings settings,
+            ChromatogramGroupInfo chromGroupInfo,
+            int indexSet,
+            ChromFileInfoId fileId)
+        {
+            float minStartTime = float.MaxValue;
+            float maxEndTime = float.MinValue;
+            var chromatogramSet = settings.MeasuredResults.Chromatograms[indexSet];
+            var chromatograms = new ChromatogramInfo[TransitionCount][];
+            var mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
+            for (int iTransition = 0; iTransition < TransitionCount; iTransition++)
+            {
+                var transition = (TransitionDocNode) Children[iTransition];
+                if (transition.IsMs1)
+                {
+                    continue;
+                }
+                chromatograms[iTransition] = chromGroupInfo.GetAllTransitionInfo(transition, mzMatchTolerance, chromatogramSet.OptimizationFunction, TransformChrom.raw);
+                foreach (var transitionChromInfo in transition.GetSafeChromInfo(indexSet))
+                {
+                    if (transitionChromInfo.IsEmpty || !ReferenceEquals(fileId, transitionChromInfo.FileId))
+                    {
+                        continue;
+                    }
+                    minStartTime = Math.Min(minStartTime, transitionChromInfo.StartRetentionTime);
+                    maxEndTime = Math.Max(maxEndTime, transitionChromInfo.EndRetentionTime);
+                }
+            }
+
+            if (minStartTime > maxEndTime)
+            {
+                return this;
+            }
+
+            var intensitiesByTime = new Dictionary<float, double>();
+            for (int iTransition = 0; iTransition < TransitionCount; iTransition++)
+            {
+                var chromatogramList = chromatograms[iTransition];
+                if (chromatogramList == null)
+                {
+                    continue;
+                }
+
+                foreach (var timeIntensity in GetAverageIntensitiesInRange(chromatogramList, minStartTime, maxEndTime))
+                {
+                    if (intensitiesByTime.TryGetValue(timeIntensity.Key, out double intensity))
+                    {
+                        intensitiesByTime[timeIntensity.Key] = intensity + timeIntensity.Value;
+                    }
+                    else
+                    {
+                        intensitiesByTime.Add(timeIntensity.Key, timeIntensity.Value);
+                    }
+                }
+            }
+
+            float? bestTime = null;
+            double? maxIntensity = null;
+            foreach (var entry in intensitiesByTime)
+            {
+                if (!maxIntensity.HasValue || entry.Value > maxIntensity)
+                {
+                    bestTime = entry.Key;
+                    maxIntensity = entry.Value;
+                }
+            }
+
+            if (bestTime.HasValue)
+            {
+
+            }
+        }
+
+        private IDictionary<float, double> GetAverageIntensitiesInRange(
+            IList<ChromatogramInfo> chromatograms, float startTime, float endTime)
+        {
+            var totalCounts = new Dictionary<float, Tuple<double, int>>();
+            foreach (var chromatogramInfo in chromatograms)
+            {
+                int index = CollectionUtil.BinarySearch(chromatogramInfo.Times, startTime);
+                if (index < 0)
+                {
+                    index = ~index;
+                }
+
+                for (; index < chromatogramInfo.Times.Count; index++)
+                {
+                    var time = chromatogramInfo.Times[index];
+                    if (time > endTime)
+                    {
+                        break;
+                    }
+
+                    double intensity = chromatogramInfo.Intensities[index];
+                    if (totalCounts.TryGetValue(time, out var tuple))
+                    {
+                        totalCounts[time] = Tuple.Create(tuple.Item1 + intensity, tuple.Item2+1);
+                    }
+                    else
+                    {
+                        totalCounts.Add(time, Tuple.Create(intensity, 1));
+                    }
+                }
+            }
+
+            return totalCounts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Item1 / kvp.Value.Item2);
         }
 
         protected override DocNodeParent SynchRemovals(DocNodeParent siblingBefore, DocNodeParent siblingAfter)
