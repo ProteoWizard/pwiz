@@ -2763,7 +2763,7 @@ namespace pwiz.Skyline.Model
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
-                    int numSteps = regression.StepCount;
+                    int numSteps = optStepChromatograms.StepCount;
                     var nodeTranNew = nodeTran;
                     for (int step = -numSteps; step <= numSteps; step++)
                     {
