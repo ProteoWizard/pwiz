@@ -125,6 +125,7 @@ namespace pwiz.SkylineTestFunctional
             var docEmpty = NewDocument();
 
             TestNegativeModeLabels();
+            TestEmptyTransitionList();
             TestErrorDialog();
             TestImportMethods();
             TestImpliedAdductWithSynonyms();
@@ -1010,15 +1011,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
-            var exception = new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
-                -1);
-
             // Inserting the header row by itself should produce an error message
-            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            AssertEx.ThrowsException<InvalidDataException>(() => SkylineWindow.Invoke(new Action(() =>
                 {
-                    SkylineWindow.Paste(header);
+                    SkylineWindow.InsertSmallMoleculeTransitionList(header,
+                        Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
                 })),
-                exception.Message);
+                Resources.MassListImporter_Import_Empty_transition_list);
 
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
@@ -1379,6 +1378,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 4, 4);
             NewDocument();
+        }
+        
+        private void TestEmptyTransitionList()
+        {
+            var text = "Precursor Name\t Precursor Formula \tPrecursor Charge \tPrecursor Adduct \tPrecursor m/z\n" +
+                       "\n";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var errDlg = ShowDialog<MessageDlg>(() => importDialog.TransitionListText = text); // Testing that we catch the exception properly
+            OkDialog(errDlg, errDlg.Close);
         }
 
         private void TestErrorDialog()
