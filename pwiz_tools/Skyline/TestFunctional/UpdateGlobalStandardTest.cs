@@ -94,7 +94,8 @@ namespace pwiz.SkylineTestFunctional
                     var globalStandardPeptide = (PeptideDocNode) SkylineWindow.Document.FindNode(globalStandardPath);
                     var transitionGroup = globalStandardPeptide.TransitionGroups.First();
                     var transition = transitionGroup.Transitions.First();
-                    var chromInfo = chromGroupInfo.GetAllTransitionInfo(transition, 0, null, TransformChrom.raw).First();
+                    var chromInfo = chromGroupInfo.GetAllTransitionInfo(transition, 0, null, TransformChrom.raw)
+                        .GetChromatogramForStep(0);
                     var peak = chromInfo.Peaks.Skip(iPeak).First();
                     RunUI(()=>graphChromatogram.FirePickedPeak(transitionGroup, transition, new ScaledRetentionTime(peak.RetentionTime)));
                     VerifyCalculatedAreas();

@@ -2417,7 +2417,9 @@ namespace pwiz.Skyline.Model.Results
                         // was the regression value.
                         int startOptTran, endOptTran;
                         GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                        iMiddle = (startOptTran + endOptTran) / 2;
+                        var chromatogramMzs = Enumerable.Range(startOptTran, endOptTran - startOptTran + 1)
+                            .Select(GetProductGlobal);
+                        iMiddle = startOptTran + OptStepChromatograms.IndexOfCenter(productMz, chromatogramMzs, regression.StepCount);
                     }
 
                     double deltaMz = Math.Abs(productMz - GetProductGlobal(iMiddle));
@@ -2433,29 +2435,24 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
+        public OptStepChromatograms GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
         {
-            var listChromInfo = new List<ChromatogramInfo>();
-            GetAllTransitionInfo(nodeTran, tolerance, regression, listChromInfo, transform);
-            return listChromInfo.ToArray();
-        }
-
-        public void GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo, TransformChrom transform)
-        {
-            listChromInfo.Clear();
             if (regression == null)
             {
                 // ReSharper disable ExpressionIsAlwaysNull
                 var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
                 // ReSharper restore ExpressionIsAlwaysNull
                 if (info != null)
-                    listChromInfo.Add(info);
-                return;
+                {
+                    return OptStepChromatograms.FromChromatogram(info);
+                }
+                return OptStepChromatograms.EMPTY;
             }
 
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
+            var listChromInfo = new List<ChromatogramInfo>();
             for (int i = startTran; i < endTran; i++)
             {
                 if (IsProductGlobalMatch(i, nodeTran, tolerance))
@@ -2467,6 +2464,8 @@ namespace pwiz.Skyline.Model.Results
                     i = Math.Max(i, endOptTran);
                 }
             }
+
+            return new OptStepChromatograms(nodeTran?.Mz ?? SignedMz.ZERO, listChromInfo, regression.StepCount);
         }
 
         private void GetOptimizationBounds(SignedMz productMz, int i, int startTran, int endTran, out int startOptTran, out int endOptTran)
