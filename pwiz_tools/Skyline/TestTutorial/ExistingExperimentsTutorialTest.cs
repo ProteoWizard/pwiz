@@ -160,9 +160,7 @@ namespace pwiz.SkylineTestTutorial
             string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
             var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
             PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
-            RunUI(() => {
-                colDlg.checkBoxAssociateProteins.Checked = true; // Enable Associate Proteins
-            });
+
 
             OkDialog(colDlg, colDlg.OkDialog);
 
