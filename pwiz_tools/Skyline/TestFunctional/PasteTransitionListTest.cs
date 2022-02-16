@@ -58,6 +58,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestEmptyTransitionList();
             TestMissingFragmentMz();
 
             RunUI(() => SkylineWindow.NewDocument());
@@ -363,6 +364,14 @@ namespace pwiz.SkylineTestFunctional
             CheckDocumentGridAndColumns(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List,
                 9, 21, SrmDocument.DOCUMENT_TYPE.proteomic);
             
+        }
+
+        private void TestEmptyTransitionList()
+        {
+            var text = "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\n\n";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var errDlg = ShowDialog<MessageDlg>(() => importDialog.TransitionListText = text); // Testing that we catch the exception properly
+            OkDialog(errDlg, errDlg.Close);
         }
 
         // Tests the current document, important to note that you must have data already in a skyline document for this to work

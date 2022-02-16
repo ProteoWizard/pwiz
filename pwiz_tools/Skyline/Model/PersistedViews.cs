@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 10; } }
+        public int RevisionIndexCurrent { get { return 11; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -166,6 +166,11 @@ namespace pwiz.Skyline.Model
                 reportStrings.Add(REPORTS_V10);
             }
 
+            if (revisionIndex >= 11)
+            {
+                reportStrings.Add(REPORTS_V11);
+            }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -180,8 +185,9 @@ namespace pwiz.Skyline.Model
                 {"Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Transition_Results)},
                 {"Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries)},
                 {"Peptide Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List)},
-                {"Mixed Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List)},
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
+                {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
+                {"Molecule Ratio Results", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
             };
             // ReSharper restore LocalizableElement
@@ -290,40 +296,6 @@ namespace pwiz.Skyline.Model
     <column name='ProductMz' />
     <column name='ProductCharge' />
     <column name='FragmentIon' />
-    <column name='FragmentIonType' />
-    <column name='FragmentIonOrdinal' />
-    <column name='CleavageAa' />
-    <column name='LossNeutralMass' />
-    <column name='Losses' />
-    <column name='LibraryRank' />
-    <column name='LibraryIntensity' />
-    <column name='IsotopeDistIndex' />
-    <column name='IsotopeDistRank' />
-    <column name='IsotopeDistProportion' />
-    <column name='FullScanFilterWidth' />
-    <column name='IsDecoy' />
-    <column name='ProductDecoyMzShift' />
-  </view>
-  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
-    <column name='Precursor.Peptide.Protein.Name' />
-    <column name='Precursor.Peptide.ModifiedSequence' />
-    <column name='Precursor.Peptide.MoleculeName' />
-    <column name='Precursor.Peptide.MoleculeFormula' />
-    <column name='Precursor.IonFormula' />
-    <column name='Precursor.NeutralFormula' />
-    <column name='Precursor.Adduct' />
-    <column name='Precursor.Mz' />
-    <column name='Precursor.Charge' />
-    <column name='Precursor.CollisionEnergy' />
-    <column name='Precursor.ExplicitCollisionEnergy' />
-    <column name='Precursor.Peptide.ExplicitRetentionTime' />
-    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
-    <column name='ProductMz' />
-    <column name='ProductCharge' />
-    <column name='FragmentIon' />
-    <column name='ProductIonFormula' />
-    <column name='ProductNeutralFormula' />
-    <column name='ProductAdduct' />
     <column name='FragmentIonType' />
     <column name='FragmentIonOrdinal' />
     <column name='CleavageAa' />
@@ -451,40 +423,6 @@ namespace pwiz.Skyline.Model
         // There is no REPORTS_V9 in order to work around a problem where V4 was changed.
 
         private const string REPORTS_V10 = @"<views>
-  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='mixed'>
-    <column name='Precursor.Peptide.Protein.Name' />
-    <column name='Precursor.Peptide.ModifiedSequence' />
-    <column name='Precursor.Peptide.MoleculeName' />
-    <column name='Precursor.Peptide.MoleculeFormula' />
-    <column name='Precursor.IonFormula' />
-    <column name='Precursor.NeutralFormula' />
-    <column name='Precursor.Adduct' />
-    <column name='Precursor.Mz' />
-    <column name='Precursor.Charge' />
-    <column name='Precursor.CollisionEnergy' />
-    <column name='ExplicitCollisionEnergy' />
-    <column name='Precursor.Peptide.ExplicitRetentionTime' />
-    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
-    <column name='ProductMz' />
-    <column name='ProductCharge' />
-    <column name='FragmentIon' />
-    <column name='ProductIonFormula' />
-    <column name='ProductNeutralFormula' />
-    <column name='ProductAdduct' />
-    <column name='FragmentIonType' />
-    <column name='FragmentIonOrdinal' />
-    <column name='CleavageAa' />
-    <column name='LossNeutralMass' />
-    <column name='Losses' />
-    <column name='LibraryRank' />
-    <column name='LibraryIntensity' />
-    <column name='IsotopeDistIndex' />
-    <column name='IsotopeDistRank' />
-    <column name='IsotopeDistProportion' />
-    <column name='FullScanFilterWidth' />
-    <column name='IsDecoy' />
-    <column name='ProductDecoyMzShift' />
-  </view>
   <view name='Small Molecule Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='small_molecules'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.MoleculeName' />
@@ -506,6 +444,29 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
+
+        private const string REPORTS_V11 = @"<views>
+  <view name='Molecule Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='StandardType' />
+    <column name='InternalStandardConcentration' />
+    <column name='ConcentrationMultiplier' />
+    <column name='NormalizationMethod' />
+    <column name='CalibrationCurve' />
+    <column name='Note' />
+  </view>
+  <view name='Molecule Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='Results!*.Value.ResultFile.Replicate' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.RatioToStandard' />
+    <column name='Results!*.Value.Quantification' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+</views>";
 
         // ReSharper restore LocalizableElement
 

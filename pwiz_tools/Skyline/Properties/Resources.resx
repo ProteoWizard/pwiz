@@ -6775,9 +6775,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
     <value>{0} existing</value>
   </data>
-  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
-    <value>Mixed Transition List</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>Opt Declustering Potential</value>
   </data>
@@ -11665,5 +11662,14 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_" xml:space="preserve">
 	  <value>Number of score thresholds does not match number of rows in grid.</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Quantification" xml:space="preserve">
+	  <value>Molecule Quantification</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
+	  <value>Molecule Ratio Results</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
+	  <value>Associate Proteins</value>
   </data>
 </root>
