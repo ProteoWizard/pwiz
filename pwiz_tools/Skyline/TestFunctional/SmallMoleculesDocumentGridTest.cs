@@ -51,8 +51,9 @@ namespace pwiz.SkylineTestFunctional
         {
             // Try a mixed document
             const string mixedSky = "mixed.sky";
+            EnsureMixedTransitionListReport();
             CheckDocumentGridAndColumns(mixedSky,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
+                MIXED_TRANSITION_LIST_REPORT_NAME,
                 49, 32, SrmDocument.DOCUMENT_TYPE.mixed, "C19H34[M-H]", "custom", "C12H19", "C12H19", "C12H18");
 
             CheckDocumentGridAndColumns(mixedSky,
