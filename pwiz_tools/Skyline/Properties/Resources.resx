@@ -6775,9 +6775,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
     <value>{0} existing</value>
   </data>
-  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
-    <value>Mixed Transition List</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>Opt Declustering Potential</value>
   </data>
@@ -11638,6 +11635,12 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
 	  <value>Product needs values for any two of: Formula, m/z or Charge.</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Quantification" xml:space="preserve">
+	  <value>Molecule Quantification</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
+	  <value>Molecule Ratio Results</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
 	  <value>Associate Proteins</value>
