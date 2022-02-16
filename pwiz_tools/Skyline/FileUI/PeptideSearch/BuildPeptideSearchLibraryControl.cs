@@ -49,7 +49,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
 
-        private object _gridFilesLock = new object();
         private const string CELL_LOADING = @"...";
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
@@ -239,36 +238,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var toAdd = searchFiles.ToHashSet();
 
             // Populate the input files list
-            lock (_gridFilesLock)
+            gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
+
+            var existingFiles = new HashSet<string>();
+            for (var i = gridSearchFiles.RowCount - 1; i >= 0; i--)
             {
-                gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
-
-                var existingFiles = new HashSet<string>();
-                for (var i = gridSearchFiles.RowCount - 1; i >= 0; i--)
-                {
-                    var existingFile = FileCellValue.Get(gridSearchFiles.Rows[i], columnFile).File;
-                    if (!toAdd.Contains(existingFile))
-                        gridSearchFiles.Rows.RemoveAt(i);
-                    else
-                        existingFiles.Add(existingFile);
-                }
-                toAdd.ExceptWith(existingFiles);
-
-                foreach (var file in toAdd)
-                {
-                    var i = gridSearchFiles.Rows.Add();
-                    gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
-                    gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue();
-                    gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
-                }
-
-                if (gridSearchFiles.SortedColumn == null || gridSearchFiles.SortOrder == SortOrder.None)
-                    gridSearchFiles.Sort(columnFile, ListSortDirection.Ascending);
+                var existingFile = FileCellValue.Get(gridSearchFiles.Rows[i], columnFile).File;
+                if (!toAdd.Contains(existingFile))
+                    gridSearchFiles.Rows.RemoveAt(i);
                 else
-                    gridSearchFiles.Sort(gridSearchFiles.SortedColumn, gridSearchFiles.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
-
-                gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
+                    existingFiles.Add(existingFile);
             }
+            toAdd.ExceptWith(existingFiles);
+
+            foreach (var file in toAdd)
+            {
+                var i = gridSearchFiles.Rows.Add();
+                gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
+                gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue();
+                gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
+            }
+
+            if (gridSearchFiles.SortedColumn == null || gridSearchFiles.SortOrder == SortOrder.None)
+                gridSearchFiles.Sort(columnFile, ListSortDirection.Ascending);
+            else
+                gridSearchFiles.Sort(gridSearchFiles.SortedColumn, gridSearchFiles.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
+
+            gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
 
             if (toAdd.Any())
             {
@@ -285,13 +281,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         scoreTypesTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
                     scoreTypes = scoreTypesTmp;
 
-                    if (async)
-                        Monitor.Enter(_gridFilesLock);
-
-                    gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
-
                     Invoke(new MethodInvoker(delegate
                     {
+                        gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
+
                         // Gather existing score thresholds
                         var existingThresholds = new Dictionary<string, double?>();
                         foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => !toAdd.Contains(FileCellValue.Get(row, columnFile).File)))
@@ -346,14 +339,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 ThresholdCell.Get(row, columnThreshold).Value = string.Empty;
                             }
                         }
+
+                        gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
+
+                        FireInputFilesChanged();
                     }));
-
-                    gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
-
-                    if (async)
-                        Monitor.Exit(_gridFilesLock);
-
-                    Invoke(new MethodInvoker(FireInputFilesChanged));
                 }
 
                 if (async)
@@ -365,10 +355,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else
                 {
-                    lock (_gridFilesLock)
-                    {
-                        GetScoreTypes(null, null);
-                    }
+                    GetScoreTypes(null, null);
                 }
             }
         }
@@ -385,38 +372,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Array.Sort(_ddaSearchDataSources);
 
                 // Populate the input files list
-                lock (_gridFilesLock)
+                gridSearchFiles.Rows.Clear();
+                foreach (var uri in _ddaSearchDataSources)
                 {
-                    gridSearchFiles.Rows.Clear();
-                    foreach (var uri in _ddaSearchDataSources)
-                    {
-                        var fileAndSampleLocator = uri.GetFilePath();
-                        if (uri.GetSampleIndex() > 0)
-                            fileAndSampleLocator += $@":{uri.GetSampleIndex()}";
-                        var i = gridSearchFiles.Rows.Add();
-                        gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, fileAndSampleLocator);
-                    }
+                    var fileAndSampleLocator = uri.GetFilePath();
+                    if (uri.GetSampleIndex() > 0)
+                        fileAndSampleLocator += $@":{uri.GetSampleIndex()}";
+                    var i = gridSearchFiles.Rows.Add();
+                    gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, fileAndSampleLocator);
                 }
 
                 FireInputFilesChanged();
             }
         }
 
-        private IEnumerable<string> SelectedFiles
-        {
-            get
-            {
-                lock (_gridFilesLock)
-                {
-                    return gridSearchFiles.SelectedCells.Cast<DataGridViewCell>()
-                        .Where(cell => cell.ColumnIndex == columnFile.Index)
-                        .Select(cell => cell.OwningRow).Distinct()
-                        .Select(row => FileCellValue.Get(row, columnFile))
-                        .Where(value => value != null)
-                        .Select(value => value.File);
-                }
-            }
-        }
+        private IEnumerable<string> SelectedFiles => gridSearchFiles.SelectedCells.Cast<DataGridViewCell>()
+            .Where(cell => cell.ColumnIndex == columnFile.Index)
+            .Select(cell => cell.OwningRow).Distinct()
+            .Select(row => FileCellValue.Get(row, columnFile))
+            .Where(value => value != null)
+            .Select(value => value.File);      
 
         private void btnRemFile_Click(object sender, EventArgs e)
         {
@@ -487,24 +462,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                lock (_gridFilesLock)
-                {
-                    var scoreTypes = new BiblioSpecScoreType[gridSearchFiles.RowCount];
-                    for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                        scoreTypes[i] = ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType).ScoreType;
-                    return scoreTypes;
-                }
+                var scoreTypes = new BiblioSpecScoreType[gridSearchFiles.RowCount];
+                for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                    scoreTypes[i] = ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType).ScoreType;
+                return scoreTypes;
             }
 
             set
             {
-                lock (_gridFilesLock)
-                {
-                    if (value.Length != gridSearchFiles.RowCount)
-                        throw new Exception(Resources.BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_);
-                    for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                        ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType).ScoreType = value[i];
-                }
+                if (value.Length != gridSearchFiles.RowCount)
+                    throw new Exception(Resources.BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_);
+                for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                    ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType).ScoreType = value[i];
             }
         }
 
@@ -512,24 +481,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                lock (_gridFilesLock)
-                {
-                    var thresholds = new double?[gridSearchFiles.RowCount];
-                    for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                        thresholds[i] = ThresholdCell.Get(gridSearchFiles.Rows[i], columnThreshold).Threshold;
-                    return thresholds;
-                }
+                var thresholds = new double?[gridSearchFiles.RowCount];
+                for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                    thresholds[i] = ThresholdCell.Get(gridSearchFiles.Rows[i], columnThreshold).Threshold;
+                return thresholds;
             }
 
             set
             {
-                lock (_gridFilesLock)
-                {
-                    if (value.Length != gridSearchFiles.RowCount)
-                        throw new Exception(Resources.BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_);
-                    for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                        ThresholdCell.Get(gridSearchFiles.Rows[i], columnThreshold).Threshold = value[i];
-                }
+                if (value.Length != gridSearchFiles.RowCount)
+                    throw new Exception(Resources.BuildPeptideSearchLibraryControl_ScoreThresholds_Number_of_score_thresholds_does_not_match_number_of_rows_in_grid_);
+                for (var i = 0; i < gridSearchFiles.RowCount; i++)
+                    ThresholdCell.Get(gridSearchFiles.Rows[i], columnThreshold).Threshold = value[i];
             }
         }
 
@@ -567,70 +530,67 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var thresholdsByScoreType = new Dictionary<BiblioSpecScoreType, double>();
             var thresholdsByFile = new Dictionary<string, double>();
-            lock (_gridFilesLock)
+            var errors = new List<string>();
+            var warnings = new List<string>();
+            foreach (DataGridViewRow row in gridSearchFiles.Rows)
             {
-                var errors = new List<string>();
-                var warnings = new List<string>();
-                foreach (DataGridViewRow row in gridSearchFiles.Rows)
+                var scoreType = ScoreTypeCellValue.Get(row, columnScoreType);
+                var thresholdCell = ThresholdCell.Get(row, columnThreshold);
+                var threshold = thresholdCell.Threshold;
+                var file = FileCellValue.Get(row, columnFile);
+                if (scoreType.MinValue <= threshold && threshold <= scoreType.MaxValue)
                 {
-                    var scoreType = ScoreTypeCellValue.Get(row, columnScoreType);
-                    var thresholdCell = ThresholdCell.Get(row, columnThreshold);
-                    var threshold = thresholdCell.Threshold;
-                    var file = FileCellValue.Get(row, columnFile);
-                    if (scoreType.MinValue <= threshold && threshold <= scoreType.MaxValue)
+                    thresholdsByFile[file.File] = threshold.Value;
+                    if (scoreType.ScoreType != null)
+                        thresholdsByScoreType[scoreType.ScoreType] = threshold.Value;
+                }
+                else
+                {
+                    errors.Add(string.Format(
+                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___,
+                        thresholdCell.Value, file, scoreType.MinValue, scoreType.MaxValue));
+                }
+            }
+            if (errors.Any())
+            {
+                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(errors));
+                e.Cancel = true;
+                return false;
+            }
+
+            if (showWarnings)
+            {
+                foreach (var pair in thresholdsByScoreType)
+                {
+                    var scoreType = pair.Key;
+                    var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
+                    var threshold = pair.Value;
+                    if (threshold < suggestedMin || threshold > suggestedMax)
                     {
-                        thresholdsByFile[file.File] = threshold.Value;
-                        if (scoreType.ScoreType != null)
-                            thresholdsByScoreType[scoreType.ScoreType] = threshold.Value;
-                    }
-                    else
-                    {
-                        errors.Add(string.Format(
-                            Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___,
-                            thresholdCell.Value, file, scoreType.MinValue, scoreType.MaxValue));
+                        var warning =
+                            string.Format(
+                                Resources
+                                    .BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_,
+                                threshold, scoreType.DisplayName);
+                        if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
+                        else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
+                        warnings.Add(warning);
                     }
                 }
-                if (errors.Any())
-                {
-                    MessageDlg.Show(WizardForm, TextUtil.LineSeparate(errors));
-                    e.Cancel = true;
-                    return false;
-                }
 
-                if (showWarnings)
+                if (warnings.Any())
                 {
-                    foreach (var pair in thresholdsByScoreType)
+                    warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
+                    if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
-                        var scoreType = pair.Key;
-                        var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
-                        var threshold = pair.Value;
-                        if (threshold < suggestedMin || threshold > suggestedMax)
-                        {
-                            var warning =
-                                string.Format(
-                                    Resources
-                                        .BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_,
-                                    threshold, scoreType.DisplayName);
-                            if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
-                                warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                    scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
-                            else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
-                                warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                    scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
-                            warnings.Add(warning);
-                        }
-                    }
-
-                    if (warnings.Any())
-                    {
-                        warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
-                        if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                        {
-                            e.Cancel = true;
-                            return false;
-                        }
+                        e.Cancel = true;
+                        return false;
                     }
                 }
             }
@@ -878,21 +838,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                if (UseExistingLibrary)
-                {
-                    return !string.IsNullOrEmpty(tbxLibraryPath.Text);
-                }
-
-                lock (_gridFilesLock)
-                {
-                    return gridSearchFiles.RowCount > 0 &&
-                           (PerformDDASearch || gridSearchFiles.Rows.Cast<DataGridViewRow>().All(row =>
-                           {
-                               var scoreType = ScoreTypeCellValue.Get(row, columnScoreType)?.ToString();
-                               var threshold = ThresholdCell.Get(row, columnThreshold)?.ToString();
-                               return scoreType != null && !Equals(scoreType, CELL_LOADING) && threshold != null && !Equals(threshold, CELL_LOADING);
-                           }));
-                }
+                return UseExistingLibrary
+                    ? !string.IsNullOrEmpty(tbxLibraryPath.Text)
+                    : gridSearchFiles.RowCount > 0 &&
+                      (PerformDDASearch || gridSearchFiles.Rows.Cast<DataGridViewRow>().All(row =>
+                      {
+                          var scoreType = ScoreTypeCellValue.Get(row, columnScoreType)?.ToString();
+                          var threshold = ThresholdCell.Get(row, columnThreshold)?.ToString();
+                          return scoreType != null && !Equals(scoreType, CELL_LOADING) && threshold != null && !Equals(threshold, CELL_LOADING);
+                      }));
             }
         }
 
@@ -976,13 +930,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
 
             // Copy new threshold to all other files with same score type
-            lock (_gridFilesLock)
+            var scoreType = ScoreTypeCellValue.Get(e.RowIndex, columnScoreType)?.NameInvariant;
+            foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => Equals(ScoreTypeCellValue.Get(row, columnScoreType)?.NameInvariant, scoreType)))
             {
-                var scoreType = ScoreTypeCellValue.Get(e.RowIndex, columnScoreType)?.NameInvariant;
-                foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => Equals(ScoreTypeCellValue.Get(row, columnScoreType)?.NameInvariant, scoreType)))
-                {
-                    row.Cells[columnThreshold.Index].Value = gridSearchFiles[e.ColumnIndex, e.RowIndex].Value;
-                }
+                row.Cells[columnThreshold.Index].Value = gridSearchFiles[e.ColumnIndex, e.RowIndex].Value;
             }
         }
 
