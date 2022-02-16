@@ -1434,14 +1434,9 @@
       <xs:enumeration value="ms2_ids"/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name="atomic_symbol_type">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="H|H'|H&quot;|D|T|C|C'|C&quot;|N|N'|O|O&quot;|O'|P|P'|S|S'|S&quot;|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
-    </xs:restriction>
-  </xs:simpleType>
   <xs:simpleType name="heavy_isotope_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;"/>
+      <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;|Cu'"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="full_scan_mass_analyzer_type">

@@ -104,10 +104,9 @@ namespace pwiz.SkylineTestFunctional
             string allErrorText = "";
             var pasteText = TransitionsClipboardText;
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
-            var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => windowDlg.checkBoxAssociateProteins.Checked = true ); // // Enable Associate Proteins, but some peptides aren't in background proteome
-            OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
-            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
+            var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(windowDlg.OkDialog); // Some peptides aren't in background proteome
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(associateProteinsDlg.OkDialog);
             RunUI(() =>
             {
                 foreach (var err in errDlg.ErrorList)
@@ -117,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(allErrorText.Contains((506.7821).ToString(LocalizationHelper.CurrentCulture)),
                     string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
                         (506.7821).ToString(LocalizationHelper.CurrentCulture), errDlg.ErrorList));
-                errDlg.Close();
+                errDlg.CancelDialog();
             });
             RunUI(windowDlg.CancelDialog);
 
@@ -140,11 +139,9 @@ namespace pwiz.SkylineTestFunctional
 
             var pasteText2 = "LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg2 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg2.textBox1.Text = pasteText2);
-            associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => windowDlg2.checkBoxAssociateProteins.Checked = true); // // Enable Associate Proteins, but some peptides aren't in background proteome
-            OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
-
-            var noErrDlg = ShowDialog<MessageDlg>(() => windowDlg2.CheckForErrors());
+            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg2.TransitionListText = pasteText2);
+            associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => windowDlg2.CheckForErrors()); // Some peptides aren't in background proteome
+            var noErrDlg = ShowDialog<MessageDlg>(associateProteinsDlg.OkDialog);
             Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
             OkDialog(noErrDlg, noErrDlg.OkDialog);
             RunUI(() => windowDlg2.CancelDialog());

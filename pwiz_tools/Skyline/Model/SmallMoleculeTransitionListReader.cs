@@ -48,9 +48,13 @@ namespace pwiz.Skyline.Model
 
         private double MzMatchTolerance { get; set; }
 
+        public List<PasteError> ErrorList { get; set; }
+        public bool HasHeaders { get; set; }
+
         protected SmallMoleculeTransitionListReader()
         {
             Rows = new List<Row>();
+            ErrorList = new List<PasteError>();
         }
 
         public class Row
@@ -88,11 +92,6 @@ namespace pwiz.Skyline.Model
                 return Double.TryParse(GetCell(index), NumberStyles.Float, _parent._cultureInfo, out val);
             }
 
-            public void SetCell(int index, string value)
-            {
-                if (index >= 0)
-                    _cells[index] = value;
-            }
         }
 
         private bool RowHasDistinctProductValue(Row row, int productCol, int precursorCol)
@@ -121,22 +120,30 @@ namespace pwiz.Skyline.Model
                 SortSiblingsByMz();
             }
 
-            _requireProductInfo = GetRequireProductInfo(document);
+            _requireProductInfo = GetRequireProductInfo(document); // Examine the first several lines of the file to determine columns will be needed
+            ErrorList.Clear(); // We're going to reparse, so clear any errors found so far
 
             string defaultPepGroupName = null;
             var docStart = document;
             document = document.BeginDeferSettingsChanges(); // Prevents excessive calls to SetDocumentType etc
+            var rowCount = 0;
+            var rowSuccessCount = 0;
 
             // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
             foreach (var row in Rows)
             {
+                rowCount++;
                 var precursor = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Get molecule values
                 if (hasError)
-                    return null;
+                {
+                    continue; // This won't succeed, but keep gathering errors
+                }
                 if (_requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor, out hasError) == null)
                 {
                     if (hasError)
-                        return null;
+                    {
+                        continue; // This won't succeed, but keep gathering errors
+                    }
                 }
 
                 var groupName = GetCellTrimmed(row, INDEX_MOLECULE_GROUP);
@@ -146,14 +153,18 @@ namespace pwiz.Skyline.Model
                 if (string.IsNullOrEmpty(groupName) || !groupNamesSeen.Add(groupName)) // If group name is unique (so far), no need to search document for it
                 {
                     if (ErrorAddingToExistingMoleculeGroup(ref document, precursor, groupName, defaultPepGroupName, precursorNamesSeen, row, ref pepGroupFound))
-                        return null;
+                    {
+                        continue; // This won't succeed, but keep gathering errors
+                    }
                 }
 
                 if (!pepGroupFound)
                 {
                     var node = GetMoleculePeptideGroup(document, row);
                     if (node == null)
-                        return null;
+                    {
+                        continue; // This won't succeed, but keep gathering errors
+                    }
                     IdentityPath first;
                     IdentityPath next;
                     document = document.AddPeptideGroups(new[] {node}, false, to, out first, out next);
@@ -167,6 +178,13 @@ namespace pwiz.Skyline.Model
                         precursorNamesSeen.Add(precursor.Name);
                     groupNamesSeen.Add(node.Name);
                 }
+
+                rowSuccessCount++;
+            }
+
+            if (rowSuccessCount != rowCount)
+            {
+                return null;
             }
 
             document = document.EndDeferSettingsChanges(docStart, null); // Process deferred calls to SetDocumentType etc
@@ -233,7 +251,7 @@ namespace pwiz.Skyline.Model
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
-                        if (Math.Abs(tranGroup.PrecursorMz - precursor.Mz) <= MzMatchTolerance)
+                        if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
                             tranGroupFound = true;
                             var tranFound = false;
@@ -335,7 +353,8 @@ namespace pwiz.Skyline.Model
                 // Match existing molecule if similar m/z at the precursor charge
                 pepFound |= Math.Abs(ionMonoMz - precursorMonoMz) <= MzMatchTolerance &&
                             Math.Abs(ionAverageMz - precursorAverageMz) <=
-                            MzMatchTolerance; // (we don't just check mass since we don't have a tolerance value for that)
+                            MzMatchTolerance && // (we don't just check mass since we don't have a tolerance value for that)
+                            (adduct.AdductCharge < 0 == precursor.Adduct.AdductCharge < 0);
                 // Or no formula, and different isotope labels or matching label and mz
                 pepFound |= string.IsNullOrEmpty(pep.CustomMolecule.Formula) &&
                             string.IsNullOrEmpty(precursor.Formula) &&
@@ -344,8 +363,7 @@ namespace pwiz.Skyline.Model
                              pep.TransitionGroups.Any(
                                  t => Equals(t.TransitionGroup.LabelType,
                                           labelType) && // Already seen this label, and
-                                      Math.Abs(precursor.Mz - t.PrecursorMz) <=
-                                      MzMatchTolerance)); // Matches precursor mz of similar labels
+                                      precursor.SignedMz.CompareTolerant(t.PrecursorMz, MzMatchTolerance)==0)); // Matches precursor mz of similar labels
             }
         }
 
@@ -375,7 +393,7 @@ namespace pwiz.Skyline.Model
 
                     var product =
                         ReadPrecursorOrProductColumns(document, row, precursor, out hasError); // Get product values, if available
-                    if ((product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance)) || hasError)
+                    if ((product != null && precursor.SignedMz.CompareTolerant(product.SignedMz, MzMatchTolerance)!=0) || hasError)
                     {
                         requireProductInfo = true; // Product list is not completely empty, or not just precursors
                         break;
@@ -716,6 +734,7 @@ namespace pwiz.Skyline.Model
             public string Note { get; private set; }
             public TypedMass Mz { get; private set; } // Not actually a mass, of course, but useful to know if its based on mono vs avg mass
             public Adduct Adduct { get; private set; }
+            public SignedMz SignedMz => new SignedMz(Mz, Adduct.AdductCharge < 0); 
             public TypedMass MonoMass { get; private set; }
             public TypedMass AverageMass { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
@@ -1299,7 +1318,7 @@ namespace pwiz.Skyline.Model
                         });
                         return null;
                     }
-                    row.SetCell(indexAdduct, adduct.AdductFormula);
+                    row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct.AdductFormula);
                 }
             }
             if (mz > 0)
@@ -1368,8 +1387,8 @@ namespace pwiz.Skyline.Model
                             {
                                 adduct = adduct.ChangeIsotopeLabels(labels);
                                 formula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(formula);
-                                row.SetCell(indexFormula, formula);
-                                row.SetCell(indexAdduct, adduct.AsFormulaOrSignedInt());
+                                row.UpdateCell(indexFormula, formula);
+                                row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct.AsFormulaOrSignedInt());
                             }
                         }
                         if (mz > 0)
@@ -1385,7 +1404,7 @@ namespace pwiz.Skyline.Model
                             var initialAdduct = adduct;
                             charge = ValidateFormulaWithMzAndAdduct(tolerance, useMonoisotopicMass,
                                 ref formula, ref adduct,  mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMmass, out mzCalc);
-                            row.SetCell(indexFormula, formula);
+                            row.UpdateCell(indexFormula, formula);
                             massOk = monoMass < CustomMolecule.MAX_MASS && averageMmass < CustomMolecule.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS)); // Null charge => masses are 0 but meaningless
                             if (adduct.IsEmpty && charge.HasValue)
@@ -1399,7 +1418,7 @@ namespace pwiz.Skyline.Model
                                     row.UpdateCell(indexCharge, charge.Value);
                                     if (!Equals(adduct, initialAdduct))
                                     {
-                                        row.UpdateCell(indexAdduct, adduct); // Show the deduced adduct
+                                        row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct); // Show the deduced adduct
                                     }
                                     hasError = false;
                                     return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
@@ -1408,17 +1427,17 @@ namespace pwiz.Skyline.Model
                                 {
                                     // There was an initial charge value, but it didn't make sense with formula and proposed mz
                                     errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_
-                                        : Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                                        row.Index + 1, (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                                        ? Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_
+                                        : Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
+                                        (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
                                     errColumn = indexMz;
                                 }
                                 else
                                 {
                                     // No charge state given, and mz makes no sense with formula
-                                    errMessage = String.Format(getPrecursorColumns
-                                        ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
-                                        : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, row.Index + 1);
+                                    errMessage = getPrecursorColumns
+                                        ? Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_
+                                        : Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_;
                                     errColumn = indexMz;
                                 }
                             }
@@ -1493,9 +1512,9 @@ namespace pwiz.Skyline.Model
                 }
                 else if (countValues < 2)
                 {
-                    errMessage = string.Format(getPrecursorColumns
-                            ? Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
-                            : Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, row.Index + 1);
+                    errMessage = getPrecursorColumns
+                            ? Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
+                            : Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_;
                 }
                 else
                 {
@@ -1907,6 +1926,7 @@ namespace pwiz.Skyline.Model
             // Ask MassListInputs to figure out the column and decimal separators
             var inputs = new MassListInputs(csvText);
             _cultureInfo = inputs.FormatProvider;
+            HasHeaders = hasHeaders;
             _csvReader = new DsvFileReader(new StringListReader(csvText), inputs.Separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms, columnPositions, hasHeaders);
             // Do we recognize all the headers?
             var badHeaders =
@@ -2013,22 +2033,7 @@ namespace pwiz.Skyline.Model
 
         public override void ShowTransitionError(PasteError error)
         {
-            if (error.Column >= 0)
-            {
-                throw new LineColNumberedIoException(
-                    string.Format(
-                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_,
-                        error.Line + 1, error.Column + 1, error.Message),
-                    error.Line + 1, error.Column);
-            }
-            else
-            {
-                throw new LineColNumberedIoException(
-                    string.Format(
-                        Resources.InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_,
-                        error.Line + 1, error.Message),
-                    error.Line + 1, error.Column);
-            }
+            ErrorList.Add(error);
         }
 
         public override int ColumnIndex(string columnName)
@@ -2193,6 +2198,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
+                    Tuple.Create(labelType, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),
                     Tuple.Create(idCAS, idCAS),
                     Tuple.Create(idHMDB, idHMDB),

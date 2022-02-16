@@ -805,5 +805,11 @@ namespace pwiz.Skyline.Controls.Startup
                 string.Empty
                 );
         }
+
+        public void ClickWizardAction(string actionName)
+        {
+            flowLayoutPanelWizard.Controls.Cast<ActionBoxControl>().First(c => Equals(c.Caption, actionName))
+                .EventAction();
+        }
     }
 }

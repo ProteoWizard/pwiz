@@ -1,6 +1,6 @@
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This is a generic 'clang' toolset. Depending on the current system, it
 # forwards either to 'clang-linux' or 'clang-darwin' modules.
@@ -24,12 +24,12 @@ rule init ( * : * )
     }
     else if [ os.name ] = MACOSX
     {
-        toolset.using clang-darwin : 
+        toolset.using clang-darwin :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else
     {
-        toolset.using clang-linux : 
+        toolset.using clang-linux :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
 }

@@ -1,7 +1,7 @@
 # Copyright 2008 - 2013 Roland Schwarz
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Boost library support module.
 #
@@ -213,6 +213,7 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std graph               : BOOST_GRAPH_DYN_LINK ;
     boost_lib_std graph_parallel      : BOOST_GRAPH_DYN_LINK ;
     boost_lib_std iostreams           : BOOST_IOSTREAMS_DYN_LINK ;
+    boost_lib_std json                : BOOST_JSON_DYN_LINK ;
     boost_lib_std locale              : BOOST_LOCALE_DYN_LINK ;
     boost_lib_std log                 : BOOST_LOG_DYN_LINK  ;
     boost_lib_std log_setup           : BOOST_LOG_SETUP_DYN_LINK  ;

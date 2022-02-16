@@ -10,6 +10,10 @@ namespace SharedBatch
     public partial class FileOpenedForm : Form
     {
 
+        // Form with two labels and a FilePathControl. Used in AutoQC and SkylineBatch
+        // to allow user to choose a new directory when a configuration file is imported
+        // from the downloads folder.
+
         private FilePathControl _filePathControl;
         private IMainUiControl _mainControl;
 

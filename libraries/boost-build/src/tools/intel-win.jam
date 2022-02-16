@@ -1,7 +1,7 @@
 # Copyright Vladimir Prus 2004.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Importing common is needed because the rules we inherit here depend on it.
 # That is nasty.
@@ -194,7 +194,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         setup_astk_bat = "iclvars_*.bat" ;
         setup_bat = "iclvars.bat" ;
     }
-    
+
     setup = [ path.glob $(root) : $(setup_astk_bat) ] ;
     if ! $(setup)
     {

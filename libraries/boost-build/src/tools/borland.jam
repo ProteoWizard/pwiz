@@ -1,9 +1,9 @@
-# Copyright 2005 Dave Abrahams 
-# Copyright 2003 Rene Rivera 
-# Copyright 2003, 2004, 2005 Vladimir Prus 
+# Copyright 2005 Dave Abrahams
+# Copyright 2003 Rene Rivera
+# Copyright 2003, 2004, 2005 Vladimir Prus
 # Copyright (c) 2020 Edward Diener
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #| tag::doc[]
 
@@ -69,27 +69,27 @@ rule init ( version ? : command * : options * )
 
     local condition = [ common.check-init-parameters borland :
         version $(version) ] ;
-    
-    local command = [ common.get-invocation-command borland : bcc32.exe 
+
+    local command = [ common.get-invocation-command borland : bcc32.exe
         : $(command) ] ;
-     
+
     common.handle-options borland : $(condition) : $(command) : $(options) ;
-    
+
     local just_bcc32 = [ MATCH ".*(bcc32)([^a-z0-9]|$)" : $(command:L) ] ;
-    
+
     if $(command)
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    }   
-    root = $(command:D) ;    
-    
+    }
+    root = $(command:D) ;
+
     flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
     flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
     flags borland.link RUN_PATH $(condition) : $(root)/bin ;
-    flags borland .root $(condition) : $(root)/bin/ ;    
-    
+    flags borland .root $(condition) : $(root)/bin/ ;
+
     local jv ;
-    
+
     if $(version)
         {
         jv = [ MATCH "^([0-9.]+)" : $(version) ] ;
@@ -102,7 +102,7 @@ rule init ( version ? : command * : options * )
         {
         init-later-releases $(condition) ;
         }
-        
+
     if $(just_bcc32) && ( $(just_bcc32[1]) = bcc32 )
         {
         flags borland.compile OPTIONS $(condition) : -g255 -Vx- -Ve- -b- ;
@@ -124,7 +124,7 @@ local rule init-earlier-releases ( condition )
 # This should be not for DLL
 flags borland OPTIONS $(condition)/<user-interface>console : -tWC ;
 
-# -tWR sets -tW as well, so we turn it off here and then turn it 
+# -tWR sets -tW as well, so we turn it off here and then turn it
 # on again later if we need it:
 flags borland OPTIONS $(condition)/<runtime-link>shared : -tWR -tWC ;
 
@@ -168,7 +168,7 @@ generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borlan
 generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
 generators.register-standard borland.asm : ASM : OBJ : <toolset>borland ;
 
-# Declare flags 
+# Declare flags
 
 flags borland.compile OPTIONS <debug-symbols>on : -v ;
 flags borland.link OPTIONS <debug-symbols>on : -v ;
@@ -211,7 +211,7 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extension
-# -a8    8 byte alignment, this option is on in the IDE by default 
+# -a8    8 byte alignment, this option is on in the IDE by default
 #        and effects binary compatibility.
 #
 
@@ -257,7 +257,7 @@ flags borland.archive AROPTIONS <archiveflags> ;
 # values tlib fails when building large applications.
 # CONSIDER: don't know what 'together' is for...
 actions updated together piecemeal archive
-{ 
+{
     $(.set-path)$(.root:W)$(.old-path)
     tlib $(AROPTIONS) /P256 /u /a /C "$(<:W)" +-"$(>:W)"
 }
@@ -267,7 +267,7 @@ if [ os.name ] = CYGWIN
 {
     .set-path = "cmd /S /C set \"PATH=" ;
     .old-path = ";%PATH%\" \"&&\"" ;
-    
+
 
     # Couldn't get TLIB to stop being confused about pathnames
     # containing dashes (it seemed to treat them as option separators
@@ -276,11 +276,11 @@ if [ os.name ] = CYGWIN
     # about pathname style! Forward slashes, too, are treated as
     # options.
     actions updated together piecemeal archive
-    { 
+    {
        chdir $(<:D)
        echo +-$(>:BS) > $(<:BS).rsp
        $(.set-path)$(.root)$(.old-path) "tlib.exe" $(AROPTIONS) /P256 /C $(<:BS) @$(<:BS).rsp && $(RM) $(<:BS).rsp
-    }    
+    }
 }
 else if [ os.name ] = NT
 {

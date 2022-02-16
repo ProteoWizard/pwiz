@@ -175,8 +175,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         public void UpdateButtons()
         {
             btnCopy.Enabled = btnShare.Enabled = btnRemove.Enabled = chooseViewsControl1.SelectedViews.Any();
-            ViewInfo selectedViewInfo = chooseViewsControl1.ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName);
-            btnEdit.Enabled = null != selectedViewInfo;
+            btnEdit.Enabled = CanEdit(chooseViewsControl1.SelectedViewName);
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
@@ -184,10 +183,20 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ShowCopyContextMenu();
         }
 
+        private bool CanEdit(ViewName? viewName)
+        {
+            if (!viewName.HasValue)
+            {
+                return false;
+            }
+            var viewContext = chooseViewsControl1.ViewContext;
+            var viewSpec = viewContext.GetViewSpecList(viewName.Value.GroupId)?.GetView(viewName.Value.Name);
+            return viewSpec != null && viewContext.GetRowSourceInfo(viewSpec) != null;
+        }
+
         public void ShowCopyContextMenu()
         {
-            openViewEditorContextMenuItem.Enabled = 
-                null != chooseViewsControl1.ViewContext.GetViewInfo(chooseViewsControl1.SelectedViewName);
+            openViewEditorContextMenuItem.Enabled = CanEdit(chooseViewsControl1.SelectedViewName);
             copyToGroupContextMenuItem.DropDownItems.Clear();
             foreach (var group in ViewContext.ViewGroups)
             {
