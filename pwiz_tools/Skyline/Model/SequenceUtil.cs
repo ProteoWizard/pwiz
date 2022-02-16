@@ -1089,6 +1089,8 @@ namespace pwiz.Skyline.Model
             var cTermMassY = (_massDiffY + modMasses._massModCleaveC + BioMassCalc.MassProton).ChangeIsMassH(true);
             var deltaX = _massDiffX - _massDiffY;
             var deltaZ = _massDiffZ - _massDiffY;
+            var deltaZH = _massDiffZH - _massDiffY;
+            var deltaZHH = _massDiffZHH - _massDiffY;
 
             var masses = new IonTable<TypedMass>(IonType.zhh, len);
 
@@ -1114,8 +1116,8 @@ namespace pwiz.Skyline.Model
                 masses[x, iC] = cTermMassY + deltaX;
                 masses[y, iC] = cTermMassY;
                 masses[z, iC] = cTermMassY + deltaZ;
-                masses[IonType.zh, iC] = cTermMassY + deltaZ + BioMassCalc.MassProton;
-                masses[IonType.zhh, iC] = cTermMassY + deltaZ + BioMassCalc.MassProton * 2;
+                masses[IonType.zh, iC] = cTermMassY + deltaZH;
+                masses[IonType.zhh, iC] = cTermMassY + deltaZHH;
             }
 
             return masses;

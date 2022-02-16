@@ -357,13 +357,13 @@
     <value>193, 22</value>
   </data>
   <data name="zhionsContextMenuItem.Text" xml:space="preserve">
-    <value>ZH-ions</value>
+    <value>Z&#x2022;-ions</value>
   </data>
   <data name="zhhionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
   <data name="zhhionsContextMenuItem.Text" xml:space="preserve">
-    <value>ZHH-ions</value>
+    <value>Z&#x2032;-ions</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
