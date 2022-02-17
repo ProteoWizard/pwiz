@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestMzOrderIndependence();
             TestNegativeModeLabels();
             TestEmptyTransitionList();
             TestErrorDialog();
@@ -1363,6 +1364,38 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestMzOrderIndependence()
+        {
+            // Ensure that the line order of an m/z-only mixed polarity transition list does not matter
+            var texts = new[]
+            {
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n", // If bug is not fixed, this order won't give same doc structure as the other
+
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n"
+            };
+            foreach (var text in texts)
+            {
+                SetClipboardText(text);
+                // Paste directly into targets area - no interaction expected
+                RunUI(() => SkylineWindow.Paste());
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 2);
+                AssertEx.AreEqual(228, SkylineWindow.Document.Molecules.First().Target.Molecule.AverageMass, 1);
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t => 
+                    t.PrecursorAdduct.AdductCharge < 0 && !t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t =>
+                    t.PrecursorAdduct.AdductCharge > 0 && t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 144.1) < 1));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    !t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 236.1) < 1));
+                NewDocument();
+            }
         }
 
         private void TestNegativeModeLabels()
