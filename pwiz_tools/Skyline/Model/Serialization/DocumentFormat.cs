@@ -90,7 +90,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Import Time
         public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration, auto-train peak scoring model
         public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_21_2;
+        public static readonly DocumentFormat VERSION_21_22 = new DocumentFormat(21.22); // zh and zhh ion types added to the schema.
+        public static readonly DocumentFormat CURRENT = VERSION_21_22;
 
 
         private readonly double _versionNumber;

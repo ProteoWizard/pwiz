@@ -170,6 +170,7 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="EADZIonsTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
     <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
@@ -474,6 +475,7 @@
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="DuplicateSmallMoleculePrecursorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />
+    <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
