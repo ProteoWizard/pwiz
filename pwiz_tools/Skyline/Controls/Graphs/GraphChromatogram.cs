@@ -1311,7 +1311,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         int numStepsExpected = chromatograms.OptimizationFunction.StepCount*2 + 1;
                         if (arrayChromInfo.Length != numStepsExpected)
                         {
-                            arrayChromInfo = ResizeArrayChromInfo(arrayChromInfo, numStepsExpected);
+                            int centerInfo = TransitionGroupDocNode.FindCenterInfo(nodeTranSelected, arrayChromInfo);
+                            arrayChromInfo = ResizeArrayChromInfo(arrayChromInfo, centerInfo, numStepsExpected);
                             allowEmpty = true;
                         }
                     }
@@ -1756,7 +1757,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 // no matter what, so that chromatogram colors will match up with peak
                 // area charts.
                 if (infos.Length != totalOptCount)
-                    infos = ResizeArrayChromInfo(infos, totalOptCount);
+                {
+                    int centerInfo = TransitionGroupDocNode.FindCenterInfo(nodeTran, infos);
+                    infos = ResizeArrayChromInfo(infos, centerInfo, totalOptCount);
+                }
 
                 listChromInfoSets.Add(infos);
                 var transitionChromInfos = new TransitionChromInfo[totalOptCount];
@@ -1853,7 +1857,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphData = listGraphData[i];
 
-                if (graphData.InfoPrimary != null)
+                if (graphData.InfoPrimary != null || totalSteps > 0)    // Show everything for optimization runs
                 {
                     int step = i - totalSteps;
                     int width = lineWidth;
@@ -1895,19 +1899,23 @@ namespace pwiz.Skyline.Controls.Graphs
             return chromGraphItems;
         }
 
-        private static ChromatogramInfo[] ResizeArrayChromInfo(ChromatogramInfo[] arrayChromInfo, int numStepsExpected)
+        private static ChromatogramInfo[] ResizeArrayChromInfo(ChromatogramInfo[] arrayChromInfo, int centerInfo, int numStepsExpected)
         {
             int numStepsFound = arrayChromInfo.Length;
             var arrayChromInfoNew = new ChromatogramInfo[numStepsExpected];
             if (numStepsFound < numStepsExpected)
             {
+                // Position a smaller set inside a larger array
+                int destinationIndex = numStepsExpected / 2 - centerInfo;
+                int length = Math.Min(numStepsFound, numStepsExpected - destinationIndex);
                 Array.Copy(arrayChromInfo, 0,
-                           arrayChromInfoNew, (numStepsExpected - numStepsFound) / 2, numStepsFound);
+                    arrayChromInfoNew, destinationIndex, length);
             }
             else
             {
-                Array.Copy(arrayChromInfo, (numStepsFound - numStepsExpected) / 2,
-                           arrayChromInfoNew, 0, numStepsExpected);
+                // Position as much as will fit of a larger set into a smaller array
+                Array.Copy(arrayChromInfo, centerInfo - numStepsExpected / 2,
+                    arrayChromInfoNew, 0, numStepsExpected);
             }
             arrayChromInfo = arrayChromInfoNew;
             return arrayChromInfo;

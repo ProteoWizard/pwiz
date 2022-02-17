@@ -147,6 +147,7 @@
     <Compile Include="PeptideTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
+    <Compile Include="SchemaDocumentsTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
