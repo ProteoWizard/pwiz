@@ -455,7 +455,7 @@ namespace pwiz.Skyline.Model
 
                         if (smallestMassRow != r)
                         {
-                            // Reorder the list such that the smallest mz appears before its siblings
+                            // Reorder the list such that the row with smallest calculated mass appears before its siblings
                             var rowSmallestMass = Rows[smallestMassRow];
                             Rows.RemoveAt(smallestMassRow);
                             Rows.Insert(r, rowSmallestMass);
