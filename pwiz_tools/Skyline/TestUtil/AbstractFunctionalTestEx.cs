@@ -26,6 +26,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.MSGraph;
@@ -631,7 +632,10 @@ namespace pwiz.SkylineTestUtil
             });
 
             if (pausePage.HasValue)
+            {
+                RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
                 PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage.Value);
+            }
 
             OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
             OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
@@ -697,6 +701,50 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        protected const string MIXED_TRANSITION_LIST_REPORT_NAME = "Mixed Transition List";
+        protected void EnsureMixedTransitionListReport()
+        {
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
+            var viewsToAdd = @"<views>
+  <view name='Mixed Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='mixed'>
+    <column name='Precursor.Peptide.Protein.Name' />
+    <column name='Precursor.Peptide.ModifiedSequence' />
+    <column name='Precursor.Peptide.MoleculeName' />
+    <column name='Precursor.Peptide.MoleculeFormula' />
+    <column name='Precursor.IonFormula' />
+    <column name='Precursor.NeutralFormula' />
+    <column name='Precursor.Adduct' />
+    <column name='Precursor.Mz' />
+    <column name='Precursor.Charge' />
+    <column name='Precursor.CollisionEnergy' />
+    <column name='ExplicitCollisionEnergy' />
+    <column name='Precursor.Peptide.ExplicitRetentionTime' />
+    <column name='Precursor.Peptide.ExplicitRetentionTimeWindow' />
+    <column name='ProductMz' />
+    <column name='ProductCharge' />
+    <column name='FragmentIon' />
+    <column name='ProductIonFormula' />
+    <column name='ProductNeutralFormula' />
+    <column name='ProductAdduct' />
+    <column name='FragmentIonType' />
+    <column name='FragmentIonOrdinal' />
+    <column name='CleavageAa' />
+    <column name='LossNeutralMass' />
+    <column name='Losses' />
+    <column name='LibraryRank' />
+    <column name='LibraryIntensity' />
+    <column name='IsotopeDistIndex' />
+    <column name='IsotopeDistRank' />
+    <column name='IsotopeDistProportion' />
+    <column name='FullScanFilterWidth' />
+    <column name='IsDecoy' />
+    <column name='ProductDecoyMzShift' />
+  </view>
+</views>";
+            var viewSpecListToAdd = (ViewSpecList) new XmlSerializer(typeof(ViewSpecList)).Deserialize(new StringReader(viewsToAdd));
+            Settings.Default.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, viewSpecList.AddOrReplaceViews(viewSpecListToAdd.ViewSpecLayouts));
+        }
+
         public DocumentGridForm EnableDocumentGridIonMobilityResultsColumns(int? expectedRowCount = null)
         {
             /* Add these IMS related columns to the standard mixed transition list report
@@ -710,13 +758,14 @@ namespace pwiz.SkylineTestUtil
                 <column name="Results!*.Value.Chromatogram.ChromatogramIonMobilityUnits" />
             */
 
+            EnsureMixedTransitionListReport();
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-
             EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
+                MIXED_TRANSITION_LIST_REPORT_NAME,
                 SkylineWindow.Document.MoleculeTransitionCount,
                 new[]
                 {
+                    // Completely new columns
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
                     "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.IonMobilityFragment",

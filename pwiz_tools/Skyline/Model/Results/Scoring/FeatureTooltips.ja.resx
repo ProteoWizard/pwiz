@@ -98,13 +98,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Co-elution (weighted)" xml:space="preserve">
-    <value>トランジション面積の合計で加重した検体プリカーサーのMQuest共溶出スコア</value>
+    <value>トランジション面積の合計で重み付けした検体プリカーサーのMQuest共溶出スコア</value>
   </data>
   <data name="Co-elution count" xml:space="preserve">
     <value>「共溶出」が真である全プリカーサーでのトランジションピークの割合</value>
   </data>
   <data name="Default co-elution (weighted)" xml:space="preserve">
-<value>トランジション面積の合計で加重したMQuest共溶出スコア。
+<value>トランジション面積の合計で重み付けしたMQuest共溶出スコア。
 内部標準プリカーサーがある場合にはそれを使用し、ない場合には検体プリカーサーを使用して計算されます。</value>
 </data>
   <data name="Default co-elution count" xml:space="preserve">
@@ -121,7 +121,7 @@
 内部標準プリカーサーがある場合にはそれを使用し、ない場合には検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Default shape (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重したMQues形状スコア。
+    <value>トランジションピーク面積の合計で重み付けしたMQues形状スコア。
 内部標準プリカーサーがある場合にはそれを使用し、ない場合には検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Identified count" xml:space="preserve">
@@ -139,17 +139,17 @@
 スコアが一番高い検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Precursor mass error" xml:space="preserve">
-    <value>トランジション面積で加重した検体MS1トランジション全体での平均質量誤差。</value>
+    <value>トランジション面積で重み付けした検体MS1トランジション全体での平均質量誤差。</value>
   </data>
   <data name="Precursor-product shape score" xml:space="preserve">
     <value>MS1イオンとMS2イオンとの間の形状相関スコア。
 内部標準プリカーサーがある場合にはそれを使用し、ない場合には検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Product mass error" xml:space="preserve">
-    <value>トランジション面積で加重した検体MS2トランジション全体での平均質量誤差。</value>
+    <value>トランジション面積で重み付けした検体MS2トランジション全体での平均質量誤差。</value>
   </data>
   <data name="Reference co-elution (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重したMQuest共溶出スコア。</value>
+    <value>トランジションピーク面積の合計で重み付けしたMQuest共溶出スコア。</value>
   </data>
   <data name="Reference co-elution count" xml:space="preserve">
     <value>「共溶出」が真である内部標準プリカーサー全体でのトランジションの割合。</value>
@@ -158,24 +158,24 @@
     <value>検体と内部標準トランジションピーク面積との間の相関性における正規化されたコントラスト角度。</value>
   </data>
   <data name="Reference shape (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重されたMQuest形状スコア。</value>
+    <value>トランジションピーク面積の合計で重み付けされたMQuest形状スコア。</value>
   </data>
   <data name="Retention time difference" xml:space="preserve">
     <value>予測される保持時間とピーク頂点時間との間の差。</value>
   </data>
   <data name="Retention time squared difference" xml:space="preserve">
-    <value>予測される保持時間とピーク頂点h時間との間の差の2乗。</value>
+    <value>予測される保持時間とピーク頂点時間との間の差の2乗。</value>
   </data>
   <data name="Shape (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重されたMQuest形状スコア。
+    <value>トランジションピーク面積の合計で重み付けされたMQuest形状スコア。
 検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Signal to noise" xml:space="preserve">
-    <value>ピーク境界以降のピーク高さのメジアン強度に対する比の対数。
+    <value>ピーク境界以降のピーク高さのメディアン強度に対する比の対数。
 検体プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Standard co-elution (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重されるMQuest共溶出スコア。
+    <value>トランジションピーク面積の合計で重み付けされるMQuest共溶出スコア。
 内部標準プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Standard Intensity" xml:space="preserve">
@@ -186,14 +186,14 @@
 内部標準プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Standard product mass error" xml:space="preserve">
-    <value>トランジション面積で加重された内部標準MS2トランジション全体での平均質量誤差。</value>
+    <value>トランジション面積で重み付けされた内部標準MS2トランジション全体での平均質量誤差。</value>
   </data>
   <data name="Standard shape (weighted)" xml:space="preserve">
-    <value>トランジションピーク面積の合計で加重されたMQuest形状スコア。
+    <value>トランジションピーク面積の合計で重み付けされたMQuest形状スコア。
 内部標準プリカーサーを使用して計算されます。</value>
   </data>
   <data name="Standard signal to noise" xml:space="preserve">
-    <value>ピーク境界以降のメジアン強度に対するピーク高さの比の対数。
+    <value>ピーク境界以降のメディアン強度に対するピーク高さの比の対数。
 内部標準プリカーサーを使用して計算されます。</value>
   </data>
 </root>

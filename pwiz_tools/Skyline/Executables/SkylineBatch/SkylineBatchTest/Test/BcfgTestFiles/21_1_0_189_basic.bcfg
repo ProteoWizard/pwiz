@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_list saved_path_root="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles" version="21.1.0.189">
+  <skylinebatch_config name="Basic" modified="01/12/2022 12:12:00">
+    <file_settings analysis_folder_path="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Basic">
+      <template_file path="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" />
+      <data_folder path="C:\Branches\always_bugs\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" />
+      <annotations_file />
+    </file_settings>
+    <import_settings />
+    <refine_settings remove_decoys="true" remove_results="true" />
+    <report_settings />
+    <config_skyline_settings type="Skyline" />
+  </skylinebatch_config>
+</config_list>

@@ -4264,6 +4264,10 @@ namespace pwiz.Skyline
                 {
                     SetNormalizationMethod(value);
                 }
+                else
+                {
+                    SequenceTree.NormalizeOption = value;
+                }
             }
         }
 

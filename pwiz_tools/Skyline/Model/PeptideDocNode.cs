@@ -120,6 +120,23 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
+        public PeptideDocNode ChangeFastaSequence(FastaSequence newSequence)
+        {
+            int begin = newSequence.Sequence.IndexOf(Peptide.Target.Sequence, StringComparison.Ordinal);
+            Assume.IsTrue(begin >= 0);
+            int end = begin + Peptide.Target.Sequence.Length;
+            var newPeptide = new Peptide(newSequence, Peptide.Target.Sequence,
+                begin, end, Peptide.MissedCleavages);
+            return ChangePeptide(newPeptide, TransitionGroups.Select(tg => tg.ChangePeptide(newPeptide)));
+        }
+
+        public PeptideDocNode ChangePeptide(Peptide peptide, IEnumerable<TransitionGroupDocNode> newTransitionGroups)
+        {
+            var node = (PeptideDocNode)ChangeId(peptide);
+            node = (PeptideDocNode)node.ChangeChildren(newTransitionGroups.Cast<DocNode>().ToList());
+            return node;
+        }
+
         [TrackChildren(ignoreName:true, defaultValues: typeof(DefaultValuesNull))]
         public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 

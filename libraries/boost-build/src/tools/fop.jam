@@ -1,7 +1,7 @@
 #  Copyright (C) 2003-2004 Doug Gregor and Dave Abrahams. Distributed
 # under the Boost Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 #
 #  This module defines rules to handle generation of PDF and
 #  PostScript files from XSL Formatting Objects via Apache FOP
@@ -26,10 +26,10 @@ rule init ( fop-command ? : java-home ? : java ? )
 
     if $(fop-command) || ! $(has-command)
     {
-        fop-command = [ common.get-invocation-command fop : fop : $(fop-command) 
+        fop-command = [ common.get-invocation-command fop : fop : $(fop-command)
           : [ modules.peek : FOP_DIR ] ] ;
     }
-    
+
     if $(fop-command)
     {
         .FOP_COMMAND = $(fop-command) ;
@@ -39,9 +39,9 @@ rule init ( fop-command ? : java-home ? : java ? )
     {
         .FOP_SETUP = ;
 
-    
+
         # JAVA_HOME is the location that java was installed to.
-    
+
         if $(java-home)
         {
             .FOP_SETUP += [ common.variable-setting-command JAVA_HOME : $(java-home) ] ;
@@ -50,7 +50,7 @@ rule init ( fop-command ? : java-home ? : java ? )
         # JAVACMD is the location that of the java executable, useful for a
         # non-standard java installation, where the executable isn't at
         # $JAVA_HOME/bin/java.
-    
+
         if $(java)
         {
             .FOP_SETUP += [ common.variable-setting-command JAVACMD : $(java) ] ;

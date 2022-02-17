@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             // ReSharper disable LocalizableElement 
             IEnumerable<string> commonAffixes = new [] { "decoy", "dec", "reverse", "rev", "__id_decoy", "xxx", "shuffled", "shuffle", "pseudo", "random" };
-            commonAffixes = commonAffixes.Concat(commonAffixes.Select(o => o.ToUpperInvariant()));
+            commonAffixes = commonAffixes.Concat(commonAffixes.Select(o => o.ToUpperInvariant())).ToArray();
             // ReSharper restore LocalizableElement
 
             var prefixCounts = commonAffixes.ToDictionary(o => o, k => 0);
