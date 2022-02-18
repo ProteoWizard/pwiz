@@ -1355,7 +1355,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                // Mask off mass error bits
                 return _flagValues;
             }
         }
@@ -1405,8 +1404,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if ((_flagValues & FlagValues.mass_error_known) == 0)
                     return null;
-                // Mass error is stored in the high 16 bits of the Flags
-                // as 10x the calculated mass error in PPM.
+                // Mass error is stored as 10x the calculated mass error in PPM.
                 return _massError / 10f;
             }
         }

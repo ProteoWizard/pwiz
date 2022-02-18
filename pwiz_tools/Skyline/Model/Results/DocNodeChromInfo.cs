@@ -188,7 +188,6 @@ namespace pwiz.Skyline.Model.Results
             HasIsotopeDotProduct = 8192,
             HasQValue = 16384,
             HasZScore = 32768,
-
         }
 
         private Flags _flags;
@@ -246,8 +245,8 @@ namespace pwiz.Skyline.Model.Results
         public short OptimizationStep { get; private set; }
 
         public float PeakCountRatio { get; private set; }
-        private float _retentionTime;
 
+        private float _retentionTime;
         public float? RetentionTime
         {
             get { return GetOptional(_retentionTime, Flags.HasRetentionTime); }
@@ -262,7 +261,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private float _endRetentionTime;
-
         public float? EndRetentionTime
         {
             get { return GetOptional(_endRetentionTime, Flags.HasEndRetentionTime); }
@@ -301,7 +299,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private float _backgroundArea;
-
         public float? BackgroundArea
         {
             get { return GetOptional(_backgroundArea, Flags.HasBackgroundArea); }
@@ -345,6 +342,7 @@ namespace pwiz.Skyline.Model.Results
 
         public PeakIdentification Identified { get; private set; }
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
+
         private float _libraryDotProduct;
         public float? LibraryDotProduct
         {
@@ -367,7 +365,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private float _zScore;
-
         public float? ZScore
         {
             get { return GetOptional(_zScore, Flags.HasZScore); }
