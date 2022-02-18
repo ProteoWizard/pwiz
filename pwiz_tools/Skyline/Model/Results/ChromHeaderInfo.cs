@@ -1033,11 +1033,12 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _backgroundArea;
         private readonly float _height;
         private readonly float _fwhm;
-        private uint _flagBits;
+        private FlagValues _flagValues;
+        private short _massError;
         private readonly short _pointsAcross;
 
         [Flags]
-        public enum FlagValues
+        public enum FlagValues : ushort
         {
             degenerate_fwhm =       0x0001,
             forced_integration =    0x0002,
@@ -1048,7 +1049,6 @@ namespace pwiz.Skyline.Model.Results
             used_id_alignment =     0x0040,
 
             // This is the last available flag
-            // The high word of the flags is reserved for delta-mass-error
             mass_error_known =      0x8000,
         }
 
@@ -1201,7 +1201,7 @@ namespace pwiz.Skyline.Model.Results
             _backgroundArea = 0;
             _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
             _retentionTime = (float) apexTime;
-            _flagBits = 0;
+            _flagValues = flagValues;
             if (halfMaxStart.HasValue)
             {
                 _fwhm = (float) (halfMaxEnd - halfMaxStart);
@@ -1212,15 +1212,18 @@ namespace pwiz.Skyline.Model.Results
             }
             if (null != timeIntensities.MassErrors && totalArea > 0)
             {
-                flagValues |= FlagValues.mass_error_known;
-                FlagBits = ((uint)To10x(totalMassError / totalArea)) << 16;
+                _flagValues |= FlagValues.mass_error_known;
+                _massError = To10x(totalMassError / totalArea);
+            }
+            else
+            {
+                _flagValues &= ~FlagValues.mass_error_known;
+                _massError = 0;
             }
 
-
-            FlagBits |= (uint) flagValues;
             if (fwhmDegenerate)
             {
-                FlagBits |= (uint) FlagValues.degenerate_fwhm;
+                _flagValues |= FlagValues.degenerate_fwhm;
             }
         }
 
@@ -1273,20 +1276,23 @@ namespace pwiz.Skyline.Model.Results
             _fwhm = (float) (peak.Fwhm * interval);
             if (float.IsNaN(Fwhm))
                 _fwhm = 0;
+            _flagValues = flags;
             if (peak.FwhmDegenerate)
-                flags |= FlagValues.degenerate_fwhm;
+                _flagValues |= FlagValues.degenerate_fwhm;
 
             // Calculate peak truncation as a peak extent at either end of the
             // recorded values, where the intensity is higher than the other extent
             // by more than 1% of the peak height.
-            flags |= FlagValues.peak_truncation_known;
+            _flagValues |= FlagValues.peak_truncation_known;
             const double truncationTolerance = 0.01;
             double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
             if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
                 (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
             {
-                flags |= FlagValues.peak_truncated;
+                _flagValues |= FlagValues.peak_truncated;
             }
+
+            _massError = 0;
             if (massErrors != null)
             {
                 // Mass error is mean of mass errors in the peak, weighted by intensity
@@ -1307,11 +1313,10 @@ namespace pwiz.Skyline.Model.Results
                 // Only if intensity exceded the background at least once
                 if (totalIntensity > 0)
                 {
-                    flags |= FlagValues.mass_error_known;
-                    FlagBits = ((uint)To10x(massError)) << 16;
+                    _flagValues |= FlagValues.mass_error_known;
+                    _massError = To10x(massError);
                 }
             }
-            FlagBits |= (uint) flags;
             if (rawTimes != null)
             {
                 int startIndex = CollectionUtil.BinarySearch(rawTimes, StartTime);
@@ -1339,7 +1344,6 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get { return _backgroundArea; } }
         public float Height { get { return _height; } }
         public float Fwhm { get { return _fwhm; } }
-        public uint FlagBits { get { return _flagBits; } private set { _flagBits = value; } }
         public short? PointsAcross { get { return _pointsAcross == 0 ? (short?)null : _pointsAcross; } }
 
         public override string ToString()
@@ -1352,7 +1356,7 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 // Mask off mass error bits
-                return (FlagValues) (FlagBits & 0xFFFF);
+                return _flagValues;
             }
         }
 
@@ -1399,11 +1403,11 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if ((FlagBits & (uint) FlagValues.mass_error_known) == 0)
+                if ((_flagValues & FlagValues.mass_error_known) == 0)
                     return null;
                 // Mass error is stored in the high 16 bits of the Flags
                 // as 10x the calculated mass error in PPM.
-                return ((short)(FlagBits >> 16))/10f;
+                return _massError / 10f;
             }
         }
 
@@ -1415,7 +1419,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromPeak RemoveMassError()
         {
             var copy = this;
-            copy.FlagBits = (uint) (Flags & ~FlagValues.mass_error_known);
+            copy._flagValues = Flags & ~FlagValues.mass_error_known;
+            copy._massError = 0;
             return copy;
         }
 
