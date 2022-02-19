@@ -628,7 +628,7 @@ namespace pwiz.Skyline.Controls
 
                 if (Choice.Id is Transition transition)
                 {
-                    foreach (var inputString in transition.IonType.GetInputStrings())
+                    foreach (var inputString in transition.IonType.GetInputAliases())
                     {
                         if (Label.Contains(searchString.Replace(inputString, transition.IonType.GetLocalizedString())))
                             return true;

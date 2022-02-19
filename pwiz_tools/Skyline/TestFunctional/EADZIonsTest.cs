@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -24,6 +25,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            //Making sure the input aliases are unique across all ion types to avoid input ambiguity.
+            Assert.IsTrue(Enumerable.Range(0, (int) IonType.zhh + 1).SelectMany(i => ((IonType) i).GetInputAliases(), (i, s) => s)
+                .GroupBy(s => s, (s, enumerable) => enumerable.Count()).All(i => i == 1));
+
             OpenDocument("EADZIonsTest.sky");
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
@@ -37,6 +42,8 @@ namespace pwiz.SkylineTestFunctional
             ImportResults("FilteredScans\\LITV56_EAD" + ExtensionTestContext.ExtMzml);
             WaitForGraphs();
             FindNode((505.5810).ToString("F4", LocalizationHelper.CurrentCulture) + "+++");
+            Settings.Default.ShowZHIons = true;
+            Settings.Default.ShowZHHIons = true;
 
             var testIons = new[]{
                 new {type = IonType.zh, offset = 8},

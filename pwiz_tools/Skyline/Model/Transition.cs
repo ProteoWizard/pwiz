@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model
             return LOCALIZED_VALUES[(int) val + 2]; // To include precursor and custom
         }
 
-        public static IEnumerable<string> GetInputStrings(this IonType val)
+        public static IEnumerable<string> GetInputAliases(this IonType val)
         {
             if (!INPUT_ALIASES.ContainsKey(val))
                 return new[] {val.ToString()};
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model
             int i = LOCALIZED_VALUES.IndexOf(v => Equals(v, enumValue));
             if (i >= 0)
                 return (IonType) (i-2);
-            var result = INPUT_ALIASES.Keys.First(ion => GetInputStrings(ion).Any(str => str.Equals(enumValue)));
+            var result = INPUT_ALIASES.Keys.First(ion => GetInputAliases(ion).Any(str => str.Equals(enumValue)));
             return result;
         }
 

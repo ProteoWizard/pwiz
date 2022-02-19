@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Model.DocSettings
             string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
-            var stringsList = ionTypes.Select(ion => ion.GetInputStrings().First()).ToList();
+            var stringsList = ionTypes.Select(ion => ion.GetInputAliases().First()).ToList();
             return stringsList.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
