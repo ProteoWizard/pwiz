@@ -35,7 +35,6 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Database;
@@ -75,6 +74,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             comboInputFileType.SelectedIndex = 0;
+
+            columnThreshold.CellTemplate = new ThresholdCell();
         }
 
         public BuildPeptideSearchLibrarySettings BuildLibrarySettings
@@ -252,12 +253,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             toAdd.ExceptWith(existingFiles);
 
             foreach (var file in toAdd)
-            {
-                var i = gridSearchFiles.Rows.Add();
-                gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
-                gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue();
-                gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
-            }
+                AddRow(null, file, null);
 
             if (gridSearchFiles.SortedColumn == null || gridSearchFiles.SortOrder == SortOrder.None)
                 gridSearchFiles.Sort(columnFile, ListSortDirection.Ascending);
@@ -266,98 +262,109 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
 
-            if (toAdd.Any())
+            if (!toAdd.Any())
+                return;
+
+            if (async)
             {
-                var blibBuild = new BlibBuild(null, toAdd.ToArray());
-                void GetScoreTypes(object sender, DoWorkEventArgs e)
+                FireInputFilesChanged();
+                var bw = new BackgroundWorker();
+                bw.DoWork += (sender, e) =>
                 {
-                    IProgressStatus status = new ProgressStatus();
-                    var success = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _, out _, out var scoreTypes);
+                    var success = GetScoreTypes(toAdd, out var scoreTypes);
+                    Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes)));
+                };
+                bw.RunWorkerAsync();
+            }
+            else
+            {
+                var success = GetScoreTypes(toAdd, out var scoreTypes);
+                GridUpdateScoreInfo(success, scoreTypes);
+            }
+        }
 
-                    // Match input/output files
-                    var filesByLength = toAdd.OrderByDescending(s => s.Length).ToArray();
-                    var scoreTypesTmp = new Dictionary<string, BiblioSpecScoreType[]>();
-                    foreach (var pair in scoreTypes)
-                        scoreTypesTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
-                    scoreTypes = scoreTypesTmp;
+        private bool GetScoreTypes(ICollection<string> files, out Dictionary<string, BiblioSpecScoreType[]> scoreTypes)
+        {
+            var blibBuild = new BlibBuild(null, files.ToArray());
+            IProgressStatus status = new ProgressStatus();
+            var success = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _, out _, out scoreTypes);
 
-                    Invoke(new MethodInvoker(delegate
+            // Match input/output files
+            var filesByLength = files.OrderByDescending(s => s.Length).ToArray();
+            var scoreTypesTmp = new Dictionary<string, BiblioSpecScoreType[]>();
+            foreach (var pair in scoreTypes)
+                scoreTypesTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
+            scoreTypes = scoreTypesTmp;
+
+            return success;
+        }
+
+        private void GridUpdateScoreInfo(bool success, IReadOnlyDictionary<string, BiblioSpecScoreType[]> scoreTypes)
+        {
+            gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
+
+            // Gather existing score thresholds
+            var existingThresholds = new Dictionary<string, double?>();
+            foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => !scoreTypes.ContainsKey(FileCellValue.Get(row, columnFile).File)))
+            {
+                var scoreType = ScoreTypeCellValue.Get(row, columnScoreType).NameInvariant;
+                if (scoreType != null)
+                    existingThresholds[scoreType] = ThresholdCell.Get(row, columnThreshold).Threshold;
+            }
+
+            for (var i = 0; i < gridSearchFiles.RowCount; i++)
+            {
+                var row = gridSearchFiles.Rows[i];
+                var file = FileCellValue.Get(row, columnFile).File;
+                if (!scoreTypes.ContainsKey(file))
+                    continue;
+                if (!success || !scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
+                {
+                    ThresholdCell.Get(row, columnThreshold).Value = string.Empty;
+                    continue;
+                }
+
+                for (var j = 0; j < scoreTypesThis.Length; j++)
+                {
+                    var scoreType = scoreTypesThis[j];
+                    if (j == 0)
                     {
-                        gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
-
-                        // Gather existing score thresholds
-                        var existingThresholds = new Dictionary<string, double?>();
-                        foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => !toAdd.Contains(FileCellValue.Get(row, columnFile).File)))
-                        {
-                            var scoreType = ScoreTypeCellValue.Get(row, columnScoreType).NameInvariant;
-                            if (scoreType != null)
-                                existingThresholds[scoreType] = ThresholdCell.Get(row, columnThreshold).Threshold;
-                        }
-
-                        for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                        {
-                            var row = gridSearchFiles.Rows[i];
-                            var file = FileCellValue.Get(row, columnFile).File;
-                            if (!toAdd.Contains(file))
-                                continue;
-                            if (success && scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
-                            {
-                                for (var j = 0; j < scoreTypesThis.Length; j++)
-                                {
-                                    var scoreType = scoreTypesThis[j];
-                                    if (j == 0)
-                                    {
-                                        row.Cells[columnScoreType.Index].Value = new ScoreTypeCellValue(scoreType);
-                                    }
-                                    else
-                                    {
-                                        gridSearchFiles.Rows.Insert(i + 1);
-                                        row = gridSearchFiles.Rows[++i];
-                                        gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
-                                        gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue(scoreType);
-                                        gridSearchFiles[columnThreshold.Index, i] = new ThresholdCell();
-                                    }
-                                    var thresholdCell = ThresholdCell.Get(row, columnThreshold);
-                                    if (scoreType.CanSet)
-                                    {
-                                        thresholdCell.Value = existingThresholds.TryGetValue(scoreType.NameInvariant, out var threshold)
-                                            ? threshold
-                                            : BiblioSpecLiteBuilder.GetDefaultScoreThreshold(scoreType.NameInvariant, scoreType.DefaultValue);
-                                        thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
-                                            ? Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
-                                            : Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
-                                    }
-                                    else
-                                    {
-                                        thresholdCell.Value = scoreType.DefaultValue;
-                                        thresholdCell.ReadOnly = true;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                ThresholdCell.Get(row, columnThreshold).Value = string.Empty;
-                            }
-                        }
-
-                        gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
-
-                        FireInputFilesChanged();
-                    }));
-                }
-
-                if (async)
-                {
-                    FireInputFilesChanged();
-                    var bw = new BackgroundWorker();
-                    bw.DoWork += GetScoreTypes;
-                    bw.RunWorkerAsync();
-                }
-                else
-                {
-                    GetScoreTypes(null, null);
+                        row.Cells[columnScoreType.Index].Value = new ScoreTypeCellValue(scoreType);
+                    }
+                    else
+                    {
+                        row = AddRow(++i, file, scoreType);
+                    }
+                    var thresholdCell = ThresholdCell.Get(row, columnThreshold);
+                    if (scoreType.CanSet)
+                    {
+                        thresholdCell.Value = existingThresholds.TryGetValue(scoreType.NameInvariant, out var threshold)
+                            ? threshold
+                            : BiblioSpecLiteBuilder.GetDefaultScoreThreshold(scoreType.NameInvariant, scoreType.DefaultValue);
+                        thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
+                            ? Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
+                            : Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
+                    }
+                    else
+                    {
+                        thresholdCell.Value = scoreType.DefaultValue;
+                        thresholdCell.ReadOnly = true;
+                    }
                 }
             }
+
+            gridSearchFiles.CellValueChanged += gridSearchFiles_CellValueChanged;
+
+            FireInputFilesChanged();
+        }
+
+        private DataGridViewRow AddRow(int? insertPos, string file, BiblioSpecScoreType scoreType)
+        {
+            var i = insertPos ?? gridSearchFiles.RowCount;
+            gridSearchFiles.Rows.Insert(i);
+            gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
+            gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue(scoreType);
+            return gridSearchFiles.Rows[i];
         }
 
         public MsDataFileUri[] DdaSearchDataSources
@@ -1009,7 +1016,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 set => Value = value;
             }
 
-            public ThresholdCell(double? threshold = null)
+            public ThresholdCell() : this(null)
+            {
+                // Need parameterless constructor to use as CellTemplate
+            }
+
+            public ThresholdCell(double? threshold)
             {
                 if (threshold.HasValue)
                     Value = threshold.Value;
