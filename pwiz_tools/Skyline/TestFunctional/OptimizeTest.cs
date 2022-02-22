@@ -777,7 +777,8 @@ namespace pwiz.SkylineTestFunctional
 
                 // Try exporting with an explicitly set compensation voltage value and declustering potential
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-                EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
+                EnsureMixedTransitionListReport();
+                EnableDocumentGridColumns(documentGrid, MIXED_TRANSITION_LIST_REPORT_NAME, 5,
                     new[]
                     {
                         "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",

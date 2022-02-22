@@ -543,7 +543,11 @@ namespace pwiz.Skyline.Model
                 {
                     throw mzException;
                 }
-                else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                else if (lines.Count == 0) // Only line was a header, apparently
+                {
+                    throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+                }
+                else 
                 {
                     throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
                         -1);

@@ -264,6 +264,7 @@ namespace pwiz.Skyline.Util
         public const string Fe = "Fe";  // Iron
         public const string Ni = "Ni";  // Nickle
         public const string Cu = "Cu";  // Copper
+        public const string Cu65 = "Cu'";  // Copper65
         public const string Zn = "Zn";  // Zinc
         public const string Br = "Br";  // Bromine
         public const string Br81 = "Br'";  // Bromine81
@@ -305,6 +306,7 @@ namespace pwiz.Skyline.Util
                     { S33, new KeyValuePair<double, double>(32.971456, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                     { S34, new KeyValuePair<double, double>(33.967866, 0.99) },  // N.B. No idea if this 0.99 a realistic value 
                     { H3, new KeyValuePair<double, double>(3.01604928199, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { Cu65, new KeyValuePair<double, double>(64.92778970, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
         public static bool IsSkylineHeavySymbol(string symbol)
@@ -452,6 +454,8 @@ namespace pwiz.Skyline.Util
             AddMass(Fe, 55.845); //Unimod
             AddMass(Ni, 58.6934); //Unimod
             AddMass(Cu, 63.546); //Unimod
+            var massCu65 = IsotopeAbundances.Default[Cu].Keys[1]; // Just be consistent with the isotope masses we already use
+            AddMass(Cu65, massCu65);
             AddMass(Zn, 65.409); //Unimod
             AddMass(Br, 79.904); //Unimod
             AddMass(Br81, 80.9162897); //NIST

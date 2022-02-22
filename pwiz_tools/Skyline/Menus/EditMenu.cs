@@ -1159,8 +1159,19 @@ namespace pwiz.Skyline.Menus
                 // As long as it has columns we want to parse the input as a transition list
                 if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
                 {
-                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                        Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                    try
+                    {
+                        SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                    }
+                    catch (Exception exception)
+                    {
+                        if (ExceptionUtil.IsProgrammingDefect(exception))
+                        {
+                            throw;
+                        }
+                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                    }
                 }
                 else
                 {
