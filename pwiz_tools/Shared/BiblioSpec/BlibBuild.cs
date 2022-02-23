@@ -174,7 +174,7 @@ namespace pwiz.BiblioSpec
             }
         }
 
-        public bool CanSet => !ValidRange.Item1.Equals(ValidRange.Item2);
+        public bool CanSet => !ValidRange.Min.Equals(ValidRange.Max);
 
         public double DefaultValue
         {
@@ -201,7 +201,19 @@ namespace pwiz.BiblioSpec
             }
         }
 
-        public Tuple<double, double> ValidRange
+        public struct RangeValues
+        {
+            public double? Min { get; }
+            public double? Max { get; }
+
+            public RangeValues(double? min, double? max)
+            {
+                Min = min;
+                Max = max;
+            }
+        };
+
+        public RangeValues ValidRange
         {
             get
             {
@@ -209,27 +221,27 @@ namespace pwiz.BiblioSpec
                 {
                     case SPECTRUM_MILL:
                     case IDPICKER_FDR:
-                        return Tuple.Create(0d, 0d);
+                        return new RangeValues(0, 0);
                     case WATERS_MSE_PEPTIDE_SCORE:
-                        return Tuple.Create(6d, 6d);
+                        return new RangeValues(6, 6);
                     default:
-                        return Tuple.Create(0d, 1d);
+                        return new RangeValues(0, 1);
                 }
             }
         }
 
-        public Tuple<double?, double?> SuggestedRange
+        public RangeValues SuggestedRange
         {
             get
             {
                 switch (ProbabilityType)
                 {
                     case EnumProbabilityType.probability_correct:
-                        return new Tuple<double?, double?>(0.7, 1.0);
+                        return new RangeValues(0.7, 1.0);
                     case EnumProbabilityType.probability_incorrect:
-                        return new Tuple<double?, double?>(0.0, 0.3);
+                        return new RangeValues(0.0, 0.3);
                     default:
-                        return new Tuple<double?, double?>(null, null);
+                        return new RangeValues(null, null);
                 }
             }
         }

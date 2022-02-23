@@ -543,19 +543,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var scoreType = ScoreTypeCellValue.Get(row, columnScoreType);
                 var thresholdCell = ThresholdCell.Get(row, columnThreshold);
-                var threshold = thresholdCell.Threshold;
+                var thresholdError = thresholdCell.ErrorText;
                 var file = FileCellValue.Get(row, columnFile);
-                if (scoreType.MinValue <= threshold && threshold <= scoreType.MaxValue)
+                if (string.IsNullOrEmpty(thresholdError))
                 {
-                    thresholdsByFile[file.File] = threshold.Value;
+                    var threshold = thresholdCell.Threshold.GetValueOrDefault();
+                    thresholdsByFile[file.File] = threshold;
                     if (scoreType.ScoreType != null)
-                        thresholdsByScoreType[scoreType.ScoreType] = threshold.Value;
+                        thresholdsByScoreType[scoreType.ScoreType] = threshold;
                 }
                 else
                 {
-                    errors.Add(string.Format(
-                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___for__1__is_invalid__must_be_a_decimal_value_between__2__and__3___,
-                        thresholdCell.Value, file, scoreType.MinValue, scoreType.MaxValue));
+                    errors.Add(string.Format(@"{0}: {1}", file.File, thresholdError));
                 }
             }
             if (errors.Any())
@@ -570,20 +569,41 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 foreach (var pair in thresholdsByScoreType)
                 {
                     var scoreType = pair.Key;
-                    var (suggestedMin, suggestedMax) = scoreType.SuggestedRange;
+                    if (!scoreType.CanSet)
+                        continue;
+
+                    var probCorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct;
+                    var probIncorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect;
                     var threshold = pair.Value;
-                    if (threshold < suggestedMin || threshold > suggestedMax)
+                    var thresholdIsMin = threshold.Equals(scoreType.ValidRange.Min);
+                    var thresholdIsMax = threshold.Equals(scoreType.ValidRange.Max);
+                    string warning = null;
+                    if ((probCorrect && thresholdIsMax) || (probIncorrect && thresholdIsMin))
                     {
-                        var warning =
-                            string.Format(
-                                Resources
-                                    .BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_,
-                                threshold, scoreType.DisplayName);
-                        if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct)
+                        warning = string.Format(
+                            Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_,
+                            threshold, scoreType.DisplayName);
+                    }
+                    else if ((probCorrect && thresholdIsMin) || (probIncorrect && thresholdIsMax))
+                    {
+                        warning = string.Format(
+                            Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__will_include_all_identifications_,
+                            threshold, scoreType.DisplayName);
+                    }
+                    else if (threshold < scoreType.SuggestedRange.Min || threshold > scoreType.SuggestedRange.Max)
+                    {
+                        warning = string.Format(
+                            Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__is_unusually_permissive_,
+                            threshold, scoreType.DisplayName);
+                    }
+
+                    if (!string.IsNullOrEmpty(warning))
+                    {
+                        if (probCorrect)
                             warning = TextUtil.SpaceSeparate(warning, string.Format(
                                 Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
                                 scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_correct));
-                        else if (scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect)
+                        else if (probIncorrect)
                             warning = TextUtil.SpaceSeparate(warning, string.Format(
                                 Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary__0__scores_indicate_the_probability_that_an_identification_is__1__,
                                 scoreType.DisplayName, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_incorrect));
@@ -936,11 +956,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (e.RowIndex < 0 || e.ColumnIndex != columnThreshold.Index)
                 return;
 
+            var scoreType = ScoreTypeCellValue.Get(e.RowIndex, columnScoreType)?.ScoreType;
+            if (scoreType == null)
+                return;
+
             // Copy new threshold to all other files with same score type
-            var scoreType = ScoreTypeCellValue.Get(e.RowIndex, columnScoreType)?.NameInvariant;
-            foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => Equals(ScoreTypeCellValue.Get(row, columnScoreType)?.NameInvariant, scoreType)))
+            var thresholdCell = ThresholdCell.Get(gridSearchFiles.Rows[e.RowIndex], columnThreshold);
+            var threshold = thresholdCell.Threshold;
+            var errorText = threshold.HasValue && scoreType.ValidRange.Min <= threshold && threshold <= scoreType.ValidRange.Max
+                ? null
+                : string.Format(
+                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
+                    thresholdCell.Value, scoreType.ValidRange.Min, scoreType.ValidRange.Max);
+
+            foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => Equals(ScoreTypeCellValue.Get(row, columnScoreType)?.ScoreType, scoreType)))
             {
-                row.Cells[columnThreshold.Index].Value = gridSearchFiles[e.ColumnIndex, e.RowIndex].Value;
+                var thisCell = ThresholdCell.Get(row, columnThreshold);
+                thisCell.Value = thresholdCell.Value;
+                thisCell.ErrorText = errorText;
             }
         }
 
@@ -972,8 +1005,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             public BiblioSpecScoreType ScoreType { get; set; }
             public string NameInvariant => ScoreType?.NameInvariant;
-            public double MinValue => ScoreType?.ValidRange.Item1 ?? 0;
-            public double MaxValue => ScoreType?.ValidRange.Item2 ?? 1;
+            public double MinValue => ScoreType?.ValidRange.Min ?? 0;
+            public double MaxValue => ScoreType?.ValidRange.Max ?? 1;
 
             public ScoreTypeCellValue(BiblioSpecScoreType scoreType = null)
             {
