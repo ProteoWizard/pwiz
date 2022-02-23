@@ -146,19 +146,26 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            var docBeforeTrans = WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() => importDialog.Size = new Size(600, 300));
-            PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
-            var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-            string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
-            PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+            using (new CheckDocumentState(24, 44, 88, 296))
+            {
+                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog.Size = new Size(600, 300));
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+                string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+                var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+                // TODO(bspratt): Fix the race condition where associate proteins has not completed and OkDialog produces a document with just 1 long peptide list
+                OkDialog(colDlg, colDlg.OkDialog);
 
-
-            OkDialog(colDlg, colDlg.OkDialog);
+                // TODO(bspratt): Remove this PauseTest after the race condition is fixed
+                var docAfterTrans = WaitForDocumentChange(docBeforeTrans);
+                if (docAfterTrans.PeptideGroupCount < 24)
+                    PauseTest();
+            }
 
             RunUI(() =>
             {
