@@ -52,9 +52,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return string.Format(@"{0:0.00}", Score);
         }
 
-        public ScoredPeak CalcScore(IList<double> weights)
+        public ScoredPeak CalcScore(IList<double> weights, bool replaceUnknownFeatureScores)
         {
-            return new ScoredPeak(Features, LinearModelParams.Score(Features, weights, 0));
+            IList<float> features = Features;
+            if (replaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
+            return new ScoredPeak(Features, LinearModelParams.Score(features, weights, 0));
         }
     }
 }

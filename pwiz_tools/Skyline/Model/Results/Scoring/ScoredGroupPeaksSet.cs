@@ -207,15 +207,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Recalculate the scores of each peak by applying the given feature weighting factors.
         /// </summary>
         /// <param name="weights">Array of weight factors applied to each feature.</param>
+        /// <param name="replaceUnknownFeatureScores">Whether feature scores which are NaN or infinity should be replaced with zero</param>
         /// <returns>Mean peak score.</returns>
-        public void ScorePeaks(IList<double> weights)
+        public void ScorePeaks(IList<double> weights, bool replaceUnknownFeatureScores)
         {
             ParallelEx.For(0, _scoredGroupPeaksList.Count, i =>
             {
                 var scoredPeaks = _scoredGroupPeaksList[i].ScoredPeaks;
                 for (int j = 0; j < scoredPeaks.Count; j++)
                 {
-                    scoredPeaks[j] = scoredPeaks[j].CalcScore(weights);
+                    scoredPeaks[j] = scoredPeaks[j].CalcScore(weights, replaceUnknownFeatureScores);
                 }
             });
 

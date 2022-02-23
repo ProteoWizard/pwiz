@@ -169,6 +169,29 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
+        [Flags]
+        private enum Flags
+        {
+            HasRetentionTime = 1,
+            HasStartRetentionTime = 2,
+            HasEndRetentionTime = 4,
+            HasFwhm = 8,
+            HasArea = 16,
+            HasAreaMs1 = 32,
+            HasAreaFragment = 64,
+            HasBackgroundArea = 128,
+            HasBackgroundAreaMs1 = 256,
+            HasBackgroundAreaFragment = 512,
+            HasHeight = 1024,
+            HasMassError = 2048,
+            HasLibraryDotProduct = 4096,
+            HasIsotopeDotProduct = 8192,
+            HasQValue = 16384,
+            HasZScore = 32768,
+        }
+
+        private Flags _flags;
+
         public TransitionGroupChromInfo(ChromFileInfoId fileId,
                                         int optimizationStep,
                                         float peakCountRatio,
@@ -195,7 +218,7 @@ namespace pwiz.Skyline.Model.Results
                                         UserSet userSet)
             : base(fileId)
         {
-            OptimizationStep = optimizationStep;
+            OptimizationStep = Convert.ToInt16(optimizationStep);
             PeakCountRatio = peakCountRatio;
             RetentionTime = retentionTime;
             StartRetentionTime = startTime;
@@ -219,30 +242,135 @@ namespace pwiz.Skyline.Model.Results
             Annotations = annotations;
             UserSet = userSet;
         }
-
-        public int OptimizationStep { get; private set; }
+        public short OptimizationStep { get; private set; }
 
         public float PeakCountRatio { get; private set; }
-        public float? RetentionTime { get; private set; }
-        public float? StartRetentionTime { get; private set; }
-        public float? EndRetentionTime { get; private set; }
+
+        private float _retentionTime;
+        public float? RetentionTime
+        {
+            get { return GetOptional(_retentionTime, Flags.HasRetentionTime); }
+            set { _retentionTime = SetOptional(value, Flags.HasRetentionTime); }
+        }
+
+        private float _startRetentionTime;
+        public float? StartRetentionTime
+        {
+            get { return GetOptional(_startRetentionTime, Flags.HasStartRetentionTime); }
+            set { _startRetentionTime = SetOptional(value, Flags.HasStartRetentionTime); }
+        }
+
+        private float _endRetentionTime;
+        public float? EndRetentionTime
+        {
+            get { return GetOptional(_endRetentionTime, Flags.HasEndRetentionTime); }
+            set { _endRetentionTime = SetOptional(value, Flags.HasEndRetentionTime); }
+        }
+
         public TransitionGroupIonMobilityInfo IonMobilityInfo { get; private set; }
-        public float? Fwhm { get; private set; }
-        public float? Area { get; private set; }
-        public float? AreaMs1 { get; private set; }
-        public float? AreaFragment { get; private set; }
-        public float? BackgroundArea { get; private set; }
-        public float? BackgroundAreaMs1 { get; private set; }
-        public float? BackgroundAreaFragment { get; private set; }
-        public float? Height { get; private set; }
-        public float? MassError { get; private set; }
-        public int? Truncated { get; private set; }
+        private float _fwhm;
+
+        public float? Fwhm
+        {
+            get { return GetOptional(_fwhm, Flags.HasFwhm); }
+            set { _fwhm = SetOptional(value, Flags.HasFwhm); }
+        }
+
+        private float _area;
+        public float? Area
+        {
+            get { return GetOptional(_area, Flags.HasArea);}
+            private set { _area = SetOptional(value, Flags.HasArea); }
+        }
+
+        private float _areaMs1;
+        public float? AreaMs1
+        {
+            get { return GetOptional(_areaMs1, Flags.HasAreaMs1);}
+
+            private set { _areaMs1 = SetOptional(value, Flags.HasAreaMs1); }
+        }
+
+        private float _areaFragment;
+        public float? AreaFragment
+        {
+            get { return GetOptional(_areaFragment, Flags.HasAreaFragment); }
+            private set { _areaFragment = SetOptional(value, Flags.HasAreaFragment); }
+        }
+
+        private float _backgroundArea;
+        public float? BackgroundArea
+        {
+            get { return GetOptional(_backgroundArea, Flags.HasBackgroundArea); }
+            private set { _backgroundArea = SetOptional(value, Flags.HasBackgroundArea); }
+        }
+
+        private float _backgroundAreaMs1;
+        public float? BackgroundAreaMs1
+        {
+            get { return GetOptional(_backgroundAreaMs1, Flags.HasBackgroundAreaMs1); }
+            private set { _backgroundAreaMs1 = SetOptional(value, Flags.HasBackgroundAreaMs1); }
+        }
+
+        private float _backgroundAreaFragment;
+        public float? BackgroundAreaFragment 
+        {
+            get { return GetOptional(_backgroundAreaFragment, Flags.HasBackgroundAreaFragment); }
+            private set { _backgroundAreaFragment = SetOptional(value, Flags.HasBackgroundAreaFragment); }
+        }
+
+        private float _height;
+        public float? Height 
+        { 
+            get { return GetOptional(_height, Flags.HasHeight); }
+            private set { _height = SetOptional(value, Flags.HasHeight); }
+        }
+
+        private float _massError;
+        public float? MassError 
+        { 
+            get { return GetOptional(_massError, Flags.HasMassError); }
+            private set { _massError = SetOptional(value, Flags.HasMassError); }
+        }
+
+        private int _truncated;
+        public int? Truncated
+        {
+            get { return _truncated >= 0 ? _truncated : (int?) null; }
+            private set { _truncated = value ?? -1; }
+        }
+
         public PeakIdentification Identified { get; private set; }
         public bool IsIdentified { get { return Identified != PeakIdentification.FALSE; } }
-        public float? LibraryDotProduct { get; private set; }
-        public float? IsotopeDotProduct { get; private set; }
-        public float? QValue { get; private set; }
-        public float? ZScore { get; private set; }
+
+        private float _libraryDotProduct;
+        public float? LibraryDotProduct
+        {
+            get { return GetOptional(_libraryDotProduct, Flags.HasLibraryDotProduct);}
+            private set { _libraryDotProduct = SetOptional(value, Flags.HasLibraryDotProduct); }
+        }
+
+        private float _isotopeDotProduct;
+        public float? IsotopeDotProduct
+        {
+            get { return GetOptional(_isotopeDotProduct, Flags.HasIsotopeDotProduct); }
+            private set { _isotopeDotProduct = SetOptional(value, Flags.HasIsotopeDotProduct); }
+        }
+
+        private float _qValue;
+        public float? QValue
+        {
+            get { return GetOptional(_qValue, Flags.HasQValue); }
+            private set { _qValue = SetOptional(value, Flags.HasQValue); }
+        }
+
+        private float _zScore;
+        public float? ZScore
+        {
+            get { return GetOptional(_zScore, Flags.HasZScore); }
+            private set { _zScore = SetOptional(value, Flags.HasZScore); }
+        }
+
         public Annotations Annotations { get; private set; }
 
         /// <summary>
@@ -257,6 +385,34 @@ namespace pwiz.Skyline.Model.Results
         public bool IsUserSetMatched { get { return UserSet == UserSet.MATCHED; }}
 
         public bool IsUserModified { get { return IsUserSetManual || !Annotations.IsEmpty; } }
+
+        private bool GetFlag(Flags flag)
+        {
+            return 0 != (_flags & flag);
+        }
+
+        private void SetFlag(Flags flag, bool b)
+        {
+            if (b)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags &= ~flag;
+            }
+        }
+
+        private T? GetOptional<T>(T field, Flags flag) where T:struct
+        {
+            return GetFlag(flag) ? field : (T?) null;
+        }
+
+        private T SetOptional<T>(T? value, Flags flag) where T : struct
+        {
+            SetFlag(flag, value.HasValue);
+            return value ?? default(T);
+        }
 
         #region Property change methods
 
