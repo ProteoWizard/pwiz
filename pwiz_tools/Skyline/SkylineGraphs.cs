@@ -847,75 +847,132 @@ namespace pwiz.Skyline
         public GraphSpectrum GraphSpectrum { get { return _graphSpectrum; } }
         public GraphSpectrumSettings GraphSpectrumSettings { get { return _graphSpectrumSettings; } }
 
+        public void ShowAIons(bool show)
+        {
+            _graphSpectrumSettings.ShowAIons = show;
+        }
+        public void ShowBIons(bool show)
+        {
+            _graphSpectrumSettings.ShowBIons = show;
+        }
+        public void ShowCIons(bool show)
+        {
+            _graphSpectrumSettings.ShowCIons = show;
+        }
+        public void ShowXIons(bool show)
+        {
+            _graphSpectrumSettings.ShowXIons = show;
+        }
+        public void ShowYIons(bool show)
+        {
+            _graphSpectrumSettings.ShowYIons = show;
+        }
+        public void ShowZIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZIons = show;
+        }
+        public void ShowZHIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZHIons = show;
+        }
+        public void ShowZHHIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZHHIons = show;
+        }
+        public void ShowFragmentIons(bool show)
+        {
+            _graphSpectrumSettings.ShowFragmentIons = show;
+        }
+        public void ShowPrecursorIon(bool show)
+        {
+            _graphSpectrumSettings.ShowPrecursorIon = show;
+        }
+        public void ShowCharge1(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge1 = show;
+        }
+        public void ShowCharge2(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge2 = show;
+        }
+        public void ShowCharge3(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge3 = show;
+        }
+        public void ShowCharge4(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge4 = show;
+        }
+
         private void aMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowAIons = !_graphSpectrumSettings.ShowAIons;
+            ShowAIons(!_graphSpectrumSettings.ShowAIons);
         }
 
         private void bMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowBIons = !_graphSpectrumSettings.ShowBIons;
+            ShowBIons(!_graphSpectrumSettings.ShowBIons);
         }
 
         private void cMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCIons = !_graphSpectrumSettings.ShowCIons;
+            ShowCIons(!_graphSpectrumSettings.ShowCIons);
         }
 
         private void xMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowXIons = !_graphSpectrumSettings.ShowXIons;
+            ShowXIons(!_graphSpectrumSettings.ShowXIons);
         }
 
         private void yMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowYIons = !_graphSpectrumSettings.ShowYIons;
+            ShowYIons(!_graphSpectrumSettings.ShowYIons);
         }
 
         private void zMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowZIons = !_graphSpectrumSettings.ShowZIons;
+            ShowZIons(!_graphSpectrumSettings.ShowZIons);
         }
         private void zhMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowZHIons = !_graphSpectrumSettings.ShowZHIons;
+            ShowZHIons(!_graphSpectrumSettings.ShowZHIons);
         }
 
         private void zhhMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowZHHIons = !_graphSpectrumSettings.ShowZHHIons;
+            ShowZHHIons(!_graphSpectrumSettings.ShowZHHIons);
         }
 
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowFragmentIons = !_graphSpectrumSettings.ShowFragmentIons;
+            ShowFragmentIons(!_graphSpectrumSettings.ShowFragmentIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowPrecursorIon = !_graphSpectrumSettings.ShowPrecursorIon;
+            ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
         }
 
         // Update the Ion Types menu for document contents
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge1 = !_graphSpectrumSettings.ShowCharge1;
+            ShowCharge1(!_graphSpectrumSettings.ShowCharge1);
         }
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge2 = !_graphSpectrumSettings.ShowCharge2;
+            ShowCharge2(!_graphSpectrumSettings.ShowCharge2);
         }
 
         private void charge3MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge3 = !_graphSpectrumSettings.ShowCharge3;
+            ShowCharge3(!_graphSpectrumSettings.ShowCharge3);
         }
 
         private void charge4MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
+            ShowCharge4(!_graphSpectrumSettings.ShowCharge4);
         }
 
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)

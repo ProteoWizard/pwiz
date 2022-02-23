@@ -1,10 +1,29 @@
-﻿using System.Globalization;
+﻿/*
+ * Original author: Rita Chupalov <rita .at. uw .edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2022 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -37,17 +56,22 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUI.IonCount = 5;
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
+            RunUI(() => 
+            { 
+                SkylineWindow.ShowZHIons(true);
+                SkylineWindow.ShowZHHIons(true);
+            });
+
             WaitForGraphs();
             var libMatch = SkylineWindow.GraphSpectrum.DisplayedSpectrum;
             ImportResults("FilteredScans\\LITV56_EAD" + ExtensionTestContext.ExtMzml);
             WaitForGraphs();
             FindNode((505.5810).ToString("F4", LocalizationHelper.CurrentCulture) + "+++");
-            Settings.Default.ShowZHIons = true;
-            Settings.Default.ShowZHHIons = true;
 
             var testIons = new[]{
                 new {type = IonType.zh, offset = 8},
-                new {type = IonType.zhh, offset = 5},
+                new {type = IonType.zh, offset = 5},
                 new {type = IonType.zhh, offset = 5}
             };
 
@@ -76,6 +100,22 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Any(c =>
                     c.Label.Text.StartsWith(testNode.FragmentIonName)));
             }
+            using (new CheckDocumentState(1, 1, 1, 6))
+            {
+                var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
+                RunUI(() =>
+                {
+                    pickList1.ApplyFilter(false);
+                    pickList1.ToggleFind();
+                    pickList1.SearchString = "z.";
+                    Assert.AreEqual(65, pickList1.ItemNames.Count());
+                    pickList1.SearchString = "z'";
+                    Assert.AreEqual(65, pickList1.ItemNames.Count());
+                    pickList1.SetItemChecked(4, true);
+                });
+                RunUI(pickList1.OnOk);
+            }
+
         }
     }
 }

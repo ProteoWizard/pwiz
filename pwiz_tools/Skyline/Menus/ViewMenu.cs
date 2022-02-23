@@ -277,52 +277,52 @@ namespace pwiz.Skyline.Menus
         }
         private void aMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowAIons = !GraphSpectrumSettings.ShowAIons;
+            SkylineWindow.ShowAIons(!GraphSpectrumSettings.ShowAIons);
         }
 
         private void bMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowBIons = !GraphSpectrumSettings.ShowBIons;
+            SkylineWindow.ShowBIons(!GraphSpectrumSettings.ShowBIons);
         }
 
         private void cMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCIons = !GraphSpectrumSettings.ShowCIons;
+            SkylineWindow.ShowCIons(!GraphSpectrumSettings.ShowCIons);
         }
 
         private void xMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowXIons = !GraphSpectrumSettings.ShowXIons;
+            SkylineWindow.ShowXIons(!GraphSpectrumSettings.ShowXIons);
         }
 
         private void yMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowYIons = !GraphSpectrumSettings.ShowYIons;
+            SkylineWindow.ShowYIons(!GraphSpectrumSettings.ShowYIons);
         }
 
         private void zMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowZIons = !GraphSpectrumSettings.ShowZIons;
+            SkylineWindow.ShowZIons(!GraphSpectrumSettings.ShowZIons);
         }
 
         private void zhMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowZHIons = !GraphSpectrumSettings.ShowZHIons;
+            SkylineWindow.ShowZHIons(!GraphSpectrumSettings.ShowZHIons);
         }
 
         private void zhhMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowZHHIons = !GraphSpectrumSettings.ShowZHHIons;
+            SkylineWindow.ShowZHHIons(!GraphSpectrumSettings.ShowZHHIons);
         }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowFragmentIons = !GraphSpectrumSettings.ShowFragmentIons;
+            SkylineWindow.ShowFragmentIons(!GraphSpectrumSettings.ShowFragmentIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowPrecursorIon = !GraphSpectrumSettings.ShowPrecursorIon;
+            SkylineWindow.ShowPrecursorIon(!GraphSpectrumSettings.ShowPrecursorIon);
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -336,22 +336,22 @@ namespace pwiz.Skyline.Menus
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge1 = !GraphSpectrumSettings.ShowCharge1;
+            SkylineWindow.ShowCharge1(!GraphSpectrumSettings.ShowCharge1);
         }
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge2 = !GraphSpectrumSettings.ShowCharge2;
+            SkylineWindow.ShowCharge2(!GraphSpectrumSettings.ShowCharge2);
         }
 
         private void charge3MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge3 = !GraphSpectrumSettings.ShowCharge3;
+            SkylineWindow.ShowCharge3(!GraphSpectrumSettings.ShowCharge3);
         }
 
         private void charge4MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge4 = !GraphSpectrumSettings.ShowCharge4;
+            SkylineWindow.ShowCharge4(!GraphSpectrumSettings.ShowCharge4);
         }
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {

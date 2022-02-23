@@ -3177,7 +3177,6 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaDotpDisplay"] = value;
             }
         }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
@@ -3189,29 +3188,36 @@ namespace pwiz.Skyline.Properties {
                 this["ChromatogramDisplayRTDigits"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHIons {
-            get {
+        public bool ShowZHIons
+        {
+            get
+            {
                 return ((bool)(this["ShowZHIons"]));
             }
-            set {
+            set
+            {
                 this["ShowZHIons"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHHIons {
-            get {
+        public bool ShowZHHIons
+        {
+            get
+            {
                 return ((bool)(this["ShowZHHIons"]));
             }
-            set {
+            set
+            {
                 this["ShowZHHIons"] = value;
             }
         }
     }
 }
+
