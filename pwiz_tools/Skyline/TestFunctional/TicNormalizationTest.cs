@@ -153,6 +153,8 @@ namespace pwiz.SkylineTestFunctional
                         "TransitionGroup: {0}", peptideAnnotationPair.TransitionGroup);
                 }
             }
+
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             RunUI(() =>
             {
