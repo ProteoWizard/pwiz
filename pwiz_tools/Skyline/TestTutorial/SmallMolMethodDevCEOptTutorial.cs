@@ -512,19 +512,19 @@ namespace pwiz.SkylineTestTutorial
         {
             SelectNode(SrmDocument.Level.TransitionGroups, 1);
             WaitForGraphs();
-            TestSelectedAsymOpt(0.95);
+            TestSelectedAsymOpt(0.95, 0);
             SelectNode(SrmDocument.Level.TransitionGroups, 2);
             WaitForGraphs();
-            TestSelectedAsymOpt(0.99);
+            TestSelectedAsymOpt(0.99, 2);
             SelectNode(SrmDocument.Level.Transitions, 2);
             WaitForGraphs();
-            TestSelectedAsymOpt(0.99);
+            TestSelectedAsymOpt(0.99, 2);
 
             // Close the opened second molecule node.
             RunUI(() => SkylineWindow.SequenceTree.Nodes[0].Nodes[1].Collapse());
         }
 
-        private void TestSelectedAsymOpt(double expectedMinCorr)
+        private void TestSelectedAsymOpt(double expectedMinCorr, int expMaxStep)
         {
             RunUI(() =>
             {
@@ -550,6 +550,8 @@ namespace pwiz.SkylineTestTutorial
                 double corr = statChrom.R(statArea);
                 Assert.IsTrue(corr >= expectedMinCorr, "Correlation between chromatogram and area intensities {0} expected to be >= {1}",
                     corr, expectedMinCorr);
+                Assert.AreEqual(expMaxStep, areaIntensities.IndexOf(statArea.Max()) - 5);
+                Assert.AreEqual(expMaxStep, chromIntensities.IndexOf(statChrom.Max()) - 5);
             });
         }
 

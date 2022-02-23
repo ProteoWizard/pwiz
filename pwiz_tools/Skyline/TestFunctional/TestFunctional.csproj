@@ -170,12 +170,14 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
     <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="TargetRatiosTest.cs" />
+    <Compile Include="TestPeakAreaDotpGraph.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -512,6 +514,7 @@
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
+    <None Include="LegacyScoringModelTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryCacheTest.zip" />
@@ -539,6 +542,7 @@
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
+    <None Include="PeakAreaDotpGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PermuteIsotopeModificationsTest.zip" />

@@ -1765,6 +1765,10 @@ namespace pwiz.Skyline
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
                         var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText), columnPositions);
+                        if (smallMoleculeTransitionListReader.RowCount == 0)
+                        {
+                            throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+                        }
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
