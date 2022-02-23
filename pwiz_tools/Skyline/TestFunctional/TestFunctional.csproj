@@ -177,6 +177,7 @@
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="TargetRatiosTest.cs" />
+    <Compile Include="TestPeakAreaDotpGraph.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -541,6 +542,7 @@
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
+    <None Include="PeakAreaDotpGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PermuteIsotopeModificationsTest.zip" />
