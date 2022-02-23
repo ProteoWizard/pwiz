@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -552,15 +553,17 @@ namespace pwiz.Skyline.Model.Results
 
         private ChromDataPeakList()
         {
+            AcquisitionMethod = FullScanAcquisitionMethod.None;
         }
         
-        public ChromDataPeakList(ChromDataPeak peak)
+        public ChromDataPeakList(FullScanAcquisitionMethod acquisitionMethod, ChromDataPeak peak)
         {
+            AcquisitionMethod = acquisitionMethod;
             Add(peak);
         }
 
-        public ChromDataPeakList(ChromDataPeak peak, IEnumerable<ChromData> listChromData)
-            : this(peak)
+        public ChromDataPeakList(FullScanAcquisitionMethod acquisitionMethod, ChromDataPeak peak, IEnumerable<ChromData> listChromData)
+            : this(acquisitionMethod, peak)
         {
             foreach (var chromData in listChromData)
             {
@@ -578,13 +581,15 @@ namespace pwiz.Skyline.Model.Results
             var newPeaks = this.Cast<ChromDataPeak>().Select((peak, index) => Tuple.Create(peak, index))
                 .Where(tuple => indexes.Contains(tuple.Item2))
                 .ToArray();
-            var chromDataPeakList = new ChromDataPeakList(newPeaks[0].Item1);
+            var chromDataPeakList = new ChromDataPeakList(AcquisitionMethod, newPeaks[0].Item1);
             for (int i = 1; i < newPeaks.Length; i++)
             {
                 chromDataPeakList.Add(newPeaks[i].Item1);
             }
             return chromDataPeakList;
         }
+
+        public FullScanAcquisitionMethod AcquisitionMethod { get; }
 
         /// <summary>
         /// True if this set of peaks was created to satisfy forced integration
@@ -639,7 +644,17 @@ namespace pwiz.Skyline.Model.Results
             return source != ChromSource.fragment; // TODO: source == ChromSource.ms1 || source == ChromSource.sim;
         }
 
-        public double TotalArea { get { return IsAllMS1 ? MS1Area : MS2Area; } }
+        public double TotalArea 
+        {
+            get
+            {
+                if (FullScanAcquisitionMethod.DDA.Equals(AcquisitionMethod) || IsAllMS1)
+                {
+                    return MS1Area;
+                }
+                return MS2Area;
+            }
+        }
 
         public void SetIdentified(double[] retentionTimes, bool isAlignedTimes)
         {
@@ -854,6 +869,41 @@ namespace pwiz.Skyline.Model.Results
             base.SetItem(index, item);
             SubtractPeak(peak);
             AddPeak(item);
+        }
+
+        public void RecalculateDdaPeaks()
+        {
+            var ms2Chromatograms = new List<TimeIntensities>();
+            var ms2PeakBounds = new List<PeakBounds>();
+            foreach (var chromDataPeak in this)
+            {
+                if (!IsMs1(chromDataPeak.Data.Key.Source))
+                {
+                    continue;
+                }
+                ms2Chromatograms.Add(chromDataPeak.Data.RawTimeIntensities);
+                if (chromDataPeak.DataPeak.IsEmpty)
+                {
+                    ms2PeakBounds.Add(null);
+                }
+                else
+                {
+                    ms2PeakBounds.Add(new PeakBounds(chromDataPeak.DataPeak.StartTime, chromDataPeak.DataPeak.EndTime));
+                }
+            }
+
+            var intensities = PeakIntegrator.GetDdaIntensities(ms2Chromatograms, ms2PeakBounds);
+            int indexMs2 = 0;
+            foreach (var peak in this)
+            {
+                if (!IsMs1(peak.Data.Key.Source))
+                {
+                    continue;
+                }
+                float intensity = intensities[indexMs2];
+                indexMs2++;
+                peak.ChangeChromPeak(peak.DataPeak.ChangeArea(intensity));
+            }
         }
 
         #region Implement read-only IList<ITransitionPeakData<IDetailedPeakData>> for peak scoring

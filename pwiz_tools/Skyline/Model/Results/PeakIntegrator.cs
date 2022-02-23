@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Util;
 
@@ -109,6 +112,69 @@ namespace pwiz.Skyline.Model.Results
             var peakFinder = PeakFinders.NewDefaultPeakFinder();
             peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
             return peakFinder;
+        }
+
+        public static IList<float> GetDdaIntensities(IList<TimeIntensities> chromatograms,
+            IList<PeakBounds> peakBoundsList)
+        {
+            Assume.AreEqual(chromatograms.Count, peakBoundsList.Count);
+            var nonNullPeakBounds = peakBoundsList.Where(bounds => null != bounds).ToList();
+            if (nonNullPeakBounds.Count == 0)
+            {
+                return Enumerable.Repeat(0f, chromatograms.Count).ToArray();
+            }
+            var minStartTime = (float) nonNullPeakBounds.Min(bounds => bounds.StartTime);
+            var maxEndTime = (float) nonNullPeakBounds.Max(bounds => bounds.EndTime);
+            var intensitiesAtPoints = new Dictionary<float, double>();
+            for (int iChromatogram = 0; iChromatogram < chromatograms.Count; iChromatogram++)
+            {
+                var timeIntensities = chromatograms[iChromatogram];
+                var iPoint = CollectionUtil.BinarySearch(timeIntensities.Times, minStartTime);
+                if (iPoint < 0)
+                {
+                    iPoint = ~iPoint;
+                }
+
+                for (; iPoint < timeIntensities.Times.Count; iPoint++)
+                {
+                    var time = timeIntensities.Times[iPoint];
+                    if (time > maxEndTime)
+                    {
+                        break;
+                    }
+
+                    intensitiesAtPoints.TryGetValue(time, out var totalIntensity);
+                    totalIntensity += timeIntensities.Intensities[iPoint];
+                    intensitiesAtPoints[time] = totalIntensity;
+                }
+            }
+
+            var ddaIntensities = new List<float>();
+            var maxTotalIntensity = intensitiesAtPoints.Values.Max();
+            var timeWithMaxIntensity = intensitiesAtPoints.OrderBy(kvp => kvp.Key)
+                .FirstOrDefault(kvp => kvp.Value == maxTotalIntensity).Key;
+            for (int iChromatogram = 0; iChromatogram < chromatograms.Count; iChromatogram++)
+            {
+                var peakBounds = peakBoundsList[iChromatogram];
+                if (peakBounds == null || peakBounds.StartTime > timeWithMaxIntensity || peakBounds.EndTime < timeWithMaxIntensity)
+                {
+                    ddaIntensities.Add(0);
+                    continue;
+                }
+
+                var timeIntensities = chromatograms[iChromatogram];
+                int iPoint = CollectionUtil.BinarySearch(timeIntensities.Times, timeWithMaxIntensity);
+                if (iPoint >= 0 && iPoint < timeIntensities.NumPoints)
+                {
+                    ddaIntensities.Add(timeIntensities.Intensities[iPoint]);
+                }
+                else
+                {
+                    ddaIntensities.Add(0);
+                }
+            }
+
+            return ddaIntensities;
         }
     }
 }

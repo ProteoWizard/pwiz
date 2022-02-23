@@ -1029,7 +1029,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _retentionTime;
         private readonly float _startTime;
         private readonly float _endTime;
-        private readonly float _area;
+        private float _area;
         private readonly float _backgroundArea;
         private readonly float _height;
         private readonly float _fwhm;
@@ -1415,6 +1415,13 @@ namespace pwiz.Skyline.Model.Results
         {
             var copy = this;
             copy.FlagBits = (uint) (Flags & ~FlagValues.mass_error_known);
+            return copy;
+        }
+
+        public ChromPeak ChangeArea(float newArea)
+        {
+            var copy = this;
+            copy._area = newArea;
             return copy;
         }
 
