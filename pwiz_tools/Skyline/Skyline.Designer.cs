@@ -70,6 +70,8 @@ namespace pwiz.Skyline
             this.xionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.yionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.zhionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.zhhionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fragmentionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
@@ -567,6 +569,8 @@ namespace pwiz.Skyline
             this.xionsContextMenuItem,
             this.yionsContextMenuItem,
             this.zionsContextMenuItem,
+            this.zhionsContextMenuItem,
+            this.zhhionsContextMenuItem,
             this.fragmentionsContextMenuItem,
             this.precursorIonContextMenuItem,
             this.toolStripSeparator11,
@@ -634,6 +638,22 @@ namespace pwiz.Skyline
             this.zionsContextMenuItem.Name = "zionsContextMenuItem";
             resources.ApplyResources(this.zionsContextMenuItem, "zionsContextMenuItem");
             this.zionsContextMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
+            // 
+            // zhionsContextMenuItem
+            // 
+            this.zhionsContextMenuItem.CheckOnClick = true;
+            this.zhionsContextMenuItem.Name = "zhionsContextMenuItem";
+            resources.ApplyResources(this.zhionsContextMenuItem, "zhionsContextMenuItem");
+            this.zhionsContextMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
+
+            // 
+            // zhhionsContextMenuItem
+            // 
+            this.zhhionsContextMenuItem.CheckOnClick = true;
+            this.zhhionsContextMenuItem.Name = "zhhionsContextMenuItem";
+            resources.ApplyResources(this.zhhionsContextMenuItem, "zhhionsContextMenuItem");
+            this.zhhionsContextMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
+            
             // 
             // fragmentionsContextMenuItem
             // 
@@ -2639,6 +2659,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem xionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem yionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem zhionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem zhhionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fragmentionsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
