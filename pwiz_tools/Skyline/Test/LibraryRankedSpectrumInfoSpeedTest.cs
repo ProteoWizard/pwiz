@@ -65,18 +65,18 @@ namespace pwiz.SkylineTest
             {
                 // ReSharper disable StringLiteralTypo
                 Tuple.Create("MEIVK", "Short Peptide",
-                    20, new[] {131.1, 147.1, 187.1}),
+                    23, new[] {131.1, 147.1, 187.1}),
                 Tuple.Create("EIYYTPDPSELAAKEEPAKEEAPAPTPAASAPAPAAAAPAPVAAAAPAAAAAEIADEPVK", "Long Peptide",
-                    55, new[] {587.4, 771.4, 900.5}),
+                    61, new[] {587.4, 771.4, 900.5}),
                 Tuple.Create("LVGFT[+80]FR", "Short Peptide with 1 Neutral Loss",
-                    24, new[] {305.1334, 322.0948, 325.2004}),
+                    26, new[] {305.1334, 322.0948, 325.2004}),
                 Tuple.Create("DLKEILSGFHNAGPVAGAGAASGAAAAGGDAAAEEEKEEEAAEES[+80]DDDMGFGLFD",
                     "Long peptide with 1 Neutral Loss",
                     43, new[] {790.1161, 825.5901, 889.6103}),
                 Tuple.Create("MLPTS[+80]VS[+80]R", "Short peptide with 2 neutral losses",
-                    36, new[] {305.6439, 340.5001, 343.2071}),
+                    38, new[] {305.6439, 340.5001, 343.2071}),
                 Tuple.Create("RNPDFEDDDFLGGDFDEDEIDEESS[+80]EEEEEEKT[+80]QKK", "Long peptide with 2 neutral losses",
-                    65, new[] {483.2214, 552.9168, 626.2743})
+                    68, new[] {483.2214, 552.9168, 626.2743})
                 // ReSharper restore StringLiteralTypo
             };
 

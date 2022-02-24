@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     }
 
     // ReSharper disable InconsistentNaming
-    public enum PeakIdentification { FALSE, TRUE, ALIGNED }
+    public enum PeakIdentification : byte { FALSE, TRUE, ALIGNED }
     // ReSharper restore InconsistentNaming
 
     public static class PeakIdentificationFastLookup

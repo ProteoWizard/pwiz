@@ -114,10 +114,11 @@ namespace pwiz.Skyline.Model
             _hasAnyMoleculeCharge = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE)));
             _hasAnyMoleculeAdduct = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT)));
 
-            // Rearrange mz-only lists if necessary such that lowest mz for any given group+molecule+charge appears before its heavy siblings, so we can work out from there on isotopes
+            // Rearrange mz-only lists if necessary such that lowest mass for any given group+molecule appears before its heavy siblings,
+            // so we can work out from there to identify implied isotope labels.
             if (_hasAnyMoleculeMz && !_hasAnyMoleculeFormula)
             {
-                SortSiblingsByMz();
+                SortSiblingsByMass();
             }
 
             _requireProductInfo = GetRequireProductInfo(document); // Examine the first several lines of the file to determine columns will be needed
@@ -404,7 +405,13 @@ namespace pwiz.Skyline.Model
             return requireProductInfo;
         }
 
-        private void SortSiblingsByMz()
+        // Rearrange mz-only lists if necessary such that lowest mass for any given group+molecule appears before its heavy siblings,
+        // so we can work out from there to identify implied isotope labels.
+        //
+        // We can detect implied labels only by combining declared m/z and charge (or adduct) to get the un-ionized mass,
+        // then sorting on masses low to high. If they're not all the same, then the smallest derived mass must be the actual
+        // mass and others must be labeled.
+        private void SortSiblingsByMass()
         {
             var visited = new HashSet<Row>();
             for (var r = 0; r < Rows.Count; r++)
@@ -417,10 +424,12 @@ namespace pwiz.Skyline.Model
                     var name = GetCellTrimmed(row, INDEX_MOLECULE_NAME) ?? string.Empty;
                     if (row.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed))
                     {
-                        var smallestMzRow = r;
-                        var smallestMz = mzParsed;
-                        var z = GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE) ??
-                                GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT) ?? string.Empty;
+                        var smallestMassRow = r;
+                        var zString = GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT) ?? 
+                                      GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE) ?? string.Empty;
+                        var adductInferred = Adduct.FromStringAssumeChargeOnly(zString);
+                        var smallestMass = adductInferred.MassFromMz(mzParsed, MassType.Monoisotopic);
+
                         for (var r2 = r + 1; r2 < Rows.Count; r2++)
                         {
                             var row2 = Rows[r2];
@@ -428,26 +437,28 @@ namespace pwiz.Skyline.Model
                             {
                                 if (@group.Equals(GetCellTrimmed(row2, INDEX_MOLECULE_GROUP) ?? string.Empty) &&
                                     name.Equals(GetCellTrimmed(row2, INDEX_MOLECULE_NAME) ?? string.Empty) &&
-                                    z.Equals(GetCellTrimmed(row2, INDEX_PRECURSOR_CHARGE) ??
-                                             GetCellTrimmed(row2, INDEX_PRECURSOR_ADDUCT) ?? string.Empty))
+                                    row2.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed2))
                                 {
+                                    var zString2 = GetCellTrimmed(row2, INDEX_PRECURSOR_ADDUCT) ?? 
+                                                   GetCellTrimmed(row2, INDEX_PRECURSOR_CHARGE) ?? string.Empty;
+                                    var adduct2 = Adduct.FromStringAssumeChargeOnly(zString2);
+                                    var mass2 = adduct2.MassFromMz(mzParsed2, MassType.Monoisotopic);
                                     visited.Add(row2);
-                                    if (row2.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed2) &&
-                                        mzParsed2 < smallestMz)
+                                    if (mass2 < smallestMass)
                                     {
-                                        smallestMzRow = r2;
-                                        smallestMz = mzParsed2;
+                                        smallestMassRow = r2;
+                                        smallestMass = mass2;
                                     }
                                 }
                             }
                         }
 
-                        if (smallestMzRow != r)
+                        if (smallestMassRow != r)
                         {
-                            // Reorder the list such that the smallest mz appears before its siblings
-                            var rowSmallestMz = Rows[smallestMzRow];
-                            Rows.RemoveAt(smallestMzRow);
-                            Rows.Insert(r, rowSmallestMz);
+                            // Reorder the list such that the row with smallest calculated mass appears before its siblings
+                            var rowSmallestMass = Rows[smallestMassRow];
+                            Rows.RemoveAt(smallestMassRow);
+                            Rows.Insert(r, rowSmallestMass);
                         }
                     }
                 }

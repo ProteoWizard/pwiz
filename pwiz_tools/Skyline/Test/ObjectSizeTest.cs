@@ -53,6 +53,11 @@ namespace pwiz.SkylineTest
         {
             DumpTypeAndFields(typeof(TransitionChromInfo));
         }
+        [TestMethod]
+        public void TestTransitionGroupChromInfoSize()
+        {
+            DumpTypeAndFields(typeof(TransitionGroupChromInfo));
+        }
 
         private void DumpTypeAndFields(Type type)
         {

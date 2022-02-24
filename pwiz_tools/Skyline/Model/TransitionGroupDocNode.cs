@@ -1425,27 +1425,20 @@ namespace pwiz.Skyline.Model
                     ChromFileInfoId fileId = fileIds[j];
                     PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
-                    var listChromInfo = (IList<ChromatogramInfo>) chromGroupInfo.GetAllTransitionInfo(nodeTran,
+                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran,
                         mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.interpolated);
+                    if (listChromInfo.IsEmpty)
+                    {
+                        // Make sure nothing gets added when no measurements are present
+                        continue;
+                    }
 
                     // Always add the right number of steps to the list, no matter
                     // how many entries were returned.
-                    int offset = listChromInfo.Count / 2 - numSteps;
-                    int countInfos = numSteps * 2 + 1;
-                    // Make sure nothing gets added when no measurements are present
-                    if (listChromInfo.Count == 0)
-                        countInfos = 0;
-                    else if (listChromInfo.Count < countInfos)
-                        offset = FindCenterInfo(nodeTran, listChromInfo) - numSteps;
-                    for (int i = 0; i < countInfos; i++)
+                    for (int step = -numSteps; step <= numSteps; step++)
                     {
-                        ChromatogramInfo info = null;
-                        int iInfo = i + offset;
-                        if (0 <= iInfo && iInfo < listChromInfo.Count)
-                            info = listChromInfo[iInfo];
-
+                        ChromatogramInfo info = listChromInfo.GetChromatogramForStep(step);
                         // Check for existing info that was set by the user.
-                        int step = i - numSteps;
                         UserSet userSet = UserSet.FALSE;
                         var chromInfo = FindChromInfo(results, fileId, step);
                         bool notUserSet;
@@ -1617,27 +1610,6 @@ namespace pwiz.Skyline.Model
 
             var empty = measuredResults.EmptyTransitionGroupResults;
             return (TransitionGroupDocNode) ChangeResults(empty).ChangeChildren(childrenNew);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="ChromatogramInfo"/> with the closest m/z value to the given transition.
-        /// </summary>
-        public static int FindCenterInfo(TransitionDocNode nodeTran, IList<ChromatogramInfo> listChromInfo)
-        {
-            // The list is assumed to be sorted by m/z. So, m/z values should get closer and closer
-            // until they start getting farther and farther.
-            double minDelta = double.MaxValue;
-            for (int i = 1; i < listChromInfo.Count; i++)
-            {
-                // Stop once the first element is farther away than the last and return the last
-                double delta = Math.Abs(listChromInfo[i].ProductMz - nodeTran.Mz);
-                if (delta > minDelta)
-                    return i - 1;
-                minDelta = delta;
-            }
-
-            // Just got closer with each step. So return the last element
-            return listChromInfo.Count - 1;
         }
 
         private static int GetBestIndex(ChromatogramInfo info, PeakFeatureStatistics reintegratePeak, double qcutoff, ref UserSet userSet)
@@ -1831,7 +1803,7 @@ namespace pwiz.Skyline.Model
                     var chromInfo = results[i];
                     if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
                         return chromInfo;
-            }
+                }
             }
             return null;
         }
@@ -2782,27 +2754,26 @@ namespace pwiz.Skyline.Model
             }
             // Update all transitions with the new information
             var listChildrenNew = new List<DocNode>(Children.Count);
-            var listChromInfo = new List<ChromatogramInfo>();
             foreach (TransitionDocNode nodeTran in Children)
             {
-                chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
+                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
                 // Shouldn't need to update a transition with no chrom info
-                if (listChromInfo.Count == 0)
+                if (optStepChromatograms.IsEmpty) 
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
-                    // CONSIDER: Do this more efficiently?  Only when there is opimization
-                    //           data will the loop execute more than once.
-                    int numSteps = listChromInfo.Count/2;
+                    int numSteps = optStepChromatograms.StepCount;
                     var nodeTranNew = nodeTran;
-                    for (int i = 0; i < listChromInfo.Count; i++)
+                    for (int step = -numSteps; step <= numSteps; step++)
                     {
-                        var chromInfo = listChromInfo[i];
-                        int step = i - numSteps;
-
+                        var chromInfo = optStepChromatograms.GetChromatogramForStep(step);
+                        if (chromInfo == null)
+                        {
+                            continue;
+                        }
                         ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
-                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                                              indexSet, fileId, step, peakNew, chromInfo.GetIonMobilityFilter(), ratioCount, userSet);
+                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step, peakNew,
+                            chromInfo.GetIonMobilityFilter(), ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }
@@ -2840,7 +2811,6 @@ namespace pwiz.Skyline.Model
                 flags |= ChromPeak.FlagValues.contains_id;
             if (identified == PeakIdentification.ALIGNED)
                 flags |= ChromPeak.FlagValues.used_id_alignment;
-            var listChromInfo = new List<ChromatogramInfo>();
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))
@@ -2860,26 +2830,23 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
+                var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
 
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak
-                if (listChromInfo.Count == 0 || startTime == null)
+                if (listChromInfo.IsEmpty || startTime == null)
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
                 else
                 {
-                    // CONSIDER: Do this more efficiently?  Only when there is optimization
-                    //           data will the loop execute more than once.
-                    int numSteps = listChromInfo.Count / 2;
+                    int numSteps = regression?.StepCount ?? 0;
                     var nodeTranNew = nodeTran;
-                    for (int i = 0; i < listChromInfo.Count; i++)
+                    for (int step = -numSteps; step <= numSteps; step++)
                     {
-                        var chromInfo = listChromInfo[i];
-                        int step = i - numSteps;
-                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                    chromInfo.CalcPeak((float) startTime, (float) endTime, flags),
-                                                                                    chromInfo.GetIonMobilityFilter(),
-                                                                                    ratioCount, userSet);
+                        var chromInfo = listChromInfo.GetChromatogramForStep(step);
+                        ChromPeak chromPeak = chromInfo?.CalcPeak((float) startTime, (float) endTime, flags) 
+                                              ?? ChromPeak.EMPTY;
+                        nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step, chromPeak,
+                            chromInfo?.GetIonMobilityFilter(), ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }

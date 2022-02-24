@@ -1089,7 +1089,8 @@ namespace pwiz.Skyline.Model.DocSettings
             string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
-            return ionTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
+            var stringsList = ionTypes.Select(ion => ion.GetInputAliases().First()).ToList();
+            return stringsList.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
@@ -1109,7 +1110,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return IonType.precursor;
             }
-            IonType ionType = TypeSafeEnum.Parse<IonType>(s);
+            IonType ionType = IonTypeExtension.GetEnum(s);
             if (ionType == IonType.custom)
             {
                 throw new ArgumentException();
