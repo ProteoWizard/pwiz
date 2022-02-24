@@ -784,7 +784,7 @@ namespace pwiz.Skyline.Model.Results
                             endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
                         }
 
-                        var chromPeak = ChromPeak.IntegrateWithoutBackgroundSubtraction(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);
                         peak.SetChromPeak(chromPeak);
                     }
                 }

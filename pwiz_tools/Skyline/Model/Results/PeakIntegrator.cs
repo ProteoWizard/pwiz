@@ -115,9 +115,13 @@ namespace pwiz.Skyline.Model.Results
                     endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
                 }
             }
-            return ChromPeak.IntegrateWithoutBackgroundSubtraction(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
+            return new ChromPeak(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
         }
 
+        /// <summary>
+        /// If the Acquisition Method is DDA, then change the Area of the peak to
+        /// be the intensity at the time point with the highest total MS1 intensity
+        /// </summary>
         public ChromPeak FixDdaPeakArea(ChromPeak chromPeak)
         {
             if (ChromSource != ChromSource.fragment ||
@@ -129,6 +133,9 @@ namespace pwiz.Skyline.Model.Results
             return chromPeak.ChangeArea(GetDdaAreaForRange(chromPeak.StartTime, chromPeak.EndTime));
         }
 
+        /// <summary>
+        /// Return the intensity at the point in the range where the total MS2 intensity is the largest.
+        /// </summary>
         public float GetDdaAreaForRange(float startTime, float endTime)
         {
             var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
