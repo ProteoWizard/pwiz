@@ -1486,6 +1486,18 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowZIons = value); }
         }
 
+        public bool ShowZHIons
+        {
+            get { return Set.ShowZHIons; }
+            set { ActAndUpdate(() => Set.ShowZHIons = value); }
+        }
+
+        public bool ShowZHHIons
+        {
+            get { return Set.ShowZHHIons; }
+            set { ActAndUpdate(() => Set.ShowZHHIons = value); }
+        }
+
         public bool ShowFragmentIons
         {
             get { return Set.ShowFragmentIons; }
@@ -1543,6 +1555,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddItem(types, IonType.y, Set.ShowYIons);
                 AddItem(types, IonType.b, Set.ShowBIons);
                 AddItem(types, IonType.z, Set.ShowZIons);
+                AddItem(types, IonType.zh, Set.ShowZHIons);
+                AddItem(types, IonType.zhh, Set.ShowZHHIons);
                 AddItem(types, IonType.c, Set.ShowCIons);
                 AddItem(types, IonType.x, Set.ShowXIons);
                 AddItem(types, IonType.a, Set.ShowAIons);

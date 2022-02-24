@@ -352,6 +352,12 @@ namespace pwiz.Skyline.Model
                 case IonType.z:
                     deltas = new[] {Tuple.Create(@"H", -1), Tuple.Create(@"O", 1), Tuple.Create(@"N", -1)};
                     break;
+                case IonType.zh:
+                    deltas = new[] { Tuple.Create(@"O", 1), Tuple.Create(@"N", -1) };
+                    break;
+                case IonType.zhh:
+                    deltas = new[] { Tuple.Create(@"H", 1), Tuple.Create(@"O", 1), Tuple.Create(@"N", -1) };
+                    break;
                 default:
                     throw new ArgumentException();
             }
