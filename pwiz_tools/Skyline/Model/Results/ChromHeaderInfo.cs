@@ -1223,7 +1223,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (fwhmDegenerate)
             {
-                flagValues |= FlagValues.degenerate_fwhm;
+                _flagValues |= FlagValues.degenerate_fwhm;
             }
         }
 
