@@ -1047,6 +1047,7 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
+
             // This is the last available flag
             mass_error_known =      0x8000,
         }
@@ -1074,7 +1075,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
         /// </summary>
-        public static ChromPeak IntegrateWithoutBackgroundSubtraction(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
         {
             int pointsAcrossThePeak = 0;
             double totalArea = 0;
@@ -1193,34 +1194,37 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            float fwhm;
+            _area = (float) totalArea;
+            _startTime = startTime;
+            _endTime = endTime;
+            _height = (float) apexHeight;
+            _backgroundArea = 0;
+            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
+            _retentionTime = (float) apexTime;
+            _flagValues = flagValues;
             if (halfMaxStart.HasValue)
             {
-                fwhm = (float)(halfMaxEnd - halfMaxStart);
+                _fwhm = (float) (halfMaxEnd - halfMaxStart);
             }
             else
             {
-                fwhm = 0;
+                _fwhm = 0;
             }
-
-            double? massError;
             if (null != timeIntensities.MassErrors && totalArea > 0)
             {
-                massError = totalMassError / totalArea;
+                _flagValues |= FlagValues.mass_error_known;
+                _massError = To10x(totalMassError / totalArea);
             }
             else
             {
-                massError = null;
+                _flagValues &= ~FlagValues.mass_error_known;
+                _massError = 0;
             }
 
             if (fwhmDegenerate)
             {
                 flagValues |= FlagValues.degenerate_fwhm;
             }
-
-            return new ChromPeak(retentionTime: (float) apexTime, startTime: startTime, endTime: endTime,
-                area: (float) totalArea, backgroundArea: 0, height: (float) apexHeight, fwhm: fwhm,
-                flagValues: flagValues, massError, pointsAcrossThePeak);
         }
 
         public ChromPeak(IPeakFinder finder,
@@ -1331,41 +1335,6 @@ namespace pwiz.Skyline.Model.Results
                     _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
                 }
             }
-        }
-
-        public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
-            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
-        {
-            _retentionTime = retentionTime;
-            _startTime = startTime;
-            _endTime = endTime;
-            _area = area;
-            _backgroundArea = backgroundArea;
-            _height = height;
-            _fwhm = fwhm;
-            if (massError.HasValue)
-            {
-                _massError = To10x(massError.Value);
-                flagValues |= FlagValues.mass_error_known;
-            }
-            else
-            {
-                _massError = 0;
-                flagValues &= ~FlagValues.mass_error_known;
-            }
-
-            if (pointsAcross.HasValue)
-            {
-                // Convert pointsAcross to a short. If pointsAcross happens to be too large of an integer to fit in a short, it will
-                // be a negative number, and the property getter for PointsAcross will return null
-                _pointsAcross = (short) Math.Min(pointsAcross.Value, ushort.MaxValue);
-            }
-            else
-            {
-                _pointsAcross = -1;
-            }
-
-            _flagValues = flagValues;
         }
 
         public float RetentionTime { get { return _retentionTime; } }

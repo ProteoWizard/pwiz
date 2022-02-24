@@ -2878,8 +2878,7 @@ namespace pwiz.Skyline.Model
                     listChildrenNew.Add(nodeTranNew);
                 }
             }
-
-            return (TransitionGroupDocNode) ChangeChildrenChecked(listChildrenNew);
+            return ChangeChildrenChecked(listChildrenNew);
         }
 
         protected override DocNodeParent SynchRemovals(DocNodeParent siblingBefore, DocNodeParent siblingAfter)

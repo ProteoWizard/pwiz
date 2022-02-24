@@ -620,11 +620,6 @@ namespace pwiz.Skyline.Model.Results
         public float EndRetentionTime { get; private set; }
         public IonMobilityFilter IonMobility { get; private set; } // The actual ion mobility used for this transition
         public float Area { get; private set; }
-
-        public TransitionChromInfo ChangeArea(float area)
-        {
-            return ChangeProp(ImClone(this), im => im.Area = area);
-        }
         public float BackgroundArea { get; private set; }
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
