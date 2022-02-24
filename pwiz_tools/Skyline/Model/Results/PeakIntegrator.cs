@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -29,20 +30,29 @@ namespace pwiz.Skyline.Model.Results
     public class PeakIntegrator
     {
         public PeakIntegrator(TimeIntensities interpolatedTimeIntensities)
-            : this(interpolatedTimeIntensities, null)
+            : this(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, null), ChromSource.unknown, null, interpolatedTimeIntensities, null)
         {
         }
 
-        public PeakIntegrator(TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
+        public PeakIntegrator(PeakGroupIntegrator peakGroupIntegrator, ChromSource chromSource, TimeIntensities rawTimeIntensities, TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
         {
+            PeakGroupIntegrator = peakGroupIntegrator;
+            ChromSource = chromSource;
+            RawTimeIntensities = rawTimeIntensities;
             InterpolatedTimeIntensities = interpolatedTimeIntensities;
             PeakFinder = peakFinder;
         }
 
+        public PeakGroupIntegrator PeakGroupIntegrator { get; }
+        public ChromSource ChromSource { get; }
+
         public IPeakFinder PeakFinder { get; private set; }
-        public TimeIntensities InterpolatedTimeIntensities { get; private set; }
-        public TimeIntensities RawTimeIntensities { get; set; }
-        public TimeIntervals TimeIntervals { get; set; }
+        public TimeIntensities InterpolatedTimeIntensities { get; }
+        public TimeIntensities RawTimeIntensities { get; }
+        public TimeIntervals TimeIntervals
+        {
+            get { return PeakGroupIntegrator.TimeIntervals; }
+        }
 
         /// <summary>
         /// Return the ChromPeak with the specified start and end times chosen by a user.
@@ -67,7 +77,9 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
             var foundPeak = PeakFinder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
+            var chromPeak = new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
+            chromPeak = FixDdaPeakArea(chromPeak);
+            return chromPeak;
         }
 
         /// <summary>
@@ -87,6 +99,7 @@ namespace pwiz.Skyline.Model.Results
                 chromPeak = IntegratePeakWithoutBackground(InterpolatedTimeIntensities.Times[peakMax.StartIndex], InterpolatedTimeIntensities.Times[peakMax.EndIndex], flags);
             }
 
+            chromPeak = FixDdaPeakArea(chromPeak);
             return Tuple.Create(chromPeak, interpolatedPeak);
         }
 
@@ -104,7 +117,53 @@ namespace pwiz.Skyline.Model.Results
                     endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
                 }
             }
-            return new ChromPeak(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
+            return ChromPeak.IntegrateWithoutBackgroundSubtraction(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
+        }
+
+        public ChromPeak FixDdaPeakArea(ChromPeak chromPeak)
+        {
+            if (ChromSource != ChromSource.fragment ||
+                !FullScanAcquisitionMethod.DDA.Equals(PeakGroupIntegrator.FullScanAcquisitionMethod))
+            {
+                return chromPeak;
+            }
+
+            return chromPeak.ChangeArea(GetDdaAreaForRange(chromPeak.StartTime, chromPeak.EndTime));
+        }
+
+        public float GetDdaAreaForRange(float startTime, float endTime)
+        {
+            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
+            int? bestIndex = null;
+            double bestTotalIntensity = 0;
+            int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+
+            for (; index < timeIntensities.NumPoints; index++)
+            {
+                var time = timeIntensities.Times[index];
+                if (time > endTime)
+                {
+                    break;
+                }
+
+                var totalIntensity = PeakGroupIntegrator.GetTotalDdaIntensityAtTime(time, index);
+                if (bestIndex == null || totalIntensity > bestTotalIntensity)
+                {
+                    bestIndex = index;
+                    bestTotalIntensity = totalIntensity;
+                }
+            }
+
+            if (bestIndex.HasValue)
+            {
+                return timeIntensities.Intensities[bestIndex.Value];
+            }
+
+            return 0;
         }
 
         public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)

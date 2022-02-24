@@ -714,6 +714,16 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void GeneratePeakData(TimeIntervals intersectedTimeIntervals)
         {
+            var peakGroupIntegrator = new PeakGroupIntegrator(FullScanAcquisitionMethod, intersectedTimeIntervals);
+            foreach (var chromData in _listChromData)
+            {
+                if (chromData.OptimizationStep != 0)
+                {
+                    continue;
+                }
+                var peakIntegrator = chromData.MakePeakIntegrator(peakGroupIntegrator);
+                peakGroupIntegrator.AddPeakIntegrator(peakIntegrator);
+            }
             // Set the processed peaks back to the chromatogram data
             HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
             for (int i = 0, len = _listPeakSets.Count; i < len; i++)
@@ -761,7 +771,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
+                    peak.CalcChromPeak(peakGroupIntegrator, peakMax, flags);
 
                     if (intersectedTimeIntervals != null && peakMax != null)
                     {
@@ -774,13 +784,9 @@ namespace pwiz.Skyline.Model.Results
                             endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
                         }
 
-                        var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        var chromPeak = ChromPeak.IntegrateWithoutBackgroundSubtraction(peak.Data.RawTimeIntensities, startTime, endTime, flags);
                         peak.SetChromPeak(chromPeak);
                     }
-                }
-                if (FullScanAcquisitionMethod.DDA.Equals(FullScanAcquisitionMethod))
-                {
-                    peakSet.RecalculateDdaPeaks();
                 }
             }
         }
@@ -1180,7 +1186,7 @@ namespace pwiz.Skyline.Model.Results
                     _listPeakSets.Insert(indexSet, peakSet);
                 }
                 // If there is a different best peptide peak, and it should have
-                // the same retention time charachteristics, then reset the integration
+                // the same retention time characteristics, then reset the integration
                 // boundaries of this peak set
                 if (matchBounds)
                 {
@@ -1203,7 +1209,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         peak.ResetBoundaries(startIndex, endIndex);
                     }
-                    // In a peak set with mutiple charge states and light-heavy pairs, it is
+                    // In a peak set with multiple charge states and light-heavy pairs, it is
                     // possible that a peak may not overlap with the best peak in its
                     // charge group.  If this is the case, and the best peak is completely
                     // outside the bounds of the current chromatogram, then insert an

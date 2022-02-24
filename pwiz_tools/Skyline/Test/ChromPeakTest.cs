@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -31,7 +32,7 @@ namespace pwiz.SkylineTest
         {
             var times = Enumerable.Range(0, 12).Select(i => (float) i).ToArray();
             var timeIntensities = new TimeIntensities(times, times.Select(t => 36 - (t - 6) * (t - 6)), null, null);
-            var chromPeak = new ChromPeak(timeIntensities, 1, 11, 0);
+            var chromPeak = ChromPeak.IntegrateWithoutBackgroundSubtraction(timeIntensities, 1, 11, 0);
             Assert.AreEqual(36f, chromPeak.Height);
             Assert.AreEqual(11, timeIntensities.Intensities[1]);
             Assert.AreEqual(20, timeIntensities.Intensities[2]);
@@ -41,7 +42,7 @@ namespace pwiz.SkylineTest
             var fwhmEnd = (7 * 10 + 2 * 11) / 9.0;
             Assert.AreEqual(fwhmEnd-fwhmStart, chromPeak.Fwhm, .00001);
             Assert.AreEqual(false, chromPeak.IsFwhmDegenerate);
-            var chromPeak2 = new ChromPeak(timeIntensities, 2, 10, 0);
+            var chromPeak2 = ChromPeak.IntegrateWithoutBackgroundSubtraction(timeIntensities, 2, 10, 0);
             Assert.AreEqual(8, chromPeak2.Fwhm);
             Assert.AreEqual(true, chromPeak2.IsFwhmDegenerate);
         }
@@ -59,8 +60,10 @@ namespace pwiz.SkylineTest
             Assert.AreNotEqual(0, peakWithBackground.BackgroundArea);
 
             // Set the TimeIntervals so the peakIntegrator will use "IntegratePeakWithoutBackground" 
-            peakIntegrator.TimeIntervals = TimeIntervals.EMPTY;
-            var peakWithoutBackground = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
+            var peakIntegratorWithTimeIntervals =
+                new PeakIntegrator(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY),
+                    ChromSource.unknown, null, timeIntensities, null);
+            var peakWithoutBackground = peakIntegratorWithTimeIntervals.IntegratePeak(peakStartTime, peakEndTime, flagValues);
             Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
             var expectedArea = peakWithBackground.Area + peakWithBackground.BackgroundArea;
             Assert.AreEqual(expectedArea, peakWithoutBackground.Area, .01);

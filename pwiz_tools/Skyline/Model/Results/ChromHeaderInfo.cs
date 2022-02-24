@@ -1074,7 +1074,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
         /// </summary>
-        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        public static ChromPeak IntegrateWithoutBackgroundSubtraction(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
         {
             int pointsAcrossThePeak = 0;
             double totalArea = 0;
@@ -1193,37 +1193,34 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            _area = (float) totalArea;
-            _startTime = startTime;
-            _endTime = endTime;
-            _height = (float) apexHeight;
-            _backgroundArea = 0;
-            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
-            _retentionTime = (float) apexTime;
-            _flagValues = flagValues;
+            float fwhm;
             if (halfMaxStart.HasValue)
             {
-                _fwhm = (float) (halfMaxEnd - halfMaxStart);
+                fwhm = (float)(halfMaxEnd - halfMaxStart);
             }
             else
             {
-                _fwhm = 0;
+                fwhm = 0;
             }
+
+            double? massError;
             if (null != timeIntensities.MassErrors && totalArea > 0)
             {
-                _flagValues |= FlagValues.mass_error_known;
-                _massError = To10x(totalMassError / totalArea);
+                massError = totalMassError / totalArea;
             }
             else
             {
-                _flagValues &= ~FlagValues.mass_error_known;
-                _massError = 0;
+                massError = null;
             }
 
             if (fwhmDegenerate)
             {
-                _flagValues |= FlagValues.degenerate_fwhm;
+                flagValues |= FlagValues.degenerate_fwhm;
             }
+
+            return new ChromPeak(retentionTime: (float) apexTime, startTime: startTime, endTime: endTime,
+                area: (float) totalArea, backgroundArea: 0, height: (float) apexHeight, fwhm: fwhm,
+                flagValues: flagValues, massError, pointsAcrossThePeak);
         }
 
         public ChromPeak(IPeakFinder finder,
@@ -1334,6 +1331,41 @@ namespace pwiz.Skyline.Model.Results
                     _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
                 }
             }
+        }
+
+        public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
+        {
+            _retentionTime = retentionTime;
+            _startTime = startTime;
+            _endTime = endTime;
+            _area = area;
+            _backgroundArea = backgroundArea;
+            _height = height;
+            _fwhm = fwhm;
+            if (massError.HasValue)
+            {
+                _massError = To10x(massError.Value);
+                flagValues |= FlagValues.mass_error_known;
+            }
+            else
+            {
+                _massError = 0;
+                flagValues &= ~FlagValues.mass_error_known;
+            }
+
+            if (pointsAcross.HasValue)
+            {
+                // Convert pointsAcross to a short. If pointsAcross happens to be too large of an integer to fit in a short, it will
+                // be a negative number, and the property getter for PointsAcross will return null
+                _pointsAcross = (short) Math.Min(pointsAcross.Value, ushort.MaxValue);
+            }
+            else
+            {
+                _pointsAcross = -1;
+            }
+
+            _flagValues = flagValues;
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -2752,7 +2784,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
+        public TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
         {
             var timeIntensitiesGroup = _groupInfo?.TimeIntensitiesGroup;
             if (timeIntensitiesGroup == null)
@@ -2841,14 +2873,18 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(TimeIntensities)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = TimeIntervals
-            };
+            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
+        }
+
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
+        {
+            var rawTimeIntensities = RawTimeIntensities;
+            var interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, rawTimeIntensities,
+                interpolatedTimeIntensities, null);
         }
 
         public int IndexOfPeak(double retentionTime)

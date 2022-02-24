@@ -237,6 +237,11 @@ namespace pwiz.Skyline.Model.Results
 
         private IPeakFinder Finder { get; set; }
 
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
+        {
+            return new PeakIntegrator(peakGroupIntegrator, Key.Source, RawTimeIntensities, TimeIntensities, Finder);
+        }
+
         public ChromKey Key { get; private set; }
         public ChromExtra Extra { get; private set; }
         public TransitionDocNode DocNode { get; set; }
@@ -301,7 +306,7 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals, out IFoundPeak peak)
+        public ChromPeak CalcChromPeak(PeakGroupIntegrator peakGroupIntegrator, IFoundPeak peakMax, ChromPeak.FlagValues flags, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -311,11 +316,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            var peakIntegrator = new PeakIntegrator(TimeIntensities, Finder)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = timeIntervals
-            };
+            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             var tuple = peakIntegrator.IntegrateFoundPeak(peakMax, flags);
             peak = tuple.Item2;
             return tuple.Item1;
@@ -412,9 +413,9 @@ namespace pwiz.Skyline.Model.Results
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals)
+        public ChromPeak CalcChromPeak(PeakGroupIntegrator peakGroupIntegrator, IFoundPeak peakMax, ChromPeak.FlagValues flags)
         {
-            _chromPeak = Data.CalcChromPeak(peakMax, flags, timeIntervals, out _crawPeak);
+            _chromPeak = Data.CalcChromPeak(peakGroupIntegrator, peakMax, flags, out _crawPeak);
             return _chromPeak;
         }
 
@@ -869,41 +870,6 @@ namespace pwiz.Skyline.Model.Results
             base.SetItem(index, item);
             SubtractPeak(peak);
             AddPeak(item);
-        }
-
-        public void RecalculateDdaPeaks()
-        {
-            var ms2Chromatograms = new List<TimeIntensities>();
-            var ms2PeakBounds = new List<PeakBounds>();
-            foreach (var chromDataPeak in this)
-            {
-                if (!IsMs1(chromDataPeak.Data.Key.Source))
-                {
-                    continue;
-                }
-                ms2Chromatograms.Add(chromDataPeak.Data.RawTimeIntensities);
-                if (chromDataPeak.DataPeak.IsEmpty)
-                {
-                    ms2PeakBounds.Add(null);
-                }
-                else
-                {
-                    ms2PeakBounds.Add(new PeakBounds(chromDataPeak.DataPeak.StartTime, chromDataPeak.DataPeak.EndTime));
-                }
-            }
-
-            var intensities = PeakIntegrator.GetDdaIntensities(ms2Chromatograms, ms2PeakBounds);
-            int indexMs2 = 0;
-            foreach (var peak in this)
-            {
-                if (!IsMs1(peak.Data.Key.Source))
-                {
-                    continue;
-                }
-                float intensity = intensities[indexMs2];
-                indexMs2++;
-                peak.ChangeChromPeak(peak.DataPeak.ChangeArea(intensity));
-            }
         }
 
         #region Implement read-only IList<ITransitionPeakData<IDetailedPeakData>> for peak scoring

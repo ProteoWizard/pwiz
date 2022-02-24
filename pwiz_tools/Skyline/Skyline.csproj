@@ -610,6 +610,7 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
