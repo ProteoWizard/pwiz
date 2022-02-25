@@ -88,10 +88,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
-
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             doc = WaitForDocumentChange(doc);
 

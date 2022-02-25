@@ -116,9 +116,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles, false);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForDocumentChange(doc);
 
             // We're on the "Extract Chromatograms" page of the wizard.
@@ -228,10 +229,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForDocumentChange(doc);
 
             // We're on the "Extract Chromatograms" page of the wizard.
@@ -329,11 +331,11 @@ namespace pwiz.SkylineTestFunctional
             // build the document library.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles, false);
-                Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsEarlyFinishButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton()));
             WaitForClosedForm(importPeptideSearchDlg);
 
             VerifyDocumentLibraryBuilt(documentFile);
@@ -375,9 +377,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("SpectrumSources.blib")}, false);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("SpectrumSources.blib")});
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForDocumentChange(doc);
 
             RunUI(() =>
@@ -431,10 +434,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 Assert.IsFalse(importPeptideSearchDlg.IsBackButtonVisible);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             doc = WaitForDocumentChange(doc);
 
             RunUI(() =>
@@ -574,10 +578,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("biognosystiny.blib")}, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("biognosystiny.blib")});
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
             OkDialog(recalibrateDlg, recalibrateDlg.ClickNo);

@@ -367,10 +367,15 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
+            });
+            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.ScoreTypesLoaded);
+            RunUI(() =>
+            {
                 importPeptideSearchDlg.BuildPepSearchLibControl.ScoreThresholds = new[] { (double?)0.01, 0.01 };
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
             
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());

@@ -225,10 +225,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string[] SearchFilenames
         {
             get { return ImportPeptideSearch.SearchFilenames; }
-            private set { SetSearchFiles(value, true); }
+            private set { SetSearchFiles(value); }
         }
 
-        private void SetSearchFiles(string[] searchFiles, bool async)
+        private void SetSearchFiles(string[] searchFiles)
         {
             // Set new value
             ImportPeptideSearch.SearchFilenames = searchFiles;
@@ -265,22 +265,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!toAdd.Any())
                 return;
 
-            if (async)
-            {
-                FireInputFilesChanged();
-                var bw = new BackgroundWorker();
-                bw.DoWork += (sender, e) =>
-                {
-                    var success = GetScoreTypes(toAdd, out var scoreTypes);
-                    Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes)));
-                };
-                bw.RunWorkerAsync();
-            }
-            else
+            FireInputFilesChanged();
+            var bw = new BackgroundWorker();
+            bw.DoWork += (sender, e) =>
             {
                 var success = GetScoreTypes(toAdd, out var scoreTypes);
-                GridUpdateScoreInfo(success, scoreTypes);
-            }
+                Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes)));
+            };
+            bw.RunWorkerAsync();
         }
 
         private bool GetScoreTypes(ICollection<string> files, out Dictionary<string, BiblioSpecScoreType[]> scoreTypes)
@@ -460,10 +452,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public void AddSearchFiles(IEnumerable<string> fileNames, bool async = true)
+        public void AddSearchFiles(IEnumerable<string> fileNames)
         {
-            SetSearchFiles(BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch), async);
+            SetSearchFiles(BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch));
         }
+
+        public bool ScoreTypesLoaded => ScoreTypes.All(scoreType => scoreType != null);
 
         public BiblioSpecScoreType[] ScoreTypes
         {

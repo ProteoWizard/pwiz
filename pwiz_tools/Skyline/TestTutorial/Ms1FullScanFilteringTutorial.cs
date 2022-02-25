@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles, false);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
 
                 // Sanity check here, because of failure getting both files for results import below
                 var searchNames = importPeptideSearchDlg.BuildPepSearchLibControl.SearchFilenames;
@@ -173,9 +173,9 @@ namespace pwiz.SkylineTestTutorial
                     PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
                 importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));

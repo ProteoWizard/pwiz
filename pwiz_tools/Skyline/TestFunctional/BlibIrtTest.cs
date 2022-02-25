@@ -84,13 +84,15 @@ namespace pwiz.SkylineTestFunctional
             // Import peptide search
             RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky")));
             var import = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            RunUI(() => { import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults }); });
+            WaitForConditionUI(() => import.BuildPepSearchLibControl.ScoreTypesLoaded);
             RunUI(() =>
             {
-                import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults }, false);
                 import.BuildPepSearchLibControl.ScoreThresholds = new double?[] { 0.05 };
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });
+            WaitForConditionUI(() => import.IsNextButtonEnabled);
             VerifyAddIrts(ShowDialog<AddIrtPeptidesDlg>(() => import.ClickNextButton()));
             OkDialog(import, import.CancelDialog);
         }
