@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         string plusSub = Transition.GetChargeIndicator(charge);
                         foreach (IonType type in types)
                         {
-                            CellDesc cell = CreateHead(type.ToString().ToLower() + plusSub, rt);
+                            CellDesc cell = CreateHead(type.GetLocalizedString().ToLower() + plusSub, rt);
                             if (Transition.IsNTerminal(type))
                                 headers.Insert(0, cell);
                             else

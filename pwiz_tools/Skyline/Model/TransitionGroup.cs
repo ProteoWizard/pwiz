@@ -789,6 +789,8 @@ namespace pwiz.Skyline.Model
                     case IonType.x:
                     case IonType.y:
                     case IonType.z:
+                    case IonType.zh:
+                    case IonType.zhh:
                         if (loss.IndexAA <= cleavageOffset)
                             continue;
                         break;
@@ -820,6 +822,8 @@ namespace pwiz.Skyline.Model
                     case IonType.x:
                     case IonType.y:
                     case IonType.z:
+                    case IonType.zh:
+                    case IonType.zhh:
                         if (loss.IndexAA <= cleavageOffset)
                             continue;
                         break;

@@ -29,6 +29,8 @@ message SkylineDocumentProto {
 		ION_TYPE_z = 6;
 		ION_TYPE_precursor = 7;
 		ION_TYPE_custom = 8;
+		ION_TYPE_zH = 9;
+		ION_TYPE_zHH = 10;
 	}
 
 	message Annotations {

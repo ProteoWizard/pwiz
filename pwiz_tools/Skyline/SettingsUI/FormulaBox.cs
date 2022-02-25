@@ -59,8 +59,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="labelMonoText">Label text for the monoisotopic mass or m/z textedit control</param>
         /// <param name="adduct">If non-null, treat the average and monoisotopic textedits as describing m/z instead of mass</param>
         /// <param name="mode">Controls editing of the formula and/or adduct edit</param>
-        /// <param name="suggestOnlyAdductsWithMass">If presenting an adduct dropdown menu, do we include things like "[M+]"?</param>
-        public FormulaBox(bool isProteomic, string labelFormulaText, string labelAverageText, string labelMonoText, Adduct adduct, EditMode mode = EditMode.formula_only, bool suggestOnlyAdductsWithMass = true)
+        public FormulaBox(bool isProteomic, string labelFormulaText, string labelAverageText, string labelMonoText, Adduct adduct, EditMode mode = EditMode.formula_only)
         {
             InitializeComponent();
             if (isProteomic)
@@ -82,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 case EditMode.adduct_only:
                 case EditMode.formula_and_adduct:
-                    TransitionSettingsUI.AppendAdductMenus(contextFormula, suggestOnlyAdductsWithMass, adductStripMenuItem_Click);
+                    TransitionSettingsUI.AppendAdductMenus(contextFormula, adductStripMenuItem_Click);
                     break;
             }
 
