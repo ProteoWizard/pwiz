@@ -513,6 +513,7 @@ namespace pwiz.Skyline
             DestroyDocumentGrid();
             DestroyAuditLogForm();
             DestroyCalibrationForm();
+            DestroyCandidatePeakForm();
 
             DestroyImmediateWindow();
             HideFindResults(true);

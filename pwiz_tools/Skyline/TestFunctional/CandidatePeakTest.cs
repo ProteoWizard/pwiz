@@ -1,5 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -22,8 +26,30 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowCandidatePeaks();
             });
             SelectPeptide("SLDLIESLLR");
-            PauseTest();
+            WaitForGraphs();
+            var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
+            Assert.IsNotNull(candidatePeakForm);
+            WaitForConditionUI(() => candidatePeakForm.IsComplete);
+            RunUI(() =>
+            {
+
+            });
         }
+
+        private void VerifyFeatureScores()
+        {
+            var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
+            WaitForConditionUI(() => candidatePeakForm.IsComplete);
+            PropertyPath ppWeightedFeature = PropertyPath.Root
+                .Property(nameof(CandidatePeakGroup.PeakScores))
+                .Property(nameof(PeakGroupScore.WeightedFeatures))
+                .DictionaryValues();
+                
+            var colIntensity = candidatePeakForm.DataboundGridControl.FindColumn()
+                
+        }
+
+        private DataGridViewColumn FindColumn(PropertyPath propertyPath, )
 
         private void SelectPeptide(string sequence)
         {

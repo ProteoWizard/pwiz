@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnCaptions {
@@ -2194,6 +2194,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Q Value.
+        /// </summary>
+        public static string PeakQValue {
+            get {
+                return ResourceManager.GetString("PeakQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Rank.
         /// </summary>
         public static string PeakRank {
@@ -2208,6 +2217,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak Score.
+        /// </summary>
+        public static string PeakScore {
+            get {
+                return ResourceManager.GetString("PeakScore", resourceCulture);
             }
         }
         

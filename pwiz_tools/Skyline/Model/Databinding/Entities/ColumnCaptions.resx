@@ -809,13 +809,19 @@
 	  <value>Peak Group End Time</value>
   </data>
   <data name="PeakGroupStartTime">
-	  <value>Peak Group Start Time</value>
+	<value>Peak Group Start Time</value>
+  </data>
+  <data name="PeakQValue">
+	<value>Peak Q Value</value>
   </data>
   <data name="PeakRank">
     <value>Peak Rank</value>
   </data>
   <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
+  </data>
+  <data name="PeakScore">
+	<value>Peak Score</value>
   </data>
   <data name="PeakScores">
 	  <value>Peak Scores</value>
