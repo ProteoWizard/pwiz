@@ -448,6 +448,11 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
@@ -549,11 +554,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
     <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />

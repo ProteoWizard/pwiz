@@ -219,9 +219,6 @@
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
-  <data name="CandidatePeakGroups">
-	  <value>Candidate Peak Groups</value>
-  </data>
   <data name="CAS">
     <value>CAS</value>
   </data>
@@ -819,9 +816,6 @@
   </data>
   <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
-  </data>
-  <data name="PeakScore">
-	<value>Peak Score</value>
   </data>
   <data name="PeakScores">
 	  <value>Peak Scores</value>

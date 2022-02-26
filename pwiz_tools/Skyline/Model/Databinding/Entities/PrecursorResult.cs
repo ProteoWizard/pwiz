@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
@@ -40,12 +39,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
-        private readonly CachedValue<CandidatePeakGroupData> _peakScores;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
-            _peakScores = CachedValue.Create(DataSchema, GetMyPeakScore);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -277,35 +274,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.DocNode);
         }
 
-        public PeakGroupScore PeakScore
-        {
-            get
-            {
-                return _peakScores.Value.Score;
-            }
-        }
-
-        private CandidatePeakGroupData GetMyPeakScore()
-        {
-            var onDemandScoreCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(SrmDocument,
-                Precursor.Peptide.IdentityPath, GetResultFile().Replicate.ReplicateIndex,
-                GetResultFile().ChromFileInfo.FileId);
-            var featureScores = onDemandScoreCalculator.GetChosenPeakGroupData(Precursor.DocNode.TransitionGroup);
-            return featureScores;
-        }
-
-        private PeakBounds FindPeakBounds(TransitionGroup transitionGroup, Model.Transition transition)
-        {
-            var peptideDocNode = Precursor.Peptide.DocNode;
-            var transitionDocNode = (TransitionDocNode) peptideDocNode.FindNode(new IdentityPath(transitionGroup, transition));
-            var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode?.Results);
-            if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
-            {
-                return null;
-            }
-
-            return new PeakBounds(transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime);
-        }
         public double? GetNormalizedArea(NormalizationMethod normalizationMethod)
         {
             if (normalizationMethod == null)

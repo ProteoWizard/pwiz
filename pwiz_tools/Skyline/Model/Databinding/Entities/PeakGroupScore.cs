@@ -109,6 +109,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
     }
 
+    [InvariantDisplayName(nameof(WeightedFeature))]
     public class WeightedFeature
     {
         public WeightedFeature(float? score, double weight)

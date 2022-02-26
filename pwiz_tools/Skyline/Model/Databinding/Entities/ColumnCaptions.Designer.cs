@@ -367,15 +367,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Candidate Peak Groups.
-        /// </summary>
-        public static string CandidatePeakGroups {
-            get {
-                return ResourceManager.GetString("CandidatePeakGroups", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to CAS.
         /// </summary>
         public static string CAS {
@@ -2217,15 +2208,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Peak Score.
-        /// </summary>
-        public static string PeakScore {
-            get {
-                return ResourceManager.GetString("PeakScore", resourceCulture);
             }
         }
         

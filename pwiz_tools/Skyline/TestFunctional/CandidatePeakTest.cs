@@ -36,20 +36,20 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private void VerifyFeatureScores()
-        {
-            var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
-            WaitForConditionUI(() => candidatePeakForm.IsComplete);
-            PropertyPath ppWeightedFeature = PropertyPath.Root
-                .Property(nameof(CandidatePeakGroup.PeakScores))
-                .Property(nameof(PeakGroupScore.WeightedFeatures))
-                .DictionaryValues();
-                
-            var colIntensity = candidatePeakForm.DataboundGridControl.FindColumn()
-                
-        }
+        // private void VerifyFeatureScores()
+        // {
+        //     var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
+        //     WaitForConditionUI(() => candidatePeakForm.IsComplete);
+        //     PropertyPath ppWeightedFeature = PropertyPath.Root
+        //         .Property(nameof(CandidatePeakGroup.PeakScores))
+        //         .Property(nameof(PeakGroupScore.WeightedFeatures))
+        //         .DictionaryValues();
+        //         
+        //     var colIntensity = candidatePeakForm.DataboundGridControl.FindColumn()
+        //         
+        // }
 
-        private DataGridViewColumn FindColumn(PropertyPath propertyPath, )
+        // private DataGridViewColumn FindColumn(PropertyPath propertyPath, )
 
         private void SelectPeptide(string sequence)
         {
