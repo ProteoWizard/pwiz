@@ -221,6 +221,7 @@ namespace TestPerf
             RunUI(() => colDlg.checkBoxAssociateProteins.Checked = associateProteins);
             if (associateProteins)
             {
+                WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for initial associate proteins to complete
                 if (checkForErrors)
                 {
                     // FilterMatchedPeptidesDlg should appear when user checks for errors
