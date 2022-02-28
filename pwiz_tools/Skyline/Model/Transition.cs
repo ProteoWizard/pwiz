@@ -33,12 +33,17 @@ namespace pwiz.Skyline.Model
 {
     public enum IonType
     {
-         precursor = -2, custom = -1, a, b, c, x, y, z
+        precursor = -2, custom = -1, a, b, c, x, y, z, zh, zhh
     }
 
     public static class IonTypeExtension
     {
-        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z"};
+        private static readonly string[] VALUES = {string.Empty, string.Empty, @"a", @"b", @"c", @"x", @"y", @"z", @"z" + '\u2022', @"z" + '\u2032' };
+        private static readonly Dictionary<IonType, string[]> INPUT_ALIASES = new Dictionary<IonType, string[]>()
+        {
+            {IonType.zh, new[]{@"z.", @"z*"}},
+            { IonType.zhh, new[]{@"z'", @"z"""}}
+        };
 
         private static readonly Color COLOR_A = Color.YellowGreen;
         private static readonly Color COLOR_X = Color.Green;
@@ -46,6 +51,8 @@ namespace pwiz.Skyline.Model
         private static readonly Color COLOR_Y = Color.Blue;
         private static readonly Color COLOR_C = Color.Orange;
         private static readonly Color COLOR_Z = Color.OrangeRed;
+        private static readonly Color COLOR_ZH = Color.Brown;
+        private static readonly Color COLOR_ZHH = Color.Sienna;
         private static readonly Color COLOR_OTHER_IONS = Color.DodgerBlue; // Other ion types, as in small molecule
         private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
         private static readonly Color COLOR_NONE = COLOR_A;
@@ -64,14 +71,20 @@ namespace pwiz.Skyline.Model
             return LOCALIZED_VALUES[(int) val + 2]; // To include precursor and custom
         }
 
-        public static IonType GetEnum(string enumValue)
+        public static IEnumerable<string> GetInputAliases(this IonType val)
         {
-            return Helpers.EnumFromLocalizedString<IonType>(enumValue, LOCALIZED_VALUES);
+            if (!INPUT_ALIASES.ContainsKey(val))
+                return new[] {val.ToString()};
+            return INPUT_ALIASES[val].Concat(new [] {val.ToString()});
         }
 
-        public static IonType GetEnum(string enumValue, IonType defaultValue)
+        public static IonType GetEnum(string enumValue)
         {
-            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
+            int i = LOCALIZED_VALUES.IndexOf(v => Equals(v, enumValue));
+            if (i >= 0)
+                return (IonType) (i-2);
+            var result = INPUT_ALIASES.Keys.First(ion => GetInputAliases(ion).Any(str => str.Equals(enumValue)));
+            return result;
         }
 
         public static Color GetTypeColor(IonType? type, int rank = 0)
@@ -89,6 +102,8 @@ namespace pwiz.Skyline.Model
                 case IonType.y: color = COLOR_Y; break;
                 case IonType.c: color = COLOR_C; break;
                 case IonType.z: color = COLOR_Z; break;
+                case IonType.zh: color = COLOR_ZH; break;
+                case IonType.zhh:color = COLOR_ZHH; break;
                 case IonType.custom: color = (rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
                 case IonType.precursor: color = COLOR_PRECURSOR; break;
             }
@@ -142,7 +157,7 @@ namespace pwiz.Skyline.Model
         /// Prioritize, paired list of non-custom product ion types
         /// </summary>
         public static readonly IonType[] PEPTIDE_ION_TYPES =
-            {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a};
+            {IonType.y, IonType.b, IonType.z, IonType.c, IonType.x, IonType.a, IonType.zh, IonType.zhh};
         // And its small molecule equivalent
         public static readonly IonType[] MOLECULE_ION_TYPES = { IonType.custom };
         public static readonly IonType[] DEFAULT_MOLECULE_FILTER_ION_TYPES = { IonType.custom }; 
@@ -165,7 +180,7 @@ namespace pwiz.Skyline.Model
 
         public static bool IsCTerminal(IonType type)
         {
-            return type == IonType.x || type == IonType.y || type == IonType.z;
+            return type == IonType.x || type == IonType.y || type == IonType.z || type == IonType.zh || type == IonType.zhh;
         }
 
         public static bool IsPrecursor(IonType type)

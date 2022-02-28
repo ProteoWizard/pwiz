@@ -238,8 +238,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (!preTrain)
             {
                 qValueCutoff = 0.01; // First iteration cut-off - if not pretraining, just start at 0.01
-                targetTransitionGroups.ScorePeaks(calcWeights);
-                decoyTransitionGroups.ScorePeaks(calcWeights);
+                targetTransitionGroups.ScorePeaks(calcWeights, ReplaceUnknownFeatureScores);
+                decoyTransitionGroups.ScorePeaks(calcWeights, ReplaceUnknownFeatureScores);
             }
             // Bootstrap from the pre-trained legacy model
             else
@@ -263,8 +263,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         continue;
                     SetCalculatorValue(calculators[i].GetType(), LegacyScoringModel.DEFAULT_WEIGHTS[i], preTrainedWeights);
                 }
-                targetTransitionGroups.ScorePeaks(preTrainedWeights);
-                decoyTransitionGroups.ScorePeaks(preTrainedWeights);
+                targetTransitionGroups.ScorePeaks(preTrainedWeights, ReplaceUnknownFeatureScores);
+                decoyTransitionGroups.ScorePeaks(preTrainedWeights, ReplaceUnknownFeatureScores);
             }
 
             double decoyMean = 0;
@@ -497,8 +497,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             // Recalculate all peak scores.
-            targetTransitionGroups.ScorePeaks(weights);
-            decoyTransitionGroups.ScorePeaks(weights);
+            targetTransitionGroups.ScorePeaks(weights, ReplaceUnknownFeatureScores);
+            decoyTransitionGroups.ScorePeaks(weights, ReplaceUnknownFeatureScores);
 
             // If the mean target score is less than the mean decoy score, then the
             // weights came out negative, and all the weights and scores must be negated to
@@ -507,8 +507,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 for (int i = 0; i < weights.Length; i++)
                     weights[i] *= -1;
-                targetTransitionGroups.ScorePeaks(weights);
-                decoyTransitionGroups.ScorePeaks(weights);
+                targetTransitionGroups.ScorePeaks(weights, ReplaceUnknownFeatureScores);
+                decoyTransitionGroups.ScorePeaks(weights, ReplaceUnknownFeatureScores);
             }
 
             decoyMean = decoyTransitionGroups.Mean;
@@ -542,6 +542,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             trainData[row, j] = category;
         }
+        public override bool ReplaceUnknownFeatureScores => false;
 
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)

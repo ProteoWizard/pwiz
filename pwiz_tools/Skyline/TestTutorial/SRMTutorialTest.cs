@@ -345,10 +345,7 @@ namespace pwiz.SkylineTestTutorial
             string impliedLabeled = GetExcelFileText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
             var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = impliedLabeled);
-            
-            RunUI(() => {
-                col4Dlg.checkBoxAssociateProteins.Checked = true;
-            });
+
 
             OkDialog(col4Dlg, col4Dlg.OkDialog);
 
