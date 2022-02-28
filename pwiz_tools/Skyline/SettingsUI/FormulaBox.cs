@@ -428,7 +428,7 @@ namespace pwiz.Skyline.SettingsUI
             var insertAt = textFormula.SelectionStart;
             textFormula.Text = text;
             textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = Math.Min(insertAt, text.Length);
+            textFormula.SelectionStart = Math.Min(insertAt, text?.Length ?? 0);
         }
 
         private void hToolStripMenuItem_Click(object sender, EventArgs e)
