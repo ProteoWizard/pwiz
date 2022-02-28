@@ -157,14 +157,9 @@ namespace pwiz.SkylineTestTutorial
                 var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
                 string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
                 var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
+                WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for associate proteins to complete
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
-                // TODO(bspratt): Fix the race condition where associate proteins has not completed and OkDialog produces a document with just 1 long peptide list
                 OkDialog(colDlg, colDlg.OkDialog);
-
-                // TODO(bspratt): Remove this PauseTest after the race condition is fixed
-                var docAfterTrans = WaitForDocumentChange(docBeforeTrans);
-                if (docAfterTrans.PeptideGroupCount < 24)
-                    PauseTest();
             }
 
             RunUI(() =>

@@ -1486,5 +1486,10 @@ namespace pwiz.Skyline.FileUI
 
             return !canceled;
         }
+
+        #region testing support
+        public bool AssociateProteinsPreviewCompleted => checkBoxAssociateProteins.Checked && isAssociated;
+        #endregion
+
     }
 }  
