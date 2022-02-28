@@ -1600,8 +1600,6 @@
       <xs:enumeration value="x"/>
       <xs:enumeration value="y"/>
       <xs:enumeration value="z"/>
-      <xs:enumeration value="zh"/>
-      <xs:enumeration value="zhh"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="peptide_uniqueness_constraint_type">

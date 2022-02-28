@@ -1262,8 +1262,9 @@ to use in calculating all precursor masses</value>
     <value>5</value>
   </data>
   <data name="textPeptideIonTypes.ToolTip" xml:space="preserve">
-    <value>A list of comma separated product ion types (a, b, c, x, y, z, p for precursor) to use
-for calculating potential product ions</value>
+    <value>A list of comma separated product ion types (a, b, c, x, y, z, z., z', p for precursor) to use
+for calculating potential product ions. z. and z' stand for z+1 radical ion and z+2 ion. Those are usually found in ExD experiments.
+Alternatively, z* and z" can be used.</value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>

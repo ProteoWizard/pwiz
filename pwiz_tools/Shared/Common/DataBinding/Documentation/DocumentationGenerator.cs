@@ -78,7 +78,7 @@ namespace pwiz.Common.DataBinding.Documentation
                     var collectionInfo = DataSchema.GetCollectionInfo(rowType);
                     if (collectionInfo != null)
                     {
-                        columnQueue.Enqueue(ColumnDescriptor.RootColumn(rootColumn.DataSchema, collectionInfo.ElementType, rootColumn.UiMode));
+                        columnQueue.Enqueue(ColumnDescriptor.RootColumn(rootColumn.DataSchema, collectionInfo.ElementValueType, rootColumn.UiMode));
                     }
                     else if (!IsScalar(rowType))
                     {

@@ -3237,5 +3237,36 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaRDotpCutoffValue"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowZHIons
+        {
+            get
+            {
+                return ((bool)(this["ShowZHIons"]));
+            }
+            set
+            {
+                this["ShowZHIons"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowZHHIons
+        {
+            get
+            {
+                return ((bool)(this["ShowZHHIons"]));
+            }
+            set
+            {
+                this["ShowZHHIons"] = value;
+            }
+        }
     }
 }
+
