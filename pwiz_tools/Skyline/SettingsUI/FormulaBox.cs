@@ -424,6 +424,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void SetFormulaText(string text)
         {
+            if (Equals(text, textFormula.Text))
+            {
+                return;
+            }
             // Preserve cursor location
             var insertAt = textFormula.SelectionStart;
             textFormula.Text = text;
