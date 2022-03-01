@@ -169,6 +169,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />

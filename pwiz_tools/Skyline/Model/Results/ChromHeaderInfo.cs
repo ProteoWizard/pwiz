@@ -1029,7 +1029,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _retentionTime;
         private readonly float _startTime;
         private readonly float _endTime;
-        private float _area;
+        private readonly float _area;
         private readonly float _backgroundArea;
         private readonly float _height;
         private readonly float _fwhm;
@@ -1070,6 +1070,48 @@ namespace pwiz.Skyline.Model.Results
         public static short To10x(double f)
         {
             return (short) Math.Round(f*10);
+        }
+
+        public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
+            float height, float fwhm, FlagValues flags, double? massError, int? pointsAcross)
+        {
+            _retentionTime = retentionTime;
+            _startTime = startTime;
+            _endTime = endTime;
+            _area = area;
+            _backgroundArea = backgroundArea;
+            _height = height;
+            _fwhm = fwhm;
+            if (massError.HasValue)
+            {
+                flags |= FlagValues.mass_error_known;
+                _massError = To10x(massError.Value);
+            }
+            else
+            {
+                flags &= ~FlagValues.mass_error_known;
+                _massError = 0;
+            }
+
+            if (pointsAcross.HasValue)
+            {
+                if (pointsAcross < 0 || pointsAcross > short.MaxValue)
+                {
+                    _pointsAcross = 0;
+                }
+                else
+                {
+                    _pointsAcross = Convert.ToInt16(pointsAcross.Value);
+                }
+            }
+            else
+            {
+                // It would be nice if "-1" meant "pointsAcross" is unknown, but for
+                // backwards compatibility reasons, 0 is the unknown value.
+                _pointsAcross = 0;
+            }
+
+            _flagValues = flags;
         }
 
         /// <summary>
@@ -1419,13 +1461,6 @@ namespace pwiz.Skyline.Model.Results
             var copy = this;
             copy._flagValues = Flags & ~FlagValues.mass_error_known;
             copy._massError = 0;
-            return copy;
-        }
-
-        public ChromPeak ChangeArea(float newArea)
-        {
-            var copy = this;
-            copy._area = newArea;
             return copy;
         }
 

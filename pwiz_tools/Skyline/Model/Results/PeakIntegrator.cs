@@ -130,15 +130,31 @@ namespace pwiz.Skyline.Model.Results
                 return chromPeak;
             }
 
-            return chromPeak.ChangeArea(GetDdaAreaForRange(chromPeak.StartTime, chromPeak.EndTime));
+            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
+            int? bestIndex = GetIndexOfBestDdaRetentionTime(timeIntensities, chromPeak.StartTime, chromPeak.EndTime);
+            var flags = chromPeak.Flags;
+            // Fwhm is always degenerate and peak is never truncated
+            flags |= ChromPeak.FlagValues.degenerate_fwhm | ChromPeak.FlagValues.peak_truncation_known;
+            flags &= ~(ChromPeak.FlagValues.forced_integration | ChromPeak.FlagValues.peak_truncated);
+            if (!bestIndex.HasValue)
+            {
+                return new ChromPeak(chromPeak.RetentionTime, chromPeak.StartTime, chromPeak.EndTime, 0, 0, 0, 0,
+                    flags, null, chromPeak.PointsAcross);
+            }
+
+            float retentionTime = timeIntensities.Times[bestIndex.Value];
+            float height = timeIntensities.Intensities[bestIndex.Value];
+            float? massError = timeIntensities.MassErrors?[bestIndex.Value];
+
+            return new ChromPeak(retentionTime, chromPeak.StartTime, chromPeak.EndTime, height, 0, height, 0,
+                flags, massError, chromPeak.PointsAcross);
         }
 
         /// <summary>
-        /// Return the intensity at the point in the range where the total MS2 intensity is the largest.
+        /// Return the point in the range where the total MS2 intensity is the largest.
         /// </summary>
-        public float GetDdaAreaForRange(float startTime, float endTime)
+        public int? GetIndexOfBestDdaRetentionTime(TimeIntensities timeIntensities, float startTime, float endTime)
         {
-            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
             int? bestIndex = null;
             double bestTotalIntensity = 0;
             int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
@@ -163,12 +179,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            if (bestIndex.HasValue)
-            {
-                return timeIntensities.Intensities[bestIndex.Value];
-            }
-
-            return 0;
+            return bestIndex;
         }
 
         public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)
