@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
 
+        private readonly Color _defaultCellBackColor;
+        private static Color ReadonlyCellBackColor => Color.FromArgb(245, 245, 245);
         private const string CELL_LOADING = @"...";
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
@@ -75,6 +78,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             comboInputFileType.SelectedIndex = 0;
 
+            _defaultCellBackColor = gridSearchFiles.DefaultCellStyle.BackColor;
             columnThreshold.CellTemplate = new ThresholdCell();
         }
 
@@ -308,11 +312,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var row = gridSearchFiles.Rows[i];
                 var file = FileCellValue.Get(row, columnFile).File;
-                if (!scoreTypes.ContainsKey(file))
-                    continue;
+
                 if (!success || !scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
                 {
-                    ThresholdCell.Get(row, columnThreshold).Value = string.Empty;
+                    row.ErrorText = Resources.BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_;
+                    row.Cells[columnScoreType.Index].Value = null;
+                    ThresholdCell.Get(row, columnThreshold).Value = null;
                     continue;
                 }
 
@@ -328,19 +333,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         row = AddRow(++i, file, scoreType);
                     }
                     var thresholdCell = ThresholdCell.Get(row, columnThreshold);
-                    if (scoreType.CanSet)
+                    if (scoreType != null)
                     {
-                        thresholdCell.Value = existingThresholds.TryGetValue(scoreType.NameInvariant, out var threshold)
-                            ? threshold
-                            : BiblioSpecLiteBuilder.GetDefaultScoreThreshold(scoreType.NameInvariant, scoreType.DefaultValue);
-                        thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
-                            ? Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
-                            : Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
+                        if (scoreType.CanSet)
+                        {
+                            thresholdCell.Value = existingThresholds.TryGetValue(scoreType.NameInvariant, out var threshold)
+                                ? threshold
+                                : BiblioSpecLiteBuilder.GetDefaultScoreThreshold(scoreType.NameInvariant, scoreType.DefaultValue);
+                            thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
+                                ? Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
+                                : Resources.BuildPeptideSearchLibraryControl_AddSearchFiles_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
+                            thresholdCell.ReadOnly = false;
+                        }
+                        else
+                        {
+                            thresholdCell.Value = scoreType.DefaultValue;
+                        }
                     }
                     else
                     {
-                        thresholdCell.Value = scoreType.DefaultValue;
-                        thresholdCell.ReadOnly = true;
+                        thresholdCell.Value = null;
                     }
                 }
             }
@@ -356,6 +368,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             gridSearchFiles.Rows.Insert(i);
             gridSearchFiles[columnFile.Index, i].Value = new FileCellValue(gridSearchFiles, columnFile, file);
             gridSearchFiles[columnScoreType.Index, i].Value = new ScoreTypeCellValue(scoreType);
+            var thresholdCell = new ThresholdCell();
+            gridSearchFiles[columnThreshold.Index, i] = thresholdCell;
+            thresholdCell.ReadOnly = true;
             return gridSearchFiles.Rows[i];
         }
 
@@ -535,11 +550,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var warnings = new List<string>();
             foreach (DataGridViewRow row in gridSearchFiles.Rows)
             {
+                var file = FileCellValue.Get(row, columnFile);
                 var scoreType = ScoreTypeCellValue.Get(row, columnScoreType);
                 var thresholdCell = ThresholdCell.Get(row, columnThreshold);
-                var thresholdError = thresholdCell.ErrorText;
-                var file = FileCellValue.Get(row, columnFile);
-                if (string.IsNullOrEmpty(thresholdError))
+                var error = !string.IsNullOrEmpty(row.ErrorText) ? row.ErrorText : thresholdCell.ErrorText;
+                if (string.IsNullOrEmpty(error))
                 {
                     var threshold = thresholdCell.Threshold.GetValueOrDefault();
                     thresholdsByFile[file.File] = threshold;
@@ -548,7 +563,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else
                 {
-                    errors.Add(string.Format(@"{0}: {1}", file.File, thresholdError));
+                    errors.Add(string.Format(@"{0}: {1}", file.File, error));
                 }
             }
             if (errors.Any())
@@ -945,6 +960,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdatePerformDDASearch();
         }
 
+        private void gridSearchFiles_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            foreach (var cell in gridSearchFiles.Rows[e.RowIndex].Cells.Cast<DataGridViewCell>())
+                cell.Style.BackColor = cell.ReadOnly ? ReadonlyCellBackColor : _defaultCellBackColor;
+        }
+
         private void gridSearchFiles_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex != columnThreshold.Index)
@@ -999,8 +1020,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             public BiblioSpecScoreType ScoreType { get; set; }
             public string NameInvariant => ScoreType?.NameInvariant;
-            public double MinValue => ScoreType?.ValidRange.Min ?? 0;
-            public double MaxValue => ScoreType?.ValidRange.Max ?? 1;
 
             public ScoreTypeCellValue(BiblioSpecScoreType scoreType = null)
             {
@@ -1009,7 +1028,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public override string ToString()
             {
-                return ScoreType?.DisplayName ?? CELL_LOADING;
+                return ScoreType != null ? ScoreType.DisplayName : CELL_LOADING;
             }
 
             public static ScoreTypeCellValue Get(DataGridViewRow row, DataGridViewColumn col)
@@ -1048,7 +1067,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Need parameterless constructor to use as CellTemplate
             }
 
-            public ThresholdCell(double? threshold)
+            private ThresholdCell(double? threshold)
             {
                 if (threshold.HasValue)
                     Value = threshold.Value;

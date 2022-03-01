@@ -3179,6 +3179,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error getting score type for this file..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for" +
+                        "_this_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to import the {0} library..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_ {

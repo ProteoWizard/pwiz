@@ -11698,4 +11698,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
 	  <value>Score threshold {0} for {1} will include all identifications.</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
+	  <value>Error getting score type for this file.</value>
+  </data>
 </root>

@@ -175,6 +175,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.columnThreshold});
             this.gridSearchFiles.Name = "gridSearchFiles";
             this.gridSearchFiles.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridSearchFiles_CellValueChanged);
+            this.gridSearchFiles.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.gridSearchFiles_RowPrePaint);
             this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
             // 
             // columnFile
