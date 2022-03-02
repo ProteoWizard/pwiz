@@ -169,6 +169,7 @@ namespace pwiz.Skyline.Model
         public const string ABI = "SCIEX";
         public const string ABI_QTRAP = "SCIEX QTRAP";
         public const string ABI_TOF = "SCIEX QTOF";
+        public const string ABI_7500 = "SCIEX 7500";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
@@ -195,6 +196,7 @@ namespace pwiz.Skyline.Model
         public const string WATERS_QUATTRO_PREMIER = "Waters Quattro Premier";
 
         public const string EXT_AB_SCIEX = ".dam";
+        public const string EXT_SCIEX_OS = ".msm";
         public const string EXT_AGILENT = ".m";
         public const string EXT_BRUKER = ".m";
         public const string EXT_BRUKER_TIMSTOF = ".prmsqlite";
@@ -209,6 +211,7 @@ namespace pwiz.Skyline.Model
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
                 ABI_TOF,
+                ABI_7500,
                 SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
@@ -253,6 +256,7 @@ namespace pwiz.Skyline.Model
                                    {
                                        {ABI_QTRAP, EXT_AB_SCIEX},
                                        {ABI_TOF, EXT_AB_SCIEX},
+                                       {ABI_7500, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
@@ -441,6 +445,8 @@ namespace pwiz.Skyline.Model
                     if (type == ExportFileType.IsolationList)
                         return ExportAbiTofIsolationList(doc, path, template);
                     return ExportAbiTofMethod(doc, path, template);
+                case ExportInstrumentType.ABI_7500:
+                    return ExportSciexOsMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT:
                 case ExportInstrumentType.AGILENT6400:
                     if (type == ExportFileType.List)
@@ -571,6 +577,15 @@ namespace pwiz.Skyline.Model
             var exporter = new AbiTofIsolationListExporter(document);
             exporter.ExportIsolationList(fileName);
 
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportSciexOsMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new SciexOsMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
         }
 
@@ -2781,6 +2796,97 @@ namespace pwiz.Skyline.Model
             int step)
         {
             throw new InvalidOperationException();  // Not expected to ever be called.
+        }
+    }
+
+    public class SciexOsMethodExporter : AbiMassListExporter
+    {
+        private const string SCIEX_OS_EXE = @"SciexOs.exe";
+        private const string EXE_NAME = @"Method\AbSciex\SciexOS\BuildSciexMethod";
+
+        public SciexOsMethodExporter(SrmDocument document) : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (fileName != null)
+                EnsureSciexOs(progressMonitor);
+
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            MethodExporter.ExportMethod(EXE_NAME, new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        private static void EnsureSciexOs(IProgressMonitor progressMonitor)
+        {
+            var sciexOsDir = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
+            if (sciexOsDir == null)
+                throw new IOException(Resources.AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation);
+
+            // TODO starting SciexOs this way gives error for some reason??
+            var sciexOsProc = SciexOsProcess ?? Process.Start(Path.Combine(sciexOsDir, SCIEX_OS_EXE));
+            // Wait for main window to be present.
+            IProgressStatus status = null;
+            while (!progressMonitor.IsCanceled && !IsSciexOsProcessMainWindowActive(sciexOsProc))
+            {
+                if (status == null)
+                {
+                    status = new ProgressStatus(Resources.SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start).ChangePercentComplete(-1);
+                    progressMonitor.UpdateProgress(status);
+                }
+                Thread.Sleep(500);
+                sciexOsProc = SciexOsProcess;
+            }
+            if (status != null)
+            {
+                // Wait an extra 1.5 seconds, if the SCIEX OS window was not already present to make sure it is really completely started.
+                Thread.Sleep(1500);
+                progressMonitor.UpdateProgress(status.ChangeMessage(Resources.SciexOsMethodExporter_EnsureSciexOs_Working___));
+            }
+        }
+
+        private static bool IsSciexOsProcessMainWindowActive(Process process)
+        {
+            return process != null && process.MainWindowTitle.StartsWith(@"SCIEX OS");
+        }
+
+        private static Process SciexOsProcess => Process.GetProcesses().FirstOrDefault(proc => Equals(SCIEX_OS_EXE, GetModuleName(proc)));
+
+        private static string GetModuleName(Process proc)
+        {
+            try
+            {
+                // ReSharper disable once PossibleNullReferenceException
+                return proc.MainModule.ModuleName;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        protected override string GetOptionalColumns(string dp,
+            string ce,
+            string precursorWindow,
+            string productWindow,
+            string extGroupId,
+            string averagePeakAreaText,
+            string variableRtWindowText,
+            string primaryOrSecondary)
+        {
+            // Provide all columns for method export
+            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+                dp,
+                ce,
+                precursorWindow,
+                productWindow,
+                extGroupId,
+                averagePeakAreaText,
+                variableRtWindowText,
+                string.Empty,  // Threshold for triggering secondary
+                primaryOrSecondary);
         }
     }
 
