@@ -20,7 +20,7 @@ namespace pwiz.SkylineTest
             });
             var map = new ScoreQValueMap(sortedList);
             const double epsilon = 1e-8;
-            Assert.AreEqual(1, map.GetQValue(0).Value, epsilon);
+            Assert.IsNull(map.GetQValue(0));
             Assert.AreEqual(.5, map.GetQValue(1).Value, epsilon);
             Assert.AreEqual(.45, map.GetQValue(1.5).Value, epsilon);
             Assert.AreEqual(.4, map.GetQValue(2).Value, epsilon);

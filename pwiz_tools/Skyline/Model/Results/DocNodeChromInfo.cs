@@ -188,6 +188,7 @@ namespace pwiz.Skyline.Model.Results
             HasIsotopeDotProduct = 8192,
             HasQValue = 16384,
             HasZScore = 32768,
+            HasPeakScore = 65536,
         }
 
         private Flags _flags;
@@ -369,6 +370,22 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return GetOptional(_zScore, Flags.HasZScore); }
             private set { _zScore = SetOptional(value, Flags.HasZScore); }
+        }
+
+        private float _peakScore;
+        public float? PeakScore
+        {
+            get { return GetOptional(_peakScore, Flags.HasPeakScore); }
+        }
+        public ImmutableList<float> DetailScores { get; private set; }
+
+        public TransitionGroupChromInfo ChangePeakScore(float? peakScore, ImmutableList<float> detailScores)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                _peakScore = SetOptional(peakScore, Flags.HasPeakScore);
+                DetailScores = detailScores;
+            });
         }
 
         public Annotations Annotations { get; private set; }

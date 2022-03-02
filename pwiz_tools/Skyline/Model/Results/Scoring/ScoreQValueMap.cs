@@ -28,11 +28,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             index = ~index;
             if (index <= 0)
             {
-                return 1;
+                // Score is worse than the worst score that we have a q-value for: return null
+                return null;
             }
 
             if (index >= _sortedList.Count)
             {
+                // Score is better than the best score that we have: return the best q-value
                 return _sortedList.Values[_sortedList.Count - 1];
             }
 
