@@ -2320,7 +2320,6 @@ namespace pwiz.Skyline.Model
                                                                           step,
                                                                           TransitionCount,
                                                                           chromInfoGroup,
-                                                                          ReintegrateResults,
                                                                           GetReintegratePeak(fileId, step), 
                                                                           explicitPeakBounds);
                         calc.AddChromInfo(nodeTran, chromInfo);
@@ -2403,7 +2402,6 @@ namespace pwiz.Skyline.Model
                                                         int optimizationStep,
                                                         int transitionCount,
                                                         TransitionGroupChromInfo chromInfo,
-                                                        MProphetResultsHandler reintegrateResults,
                                                         PeakFeatureStatistics reintegratePeak,
                                                         ExplicitPeakBounds explicitPeakBounds)
             {
@@ -2610,8 +2608,7 @@ namespace pwiz.Skyline.Model
                                                     Identified,
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
-                                                    qValue,
-                                                    ZScore,
+                                                    ChosenPeakScores.WithDetectionScore(qValue, ZScore),
                                                     Annotations,
                                                     UserSet);
             }
