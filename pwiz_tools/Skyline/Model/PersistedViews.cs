@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Model
         private const string REPORTS_V12 = @"<views>
   <view name='Molecule Peak Boundaries' rowsource='pwiz.Skyline.Model.Databinding.Entities.Precursor' sublist='Results!*' uimode='small_molecules'>
     <column name='Results!*.Value.PeptideResult.ResultFile.FileName' />
-    <column name='Peptide.MoleculeName' />
+    <column name='Peptide' />
     <column name='Results!*.Value.MinStartTime' />
     <column name='Results!*.Value.MaxEndTime' />
     <column name='Adduct' />
