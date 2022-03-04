@@ -100,14 +100,28 @@ namespace pwiz.Skyline.Model
 
         // ReSharper disable LocalizableElement
 
-        public static readonly string[] PEPTIDE_SYNONYMS = new[]
+        public static string[] PEPTIDE_SYNONYMS
         {
-            "PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence
-        };
-        public static readonly string[] MOLECULE_SYNONYMS = new[]
+            get
+            {
+                return new[] 
+                {
+                    "PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence",
+                    ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence
+                };
+            }
+        }
+
+        public static string[] MOLECULE_SYNONYMS
         {
-            "Molecule", "MoleculeName", ColumnCaptions.Molecule, ColumnCaptions.MoleculeName
-        };
+            get
+            {
+                return new[] 
+                {
+                    "Molecule", "MoleculeName", ColumnCaptions.Molecule, ColumnCaptions.MoleculeName
+                };
+            }
+        }
 
         // NOTE: The first name is what appears in error messages about missing required fields
         public static string[][] FIELD_NAMES
