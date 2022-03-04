@@ -41,8 +41,8 @@ namespace pwiz.Skyline.Model
         {
         }
         
-        public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children)
-            : this(id, Annotations.EMPTY, proteinMetadata, children, true)
+        public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children, bool autoManageChildren = true)
+            : this(id, Annotations.EMPTY, proteinMetadata, children, autoManageChildren)
         {
         }
 

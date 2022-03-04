@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model;
@@ -51,7 +52,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));
             RunUI(SkylineWindow.Paste); // Paste into targets window
-            
+            var doc0 = WaitForDocumentLoaded();
+
+            // Enable automanage children so settings change will act on doc structure
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            WaitForDocumentChange(doc0);
+
             // Enable fragments only
             RunUI(() => SkylineWindow.ModifyDocument("fragments only", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                 f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom })))));

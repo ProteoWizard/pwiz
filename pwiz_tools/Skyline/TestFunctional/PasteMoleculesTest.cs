@@ -31,8 +31,10 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -124,6 +126,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestAutoManage();
             TestMzOrderIndependence();
             TestNegativeModeLabels();
             TestEmptyTransitionList();
@@ -489,6 +492,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             docB = WaitForDocumentChange(docB);
+            docB = EnableAutomanageChildren(docB); // Settings change has no effect until automanage is turned on
             Assert.AreEqual(12, docB.MoleculeTransitionCount);
 
             // Verify adduct usage - none, or in own column, or as part of formula
@@ -1587,6 +1591,77 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private void TestAutoManage()
+        {
+            const string text =
+                "Precursor Name,Precursor Formula,Precursor Adduct,Precursor charge,Explicit Retention Time,Collisional Cross Section (Sq A),Product m/z,product charge,explicit ion mobility High energy Offset,Explicit Collision Energy\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,,,,1\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,156.0112,1,0.5,1\n" +
+                "Sulfamethizole,C9H10N4O2S2,[M+H],1,1.85,157.7,92.0498,1,0.51,1\n";
+
+            var docOrig = NewDocument();
+            SetClipboardText(text);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
+
+            // Because we created nodes with auto manage off, changing these settings should not change the nodes (1 precursor, two fragments)
+            RunUI(() => SkylineWindow.ModifyDocument("Change isotope peaks count and ion types",
+                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                        fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault())).
+                    ChangeTransitionFilter(f => f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor })))));
+            pastedDoc = WaitForDocumentChange(pastedDoc);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
+
+            var managed = false;
+            for (var loop = 0; loop < 2; loop++)
+            {
+                RunUI(() => SkylineWindow.ModifyDocument(" Turn off precursors",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                        f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom })))));  
+                pastedDoc = WaitForDocumentChange(pastedDoc);
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 2 : 3);
+                RunUI(() => SkylineWindow.ModifyDocument("Turn on precursors",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                        f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor })))));  
+                pastedDoc = WaitForDocumentChange(pastedDoc);
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+
+                // Automanage has no effect on fragments, since we can't generate those for small molecules the way we do for peptides
+                RunUI(() => SkylineWindow.ModifyDocument(" Turn off fragments",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                        f.ChangeSmallMoleculeIonTypes(new[] { IonType.precursor })))));
+                pastedDoc = WaitForDocumentChange(pastedDoc);
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+                RunUI(() => SkylineWindow.ModifyDocument("Turn on fragments",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                        f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor })))));
+                pastedDoc = WaitForDocumentChange(pastedDoc);
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, managed ? 5 : 3);
+
+                if (!managed)
+                {
+                    // Now turn on auto manage children, settings should have an effect on doc structure
+                    pastedDoc = EnableAutomanageChildren(pastedDoc);
+                    managed = true;
+                }
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 5);
+            }
+            NewDocument(); // Clean up
+        }
+
+        private static SrmDocument EnableAutomanageChildren(SrmDocument pastedDoc)
+        {
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            pastedDoc = WaitForDocumentChange(pastedDoc);
+            return pastedDoc;
+        }
 
         private void TestPerTransitionValues()
         {

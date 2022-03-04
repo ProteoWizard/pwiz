@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -952,6 +953,16 @@ namespace pwiz.SkylineTestFunctional
             });
             var doc = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
+
+            // Now turn on auto manage children, so settings change has an effect on doc structure
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4); // No changes yet, though
 
             // Use transition filter settings to add isotope distribution
             var fullScanDlg = ShowTransitionSettings(TransitionSettingsUI.TABS.Filter);
