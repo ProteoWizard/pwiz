@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -390,7 +391,7 @@ namespace pwiz.SkylineTest
                 {
                     foreach (var hdr in PeakBoundaryImporter.PEPTIDE_SYNONYMS)
                     {
-                        text = text.Replace(hdr, PeakBoundaryImporter.MOLECULE_SYNONYMS.First());
+                        text = text.Replace(hdr, ColumnCaptions.Molecule);
                     }
 
                     var headerLine = text.Split('\n')[0];

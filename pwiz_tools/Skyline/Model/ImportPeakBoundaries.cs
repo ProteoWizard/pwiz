@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -100,26 +101,57 @@ namespace pwiz.Skyline.Model
 
         // ReSharper disable LocalizableElement
 
+        private static string[] _peptide_synonyms; // Cache for performance reasons (L10N stuff is expensive)
         public static string[] PEPTIDE_SYNONYMS
         {
             get
             {
-                return new[] 
+                if (_peptide_synonyms == null)
                 {
-                    "PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence",
-                    ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence
-                };
+                    var headers = new List<string>()
+                    {
+                        "PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence",
+                    };
+                    // Also recognize column captions in all supported display languages
+                    var currentUICulture = Thread.CurrentThread.CurrentUICulture;
+                    foreach (var culture in CultureUtil.AvailableDisplayLanguages())
+                    {
+                        Thread.CurrentThread.CurrentUICulture = culture;
+                        headers.Add(ColumnCaptions.PeptideModifiedSequence);
+                        headers.Add(ColumnCaptions.ModifiedSequence);
+                    }
+
+                    Thread.CurrentThread.CurrentUICulture = currentUICulture;
+                    _peptide_synonyms = headers.ToArray();
+                }
+                return _peptide_synonyms;
             }
         }
 
+        private static string[] _molecule_synonyms; // Cache for performance reasons (L10N stuff is expensive)
         public static string[] MOLECULE_SYNONYMS
         {
             get
             {
-                return new[] 
+                if (_molecule_synonyms == null) 
                 {
-                    "Molecule", "MoleculeName", ColumnCaptions.Molecule, ColumnCaptions.MoleculeName
-                };
+                    var headers = new List<string>()
+                    {
+                        "Molecule", "MoleculeName"
+                    };
+                    // Also recognize column captions in all supported display languages
+                    var currentUICulture = Thread.CurrentThread.CurrentUICulture;
+                    foreach (var culture in CultureUtil.AvailableDisplayLanguages())
+                    {
+                        Thread.CurrentThread.CurrentUICulture = culture;
+                        headers.Add(ColumnCaptions.Molecule);
+                        headers.Add(ColumnCaptions.MoleculeName);
+                    }
+
+                    Thread.CurrentThread.CurrentUICulture = currentUICulture;
+                    _molecule_synonyms = headers.ToArray();
+                }
+                return _molecule_synonyms;
             }
         }
 
