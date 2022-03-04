@@ -1614,8 +1614,7 @@ namespace pwiz.SkylineTestFunctional
             pastedDoc = WaitForDocumentChange(pastedDoc);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 3);
 
-            var managed = false;
-            for (var loop = 0; loop < 2; loop++)
+            foreach (var managed in new[] {false, true})
             {
                 RunUI(() => SkylineWindow.ModifyDocument(" Turn off precursors",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
@@ -1644,7 +1643,6 @@ namespace pwiz.SkylineTestFunctional
                 {
                     // Now turn on auto manage children, settings should have an effect on doc structure
                     pastedDoc = EnableAutomanageChildren(pastedDoc);
-                    managed = true;
                 }
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 5);
             }
