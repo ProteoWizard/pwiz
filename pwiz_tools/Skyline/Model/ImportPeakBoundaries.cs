@@ -22,7 +22,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -113,15 +112,14 @@ namespace pwiz.Skyline.Model
                         "PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence",
                     };
                     // Also recognize column captions in all supported display languages
-                    var currentUICulture = Thread.CurrentThread.CurrentUICulture;
                     foreach (var culture in CultureUtil.AvailableDisplayLanguages())
                     {
-                        Thread.CurrentThread.CurrentUICulture = culture;
-                        headers.Add(ColumnCaptions.PeptideModifiedSequence);
-                        headers.Add(ColumnCaptions.ModifiedSequence);
+                        using (var c = new CurrentCultureSetter(culture))
+                        {
+                            headers.Add(ColumnCaptions.PeptideModifiedSequence);
+                            headers.Add(ColumnCaptions.ModifiedSequence);
+                        }
                     }
-
-                    Thread.CurrentThread.CurrentUICulture = currentUICulture;
                     _peptide_synonyms = headers.ToArray();
                 }
                 return _peptide_synonyms;
@@ -137,18 +135,17 @@ namespace pwiz.Skyline.Model
                 {
                     var headers = new List<string>()
                     {
-                        "Molecule", "MoleculeName"
+                        "MoleculeName"
                     };
                     // Also recognize column captions in all supported display languages
-                    var currentUICulture = Thread.CurrentThread.CurrentUICulture;
                     foreach (var culture in CultureUtil.AvailableDisplayLanguages())
                     {
-                        Thread.CurrentThread.CurrentUICulture = culture;
-                        headers.Add(ColumnCaptions.Molecule);
-                        headers.Add(ColumnCaptions.MoleculeName);
+                        using (var c = new CurrentCultureSetter(culture))
+                        {
+                            headers.Add(ColumnCaptions.Molecule);
+                            headers.Add(ColumnCaptions.MoleculeName);
+                        }
                     }
-
-                    Thread.CurrentThread.CurrentUICulture = currentUICulture;
                     _molecule_synonyms = headers.ToArray();
                 }
                 return _molecule_synonyms;
@@ -156,26 +153,55 @@ namespace pwiz.Skyline.Model
         }
 
         // NOTE: The first name is what appears in error messages about missing required fields
+        private static string[][] _field_names; // Cache for performance reasons (L10N stuff is expensive)
         public static string[][] FIELD_NAMES
         {
             get
             {
                 // Since tests may change localized versions of column captions and reading
                 // a whole file dwarfs newing up this array.
-                return new[]
+
+                if (_field_names == null)
                 {
-                    PEPTIDE_SYNONYMS.Concat(MOLECULE_SYNONYMS).ToArray(),
-                    new[] {"FileName", "filename", "align_origfilename", "R.FileName", ColumnCaptions.FileName},
-                    new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
-                    new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
-                    new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
-                    new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge,
-                        "Adduct", "PrecursorAdduct", ColumnCaptions.PrecursorAdduct, ColumnCaptions.PrecursorAdduct},
-                    new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
-                    new[] {"SampleName", ColumnCaptions.SampleName},
-                    new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
-                    new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
-                };
+                    // Recognize column captions in all supported display languages
+                    var allFieldNames = new List<string []>();
+                    foreach (var culture in CultureUtil.AvailableDisplayLanguages())
+                    {
+                        using (var c = new CurrentCultureSetter(culture))
+                        {
+                            var currentFieldNames = new[]
+                            {
+                                PEPTIDE_SYNONYMS.Concat(MOLECULE_SYNONYMS).ToArray(),
+                                new[] {"FileName", "filename", "align_origfilename", "R.FileName", ColumnCaptions.FileName},
+                                new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
+                                new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
+                                new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
+                                new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge,
+                                    "Adduct", "PrecursorAdduct", ColumnCaptions.PrecursorAdduct},
+                                new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
+                                new[] {"SampleName", ColumnCaptions.SampleName},
+                                new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
+                                new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
+                            };
+                            for (var field = 0; field < currentFieldNames.Length; field++)
+                            {
+                                if (field == allFieldNames.Count)
+                                {
+                                    allFieldNames.Add(currentFieldNames[field]);
+                                }
+                                else
+                                {
+                                    var seen = allFieldNames[field];
+                                    var newNames = currentFieldNames[field].Where(header => !seen.Contains(header));
+                                    allFieldNames[field] = allFieldNames[field].Concat(newNames).ToArray();
+                                }
+                            }
+                        }
+                    }
+                    _field_names = allFieldNames.ToArray();
+                }
+
+                return _field_names;
             }
         }
         // ReSharper restore LocalizableElement
