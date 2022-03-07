@@ -3069,6 +3069,10 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
+        /// <summary>
+        /// OBSOLETE: replaced by  <see cref="Settings.PersistedViews"></see> for reports management/>
+        /// </summary>
+
         public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME
