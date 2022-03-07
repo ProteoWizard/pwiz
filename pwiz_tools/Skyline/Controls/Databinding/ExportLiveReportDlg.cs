@@ -215,6 +215,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 Text = Resources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
                 ShowViewsMenu = false,
             };
+            form.GetModeUIHelper().IgnoreModeUI = true; // Don't want any "peptide"=>"molecule" translation in title etc
             form.BindingListSource.SetViewContext(viewContext, viewInfo);
             form.Show(Owner);
         }
