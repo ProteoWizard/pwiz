@@ -156,6 +156,9 @@
   <data name="Description_ScoreType" xml:space="preserve">
     <value>&lt;Insert ScoreType Description&gt;</value>
   </data>
+  <data name="Description_SpecIdInFile" xml:space="preserve">
+    <value>&lt;Insert Spectra Id in File Description&gt;</value>
+  </data>
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>

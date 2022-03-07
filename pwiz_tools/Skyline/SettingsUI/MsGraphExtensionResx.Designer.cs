@@ -178,6 +178,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Insert Spectra Id in File Description&gt;.
+        /// </summary>
+        internal static string Description_SpecIdInFile {
+            get {
+                return ResourceManager.GetString("Description_SpecIdInFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of measured spectra for this peptide in the library.
         /// </summary>
         internal static string Description_SpectrumCount {

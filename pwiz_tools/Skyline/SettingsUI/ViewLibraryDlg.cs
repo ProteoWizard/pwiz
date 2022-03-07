@@ -848,7 +848,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             else
                             {
-                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(_peptides[index].Key, ((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
+                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
                             }
                             _currentProperties.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
                             _currentProperties.IdFileName = biblioAdditionalInfo.IDFileName;
