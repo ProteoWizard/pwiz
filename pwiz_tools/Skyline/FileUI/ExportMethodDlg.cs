@@ -891,7 +891,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(documentExport, _exportProperties);
+                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,
