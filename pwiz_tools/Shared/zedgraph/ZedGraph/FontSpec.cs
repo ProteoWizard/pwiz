@@ -376,7 +376,6 @@ namespace ZedGraph
 					catch (Exception e)
 					{
 						throw new Exception(string.Format(@"Unable to set FontSpec.Size to {0} for _size {1} _scaledSize {2}", value, _size, _scaledSize), e);
-						throw;
 					}
 				}
 			}
