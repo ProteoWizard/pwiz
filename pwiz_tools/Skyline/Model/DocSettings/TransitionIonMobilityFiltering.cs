@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -1059,9 +1058,8 @@ namespace pwiz.Skyline.Model.DocSettings
             var currentCulture = Thread.CurrentThread.CurrentUICulture;
             try
             {
-                foreach (var culture in new[] {@"en", @"zh-CHS", @"ja"})
+                foreach (var tryCulture in CultureUtil.AvailableDisplayLanguages())
                 {
-                    var tryCulture = new CultureInfo(culture);
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
@@ -1094,9 +1092,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var result = new List<string>();
                 var currentCulture = Thread.CurrentThread.CurrentUICulture;
-                foreach (var culture in new[] { @"en", @"zh-CHS", @"ja" })
+                foreach (var tryCulture in CultureUtil.AvailableDisplayLanguages())
                 {
-                    var tryCulture = new CultureInfo(culture);
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {

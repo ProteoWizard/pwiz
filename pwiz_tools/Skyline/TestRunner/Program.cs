@@ -327,6 +327,8 @@ namespace TestRunner
                         repeat = 1;
                     }
 
+                    TeamCityStartTestSuite(commandLineArgs);
+
                     // Prevent system sleep.
                     using (new SystemSleep())
                     {
@@ -354,6 +356,8 @@ namespace TestRunner
                             MemoryProfiler.Snapshot("end");
                         }
                     }
+
+                    TeamCityFinishTestSuite(commandLineArgs);
                 }
             }
             catch (Exception e)
@@ -402,6 +406,29 @@ namespace TestRunner
             while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
                 skylineDirectory = skylineDirectory.Parent;
             return skylineDirectory;
+        }
+
+        private static void TeamCitySettings(CommandLineArgs commandLineArgs, out bool teamcityTestDecoration, out string testSpecification)
+        {
+            teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
+            if(commandLineArgs.HasArg("test"))
+                testSpecification = commandLineArgs.ArgAsString("test");
+            else
+                testSpecification = "all";
+        }
+
+        private static void TeamCityStartTestSuite(CommandLineArgs commandLineArgs)
+        {
+            TeamCitySettings(commandLineArgs, out bool teamcityTestDecoration, out string testSpecification);
+            if (teamcityTestDecoration)
+                Console.WriteLine($"##teamcity[testSuiteStarted name='{testSpecification}']");
+        }
+
+        private static void TeamCityFinishTestSuite(CommandLineArgs commandLineArgs)
+        {
+            TeamCitySettings(commandLineArgs, out bool teamcityTestDecoration, out string testSpecification);
+            if (teamcityTestDecoration)
+                Console.WriteLine($"##teamcity[testSuiteFinished name='{testSpecification}']");
         }
 
         // Run all test passes.

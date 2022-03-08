@@ -1449,6 +1449,9 @@
   <data name="ReportSpecList_GetDefaults_Peak_Boundaries" xml:space="preserve">
     <value>Peak Boundaries</value>
   </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Peak_Boundaries" xml:space="preserve">
+    <value>Molecule Peak Boundaries</value>
+  </data>
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>Standard co-elution (weighted)</value>
   </data>
