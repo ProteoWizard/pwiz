@@ -40,6 +40,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.EditUI;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -99,7 +100,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     col4Dlg.radioMolecule.PerformClick();
                 });
 
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 4);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 3);
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
                 RunUI(() => errDlg.Size = new Size(680, 250));
@@ -108,7 +109,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 RunUI(() => col4Dlg.ComboBoxes[6].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
 
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 5);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 4);
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
 
@@ -122,20 +123,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     SkylineWindow.ExpandPeptides();
                 });
                 RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets - show the right-click menu for setting DHA to be a surrogate standard", 6);
-
-                // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
-                RunUI(() =>
-                {
-                    List<IdentityPath> pathsToSelect = SkylineWindow.SequenceTree.Nodes.OfType<PeptideGroupTreeNode>()
-                        .SelectMany(peptideGroup => peptideGroup.Nodes.OfType<PeptideTreeNode>())
-                        .Where(peptideTreeNode => peptideTreeNode.DocNode.RawTextId.Contains("(DHA)"))
-                        .Select(treeNode => treeNode.Path)
-                        .ToList();
-                    SkylineWindow.SequenceTree.SelectedPaths = pathsToSelect;
-                    SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD);
-                });
-
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
 
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
 
@@ -151,7 +139,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 8);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 6);
 
 
                 RunUI(() =>
@@ -165,10 +153,38 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.PrecursorResMz = 200;
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 9);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 7);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-                WaitForDocumentChange(docTargets);
+                docTargets = WaitForDocumentChange(docTargets);
+
+                // Turn on auto-manage
+                AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 7);
+                var refineDialog = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+                RunUI(() =>
+                {
+                    refineDialog.SelectedTab = RefineDlg.TABS.Document;
+                    refineDialog.AutoTransitions = true;
+                });
+                PauseForScreenShot<RefineDlg>("Refine Advanced", 8);
+                OkDialog(refineDialog, refineDialog.OkDialog);
+                docTargets = WaitForDocumentChange(docTargets);
+
+                AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 14);
+                PauseForScreenShot<SkylineWindow>("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 10);
+
+                // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
+                RunUI(() =>
+                {
+                    List<IdentityPath> pathsToSelect = SkylineWindow.SequenceTree.Nodes.OfType<PeptideGroupTreeNode>()
+                        .SelectMany(peptideGroup => peptideGroup.Nodes.OfType<PeptideTreeNode>())
+                        .Where(peptideTreeNode => peptideTreeNode.DocNode.RawTextId.Contains("(DHA)"))
+                        .Select(treeNode => treeNode.Path)
+                        .ToList();
+                    SkylineWindow.SequenceTree.SelectedPaths = pathsToSelect;
+                    SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD);
+                });
+
 
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("FattyAcids_demo.sky")));
 
