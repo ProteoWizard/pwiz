@@ -36,6 +36,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Database;
@@ -273,8 +274,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var bw = new BackgroundWorker();
             bw.DoWork += (sender, e) =>
             {
-                var success = GetScoreTypes(toAdd, out var scoreTypes);
-                Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes)));
+                var success = false;
+                Dictionary<string, BiblioSpecScoreType[]> scoreTypes = null;
+                Exception getScoreTypesException = null;
+                try
+                {
+                    success = GetScoreTypes(toAdd, out scoreTypes);
+                }
+                catch (Exception x)
+                {
+                    success = false;
+                    scoreTypes = null;
+                    getScoreTypesException = x;
+                }
+                finally
+                {
+                    Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes, getScoreTypesException)));
+                }
             };
             bw.RunWorkerAsync();
         }
@@ -295,17 +311,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return success;
         }
 
-        private void GridUpdateScoreInfo(bool success, IReadOnlyDictionary<string, BiblioSpecScoreType[]> scoreTypes)
+        private void GridUpdateScoreInfo(bool success, IReadOnlyDictionary<string, BiblioSpecScoreType[]> scoreTypes, Exception exception)
         {
             gridSearchFiles.CellValueChanged -= gridSearchFiles_CellValueChanged;
 
             // Gather existing score thresholds
             var existingThresholds = new Dictionary<string, double?>();
-            foreach (var row in gridSearchFiles.Rows.Cast<DataGridViewRow>().Where(row => !scoreTypes.ContainsKey(FileCellValue.Get(row, columnFile).File)))
+            foreach (DataGridViewRow row in gridSearchFiles.Rows)
             {
-                var scoreType = ScoreTypeCellValue.Get(row, columnScoreType).NameInvariant;
-                if (scoreType != null)
-                    existingThresholds[scoreType] = ThresholdCell.Get(row, columnThreshold).Threshold;
+                if (scoreTypes == null || !scoreTypes.ContainsKey(FileCellValue.Get(row, columnFile).File))
+                {
+                    var scoreType = ScoreTypeCellValue.Get(row, columnScoreType).NameInvariant;
+                    if (scoreType != null)
+                        existingThresholds[scoreType] = ThresholdCell.Get(row, columnThreshold).Threshold;
+                }
             }
 
             for (var i = 0; i < gridSearchFiles.RowCount; i++)
@@ -313,9 +332,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var row = gridSearchFiles.Rows[i];
                 var file = FileCellValue.Get(row, columnFile).File;
 
-                if (!success || !scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
+                if (!success || exception != null || scoreTypes == null || !scoreTypes.TryGetValue(FileCellValue.Get(row, columnFile).File, out var scoreTypesThis))
                 {
-                    row.ErrorText = Resources.BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_;
+                    var errorSb = new StringBuilder(Resources.BuildPeptideSearchLibraryControl_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_);
+                    if (exception != null)
+                    {
+                        errorSb.AppendLine();
+                        errorSb.Append(exception.Message);
+                    }
+                    row.ErrorText = errorSb.ToString();
                     row.Cells[columnScoreType.Index].Value = null;
                     ThresholdCell.Get(row, columnThreshold).Value = null;
                     continue;
@@ -480,7 +505,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var scoreTypes = new BiblioSpecScoreType[gridSearchFiles.RowCount];
                 for (var i = 0; i < gridSearchFiles.RowCount; i++)
-                    scoreTypes[i] = ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType).ScoreType;
+                    scoreTypes[i] = ScoreTypeCellValue.Get(gridSearchFiles.Rows[i], columnScoreType)?.ScoreType;
                 return scoreTypes;
             }
 
