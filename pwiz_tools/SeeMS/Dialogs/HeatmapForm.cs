@@ -342,25 +342,6 @@ namespace seems
             msGraphControl.Refresh();
         }
 
-        private IEnumerable<DataGridViewRow> GetIonMobilityRows()
-        {
-            var dgv = Source.SpectrumListForm.GridView;
-
-            foreach (DataGridViewRow row in dgv.Rows)
-            {
-                var spectrumRow = (Misc.SpectrumDataSet.SpectrumTableRow) ((DataRowView) row.DataBoundItem).Row;
-                if (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_None)
-                    continue;
-
-                if (spectrumRow.DataPoints == 0 ||
-                    (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_SingleValue && spectrumRow.IonMobility == 0))
-                    continue;
-
-                yield return row;
-            }
-        }
-
-
         private double ToDoubleOrDefault(object value, double defaultValue = 0)
         {
             double result;
@@ -391,8 +372,8 @@ namespace seems
 
             // build map of ms levels, to scan times, to scan indices;
             // group keys are ms level and scan time, aggregated values are isolation m/z and spectrum index
-            var ionMobilityRows = GetIonMobilityRows().GroupBy(r => new Tuple<int, double>((int) r.Cells[msLevelColumn.Index].Value, (double) r.Cells[scanTimeColumn.Index].Value),
-                                                               r => new Tuple<double, int>(ToDoubleOrDefault(r.Cells[isolationMzColumn.Index].Value), r.Index));
+            var ionMobilityRows = Source.SpectrumListForm.GetIonMobilityRows().GroupBy(r => new Tuple<int, double>(r.MsLevel, r.ScanTime),
+                                                                                       r => new Tuple<double, int>(ToDoubleOrDefault(r.IsolationWindows), r.Index));
             foreach (var group in ionMobilityRows)
             {
                 int msLevel = group.Key.Item1 - 1;
