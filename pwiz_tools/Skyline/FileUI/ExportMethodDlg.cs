@@ -582,7 +582,8 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateBrukerTimsTofControls()
         {
-            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF);
+            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) &&
+                                         _fileType == ExportFileType.Method;
         }
 
         private void UpdateCovControls()

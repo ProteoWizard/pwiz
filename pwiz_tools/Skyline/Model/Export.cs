@@ -628,7 +628,6 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new BrukerTimsTofIsolationListExporter(document));
             exporter.RunLength = RunLength;
-            exporter.Ms1RepetitionTime = Ms1RepetitionTime;
             PerformLongExport(m => exporter.ExportMethod(filename, m));
             return exporter;
         }
@@ -3290,7 +3289,6 @@ namespace pwiz.Skyline.Model
         private int _id;
 
         public double RunLength { get; set; }
-        public double Ms1RepetitionTime { get; set; }
 
         public LibKey[] MissingIonMobility => _missingIonMobility.OrderBy(k => k.ToString()).ToArray();
 
@@ -3416,7 +3414,6 @@ namespace pwiz.Skyline.Model
         {
             var exporter = exportProperties.InitExporter(new BrukerTimsTofIsolationListExporter(document));
             exporter.RunLength = exportProperties.RunLength;
-            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
             exporter.InitExport(null, null);
             return exporter.MissingIonMobility;
         }
@@ -3437,6 +3434,8 @@ namespace pwiz.Skyline.Model
         // TODO: Move this code to BuildMethod
         private readonly List<Tuple<InputTarget, string>> _targets;
         private Metrics _schedulingMetrics;
+
+        public double Ms1RepetitionTime { get; set; }
 
         public BrukerTimsTofMethodExporter(SrmDocument document) : base(document)
         {
