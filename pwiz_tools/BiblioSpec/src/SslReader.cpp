@@ -82,7 +82,7 @@ SslReader::SslReader(BlibBuilder& maker,
           (mapAccess->second).push_back(curPSM);
       }
 
-      if (newPSM.retentionTime >= 0)
+      if (newPSM.rtInfo.retentionTime >= 0 || newPSM.rtInfo.startTime >= 0)
       {
           int identifier = newPSM.specKey;
           if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
@@ -90,7 +90,7 @@ SslReader::SslReader(BlibBuilder& maker,
           else if (newPSM.specKey == -1) // default value
               identifier = std::hash<string>()(newPSM.specName);
 
-          overrideRt_[identifier] = newPSM.retentionTime;
+          overrideRt_[identifier] = newPSM.rtInfo;
       }
   }
 
@@ -110,6 +110,8 @@ SslReader::SslReader(BlibBuilder& maker,
     fileReader.addOptionalColumn("score-type", sslPSM::setScoreType);
     fileReader.addOptionalColumn("score", sslPSM::setScore);
     fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
+    fileReader.addOptionalColumn("start-time", sslPSM::setStartTime);
+    fileReader.addOptionalColumn("end-time", sslPSM::setEndTime);
 
     // add the optional small molecule columns
     fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
@@ -117,6 +119,7 @@ SslReader::SslReader(BlibBuilder& maker,
     fileReader.addOptionalColumn("chemicalformula", sslPSM::setChemicalFormula);
     fileReader.addOptionalColumn("moleculename", sslPSM::setMoleculeName);
     fileReader.addOptionalColumn("otherkeys", sslPSM::setotherKeys);
+    fileReader.addOptionalColumn("precursorMZ", sslPSM::setPrecursorMzDeclared);
 
     // use tab-delimited
     fileReader.defineSeparators('\t');
@@ -166,23 +169,32 @@ SslReader::SslReader(BlibBuilder& maker,
                               bool getPeaks) {
     if (PwizReader::getSpectrum(identifier, returnData, type, getPeaks))
     {
-      map<int, double>::const_iterator i = overrideRt_.find(identifier);
+      map<int, RTINFO>::const_iterator i = overrideRt_.find(identifier);
       if (i != overrideRt_.end()) {
-        returnData.retentionTime = i->second;
+          setRtInfo(returnData, i->second);
       }
       return true;
     }
     return false;
   }
 
+  void SslReader::setRtInfo(SpecData& returnData, const RTINFO &rtInfo) {
+    if (rtInfo.retentionTime >= 0)
+        returnData.retentionTime = rtInfo.retentionTime;
+    if (rtInfo.startTime >= 0)
+        returnData.startTime = rtInfo.startTime;
+    if (rtInfo.endTime >= 0)
+        returnData.endTime = rtInfo.endTime;
+}
+
   bool SslReader::getSpectrum(string identifier,
                               SpecData& returnData,
                               bool getPeaks) {
     if (PwizReader::getSpectrum(identifier, returnData, getPeaks))
     {
-        map<int, double>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
+        map<int, RTINFO>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
         if (i != overrideRt_.end()) {
-            returnData.retentionTime = i->second;
+            setRtInfo(returnData, i->second);
         }
         return true;
     }

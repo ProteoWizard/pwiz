@@ -1,0 +1,5 @@
+file	scan	charge	adduct	precursorMZ	inchikey	retention-time	start-time	end-time	chemicalformula	moleculename
+demo.ms2	136	3	[M+3H]3+		RYYVLZVUVIJVGH-UHFFFAOYSA-N	20.0	19.0	21.5	C8H10N4O2	Caffeine
+demo.ms2	140	3	[M+3H]		LFQSCWFLJHTTHZ-UHFFFAOYAB		31	33.2	C2H6O	Ethanol
+demo.ms2	142	3	[M+3H]		YAPQBXQYLJRXSA-UHFFFAOYSA-N	60.0			C7H8N4O2	Theobromine
+demo.ms2	144	2	[M+2]	904						Unknown-1

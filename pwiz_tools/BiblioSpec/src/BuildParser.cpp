@@ -481,7 +481,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     // this order must agree with insertSpectrumStmt_ as set in the ctor
     int field = 1;
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.mz);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, psm->smallMolMetadata.precursorMzDeclared == 0 ? curSpectrum.mz : psm->smallMolMetadata.precursorMzDeclared);
     sqlite3_bind_int(insertSpectrumStmt_, field++, psm->charge);
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
