@@ -287,10 +287,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     scoreTypes = null;
                     getScoreTypesException = x;
                 }
-                finally
-                {
-                    Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes, getScoreTypesException)));
-                }
+                Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes, getScoreTypesException)));
             };
             bw.RunWorkerAsync();
         }
