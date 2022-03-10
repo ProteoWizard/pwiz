@@ -238,6 +238,7 @@ namespace pwiz.Skyline.Model
             {
                 AGILENT_TOF,
                 ABI_TOF,
+                BRUKER_TIMSTOF,
                 THERMO_Q_EXACTIVE,
                 THERMO_FUSION,
                 WATERS_SYNAPT_TRAP,
@@ -460,6 +461,8 @@ namespace pwiz.Skyline.Model
                     }
                     return ExportBrukerMethod(doc, path, template);
                 case ExportInstrumentType.BRUKER_TIMSTOF:
+                    if (type == ExportFileType.IsolationList)
+                        return ExportBrukerTimsTofIsolationList(doc, path);
                     return ExportBrukerTimsTofMethod(doc, path, template);
                 case ExportInstrumentType.THERMO:
                 case ExportInstrumentType.THERMO_TSQ:
@@ -619,6 +622,14 @@ namespace pwiz.Skyline.Model
             var exporter = new BrukerDiaExporter(document) {RunLength = RunLength};
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public AbstractMassListExporter ExportBrukerTimsTofIsolationList(SrmDocument document, string filename)
+        {
+            var exporter = InitExporter(new BrukerTimsTofIsolationListExporter(document));
+            exporter.RunLength = RunLength;
+            PerformLongExport(m => exporter.ExportMethod(filename, m));
+            return exporter;
         }
 
         public AbstractMassListExporter ExportBrukerTimsTofMethod(SrmDocument document, string filename, string templateName)
@@ -3271,37 +3282,51 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class BrukerTimsTofMethodExporter : AbstractMassListExporter
+    public class BrukerTimsTofIsolationListExporter : AbstractMassListExporter
     {
-        private readonly List<Tuple<InputTarget, string>> _targets;
-        private readonly HashSet<LibKey> _missingIonMobility;
-
-        private double _oneOverK0UpperLimit = 1.2;
-        private Metrics _schedulingMetrics;
+        protected readonly HashSet<LibKey> _missingIonMobility;
+        protected double _oneOverK0UpperLimit = 1.2;
+        private int _id;
 
         public double RunLength { get; set; }
-        public double Ms1RepetitionTime { get; set; }
 
         public LibKey[] MissingIonMobility => _missingIonMobility.OrderBy(k => k.ToString()).ToArray();
 
-        public BrukerTimsTofMethodExporter(SrmDocument document)
-            : base(document, null)
+        public BrukerTimsTofIsolationListExporter(SrmDocument document) : base(document, null)
         {
             IsPrecursorLimited = true;
             IsolationList = true;
-            _targets = new List<Tuple<InputTarget, string>>();
             _missingIonMobility = new HashSet<LibKey>();
-            _schedulingMetrics = null;
+            _id = 0;
         }
 
-        public int Id { get; set; }
+        protected override string InstrumentType => ExportInstrumentType.BRUKER_TIMSTOF;
 
-        protected override string InstrumentType
+        public override bool HasHeaders => true;
+
+        protected override void WriteHeaders(TextWriter writer)
         {
-            get { return ExportInstrumentType.BRUKER_TIMSTOF; }
+            writer.Write(@"Mass [m/z]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"Charge");
+            writer.Write(FieldSeparator);
+            writer.Write(@"Isolation Width [m/z]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"RT [s]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"RT Range [s]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"Start IM [1/K0]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"End IM [1/K0]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"CE [eV]");
+            writer.Write(FieldSeparator);
+            writer.Write(@"External ID");
+            writer.Write(FieldSeparator);
+            writer.Write(@"Description");
+            writer.WriteLine();
         }
-
-        public override bool HasHeaders { get { return false; } }
 
         protected override void WriteTransition(TextWriter writer,
             int fileNumber,
@@ -3312,8 +3337,35 @@ namespace pwiz.Skyline.Model
             TransitionDocNode nodeTran,
             int step)
         {
+            var target = GetTarget(nodePep, nodeTranGroup, nodeTran, step);
+            ++_id;
+
+            writer.Write(target.isolation_mz.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.charge.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.isolation_width.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.time_in_seconds.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write((target.time_in_seconds_end - target.time_in_seconds_begin).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.one_over_k0_lower_limit.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.one_over_k0_upper_limit.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(target.collision_energy.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(_id.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(_id.ToString(CultureInfo));
+            writer.WriteLine();
+        }
+
+        protected InputTarget GetTarget(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran, int step)
+        {
             var target = new InputTarget();
-            
+
             var prediction = Document.Settings.PeptideSettings.Prediction;
 
             if (MethodType == ExportMethodType.Standard)
@@ -3353,9 +3405,56 @@ namespace pwiz.Skyline.Model
             target.one_over_k0 = (target.one_over_k0_lower_limit + target.one_over_k0_upper_limit) / 2;
 
             target.charge = nodeTranGroup.PrecursorCharge;
-            target.collision_energy = (int) Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+            target.collision_energy = (int)Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
 
-            _targets.Add(Tuple.Create(target, nodePep.ModifiedSequenceDisplay));
+            return target;
+        }
+
+        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties)
+        {
+            var exporter = exportProperties.InitExporter(new BrukerTimsTofIsolationListExporter(document));
+            exporter.RunLength = exportProperties.RunLength;
+            exporter.InitExport(null, null);
+            return exporter.MissingIonMobility;
+        }
+
+        public void ExportMethod(string fileName, IProgressMonitor progressMonitor)
+        {
+            _id = 0;
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            _id = 0;
+            Export(fileName);
+        }
+    }
+
+    public class BrukerTimsTofMethodExporter : BrukerTimsTofIsolationListExporter
+    {
+        // TODO: Move this code to BuildMethod
+        private readonly List<Tuple<InputTarget, string>> _targets;
+        private Metrics _schedulingMetrics;
+
+        public double Ms1RepetitionTime { get; set; }
+
+        public BrukerTimsTofMethodExporter(SrmDocument document) : base(document)
+        {
+            _targets = new List<Tuple<InputTarget, string>>();
+            _schedulingMetrics = null;
+        }
+
+        public override bool HasHeaders => false;
+
+        protected override void WriteTransition(TextWriter writer,
+            int fileNumber,
+            PeptideGroupDocNode nodePepGroup,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeTranGroup,
+            TransitionGroupDocNode nodeTranGroupPrimary,
+            TransitionDocNode nodeTran,
+            int step)
+        {
+            _targets.Add(Tuple.Create(GetTarget(nodePep, nodeTranGroup, nodeTran, step), nodePep.ModifiedSequenceDisplay));
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor, out TimeSegmentList timeSegments, out SchedulingEntryList schedulingEntries,
@@ -3405,7 +3504,7 @@ namespace pwiz.Skyline.Model
 
                     if (progressMonitor.IsCanceled) return true;
 
-                    progressMonitor.UpdateProgress(progress.ChangePercentComplete((int) Math.Round(progressPercentage)));
+                    progressMonitor.UpdateProgress(progress.ChangePercentComplete((int)Math.Round(progressPercentage)));
                     return false;
                 }
 
@@ -3421,15 +3520,6 @@ namespace pwiz.Skyline.Model
                 if (getMetrics)
                     _schedulingMetrics = new Metrics(s, _targets);
             }
-        }
-
-        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties)
-        {
-            var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
-            exporter.RunLength = exportProperties.RunLength;
-            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
-            exporter.InitExport(null, null);
-            return exporter.MissingIonMobility;
         }
 
         public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
