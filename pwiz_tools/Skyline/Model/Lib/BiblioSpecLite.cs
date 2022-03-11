@@ -673,6 +673,7 @@ namespace pwiz.Skyline.Model.Lib
                     int iId = reader.GetOrdinal(RefSpectra.id);
                     //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
                     int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
+                    int iPrecursorMz = reader.GetOrdinal(RefSpectra.precursorMZ);
                     int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
                     int iCopies = reader.GetOrdinal(RefSpectra.copies);
                     int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
@@ -725,6 +726,19 @@ namespace pwiz.Skyline.Model.Lib
                             var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
                             var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
                             smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            if (string.IsNullOrEmpty(smallMoleculeLibraryAttributes.ChemicalFormula))
+                            {
+                                // Perhaps we were supplied only mz and charge
+                                var mz = !reader.IsDBNull(iPrecursorMz) ? reader.GetDouble(iPrecursorMz) : (double?)null;
+                                if (mz.HasValue && !string.IsNullOrEmpty(adduct))
+                                {
+                                    var precursorAdduct = Adduct.FromStringAssumeChargeOnly(adduct);
+                                    var massAverage = precursorAdduct.MassFromMz(mz.Value, MassType.Average);
+                                    var massMono = precursorAdduct.MassFromMz(mz.Value, MassType.Monoisotopic);
+                                    smallMoleculeLibraryAttributes =
+                                        SmallMoleculeLibraryAttributes.Create(moleculeName, null, massMono, massAverage, inChiKey, otherKeys);
+                                }
+                            }
                             // Construct a custom molecule so we can be sure we're using the same keys
                             var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
                             sequence = mol.PrimaryEquivalenceKey;

@@ -2162,7 +2162,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 if (massAverage != null)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
+                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, massAverage.ToString()));
                 }
                 if (!string.IsNullOrEmpty(InChiKey))
                 {
