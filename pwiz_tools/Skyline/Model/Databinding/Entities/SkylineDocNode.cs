@@ -95,10 +95,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
                 {
                     var chromInfo = files[fileIndex];
-                    if (null == chromInfo)
-                    {
-                        continue;
-                    }
                     var key = fileIndex == 0 ? replicates.Keys[replicateIndex] : new ResultKey(replicate, fileIndex);
                     int optStep = ResultFile.GetOptStep(chromInfo);
                     ResultFile resultFile = null;

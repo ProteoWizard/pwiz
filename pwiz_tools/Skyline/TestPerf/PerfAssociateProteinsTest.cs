@@ -168,6 +168,8 @@ namespace TestPerf
             OkDialog(transitionDlg, transitionDlg.OkDialog);
             WaitForDocumentChangeLoaded(docBeforeTransitionSettings);
 
+            TestAssociateProteinsWithBadPeptide();
+
             TestProteinReassignmentMessage();
 
             foreach (var doErrorCheck in new[] { false, true })
@@ -219,6 +221,7 @@ namespace TestPerf
             RunUI(() => colDlg.checkBoxAssociateProteins.Checked = associateProteins);
             if (associateProteins)
             {
+                WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for initial associate proteins to complete
                 if (checkForErrors)
                 {
                     // FilterMatchedPeptidesDlg should appear when user checks for errors
@@ -259,6 +262,19 @@ namespace TestPerf
 
             WaitForDocumentChange(SkylineWindow.Document);
             WaitForClosedForm(importDialog);
+        }
+
+        private void TestAssociateProteinsWithBadPeptide()
+        {
+            var protColumnTSV = "VTTSTGASYSYDR, 709.327105, 1217.530841\n" +
+                                "_fish_, 719.327105, 1016.483162\n" +
+                                "VTTSTGASYSYDR, 709.327105, 1116.483162\n" +
+                                "AADD, 391.14600, 391.14600\n" +
+                                "VTTSTGASYSYDR, 709.327105, 928.403455";
+            // Without the fix, this will throw an exception due to handling of "_fish_" in associate proteins
+            var importDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDlg.TransitionListText = protColumnTSV);
+            RunUI(() => colDlg.CancelDialog());
         }
 
         private void TestProteinReassignmentMessage()
