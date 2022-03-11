@@ -369,10 +369,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
             });
-            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.ScoreTypesLoaded);
+            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                importPeptideSearchDlg.BuildPepSearchLibControl.ScoreThresholds = new[] { (double?)0.01, 0.01 };
+                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreThresholds = new[] { (double?)0.01, 0.01 };
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);

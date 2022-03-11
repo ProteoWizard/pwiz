@@ -435,30 +435,6 @@
   <data name="gridSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <metadata name="columnFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnFile.HeaderText" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <metadata name="columnScoreType.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnScoreType.HeaderText" xml:space="preserve">
-    <value>Score Type</value>
-  </data>
-  <data name="columnScoreType.Width" type="System.Int32, mscorlib">
-    <value>87</value>
-  </data>
-  <metadata name="columnThreshold.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="columnThreshold.HeaderText" xml:space="preserve">
-    <value>Score Threshold</value>
-  </data>
-  <data name="columnThreshold.Width" type="System.Int32, mscorlib">
-    <value>110</value>
-  </data>
   <data name="gridSearchFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 70</value>
   </data>
@@ -472,7 +448,7 @@
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=21.2.1.434, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -878,24 +854,6 @@
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 622</value>
-  </data>
-  <data name="&gt;&gt;columnFile.Name" xml:space="preserve">
-    <value>columnFile</value>
-  </data>
-  <data name="&gt;&gt;columnFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnScoreType.Name" xml:space="preserve">
-    <value>columnScoreType</value>
-  </data>
-  <data name="&gt;&gt;columnScoreType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;columnThreshold.Name" xml:space="preserve">
-    <value>columnThreshold</value>
-  </data>
-  <data name="&gt;&gt;columnThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>

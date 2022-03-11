@@ -442,6 +442,9 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">

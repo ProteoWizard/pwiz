@@ -223,6 +223,16 @@ namespace pwiz.BiblioSpec.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of score types is not equal to number of rows in grid..
+        /// </summary>
+        internal static string BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_r" +
+                        "ows_in_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The string &apos;{0}&apos; does not match an enum value.
         /// </summary>
         internal static string LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value {

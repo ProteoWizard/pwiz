@@ -41,10 +41,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowse = new System.Windows.Forms.Button();
             this.lblLibraryPath = new System.Windows.Forms.Label();
             this.panelPeptideSearch = new System.Windows.Forms.Panel();
-            this.gridSearchFiles = new pwiz.Common.Controls.CommonDataGridView();
-            this.columnFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnScoreType = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnThreshold = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.label2 = new System.Windows.Forms.Label();
             this.comboInputFileType = new System.Windows.Forms.ComboBox();
             this.lblStandardPeptides = new System.Windows.Forms.Label();
@@ -165,38 +162,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // gridSearchFiles
             // 
-            this.gridSearchFiles.AllowUserToAddRows = false;
-            this.gridSearchFiles.AllowUserToDeleteRows = false;
             resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
-            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.columnFile,
-            this.columnScoreType,
-            this.columnThreshold});
+            this.gridSearchFiles.Files = new string[0];
+            this.gridSearchFiles.FilesUris = new pwiz.Skyline.Model.Results.MsDataFileUri[0];
+            this.gridSearchFiles.IsFileOnly = false;
             this.gridSearchFiles.Name = "gridSearchFiles";
-            this.gridSearchFiles.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridSearchFiles_CellValueChanged);
-            this.gridSearchFiles.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.gridSearchFiles_RowPrePaint);
+            this.gridSearchFiles.ScoreThresholds = new System.Nullable<double>[0];
+            this.gridSearchFiles.ScoreTypes = new pwiz.BiblioSpec.BiblioSpecScoreType[0];
             this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
-            // 
-            // columnFile
-            // 
-            this.columnFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            resources.ApplyResources(this.columnFile, "columnFile");
-            this.columnFile.Name = "columnFile";
-            this.columnFile.ReadOnly = true;
-            // 
-            // columnScoreType
-            // 
-            this.columnScoreType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
-            resources.ApplyResources(this.columnScoreType, "columnScoreType");
-            this.columnScoreType.Name = "columnScoreType";
-            this.columnScoreType.ReadOnly = true;
-            // 
-            // columnThreshold
-            // 
-            this.columnThreshold.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
-            resources.ApplyResources(this.columnThreshold, "columnThreshold");
-            this.columnThreshold.Name = "columnThreshold";
             // 
             // label2
             // 
@@ -347,7 +320,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnRemFile;
         private System.Windows.Forms.Label lblFileCaption;
         private System.Windows.Forms.Button btnAddFile;
-        private Common.Controls.CommonDataGridView gridSearchFiles;
+        private BuildLibraryGridView gridSearchFiles;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
@@ -355,8 +328,5 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.FlowLayoutPanel panelSearchThreshold;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnFile;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnScoreType;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnThreshold;
     }
 }
