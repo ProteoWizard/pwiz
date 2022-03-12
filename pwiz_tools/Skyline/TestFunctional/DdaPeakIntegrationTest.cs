@@ -64,6 +64,9 @@ namespace pwiz.SkylineTestFunctional
                             var transitionChromInfo = transitionChromInfos[0];
                             AssertEx.IsLessThanOrEqual(transitionChromInfo.StartRetentionTime, transitionChromInfo.RetentionTime);
                             AssertEx.IsGreaterThanOrEqual(transitionChromInfo.EndRetentionTime, transitionChromInfo.RetentionTime);
+                            // TODO(nicksh): PointsAcrossPeak reports its value as "null" instead of "zero" for backwards compatibility reasons
+                            // Re-enable this assert when that behavior is fixed (we never anticipated that someone would need to have a peak 
+                            // with zero points in it, but this happens all the time with DDA MS2).
                             Assert.IsNotNull(transitionChromInfo.PointsAcrossPeak);
 
                             var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance,
