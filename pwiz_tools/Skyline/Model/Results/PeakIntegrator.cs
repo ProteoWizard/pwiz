@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// If the Acquisition Method is DDA, then change the Area of the peak to
-        /// be the intensity at the time point with the highest total MS1 intensity
+        /// be the intensity at the time point with the highest total MS2 intensity
         /// </summary>
         public ChromPeak FixDdaPeakArea(ChromPeak chromPeak)
         {
