@@ -44,7 +44,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
-        public readonly BuildLibraryGridView Grid;
+        public BuildLibraryGridView Grid { get; }
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
 
@@ -57,7 +57,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             Grid = gridSearchFiles;
-            Grid.FilesChanged += (sender, e) => FireInputFilesChanged();
+            Grid.FilesChanged += (sender, e) =>
+            {
+                SearchFilenames = SearchFilenames.Intersect(Grid.Files).ToArray();
+                FireInputFilesChanged();
+            };
 
             CutOffScore = ImportPeptideSearch.CutoffScore;
 
@@ -332,27 +336,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return libSpec != null && LoadPeptideSearchLibrary(libSpec);
             }
 
-            Grid.GetThresholds(out var thresholdsByScoreType, out var thresholdsByFile,
-                out var errors, out var warnings);
-            if (errors.Any())
-            {
-                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(errors));
-                e.Cancel = true;
+            if (!Grid.Validate(WizardForm, e, showWarnings, out var thresholdsByFile))
                 return false;
-            }
-
-            if (showWarnings && warnings.Any())
-            {
-                warnings.AddRange(new[] { string.Empty, Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ });
-                if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                {
-                    e.Cancel = true;
-                    return false;
-                }
-            }
-
-            foreach (var threshold in thresholdsByScoreType)
-                BiblioSpecLiteBuilder.SetDefaultScoreThreshold(threshold.Key.NameInvariant, threshold.Value);
 
             BiblioSpecLiteBuilder builder;
             try

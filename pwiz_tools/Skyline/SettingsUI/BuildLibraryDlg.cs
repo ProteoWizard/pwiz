@@ -26,6 +26,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class BuildLibraryDlg : FormEx
     {
+        public BuildLibraryGridView Grid { get; }
         public static readonly string[] RESULTS_EXTS =
         {
             BiblioSpecLiteBuilder.EXT_DAT,
@@ -68,8 +70,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SPECLIB,
         };
     
-        private string[] _inputFileNames = new string[0];
-        private string _dirInputRoot = string.Empty;
+        private string[] _inputFileNames = Array.Empty<string>();
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -101,7 +102,6 @@ namespace pwiz.Skyline.SettingsUI
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
-            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(LocalizationHelper.CurrentCulture);
 
             if (_documentUiContainer.Document.PeptideCount == 0)
                 cbFilter.Hide();
@@ -119,6 +119,13 @@ namespace pwiz.Skyline.SettingsUI
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
+
+            Grid = gridInputFiles;
+            Grid.FilesChanged += (sender, e) =>
+            {
+                _inputFileNames = _inputFileNames.Intersect(Grid.Files).ToArray();
+                btnNext.Enabled = panelProperties.Visible || Grid.IsReady;
+            };
         }
 
         private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
@@ -137,32 +144,14 @@ namespace pwiz.Skyline.SettingsUI
 
             set
             {
-                // Store checked state for existing files
-                var checkStates = new Dictionary<string, bool>();
-                for (int i = 0; i < _inputFileNames.Length; i++)
-                    checkStates.Add(_inputFileNames[i], listInputFiles.GetItemChecked(i));
-
                 // Set new value
                 _inputFileNames = value;
 
                 // Always show sorted list of files
                 Array.Sort(_inputFileNames);
 
-                // Calculate the common root directory
-                _dirInputRoot = PathEx.GetCommonRoot(_inputFileNames);
-
                 // Populate the input files list
-                listInputFiles.Items.Clear();
-                foreach (string fileName in _inputFileNames)
-                {
-                    bool checkFile;
-                    if (!checkStates.TryGetValue(fileName, out checkFile))
-                        checkFile = true;   // New files start out checked
-                    listInputFiles.Items.Add(PathEx.RemovePrefix(fileName, _dirInputRoot), checkFile);
-                }
-                int count = listInputFiles.CheckedItems.Count;
-                btnNext.Enabled = (panelProperties.Visible || count > 0);
-                cbSelect.Enabled = (count > 0);
+                Grid.Files = _inputFileNames;
             }
         }
 
@@ -218,21 +207,10 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            double cutOffScore;
-            if (!_helper.ValidateDecimalTextBox(textCutoff, 0, 1.0, out cutOffScore))
-                return false;
-            Settings.Default.LibraryResultCutOff = cutOffScore;
-
             var libraryBuildAction = LibraryBuildAction;
 
             if (validateInputFiles)
             {
-                var inputFilesChosen = new List<string>();
-                foreach (int i in listInputFiles.CheckedIndices)
-                {
-                    inputFilesChosen.Add(_inputFileNames[i]);
-                }
-
                 List<Target> targetPeptidesChosen = null;
                 if (cbFilter.Checked)
                 {
@@ -290,12 +268,15 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    Builder = new BiblioSpecLiteBuilder(name, outputPath, inputFilesChosen, targetPeptidesChosen)
+                    if (!Grid.Validate(this, null, true, out var thresholdsByFile))
+                        return false;
+
+                    Builder = new BiblioSpecLiteBuilder(name, outputPath, Grid.Files, targetPeptidesChosen)
                     {
                         Action = libraryBuildAction,
                         IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
                         KeepRedundant = LibraryKeepRedundant,
-                        CutOffScore = cutOffScore,
+                        ScoreThresholdsByFile = thresholdsByFile,
                         Id = Helpers.MakeId(textName.Text),
                         IrtStandard = _driverStandards.SelectedItem,
                         PreferEmbeddedSpectra = PreferEmbeddedSpectra
@@ -382,7 +363,7 @@ namespace pwiz.Skyline.SettingsUI
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
-                btnNext.Enabled = (listInputFiles.CheckedItems.Count > 0);
+                btnNext.Enabled = Grid.IsReady;
             }            
         }
 
@@ -659,13 +640,6 @@ namespace pwiz.Skyline.SettingsUI
             return LibrarySpec.CreateFromPath(@"__internal__", fileName) != null;
         }
 
-        private void cbSelect_CheckedChanged(object sender, EventArgs e)
-        {
-            bool checkAll = cbSelect.Checked;
-            for (int i = 0; i < listInputFiles.Items.Count; i++)
-                listInputFiles.SetItemChecked(i, checkAll);
-        }
-
         private void textPath_TextChanged(object sender, EventArgs e)
         {
             bool existsRedundant = false;
@@ -699,35 +673,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void comboAction_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (Equals(comboAction.SelectedItem, LibraryBuildAction.Append.GetLocalizedString()))
-            {
-                cbKeepRedundant.Checked = true;
-            }
-        }
-
-        private void listInputFiles_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            // If all other checkboxes in the list match the new state,
-            // update the select / deselect all checkbox.
-            int iChange = e.Index;
-            CheckState state = e.NewValue;
-            if (state == CheckState.Checked)
-                btnNext.Enabled = true;
-
-            for (int i = 0; i < listInputFiles.Items.Count; i++)
-            {
-                if (i == iChange)
-                    continue;
-                if (listInputFiles.GetItemCheckState(i) != state)
-                    return;
-            }
-            cbSelect.CheckState = state;
-            if (state == CheckState.Unchecked)
-                btnNext.Enabled = false;
-        }
-
         public string LibraryName
         {
             get { return textName.Text; }
@@ -738,17 +683,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return textPath.Text; }
             set { textPath.Text = value; }
-        }
-
-        public double LibraryCutoff
-        {
-            get
-            {
-                double cutoff;
-                return (double.TryParse(textCutoff.Text, out cutoff) ? cutoff : 0);
-            }
-
-            set { textCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public bool Prosit

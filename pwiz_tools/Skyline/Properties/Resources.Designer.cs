@@ -3147,6 +3147,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to continue?.
+        /// </summary>
+        public static string BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library {0}.
         /// </summary>
         public static string BuildLibraryNotification_BuildLibraryNotification_Library__0__ {
@@ -3191,16 +3200,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_" +
                         "library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to continue?.
-        /// </summary>
-        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_to_continue_ {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Are_you_sure_you_want_" +
-                        "to_continue_", resourceCulture);
             }
         }
         

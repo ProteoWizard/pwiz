@@ -26,6 +26,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             _defaultCellBackColor = DefaultCellStyle.BackColor;
 
-            if (!DesignMode)
+            if (LicenseManager.UsageMode == LicenseUsageMode.Runtime)
             {
                 AllowUserToAddRows = false;
                 AllowUserToDeleteRows = true;
@@ -235,17 +236,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                           threshold != null && !Equals(threshold, CELL_LOADING);
                                }));
 
-        public void GetThresholds(out Dictionary<BiblioSpecScoreType, double> thresholdsByScoreType, out Dictionary<string, double> thresholdsByFile,
-            out List<string> errors, out List<string> warnings)
+        public bool Validate(IWin32Window parent, CancelEventArgs e, bool showWarnings, out Dictionary<string, double> thresholdsByFile)
         {
             if (!ScoreTypesLoaded)
                 throw new Exception(Resources.BuildLibraryGridView_GetThresholds_Score_types_not_loaded_);
 
-            thresholdsByScoreType = new Dictionary<BiblioSpecScoreType, double>();
+            var thresholdsByScoreType = new Dictionary<BiblioSpecScoreType, double>();
             thresholdsByFile = new Dictionary<string, double>();
-            errors = new List<string>();
-            warnings = new List<string>();
 
+            var errors = new List<string>();
             foreach (DataGridViewRow row in Rows)
             {
                 var file = FileCellValue.Get(row, _colFile);
@@ -266,52 +265,78 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             if (errors.Any())
-                return;
-
-            foreach (var pair in thresholdsByScoreType)
             {
-                var scoreType = pair.Key;
-                if (!scoreType.CanSet)
-                    continue;
+                MessageDlg.Show(parent, TextUtil.LineSeparate(errors));
+                if (e != null)
+                    e.Cancel = true;
+                return false;
+            }
 
-                var probCorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct;
-                var probIncorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect;
-                var threshold = pair.Value;
-                var thresholdIsMin = threshold.Equals(scoreType.ValidRange.Min);
-                var thresholdIsMax = threshold.Equals(scoreType.ValidRange.Max);
-                string warning = null;
-                if ((probCorrect && thresholdIsMax) || (probIncorrect && thresholdIsMin))
+            if (showWarnings)
+            {
+                var warnings = new List<string>();
+                foreach (var pair in thresholdsByScoreType)
                 {
-                    warning = string.Format(
-                        Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_,
-                        threshold, scoreType.DisplayName);
-                }
-                else if ((probCorrect && thresholdIsMin) || (probIncorrect && thresholdIsMax))
-                {
-                    warning = string.Format(
-                        Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_,
-                        threshold, scoreType.DisplayName);
-                }
-                else if (threshold < scoreType.SuggestedRange.Min || threshold > scoreType.SuggestedRange.Max)
-                {
-                    warning = string.Format(
-                        Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_,
-                        threshold, scoreType.DisplayName);
+                    var scoreType = pair.Key;
+                    if (!scoreType.CanSet)
+                        continue;
+
+                    var probCorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct;
+                    var probIncorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect;
+                    var threshold = pair.Value;
+                    var thresholdIsMin = threshold.Equals(scoreType.ValidRange.Min);
+                    var thresholdIsMax = threshold.Equals(scoreType.ValidRange.Max);
+                    string warning = null;
+                    if ((probCorrect && thresholdIsMax) || (probIncorrect && thresholdIsMin))
+                    {
+                        warning = string.Format(
+                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_,
+                            threshold, scoreType.DisplayName);
+                    }
+                    else if ((probCorrect && thresholdIsMin) || (probIncorrect && thresholdIsMax))
+                    {
+                        warning = string.Format(
+                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_,
+                            threshold, scoreType.DisplayName);
+                    }
+                    else if (threshold < scoreType.SuggestedRange.Min || threshold > scoreType.SuggestedRange.Max)
+                    {
+                        warning = string.Format(
+                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_,
+                            threshold, scoreType.DisplayName);
+                    }
+
+                    if (!string.IsNullOrEmpty(warning))
+                    {
+                        if (probCorrect)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildLibraryGridView_GetThresholds_correct));
+                        else if (probIncorrect)
+                            warning = TextUtil.SpaceSeparate(warning, string.Format(
+                                Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType.DisplayName, Resources.BuildLibraryGridView_GetThresholds_incorrect));
+                        warnings.Add(warning);
+                    }
                 }
 
-                if (!string.IsNullOrEmpty(warning))
+                if (warnings.Any())
                 {
-                    if (probCorrect)
-                        warning = TextUtil.SpaceSeparate(warning, string.Format(
-                            Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                            scoreType.DisplayName, Resources.BuildLibraryGridView_GetThresholds_correct));
-                    else if (probIncorrect)
-                        warning = TextUtil.SpaceSeparate(warning, string.Format(
-                            Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                            scoreType.DisplayName, Resources.BuildLibraryGridView_GetThresholds_incorrect));
-                    warnings.Add(warning);
+                    warnings.AddRange(new[] { string.Empty, Resources.BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ });
+                    if (MultiButtonMsgDlg.Show(parent, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    {
+                        if (e != null)
+                            e.Cancel = true;
+                        return false;
+                    }
                 }
             }
+
+            // Update settings
+            foreach (var threshold in thresholdsByScoreType)
+                BiblioSpecLiteBuilder.SetDefaultScoreThreshold(threshold.Key.NameInvariant, threshold.Value);
+
+            return true;
         }
 
         private DataGridViewRow AddFile(int? insertPos, string file, BiblioSpecScoreType scoreType)
@@ -361,9 +386,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             for (var i = 0; i < RowCount; i++)
             {
                 var row = Rows[i];
-                var file = FileCellValue.Get(row, _colFile).File;
 
-                if (!success || exception != null || scoreTypes == null || !scoreTypes.TryGetValue(FileCellValue.Get(row, _colFile).File, out var scoreTypesThis))
+                if (!success || exception != null || scoreTypes == null)
                 {
                     var errorSb = new StringBuilder(Resources.BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_);
                     if (exception != null)
@@ -376,6 +400,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ThresholdCell.Get(row, _colThreshold).Value = null;
                     continue;
                 }
+
+                var file = FileCellValue.Get(row, _colFile).File;
+
+                if (!scoreTypes.TryGetValue(file, out var scoreTypesThis))
+                    continue;
 
                 for (var j = 0; j < scoreTypesThis.Length; j++)
                 {
