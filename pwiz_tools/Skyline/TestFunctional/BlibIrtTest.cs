@@ -53,13 +53,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibrary.LibraryName = "iRT standard peptides test";
                 buildLibrary.LibraryPath = outBlib;
-                buildLibrary.LibraryCutoff = 0.95;
                 buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
                 //buildLibrary.PreferEmbeddedSpectra = true;
                 buildLibrary.OkWizardPage();
 
                 buildLibrary.InputFileNames = new[] {searchResults};
             });
+            WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
+            RunUI(() => buildLibrary.Grid.ScoreThresholds = new[] { (double?)0.05 });
 
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
             var preferEmbeddedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
