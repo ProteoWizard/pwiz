@@ -719,6 +719,7 @@ namespace pwiz.SkylineTestFunctional
                 else
                     buildLibraryDlg.AddDirectory(inputDir);
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
             if (inputPaths != null)

@@ -279,7 +279,7 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.AddDirectory(GetTestPath("Tutorial-3_Library"));
             });
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
-            RunUI(() => buildLibraryDlg.Grid.ScoreThresholds = new[] { (double?)0.9 });
+            RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(null, 0.9));
             PauseForScreenShot("Build Library Window Next", 2);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             RunUI(() =>

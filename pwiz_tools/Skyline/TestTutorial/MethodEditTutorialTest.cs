@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                buildLibraryDlg.Grid.ScoreThresholds = new[] { (double?)0.95 };
+                buildLibraryDlg.Grid.SetScoreThreshold(null, 0.95);
                 buildLibraryDlg.OkWizardPage();
             });
 

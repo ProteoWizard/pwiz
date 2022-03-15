@@ -372,7 +372,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreThresholds = new[] { (double?)0.01, 0.01 };
+                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(null, 0.01);
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);

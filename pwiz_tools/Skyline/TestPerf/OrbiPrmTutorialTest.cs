@@ -227,7 +227,7 @@ namespace TestPerf
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                buildLibraryDlg.Grid.ScoreThresholds = new[] { (double?)0.1, 0.1 };
+                buildLibraryDlg.Grid.SetScoreThreshold(null, 0.1);
                 buildLibraryDlg.OkWizardPage();
             });
 

@@ -11677,12 +11677,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView__colThreshold_Score_Threshold" xml:space="preserve">
 	  <value>Score Threshold</value>
   </data>
-  <data name="BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
-	  <value>Number of score types is not equal to number of rows in grid.</value>
-  </data>
-  <data name="BuildLibraryGridView_ScoreThresholds_Number_of_score_thresholds_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
-	  <value>Number of score thresholds is not equal to number of rows in grid.</value>
-  </data>
   <data name="BuildLibraryGridView_GetThresholds_Score_types_not_loaded_" xml:space="preserve">
 	  <value>Score types not loaded.</value>
   </data>

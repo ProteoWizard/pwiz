@@ -71,6 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new []{TestFilesDir.GetTestPath("ProxlTest.proxl.xml") });
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 

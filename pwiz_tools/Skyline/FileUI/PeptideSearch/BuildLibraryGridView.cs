@@ -178,39 +178,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             .Select(cell => cell.OwningRow).Distinct()
             .Select(row => (File)row.DataBoundItem);
 
-        public BiblioSpecScoreType[] ScoreTypes
-        {
-            get
-            {
-                return !IsFileOnly ? Files.Select(f => f.ScoreType).ToArray() : Array.Empty<BiblioSpecScoreType>();
-            }
-
-            set
-            {
-                if (value.Length != RowCount)
-                    throw new Exception(Resources.BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_);
-                for (var i = 0; i < RowCount; i++)
-                    ((File)Rows[i].DataBoundItem).ScoreType = value[i];
-            }
-        }
-
-        public double?[] ScoreThresholds
-        {
-            get
-            {
-                return !IsFileOnly ? Files.Select(f => f.ScoreThreshold).ToArray() : Array.Empty<double?>();
-            }
-
-            set
-            {
-                if (value.Length != RowCount)
-                    throw new Exception(Resources.BuildLibraryGridView_ScoreThresholds_Number_of_score_thresholds_is_not_equal_to_number_of_rows_in_grid_);
-                for (var i = 0; i < RowCount; i++)
-                    ((File)Rows[i].DataBoundItem).ScoreThreshold = value[i];
-            }
-        }
-
-        public bool ScoreTypesLoaded => ScoreTypes.All(scoreType => scoreType != null);
+        public bool ScoreTypesLoaded => Files.All(f => !f.ScoreTypeError && f.ScoreType != null);
 
         public bool IsReady => FilesList.Count > 0 && (IsFileOnly || Files.All(f => !f.ScoreTypeError && f.ScoreType != null && f.ScoreThreshold.HasValue));
 
@@ -425,6 +393,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private DataGridViewRow FindRow(File file)
         {
             return Rows.Cast<DataGridViewRow>().FirstOrDefault(row => Equals(file, row.DataBoundItem));
+        }
+
+        public void SetScoreThreshold(BiblioSpecScoreType scoreType, double? threshold)
+        {
+            foreach (var file in Files.Where(f => f.ScoreType != null && (scoreType == null || scoreType.Equals(f.ScoreType))))
+            {
+                file.ScoreThreshold = threshold ?? file.ScoreType.DefaultValue;
+                InvalidateCell(FindRow(file).Cells[_colThreshold.Index]);
+            }
         }
 
         private void OnUserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)

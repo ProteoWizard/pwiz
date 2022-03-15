@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.InputFileNames = new[] {searchResults};
             });
             WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
-            RunUI(() => buildLibrary.Grid.ScoreThresholds = new[] { (double?)0.05 });
+            RunUI(() => buildLibrary.Grid.SetScoreThreshold(null, 0.05));
 
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
             var preferEmbeddedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => import.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                import.BuildPepSearchLibControl.Grid.ScoreThresholds = new double?[] { 0.05 };
+                import.BuildPepSearchLibControl.Grid.SetScoreThreshold(null, 0.05);
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });

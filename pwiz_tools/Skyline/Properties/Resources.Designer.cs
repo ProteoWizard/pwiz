@@ -3127,26 +3127,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Number of score thresholds is not equal to number of rows in grid..
-        /// </summary>
-        public static string BuildLibraryGridView_ScoreThresholds_Number_of_score_thresholds_is_not_equal_to_number_of_rows_in_grid_ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_ScoreThresholds_Number_of_score_thresholds_is_not_equal_to_n" +
-                        "umber_of_rows_in_grid_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number of score types is not equal to number of rows in grid..
-        /// </summary>
-        public static string BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_r" +
-                        "ows_in_grid_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to continue?.
         /// </summary>
         public static string BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ {
