@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaSearchFixedWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";

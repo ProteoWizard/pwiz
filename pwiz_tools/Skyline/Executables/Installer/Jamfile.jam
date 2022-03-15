@@ -129,6 +129,7 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
 
 rule test_msi ( targets + : sources * : properties * )
 {
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     msbuild_deploy $(targets) : $(sources) : $(properties) ;
 }
 

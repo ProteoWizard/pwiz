@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
 
         DdaTestSettings TestSettings;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDdaSearch()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";

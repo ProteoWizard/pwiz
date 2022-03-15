@@ -62,5 +62,20 @@ namespace pwiz.Skyline.Util
                 return 0;
             }
         }
+
+        public static long AvailableBytes
+        {
+            get
+            {
+                MEMORYSTATUSEX statEX = new MEMORYSTATUSEX();
+                if (GlobalMemoryStatusEx(statEX))
+                    return (long) statEX.ullAvailPhys;
+                return 0;
+            }
+        }
+
+        public readonly static long Kibibyte = 1024;
+        public readonly static long Mebibyte = Kibibyte * 1024;
+        public readonly static long Gibibyte = Mebibyte * 1024;
     }
 }
