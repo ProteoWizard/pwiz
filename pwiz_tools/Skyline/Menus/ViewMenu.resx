@@ -327,6 +327,18 @@
   <data name="zMenuItem.Text" xml:space="preserve">
     <value>&amp;Z</value>
   </data>
+  <data name="zhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="zhMenuItem.Text" xml:space="preserve">
+    <value>Z&#x2022;</value>
+  </data>
+  <data name="zhhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="zhhMenuItem.Text" xml:space="preserve">
+    <value>Z&#x2032;</value>
+  </data>
   <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
@@ -1129,6 +1141,18 @@
     <value>zMenuItem</value>
   </data>
   <data name="&gt;&gt;zMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;zhMenuItem.Name" xml:space="preserve">
+    <value>zhMenuItem</value>
+  </data>
+  <data name="&gt;&gt;zhMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;zhhMenuItem.Name" xml:space="preserve">
+    <value>zhhMenuItem</value>
+  </data>
+  <data name="&gt;&gt;zhhMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fragmentsMenuItem.Name" xml:space="preserve">

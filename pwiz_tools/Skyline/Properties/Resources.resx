@@ -944,6 +944,14 @@
   <data name="SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate" xml:space="preserve">
     <value>Replicate</value>
   </data>
+
+  <data name="AreaReplicateGraphPane_Tooltip_Replicate" xml:space="preserve">
+    <value>Replicate:</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Dotp" xml:space="preserve">
+    <value>{0}:</value>
+  </data>
+
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
     <value>Export Isolation List</value>
   </data>
@@ -1440,6 +1448,9 @@
   </data>
   <data name="ReportSpecList_GetDefaults_Peak_Boundaries" xml:space="preserve">
     <value>Peak Boundaries</value>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Peak_Boundaries" xml:space="preserve">
+    <value>Molecule Peak Boundaries</value>
   </data>
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>Standard co-elution (weighted)</value>
@@ -11534,6 +11545,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
     <value>None of the targets in the document have any chromatograms.</value>
   </data>
+  <data name="AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff" xml:space="preserve">
+    <value>Replicates above {2} cutoff: {0}, below cutoff: {1}</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Dotp_Cutoff_Line_Label" xml:space="preserve">
+    <value>{0} cutoff - {1:F2}</value>
+  </data>
   <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
     <value>Retention time calculator ({0})</value>
   </data>
@@ -11615,6 +11632,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
+    <value>{0} must contain a decimal value.</value>
+  </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
+    <value>{0} cutoff value must be greater or equal than 0. and lesser or equal than 1.</value>
+  </data>
   <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
 	  <value>Finding peptides in FASTA file</value>
   </data>
@@ -11644,5 +11667,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
 	  <value>Associate Proteins</value>
+  </data>
+  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
+	  <value>Skyline 21.2</value>
   </data>
 </root>

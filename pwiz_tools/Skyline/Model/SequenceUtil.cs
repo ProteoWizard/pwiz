@@ -448,6 +448,8 @@ namespace pwiz.Skyline.Model
         private readonly TypedMass _massDiffX;
         private readonly TypedMass _massDiffY;
         private readonly TypedMass _massDiffZ;
+        private readonly TypedMass _massDiffZH;
+        private readonly TypedMass _massDiffZHH;
         private readonly TypedMass _massCleaveC;
         private readonly TypedMass _massCleaveN;
 
@@ -479,6 +481,8 @@ namespace pwiz.Skyline.Model
             _massDiffY = _massCalc.CalculateMassFromFormula("H2O");
             _massDiffX = _massCalc.CalculateMassFromFormula("CO2");
             _massDiffZ = _massDiffY - _massCalc.CalculateMassFromFormula("NH3");
+            _massDiffZH = _massDiffY - _massCalc.CalculateMassFromFormula("NH2");
+            _massDiffZHH = _massDiffY - _massCalc.CalculateMassFromFormula("NH");
 
             _massCleaveN = _massCalc.CalculateMassFromFormula("H");
             _massCleaveC = _massCalc.CalculateMassFromFormula("OH");
@@ -1085,8 +1089,10 @@ namespace pwiz.Skyline.Model
             var cTermMassY = (_massDiffY + modMasses._massModCleaveC + BioMassCalc.MassProton).ChangeIsMassH(true);
             var deltaX = _massDiffX - _massDiffY;
             var deltaZ = _massDiffZ - _massDiffY;
+            var deltaZH = _massDiffZH - _massDiffY;
+            var deltaZHH = _massDiffZHH - _massDiffY;
 
-            var masses = new IonTable<TypedMass>(IonType.z, len);
+            var masses = new IonTable<TypedMass>(IonType.zhh, len);
 
             int iN = 0, iC = len;
             nTermMassB += modMasses._aminoNTermModMasses[seq[iN]];
@@ -1110,6 +1116,8 @@ namespace pwiz.Skyline.Model
                 masses[x, iC] = cTermMassY + deltaX;
                 masses[y, iC] = cTermMassY;
                 masses[z, iC] = cTermMassY + deltaZ;
+                masses[IonType.zh, iC] = cTermMassY + deltaZH;
+                masses[IonType.zhh, iC] = cTermMassY + deltaZHH;
             }
 
             return masses;
@@ -1265,6 +1273,8 @@ namespace pwiz.Skyline.Model
                 case IonType.x: return _massDiffX + modMasses._massModCleaveC;
                 case IonType.y: return _massDiffY + modMasses._massModCleaveC;
                 case IonType.z: return _massDiffZ + modMasses._massModCleaveC;
+                case IonType.zh: return _massDiffZH + modMasses._massModCleaveC;
+                case IonType.zhh: return _massDiffZHH + modMasses._massModCleaveC;
                 default:
                     throw new ArgumentException(@"Invalid ion type");
             }
@@ -1280,6 +1290,8 @@ namespace pwiz.Skyline.Model
                 case IonType.x: return _massDiffX - _massDiffY;
                 case IonType.y: return 0;
                 case IonType.z: return _massDiffZ - _massDiffY;
+                case IonType.zh: return _massDiffZH - _massDiffY;
+                case IonType.zhh: return _massDiffZHH - _massDiffY;
                 default:
                     throw new ArgumentException(@"Invalid ion type");
             }

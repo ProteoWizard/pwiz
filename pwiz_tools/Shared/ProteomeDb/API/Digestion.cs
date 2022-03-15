@@ -60,7 +60,7 @@ namespace pwiz.ProteomeDatabase.API
         public IDictionary<String, List<Protein>> GetProteinsWithSequences(IStatelessSession session,
             IEnumerable<string> sequences, CancellationToken cancellationToken)
         {
-            var sequenceList = sequences.ToArray();
+            var sequenceList = sequences.Where(s => !string.IsNullOrEmpty(s)).ToArray();
             var proteinIds = GetProteinIdsThatMightHaveSequence(session, sequenceList);
             var results = new Dictionary<string, List<Protein>>();
             var proteins = GetProteinsWithIds(session, proteinIds);

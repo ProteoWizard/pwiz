@@ -582,7 +582,8 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateBrukerTimsTofControls()
         {
-            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF);
+            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) &&
+                                         _fileType == ExportFileType.Method;
         }
 
         private void UpdateCovControls()
@@ -891,7 +892,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(documentExport, _exportProperties);
+                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,

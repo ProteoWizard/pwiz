@@ -1269,6 +1269,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
             var displayTrans = GetDisplayTransitions(nodeGroup, displayType).ToArray();
+            bool anyQuantitative = displayTrans.Any(IsQuantitative);
             int numTrans = displayTrans.Length;
             int numSteps = 0;
             bool allowEmpty = false;
@@ -1283,32 +1284,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var listChromInfo = new List<ChromatogramInfo>();
-                    chromGroupInfo.GetAllTransitionInfo(nodeTranSelected,
-                        mzMatchTolerance,
-                        chromatograms.OptimizationFunction,
-                        listChromInfo, TransformChrom.raw);
-                    arrayChromInfo = listChromInfo.ToArray();
-
-                    if (chromatograms.OptimizationFunction != null)
-                    {
-                        // Make sure the number of steps matches what will show up in the summary
-                        // graphs, or the colors won't match up.
-                        int numStepsExpected = chromatograms.OptimizationFunction.StepCount*2 + 1;
-                        if (arrayChromInfo.Length != numStepsExpected)
-                        {
-                            int centerInfo = TransitionGroupDocNode.FindCenterInfo(nodeTranSelected, arrayChromInfo);
-                            arrayChromInfo = ResizeArrayChromInfo(arrayChromInfo, centerInfo, numStepsExpected);
-                            allowEmpty = true;
-                        }
-                    }
-
-                    numTrans = arrayChromInfo.Length;
-                    displayTrans = new TransitionDocNode[numTrans];
-                    for (int i = 0; i < numTrans; i++)
-                        displayTrans[i] = nodeTranSelected;
+                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTranSelected,
+                        mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.raw);
+                    numSteps = listChromInfo.StepCount;
+                    numTrans = numSteps * 2 + 1;
+                    displayTrans = Enumerable.Repeat(nodeTranSelected, numTrans).ToArray();
+                    arrayChromInfo = Enumerable.Range(-numSteps, numTrans)
+                        .Select(step => listChromInfo.GetChromatogramForStep(step)).ToArray();
+                    allowEmpty = true;
                 }
-                numSteps = numTrans/2;
             }
             else
             {
@@ -1353,19 +1337,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, step);
                 if (transitionChromInfo == null)
                     continue;
-                if (!IsQuantitative(nodeTran))
+                bool quantitative = IsQuantitative(nodeTran);
+                if (quantitative || !anyQuantitative)
                 {
-                    bestNonQuantitativePeak = RetentionTimeValues.Merge(bestNonQuantitativePeak, RetentionTimeValues.FromTransitionChromInfo(transitionChromInfo));
-                    continue;
+                    if (maxPeakHeight < transitionChromInfo.Height)
+                    {
+                        maxPeakHeight = transitionChromInfo.Height;
+                        bestPeakTran = i;
+                        tranPeakInfo = transitionChromInfo;
+                    }
                 }
 
-                if (maxPeakHeight < transitionChromInfo.Height)
+                if (quantitative)
                 {
-                    maxPeakHeight = transitionChromInfo.Height;
-                    bestPeakTran = i;
-                    tranPeakInfo = transitionChromInfo;
+                    bestQuantitativePeak = RetentionTimeValues.Merge(bestQuantitativePeak, RetentionTimeValues.FromTransitionChromInfo(transitionChromInfo));
                 }
-                bestQuantitativePeak = RetentionTimeValues.Merge(bestQuantitativePeak, RetentionTimeValues.FromTransitionChromInfo(transitionChromInfo));
+                else
+                {
+                    bestNonQuantitativePeak = RetentionTimeValues.Merge(bestNonQuantitativePeak, RetentionTimeValues.FromTransitionChromInfo(transitionChromInfo));
+                }
             }
 
             for (int i = 0; i < numTrans; i++)
@@ -1385,8 +1375,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 var info = arrayChromInfo[i];
-                    if (info == null)
-                        continue;
+                if (info == null)
+                    continue;
 
                 // Apply any active transform
                 info.Transform(transform);
@@ -1725,53 +1715,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Collect the chromatogram info for the transition children
             // of this transition group.
-            var listChromInfoSets = new List<ChromatogramInfo[]>();
-            var listTranisitionChromInfoSets = new List<TransitionChromInfo[]>();
-            int totalOptCount = chromatograms.OptimizationFunction.StepCount * 2 + 1;
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-            {
-                var listChromInfo = new List<ChromatogramInfo>();
-                chromGroupInfo.GetAllTransitionInfo(nodeTran,
-                    mzMatchTolerance,
-                    chromatograms.OptimizationFunction,
-                    listChromInfo, TransformChrom.raw);
-                var infos = listChromInfo.ToArray();
-                if (infos.Length == 0)
-                    continue;
-
-                // Make sure the total number of chrom info entries match the expected
-                // no matter what, so that chromatogram colors will match up with peak
-                // area charts.
-                if (infos.Length != totalOptCount)
-                {
-                    int centerInfo = TransitionGroupDocNode.FindCenterInfo(nodeTran, infos);
-                    infos = ResizeArrayChromInfo(infos, centerInfo, totalOptCount);
-                }
-
-                listChromInfoSets.Add(infos);
-                var transitionChromInfos = new TransitionChromInfo[totalOptCount];
-                int steps = infos.Length / 2;
-                int offset = totalOptCount / 2 - steps;
-                for (int i = 0; i < infos.Length; i++)
-                {
-                    transitionChromInfos[i + offset] = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, i - steps);
-                }
-                listTranisitionChromInfoSets.Add(transitionChromInfos);
-            }
+            var listChromInfoSets = nodeGroup.Transitions.Select(transition =>
+                chromGroupInfo.GetAllTransitionInfo(transition, mzMatchTolerance, chromatograms.OptimizationFunction,
+                    TransformChrom.raw)).ToList();
+            int totalSteps = chromatograms.OptimizationFunction.StepCount;
 
             // Enumerate optimization steps, grouping the data into graph data by step
             var listGraphData = new List<OptimizationGraphData>();
-            for (int i = 0; i < listChromInfoSets.Count; i++)
+            for (int step = -totalSteps; step <= totalSteps; step++)
             {
-                var chromInfos = listChromInfoSets[i];
-                var transitionChromInfos = listTranisitionChromInfoSets[i];
-
-                for (int j = 0; j < chromInfos.Length; j++)
+                var optimizationData = new OptimizationGraphData(chromGroupInfo.NumPeaks);
+                for (int iTransition = 0; iTransition < nodeGroup.TransitionCount; iTransition++)
                 {
-                    if (listGraphData.Count <= j)
-                        listGraphData.Add(new OptimizationGraphData(numPeaks));
-                    listGraphData[j].Add(chromInfos[j], transitionChromInfos[j]);
+                    var optStepChromatograms = listChromInfoSets[iTransition];
+                    if (optStepChromatograms == null)
+                    {
+                        continue;
+                    }
+
+                    var transitionDocNode = (TransitionDocNode) nodeGroup.Children[iTransition];
+                    var transitionChromInfo = GetTransitionChromInfo(transitionDocNode, _chromIndex, fileId, step);
+                    optimizationData.Add(optStepChromatograms.GetChromatogramForStep(step), transitionChromInfo);
                 }
+                listGraphData.Add(optimizationData);
             }
 
             // Total and transform the data, and compute which optimization
@@ -1838,7 +1804,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Create graph items
-            int totalSteps = totalOptCount / 2;
             for (int i = 0; i < listGraphData.Count; i++)
             {
                 var graphData = listGraphData[i];
