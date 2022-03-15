@@ -57,11 +57,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             Grid = gridSearchFiles;
-            Grid.FilesChanged += (sender, e) =>
-            {
-                SearchFilenames = SearchFilenames.Intersect(Grid.Files).ToArray();
-                FireInputFilesChanged();
-            };
+            Grid.FilesChanged += OnGridChange;
 
             CutOffScore = ImportPeptideSearch.CutoffScore;
 
@@ -223,35 +219,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public string[] SearchFilenames
         {
-            get { return ImportPeptideSearch.SearchFilenames; }
-            private set { SetSearchFiles(value); }
-        }
-
-        private void SetSearchFiles(string[] searchFiles)
-        {
-            ImportPeptideSearch.SearchFilenames = searchFiles;
-            Array.Sort(ImportPeptideSearch.SearchFilenames);
-            Grid.Files = searchFiles;
+            get => ImportPeptideSearch.SearchFilenames;
+            set => Grid.FilePaths = value;
         }
 
         public MsDataFileUri[] DdaSearchDataSources
         {
             get => _ddaSearchDataSources;
-            set
-            {
-                _ddaSearchDataSources = value;
-                Array.Sort(_ddaSearchDataSources);
-                Grid.FilesUris = _ddaSearchDataSources;
-            }
+            set => Grid.FileUris = value;
         }
 
         private void btnRemFile_Click(object sender, EventArgs e)
         {
-            var selectedFiles = Grid.SelectedFiles.ToHashSet();
-            if (PerformDDASearch)
-                DdaSearchDataSources = DdaSearchDataSources.Where(source => !selectedFiles.Contains(source.GetFilePath())).ToArray();
-            else
-                SearchFilenames = SearchFilenames.Where(file => !selectedFiles.Contains(file)).ToArray();
+            Grid.Remove(Grid.SelectedFiles);
         }
 
         private void gridSearchFiles_SelectedIndexChanged(object sender, EventArgs e)
@@ -301,7 +281,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void AddSearchFiles(IEnumerable<string> fileNames)
         {
-            SetSearchFiles(BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch));
+            SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
         public double CutOffScore
@@ -617,28 +597,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 : Resources.BuildPeptideSearchLibraryControl_Result_files_;
             //peptideSearchSplitContainer.Visible = PerformDDASearch;
 
+            Grid.FilesChanged -= OnGridChange;
             if (PerformDDASearch)
             {
                 Grid.IsFileOnly = true;
-                DdaSearchDataSources = DdaSearchDataSources;
+                Grid.FileUris = _ddaSearchDataSources;
                 panelSearchThreshold.Visible = true;
             }
             else
             {
                 Grid.IsFileOnly = false;
-                SearchFilenames = SearchFilenames;
+                Grid.FilePaths = ImportPeptideSearch.SearchFilenames;
                 panelSearchThreshold.Visible = false;
             }
+            Grid.FilesChanged += OnGridChange;
         }
 
         public bool PerformDDASearch
         {
             get { return InputFileType != ImportPeptideSearchDlg.InputFile.search_result; }
-            set { InputFileType = value ? ImportPeptideSearchDlg.InputFile.dda_raw : ImportPeptideSearchDlg.InputFile.search_result; }
+            set
+            {
+                InputFileType = value ? ImportPeptideSearchDlg.InputFile.dda_raw : ImportPeptideSearchDlg.InputFile.search_result;
+                UpdatePerformDDASearch();
+            }
         }
 
         public bool DIAConversionNeeded => InputFileType == ImportPeptideSearchDlg.InputFile.dia_raw;
 
+        private void OnGridChange(object sender, EventArgs e)
+        {
+            if (!PerformDDASearch)
+                ImportPeptideSearch.SearchFilenames = Grid.FilePaths.ToArray();
+            else
+                _ddaSearchDataSources = Grid.FileUris.ToArray();
+            FireInputFilesChanged();
+        }
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {

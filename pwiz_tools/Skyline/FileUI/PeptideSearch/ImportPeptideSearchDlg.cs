@@ -745,17 +745,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
-                    var ddaSearchDataSources = ImportPeptideSearch.SearchEngine.SpectrumFileNames; // DdaConverter may change the input filenames (and thus output filenames of the search)
-                    ImportPeptideSearch.SearchFilenames = new string[ddaSearchDataSources.Length];
-                    for(int i=0; i < ddaSearchDataSources.Length; ++i)
-                    {
-                        var ddaSource = ddaSearchDataSources[i];
-                        var outFilePath = ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(ddaSource);
-                        ImportPeptideSearch.SearchFilenames[i] = outFilePath;
-                    }
-                    BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
-                    BuildPepSearchLibControl.Grid.ScoreTypes = ImportPeptideSearch.SearchFilenames.Select(f => BiblioSpecScoreType.GenericQValue).ToArray();
-                    BuildPepSearchLibControl.Grid.ScoreThresholds = ImportPeptideSearch.SearchFilenames.Select(f => (double?)(1 - BuildPepSearchLibControl.CutOffScore)).ToArray();
+                    BuildPepSearchLibControl.PerformDDASearch = false;
+                    var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
+                    BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
+                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), BiblioSpecScoreType.GenericQValue, qValue));
+                    BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
                         return;

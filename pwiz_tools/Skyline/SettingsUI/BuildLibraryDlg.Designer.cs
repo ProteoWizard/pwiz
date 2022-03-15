@@ -252,12 +252,8 @@
             this.gridInputFiles.AllowUserToAddRows = false;
             resources.ApplyResources(this.gridInputFiles, "gridInputFiles");
             this.gridInputFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridInputFiles.Files = new string[0];
-            this.gridInputFiles.FilesUris = new pwiz.Skyline.Model.Results.MsDataFileUri[0];
             this.gridInputFiles.IsFileOnly = false;
             this.gridInputFiles.Name = "gridInputFiles";
-            this.gridInputFiles.ScoreThresholds = new System.Nullable<double>[0];
-            this.gridInputFiles.ScoreTypes = new pwiz.BiblioSpec.BiblioSpecScoreType[0];
             // 
             // btnAddPaths
             // 

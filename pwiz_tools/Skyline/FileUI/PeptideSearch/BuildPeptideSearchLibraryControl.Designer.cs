@@ -165,12 +165,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.gridSearchFiles.AllowUserToAddRows = false;
             resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
             this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.Files = new string[0];
-            this.gridSearchFiles.FilesUris = new pwiz.Skyline.Model.Results.MsDataFileUri[0];
             this.gridSearchFiles.IsFileOnly = false;
             this.gridSearchFiles.Name = "gridSearchFiles";
-            this.gridSearchFiles.ScoreThresholds = new System.Nullable<double>[0];
-            this.gridSearchFiles.ScoreTypes = new pwiz.BiblioSpec.BiblioSpecScoreType[0];
             this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
             // 
             // label2

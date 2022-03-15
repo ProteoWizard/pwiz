@@ -69,8 +69,6 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
         };
-    
-        private string[] _inputFileNames = Array.Empty<string>();
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -123,7 +121,6 @@ namespace pwiz.Skyline.SettingsUI
             Grid = gridInputFiles;
             Grid.FilesChanged += (sender, e) =>
             {
-                _inputFileNames = _inputFileNames.Intersect(Grid.Files).ToArray();
                 btnNext.Enabled = panelProperties.Visible || Grid.IsReady;
             };
         }
@@ -138,21 +135,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public ILibraryBuilder Builder { get; private set; }
 
-        public string[] InputFileNames
+        public IEnumerable<string> InputFileNames
         {
-            get { return _inputFileNames; }
-
-            set
-            {
-                // Set new value
-                _inputFileNames = value;
-
-                // Always show sorted list of files
-                Array.Sort(_inputFileNames);
-
-                // Populate the input files list
-                Grid.Files = _inputFileNames;
-            }
+            get => Grid.FilePaths;
+            set => Grid.FilePaths = value;
         }
 
         public string AddLibraryFile { get; private set; }
@@ -271,7 +257,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (!Grid.Validate(this, null, true, out var thresholdsByFile))
                         return false;
 
-                    Builder = new BiblioSpecLiteBuilder(name, outputPath, Grid.Files, targetPeptidesChosen)
+                    Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                     {
                         Action = libraryBuildAction,
                         IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,

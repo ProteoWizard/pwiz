@@ -125,55 +125,6 @@ namespace pwiz.BiblioSpec
             }
         }
 
-        public string DisplayName
-        {
-            get
-            {
-                switch (NameInvariant)
-                {
-                    case PERCOLATOR_QVALUE:
-                        return Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value;
-                    case PEPTIDE_PROPHET_SOMETHING:
-                        return Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
-                    case SPECTRUM_MILL:
-                        return Resources.BiblioSpecScoreType_DisplayName_Spectrum_Mill;
-                    case IDPICKER_FDR:
-                        return Resources.BiblioSpecScoreType_DisplayName_IDPicker_FDR;
-                    case MASCOT_IONS_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_Mascot_expectation;
-                    case TANDEM_EXPECTATION_VALUE:
-                        return Resources.BiblioSpecScoreType_DisplayName_X__Tandem_expectation;
-                    case PROTEIN_PILOT_CONFIDENCE:
-                        return Resources.BiblioSpecScoreType_DisplayName_ProteinPilot_confidence;
-                    case SCAFFOLD_SOMETHING:
-                        return Resources.BiblioSpecScoreType_DisplayName_Scaffold_confidence;
-                    case WATERS_MSE_PEPTIDE_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score;
-                    case OMSSA_EXPECTATION_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_OMSSA_expectation;
-                    case PROTEIN_PROSPECTOR_EXPECTATION_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_ProteinProspector_expectation;
-                    case MAXQUANT_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_MaxQuant_PEP;
-                    case MORPHEUS_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_Morpheus_q_value;
-                    case MSGF_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_MSGF__q_value;
-                    case PEAKS_CONFIDENCE_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_PEAKS_confidence;
-                    case BYONIC_SCORE:
-                        return Resources.BiblioSpecScoreType_DisplayName_Byonic_PEP;
-                    case PEPTIDE_SHAKER_CONFIDENCE:
-                        return Resources.BiblioSpecScoreType_DisplayName_PeptideShaker_confidence;
-                    case SEQUEST_XCORR:
-                    case GENERIC_QVALUE:
-                        return Resources.BiblioSpecScoreType_DisplayName_q_value;
-                    default:
-                        return NameInvariant;
-                }
-            }
-        }
-
         public bool CanSet => !ValidRange.Min.Equals(ValidRange.Max);
 
         public double DefaultValue
@@ -243,6 +194,52 @@ namespace pwiz.BiblioSpec
                     default:
                         return new RangeValues(null, null);
                 }
+            }
+        }
+
+        public override string ToString()
+        {
+            switch (NameInvariant)
+            {
+                case PERCOLATOR_QVALUE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value;
+                case PEPTIDE_PROPHET_SOMETHING:
+                    return Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+                case SPECTRUM_MILL:
+                    return Resources.BiblioSpecScoreType_DisplayName_Spectrum_Mill;
+                case IDPICKER_FDR:
+                    return Resources.BiblioSpecScoreType_DisplayName_IDPicker_FDR;
+                case MASCOT_IONS_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Mascot_expectation;
+                case TANDEM_EXPECTATION_VALUE:
+                    return Resources.BiblioSpecScoreType_DisplayName_X__Tandem_expectation;
+                case PROTEIN_PILOT_CONFIDENCE:
+                    return Resources.BiblioSpecScoreType_DisplayName_ProteinPilot_confidence;
+                case SCAFFOLD_SOMETHING:
+                    return Resources.BiblioSpecScoreType_DisplayName_Scaffold_confidence;
+                case WATERS_MSE_PEPTIDE_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score;
+                case OMSSA_EXPECTATION_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_OMSSA_expectation;
+                case PROTEIN_PROSPECTOR_EXPECTATION_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_ProteinProspector_expectation;
+                case MAXQUANT_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_MaxQuant_PEP;
+                case MORPHEUS_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Morpheus_q_value;
+                case MSGF_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_MSGF__q_value;
+                case PEAKS_CONFIDENCE_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_PEAKS_confidence;
+                case BYONIC_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Byonic_PEP;
+                case PEPTIDE_SHAKER_CONFIDENCE:
+                    return Resources.BiblioSpecScoreType_DisplayName_PeptideShaker_confidence;
+                case SEQUEST_XCORR:
+                case GENERIC_QVALUE:
+                    return Resources.BiblioSpecScoreType_DisplayName_q_value;
+                default:
+                    return NameInvariant;
             }
         }
 
