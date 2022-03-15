@@ -594,7 +594,7 @@ namespace SkylineTester
 
                 if (Devenv == null)
                 {
-                    MessageBox.Show("Visual Studio 2017 is required to build Skyline.");
+                    MessageBox.Show("Visual Studio " + MINIMUM_VISUAL_STUDIO + " (or newer) is required to build Skyline.");
                     return false;
                 }
 
@@ -614,20 +614,31 @@ namespace SkylineTester
             Devenv = GetExistingVsIdeFilePath("devenv.exe");
         }
 
+        public const int MINIMUM_VISUAL_STUDIO = 2017;
         public static string GetExistingVsIdeFilePath(string relativePath)
         {
-            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            var programFiles = new[]
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            };
             string[] pathTrials = 
             {
-                @"Microsoft Visual Studio\2017\Enterprise\Common7\IDE",  // Enterprise edition of VS 2017
-                @"Microsoft Visual Studio\2017\Community\Common7\IDE",  // Community edition of VS 2017
-                @"Microsoft Visual Studio 12.0\Common7\IDE" // Prior installation of VS 2013
+                @"Microsoft Visual Studio\{0}\Enterprise\Common7\IDE",  
+                @"Microsoft Visual Studio\{0}\Professional\Common7\IDE",
+                @"Microsoft Visual Studio\{0}\Community\Common7\IDE",   
             };
-            foreach (var pathTrial in pathTrials)
+            for (var version = 2040; version >= MINIMUM_VISUAL_STUDIO; version--) // 2040 is completely arbitrary
             {
-                string path = Path.Combine(Path.Combine(programFiles, pathTrial), relativePath);
-                if (File.Exists(path))
-                    return path;
+                foreach (var pathTrial in pathTrials)
+                {
+                    foreach (var programFilesDir in programFiles)
+                    {
+                        var path = Path.Combine(Path.Combine(programFilesDir, string.Format(pathTrial, version)), relativePath);
+                        if (File.Exists(path))
+                            return path;
+                    }
+                }
             }
 
             return null;

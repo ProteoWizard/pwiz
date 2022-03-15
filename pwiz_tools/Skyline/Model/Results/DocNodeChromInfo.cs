@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -1380,23 +1381,43 @@ namespace pwiz.Skyline.Model.Results
         private readonly object _oneOrManyItems;
         public ChromInfoList(IList<TItem> elements)
         {
-            switch (elements?.Count)
-            {
-                case null:
-                case 0:
-                    _oneOrManyItems = null;
-                    break;
-                case 1:
-                    _oneOrManyItems = elements[0];
-                    break;
-                default:
-                    _oneOrManyItems = ImmutableList.ValueOf(elements);
-                    break;
-            }
+            _oneOrManyItems = MakeOneOrManyItems(elements);
         }
 
         public ChromInfoList(IEnumerable<TItem> elements) : this(ImmutableList.ValueOf(elements))
         {
+        }
+        
+        /// <summary>
+        /// Make the value which is to be stored in the <see cref="_oneOrManyItems"/> field.
+        /// After removing all nulls from the passed in list, if the resulting collection is empty,
+        /// then _oneOrManyItems is set to null. If the collection contains only one element, then
+        /// _oneOrManyItems is set to that element. Otherwise, _oneOrManyItems is an ImmutableList containing
+        /// the items.
+        /// </summary>
+        private static object MakeOneOrManyItems(IList<TItem> chromInfos)
+        {
+            if (chromInfos is ChromInfoList<TItem> chromInfoList)
+            {
+                return chromInfoList._oneOrManyItems;
+            }
+
+            switch (chromInfos?.Count)
+            {
+                case null:
+                case 0:
+                    return null;
+                case 1:
+                    return chromInfos[0];
+            }
+
+            var list = ImmutableList.ValueOf(chromInfos);
+            if (list.Contains(default(TItem)))
+            {
+                return MakeOneOrManyItems(ImmutableList.ValueOf(list.Where(item => null != item)));
+            }
+
+            return list;
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -1406,8 +1427,6 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var chromInfo in this)
             {
-                if (Equals(chromInfo, default(TItem)))
-                    continue;
                 float? val = getVal(chromInfo);
                 if (!val.HasValue)
                     continue;
@@ -1452,6 +1471,7 @@ namespace pwiz.Skyline.Model.Results
             return AsList().GetEnumerator();
         }
 
+        [NotNull]
         public TItem this[int index]
         {
             get
@@ -1508,7 +1528,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         bool ICollection<TItem>.IsReadOnly { get { return true; } }
-
 
         void ICollection<TItem>.Add(TItem item)
         {
