@@ -11719,4 +11719,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
 	  <value>Are you sure you want to continue?</value>
   </data>
+  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
+	  <value>Skyline 21.2</value>
+  </data>
 </root>
