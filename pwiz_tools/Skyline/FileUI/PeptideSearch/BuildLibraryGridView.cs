@@ -395,14 +395,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return Rows.Cast<DataGridViewRow>().FirstOrDefault(row => Equals(file, row.DataBoundItem));
         }
 
-        public void SetScoreThreshold(BiblioSpecScoreType scoreType, double? threshold)
+        #region Functional test support
+
+        public void SetScoreThreshold(double threshold)
         {
-            foreach (var file in Files.Where(f => f.ScoreType != null && (scoreType == null || scoreType.Equals(f.ScoreType))))
+            SetScoreThreshold(scoreType => threshold);
+        }
+
+        public void SetScoreThreshold(Func<BiblioSpecScoreType, double?> thresholdFunc)
+        {
+            foreach (var file in Files.Where(f => f.ScoreType != null && f.ScoreType.CanSet))
             {
-                file.ScoreThreshold = threshold ?? file.ScoreType.DefaultValue;
-                InvalidateCell(FindRow(file).Cells[_colThreshold.Index]);
+                var threshold = thresholdFunc.Invoke(file.ScoreType);
+                if (threshold != null)
+                {
+                    file.ScoreThreshold = threshold;
+                    InvalidateCell(FindRow(file).Cells[_colThreshold.Index]);
+                }
             }
         }
+        #endregion
 
         private void OnUserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
         {

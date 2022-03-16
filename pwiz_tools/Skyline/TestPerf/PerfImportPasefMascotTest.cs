@@ -125,7 +125,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(null, 0.05);
+                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.05);
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
