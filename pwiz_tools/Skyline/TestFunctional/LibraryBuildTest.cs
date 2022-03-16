@@ -719,7 +719,6 @@ namespace pwiz.SkylineTestFunctional
                 else
                     buildLibraryDlg.AddDirectory(inputDir);
             });
-            if (_libraryName.EndsWith("cpas2")) PauseTest();
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
             if (inputPaths != null)
