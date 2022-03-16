@@ -11671,4 +11671,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
 	  <value>Working...</value>
   </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
+	  <value>Failed to find a valid SCIEX OS installation.</value>
+  </data>
 </root>

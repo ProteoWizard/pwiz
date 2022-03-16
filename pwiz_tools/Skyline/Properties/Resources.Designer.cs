@@ -26623,6 +26623,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find a valid SCIEX OS installation..
+        /// </summary>
+        public static string SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_ {
+            get {
+                return ResourceManager.GetString("SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting for SCIEX OS to start.
         /// </summary>
         public static string SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start {

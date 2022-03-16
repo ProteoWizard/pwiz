@@ -2823,7 +2823,7 @@ namespace pwiz.Skyline.Model
         {
             var sciexOsDir = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
             if (sciexOsDir == null)
-                throw new IOException(Resources.AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation);
+                throw new IOException(Resources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
 
             // TODO starting SciexOs this way gives error for some reason??
             var sciexOsProc = SciexOsProcess ?? Process.Start(Path.Combine(sciexOsDir, SCIEX_OS_EXE));
