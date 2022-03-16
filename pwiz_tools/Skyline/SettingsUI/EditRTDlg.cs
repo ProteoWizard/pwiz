@@ -20,9 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -558,7 +558,7 @@ namespace pwiz.Skyline.SettingsUI
         private RetentionScoreCalculatorSpec RecalcRegression(IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> peptidesTimes)
         {
             var summary = RetentionTimeRegression.CalcBestRegressionLongOperationRunner(XmlNamedElement.NAME_INTERNAL, calculators, peptidesTimes,
-                null, false, RegressionMethodRT.linear, CustomCancellationToken.NONE);
+                null, false, RegressionMethodRT.linear, CancellationToken.None);
             var regression = summary.Best.Regression;
             var statistics = summary.Best.Statistics;
             var calculatorSpec = summary.Best.Calculator;
