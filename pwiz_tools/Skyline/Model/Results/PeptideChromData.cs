@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Results
         public PeptideChromDataSets(PeptideDocNode nodePep,
                                     SrmSettings settings,
                                     ChromFileInfo fileInfo,
-                                    IList<DetailedPeakFeatureCalculator> detailedPeakFeatureCalculators,
+                                    DetailedFeatureCalculators detailedPeakFeatureCalculators,
                                     bool isProcessedScans)
         {
             NodePep = nodePep;
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
+        private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
         public IEnumerable<int> ProviderIds { get { return _dataSets.SelectMany(d => d.ProviderIds); } }
 
@@ -228,7 +228,6 @@ namespace pwiz.Skyline.Model.Results
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.GeneratePeakData(intersectedTimeIntervals);
 
-            var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
             for (int i = 0; i < _listListPeakSets.Count; i++)
             {
                 var listPeakSets = _listListPeakSets[i];
@@ -240,7 +239,7 @@ namespace pwiz.Skyline.Model.Results
                     var context = new PeakScoringContext(_settings);
                     context.AddInfo(_predictedRetentionTime);
                     context.AddInfo(maxPossibleShift);
-                    peakSet.ScorePeptideSets(context, detailedCalcs);
+                    peakSet.ScorePeptideSets(context, DetailedPeakFeatureCalculators);
                 }
 
                 _listListPeakSets[i] = SortAndLimitPeaks(listPeakSets);
@@ -997,15 +996,13 @@ namespace pwiz.Skyline.Model.Results
         }
         internal IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos(IEnumerable<ChromDataSet> dataSets)
         {
-            var scoreTypeIndices = Enumerable.Range(0, DetailedPeakFeatureCalculators.Count)
-                .ToDictionary(i => DetailedPeakFeatureCalculators[i].GetType(), i => i);
             var chromCachedFile = new ChromCachedFile(FileInfo.FilePath, default(ChromCachedFile.FlagValues),
                 FileInfo.FileWriteTime ?? DateTime.FromBinary(0), FileInfo.FileWriteTime, (float) FileInfo.MaxRetentionTime, (float) FileInfo.MaxIntensity, FileInfo.IonMobilityUnits, 
                 FileInfo.SampleId, FileInfo.InstrumentSerialNumber, FileInfo.InstrumentInfoList);
             
             foreach (var chromDataSet in dataSets)
             {
-                yield return chromDataSet.ToChromatogramGroupInfo(scoreTypeIndices, chromCachedFile);
+                yield return chromDataSet.ToChromatogramGroupInfo(DetailedPeakFeatureCalculators.FeatureNames, chromCachedFile);
             }
         }
     }
@@ -1177,7 +1174,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public void ScorePeptideSets(PeakScoringContext context, IList<IPeakFeatureCalculator> detailFeatureCalculators)
+        public void ScorePeptideSets(PeakScoringContext context, DetailedFeatureCalculators detailFeatureCalculators)
         {
             var modelCalcs = ScoringModel.PeakFeatureCalculators;
             var detailFeatures = new float [detailFeatureCalculators.Count];

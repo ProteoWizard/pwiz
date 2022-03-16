@@ -39,10 +39,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
+        private readonly CachedValue<PeakGroupScore> _peakGroupScore;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
+            _peakGroupScore = CachedValue.Create(DataSchema, GetPeakGroupScore);
         }
 
         [HideWhen(AncestorOfType = typeof(Precursor))]
@@ -289,6 +291,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return DataSchema.NormalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
                 Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
+        }
+
+        public PeakGroupScore PeakGroupScore
+        {
+            get { return _peakGroupScore.Value; }
+        }
+
+        private PeakGroupScore GetPeakGroupScore()
+        {
+            var onDemandFeatureCalculator = OnDemandFeatureCalculator.GetFeatureCalculator(SrmDocument,
+                Precursor.Peptide.IdentityPath, GetResultFile().Replicate.ReplicateIndex,
+                GetResultFile().ChromFileInfoId);
+            var transitionGroup = (TransitionGroup) Precursor.IdentityPath.Child;
+            foreach (var tuple in onDemandFeatureCalculator.GetChosenPeakGroupDataForAllComparableGroups())
+            {
+                if (tuple.Item1.Any(tg => ReferenceEquals(tg.TransitionGroup, transitionGroup)))
+                {
+                    return tuple.Item2.Score;
+                }
+            }
+
+            return null;
         }
     }
 }

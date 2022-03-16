@@ -2230,7 +2230,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramGroupInfo
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
-        protected readonly IDictionary<Type, int> _scoreTypeIndices;
+        protected readonly FeatureNameList _scoreTypeIndices;
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
@@ -2241,7 +2241,7 @@ namespace pwiz.Skyline.Model.Results
         private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
-                                     IDictionary<Type, int> scoreTypeIndices,
+                                     FeatureNameList scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
@@ -2258,13 +2258,13 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
             TimeIntensitiesGroup timeIntensitiesGroup) 
-            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, new Dictionary<Type, int>(), Array.Empty<float>())
+            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNameList.EMPTY, Array.Empty<float>())
         {
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
-            TimeIntensitiesGroup timeIntensitiesGroup, IDictionary<Type, int> scoreTypeIndices, float[] scores)
+            TimeIntensitiesGroup timeIntensitiesGroup, FeatureNameList scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();
@@ -2313,7 +2313,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasScore(Type scoreType)
         {
-            return _scoreTypeIndices.ContainsKey(scoreType);
+            return _scoreTypeIndices.IndexOf(scoreType) >= 0;
         }
 
         protected IList<float> ReadScores()
@@ -2338,9 +2338,11 @@ namespace pwiz.Skyline.Model.Results
 
         public float GetScore(Type scoreType, int peakIndex)
         {
-            int scoreIndex;
-            if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
+            int scoreIndex = _scoreTypeIndices.IndexOf(scoreType);
+            if (scoreIndex < 0)
+            {
                 return float.NaN;
+            }
             var scores = ReadScores();
             return scores[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }

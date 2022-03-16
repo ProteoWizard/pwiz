@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Results
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)
                     {
-                        _listScoreTypes.AddRange(rawData.ScoreTypes);
+                        _listScoreTypes = rawData.ScoreTypes;
                         _scoreTypesCount = _listScoreTypes.Count;
                     }
                     else if (!ArrayUtil.EqualsDeep(_listScoreTypes, rawData.ScoreTypes))

@@ -6,50 +6,61 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class FeatureCalculators : IReadOnlyList<IPeakFeatureCalculator>
+    public abstract class AbstractFeatureCalculatorList<T> : IReadOnlyList<T> where T : IPeakFeatureCalculator
     {
-        public static FeatureCalculators ALL = new FeatureCalculators(PeakFeatureCalculator.Calculators);
-        private ImmutableList<IPeakFeatureCalculator> _all;
-        private Dictionary<Type, int> _allIndexes;
-        public FeatureCalculators(IEnumerable<IPeakFeatureCalculator> calculators)
+        private ImmutableList<T> _list;
+        protected AbstractFeatureCalculatorList(IEnumerable<T> calculators)
         {
-            _all = ImmutableList.ValueOf(calculators);
-            _allIndexes = CollectionUtil.SafeToDictionary(Enumerable.Range(0, _all.Count)
-                .Select(i => new KeyValuePair<Type, int>(_all[i].GetType(), i)));
-            Detailed = ImmutableList.ValueOf(_all.OfType<DetailedPeakFeatureCalculator>());
-            Summary = ImmutableList.ValueOf(_all.OfType<SummaryPeakFeatureCalculator>());
+            _list = ImmutableList.ValueOf(calculators);
+            FeatureNames = FeatureNameList.FromCalculators(_list.Cast<IPeakFeatureCalculator>());
         }
 
-        public int Count
-        {
-            get { return _all.Count; }
-        }
-
-        public int? IndexOf(Type type)
-        {
-            if (_allIndexes.TryGetValue(type, out int index))
-            {
-                return index;
-            }
-
-            return null;
-        }
-
+        public FeatureNameList FeatureNames { get; }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
-        public IEnumerator<IPeakFeatureCalculator> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
         {
-            return _all.GetEnumerator();
+            return _list.GetEnumerator();
         }
 
-        public IPeakFeatureCalculator this[int index] => _all[index];
+        public int Count
+        {
+            get { return _list.Count; }
+        }
 
-        public ImmutableList<DetailedPeakFeatureCalculator> Detailed { get; }
-        public ImmutableList<SummaryPeakFeatureCalculator> Summary { get; }
+        public T this[int index] => _list[index];
+
+        public int IndexOf(IPeakFeatureCalculator calculator)
+        {
+            return FeatureNames.IndexOf(calculator);
+        }
+
+        public int IndexOf(Type type)
+        {
+            return FeatureNames.IndexOf(type);
+        }
+    }
+
+    public class FeatureCalculators : AbstractFeatureCalculatorList<IPeakFeatureCalculator>
+    {
+        public static readonly FeatureCalculators ALL = new FeatureCalculators(PeakFeatureCalculator.Calculators);
+        public FeatureCalculators(IEnumerable<IPeakFeatureCalculator> calculators) : base(calculators)
+        {
+            Detailed = new DetailedFeatureCalculators(this.OfType<DetailedPeakFeatureCalculator>());
+        }
+
+        public DetailedFeatureCalculators Detailed { get; }
+    }
+
+    public class DetailedFeatureCalculators : AbstractFeatureCalculatorList<DetailedPeakFeatureCalculator>
+    {
+        public DetailedFeatureCalculators(IEnumerable<DetailedPeakFeatureCalculator> calculators) : base(calculators)
+        {
+        }
     }
 
     public class FeatureValues
@@ -69,9 +80,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public float? GetValue(Type type)
         {
             var index = Calculators.IndexOf(type);
-            if (index.HasValue)
+            if (index >= 0)
             {
-                var value = Values[index.Value];
+                var value = Values[index];
                 if (float.IsNaN(value))
                 {
                     return null;

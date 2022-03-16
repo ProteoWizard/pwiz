@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -116,15 +117,13 @@ namespace pwiz.Skyline.Model.Results
         private RawData _rawData;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly LibKeyMap<int[]> _chromEntryIndex;
-        private readonly Dictionary<Type, int> _scoreTypeIndices;
+        private readonly FeatureNameList _scoreTypeIndices;
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
             CachePath = cachePath;
             _rawData = raw;
-            _scoreTypeIndices = new Dictionary<Type, int>();
-            for (int i = 0; i < raw.ScoreTypes.Count; i++)
-                _scoreTypeIndices.Add(raw.ScoreTypes[i], i);
+            _scoreTypeIndices = raw.ScoreTypes;
             ReadStream = readStream;
             _chromEntryIndex = MakeChromEntryIndex();
         }
@@ -145,9 +144,9 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// In order enumeration of score types
         /// </summary>
-        public IEnumerable<Type> ScoreTypes
+        public FeatureNameList ScoreTypes
         {
-            get { return _scoreTypeIndices.OrderBy(p => p.Value).Select(p => p.Key); }
+            get { return _scoreTypeIndices; }
         }
 
         public int ScoreTypesCount
@@ -464,12 +463,12 @@ namespace pwiz.Skyline.Model.Results
         {
             public RawData(CacheHeaderStruct header, IEnumerable<ChromCachedFile> chromCacheFiles,
                 BlockedArray<ChromGroupHeaderInfo> chromatogramEntries, BlockedArray<ChromTransition> transitions, 
-                IEnumerable<Type> scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
+                FeatureNameList scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
             {
                 ChromCacheFiles = ImmutableList.ValueOf(chromCacheFiles);
                 ChromatogramEntries = chromatogramEntries;
                 ChromTransitions = transitions;
-                ScoreTypes = ImmutableList.ValueOf(scoreTypes);
+                ScoreTypes = scoreTypes;
                 LocationScoreValues = locationScoreValues;
                 TextIdBytes = textIdBytes;
             }
@@ -496,7 +495,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromCacheFiles = ImmutableList<ChromCachedFile>.EMPTY;
                 ChromatogramEntries = BlockedArray<ChromGroupHeaderInfo>.EMPTY;
                 ChromTransitions = BlockedArray<ChromTransition>.EMPTY;
-                ScoreTypes = ImmutableList<Type>.EMPTY;
+                ScoreTypes = FeatureNameList.EMPTY;
                 TextIdBytes = Array.Empty<byte>();
             }
 
@@ -522,13 +521,13 @@ namespace pwiz.Skyline.Model.Results
             }
             public long LocationPeaks { get; private set; }
             public int NumPeaks { get; private set; }
-            public ImmutableList<Type> ScoreTypes { get; private set; }
+            public FeatureNameList ScoreTypes { get; private set; }
 
-            public RawData ChangeScoreTypes(IEnumerable<Type> types, long locationScoreValues)
+            public RawData ChangeScoreTypes(FeatureNameList types, long locationScoreValues)
             {
                 return ChangeProp(ImClone(this), im =>
                 {
-                    im.ScoreTypes = ImmutableList.ValueOf(types);
+                    im.ScoreTypes = types;
                     im.LocationScoreValues = locationScoreValues;
                 });
             }
@@ -845,7 +844,7 @@ namespace pwiz.Skyline.Model.Results
             if (formatVersion > CacheFormatVersion.Four && cacheHeader.numScoreTypes > 0)
             {
                 // Read scores
-                var scoreTypes = new Type[cacheHeader.numScoreTypes];
+                var scoreTypes = new string[cacheHeader.numScoreTypes];
                 stream.Seek(cacheHeader.locationScores, SeekOrigin.Begin);
                 byte[] scoreTypeLengths = new byte[cacheHeader.numScoreTypes * 4];
                 byte[] typeNameBuffer = new byte[1024];
@@ -854,10 +853,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     int lenTypeName = GetInt32(scoreTypeLengths, i);
                     ReadComplete(stream, typeNameBuffer, lenTypeName);
-                    scoreTypes[i] = Type.GetType(Encoding.UTF8.GetString(typeNameBuffer, 0, lenTypeName));
+                    scoreTypes[i] = Encoding.UTF8.GetString(typeNameBuffer, 0, lenTypeName);
                 }
 
-                raw = raw.ChangeScoreTypes(scoreTypes, stream.Position);
+                raw = raw.ChangeScoreTypes(new FeatureNameList(scoreTypes), stream.Position);
                 Assume.AreEqual(raw.LocationScoreValues, stream.Position);
             }
             else
@@ -905,7 +904,7 @@ namespace pwiz.Skyline.Model.Results
                                         ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<byte> textIdBytes,
-                                        ICollection<Type> scoreTypes,
+                                        FeatureNameList scoreTypes,
                                         int scoreCount,
                                         int peakCount,
                                         out long scoreValueLocation)
@@ -1253,7 +1252,6 @@ namespace pwiz.Skyline.Model.Results
                 ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             var listKeepTextIdBytes = new List<byte>();
             var dictKeepTextIdIndices = new Dictionary<int, int>();
-            var scoreTypes = ScoreTypes.ToArray();
 
             // TODO: Make these first 3 temporary files that delete on close
             using (var fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
@@ -1340,7 +1338,7 @@ namespace pwiz.Skyline.Model.Results
                         start = lastEntry.StartScoreIndex;
                         if (start != -1)
                         {
-                            end = start + lastEntry.NumPeaks * scoreTypes.Length;
+                            end = start + lastEntry.NumPeaks * ScoreTypes.Count;
                             scoreCount += end - start;
                             if (scoreCount > 0)
                             {
@@ -1393,7 +1391,7 @@ namespace pwiz.Skyline.Model.Results
                     listKeepEntries,
                     listKeepTransitions,
                     listKeepTextIdBytes,
-                    scoreTypes,
+                    ScoreTypes,
                     scoreCount,
                     peakCount, out long scoreValueLocation);
 
@@ -1403,7 +1401,7 @@ namespace pwiz.Skyline.Model.Results
                 fsScores.Stream.Seek(0, SeekOrigin.Begin);
                 var rawData =
                     new RawData(newCacheHeader, listKeepCachedFiles, listKeepEntries.ToBlockedArray(),
-                        listKeepTransitions.ToBlockedArray(), scoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
+                        listKeepTransitions.ToBlockedArray(), ScoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
                 return new ChromatogramCache(cachePathOpt, rawData,
                     // Create a new read stream, for the newly created file
                     streamManager.CreatePooledStream(cachePathOpt, false));

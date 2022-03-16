@@ -190,7 +190,19 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<Type> CachedScoreTypes
         {
-            get { return Caches.SelectMany(cache => cache.ScoreTypes).Distinct(); }
+            get
+            {
+                foreach (string typeName in Caches.SelectMany(cache => cache.ScoreTypes).Distinct())
+                {
+                    var type = Type.GetType(typeName);
+                    if (type == null)
+                    {
+                        Console.Out.WriteLine("Unable to get type {0}", typeName);
+                    }
+
+                    yield return type;
+                }
+            }
         }
 
         private IEnumerable<ChromatogramCache> Caches

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
         private BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
             new BlockedArrayList<ChromGroupHeaderEntry>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
         protected List<byte> _listTextIdBytes = new List<byte>();
-        protected readonly List<Type> _listScoreTypes = new List<Type>();
+        protected FeatureNameList _listScoreTypes = FeatureNameList.EMPTY;
         protected readonly FileSaver _fs;
         protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;

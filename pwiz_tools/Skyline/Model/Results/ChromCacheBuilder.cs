@@ -82,8 +82,8 @@ namespace pwiz.Skyline.Model.Results
                 calcEnum = PeakFeatureCalculator.Calculators
                     .Where(c => c is DetailedPeakFeatureCalculator && (includeReference || !c.IsReferenceScore));
             }
-            DetailedPeakFeatureCalculators = calcEnum.Cast<DetailedPeakFeatureCalculator>().ToArray();
-            _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
+            DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
+            _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
             var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results
         private MsDataFileUri MSDataFilePath { get; set; }
         private RetentionTimeAlignmentIndices FileAlignmentIndices { get; set; }
 
-        private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
+        private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
         private bool IsTimeNormalArea
         {

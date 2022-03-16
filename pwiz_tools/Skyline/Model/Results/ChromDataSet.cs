@@ -26,6 +26,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1477,7 +1478,7 @@ namespace pwiz.Skyline.Model.Results
                 IonMobilityUnits);
         }
 
-        public ChromatogramGroupInfo ToChromatogramGroupInfo(IDictionary<Type, int> scoreTypeIndices, ChromCachedFile chromCachedFile)
+        public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNameList featureNameList, ChromCachedFile chromCachedFile)
         {
             var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
             var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
@@ -1485,7 +1486,7 @@ namespace pwiz.Skyline.Model.Results
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
             var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
             var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
-                chromPeaks, timeIntensitiesGroup, scoreTypeIndices, scores);
+                chromPeaks, timeIntensitiesGroup, featureNameList, scores);
             return chromatogramGroupInfo;
         }
     }
