@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -59,8 +60,9 @@ namespace pwiz.SkylineTest
             Assert.AreNotEqual(0, peakWithBackground.BackgroundArea);
 
             // Set the TimeIntervals so the peakIntegrator will use "IntegratePeakWithoutBackground" 
-            peakIntegrator.TimeIntervals = TimeIntervals.EMPTY;
-            var peakWithoutBackground = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
+            var peakIntegratorWithTimeIntervals = new PeakIntegrator(FullScanAcquisitionMethod.None,
+                TimeIntervals.EMPTY, ChromSource.unknown, null, timeIntensities, null);
+            var peakWithoutBackground = peakIntegratorWithTimeIntervals.IntegratePeak(peakStartTime, peakEndTime, flagValues);
             Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
             var expectedArea = peakWithBackground.Area + peakWithBackground.BackgroundArea;
             Assert.AreEqual(expectedArea, peakWithoutBackground.Area, .01);

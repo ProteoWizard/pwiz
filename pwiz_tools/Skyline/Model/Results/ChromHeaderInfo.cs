@@ -2835,13 +2835,10 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(FullScanAcquisitionMethod acquisitionMethod, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(TimeIntensities)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = TimeIntervals
-            };
+            var peakIntegrator = new PeakIntegrator(acquisitionMethod, TimeIntervals, Source, RawTimeIntensities,
+                TimeIntensities, null);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
 

@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
+                    peak.CalcChromPeak(peakMax, flags, FullScanAcquisitionMethod, intersectedTimeIntervals);
 
                     if (intersectedTimeIntervals != null && peakMax != null)
                     {
