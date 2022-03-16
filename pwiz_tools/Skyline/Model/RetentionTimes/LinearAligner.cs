@@ -18,7 +18,7 @@
  */
 
 using System;
-using pwiz.Common.DataAnalysis;
+using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
         }
 
-        public override void Train(double[] xArr, double[] yArr, CustomCancellationToken token)
+        public override void Train(double[] xArr, double[] yArr, CancellationToken token)
         {
             var statX = new Statistics(xArr);
             var statY = new Statistics(yArr);
