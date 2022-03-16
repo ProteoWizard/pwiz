@@ -736,8 +736,7 @@ namespace pwiz.Skyline.Model.Irt
                     new MeasuredRetentionTime[0],
                     peptidesTimes,null,
                     calculator,
-                    RegressionMethodRT.linear,
-                    () => false);
+                    RegressionMethodRT.linear);
 
                 var startingCount = peptidesTimes.Length;
                 var regressionCount = regression?.PeptideTimes.Count ?? 0;
