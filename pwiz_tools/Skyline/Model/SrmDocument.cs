@@ -1476,16 +1476,26 @@ namespace pwiz.Skyline.Model
             // Is this a small molecule transition list, or trying to be?
             if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
             {
+                IList<string> lines = null;
                 try
                 {
-                    var lines = inputs.ReadLines(progressMonitor);
+                    lines = inputs.ReadLines(progressMonitor);
                     var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
+                    foreach (var error in reader.ErrorList)
+                    {
+                        var lineIndex  = error.Line + (hasHeaders ? 1 : 0); // Account for parser not including header in its line count
+                        var line =
+                            ((lineIndex >= 0 && lineIndex < lines.Count) ? lines[lineIndex] : null)?.Replace(
+                                TextUtil.SEPARATOR_TSV_STR, @" ");
+                        errorList.Add(new TransitionImportErrorInfo(error.Message, error.Column, lineIndex + 1, line)); // Show line number as 1 based
+                    }
                 }
                 catch (LineColNumberedIoException x)
                 {
-                    // TODO(brianp): Better to return a complete list of all rows with errors and allow skipping
-                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber, null));  // CONSIDER: worth the effort to pull row and column info from error message?
+                    var line = (lines != null && x.LineNumber >=0 && x.LineNumber < lines.Count ? lines[(int)x.LineNumber] : null)?.
+                        Replace(TextUtil.SEPARATOR_TSV_STR, @" ");
+                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber + 1, line));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
             }
             else

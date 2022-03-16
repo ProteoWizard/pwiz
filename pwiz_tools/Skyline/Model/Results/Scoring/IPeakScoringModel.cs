@@ -92,6 +92,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Parameter structure for the model, including weights and bias
         /// </summary>
         LinearModelParams Parameters { get;  }
+
+        /// <summary>
+        /// True if this type of model ignores unknown (NaN or infinity) scores and replaces them with zero.
+        /// </summary>
+        bool ReplaceUnknownFeatureScores { get; }
     }
 
 
@@ -146,15 +151,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
+
+        public abstract bool ReplaceUnknownFeatureScores { get; }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
-        public virtual double Score(IList<float> features)
+        public double Score(IList<float> features)
         {
+            if (ReplaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
             return Parameters.Score(features);
         }
-        public virtual string ScoreText(IList<float> features)
+        public string ScoreText(IList<float> features)
         {
+            if (ReplaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
             return Parameters.ScoreText(features);
         }
         [Track]
@@ -266,15 +281,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             return score;
         }
-
-        public static double Score(IList<float> features, LinearModelParams parameters)
-        {
-            return parameters.Score(features);
-        }
-
         public double Score(IList<float> features)
         {
             return Score(features, Weights, Bias);
+        }
+        public static IList<float> ReplaceUnknownFeatureScores(IList<float> features)
+        {
+            if (features.Any(IsUnknownFeatureScore))
+            {
+                return features.Select(feature => IsUnknownFeatureScore(feature) ? 0 : feature).ToList();
+            }
+            return features;
+        }
+
+        private static bool IsUnknownFeatureScore(float feature)
+        {
+            return float.IsNaN(feature) || float.IsInfinity(feature);
         }
 
         public static string ScoreText(IList<float> features, IList<double> weights, double bias)
@@ -620,7 +642,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     }
 
     // ReSharper disable InconsistentNaming
-    public enum PeakIdentification { FALSE, TRUE, ALIGNED }
+    public enum PeakIdentification : byte { FALSE, TRUE, ALIGNED }
     // ReSharper restore InconsistentNaming
 
     public static class PeakIdentificationFastLookup

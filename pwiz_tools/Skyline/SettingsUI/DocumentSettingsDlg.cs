@@ -22,7 +22,7 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class DocumentSettingsDlg : FormEx
     {
-        public enum TABS { annotations, lists, group_comparisons, reports, metadata_rules }
+        public enum TABS { annotations, metadata_rules, lists, group_comparisons, reports }
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;

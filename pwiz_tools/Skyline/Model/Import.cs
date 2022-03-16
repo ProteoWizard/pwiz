@@ -543,7 +543,11 @@ namespace pwiz.Skyline.Model
                 {
                     throw mzException;
                 }
-                else // If it reached an MzMatchException then it found the peptide column, so do not throw both exceptions
+                else if (lines.Count == 0) // Only line was a header, apparently
+                {
+                    throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+                }
+                else 
                 {
                     throw new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
                         -1);
@@ -3361,7 +3365,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class TransitionImportErrorInfo
+    public class TransitionImportErrorInfo : IEquatable<TransitionImportErrorInfo>
     {
         public long? LineNum { get; private set; }
         public int? Column { get; private set; }
@@ -3374,6 +3378,33 @@ namespace pwiz.Skyline.Model
             LineText = lineText;
             Column = columnIndex + 1;   // 1 based column number for reporting to a user
             LineNum = lineNum;
+        }
+
+        public bool Equals(TransitionImportErrorInfo other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return LineNum == other.LineNum && Column == other.Column && ErrorMessage == other.ErrorMessage && LineText == other.LineText;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((TransitionImportErrorInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = LineNum.GetHashCode();
+                hashCode = (hashCode * 397) ^ Column.GetHashCode();
+                hashCode = (hashCode * 397) ^ (ErrorMessage != null ? ErrorMessage.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (LineText != null ? LineText.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 

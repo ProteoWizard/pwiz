@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -216,8 +215,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
             var data = new GraphData(document, null, -1, threshold, precision, true, bestResult,
-                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, CustomCancellationToken.NONE);
-            return data.Refine(() => false).Outliers;
+                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, CancellationToken.None);
+            return data.Refine(CancellationToken.None).Outliers;
         }
 
         public RetentionTimeRegression RegressionRefined
@@ -268,7 +267,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
             return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
-                pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
+                pointsType, regressionMethod, origIndex, this, token);
             
         }
 
@@ -284,9 +283,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool RegressionRefinedNull => Data.RegressionRefinedNull;
 
-        private GraphData Refine(GraphData currentData, Func<bool> isCanceled)
+        private GraphData Refine(GraphData currentData, CancellationToken cancellationToken)
         {
-            GraphData dataNew = currentData != null ? currentData.Refine(isCanceled) : null;
+            GraphData dataNew = currentData != null ? currentData.Refine(cancellationToken) : null;
 
             // No refinement happened, if data did not change
             if (ReferenceEquals(dataNew, currentData))
@@ -588,11 +587,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (regressionSettings.Refine && !IsDataRefined(newData))
                 {
                     var data = newData;
-                    newData = Refine(newData, () => cancellationToken.IsCancellationRequested ||
-                                                    !IsValidFor(data, GraphSummary.DocumentUIContainer.Document));
+                    using (var cancellationTokenSource = new DocumentCancellationToken(cancellationToken,
+                        GraphSummary.DocumentUIContainer, doc => !IsValidFor(data, doc)))
+                    {
+                        newData = Refine(newData, cancellationTokenSource.Token);
+                    }
                 }
 
-                ThreadingHelper.CheckCanceled(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // Update the graph on the UI thread.
                 lock (_requestLock)
@@ -701,7 +703,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethodRT regressionMethod,
                 int originalIndex,
                 RTLinearRegressionGraphPane graphPane,
-                CustomCancellationToken token
+                CancellationToken token
                 )
             {
                 _document = document;
@@ -731,7 +733,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var reportingStep = document.PeptideCount / (90 / REPORTING_STEP);
                 foreach (var nodePeptide in document.Molecules)
                 {
-                    ProgressMonitor.CheckCanceled(token.Token);
+                    ProgressMonitor.CheckCanceled(token);
                     index++;
                     switch (RTGraphController.PointsType)
                     {
@@ -854,7 +856,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             out unused,
                             token);
 
-                        ThreadingHelper.CheckCanceled(token);
+                        token.ThrowIfCancellationRequested();
                         _calculator = calc;
 
                         //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
@@ -979,17 +981,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 return RetentionTimeRegression.IsAboveThreshold(_statisticsAll.R, _threshold);
             }
 
-            public GraphData Refine(Func<bool> isCanceled)
+            public GraphData Refine(CancellationToken cancellationToken)
             {
                 if (IsRefined())
                     return this;
-                var result = ImClone(this).RefineCloned(_threshold, _thresholdPrecision, isCanceled);
+                var result = ImClone(this).RefineCloned(_threshold, _thresholdPrecision, cancellationToken);
                 if (result == null)
                     return this;
                 return result;
             }
 
-            private GraphData RefineCloned(double threshold, int? precision, Func<bool> isCanceled)
+            private GraphData RefineCloned(double threshold, int? precision, CancellationToken cancellationToken)
             {
                 // Create list of deltas between predicted and measured times
                 _outlierIndexes = new HashSet<int>();
@@ -1036,7 +1038,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                          _calculator,
                                                                          _regressionMethod,
                                                                          _scoreCache,
-                                                                         new CustomCancellationToken(CancellationToken.None, isCanceled), 
+                                                                         cancellationToken, 
                                                                          ref _statisticsRefined,
                                                                          ref _outlierIndexes));
 

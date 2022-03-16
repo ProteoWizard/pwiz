@@ -1040,7 +1040,8 @@ namespace pwiz.Skyline.Util
     {
         public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer)
         {
-            inStream.TransferBytes(outStream, bytesToTransfer, new byte[0x40000]); // 256K
+            int bufferSize = (int)Math.Min(bytesToTransfer, 0x40000); // 256K;
+            inStream.TransferBytes(outStream, bytesToTransfer, new byte[bufferSize]);
         }
 
         public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer, byte[] buffer)
