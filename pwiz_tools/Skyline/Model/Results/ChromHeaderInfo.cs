@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline.Model.Results
             int pointsAcrossThePeak = 0;
             double totalArea = 0;
             double totalMassError = 0;
-            double apexTime = 0;
+            double apexTime = (startTime + endTime) / 2;
             double apexHeight = 0;
 
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
