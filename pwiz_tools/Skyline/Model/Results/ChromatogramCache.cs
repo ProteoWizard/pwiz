@@ -378,6 +378,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return true;
                 }
+                // Test support - in "AsSmallMolecules" versions of tests where we transform a proteomic document to small molecules,
+                // cached chromatogram textID may be that of the original peptide. In that case, look for "PEPTIDER" instead of "pep_PEPTIDER"
+                if (SrmDocument.IsConvertedFromProteomicTestDocNode(nodePep) &&
+                    nodePep.CustomMolecule.Name.StartsWith(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator))
+                {
+                    if (EqualTextIdBytes(nodePep.CustomMolecule.Name.Substring(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator.Length), textIdIndex, textIdLen))
+                    {
+                        return true;
+                    }
+                }
                 return false;
             }
             else

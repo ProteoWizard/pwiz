@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo != null && chromInfo.Area > 0)
+                            if (chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;
@@ -1293,13 +1293,9 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeExcludeFromCalibration(int replicateIndex, bool excluded)
         {
-            ChromInfoList<PeptideChromInfo>[] newResults = Results.ToArray();
-            var chromInfoList = newResults[replicateIndex];
-            var newChromInfos = chromInfoList.Select(
-                peptideChromInfo => null == peptideChromInfo ? null 
-                    : peptideChromInfo.ChangeExcludeFromCalibration(excluded)).ToArray();
-            newResults[replicateIndex] = new ChromInfoList<PeptideChromInfo>(newChromInfos);
-            return ChangeResults(new Results<PeptideChromInfo>(newResults));
+            var newChromInfos = new ChromInfoList<PeptideChromInfo>(Results[replicateIndex]
+                .Select(peptideChromInfo => peptideChromInfo.ChangeExcludeFromCalibration(excluded)));
+            return ChangeResults(Results.ChangeAt(replicateIndex, newChromInfos));
         }
 
         public bool HasPrecursorConcentrations
@@ -1593,7 +1589,6 @@ namespace pwiz.Skyline.Model
                 // Delay allocation in the hope that nothing has changed for faster loading
                 TransitionChromInfo[] listInfoNew = null;
                 int changeStartIndex = -1;
-                var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                 for (int iInfo = 0; iInfo < countInfo; iInfo++)
                 {
                     var info = listInfo[iInfo];

@@ -22,10 +22,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -37,8 +40,9 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class PeakBoundaryTest : AbstractUnitTest
+    public class PeakBoundaryTest : AbstractUnitTestEx
     {
+        private bool AsSmallMolecules;
         const PeakIdentification FALSE = PeakIdentification.FALSE;
         const PeakIdentification TRUE = PeakIdentification.TRUE;
         
@@ -82,7 +86,7 @@ namespace pwiz.SkylineTest
         private readonly double?[] _idAreas1 = {4060, 1927, 16954, 16314, 4188, 23038, 28701, 354,
                                                2063, 21784, 8775, 18019, 19579, 11013, 58116, 26262};
 
-        private readonly string[] _peptides = { "VLVLDTDYK", "TPEVDDEALEK", "FFVAPFPEVFGK", "YLGYLEQLLR" };
+        private string[] _peptides = { "VLVLDTDYK", "TPEVDDEALEK", "FFVAPFPEVFGK", "YLGYLEQLLR" };
         private readonly string[] _peptidesId ={ "LGGLRPESPESLTSVSR", "ALVEFESNPEETREPGSPPSVQR", "YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR",
                                                     "ESEDKPEIEDVGSDEEEEKKDGDK", "GVVDSEDLPLNISR", "DMESPTKLDVTLAK",
                                                     "VGSLDNVGHLPAGGAVK","KTGSYGALAEITASK","TGSYGALAEITASK","IVRGDQPAASGDSDDDEPPPLPR",
@@ -99,6 +103,32 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestImportPeakBoundary()
         {
+            DoTest();
+        }
+
+        /// <summary>
+        /// Tests File > Import > Peak Boundaries support for small molecules
+        /// </summary>
+        [TestMethod]
+        public void TestImportPeakBoundaryAsSmallMolecules()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
+            AsSmallMolecules = true;
+            for (var i = 0; i < _peptides.Length; i++)
+            {
+                _peptides[i] = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + _peptides[i];
+            }
+
+            DoTest();
+        }
+
+        private void DoTest()
+        {
             // Load the SRM document and relevant files            
             var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             bool isIntl = (TextUtil.CsvSeparator != TextUtil.SEPARATOR_CSV);
@@ -111,6 +141,12 @@ namespace pwiz.SkylineTest
                                                                    : "PeakBoundaryUS.csv");
             var peakBoundaryDoc = testFilesDir.GetTestPath("Chrom05.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(peakBoundaryDoc);
+            if (AsSmallMolecules)
+            {
+                // Turn this proteomic doc into a small molecules doc
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(doc, peakBoundaryDoc);
+            }
 
             var cult = LocalizationHelper.CurrentCulture;
             var cultI = CultureInfo.InvariantCulture;
@@ -138,16 +174,16 @@ namespace pwiz.SkylineTest
                     _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs, annote);
 
                 // Test that importing same file twice leads to no change to document the second time
-                var docNew = ImportFileToDoc(docResults, peakBoundaryFileTsv);
-                var docNewSame = ImportFileToDoc(docNew, peakBoundaryFileTsv);
+                var docNew = ImportFileToDoc(docResults, ref peakBoundaryFileTsv);
+                var docNewSame = ImportFileToDoc(docNew, ref peakBoundaryFileTsv);
                 Assert.AreSame(docNew, docNewSame);
                 Assert.AreNotSame(docNew, docResults);
 
                 // Test that exporting peak boundaries and then importing them leads to no change
                 string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
-                ReportSpec reportSpec = MakeReportSpec();
-                ReportToCsv(reportSpec, docNew, peakBoundaryExport);
-                var docRoundTrip = ImportFileToDoc(docNew, peakBoundaryExport);
+                var reportSpec = MakeReportSpec();
+                ReportToCsv(reportSpec, docNew, peakBoundaryExport, LocalizationHelper.CurrentCulture);
+                var docRoundTrip = ImportFileToDoc(docNew, ref peakBoundaryExport);
                 Assert.AreSame(docNew, docRoundTrip);
 
 
@@ -269,6 +305,11 @@ namespace pwiz.SkylineTest
                 // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
             }
 
+            if (AsSmallMolecules)
+            {
+                return; // The rest of the test concerns peptide modification descriptions, we don't care about that in small mol version
+            }
+
             // Now check a file that has peptide ID's, and see that they're properly ported
             var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
             SrmDocument docId = ResultsUtil.DeserializeDocument(peptideIdPath);
@@ -319,16 +360,10 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private static ReportSpec MakeReportSpec()
-        {
-            var specList = new ReportSpecList();
-            var defaults = specList.GetDefaults();
-            return defaults.First(spec => spec.Name == Resources.ReportSpecList_GetDefaults_Peak_Boundaries);
-        }
-
-        private static void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
+        private void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
+            importText = UpdateReportForTestMode(importText);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
@@ -336,9 +371,10 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private static void ImportNoException(SrmDocument docResults, string importText, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
+        private void ImportNoException(SrmDocument docResults, string importText, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
+            importText = UpdateReportForTestMode(importText);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
@@ -346,17 +382,93 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private static SrmDocument ImportFileToDoc(SrmDocument docOld, string importFile)
+        private string UpdateReportForTestMode(string textIn)
         {
+            var text = textIn;
+            if (AsSmallMolecules)
+            {
+                if (!PeakBoundaryImporter.MOLECULE_SYNONYMS.Any(s => text.Contains(s))) // Generated by report during test?
+                {
+                    foreach (var hdr in PeakBoundaryImporter.PEPTIDE_SYNONYMS)
+                    {
+                        text = text.Replace(hdr, ColumnCaptions.Molecule);
+                    }
+
+                    var headerLine = text.Split('\n')[0];
+                    foreach (var sep in new[] {"\t", ";", ",", " "})
+                    {
+                        if (headerLine.Contains(sep))
+                        {
+                            foreach (var charge in new[] {1, 2, 3})
+                            {
+                                text = text.Replace(sep + charge.ToString() + sep,
+                                    sep + "[M+" + charge.ToString() + "H]" + sep);
+                            }
+
+                            // Replace occurrences of (for example) "PEPTIDER" with "pep_PEPTIDER"
+                            foreach (var peptide in _peptides)
+                            {
+                                var undecorated =
+                                    peptide.Replace(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator,
+                                        string.Empty);
+                                text = text.Replace(undecorated, peptide);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return text;
+        }
+
+        private SrmDocument ImportFileToDoc(SrmDocument docOld, ref string importFile)
+        {
+            var pep_decorator = "_pep.";
+            if (AsSmallMolecules)
+            {
+                // Massage the peptide-oriented test artifact as needed for small molecule version of test
+                if (!importFile.Contains(pep_decorator)) // Already converted from peptide test version?
+                {
+                    var text = File.ReadAllText(importFile);
+                    var textUpdated = UpdateReportForTestMode(text);
+                    if (!Equals(textUpdated, text)) // Generated by report during test?
+                    {
+                        var ext = Path.GetExtension(importFile);
+                        importFile = Path.ChangeExtension(importFile, pep_decorator + ext);
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        File.WriteAllText(importFile, textUpdated);
+                    }
+                }
+            }
             var peakBoundaryImporter = new PeakBoundaryImporter(docOld);
             long lineCount = Helpers.CountLinesInFile(importFile);
             SrmDocument docNew = peakBoundaryImporter.Import(importFile, null, lineCount);
             return docNew;
         }
 
-        public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)
+        private static void ReportToCsv(ViewSpec viewSpec, SrmDocument doc, string fileName, CultureInfo cultureInfo)
         {
-            CheckReportCompatibility.ReportToCsv(reportSpec, doc, fileName, LocalizationHelper.CurrentCulture);
+            var documentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(documentContainer.SetDocument(doc, documentContainer.Document));
+            var skylineDataSchema = new SkylineDataSchema(documentContainer, new DataSchemaLocalizer(cultureInfo, cultureInfo));
+            var viewContext = new DocumentGridViewContext(skylineDataSchema);
+            using (var writer = new StreamWriter(fileName))
+            {
+                IProgressStatus status = new ProgressStatus();
+                viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
+                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, viewContext.GetCsvWriter());
+            }
+        }
+
+        private ViewSpec MakeReportSpec()
+        {
+            var viewName = AsSmallMolecules
+                ? Resources.ReportSpecList_GetDefaults_Molecule_Peak_Boundaries
+                : Resources.ReportSpecList_GetDefaults_Peak_Boundaries;
+            Settings.Default.PersistedViews.ResetDefaults();
+            var view = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(viewName);
+            return view;
         }
 
         private void DoFileImportTests(SrmDocument docResults,
@@ -371,28 +483,28 @@ namespace pwiz.SkylineTest
                                        string[] precursorMzs = null,
                                        string annotationName = null)
         {
-            SrmDocument docNew = ImportFileToDoc(docResults, importFile);
+            SrmDocument docNew = ImportFileToDoc(docResults, ref importFile);
             int i = 0;
             // Check peptide nodes are correct
-            foreach (PeptideDocNode peptideNode in docNew.Peptides)
+            foreach (PeptideDocNode peptideNode in docNew.Molecules)
             {
-                Assert.AreEqual(peptideNode.Peptide.Sequence, peptides[i]);
+                AssertEx.AreEqual(peptides[i], AsSmallMolecules ? peptideNode.CustomMolecule.Name : peptideNode.Peptide.Sequence);
                 ++i;
             }
             int j = 0;
-            foreach (TransitionGroupDocNode groupNode in docNew.PeptideTransitionGroups)
+            foreach (TransitionGroupDocNode groupNode in docNew.MoleculeTransitionGroups)
             {
                 var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
                 // Make sure charge on each transition group is correct
-                Assert.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
+                AssertEx.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
                 // Make sure imported retention time boundaries, including nulls, are correct
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));
                 // Check that peak areas are updated correctly
                 double peakArea = peakAreas[j] ?? 0;
-                Assert.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE*peakArea));
+                AssertEx.IsTrue(ApproxEqualNullable(groupChromInfo.Area, peakAreas[j], RT_TOLERANCE*peakArea));
                 // Check that identified values are preserved/updated appropriately
-                Assert.IsTrue(groupChromInfo.Identified == identified[j],
+                AssertEx.IsTrue(groupChromInfo.Identified == identified[j],
                     string.Format("No identification match for {0}  ({1})", groupNode.TransitionGroup.Peptide, j));
                 var annotations = groupChromInfo.Annotations;
                 if (precursorMzs != null)
