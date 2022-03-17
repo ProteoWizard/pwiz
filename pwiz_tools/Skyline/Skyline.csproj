@@ -785,6 +785,7 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
