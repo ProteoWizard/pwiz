@@ -645,7 +645,7 @@ namespace pwiz.Skyline.Model.Results
             return source != ChromSource.fragment; // TODO: source == ChromSource.ms1 || source == ChromSource.sim;
         }
 
-        public double TotalArea 
+        public double TotalArea
         {
             get
             {

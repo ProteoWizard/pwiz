@@ -537,7 +537,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public TransitionGroupPeakDataConverter(ITransitionGroupPeakData<TData> groupPeakData)
         {
             _groupPeakData = groupPeakData;
-            var transPeakData = _groupPeakData.TransitionPeakData;
             TransitionPeakData = ConvertTransitionPeakDatas(_groupPeakData.TransitionPeakData);
             Ms1TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms1TranstionPeakData);
             Ms2TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms2TranstionPeakData);
@@ -559,7 +558,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
         }
-        private IList<ITransitionPeakData<ISummaryPeakData>> ConvertTransitionPeakDatas(IEnumerable<ITransitionPeakData<TData>> peakDatas)
+
+        private IList<ITransitionPeakData<ISummaryPeakData>> ConvertTransitionPeakDatas(
+            IEnumerable<ITransitionPeakData<TData>> peakDatas)
         {
             if (peakDatas == null)
             {
