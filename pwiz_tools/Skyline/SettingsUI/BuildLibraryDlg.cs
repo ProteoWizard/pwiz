@@ -123,6 +123,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 btnNext.Enabled = panelProperties.Visible || Grid.IsReady;
             };
+
+            // Reposition checkboxes
+            cbKeepRedundant.Left = cbIncludeAmbiguousMatches.Left = cbFilter.Left = actionLabel.Left;
         }
 
         private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
@@ -738,10 +741,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-
         public bool? PreferEmbeddedSpectra { get; set; }
-
-        
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -755,7 +755,6 @@ namespace pwiz.Skyline.SettingsUI
             var useFiles = dataSourceFilesRadioButton.Checked;
             ceCombo.Visible = !useFiles;
             ceLabel.Visible = !useFiles;
-
 
             if (useFiles)
             {

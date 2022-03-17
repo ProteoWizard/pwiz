@@ -165,7 +165,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.gridSearchFiles.AllowUserToAddRows = false;
             resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
             this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.IsFileOnly = false;
             this.gridSearchFiles.Name = "gridSearchFiles";
             this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
             // 

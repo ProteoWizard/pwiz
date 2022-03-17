@@ -252,7 +252,6 @@
             this.gridInputFiles.AllowUserToAddRows = false;
             resources.ApplyResources(this.gridInputFiles, "gridInputFiles");
             this.gridInputFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridInputFiles.IsFileOnly = false;
             this.gridInputFiles.Name = "gridInputFiles";
             // 
             // btnAddPaths

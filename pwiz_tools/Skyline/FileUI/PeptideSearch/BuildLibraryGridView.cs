@@ -78,8 +78,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 AutoGenerateColumns = false;
                 AllowUserToAddRows = false;
-                AllowUserToDeleteRows = true;
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 
                 Columns.Clear();
                 AddColumns(new[] { _colFile, _colScoreType, _colThreshold });
@@ -91,18 +89,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 CellValueChanged += OnCellValueChanged;
 
                 DataSource = new SortableBindingList<File>();
-                IsFileOnly = false;
             }
         }
 
         public event EventHandler FilesChanged;
 
+        [DefaultValue(false)]
         public bool IsFileOnly
         {
             get => !_colScoreType.Visible;
             set => _colScoreType.Visible = _colThreshold.Visible = !value;
         }
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<File> Files
         {
             get => FilesList;
@@ -110,12 +109,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 CellValueChanged -= OnCellValueChanged;
                 FilesList.Clear();
-                FilesList.AddRange(value);
+                FilesList.AddRange(value ?? Array.Empty<File>());
                 CellValueChanged += OnCellValueChanged;
                 FilesChanged?.Invoke(this, null);
             }
         }
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<string> FilePaths
         {
             get => Files.Select(f => f.FilePath).OrderBy(f => f).Distinct().ToArray();
@@ -167,19 +167,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<MsDataFileUri> FileUris
         {
             get => FilePaths.Select(f => new MsDataFilePath(f));
             set => FilePaths = value.Select(uri => uri.GetFilePath() + (uri.GetSampleIndex() > 0 ? $@":{uri.GetSampleIndex()}" : string.Empty));
         }
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IEnumerable<File> SelectedFiles => SelectedCells.Cast<DataGridViewCell>()
             .Where(cell => cell.ColumnIndex == _colFile.Index)
             .Select(cell => cell.OwningRow).Distinct()
             .Select(row => (File)row.DataBoundItem);
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ScoreTypesLoaded => Files.All(f => !f.ScoreTypeError && f.ScoreType != null);
 
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsReady => FilesList.Count > 0 && (IsFileOnly || Files.All(f => !f.ScoreTypeError && f.ScoreType != null && f.ScoreThreshold.HasValue));
 
         public bool Validate(IWin32Window parent, CancelEventArgs e, bool showWarnings, out Dictionary<string, double> thresholdsByFile)
