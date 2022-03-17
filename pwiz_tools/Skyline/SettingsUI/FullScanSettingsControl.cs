@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -72,6 +73,9 @@ namespace pwiz.Skyline.SettingsUI
             cbHighSelectivity.Checked = FullScan.UseSelectiveExtraction;
 
             _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
+
+            cbIgnoreSim.Checked = FullScan.IgnoreSimScans;
+            toolTip.SetToolTip(cbIgnoreSim, string.Format(toolTip.GetToolTip(cbIgnoreSim), SpectrumFilter.SIM_ISOLATION_CUTOFF));
         }
 
         public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
@@ -189,6 +193,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbHighSelectivity.Checked; }
             set { cbHighSelectivity.Checked = value; }
+        }
+
+        public bool IgnoreSimScans
+        {
+            get { return cbIgnoreSim.Checked; }
+            set { cbIgnoreSim.Checked = value; }
         }
 
         public RetentionTimeFilterType RetentionTimeFilterType
@@ -311,6 +321,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Selection change should set filter m/z textbox correctly
                 comboPrecursorAnalyzerType.SelectedIndex = -1;
                 comboPrecursorAnalyzerType.Enabled = false;
+                cbIgnoreSim.Enabled = cbIgnoreSim.Checked = false;
             }
             else
             {
@@ -346,6 +357,7 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
+                cbIgnoreSim.Enabled = true;
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
@@ -400,6 +412,7 @@ namespace pwiz.Skyline.SettingsUI
                                                   PrecursorMassAnalyzer,
                                                   precursorRes,
                                                   precursorResMz,
+                                                  IgnoreSimScans,
                                                   UseSelectiveExtraction,
                                                   Enrichments,
                                                   retentionTimeFilterType,
