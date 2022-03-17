@@ -745,7 +745,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
-                    BuildPepSearchLibControl.PerformDDASearch = false;
+                    BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), BiblioSpecScoreType.GenericQValue, qValue));
