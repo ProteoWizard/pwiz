@@ -227,6 +227,10 @@ int PwizReader::getSpecIndex(const string& identifier){
 bool PwizReader::getSpectrum(string identifier, 
                              BiblioSpec::SpecData& returnData, 
                              bool getPeaks){
+    if (PSM::isPrecursorOnlyIdentifier(identifier))
+    {
+        return true; // No spectrum to be found, but that's not a failure
+    }
     int foundIndex = getSpecIndex(identifier);
     BiblioSpec::Verbosity::comment(BiblioSpec::V_DETAIL, "PwizReader looking for id %s.", identifier.c_str());
     return getSpectrum(foundIndex, returnData, BiblioSpec::INDEX_ID, getPeaks);

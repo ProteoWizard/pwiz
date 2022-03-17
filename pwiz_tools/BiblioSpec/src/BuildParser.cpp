@@ -401,6 +401,10 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
                                idStr.c_str(), curSpecFileName_.c_str());
             continue;
         }
+        if (psm->isPrecursorOnly())
+        {
+            curSpectrum.numPeaks = 0;
+        }
 
         curSpectrum.totalIonCurrent = 0;
         for (int j = 0; j < curSpectrum.numPeaks; ++j)
@@ -463,7 +467,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     string specIdStr = psm->idAsString();
 
     // check if charge state exists
-    if (psm->charge < 1) {
+    if (psm->charge == 0) {
         // try to calculate charge
         Verbosity::debug("Attempting to calculate charge state for spectrum %s (%s)",
                          specIdStr.c_str(), psm->modifiedSeq.c_str());
@@ -500,9 +504,18 @@ void BuildParser::insertSpectrum(PSM* psm,
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    if (psm->isPrecursorOnly())
+    {
+        sqlite3_bind_null(insertSpectrumStmt_, field++); // No TIC if no spectrum
+    }
+    else
+    {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    }
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
-    sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, 
+        psm->isPrecursorOnly() ? "" : specIdStr.c_str(), // No spectrum ID for precursor-only records
+        -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);
     sqlite3_bind_int(insertSpectrumStmt_, field++, scoreType);
     // Small molecule: moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)

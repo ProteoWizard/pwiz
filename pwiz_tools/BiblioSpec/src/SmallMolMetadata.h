@@ -105,10 +105,20 @@ struct SmallMolMetadata {
     return *this;
   }
 
+  bool operator== (const SmallMolMetadata& rhs) const
+  {
+    return (inchiKey == rhs.inchiKey &&
+      precursorAdduct == rhs.precursorAdduct &&
+      chemicalFormula == rhs.chemicalFormula &&
+      moleculeName == rhs.moleculeName &&
+      otherKeys == rhs.otherKeys &&
+      precursorMzDeclared == rhs.precursorMzDeclared);
+  }
+
   bool IsCompleteEnough() const
   {
-	  // Need at least name, adduct and formula or mz declaration to be a useful description
-	  return (!moleculeName.empty() && !precursorAdduct.empty() && (precursorMzDeclared != 0 || !chemicalFormula.empty()));
+    // Need at least name, adduct and formula or mz declaration to be a useful description
+    return (!moleculeName.empty() && !precursorAdduct.empty() && (precursorMzDeclared != 0 || !chemicalFormula.empty()));
   }
 
   void clear(){

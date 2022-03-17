@@ -56,7 +56,8 @@ class sslPSM : public PSM {
     }
     static void setScanNumber(sslPSM& psm, const std::string& value){
         if( value.empty() ){
-            throw BlibException(false, "Missing scan number.");
+            Verbosity::comment(V_DETAIL,"Missing MS2 scan ID. Treating this as a precursor-only record.");
+            psm.setPrecursorOnly();
         } else {
             try{// might be a scan number or a string identifier
                 psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value));

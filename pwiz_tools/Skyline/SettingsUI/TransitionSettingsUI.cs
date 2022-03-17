@@ -848,6 +848,12 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverIons.CheckedNames = value; }
         }
 
+        public int InstrumentMinMz
+        {
+            get { return Int32.Parse(textMinMz.Text); }
+            set { textMinMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }

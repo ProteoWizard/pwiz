@@ -1355,6 +1355,13 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks, int refSpectraId, PooledSqliteConnection connection)
         {
+            var arrayMI = new SpectrumPeaksInfo.MI[numPeaks];
+
+            if (numPeaks == 0)
+            {
+                return arrayMI; // A precursor-only entry, apparently
+            }
+
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
 
@@ -1365,7 +1372,6 @@ namespace pwiz.Skyline.Model.Lib
             byte[] peakIntens = peakIntensCompressed.Uncompress(numPeaks * sizeInten);
 
             // Build the list
-            var arrayMI = new SpectrumPeaksInfo.MI[numPeaks];
 
             for (int i = 0; i < numPeaks; i++)
             {

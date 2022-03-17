@@ -53,9 +53,15 @@ SslReader::SslReader(BlibBuilder& maker,
    * unmodified one and a vector of mods.
    */
   void SslReader::addDataLine(sslPSM& newPSM){
+
+      if (newPSM.isPrecursorOnly())
+      {
+          newPSM.setPrecursorOnly(); // Set it again to ensure fully detailed lookup for precursor-only record
+      }
+
       Verbosity::comment(V_DETAIL, 
-                         "Adding new psm (scan %d) from delim file reader.",
-                         newPSM.specKey);
+                         "Adding new psm (scan %s) from delim file reader.",
+                         newPSM.idAsString());
       // create a new mod to store
       PSM* curPSM = new PSM(static_cast<PSM &>(newPSM));
       curPSM->modifiedSeq.clear();
@@ -147,14 +153,19 @@ SslReader::SslReader(BlibBuilder& maker,
       // move from map to psms_
       psms_ = fileIterator->second;
 
-      // look at first psm for scanKey vs scanName
-      if (psms_.front()->specIndex != -1) // not default value means scan id is index=<index>
-          lookUpBy_ = INDEX_ID;
-      else if (psms_.front()->specKey == -1) // default value
-          lookUpBy_ = NAME_ID;
-      else
-          lookUpBy_ = SCAN_NUM_ID;
-
+      // look at first non-precursor-only psm for scanKey vs scanName
+      for (unsigned int i = 0; i < psms_.size(); i++) {
+          sslPSM* psm = static_cast<sslPSM*>(psms_.at(i));
+          if (psm->isPrecursorOnly())
+              continue;
+          if (psm->specIndex != -1) // not default value means scan id is index=<index>
+              lookUpBy_ = INDEX_ID;
+          else if (psm->specKey == -1) // default value
+              lookUpBy_ = NAME_ID;
+          else
+              lookUpBy_ = SCAN_NUM_ID;
+          break;
+      }
       buildTables(fileScoreTypes_[fileIterator->first]);
     }
 

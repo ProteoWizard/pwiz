@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
 using pwiz.Skyline.Alerts;
@@ -42,14 +43,9 @@ namespace pwiz.SkylineTestFunctional
     /// Summary description for LibraryBuildTest
     /// </summary>
     [TestClass]
-    public class LibraryBuildTest : AbstractFunctionalTest
+    public class LibraryBuildTest : AbstractFunctionalTestEx
     {
         private string _libraryName;
-        
-        public LibraryBuildTest()
-        {
-            _libraryName = "library_test_试验";
-        }
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
         private bool ReportLibraryBuildFailures { get; set; }
@@ -63,16 +59,70 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            PrecursorOnlyTest();
             MainTest();
             CirtLibraryBuildTest();
+        }
+
+        // Check handling of .SSl files that contain entries with no MS2 scans (i.e. precursor-only IDs)
+        private void PrecursorOnlyTest()
+        {
+            // Clean-up before running the test
+            Tidy();
+            _libraryName += "_ssl_small_mol";
+            var doc = SkylineWindow.Document;
+            // Check for proper handling of precursor-only entries in an SSL file 
+            BuildLibrary(TestFilesDir.GetTestPath("library_valid"), new[] { "ssl_small_mol.ssl" },
+                TestFilesDir.GetTestPath("ssl-small-mol.blib"), false, false, false, false, null);
+            RunUI(() =>
+            {
+                PeptideSettingsUI.OkDialog();
+            });
+            doc = WaitForDocumentChangeLoaded(doc);
+            // We want to see precursor transitions
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(
+                SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsUI.InstrumentMinMz = 10;
+                transitionSettingsUI.SmallMoleculeFragmentTypes = "f,p";
+                transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+                transitionSettingsUI.Peaks = 3;
+                transitionSettingsUI.OkDialog();
+            });
+            doc = WaitForDocumentChange(doc);
+
+            var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            // Populate the document from library contents
+            RunDlg<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides, matchDlg =>
+            {
+                matchDlg.DialogResult = DialogResult.Yes; // Agree to add all to document even if settings don't agree
+            });
+
+            // Verify that library imported properly
+            using (new CheckDocumentState(1, 5, 5, 20))
+            {
+                var confirmCountDlg = WaitForOpenForm<AlertDlg>();
+                OkDialog(confirmCountDlg, confirmCountDlg.OkDialog);
+            }
+
+            // Clean up after ourselves
+            RunUI(viewLibUI.CancelDialog);
+            Tidy(); 
+        }
+
+        private void Tidy()
+        {
+            _libraryName = "library_test_试验";
+            RunUI(() => SkylineWindow.NewDocument(true));
+            RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
+                doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
         }
 
         private void MainTest()
         {
             // Clean-up before running the test
-            RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
-                            doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-
+            Tidy();
             // Check using libkey with small molecules
             var adduct = Adduct.FromStringAssumeProtonated("M+3Na");
             var z = adduct.AdductCharge;
