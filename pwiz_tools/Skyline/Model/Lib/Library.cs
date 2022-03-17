@@ -2390,12 +2390,12 @@ namespace pwiz.Skyline.Model.Lib
         private LibraryChromGroup _chromGroup;
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, object spectrumKey):
-            this(library, labelType, null, null, null, null, true, spectrumKey)
+            this(library, labelType, null, null, null, null, null, null, true, spectrumKey)
         {
         }
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, string filePath,
-            double? retentionTime, IonMobilityAndCCS ionMobilityInfo, string protein, bool isBest, object spectrumKey) :
+            double? retentionTime, double? startTime, double? endTime, IonMobilityAndCCS ionMobilityInfo, string protein, bool isBest, object spectrumKey) :
                 base(labelType, true)
         {
             _library = library;
@@ -2403,6 +2403,8 @@ namespace pwiz.Skyline.Model.Lib
             SpectrumKey = spectrumKey;
             FilePath = filePath;
             RetentionTime = retentionTime;
+            StartTime = startTime;
+            EndTime = endTime;
             IonMobilityInfo = ionMobilityInfo ?? IonMobilityAndCCS.EMPTY;
             Protein = protein;
             IsBest = isBest;
@@ -2442,6 +2444,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; set; }
+        public double? StartTime { get; set; }
+        public double? EndTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
     }

@@ -592,7 +592,10 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 })
                 .Select(kvp =>
-                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null, null,
+                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime,
+                        kvp.Value.PeakBounds?.StartTime > 0 ? kvp.Value.PeakBounds?.StartTime : null,
+                        kvp.Value.PeakBounds?.EndTime > 0 ? kvp.Value.PeakBounds?.EndTime : null,
+                        null, null,
                         kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
                     {
                         SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)

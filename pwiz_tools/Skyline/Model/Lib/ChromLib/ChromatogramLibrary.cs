@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     files[spectrumInfo.SampleFileId-1].FilePath :
                     null;
                 yield return new SpectrumInfoLibrary(this, labelType, file,
-                    null,  
+                    null, null, null,
                     spectrumInfo.IonMobility, 
                     null, true, item.OriginalIndex) 
                 {

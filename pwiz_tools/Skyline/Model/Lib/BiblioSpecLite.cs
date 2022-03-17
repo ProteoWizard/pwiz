@@ -431,6 +431,7 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper disable UnusedMember.Local
         // ReSharper disable InconsistentNaming
         // Column indices for BiblioSpec SQLite indices
+        // These various enum member names must exactly match the names used in the BiblioSpec SQLIte schema
         private enum LibInfo
         {
             libLSID,
@@ -527,6 +528,8 @@ namespace pwiz.Skyline.Model.Lib
             ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell   - obsolete as of v4
             ionMobilityType,
             retentionTime,
+            startTime,
+            endTime,
             bestSpectrum,
             driftTimeMsec, // Obsolete
             collisionalCrossSectionSqA,
@@ -1833,6 +1836,8 @@ namespace pwiz.Skyline.Model.Lib
                     int iFilePath = reader.GetOrdinal(SpectrumSourceFiles.fileName);
                     int iRedundantId = reader.GetOrdinal(RetentionTimes.RedundantRefSpectraID);
                     int iRetentionTime = reader.GetOrdinal(RetentionTimes.retentionTime);
+                    int iStartTime = reader.GetOrdinal(RetentionTimes.startTime);
+                    int iEndTime = reader.GetOrdinal(RetentionTimes.endTime);
                     int iBestSpectrum = reader.GetOrdinal(RetentionTimes.bestSpectrum);
                     bool hasDTvsCCS = (SchemaVersion > 1) && (SchemaVersion < 4); // Initially we saw DT and CCS as mutually exclusive values
                     bool hasDriftTime = reader.GetOrdinal(RetentionTimes.driftTimeMsec) >= 0;  // Then we went to saving both DT and CCS
@@ -1871,7 +1876,9 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         string filePath = reader.GetString(iFilePath);
                         int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
-                        double retentionTime = reader.GetDouble(iRetentionTime);
+                        var retentionTime = UtilDB.GetNullableDouble(reader, iRetentionTime);
+                        var startTime = UtilDB.GetNullableDouble(reader, iStartTime);
+                        var endTime = UtilDB.GetNullableDouble(reader, iEndTime);
                         bool isBest = !hasRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
 
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
@@ -1918,7 +1925,7 @@ namespace pwiz.Skyline.Model.Lib
                         object spectrumKey = i;
                         if (!isBest || redundancy == LibraryRedundancy.all_redundant)
                             spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
-                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, protein, isBest,
+                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, startTime, endTime, ionMobilityInfo, protein, isBest,
                                                          spectrumKey)
                                             {
                                                 SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])

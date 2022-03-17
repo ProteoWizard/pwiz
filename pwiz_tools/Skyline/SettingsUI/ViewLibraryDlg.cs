@@ -789,6 +789,24 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt.Value.ToString(Formats.RETENTION_TIME);
                             }
+                            // Show start and end RT in interval notation e.g. "RT:1.234 (1.11, 1.32)" or "RT:1,234 (1,11; 1,32)" in fr
+                            var rt_start = libraryChromGroup?.StartTime ?? bestSpectrum.StartTime;
+                            var rt_end = libraryChromGroup?.EndTime ?? bestSpectrum.EndTime;
+                            if (rt_start.HasValue || rt_end.HasValue)
+                            {
+                                var interval = string.Format(@"({0}{1} {2})",
+                                    rt_start.HasValue ? rt_start.Value.ToString(Formats.RETENTION_TIME) : @"?",
+                                    TextUtil.CsvSeparator,
+                                    rt_end.HasValue ? rt_end.Value.ToString(Formats.RETENTION_TIME) : @"?");
+                                if (rt.HasValue)
+                                {
+                                    labelRT.Text = TextUtil.TextSeparate(@" ", labelRT.Text, interval);
+                                }
+                                else
+                                {
+                                    labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + interval;
+                                }
+                            }
                             IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
