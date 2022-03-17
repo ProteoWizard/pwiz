@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ConfigList>
   <skylinebatch_config Name="Basic" Modified="1/12/2022 11:53 AM">
-    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\EmptyData" ReplicateNamingPattern="Tester" />
+    <main_settings TemplateFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" ReplicateNamingPattern="Tester" />
     <file_settings />
     <report_settings />
     <config_skyline_settings Type="Skyline" CmdPath="C:\Users\alimarsh\Documents\Application Files\SkylineBatch_20_2_0_414\SkylineRunner.exe" />
   </skylinebatch_config>
   <skylinebatch_config Name="Complex" Enabled="true" Modified="1/12/2022 11:56 AM">
-    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\EmptyData" ReplicateNamingPattern="Tester" />
+    <main_settings TemplateFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" ReplicateNamingPattern="Tester" />
     <file_settings MsOneResolvingPower="1" MsMsResolvingPower="2" RetentionTime="3" AddDecoys="true" ShuffleDecoys="true" TrainMProphet="true" />
     <report_settings>
-      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr">
-        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr">
+        <script_path>(REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R, 4.0.3)</script_path>
       </report_info>
     </report_settings>
-    <config_skyline_settings Type="Custom" CmdPath="C:\Program Files\Skyline\SkylineCmd.exe" />
+    <config_skyline_settings Type="Custom" CmdPath="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
   </skylinebatch_config>
 </ConfigList>

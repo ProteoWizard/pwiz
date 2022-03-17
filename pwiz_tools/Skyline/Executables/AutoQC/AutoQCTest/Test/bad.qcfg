@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ConfigList>
-  <autoqc_config name="Bad" created="1/19/2021 10:44 AM" modified="1/19/2021 10:44 AM">
-    <main_settings skyline_file_path="C:\I_DONT_EXIST.sky" folder_to_watch="C:\Nope" file_filter_type="All" results_window="31" instrument_type="Thermo" acquisition_time="75" />
-    <panorama_settings />
-    <config_skyline_settings Type="Skyline" CmdPath="C:\Branches\Skylinework20210204_Consolidate_shared_AutoQcSkylineBatch_files\ProteoWizard\pwiz\pwiz_tools\Skyline\Executables\AutoQC\AutoQC\bin\Debug\SkylineRunner.exe" />
-  </autoqc_config>
-</ConfigList>
