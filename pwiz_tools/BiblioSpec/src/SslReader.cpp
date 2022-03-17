@@ -88,7 +88,7 @@ SslReader::SslReader(BlibBuilder& maker,
           (mapAccess->second).push_back(curPSM);
       }
 
-      if (newPSM.rtInfo.retentionTime >= 0 || newPSM.rtInfo.startTime >= 0)
+      if (newPSM.rtInfo.retentionTime != 0 || newPSM.rtInfo.startTime != 0)
       {
           int identifier = newPSM.specKey;
           if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
@@ -190,11 +190,11 @@ SslReader::SslReader(BlibBuilder& maker,
   }
 
   void SslReader::setRtInfo(SpecData& returnData, const RTINFO &rtInfo) {
-    if (rtInfo.retentionTime >= 0)
+    if (rtInfo.retentionTime != 0)
         returnData.retentionTime = rtInfo.retentionTime;
-    if (rtInfo.startTime >= 0)
+    if (rtInfo.startTime != 0)
         returnData.startTime = rtInfo.startTime;
-    if (rtInfo.endTime >= 0)
+    if (rtInfo.endTime != 0)
         returnData.endTime = rtInfo.endTime;
 }
 

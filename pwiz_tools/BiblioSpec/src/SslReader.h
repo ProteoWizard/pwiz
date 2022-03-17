@@ -44,7 +44,7 @@ class sslPSM : public PSM {
 
     sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE), precursorMz(0)
     {
-        rtInfo.retentionTime = rtInfo.startTime = rtInfo.endTime = -1;
+        rtInfo.retentionTime = rtInfo.startTime = rtInfo.endTime = 0;
     };
 
     static void setFile(sslPSM& psm, const std::string& value){

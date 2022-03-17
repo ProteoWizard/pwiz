@@ -841,6 +841,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
     for (int i = 0; i < num_spec; i++) {
         const RefSpectrum* spectrum = oneIon[i];
         int specIdRedundant = spectrum->getLibSpecID();
+        double retentionTime = spectrum->getRetentionTime();
         double startTime = spectrum->getStartTime();
         double endTime = spectrum->getEndTime();
         sqlite3_bind_int(insertStmt_, 1, specID);
@@ -850,7 +851,12 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
         sqlite3_bind_double(insertStmt_, 5, spectrum->getCollisionalCrossSection());
         sqlite3_bind_double(insertStmt_, 6, spectrum->getIonMobilityHighEnergyOffset());
         sqlite3_bind_int(insertStmt_, 7, (int)spectrum->getIonMobilityType());
-        sqlite3_bind_double(insertStmt_, 8, spectrum->getRetentionTime());
+        if (retentionTime != 0)
+        {
+            sqlite3_bind_double(insertStmt_, 8, retentionTime);
+        } else {
+            sqlite3_bind_null(insertStmt_, 8);
+        }
         if (startTime != 0 && endTime != 0) {
             sqlite3_bind_double(insertStmt_, 9, startTime);
             sqlite3_bind_double(insertStmt_, 10, endTime);
