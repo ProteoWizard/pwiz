@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -552,15 +553,17 @@ namespace pwiz.Skyline.Model.Results
 
         private ChromDataPeakList()
         {
+            AcquisitionMethod = FullScanAcquisitionMethod.None;
         }
         
-        public ChromDataPeakList(ChromDataPeak peak)
+        public ChromDataPeakList(FullScanAcquisitionMethod acquisitionMethod, ChromDataPeak peak)
         {
+            AcquisitionMethod = acquisitionMethod;
             Add(peak);
         }
 
-        public ChromDataPeakList(ChromDataPeak peak, IEnumerable<ChromData> listChromData)
-            : this(peak)
+        public ChromDataPeakList(FullScanAcquisitionMethod acquisitionMethod, ChromDataPeak peak, IEnumerable<ChromData> listChromData)
+            : this(acquisitionMethod, peak)
         {
             foreach (var chromData in listChromData)
             {
@@ -578,7 +581,7 @@ namespace pwiz.Skyline.Model.Results
             var newPeaks = this.Cast<ChromDataPeak>().Select((peak, index) => Tuple.Create(peak, index))
                 .Where(tuple => indexes.Contains(tuple.Item2))
                 .ToArray();
-            var chromDataPeakList = new ChromDataPeakList(newPeaks[0].Item1);
+            var chromDataPeakList = new ChromDataPeakList(AcquisitionMethod, newPeaks[0].Item1);
             for (int i = 1; i < newPeaks.Length; i++)
             {
                 chromDataPeakList.Add(newPeaks[i].Item1);
@@ -586,6 +589,7 @@ namespace pwiz.Skyline.Model.Results
             return chromDataPeakList;
         }
 
+        public FullScanAcquisitionMethod AcquisitionMethod { get; }
         /// <summary>
         /// True if this set of peaks was created to satisfy forced integration
         /// rules.
@@ -639,7 +643,17 @@ namespace pwiz.Skyline.Model.Results
             return source != ChromSource.fragment; // TODO: source == ChromSource.ms1 || source == ChromSource.sim;
         }
 
-        public double TotalArea { get { return IsAllMS1 ? MS1Area : MS2Area; } }
+        public double TotalArea
+        {
+            get
+            {
+                if (FullScanAcquisitionMethod.DDA.Equals(AcquisitionMethod) || IsAllMS1)
+                {
+                    return MS1Area;
+                }
+                return MS2Area;
+            }
+        }
 
         public void SetIdentified(double[] retentionTimes, bool isAlignedTimes)
         {
