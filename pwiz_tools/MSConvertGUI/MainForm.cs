@@ -644,7 +644,7 @@ namespace MSConvertGUI
                     if (!String.IsNullOrEmpty(ScanEventLow.Text) || !String.IsNullOrEmpty(ScanEventHigh.Text))
                         FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text) });
                     if (!String.IsNullOrEmpty(ChargeStatesLow.Text) || !String.IsNullOrEmpty(ChargeStatesHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "chargeStates", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
+                        FilterDGV.Rows.Add(new[] { "chargeState", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
                     if (!String.IsNullOrEmpty(DefaultArrayLengthLow.Text) || !String.IsNullOrEmpty(DefaultArrayLengthHigh.Text))
                         FilterDGV.Rows.Add(new[] { "defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text) });
                     if (!String.IsNullOrEmpty(CollisionEnergyLow.Text) && !String.IsNullOrEmpty(CollisionEnergyHigh.Text))

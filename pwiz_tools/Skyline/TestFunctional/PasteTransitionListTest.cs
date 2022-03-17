@@ -58,6 +58,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestEmptyTransitionList();
             TestMissingFragmentMz();
 
             RunUI(() => SkylineWindow.NewDocument());
@@ -365,6 +366,14 @@ namespace pwiz.SkylineTestFunctional
             
         }
 
+        private void TestEmptyTransitionList()
+        {
+            var text = "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\n\n";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var errDlg = ShowDialog<MessageDlg>(() => importDialog.TransitionListText = text); // Testing that we catch the exception properly
+            OkDialog(errDlg, errDlg.Close);
+        }
+
         // Tests the current document, important to note that you must have data already in a skyline document for this to work
         private void CheckDocumentGridAndColumns(string viewName,
             int rowCount, int colCount,  // Expected row and column count for document grid
@@ -393,7 +402,7 @@ namespace pwiz.SkylineTestFunctional
             var saveColumnOrder = Settings.Default.CustomMoleculeTransitionInsertColumnsList;
             var text =  "Peptide Modified Sequence\tPrecursor m/z\tFragment Name\tProduct Charge\nPEPTIDER\t478.738\ty1\t1\nPEPTIDER\t478.738\ty2\t1";
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text =
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText =
                 text.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
 
             var errDlg = ShowDialog<MessageDlg>(columnSelectDlg.CheckForErrors);

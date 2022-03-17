@@ -801,8 +801,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // Best replicate display, requires that the node have correct
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.
+                // Also, TransitionGroups and Transitions need to know their Peptide in order
+                // to display ratios, so they must be updated when their parent changes
                 if (tree.ShowReplicate == ReplicateDisplay.best 
                     || docNode is TransitionGroupDocNode
+                    || docNode is TransitionDocNode
                     || !ReferenceEquals(docNode, nodeTree.Model))
                 {
                     nodeTree.Model = docNode;

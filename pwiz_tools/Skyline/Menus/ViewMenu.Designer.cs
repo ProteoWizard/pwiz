@@ -64,6 +64,8 @@
             this.xMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.yMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.zhMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.zhhMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fragmentsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chargesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -381,6 +383,8 @@
             this.xMenuItem,
             this.yMenuItem,
             this.zMenuItem,
+            this.zhMenuItem,
+            this.zhhMenuItem,
             this.fragmentsMenuItem,
             this.precursorIonMenuItem});
             resources.ApplyResources(this.ionTypesMenuItem, "ionTypesMenuItem");
@@ -430,6 +434,20 @@
             this.zMenuItem.Name = "zMenuItem";
             resources.ApplyResources(this.zMenuItem, "zMenuItem");
             this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
+            // 
+            // zhMenuItem
+            // 
+            this.zhMenuItem.CheckOnClick = true;
+            this.zhMenuItem.Name = "zhMenuItem";
+            resources.ApplyResources(this.zhMenuItem, "zhMenuItem");
+            this.zhMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
+            // 
+            // zhhMenuItem
+            // 
+            this.zhhMenuItem.CheckOnClick = true;
+            this.zhhMenuItem.Name = "zhhMenuItem";
+            resources.ApplyResources(this.zhhMenuItem, "zhhMenuItem");
+            this.zhhMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
             // 
             // fragmentsMenuItem
             // 
@@ -1014,6 +1032,8 @@
         private System.Windows.Forms.ToolStripMenuItem xMenuItem;
         private System.Windows.Forms.ToolStripMenuItem yMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem zhMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem zhhMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fragmentsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chargesMenuItem;

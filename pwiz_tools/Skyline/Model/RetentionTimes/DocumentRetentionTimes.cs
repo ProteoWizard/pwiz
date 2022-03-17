@@ -20,11 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -139,15 +137,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     continue;
                 }
-                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, new CustomCancellationToken(CancellationToken.None, () => progressMonitor.IsCanceled));
-                if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
+
+                using (var tokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled))
                 {
-                    continue;
+                    var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
+                        REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, tokenSource.Token);
+                    if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
+                        !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
+                    {
+                        continue;
+                    }
+                    var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
+                    if (regressionLine != null)
+                        alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
                 }
-                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
-                if (regressionLine != null)
-                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
             }
             return new FileRetentionTimeAlignments(dataFileName, alignments);
         }

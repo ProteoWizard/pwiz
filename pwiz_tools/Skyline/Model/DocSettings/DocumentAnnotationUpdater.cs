@@ -321,16 +321,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     for (int fileIndex = 0; fileIndex < results[replicateIndex].Count; fileIndex++)
                     {
                         var chromInfo = results[replicateIndex][fileIndex];
-                        if (chromInfo != null)
+                        var resultKey = new ResultKey(replicate, fileIndex);
+                        TResult resultObject;
+                        if (resultObjects.TryGetValue(resultKey, out resultObject))
                         {
-                            var resultKey = new ResultKey(replicate, fileIndex);
-                            TResult resultObject;
-                            if (resultObjects.TryGetValue(resultKey, out resultObject))
-                            {
-                                var newAnnotations =
-                                    AnnotationUpdater.UpdateAnnotations(GetAnnotations(chromInfo), resultObject);
-                                chromInfo = ChangeAnnotations(chromInfo, newAnnotations);
-                            }
+                            var newAnnotations =
+                                AnnotationUpdater.UpdateAnnotations(GetAnnotations(chromInfo), resultObject);
+                            chromInfo = ChangeAnnotations(chromInfo, newAnnotations);
                         }
 
                         list.Add(chromInfo);

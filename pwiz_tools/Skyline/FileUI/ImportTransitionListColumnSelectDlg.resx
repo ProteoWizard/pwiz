@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="buttonOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>610, 358</value>
+    <value>603, 358</value>
   </data>
   <data name="buttonOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="buttonCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>691, 358</value>
+    <value>684, 358</value>
   </data>
   <data name="buttonCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -187,7 +187,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="buttonCheckForErrors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>506, 358</value>
+    <value>499, 358</value>
   </data>
   <data name="buttonCheckForErrors.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 23</value>
@@ -217,7 +217,7 @@
     <value>0, 23</value>
   </data>
   <data name="comboPanelInner.Size" type="System.Drawing.Size, System.Drawing">
-    <value>736, 35</value>
+    <value>746, 35</value>
   </data>
   <data name="comboPanelInner.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -235,10 +235,10 @@
     <value>0</value>
   </data>
   <data name="comboPanelOuter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 36</value>
+    <value>16, 36</value>
   </data>
   <data name="comboPanelOuter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 75</value>
+    <value>749, 75</value>
   </data>
   <data name="comboPanelOuter.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -259,7 +259,7 @@
     <value>True</value>
   </data>
   <data name="fileLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 9</value>
+    <value>13, 9</value>
   </data>
   <data name="fileLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>47, 13</value>
@@ -286,10 +286,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="dataGrid.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 36</value>
+    <value>16, 36</value>
   </data>
   <data name="dataGrid.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 307</value>
+    <value>742, 307</value>
   </data>
   <data name="dataGrid.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -316,7 +316,7 @@
     <value>NoControl</value>
   </data>
   <data name="CheckShowUnusedColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 362</value>
+    <value>198, 362</value>
   </data>
   <data name="CheckShowUnusedColumns.Size" type="System.Drawing.Size, System.Drawing">
     <value>133, 17</value>
@@ -346,7 +346,7 @@
     <value>True</value>
   </data>
   <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 360</value>
+    <value>16, 360</value>
   </data>
   <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
     <value>66, 17</value>
@@ -376,7 +376,7 @@
     <value>True</value>
   </data>
   <data name="radioMolecule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>111, 360</value>
+    <value>101, 360</value>
   </data>
   <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 17</value>
@@ -409,7 +409,7 @@
     <value>NoControl</value>
   </data>
   <data name="checkBoxAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>364, 362</value>
+    <value>354, 362</value>
   </data>
   <data name="checkBoxAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 17</value>
@@ -439,7 +439,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>772, 392</value>
+    <value>775, 392</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

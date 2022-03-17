@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.DataAnalysis;
+using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
@@ -69,8 +69,9 @@ namespace pwiz.Skyline.Model.Lib
         /// In cases where there is more than one MS2 id in either file, only the earliest MS2 id from
         /// each file is used.
         /// </summary>
-        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
-            CustomCancellationToken token)
+        public static AlignedRetentionTimes AlignLibraryRetentionTimes(
+            IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, 
+            double refinementThreshhold, RegressionMethodRT regressionMethod, CancellationToken token)
         {
             var calculator = new DictionaryRetentionScoreCalculator(@"alignment", originalTimes);
             var targetTimesList = new List<MeasuredRetentionTime>();

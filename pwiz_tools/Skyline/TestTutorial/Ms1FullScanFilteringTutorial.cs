@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -44,6 +45,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -521,14 +523,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
-                    Assert.AreEqual(726, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(75656, pointCount);
                     SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
                 });
                 WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
 
                 RunUI(() =>
                 {
-                    Assert.AreEqual(36, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(3575, pointCount);
                     SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
                 });
             }
@@ -714,6 +718,25 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private int GetTotalPointCount(GraphPane msGraphPane)
+        {
+            int total = 0;
+            foreach (var curve in msGraphPane.CurveList)
+            {
+                var pointList = curve.Points;
+                if (pointList is MSPointList msPointList)
+                {
+                    total += msPointList.FullCount;
+                }
+                else
+                {
+                    total += pointList.Count;
+                }
+            }
+
+            return total;
         }
 
         private GraphChromatogram GetGraphChromatogram(int chromIndex)

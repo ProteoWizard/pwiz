@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -38,6 +39,8 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -464,6 +467,8 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot<SkylineWindow>("No legend", 34);
 
+                TestAsymmetricOptimization();
+
                 // Show Pentose-P
                 SelectNode(SrmDocument.Level.Molecules, 6);
                 PauseForScreenShot<SkylineWindow>("Pentose-P", 35);
@@ -500,6 +505,68 @@ namespace pwiz.SkylineTestTutorial
                     PauseForScreenShot<SchedulingOptionsDlg>("Final Scheduling", 37);
                     OkDialog(scheduleDlg, scheduleDlg.OkDialog);
                 }
+            }
+        }
+
+        private void TestAsymmetricOptimization()
+        {
+            SelectNode(SrmDocument.Level.TransitionGroups, 1);
+            WaitForGraphs();
+            TestSelectedAsymOpt(0.95, 0);
+            SelectNode(SrmDocument.Level.TransitionGroups, 2);
+            WaitForGraphs();
+            TestSelectedAsymOpt(0.99, 2);
+            SelectNode(SrmDocument.Level.Transitions, 2);
+            WaitForGraphs();
+            TestSelectedAsymOpt(0.99, 2);
+
+            // Close the opened second molecule node.
+            RunUI(() => SkylineWindow.SequenceTree.Nodes[0].Nodes[1].Collapse());
+        }
+
+        private void TestSelectedAsymOpt(double expectedMinCorr, int expMaxStep)
+        {
+            RunUI(() =>
+            {
+                var chromPoints = SkylineWindow.GraphChromatograms.Last().CurveList;
+                Assert.AreEqual(11, chromPoints.Count);
+                AreaReplicateGraphPane pane;
+                SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane);
+                var areaPoints = pane.CurveList;
+                Assert.AreEqual(chromPoints.Count, areaPoints.Count);
+                var chromIntensities = new List<double>();
+                var areaIntensities = new List<double>();
+                for (int i = 0; i < chromPoints.Count; i++)
+                {
+                    var chrom = chromPoints[i];
+                    var area = areaPoints[i];
+                    Assert.AreEqual(chrom.Label.Text, area.Label.Text);
+                    chromIntensities.Add(ToIntensities(chrom.Points).Max());
+                    areaIntensities.Add(ToIntensities(area.Points).Last());
+                }
+
+                var statChrom = new Statistics(chromIntensities);
+                var statArea = new Statistics(areaIntensities);
+                double corr = statChrom.R(statArea);
+                Assert.IsTrue(corr >= expectedMinCorr, "Correlation between chromatogram and area intensities {0} expected to be >= {1}",
+                    corr, expectedMinCorr);
+                Assert.AreEqual(expMaxStep, areaIntensities.IndexOf(statArea.Max()) - 5);
+                Assert.AreEqual(expMaxStep, chromIntensities.IndexOf(statChrom.Max()) - 5);
+            });
+        }
+
+        private IEnumerable<double> ToIntensities(IPointList points)
+        {
+            // Return at least a single zero point even if there are no points
+            if (points.Count == 0)
+                yield return 0;
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (points[i].IsMissing)
+                    yield return 0;
+                else
+                    yield return points[i].Y;
             }
         }
 

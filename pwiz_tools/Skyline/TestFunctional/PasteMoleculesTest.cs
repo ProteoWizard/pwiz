@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             var allErrorText = string.Empty;
             clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = clipText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = clipText);
 
             RunUI(() =>
             {
@@ -81,11 +81,11 @@ namespace pwiz.SkylineTestFunctional
                     {
                         foreach (var err in errDlg.ErrorList)
                         {
-                            allErrorText += err.ErrorMessage;
+                            allErrorText += err.ErrorMessage + "\n";
                         }
                         Assert.IsTrue(allErrorText.Contains(errText),
                             string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                                errText, errDlg.ErrorList));
+                                errText, allErrorText));
                     });
                     OkDialog(errDlg, errDlg.Close);
                 } else {
@@ -124,6 +124,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestMzOrderIndependence();
+            TestNegativeModeLabels();
+            TestEmptyTransitionList();
+            TestErrorDialog();
             TestImportMethods();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
@@ -197,11 +201,11 @@ namespace pwiz.SkylineTestFunctional
             TestError(line1.Replace("\t-2\t-2", "\t-2\t2").Replace(productMzAtZNeg2.ToString(CultureInfo.CurrentCulture),""), // precursor and charge polarities disagree
                 Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
             TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
-                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                1, (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                String.Format(Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
+                (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
-                String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_,
-                1, (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                String.Format(Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
+                (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
@@ -211,13 +215,13 @@ namespace pwiz.SkylineTestFunctional
                 String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
                 badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder);
             TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2), fullColumnOrder);
+                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, fullColumnOrder);
             TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2), fullColumnOrder);
+                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, fullColumnOrder);
             TestError(line1 + line2start + "\t7\t1", // Product Formula and m/z don't make sense together
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, 2), fullColumnOrder);
+                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, fullColumnOrder);
             TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
-                String.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 2), fullColumnOrder);
+                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, fullColumnOrder);
             TestError(line1 + line3, // Insanely large molecule
                 string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 503970013.01879, CustomMolecule.MAX_MASS), fullColumnOrder);
             TestError(line1 + line4, // Insanely small molecule
@@ -394,7 +398,7 @@ namespace pwiz.SkylineTestFunctional
             // Now a proper user data set
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = GetCsvFileText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")));
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = GetCsvFileText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")));
 
             RunUI(() => {
                 // Example line from that file: "PC,PC aa C24:0,,C32H64N1O8P1,C5H14N1O4P1,622.445,184.074"
@@ -652,7 +656,7 @@ namespace pwiz.SkylineTestFunctional
             // Bad charge states mid-list were handled ungracefully due to lookahead in figuring out transition groups
             const int badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv")).Replace(
                 ",4,4".Replace(',', TextUtil.CsvSeparator), (",4," + badcharge).Replace(',', TextUtil.CsvSeparator)));
             RunUI(() => {
                 windowDlg.radioMolecule.PerformClick();
@@ -687,7 +691,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(showDialog);
             var text = GetCsvFileText(TestFilesDir.GetTestPath("SmallMolDataFix.csv"));
             var text1Dialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var col0Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => text1Dialog.textBox1.Text = text);
+            var col0Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => text1Dialog.TransitionListText = text);
             RunUI(() => {
                 col0Dlg.radioMolecule.PerformClick();
                 col0Dlg.SetSelectedColumnTypes(
@@ -899,7 +903,7 @@ namespace pwiz.SkylineTestFunctional
             const string inconsistent =
                 "Oly\tlager\tbubbles\t452\t\t\t\t1\t\t\n" +
                 "Oly\tlager\tfoam\t234\t163\t\t\t1\t1\tduly noted?";
-            var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
+            var errText = string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
             TestError(inconsistent, errText, columnOrder);
 
             // If user omits product info altogether, that implies precursor transitions
@@ -1008,15 +1012,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
-            var exception = new LineColNumberedIoException(Resources.MassListImporter_Import_Failed_to_find_peptide_column, 1,
-                -1);
-
             // Inserting the header row by itself should produce an error message
-            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            AssertEx.ThrowsException<InvalidDataException>(() => SkylineWindow.Invoke(new Action(() =>
                 {
-                    SkylineWindow.Paste(header);
+                    SkylineWindow.InsertSmallMoleculeTransitionList(header,
+                        Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
                 })),
-                exception.Message);
+                Resources.MassListImporter_Import_Empty_transition_list);
 
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
@@ -1249,7 +1251,7 @@ namespace pwiz.SkylineTestFunctional
                 "QEP1_2021_0823_RJ_31_2ef55prm.raw\t5909\t1\t[M+H]\tXFNJVJPLKCPIBV-UHFFFAOYSA-N\tC3H10N2\t\"1,3 - DIAMINOPROPANE\"\tHMDB00002\t8.9\t2\t74.0844\t75.09222333\tC3H8N\t59.0656708\tna\tna\n"; // Implied fragment M+H
             var docOrig = NewDocument();
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
             OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             WaitForClosedForm(importDialog);
 
@@ -1269,7 +1271,7 @@ namespace pwiz.SkylineTestFunctional
             var text = "Molecular Formula, Precursor Charge,Product Formula, Product Charge\nH2O10,1,HO10,1\nH2O10,1,HO6,1";
             var docOrig = NewDocument();
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
             OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             WaitForClosedForm(importDialog);
 
@@ -1285,20 +1287,20 @@ namespace pwiz.SkylineTestFunctional
             var text = "Molecular Formula\tPrecursor Charge\tProduct Name\tProduct Charge\nH2O10\t1\tHO10\t1\nH2O10\t1\tHO6\t1";
             var docOrig = NewDocument();
             var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.textBox1.Text = text);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
 
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
             RunUI(() =>
             {
-                var allErrorText = string.Empty;
+                var lineNum = 2;
+                AssertEx.AreEqual(2, errDlg.ErrorList.Count);
                 foreach (var err in errDlg.ErrorList)
                 {
-                    allErrorText += err.ErrorMessage;
+                    var errText = string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, lineNum++);
+                    Assert.IsTrue(err.ErrorMessage.Contains(errText),
+                        "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                        errText, err.ErrorMessage);
                 }
-                var errText = string.Format(Resources.PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, 1);
-                Assert.IsTrue(allErrorText.Contains(errText),
-                    "Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
-                    errText, errDlg.ErrorList);
             });
             OkDialog(errDlg, errDlg.Close);
             OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
@@ -1330,7 +1332,7 @@ namespace pwiz.SkylineTestFunctional
                 "Amino Acids B\tArgB\t\tlight\t\t\t310\t218\t-1\t-1\t19\n" +
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t219\t-1\t-1\t19\n" +
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t220\t-1\t-1\t19\n";
-            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = transistionList.Replace(".",
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = transistionList.Replace(".",
                 CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
 
             RunUI(() => {
@@ -1362,6 +1364,98 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestMzOrderIndependence()
+        {
+            // Ensure that the line order of an m/z-only mixed polarity transition list does not matter
+            var texts = new[]
+            {
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n", // If bug is not fixed, this order won't give same doc structure as the other
+
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n"
+            };
+            foreach (var text in texts)
+            {
+                SetClipboardText(text);
+                // Paste directly into targets area - no interaction expected
+                RunUI(() => SkylineWindow.Paste());
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 2);
+                AssertEx.AreEqual(228, SkylineWindow.Document.Molecules.First().Target.Molecule.AverageMass, 1);
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t => 
+                    t.PrecursorAdduct.AdductCharge < 0 && !t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t =>
+                    t.PrecursorAdduct.AdductCharge > 0 && t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 144.1) < 1));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    !t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 236.1) < 1));
+                NewDocument();
+            }
+        }
+
+        private void TestNegativeModeLabels()
+        {
+            // If bug is not fixed, the negative heavy does not appear in the document
+            var text = "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor Charge,Label Type\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M+H]+,1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M+H]+,1,heavy\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M-H]-,-1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M-H]-,-1,heavy";
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 4, 4);
+            NewDocument();
+        }
+        
+        private void TestEmptyTransitionList()
+        {
+            var text = "Precursor Name\t Precursor Formula \tPrecursor Charge \tPrecursor Adduct \tPrecursor m/z\n" +
+                       "\n";
+            var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var errDlg = ShowDialog<MessageDlg>(() => importDialog.TransitionListText = text); // Testing that we catch the exception properly
+            OkDialog(errDlg, errDlg.Close);
+        }
+
+        private void TestErrorDialog()
+        {
+            var text = "Precursor Name	Precursor Formula \tPrecursor Charge \tPrecursor Adduct \tPrecursor m/z\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[M-H]\t59\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[6M-H6+Fe3+O]\t536.88\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[6M-H6+H2O+Fe3+O]\t555.88\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[7M-H6+Fe3+O]\t596.9\n" +
+                       "Acetic Acid\tC2H4O2\t1\t[8M-H6+Fe3+O]\t657.92\n";
+            SetClipboardText(text);
+            // Paste directly into targets area
+            var transitionDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => transitionDlg.buttonCheckForErrors.PerformClick());
+            RunUI(() => errDlg.ShowLineText(true));
+
+            /*
+             Expect errors
+                Adduct[M - H] charge - 1 does not agree with declared charge 1    2   4   Acetic Acid C2H4O2 1 [M-H] 59
+                Error on line 3: Precursor m/ z 536,88 does not agree with value 537,879 as calculated from ion formula and charge state(delta = 0,9990012, Transition Settings | Instrument | Method match tolerance m / z = 0,055).  Correct the m / z value in the table, or leave it blank and Skyline will calculate it for you.   3   5   Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88
+                Error on line 5: Precursor m / z 596, 9 does not agree with value 597, 9001 as calculated from ion formula and charge state(delta = 1, 000131, Transition Settings | Instrument | Method match tolerance m / z = 0, 055).Correct the m / z value in the table, or leave it blank and Skyline will calculate it for you.    5   5   Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9
+            */
+            AssertEx.AreEqual(3, errDlg.ErrorList.Count);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "[M-H]", -1, 1),
+                3, 2, "Acetic Acid C2H4O2 1 [M-H] 59"), errDlg.ErrorList[0]);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
+                    536.88, 537.879, 0.9990012, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance), 
+                4, 3, "Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88"), errDlg.ErrorList[1]);
+            AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
+                    Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
+                    596.9, 597.9001, 1.000131, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance),
+                4, 5, "Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9"), errDlg.ErrorList[2]);
+            RunUI(() => errDlg.OkDialog());
+            RunUI(() => transitionDlg.CancelDialog());
         }
 
         private void TestProductNeutralLoss()

@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
             
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = insertListText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = insertListText);
 
             RunUI(() => {
                 windowDlg.SetSelectedColumnTypes(
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             var showDialog1 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.textBox1.Text = insertListText);
+            var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.TransitionListText = insertListText);
 
             RunUI(() => {
                 windowDlg1.SetSelectedColumnTypes(
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             // Finally a working set of transitions
             SetClipboardText(insertPart1 + insertSep + insertPart2);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = insertPart1 + insertSep + insertPart2);
+            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = insertPart1 + insertSep + insertPart2);
             RunUI(() => {
                 windowDlg2.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
                 insertListText;
             string allErrorText = "";
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
             RunUI(() => {
                 windowDlg.SetSelectedColumnTypes(
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,

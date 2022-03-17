@@ -93,12 +93,6 @@ Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844+
 All Info  :
 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 
-Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
-Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
-All Info  :
-离子对设置 -- 整合 > 全部整合 已更改为 真
-设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
-
 Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [29, 42]
 Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [29, 42]
 All Info  :
@@ -175,6 +169,12 @@ Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
 Summary   : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
 All Info  :
 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
+
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
+All Info  :
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
 
 Undo Redo : 已删除目标 NP_001033064 > GMYESLPVVAVK
 Summary   : 已删除目标 NP_001033064 > GMYESLPVVAVK

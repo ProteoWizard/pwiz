@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model
                     var monitor = _container as IProgressMonitor;
                     if (monitor != null && monitor.IsCanceled)
                         return true;
-                    // Check for cancelation of just this item
+                    // Check for cancellation of just this item
                     return IsCanceledItem(_tag);
                 }
             }

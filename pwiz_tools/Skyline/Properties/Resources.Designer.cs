@@ -1589,6 +1589,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must contain a decimal value..
+        /// </summary>
+        public static string AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value {
+            get {
+                return ResourceManager.GetString("AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cutoff value must be greater or equal than 0. and lesser or equal than 1..
+        /// </summary>
+        public static string AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1 {
+            get {
+                return ResourceManager.GetString("AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not enough data.
         /// </summary>
         public static string AreaCVHistogram2DGraphPane_Draw_Not_enough_data {
@@ -1770,6 +1788,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} cutoff - {1:F2}.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Dotp_Cutoff_Line_Label {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Dotp_Cutoff_Line_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected.
         /// </summary>
         public static string AreaReplicateGraphPane_InitFromData_Expected {
@@ -1784,6 +1811,33 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_InitFromData_Library {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_InitFromData_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates above {2} cutoff: {0}, below cutoff: {1}.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}:.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Tooltip_Dotp {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Dotp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate:.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Tooltip_Replicate {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Replicate", resourceCulture);
             }
         }
         
@@ -16471,6 +16525,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A transition contained an error..
         /// </summary>
         public static string ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ {
@@ -16542,26 +16605,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_p" +
                         "eptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_followi" +
                         "ng__2__peptides_are_missing___3__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}, column {1}: {2}.
-        /// </summary>
-        public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_ {
-            get {
-                return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
-                        "__0___column_1____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: {1}.
-        /// </summary>
-        public static string InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_ {
-            get {
-                return ResourceManager.GetString("InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line" +
-                        "__0__1_", resourceCulture);
             }
         }
         
@@ -21535,24 +21578,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Precursor m/z {1} does not agree with value {2} as calculated from ion formula and charge state (delta = {3}, Transition Settings | Instrument | Method match tolerance m/z = {4}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you..
-        /// </summary>
-        public static string PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_ {
-            get {
-                return ResourceManager.GetString(@"PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Product m/z {1} does not agree with value {2} as calculated from ion formula and charge state (delta = {3}, Transition Settings | Instrument | Method match tolerance m/z = {4}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you..
-        /// </summary>
-        public static string PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_ {
-            get {
-                return ResourceManager.GetString(@"PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid charge value {0}.
         /// </summary>
         public static string PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_ {
@@ -21983,46 +22008,6 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_S_Lens {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_S_Lens", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Precursor formula and m/z value do not agree for any charge state..
-        /// </summary>
-        public static string PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_" +
-                        "agree_for_any_charge_state_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Precursor needs values for any two of: Formula, m/z or Charge..
-        /// </summary>
-        public static string PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__" +
-                        "Formula__m_z_or_Charge_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Product formula and m/z value do not agree for any charge state..
-        /// </summary>
-        public static string PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_ag" +
-                        "ree_for_any_charge_state_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error on line {0}: Product needs values for any two of: Formula, m/z or Charge..
-        /// </summary>
-        public static string PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_ {
-            get {
-                return ResourceManager.GetString("PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Fo" +
-                        "rmula__m_z_or_Charge_", resourceCulture);
             }
         }
         
@@ -23747,6 +23732,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule Quantification.
+        /// </summary>
+        public static string PersistedViews_GetDefaults_Molecule_Quantification {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Molecule_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Ratio Results.
+        /// </summary>
+        public static string PersistedViews_GetDefaults_Molecule_Ratio_Results {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Molecule_Ratio_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Main.
         /// </summary>
         public static string PersistedViews_MainGroup_Main {
@@ -25433,6 +25436,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ReportSpecList_EditItem_An_unexpected_error_occurred_while_analyzing_the_current_" +
                         "document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Peak Boundaries.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_Peak_Boundaries {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_Peak_Boundaries", resourceCulture);
             }
         }
         
@@ -27267,6 +27279,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline 21.2.
+        /// </summary>
+        public static string SkylineVersion_V21_2_Skyline_21_2 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V21_2_Skyline_21_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline 3.6.
         /// </summary>
         public static string SkylineVersion_V3_6_Skyline_3_6 {
@@ -27380,15 +27401,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineViewContext_GetDocumentGridRowSources_Transitions {
             get {
                 return ResourceManager.GetString("SkylineViewContext_GetDocumentGridRowSources_Transitions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Mixed Transition List.
-        /// </summary>
-        public static string SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List {
-            get {
-                return ResourceManager.GetString("SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List", resourceCulture);
             }
         }
         
@@ -30413,6 +30425,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_val" +
+                        "ue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot use product neutral loss chemical formula without a precursor chemical formula.
         /// </summary>
         public static string SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula {
@@ -30429,6 +30451,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula_" +
                         "_0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value" +
+                        "_", resourceCulture);
             }
         }
         
@@ -30570,6 +30602,46 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobi" +
                         "lity_declarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor formula and m/z value do not agree for any charge state..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula" +
+                        "_and_m_z_value_do_not_agree_for_any_charge_state_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor needs values for any two of: Formula, m/z or Charge..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_v" +
+                        "alues_for_any_two_of__Formula__m_z_or_Charge_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product formula and m/z value do not agree for any charge state..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_a" +
+                        "nd_m_z_value_do_not_agree_for_any_charge_state_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product needs values for any two of: Formula, m/z or Charge..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_val" +
+                        "ues_for_any_two_of__Formula__m_z_or_Charge_", resourceCulture);
             }
         }
         

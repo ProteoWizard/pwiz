@@ -900,5 +900,24 @@ namespace pwiz.Skyline.Model.Databinding
                 return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
             }
         }
+
+        public override bool CanDisplayView(ViewSpec viewSpec)
+        {
+            if (!base.CanDisplayView(viewSpec))
+            {
+                return false;
+            }
+
+            var reportUiMode = DataSchema.NormalizeUiMode(viewSpec.UiMode);
+            switch (DataSchema.DefaultUiMode)
+            {
+                case UiModes.PROTEOMIC:
+                    return reportUiMode != UiModes.SMALL_MOLECULES;
+                case UiModes.SMALL_MOLECULES:
+                    return reportUiMode != UiModes.PROTEOMIC;
+            }
+
+            return true;
+        }
     }
 }
