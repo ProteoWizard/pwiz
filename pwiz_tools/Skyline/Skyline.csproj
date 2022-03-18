@@ -620,7 +620,6 @@
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
-    <Compile Include="Model\Results\Scoring\CandidatePeakScoreCalculator.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNameList.cs" />

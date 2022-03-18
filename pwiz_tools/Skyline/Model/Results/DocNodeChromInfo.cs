@@ -213,9 +213,9 @@ namespace pwiz.Skyline.Model.Results
                                         PeakIdentification identified,
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
-                                        float? qValue,
+                                        float? qvalue,
                                         FeatureScores featureScores,
-                                        float? zScore,
+                                        float? zscore,
                                         Annotations annotations,
                                         UserSet userSet)
             : base(fileId)
@@ -239,9 +239,9 @@ namespace pwiz.Skyline.Model.Results
             Identified = identified;
             LibraryDotProduct = libraryDotProduct;
             IsotopeDotProduct = isotopeDotProduct;
-            QValue = qValue;
+            QValue = qvalue;
             FeatureScores = featureScores;
-            ZScore = zScore;
+            ZScore = zscore;
             Annotations = annotations;
             UserSet = userSet;
         }
