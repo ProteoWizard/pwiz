@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Serialization
                 identified,
                 libraryDotProduct,
                 isotopeDotProduct,
-                ChosenPeakScores.WithDetectionScore(zscore, qvalue), 
+                new ChosenPeakScores(zscore, qvalue), 
                 annotations,
                 userSet);
         }

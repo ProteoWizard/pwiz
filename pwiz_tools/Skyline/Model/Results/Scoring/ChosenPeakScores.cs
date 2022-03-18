@@ -6,20 +6,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class ChosenPeakScores : Immutable
     {
-        public static readonly ChosenPeakScores NONE = new ChosenPeakScores();
-
-        private ChosenPeakScores()
+        public ChosenPeakScores(float? detectionZScore, float? detectionQValue)
         {
-        }
-
-        public static ChosenPeakScores WithDetectionScore(float? detectionZScore, float? detectionQValue)
-        {
-            if (detectionZScore.HasValue)
-            {
-                return NONE.ChangeDetectionScore(detectionZScore.Value, detectionQValue);
-            }
-
-            return NONE;
+            DetectionZScore = detectionZScore;
+            DetectionQValue = detectionQValue;
         }
         [Flags]
         private enum Flags
@@ -50,7 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        public ChosenPeakScores ChangeDetectionScore(float detectionZScore, float? detectionQValue)
+        public ChosenPeakScores ChangeDetectionScore(float? detectionZScore, float? detectionQValue)
         {
             return ChangeProp(ImClone(this), im =>
             {

@@ -2608,7 +2608,7 @@ namespace pwiz.Skyline.Model
                                                     Identified,
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
-                                                    ChosenPeakScores.WithDetectionScore(ZScore, qValue),
+                                                    new ChosenPeakScores(ZScore, qValue),
                                                     Annotations,
                                                     UserSet);
             }
