@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public static class PeakFeatureEnumerator
     {
         public static PeakTransitionGroupFeatureSet GetPeakFeatures(this SrmDocument document,
-                                                                               IList<IPeakFeatureCalculator> calcs,
+                                                                               FeatureCalculators calcs,
                                                                                IProgressMonitor progressMonitor = null,
                                                                                bool verbose = false)
         {
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(SrmSettings settings,
                                                                                 PeptideGroupDocNode nodePepGroup,
                                                                                 PeptideDocNode nodePep,
-                                                                                IList<IPeakFeatureCalculator> calcs,
+                                                                                FeatureCalculators calcs,
                                                                                 IDictionary<int, int> runEnumDict,
                                                                                 bool verbose)
         {
@@ -138,7 +139,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                    PeptideDocNode nodePep,
                                                                    IsotopeLabelType labelType,
                                                                    IList<TransitionGroupDocNode> nodeGroups,
-                                                                   IList<IPeakFeatureCalculator> calcs,
+                                                                   FeatureCalculators calcs,
                                                                    IDictionary<int, int> runEnumDict,
                                                                    bool verbose)
         {
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
-                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, features));
+                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, new FeatureScores(calcs, ImmutableList.ValueOf(features))));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures.ToArray(), verbose);
@@ -768,20 +769,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public struct PeakGroupFeatures
     {
         public PeakGroupFeatures(int peakIndex, float retentionTime, float startTime, float endTime,
-            float[] features) : this()
+            FeatureScores features) : this()
         {
             OriginalPeakIndex = peakIndex;
             // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
-            Features = features;
+            FeatureScores = features;
         }
 
         public int OriginalPeakIndex { get; private set; }
         public float RetentionTime { get; private set; }
         public float StartTime { get; private set; }
         public float EndTime { get; private set; }
-        public float[] Features { get; private set; }
+        public FeatureScores FeatureScores { get; }
+        public ImmutableList<float> Features
+        {
+            get { return FeatureScores.Values; }
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// List of feature calculators used by this model in scoring.
         /// </summary>
-        IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
+        FeatureCalculators PeakFeatureCalculators { get; }
 
         /// <summary>
         /// Method called to train the model.  Features scores for positive and negative distributions
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
         /// <param name="progressMonitor">Progress monitor for displaying progress to the user</param>
         /// <param name="documentPath">Path on disk of the document for writing diagnostic files</param>
-        IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
+        IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
 
         /// <summary>
@@ -153,8 +153,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
 
         public abstract bool ReplaceUnknownFeatureScores { get; }
-        public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
-        public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
+        public abstract FeatureCalculators PeakFeatureCalculators { get; }
+        public abstract IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
         public double Score(IList<float> features)
         {
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return base.Equals(other) && 
                 UsesDecoys.Equals(other.UsesDecoys) && 
                 UsesSecondBest.Equals(other.UsesSecondBest) && 
-                AreSameCalculators(PeakFeatureCalculators, other.PeakFeatureCalculators) &&
+                PeakFeatureCalculators.Equals(other.PeakFeatureCalculators) &&
                 Equals(Parameters, other.Parameters);
         }
 

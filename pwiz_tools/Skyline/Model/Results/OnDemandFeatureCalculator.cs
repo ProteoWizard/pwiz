@@ -105,14 +105,14 @@ namespace pwiz.Skyline.Model.Results
             return list;
         }
 
-        internal IEnumerable<FeatureValues> CalculateScoresForComparableGroup(PeptideChromDataSets peptideChromDataSets,
+        internal IEnumerable<FeatureScores> CalculateScoresForComparableGroup(PeptideChromDataSets peptideChromDataSets,
             IList<ChromDataSet> comparableSet)
         {
             var transitionGroups = comparableSet.Select(dataSet => dataSet.NodeGroup).ToList();
             var chromatogramGroupInfos = peptideChromDataSets.MakeChromatogramGroupInfos(comparableSet).ToList();
             if (chromatogramGroupInfos.Count == 0)
             {
-                return Array.Empty<FeatureValues>();
+                return Array.Empty<FeatureScores>();
             }
             return CalculateChromatogramGroupScores(transitionGroups, chromatogramGroupInfos);
         }
@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IList<CandidatePeakGroupData> MakePeakGroupData(IList<TransitionGroupDocNode> transitionGroups,
-            IList<ChromatogramGroupInfo> chromatogramGroupInfos, IList<FeatureValues> peakGroupFeatureValues)
+            IList<ChromatogramGroupInfo> chromatogramGroupInfos, IList<FeatureScores> peakGroupFeatureValues)
         {
             var chromatogramInfos = new List<ChromatogramInfo>();
             
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
 
         private CandidatePeakGroupData MakeCandidatePeakGroupData(int peakIndex,
             IList<ChromatogramInfo> chromatogramInfos, IList<TransitionChromInfo> transitionChromInfos,
-            FeatureValues featureValues)
+            FeatureScores featureScores)
         {
             Assume.AreEqual(chromatogramInfos.Count, transitionChromInfos.Count);
             bool isChosen = true;
@@ -237,20 +237,20 @@ namespace pwiz.Skyline.Model.Results
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
             }
-            return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureValues));
+            return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
         }
 
-        private PeakGroupScore MakePeakScore(FeatureValues featureValues)
+        private PeakGroupScore MakePeakScore(FeatureScores featureScores)
         {
             var model = Settings.PeptideSettings.Integration.PeakScoringModel;
             if (model == null || !model.IsTrained)
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
             }
-            return PeakGroupScore.MakePeakScores(featureValues, model, _scoreQValueMap);
+            return PeakGroupScore.MakePeakScores(featureScores, model, _scoreQValueMap);
         }
 
-        internal IEnumerable<FeatureValues> CalculateChromatogramGroupScores(
+        internal IEnumerable<FeatureScores> CalculateChromatogramGroupScores(
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
             var context = new PeakScoringContext(Settings);
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                yield return new FeatureValues(Calculators, ImmutableList.ValueOf(scores));
+                yield return new FeatureScores(Calculators, ImmutableList.ValueOf(scores));
             }
         }
 

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model
     public class MProphetResultsHandler
     {
         private double[] _qValues;
-        private readonly IList<IPeakFeatureCalculator> _calcs;
+        private readonly FeatureCalculators _calcs;
         private PeakTransitionGroupFeatureSet _features;
 
         private readonly Dictionary<PeakTransitionGroupIdKey, PeakFeatureStatistics> _featureDictionary;
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model
             ScoringModel = scoringModel;
             _calcs = ScoringModel != null
                 ? ScoringModel.PeakFeatureCalculators
-                : PeakFeatureCalculator.Calculators.ToArray();
+                : FeatureCalculators.ALL;
             _features = features;
             _featureDictionary = new Dictionary<PeakTransitionGroupIdKey, PeakFeatureStatistics>();
 
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model
 
         public void WriteScores(TextWriter writer,
             CultureInfo cultureInfo,
-            IList<IPeakFeatureCalculator> calcs = null,
+            FeatureCalculators calcs = null,
             bool bestOnly = true,
             bool includeDecoys = true,
             IProgressMonitor progressMonitor = null)

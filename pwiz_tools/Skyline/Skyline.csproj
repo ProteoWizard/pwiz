@@ -632,6 +632,7 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

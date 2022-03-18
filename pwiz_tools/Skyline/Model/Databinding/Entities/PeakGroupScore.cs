@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
@@ -13,7 +12,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class PeakGroupScore
     {
-        public PeakGroupScore(FeatureValues scores, double? modelScore, double? qValue, IDictionary<string, WeightedFeature> weightedFeatures)
+        public PeakGroupScore(FeatureScores scores, double? modelScore, double? qValue, IDictionary<string, WeightedFeature> weightedFeatures)
         {
             Features = new Features(scores);
             WeightedFeatures = weightedFeatures;
@@ -33,7 +32,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [OneToMany(ItemDisplayName = "WeightedFeature")]
         public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
 
-        public static PeakGroupScore MakePeakScores(FeatureValues featureValues, PeakScoringModelSpec model, ScoreQValueMap scoreQValueMap)
+        public static PeakGroupScore MakePeakScores(FeatureScores featureScores, PeakScoringModelSpec model, ScoreQValueMap scoreQValueMap)
         {
             var weightedFeatures = new Dictionary<string, WeightedFeature>();
             double? modelScore = 0;
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         continue;
                     }
                     var featureCalc = model.PeakFeatureCalculators[i];
-                    float? score = featureValues.GetValue(featureCalc);
+                    float? score = featureScores.GetFeature(featureCalc);
                     if (!score.HasValue && model is LegacyScoringModel)
                     {
                         score = 0;
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 qValue = scoreQValueMap.GetQValue(modelScore + model.Parameters.Bias);
             }
-            return new PeakGroupScore(featureValues, modelScore, qValue, weightedFeatures);
+            return new PeakGroupScore(featureScores, modelScore, qValue, weightedFeatures);
         }
 
         public override string ToString()
@@ -77,35 +76,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
     public class Features : IFeatureScores, IFormattable
     {
-        private FeatureValues _scores;
-        public Features(FeatureValues scores)
+        private FeatureScores _scores;
+        public Features(FeatureScores scores)
         {
             _scores = scores;
         }
 
         public float? GetFeature(IPeakFeatureCalculator calculator)
         {
-            return _scores.GetValue(calculator.GetType());
+            return _scores.GetFeature(calculator.GetType());
         }
 
         public override string ToString()
         {
-            return ToString(null, CultureInfo.CurrentCulture);
+            return _scores.ToString(null, CultureInfo.CurrentCulture);
         }
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            var parts = new List<string>();
-            foreach (var calc in _scores.Calculators.OrderBy(entry => entry.Name, StringComparer.CurrentCultureIgnoreCase))
-            {
-                var value = GetFeature(calc);
-                if (value.HasValue)
-                {
-                    parts.Add(calc.Name + @":" + value.Value.ToString(format, formatProvider));
-                }
-            }
-
-            return new FormattableList<string>(parts).ToString(format, formatProvider);
+            return _scores.ToString(format, formatProvider);
         }
     }
 

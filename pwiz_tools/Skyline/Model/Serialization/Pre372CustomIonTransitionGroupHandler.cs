@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 var adjustParentMass = retry < 2; // Do/don't try adjusting the neutral mass as if it had proton gain or loss built in
                 var assumeProtonated = retry % 2 == 0; // Do/don't try [M+H] vs [M+] 
-                foreach (var detail in _precursorRawDetails.OrderBy(d => d._declaredHeavy ? 1 : 0, SortOrder.Ascending)) // Look at lights first
+                foreach (var detail in _precursorRawDetails.OrderBy(d => d._declaredHeavy ? 1 : 0)) // Look at lights first
                 {
                     var parentMassAdjustment = adjustParentMass
                         ? Adduct.NonProteomicProtonatedFromCharge(detail._declaredCharge).ApplyToMass(TypedMass.ZERO_MONO_MASSH)

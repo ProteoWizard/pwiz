@@ -192,16 +192,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                foreach (string typeName in Caches.SelectMany(cache => cache.ScoreTypes).Distinct())
-                {
-                    var type = Type.GetType(typeName);
-                    if (type == null)
-                    {
-                        Console.Out.WriteLine("Unable to get type {0}", typeName);
-                    }
-
-                    yield return type;
-                }
+                return Caches.SelectMany(cache => cache.ScoreTypes.AsCalculatorTypes()).Distinct();
             }
         }
 

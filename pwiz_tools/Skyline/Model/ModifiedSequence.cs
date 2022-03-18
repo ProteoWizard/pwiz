@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model
         public ModifiedSequence(string unmodifiedSequence, IEnumerable<Modification> explicitMods, MassType defaultMassType)
         {
             _unmodifiedSequence = unmodifiedSequence;
-            _explicitMods = ImmutableList.ValueOf(explicitMods.OrderBy(mod=>mod.IndexAA, SortOrder.Ascending));
+            _explicitMods = ImmutableList.ValueOf(explicitMods.OrderBy(mod=>mod.IndexAA));
             _defaultMassType = defaultMassType;
         }
 

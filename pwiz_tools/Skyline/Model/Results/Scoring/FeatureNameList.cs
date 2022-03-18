@@ -8,6 +8,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class FeatureNameList : AbstractReadOnlyList<string>
     {
         public static readonly FeatureNameList EMPTY = new FeatureNameList(ImmutableList.Empty<string>());
+        private static readonly Dictionary<string, IPeakFeatureCalculator> _calculatorsByTypeName;
+
+        static FeatureNameList()
+        {
+            _calculatorsByTypeName = PeakFeatureCalculator.Calculators.ToDictionary(calc => calc.GetType().FullName);
+        }
         private readonly ImmutableList<string> _names;
         private readonly Dictionary<string, int> _dictionary;
 
@@ -24,7 +30,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public FeatureNameList(IEnumerable<string> names)
         {
             _names = ImmutableList.ValueOf(names);
-            _dictionary = Enumerable.Range(0, _names.Count).ToDictionary(i => _names[i], i => i);
+            _dictionary = new Dictionary<string, int>();
+            for (int i = 0; i < _names.Count; i++)
+            {
+                string name = _names[i];
+                if (name != null && !_dictionary.ContainsKey(name))
+                {
+                    _dictionary.Add(name, i);
+                }
+            }
         }
 
         public override int Count
@@ -70,6 +84,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override int GetHashCode()
         {
             return (_names != null ? _names.GetHashCode() : 0);
+        }
+
+        public IEnumerable<IPeakFeatureCalculator> AsCalculators()
+        {
+            return this.Select(CalculatorFromTypeName);
+        }
+
+        public IEnumerable<Type> AsCalculatorTypes()
+        {
+            return AsCalculators().Select(calc => calc?.GetType());
+        }
+
+        public static IPeakFeatureCalculator CalculatorFromTypeName(string name)
+        {
+            _calculatorsByTypeName.TryGetValue(name, out var calculator);
+            return calculator;
         }
     }
 }

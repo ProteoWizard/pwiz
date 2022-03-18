@@ -944,7 +944,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Write the scores
                 StringBuilder sbTypes = new StringBuilder();
-                foreach (string scoreTypeName in scoreTypes.Select(scoreType => scoreType.ToString()))
+                foreach (string scoreTypeName in scoreTypes)
                 {
                     outStream.Write(BitConverter.GetBytes(scoreTypeName.Length), 0, sizeof(int));
                     sbTypes.Append(scoreTypeName);

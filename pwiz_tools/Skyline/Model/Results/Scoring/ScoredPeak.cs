@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
@@ -27,8 +28,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public struct ScoredPeak
     {
         public static ScoredPeak Empty = new ScoredPeak(null);
-
-        public float[] Features { get; private set; }
+        public FeatureScores FeatureScores { get; }
+        public ImmutableList<float> Features
+        {
+            get { return FeatureScores.Values; }
+        }
         public double Score { get; set; }
 
         /// <summary>
@@ -38,9 +42,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="features">Array of feature values.</param>
         /// <param name="score">Explicit score value</param>
-        public ScoredPeak(float[] features, double? score = null) : this()
+        public ScoredPeak(FeatureScores features, double? score = null) : this()
         {
-            Features = features;
+            FeatureScores = features;
             if (features != null)
                 Score = score ?? Features[0];    // Use the first feature as the initial score.
         }
@@ -59,7 +63,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 features = LinearModelParams.ReplaceUnknownFeatureScores(features);
             }
-            return new ScoredPeak(Features, LinearModelParams.Score(features, weights, 0));
+            return new ScoredPeak(FeatureScores, LinearModelParams.Score(features, weights, 0));
         }
     }
 }

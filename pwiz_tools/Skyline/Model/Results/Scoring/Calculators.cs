@@ -15,6 +15,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             FeatureNames = FeatureNameList.FromCalculators(_list.Cast<IPeakFeatureCalculator>());
         }
 
+        protected AbstractFeatureCalculatorList(FeatureNameList names)
+        {
+            FeatureNames = names;
+            _list = ImmutableList.ValueOf(names.AsCalculators().Cast<T>());
+        }
+
         public FeatureNameList FeatureNames { get; }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -43,14 +49,44 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return FeatureNames.IndexOf(type);
         }
+
+        protected bool Equals(AbstractFeatureCalculatorList<T> other)
+        {
+            return FeatureNames.Equals(other.FeatureNames);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AbstractFeatureCalculatorList<T>) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return FeatureNames.GetHashCode();
+        }
     }
 
     public class FeatureCalculators : AbstractFeatureCalculatorList<IPeakFeatureCalculator>
     {
         public static readonly FeatureCalculators ALL = new FeatureCalculators(PeakFeatureCalculator.Calculators);
+
+        public static readonly FeatureCalculators NONE =
+            new FeatureCalculators(ImmutableList.Empty<IPeakFeatureCalculator>());
         public FeatureCalculators(IEnumerable<IPeakFeatureCalculator> calculators) : base(calculators)
         {
             Detailed = new DetailedFeatureCalculators(this.OfType<DetailedPeakFeatureCalculator>());
+        }
+
+        public FeatureCalculators(FeatureNameList names) : base(names)
+        {
+        }
+
+        public static FeatureCalculators FromCalculators(IEnumerable<IPeakFeatureCalculator> calculators)
+        {
+            return calculators as FeatureCalculators ?? new FeatureCalculators(calculators);
         }
 
         public DetailedFeatureCalculators Detailed { get; }
@@ -60,38 +96,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public DetailedFeatureCalculators(IEnumerable<DetailedPeakFeatureCalculator> calculators) : base(calculators)
         {
-        }
-    }
-
-    public class FeatureValues
-    {
-        public FeatureValues(FeatureCalculators calculators, ImmutableList<float> values)
-        {
-            Calculators = calculators;
-            Values = values;
-        }
-        public FeatureCalculators Calculators { get; }
-        public ImmutableList<float> Values { get; }
-
-        public float? GetValue(IPeakFeatureCalculator calc)
-        {
-            return GetValue(calc.GetType());
-        }
-        public float? GetValue(Type type)
-        {
-            var index = Calculators.IndexOf(type);
-            if (index >= 0)
-            {
-                var value = Values[index];
-                if (float.IsNaN(value))
-                {
-                    return null;
-                }
-
-                return value;
-            }
-
-            return null;
         }
     }
 }
