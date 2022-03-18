@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -499,7 +500,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class File
         {
             public string FilePath { get; set; }
+            [Track]
+            public string FileName => Path.GetFileName(FilePath);
             public BiblioSpecScoreType ScoreType { get; set; }
+            [Track]
+            public string ScoreTypeName => ScoreType?.ToString();
+            [Track]
             public double? ScoreThreshold { get; set; }
             public bool ScoreTypeError { get; set; }
 
