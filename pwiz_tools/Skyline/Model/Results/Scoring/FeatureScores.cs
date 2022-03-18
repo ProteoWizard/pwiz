@@ -9,6 +9,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class FeatureScores : IFormattable
     {
+        public static readonly FeatureScores EMPTY =
+            new FeatureScores(FeatureCalculators.NONE, ImmutableList.Empty<float>());
         public FeatureScores(FeatureCalculators calculators, IEnumerable<float> values)
         {
             Calculators = calculators;
@@ -60,6 +62,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             return new FormattableList<string>(parts).ToString(format, formatProvider);
+        }
+
+        protected bool Equals(FeatureScores other)
+        {
+            return Equals(Calculators, other.Calculators) && Equals(Values, other.Values);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((FeatureScores) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Calculators != null ? Calculators.GetHashCode() : 0) * 397) ^
+                       (Values != null ? Values.GetHashCode() : 0);
+            }
         }
     }
 }

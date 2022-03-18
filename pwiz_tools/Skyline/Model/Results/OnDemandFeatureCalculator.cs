@@ -232,11 +232,6 @@ namespace pwiz.Skyline.Model.Results
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
                 }
             }
-            var model = Settings.PeptideSettings.Integration.PeakScoringModel;
-            if (model == null || !model.IsTrained)
-            {
-                model = LegacyScoringModel.DEFAULT_MODEL;
-            }
             return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
         }
 

@@ -8,14 +8,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class FeatureNameList : AbstractReadOnlyList<string>
     {
         public static readonly FeatureNameList EMPTY = new FeatureNameList(ImmutableList.Empty<string>());
-        private static readonly Dictionary<string, IPeakFeatureCalculator> _calculatorsByTypeName;
 
+        private static readonly Dictionary<string, IPeakFeatureCalculator> _calculatorsByTypeName;
         static FeatureNameList()
         {
-            _calculatorsByTypeName = PeakFeatureCalculator.Calculators.ToDictionary(calc => calc.GetType().FullName);
+            _calculatorsByTypeName = PeakFeatureCalculator.Calculators.ToDictionary(calc => calc.FullyQualifiedName);
         }
         private readonly ImmutableList<string> _names;
         private readonly Dictionary<string, int> _dictionary;
+        private readonly int _hashCode;
 
         public static FeatureNameList FromCalculators(IEnumerable<IPeakFeatureCalculator> calculators)
         {
@@ -29,7 +30,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         
         public FeatureNameList(IEnumerable<string> names)
         {
-            _names = ImmutableList.ValueOf(names);
+            _names = ImmutableList.ValueOfOrEmpty(names);
+            _hashCode = _names.GetHashCode();
             _dictionary = new Dictionary<string, int>();
             for (int i = 0; i < _names.Count; i++)
             {
@@ -65,7 +67,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public int IndexOf(IPeakFeatureCalculator calculator)
         {
-            return IndexOf(calculator.GetType().FullName);
+            return IndexOf(calculator.FullyQualifiedName);
         }
 
         protected bool Equals(FeatureNameList other)
@@ -83,7 +85,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override int GetHashCode()
         {
-            return (_names != null ? _names.GetHashCode() : 0);
+            return _hashCode;
         }
 
         public IEnumerable<IPeakFeatureCalculator> AsCalculators()

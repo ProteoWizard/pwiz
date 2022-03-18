@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -345,11 +344,11 @@ namespace pwiz.Skyline.Model
         {
             MprophetScores = mprophetScores;    // May only be present for writing features
             PValues = pvalues;
-            // Don't hold onto the features, because they hold a lot of memory
             BestPeakIndex = features.PeakGroupFeatures[bestScoreIndex].OriginalPeakIndex;
             BestScoreIndex = bestScoreIndex;
             BestScore = bestScore;
             QValue = qValue;
+            BestFeatureScores = features.PeakGroupFeatures[bestScoreIndex].FeatureScores;
         }
 
         public IList<float> MprophetScores { get; private set; }
@@ -358,5 +357,6 @@ namespace pwiz.Skyline.Model
         public int BestScoreIndex { get; private set; }
         public float BestScore { get; private set; }
         public float? QValue { get; internal set; }
+        public FeatureScores BestFeatureScores { get; }
     }
 }

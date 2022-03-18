@@ -1,9 +1,6 @@
-﻿using System.Windows.Forms;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -27,7 +24,7 @@ namespace pwiz.SkylineTestFunctional
             });
             SelectPeptide("SLDLIESLLR");
             WaitForGraphs();
-            var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
+            var candidatePeakForm = WaitForOpenForm<CandidatePeakForm>();
             Assert.IsNotNull(candidatePeakForm);
             WaitForConditionUI(() => candidatePeakForm.IsComplete);
             RunUI(() =>

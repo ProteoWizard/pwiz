@@ -19,10 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Xml;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization

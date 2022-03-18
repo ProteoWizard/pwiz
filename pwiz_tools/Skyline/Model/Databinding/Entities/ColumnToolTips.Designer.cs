@@ -2242,6 +2242,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The sum of the feature scores multiplied by the weightings of the trained model, and offset by the model&apos;s bias.
+        ///For a properly trained model, the peak group score is the Z-score representing the number of standard deviations the quality of the peak is from a random peak..
+        /// </summary>
+        public static string PeakGroupScore {
+            get {
+                return ResourceManager.GetString("PeakGroupScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The minimum start time of the individual peaks in the peak group..
         /// </summary>
         public static string PeakGroupStartTime {

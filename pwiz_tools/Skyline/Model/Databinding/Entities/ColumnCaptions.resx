@@ -805,6 +805,9 @@
   <data name="PeakGroupEndTime">
 	  <value>Peak Group End Time</value>
   </data>
+  <data name="PeakGroupScore">
+      <value>Peak Group Score</value>
+  </data>
   <data name="PeakGroupStartTime">
 	<value>Peak Group Start Time</value>
   </data>

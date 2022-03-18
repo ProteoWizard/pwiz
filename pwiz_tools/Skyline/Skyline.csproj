@@ -448,6 +448,11 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnCaptions.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -550,11 +555,6 @@
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
     <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
-    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ColumnCaptions.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
     <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
     <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
@@ -618,8 +618,6 @@
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
-    <Compile Include="Model\Results\Scoring\ChosenPeakScores.cs" />
-    <Compile Include="Model\Results\IntegratedPeakGroup.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\Scoring\CandidatePeakScoreCalculator.cs" />
@@ -2228,6 +2226,9 @@
     <EmbeddedResource Include="Controls\Clustering\PcaPlot.zh-CHS.resx">
       <DependentUpon>PcaPlot.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>

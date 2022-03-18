@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;

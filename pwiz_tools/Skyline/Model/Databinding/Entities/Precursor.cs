@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;

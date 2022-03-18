@@ -189,7 +189,6 @@ namespace pwiz.Skyline.Model.Results
             HasIsotopeDotProduct = 8192,
             HasQValue = 16384,
             HasZScore = 32768,
-            HasPeakScore = 65536,
         }
 
         private Flags _flags;
@@ -214,7 +213,9 @@ namespace pwiz.Skyline.Model.Results
                                         PeakIdentification identified,
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
-                                        ChosenPeakScores peakScores,
+                                        float? qValue,
+                                        FeatureScores featureScores,
+                                        float? zScore,
                                         Annotations annotations,
                                         UserSet userSet)
             : base(fileId)
@@ -238,7 +239,9 @@ namespace pwiz.Skyline.Model.Results
             Identified = identified;
             LibraryDotProduct = libraryDotProduct;
             IsotopeDotProduct = isotopeDotProduct;
-            PeakScores = peakScores;
+            QValue = qValue;
+            FeatureScores = featureScores;
+            ZScore = zScore;
             Annotations = annotations;
             UserSet = userSet;
         }
@@ -357,24 +360,25 @@ namespace pwiz.Skyline.Model.Results
             private set { _isotopeDotProduct = SetOptional(value, Flags.HasIsotopeDotProduct); }
         }
 
-        public ChosenPeakScores PeakScores { get; private set; }
+        public FeatureScores FeatureScores { get; private set; }
 
-        public TransitionGroupChromInfo ChangePeakScores(ChosenPeakScores peakScores)
+        public TransitionGroupChromInfo ChangeFeatureScores(FeatureScores featureScores)
         {
-            return ChangeProp(ImClone(this), im =>im.PeakScores = peakScores);
+            return ChangeProp(ImClone(this), im =>im.FeatureScores = featureScores);
         }
 
+        private float _qValue;
         public float? QValue
         {
-            get
-            {
-                return PeakScores?.DetectionQValue;
-            }
+            get { return GetOptional(_qValue, Flags.HasQValue); }
+            private set { _qValue = SetOptional(value, Flags.HasQValue); }
         }
 
+        private float _zScore;
         public float? ZScore
         {
-            get { return PeakScores?.DetectionZScore; }
+            get { return GetOptional(_zScore, Flags.HasZScore); }
+            private set { _zScore = SetOptional(value, Flags.HasZScore); }
         }
 
         public Annotations Annotations { get; private set; }
@@ -464,7 +468,9 @@ namespace pwiz.Skyline.Model.Results
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
-                   Equals(PeakScores, other.PeakScores) &&
+                   other.QValue.Equals(QValue) &&
+                   Equals(other.FeatureScores, FeatureScores) &&
+                   other.ZScore.Equals(ZScore) &&
                    other.Annotations.Equals(Annotations) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
@@ -501,7 +507,9 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
-                result = (result*397) ^ PeakScores.GetHashCode();
+                result = (result*397) ^ QValue.GetHashCode();
+                result = (result*397) ^ (FeatureScores?.GetHashCode() ?? 0);
+                result = (result*397) ^ ZScore.GetHashCode();
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();

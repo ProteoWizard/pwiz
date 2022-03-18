@@ -28,10 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CandidatePeakForm));
+            this.SuspendLayout();
+            // 
+            // databoundGridControl
+            // 
+            resources.ApplyResources(this.databoundGridControl, "databoundGridControl");
+            // 
+            // CandidatePeakForm
+            // 
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "CandidatePeakForm";
+            this.Name = "CandidatePeakForm";
+            this.ResumeLayout(false);
+
         }
 
         #endregion

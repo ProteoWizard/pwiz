@@ -403,6 +403,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// A calculator name that does not get localized
         /// </summary>
         string HeaderName { get; }
+        /// <summary>
+        /// The full name of the calculator class
+        /// </summary>
+        string FullyQualifiedName { get; }
 
         string Tooltip { get; }
         
@@ -435,10 +439,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract string Name { get; }
 
         public string HeaderName { get; private set; }
+        public string FullyQualifiedName
+        {
+            get { return GetType().FullName; }
+        }
 
         public string Tooltip
         {
-            get { return FeatureTooltips.ResourceManager.GetString(HeaderName); }
+            get { return FeatureTooltips.ResourceManager.GetString(FullyQualifiedName); }
         }
 
         public abstract bool IsReversedScore { get; }
@@ -472,9 +480,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public string HeaderName { get; private set; }
 
+        public string FullyQualifiedName
+        {
+            get { return GetType().FullName; }
+        }
+
         public string Tooltip
         {
-            get { return FeatureTooltips.ResourceManager.GetString(HeaderName); }
+            get { return FeatureTooltips.ResourceManager.GetString(FullyQualifiedName); }
         }
 
         public abstract bool IsReversedScore { get; }

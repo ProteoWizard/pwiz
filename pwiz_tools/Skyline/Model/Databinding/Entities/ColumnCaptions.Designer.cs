@@ -2176,6 +2176,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Group Score.
+        /// </summary>
+        public static string PeakGroupScore {
+            get {
+                return ResourceManager.GetString("PeakGroupScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Group Start Time.
         /// </summary>
         public static string PeakGroupStartTime {

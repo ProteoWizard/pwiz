@@ -21,7 +21,7 @@ namespace pwiz.Skyline.Model.Databinding
         public const string FEATURE_PREFIX = "feature_";
         private IPeakFeatureCalculator _calculator;
         public FeaturePropertyDescriptor(IPeakFeatureCalculator calculator, CultureInfo language) 
-            : base(FEATURE_PREFIX + calculator.HeaderName, GetAttributes(calculator, language))
+            : base(FEATURE_PREFIX + calculator.FullyQualifiedName, GetAttributes(calculator, language))
         {
             _calculator = calculator;
         }
