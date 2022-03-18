@@ -4093,6 +4093,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore SIM scans.
+        /// </summary>
+        public static string TransitionFullScan_IgnoreSimScans {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_IgnoreSimScans", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Isolation scheme.
         /// </summary>
         public static string TransitionFullScan_IsolationScheme {

@@ -1664,4 +1664,7 @@
   <data name="File_ScoreThreshold" xml:space="preserve">
     <value>Score threshold</value>
   </data>
+  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
+    <value>Ignore SIM scans</value>
+  </data>
 </root>

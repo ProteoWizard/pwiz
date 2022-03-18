@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config_list saved_path_root="REPLACE_TEXT\BcfgTestFiles" xml_version="21.12">
+<config_list saved_path_root="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles" xml_version="21.12">
   <skylinebatch_config name="Complex" modified="01/12/2022 14:37:51">
-    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Complex" replicate_naming_pattern="Tester">
-      <template_file path="REPLACE_TEXT\emptyTemplate.sky" />
-      <data_folder path="REPLACE_TEXT\EmptyData" />
+    <file_settings analysis_folder_path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Complex" replicate_naming_pattern="Tester">
+      <template_file path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" />
+      <data_folder path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" />
       <annotations_file />
     </file_settings>
     <import_settings ms_one_resolving_power="1" ms_ms_resolving_power="2" retention_time="3" add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
     <refine_settings />
     <report_settings>
-      <report_info name="Unique Report" path="REPLACE_TEXT\UniqueReport.skyr">
-        <r_script path="REPLACE_TEXT\testScript.R" version="4.0.3" />
+      <report_info name="Unique Report" path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr">
+        <r_script path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R" version="4.0.3" />
       </report_info>
     </report_settings>
-    <config_skyline_settings type="Custom" version="latest" path="C:\Program Files\Skyline\SkylineCmd.exe\SkylineCmd.exe" />
+    <config_skyline_settings type="Custom" version="latest" path="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe\SkylineCmd.exe" />
   </skylinebatch_config>
 </config_list>

@@ -561,6 +561,18 @@
   <data name="&gt;&gt;radioKeepAllTime.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="&gt;&gt;cbIgnoreSim.Name" xml:space="preserve">
+    <value>cbIgnoreSim</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Parent" xml:space="preserve">
+    <value>groupBoxMS1</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorPPM.Name" xml:space="preserve">
     <value>labelPrecursorPPM</value>
   </data>
@@ -571,7 +583,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorPPM.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.Name" xml:space="preserve">
     <value>comboEnrichments</value>
@@ -583,7 +595,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
@@ -595,7 +607,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilterPercent</value>
@@ -607,7 +619,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>textPrecursorIsotopeFilter</value>
@@ -619,7 +631,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilter</value>
@@ -631,7 +643,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
@@ -643,7 +655,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Name" xml:space="preserve">
     <value>comboPrecursorIsotopes</value>
@@ -655,7 +667,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;labelPrecursorAt.Name" xml:space="preserve">
     <value>labelPrecursorAt</value>
@@ -667,7 +679,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorAt.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.Name" xml:space="preserve">
     <value>textPrecursorAt</value>
@@ -679,7 +691,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;labelPrecursorTh.Name" xml:space="preserve">
     <value>labelPrecursorTh</value>
@@ -691,7 +703,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorTh.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.Name" xml:space="preserve">
     <value>textPrecursorRes</value>
@@ -703,7 +715,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="&gt;&gt;labelPrecursorRes.Name" xml:space="preserve">
     <value>labelPrecursorRes</value>
@@ -715,7 +727,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorRes.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Name" xml:space="preserve">
     <value>comboPrecursorAnalyzerType</value>
@@ -727,7 +739,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>
@@ -739,7 +751,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label32.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="groupBoxMS1.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 13</value>
@@ -765,6 +777,42 @@
   <data name="&gt;&gt;groupBoxMS1.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="cbIgnoreSim.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbIgnoreSim.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbIgnoreSim.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 164</value>
+  </data>
+  <data name="cbIgnoreSim.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 17</value>
+  </data>
+  <data name="cbIgnoreSim.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="cbIgnoreSim.Text" xml:space="preserve">
+    <value>Ignore SIM scans</value>
+  </data>
+  <data name="cbIgnoreSim.ToolTip" xml:space="preserve">
+    <value>Ignores SIM spectra with m/z range less than {0}.</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Name" xml:space="preserve">
+    <value>cbIgnoreSim</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Parent" xml:space="preserve">
+    <value>groupBoxMS1</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="labelPrecursorPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -781,7 +829,7 @@
     <value>27, 13</value>
   </data>
   <data name="labelPrecursorPPM.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>11</value>
   </data>
   <data name="labelPrecursorPPM.Text" xml:space="preserve">
     <value>ppm</value>
@@ -796,7 +844,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorPPM.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="comboEnrichments.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 162</value>
@@ -805,7 +853,7 @@
     <value>111, 21</value>
   </data>
   <data name="comboEnrichments.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.Name" xml:space="preserve">
     <value>comboEnrichments</value>
@@ -817,7 +865,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="labelEnrichments.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -832,7 +880,7 @@
     <value>139, 13</value>
   </data>
   <data name="labelEnrichments.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>13</value>
   </data>
   <data name="labelEnrichments.Text" xml:space="preserve">
     <value>Isotope la&amp;beling enrichment:</value>
@@ -847,7 +895,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="labelPrecursorIsotopeFilterPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -880,7 +928,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textPrecursorIsotopeFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 102</value>
@@ -901,7 +949,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="labelPrecursorIsotopeFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -931,7 +979,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="label23.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -961,7 +1009,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="comboPrecursorIsotopes.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 41</value>
@@ -982,7 +1030,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="labelPrecursorAt.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -997,7 +1045,7 @@
     <value>20, 13</value>
   </data>
   <data name="labelPrecursorAt.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>9</value>
   </data>
   <data name="labelPrecursorAt.Text" xml:space="preserve">
     <value>&amp;At:</value>
@@ -1012,7 +1060,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorAt.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="textPrecursorAt.Location" type="System.Drawing.Point, System.Drawing">
     <value>244, 102</value>
@@ -1021,7 +1069,7 @@
     <value>44, 20</value>
   </data>
   <data name="textPrecursorAt.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.Name" xml:space="preserve">
     <value>textPrecursorAt</value>
@@ -1033,7 +1081,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="labelPrecursorTh.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1051,7 +1099,7 @@
     <value>25, 13</value>
   </data>
   <data name="labelPrecursorTh.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>12</value>
   </data>
   <data name="labelPrecursorTh.Text" xml:space="preserve">
     <value>m/z</value>
@@ -1066,7 +1114,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorTh.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="textPrecursorRes.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1078,7 +1126,7 @@
     <value>85, 20</value>
   </data>
   <data name="textPrecursorRes.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.Name" xml:space="preserve">
     <value>textPrecursorRes</value>
@@ -1090,7 +1138,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="labelPrecursorRes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1105,7 +1153,7 @@
     <value>89, 13</value>
   </data>
   <data name="labelPrecursorRes.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="labelPrecursorRes.Text" xml:space="preserve">
     <value>&amp;Resolving power:</value>
@@ -1120,11 +1168,8 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorRes.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="comboPrecursorAnalyzerType.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -1135,7 +1180,7 @@
     <value>111, 21</value>
   </data>
   <data name="comboPrecursorAnalyzerType.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="comboPrecursorAnalyzerType.ToolTip" xml:space="preserve">
     <value>The "Centroided" option only applies to data formats with available vendor-supplied peak picking,  or to pre-centroided data.</value>
@@ -1150,7 +1195,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="label32.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1165,7 +1210,7 @@
     <value>124, 13</value>
   </data>
   <data name="label32.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="label32.Text" xml:space="preserve">
     <value>&amp;Precursor mass analyzer:</value>
@@ -1180,7 +1225,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label32.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;labelProductPPM.Name" xml:space="preserve">
     <value>labelProductPPM</value>
@@ -1366,7 +1411,7 @@
     <value>27, 13</value>
   </data>
   <data name="labelProductPPM.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>10</value>
   </data>
   <data name="labelProductPPM.Text" xml:space="preserve">
     <value>ppm</value>
@@ -1390,7 +1435,7 @@
     <value>111, 21</value>
   </data>
   <data name="comboIsolationScheme.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboIsolationScheme.Name" xml:space="preserve">
     <value>comboIsolationScheme</value>
@@ -1417,7 +1462,7 @@
     <value>20, 13</value>
   </data>
   <data name="labelProductAt.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="labelProductAt.Text" xml:space="preserve">
     <value>A&amp;t:</value>
@@ -1441,7 +1486,7 @@
     <value>44, 20</value>
   </data>
   <data name="textProductAt.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;textProductAt.Name" xml:space="preserve">
     <value>textProductAt</value>
@@ -1471,7 +1516,7 @@
     <value>25, 13</value>
   </data>
   <data name="labelProductTh.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>11</value>
   </data>
   <data name="labelProductTh.Text" xml:space="preserve">
     <value>m/z</value>
@@ -1498,7 +1543,7 @@
     <value>85, 20</value>
   </data>
   <data name="textProductRes.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;textProductRes.Name" xml:space="preserve">
     <value>textProductRes</value>
@@ -1525,7 +1570,7 @@
     <value>89, 13</value>
   </data>
   <data name="labelProductRes.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="labelProductRes.Text" xml:space="preserve">
     <value>Res&amp;olving power:</value>
@@ -1552,7 +1597,7 @@
     <value>111, 21</value>
   </data>
   <data name="comboProductAnalyzerType.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="comboProductAnalyzerType.ToolTip" xml:space="preserve">
     <value>The "Centroided" option only applies to data formats with available vendor-supplied peak picking,  or to pre-centroided data.</value>
@@ -1582,7 +1627,7 @@
     <value>116, 13</value>
   </data>
   <data name="label22.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="label22.Text" xml:space="preserve">
     <value>Product &amp;mass analyzer:</value>
