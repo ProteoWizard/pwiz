@@ -330,6 +330,12 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.PrecursorResMz = value; }
         }
 
+        public bool IgnoreSimScans
+        {
+            get { return FullScanSettingsControl.IgnoreSimScans; }
+            set { FullScanSettingsControl.IgnoreSimScans = value; }
+        }
+
         public bool UseSelectiveExtraction
         {
             get { return FullScanSettingsControl.UseSelectiveExtraction; }

@@ -25,7 +25,6 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Irt;
@@ -566,7 +565,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
-            CustomCancellationToken token)
+            CancellationToken token)
         {
             CalculateRegressionSummary result = new CalculateRegressionSummary();
             new LongOperationRunner
@@ -575,11 +574,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }.Run(longWaitBroker =>
             {
                 using (var linkedTokenSource =
-                    CancellationTokenSource.CreateLinkedTokenSource(longWaitBroker.CancellationToken, token.Token))
+                    CancellationTokenSource.CreateLinkedTokenSource(longWaitBroker.CancellationToken, token))
                 {
                     longWaitBroker.SetProgressCheckCancel(0, calculators.Count);
                     result = CalcBestRegressionBackground(name, calculators, measuredPeptides, scoreCache, allPeptides,
-                        regressionMethod, new CustomCancellationToken(linkedTokenSource.Token), longWaitBroker);
+                        regressionMethod, linkedTokenSource.Token, longWaitBroker);
                 }
             });
             return result;
@@ -594,7 +593,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
-            CustomCancellationToken token,
+            CancellationToken token,
             ILongWaitBroker longWaitBroker = null)
         {
             var data = new List<CalculatedRegressionInfo>(calculators.Count);
@@ -627,7 +626,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (queueWorker.Exception != null)
                 throw queueWorker.Exception;
 
-            ThreadingHelper.CheckCanceled(token);
+            token.ThrowIfCancellationRequested();
 
             var ordered = data.OrderByDescending(r => Math.Abs(r.RVal)).ToArray();
             return new CalculateRegressionSummary
@@ -645,7 +644,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RegressionMethodRT regressionMethod,
             out RetentionTimeStatistics statistics,
             out double rVal,
-            CustomCancellationToken token)
+            CancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -770,8 +769,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             IList<MeasuredRetentionTime> variableTargetPeptides,
                             IList<MeasuredRetentionTime> variableOrigPeptides,
                             RetentionScoreCalculatorSpec calculator,
-                            RegressionMethodRT regressionMethod,
-                            Func<bool> isCanceled)
+                            RegressionMethodRT regressionMethod)
         {
             RetentionTimeRegression result = null;
             OperationCanceledException cancelEx = null;
@@ -781,15 +779,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 JobTitle = Resources.RetentionTimeRegression_FindThreshold_Finding_threshold
             }.Run(longWaitBroker =>
             {
-                var token = new CustomCancellationToken(longWaitBroker.CancellationToken, isCanceled);
-                var calculators = new[] { calculator };
+                var calculators = new[] {calculator};
                 var scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
                 var summary = CalcBestRegressionBackground(NAME_INTERNAL,
                     calculators,
                     measuredPeptides,
                     scoreCache,
                     true,
-                    regressionMethod, token);
+                    regressionMethod, longWaitBroker.CancellationToken);
                 var regressionInitial = summary.Best.Regression;
                 var statisticsAll = summary.Best.Statistics;
                 calculator = summary.Best.Calculator;
@@ -810,11 +807,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         calculator,
                         regressionMethod,
                         scoreCache,
-                        token,
+                        longWaitBroker.CancellationToken,
                         ref statisticsRefined,
                         ref outIndexes);
                 }
-                catch(OperationCanceledException ex)
+                catch (OperationCanceledException ex)
                 {
                     cancelEx = ex;
                     throw;
@@ -839,7 +836,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             RetentionScoreCalculatorSpec calculator,
                             RegressionMethodRT regressionMethod,
                             RetentionTimeScoreCache scoreCache,
-                            CustomCancellationToken token,
+                            CancellationToken token,
                             ref RetentionTimeStatistics statisticsResult,
                             ref HashSet<int> outIndexes)
         {
@@ -852,7 +849,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Add back outliers until below the threshold
                     for (;;)
                     {
-                        ThreadingHelper.CheckCanceled(token);
+                        token.ThrowIfCancellationRequested();
                         RecalcRegression(bestOut, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                             out statisticsResult, ref outIndexes);
                         if (bestOut >= variableTargetPeptides.Count || statisticsResult == null || !IsAboveThreshold(statisticsResult.R, threshold, precision))
@@ -865,7 +862,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Remove values until above the threshold
                 for (;;)
                 {
-                    ThreadingHelper.CheckCanceled(token);
+                    token.ThrowIfCancellationRequested();
                     var regression = RecalcRegression(worstIn, standardPeptides, variableTargetPeptides, variableOrigPeptides, statisticsResult, calculator, regressionMethod, scoreCache, token,
                         out statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
@@ -876,8 +873,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            // Check for cancelation
-            ThreadingHelper.CheckCanceled(token);
+            token.ThrowIfCancellationRequested();
 
             int mid = (left + right) / 2;
 
@@ -912,7 +908,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     RetentionScoreCalculatorSpec calculator,
                     RegressionMethodRT regressionMethod,
                     RetentionTimeScoreCache scoreCache,
-                    CustomCancellationToken token,
+                    CancellationToken token,
                     out RetentionTimeStatistics statisticsResult,
                     ref HashSet<int> outIndexes)
         {
@@ -1068,7 +1064,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CustomCancellationToken token)
+        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CancellationToken token)
         {
             var calcCache = _cache[calculator.Name];
             if(calcCache != null)
@@ -1080,7 +1076,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         //force recalculation
                         newCalcCache.Add(key, CalcScore(calculator, key, null));
-                        ProgressMonitor.CheckCanceled(token.Token);
+                        ProgressMonitor.CheckCanceled(token);
                     }
 
                     _cache[calculator.Name] = newCalcCache;
@@ -1099,7 +1095,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<Target> peptides,
-            RetentionTimeScoreCache scoreCache, CustomCancellationToken token)
+            RetentionTimeScoreCache scoreCache, CancellationToken token)
         {
             Dictionary<Target, double> cacheCalc;
             if (scoreCache == null || !scoreCache._cache.TryGetValue(calculator.Name, out cacheCalc))
@@ -1109,7 +1105,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var pep in peptides)
             {
                 result.Add(CalcScore(calculator, pep, cacheCalc));
-                ProgressMonitor.CheckCanceled(token.Token);
+                ProgressMonitor.CheckCanceled(token);
             }
             return result;
         }
