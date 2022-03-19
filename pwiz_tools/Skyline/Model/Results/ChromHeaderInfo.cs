@@ -2230,7 +2230,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramGroupInfo
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
-        protected readonly FeatureNameList _scoreTypeIndices;
+        protected readonly FeatureNames _scoreTypeIndices;
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
@@ -2241,7 +2241,7 @@ namespace pwiz.Skyline.Model.Results
         private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
-                                     FeatureNameList scoreTypeIndices,
+                                     FeatureNames scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
@@ -2258,13 +2258,13 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
             TimeIntensitiesGroup timeIntensitiesGroup) 
-            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNameList.EMPTY, Array.Empty<float>())
+            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
         {
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
-            TimeIntensitiesGroup timeIntensitiesGroup, FeatureNameList scoreTypeIndices, float[] scores)
+            TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();

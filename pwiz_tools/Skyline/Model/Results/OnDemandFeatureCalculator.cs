@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                yield return new FeatureScores(Calculators, ImmutableList.ValueOf(scores));
+                yield return new FeatureScores(Calculators.FeatureNames, ImmutableList.ValueOf(scores));
             }
         }
 

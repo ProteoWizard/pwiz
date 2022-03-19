@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results
         private RawData _rawData;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly LibKeyMap<int[]> _chromEntryIndex;
-        private readonly FeatureNameList _scoreTypeIndices;
+        private readonly FeatureNames _scoreTypeIndices;
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// In order enumeration of score types
         /// </summary>
-        public FeatureNameList ScoreTypes
+        public FeatureNames ScoreTypes
         {
             get { return _scoreTypeIndices; }
         }
@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Model.Results
         {
             public RawData(CacheHeaderStruct header, IEnumerable<ChromCachedFile> chromCacheFiles,
                 BlockedArray<ChromGroupHeaderInfo> chromatogramEntries, BlockedArray<ChromTransition> transitions, 
-                FeatureNameList scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
+                FeatureNames scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
             {
                 ChromCacheFiles = ImmutableList.ValueOf(chromCacheFiles);
                 ChromatogramEntries = chromatogramEntries;
@@ -505,7 +505,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromCacheFiles = ImmutableList<ChromCachedFile>.EMPTY;
                 ChromatogramEntries = BlockedArray<ChromGroupHeaderInfo>.EMPTY;
                 ChromTransitions = BlockedArray<ChromTransition>.EMPTY;
-                ScoreTypes = FeatureNameList.EMPTY;
+                ScoreTypes = FeatureNames.EMPTY;
                 TextIdBytes = Array.Empty<byte>();
             }
 
@@ -531,9 +531,9 @@ namespace pwiz.Skyline.Model.Results
             }
             public long LocationPeaks { get; private set; }
             public int NumPeaks { get; private set; }
-            public FeatureNameList ScoreTypes { get; private set; }
+            public FeatureNames ScoreTypes { get; private set; }
 
-            public RawData ChangeScoreTypes(FeatureNameList types, long locationScoreValues)
+            public RawData ChangeScoreTypes(FeatureNames types, long locationScoreValues)
             {
                 return ChangeProp(ImClone(this), im =>
                 {
@@ -866,7 +866,7 @@ namespace pwiz.Skyline.Model.Results
                     scoreTypes[i] = Encoding.UTF8.GetString(typeNameBuffer, 0, lenTypeName);
                 }
 
-                raw = raw.ChangeScoreTypes(new FeatureNameList(scoreTypes), stream.Position);
+                raw = raw.ChangeScoreTypes(new FeatureNames(scoreTypes), stream.Position);
                 Assume.AreEqual(raw.LocationScoreValues, stream.Position);
             }
             else
@@ -914,7 +914,7 @@ namespace pwiz.Skyline.Model.Results
                                         ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
                                         ICollection<byte> textIdBytes,
-                                        FeatureNameList scoreTypes,
+                                        FeatureNames scoreTypes,
                                         int scoreCount,
                                         int peakCount,
                                         out long scoreValueLocation)

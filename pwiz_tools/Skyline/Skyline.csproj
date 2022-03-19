@@ -622,7 +622,7 @@
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
-    <Compile Include="Model\Results\Scoring\FeatureNameList.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

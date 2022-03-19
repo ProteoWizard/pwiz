@@ -868,10 +868,6 @@ being performed in the replicate.</value>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
   </data>
-  <data name="PeakGroupScore">
-	<value>The sum of the feature scores multiplied by the weightings of the trained model, and offset by the model's bias.
-For a properly trained model, the peak group score is the Z-score representing the number of standard deviations the quality of the peak is from a random peak.</value>
-  </data>
   <data name="PeakGroupStartTime">
     <value>The minimum start time of the individual peaks in the peak group.</value>
   </data>

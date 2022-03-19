@@ -1478,7 +1478,7 @@ namespace pwiz.Skyline.Model.Results
                 IonMobilityUnits);
         }
 
-        public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNameList featureNameList, ChromCachedFile chromCachedFile)
+        public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNames featureNames, ChromCachedFile chromCachedFile)
         {
             var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
             var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
@@ -1486,7 +1486,7 @@ namespace pwiz.Skyline.Model.Results
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
             var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
             var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
-                chromPeaks, timeIntensitiesGroup, featureNameList, scores);
+                chromPeaks, timeIntensitiesGroup, featureNames, scores);
             return chromatogramGroupInfo;
         }
     }

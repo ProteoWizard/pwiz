@@ -313,8 +313,7 @@ namespace pwiz.SkylineTest
             // Create transition groups to be filled from data file.
             targetTransitionGroups = new ScoredGroupPeaksSet();
             decoyTransitionGroups = new ScoredGroupPeaksSet();
-            var calculatorList = new FeatureCalculators(
-                new FeatureNameList(varColumns.Prepend(mainVarColumn).Select(i => data.Header[i])));
+            var featureNames = new FeatureNames(varColumns.Prepend(mainVarColumn).Select(i => data.Header[i]));
             var featuresCount = varColumns.Count + 1;
             var transitionGroupDictionary = new Dictionary<string, ScoredGroupPeaks>();
 
@@ -351,7 +350,7 @@ namespace pwiz.SkylineTest
                     features[j + 1] = (float) double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
 
                 // Add the peak to its transition group.
-                transitionGroup.Add(new ScoredPeak(new FeatureScores(calculatorList, features)));
+                transitionGroup.Add(new ScoredPeak(new FeatureScores(featureNames, features)));
             }
         }
 

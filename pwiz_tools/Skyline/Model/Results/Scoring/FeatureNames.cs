@@ -5,12 +5,12 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class FeatureNameList : AbstractReadOnlyList<string>
+    public class FeatureNames : AbstractReadOnlyList<string>
     {
-        public static readonly FeatureNameList EMPTY = new FeatureNameList(ImmutableList.Empty<string>());
+        public static readonly FeatureNames EMPTY = new FeatureNames(ImmutableList.Empty<string>());
 
         private static readonly Dictionary<string, IPeakFeatureCalculator> _calculatorsByTypeName;
-        static FeatureNameList()
+        static FeatureNames()
         {
             _calculatorsByTypeName = PeakFeatureCalculator.Calculators.ToDictionary(calc => calc.FullyQualifiedName);
         }
@@ -18,17 +18,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private readonly Dictionary<string, int> _dictionary;
         private readonly int _hashCode;
 
-        public static FeatureNameList FromCalculators(IEnumerable<IPeakFeatureCalculator> calculators)
+        public static FeatureNames FromCalculators(IEnumerable<IPeakFeatureCalculator> calculators)
         {
             return FromScoreTypes(calculators.Select(calc => calc.GetType()));
         }
 
-        public static FeatureNameList FromScoreTypes(IEnumerable<Type> types)
+        public static FeatureNames FromScoreTypes(IEnumerable<Type> types)
         {
-            return new FeatureNameList(types.Select(type => type.FullName));
+            return new FeatureNames(types.Select(type => type.FullName));
         }
         
-        public FeatureNameList(IEnumerable<string> names)
+        public FeatureNames(IEnumerable<string> names)
         {
             _names = ImmutableList.ValueOfOrEmpty(names);
             _hashCode = _names.GetHashCode();
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return IndexOf(calculator.FullyQualifiedName);
         }
 
-        protected bool Equals(FeatureNameList other)
+        protected bool Equals(FeatureNames other)
         {
             return Equals(_names, other._names);
         }
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((FeatureNameList) obj);
+            return Equals((FeatureNames) obj);
         }
 
         public override int GetHashCode()

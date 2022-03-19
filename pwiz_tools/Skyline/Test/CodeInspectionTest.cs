@@ -645,7 +645,7 @@ namespace pwiz.SkylineTest
             public Pattern(string patternString, bool isRegEx, string patternExceptionString)
             {
                 PatternString = patternString;
-                RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.CultureInvariant) : null;
+                RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.Compiled) : null;
                 PatternExceptionString = patternExceptionString;
             }
 

@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
-                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, new FeatureScores(calcs, ImmutableList.ValueOf(features))));
+                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, new FeatureScores(calcs.FeatureNames, ImmutableList.ValueOf(features))));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures.ToArray(), verbose);

@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
         private BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
             new BlockedArrayList<ChromGroupHeaderEntry>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
         protected List<byte> _listTextIdBytes = new List<byte>();
-        protected FeatureNameList _listScoreTypes = FeatureNameList.EMPTY;
+        protected FeatureNames _listScoreTypes = FeatureNames.EMPTY;
         protected readonly FileSaver _fs;
         protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;

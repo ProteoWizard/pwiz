@@ -12,16 +12,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected AbstractFeatureCalculatorList(IEnumerable<T> calculators)
         {
             _list = ImmutableList.ValueOf(calculators);
-            FeatureNames = FeatureNameList.FromCalculators(_list.Cast<IPeakFeatureCalculator>());
+            FeatureNames = FeatureNames.FromCalculators(_list.Cast<IPeakFeatureCalculator>());
         }
 
-        protected AbstractFeatureCalculatorList(FeatureNameList names)
+        protected AbstractFeatureCalculatorList(FeatureNames names)
         {
             FeatureNames = names;
             _list = ImmutableList.ValueOf(names.AsCalculators().Cast<T>());
         }
 
-        public FeatureNameList FeatureNames { get; }
+        public FeatureNames FeatureNames { get; }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             Detailed = new DetailedFeatureCalculators(this.OfType<DetailedPeakFeatureCalculator>());
         }
 
-        public FeatureCalculators(FeatureNameList names) : base(names)
+        public FeatureCalculators(FeatureNames names) : base(names)
         {
         }
 
