@@ -1086,7 +1086,7 @@ namespace pwiz.Skyline.Model.Results
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
             if (startIndex < 0)
             {
-                startIndex = ~startIndex;
+                startIndex = Math.Max(~startIndex - 1, 0);
             }
 
             for (int index = startIndex; index < timeIntensities.NumPoints; index++)

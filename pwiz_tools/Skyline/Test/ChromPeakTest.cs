@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
@@ -66,6 +68,27 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
             var expectedArea = peakWithBackground.Area + peakWithBackground.BackgroundArea;
             Assert.AreEqual(expectedArea, peakWithoutBackground.Area, .01);
+        }
+
+        [TestMethod]
+        public void TestFlatChromatogramIntegration()
+        {
+            const float constantIntensity = 8;
+            var times = new [] {0, 1.5f, 2, 3};
+            var intensities = Enumerable.Repeat(constantIntensity, times.Length);
+            var timeIntensities = new TimeIntensities(times, intensities, null, null);
+            var peakIntegrator = new PeakIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, ChromSource.unknown, null, timeIntensities, null);
+            var flagValues = ChromPeak.FlagValues.time_normalized;
+            for (float peakStartTime = 0; peakStartTime < 3; peakStartTime += .1f)
+            {
+                var zeroLengthPeak = peakIntegrator.IntegratePeak(peakStartTime, peakStartTime, flagValues);
+                Assert.AreEqual(0, zeroLengthPeak.Area);
+                for (float peakEndTime = peakStartTime + .1f; peakEndTime < 3; peakEndTime += .1f)
+                {
+                    var peak = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
+                    Assert.AreEqual(60 * constantIntensity * (peakEndTime - peakStartTime), peak.Area, .001);
+                }
+            }            
         }
     }
 }
