@@ -678,6 +678,12 @@ namespace pwiz.Skyline.Util
 
         private static void Commit(string pathTemp, string pathDestination)
         {
+            if (pathDestination.EndsWith(".skyd"))
+            {
+                Console.Out.WriteLine("Begin commit {0}", pathDestination);
+            }
+            try
+            {
             if (Directory.Exists(pathTemp))
             {
                 try
@@ -711,6 +717,15 @@ namespace pwiz.Skyline.Util
 
                 // Or just move, if it does not.
                 Helpers.TryTwice(() => File.Move(pathTemp, pathDestination));
+            }
+            }
+            finally 
+            {
+                if (pathDestination.EndsWith(".skyd"))
+                {
+                    Console.Out.WriteLine("End commit {0}", pathDestination);
+                }
+
             }
         }
 
