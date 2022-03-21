@@ -109,7 +109,8 @@ namespace pwiz.Skyline.Model.Results
                     endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
                 }
             }
-            return new ChromPeak(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
+            return ChromPeak.IntegrateWithoutBackground(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime,
+                endTime, flags);
         }
 
         public bool BackgroundSubtraction
