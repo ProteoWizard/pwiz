@@ -552,7 +552,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         foreach (IonType type in types)
                         {
                             CellDesc cell = CreateHead(type.GetLocalizedString().ToLower() + plusSub, rt);
-                            if (Transition.IsNTerminal(type))
+                            if (type.IsNTerminal())
                                 headers.Insert(0, cell);
                             else
                                 headers.Add(cell);
@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             foreach (IonType type in types)
                             {
                                 CellDesc cell;
-                                if (Transition.IsNTerminal(type))
+                                if (type.IsNTerminal())
                                 {
                                     if (i == len - 1)
                                         cell = CreateData(string.Empty, rt);

@@ -64,6 +64,7 @@ namespace pwiz.Skyline
             this.singleReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -563,6 +564,7 @@ namespace pwiz.Skyline
             // contextMenuSpectrum
             // 
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ionTypesContextMenuItem,
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
             this.cionsContextMenuItem,
@@ -596,6 +598,11 @@ namespace pwiz.Skyline
             this.synchMzScaleToolStripMenuItem});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
             resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
+            // 
+            // ionTypesContextMenuItem
+            // 
+            this.ionTypesContextMenuItem.Name = "ionTypesContextMenuItem";
+            resources.ApplyResources(this.ionTypesContextMenuItem, "ionTypesContextMenuItem");
             // 
             // aionsContextMenuItem
             // 
@@ -645,7 +652,6 @@ namespace pwiz.Skyline
             this.zhionsContextMenuItem.Name = "zhionsContextMenuItem";
             resources.ApplyResources(this.zhionsContextMenuItem, "zhionsContextMenuItem");
             this.zhionsContextMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
-
             // 
             // zhhionsContextMenuItem
             // 
@@ -653,7 +659,6 @@ namespace pwiz.Skyline
             this.zhhionsContextMenuItem.Name = "zhhionsContextMenuItem";
             resources.ApplyResources(this.zhhionsContextMenuItem, "zhhionsContextMenuItem");
             this.zhhionsContextMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
-            
             // 
             // fragmentionsContextMenuItem
             // 
@@ -2653,6 +2658,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem editNoteContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip contextMenuSpectrum;
+        private System.Windows.Forms.ToolStripMenuItem ionTypesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cionsContextMenuItem;
