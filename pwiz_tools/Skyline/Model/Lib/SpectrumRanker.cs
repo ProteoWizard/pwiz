@@ -715,7 +715,7 @@ namespace pwiz.Skyline.Model.Lib
                             MoleculeMassesObj.MatchIonMasses.FragmentMasses, type, adduct,
                             MoleculeMassesObj.precursorMz, TransitionSettings.Filter.PrecursorMzWindow, out startMz);
                         end = TransitionSettings.Filter.FragmentRangeLast.FindEndFragment(type, start, len);
-                        if (Transition.IsCTerminal(type))
+                        if (type.IsCTerminal())
                             Helpers.Swap(ref start, ref end);
                     }
 
@@ -723,7 +723,7 @@ namespace pwiz.Skyline.Model.Lib
                     // code duplication proved the fastest implementation under a
                     // profiler.  Apparently .NET failed to inline an attempt to put
                     // the loop contents in a function.
-                    if (Transition.IsCTerminal(type))
+                    if (type.IsCTerminal())
                     {
                         for (int i = len - 1; i >= 0; i--)
                         {

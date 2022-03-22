@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
+using NHibernate.Util;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
@@ -1092,6 +1093,23 @@ namespace pwiz.Skyline
             
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
+
+            if (_graphFullScan != null)
+            {
+                var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
+                if(chargeSelector != null)
+                {
+                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
+                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
+                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
+                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
+                }
+                var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
+                if (ionTypeSelector != null)
+                {
+                    ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                }
+            }
         }
 
         protected override void OnClosed(EventArgs e)

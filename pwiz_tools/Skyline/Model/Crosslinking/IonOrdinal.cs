@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return null;
             }
             int offset = Transition.OrdinalToOffset(Type.Value, Ordinal, sequence.Length);
-            if (Transition.IsCTerminal(Type.Value))
+            if (Type.Value.IsCTerminal())
             {
                 return sequence[offset + 1];
             }
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             int offset = Transition.OrdinalToOffset(Type.Value, Ordinal, peptide.Length);
-            if (Transition.IsCTerminal(Type.Value))
+            if (Type.Value.IsCTerminal())
             {
                 return offset < aaIndex;
             }
@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return result;
             }
-            if (Transition.IsCTerminal(Type.Value))
+            if (Type.Value.IsCTerminal())
             {
                 return -Ordinal.CompareTo(ionFragment.Ordinal);
             }

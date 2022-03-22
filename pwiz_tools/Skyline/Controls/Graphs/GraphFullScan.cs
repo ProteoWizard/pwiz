@@ -1236,6 +1236,18 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public MenuControl<T> GetHostedControl<T>() where T:Panel, IControlSize, new()
+        {
+                if (ZedGraphControl.ContextMenuStrip != null)
+                {
+                    var chargesItem = ZedGraphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                        .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                    if (chargesItem != null)
+                        return chargesItem.DropDownItems[0] as MenuControl<T>;
+                }
+                return null;
+        }
+
         #region Mouse events
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
