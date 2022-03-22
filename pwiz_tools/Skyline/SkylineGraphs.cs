@@ -1040,14 +1040,37 @@ namespace pwiz.Skyline
 
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var set = _graphSpectrumSettings;
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            charge3ContextMenuItem.Checked = set.ShowCharge3;
-            charge4ContextMenuItem.Checked = set.ShowCharge4;
+            if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
+            {
+                chargeSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                chargesContextMenuItem.DropDownItems.Clear();
+                var selectorControl = new MenuControl<ChargeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                chargesContextMenuItem.DropDownItems.Add(selectorControl);
+                selectorControl.HostedControl.OnCharge1Changed += ShowCharge1;
+                selectorControl.HostedControl.OnCharge2Changed += ShowCharge2;
+                selectorControl.HostedControl.OnCharge3Changed += ShowCharge3;
+                selectorControl.HostedControl.OnCharge4Changed += ShowCharge4;
+            }
         }
 
-
+        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
+                ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+            {
+                ionSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                ionTypesContextMenuItem.DropDownItems.Clear();
+                var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
+                ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+            }
+        }
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -1128,19 +1151,6 @@ namespace pwiz.Skyline
                 if (isProteomic)
                 {
                     menuStrip.Items.Insert(iInsert++, ionTypesContextMenuItem);
-                    if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
-                        ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
-                    {
-                        ionSelector.Update(Settings.Default, DocumentUI.Settings.PeptideSettings);
-                    }
-                    else
-                    {
-                        ionTypesContextMenuItem.DropDownItems.Clear();
-                        var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(Settings.Default,
-                            DocumentUI.Settings.PeptideSettings);
-                        ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
-                        ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
-                    }
                 }
                 else
                 {
@@ -1152,21 +1162,6 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-
-                if (chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
-                {
-                    chargeSelector.Update(Settings.Default, DocumentUI.Settings.PeptideSettings);
-                }
-                else
-                {
-                    chargesContextMenuItem.DropDownItems.Clear();
-                    var selectorControl = new MenuControl<ChargeSelectionPanel>(Settings.Default, DocumentUI.Settings.PeptideSettings);
-                    chargesContextMenuItem.DropDownItems.Add(selectorControl);
-                    selectorControl.HostedControl.OnCharge1Changed += ShowCharge1;
-                    selectorControl.HostedControl.OnCharge2Changed += ShowCharge2;
-                    selectorControl.HostedControl.OnCharge3Changed += ShowCharge3;
-                    selectorControl.HostedControl.OnCharge4Changed += ShowCharge4;
-                }
 
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
                 ranksContextMenuItem.Checked = set.ShowRanks;
