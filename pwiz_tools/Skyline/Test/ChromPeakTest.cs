@@ -22,6 +22,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -110,7 +111,54 @@ namespace pwiz.SkylineTest
                     AssertEx.AreEqual(60 * slope * (peakStartTime + peakEndTime) / 2 * (peakEndTime - peakStartTime), peak.Area, .001);
                 }
             }
+        }
 
+        [TestMethod]
+        public void TestTimeIntensitiesInterpolateTime()
+        {
+            var timeIntensities = new TimeIntensities(new[] {1f, 2f}, new[] {15f, 25f}, new[] {5, -5f}, new[] {1, 2});
+
+            var timeIntensities2 = timeIntensities.InterpolateTime(1.5f);
+            Assert.AreEqual(3, timeIntensities2.NumPoints);
+            Assert.AreEqual(1.5f, timeIntensities2.Times[1]);
+            Assert.AreEqual(20f, timeIntensities2.Intensities[1]);
+            Assert.AreEqual(-1.25f, timeIntensities2.MassErrors[1]);
+
+            var timeIntensities3 = timeIntensities.InterpolateTime(1.25f);
+            Assert.AreEqual(3, timeIntensities3.NumPoints);
+            Assert.AreEqual(1.25f, timeIntensities3.Times[1]);
+            Assert.AreEqual(17.5, timeIntensities3.Intensities[1]);
+            Assert.AreEqual((float) (10.0/7), timeIntensities3.MassErrors[1]);
+            Assert.AreEqual(1, timeIntensities3.ScanIds[1]);
+
+            var timeIntensities4 = timeIntensities.InterpolateTime(1.75f);
+            Assert.AreEqual(3, timeIntensities4.NumPoints);
+            Assert.AreEqual(1.75f, timeIntensities4.Times[1]);
+            Assert.AreEqual(22.5f, timeIntensities4.Intensities[1]);
+            Assert.AreEqual((float) (-10.0 / 3), timeIntensities4.MassErrors[1]);
+            Assert.AreEqual(2, timeIntensities4.ScanIds[1]);
+
+            var timeIntensities5 = timeIntensities.InterpolateTime(1.00001f);
+            Assert.AreEqual(1.00001f, timeIntensities5.Times[1]);
+            Assert.AreEqual(15f, timeIntensities5.Intensities[1], .01);
+            Assert.AreEqual(5f, timeIntensities5.MassErrors[1], .01);
+
+            var timeIntensities6 = timeIntensities.InterpolateTime(1.99999f);
+            Assert.AreEqual(1.99999f, timeIntensities6.Times[1]);
+            Assert.AreEqual(25f, timeIntensities6.Intensities[1], .01);
+            Assert.AreEqual(-5f, timeIntensities6.MassErrors[1], .01);
+
+            var timeIntensities7 = timeIntensities.InterpolateTime(-1f);
+            Assert.AreEqual(-1f, timeIntensities7.Times[0]);
+            Assert.AreEqual(15f, timeIntensities7.Intensities[0]);
+            Assert.AreEqual(5f, timeIntensities7.MassErrors[0]);
+            Assert.AreEqual(1, timeIntensities7.ScanIds[0]);
+
+            var timeIntensities8 = timeIntensities.InterpolateTime(4f);
+            Assert.AreEqual(4f, timeIntensities8.Times[2]);
+            Assert.AreEqual(25f, timeIntensities8.Intensities[2]);
+            Assert.AreEqual(-5f, timeIntensities8.MassErrors[2]);
+            Assert.AreEqual(2, timeIntensities8.ScanIds[2]);
         }
     }
 }
