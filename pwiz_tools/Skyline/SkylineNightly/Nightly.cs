@@ -436,6 +436,9 @@ namespace SkylineNightly
                 }
                 Log("SkylineTester started");
 
+                var channelFactory = new ChannelFactory<IEndTimeSetter>(new NetNamedPipeBinding(),
+                    new EndpointAddress("net.pipe://localhost/Nightly_" + skylineTesterProcess.Id + "/SetEndTime"));
+
                 // Calculate end time: convert to UTC, add the duration, then convert back to local time.
                 // Conversion to UTC before adding the duration avoids DST issues.
                 var endTime = skylineTesterProcess.StartTime.ToUniversalTime().AddHours(durationHours).ToLocalTime();
@@ -469,7 +472,7 @@ namespace SkylineNightly
                             {
                                 // between 9am-5pm, set end time to 4 hours from now (unless scheduled end is already 4+ hours from now)
                                 var newEndTime = DateTime.Now.AddHours(4);
-                                if (newEndTime > originalEndTime && SetEndTime(newEndTime))
+                                if (newEndTime > originalEndTime && SetEndTime(channelFactory, newEndTime))
                                     endTime = newEndTime;
                             }
                             else
@@ -477,7 +480,7 @@ namespace SkylineNightly
                                 // extend the end time until 12pm to give us more time to attach a debugger
                                 var newEndTime = originalEndTime.AddHours(16);
                                 newEndTime = new DateTime(newEndTime.Year, newEndTime.Month, newEndTime.Day, 12, 0, 0);
-                                if (SetEndTime(newEndTime))
+                                if (SetEndTime(channelFactory, newEndTime))
                                     endTime = newEndTime;
                             }
                         }
@@ -500,7 +503,7 @@ namespace SkylineNightly
                             if (newEndTime <= min)
                                 newEndTime = min;
                         }
-                        if (endTime != newEndTime && SetEndTime(newEndTime))
+                        if (endTime != newEndTime && SetEndTime(channelFactory, newEndTime))
                             endTime = newEndTime;
                     }
                 }
@@ -1230,16 +1233,13 @@ namespace SkylineNightly
             }
         }
 
-        private static readonly ChannelFactory<IEndTimeSetter> END_TIME_SETTER_FACTORY =
-            new ChannelFactory<IEndTimeSetter>(new NetNamedPipeBinding(), new EndpointAddress("net.pipe://localhost/Nightly/SetEndTime"));
-
         // Set the end time of an already running nightly run (e.g. if there is a hang and we want to give more time for someone to attach a debugger)
-        public bool SetEndTime(DateTime endTime)
+        public bool SetEndTime(ChannelFactory<IEndTimeSetter> channelFacory, DateTime endTime)
         {
             Exception exception = null;
             try
             {
-                END_TIME_SETTER_FACTORY.CreateChannel().SetEndTime(endTime);
+                channelFacory.CreateChannel().SetEndTime(endTime);
             }
             catch (Exception x)
             {
