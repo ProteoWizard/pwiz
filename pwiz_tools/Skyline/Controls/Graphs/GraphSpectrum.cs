@@ -1498,6 +1498,20 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowZHHIons = value); }
         }
 
+        public Dictionary<IonType, bool> GetShowIonTypeSettings()
+        {
+            var res = new Dictionary<IonType, bool>();
+            res[IonType.a] = ShowAIons;
+            res[IonType.b] = ShowBIons;
+            res[IonType.c] = ShowCIons;
+            res[IonType.x] = ShowXIons;
+            res[IonType.y] = ShowYIons;
+            res[IonType.z] = ShowZIons;
+            res[IonType.zh] = ShowZHIons;
+            res[IonType.zhh] = ShowZHHIons;
+            return res;
+        }
+
         public bool ShowFragmentIons
         {
             get { return Set.ShowFragmentIons; }

@@ -117,22 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 34</value>
-  </data>
-  <data name="textName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>15, 28</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>328, 22</value>
+    <value>247, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
@@ -154,13 +148,10 @@
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 15</value>
-  </data>
-  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>12, 12</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 17</value>
+    <value>38, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -184,13 +175,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>384, 52</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>288, 42</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -214,13 +202,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>384, 15</value>
-  </data>
-  <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>288, 12</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -241,13 +226,10 @@
     <value>11</value>
   </data>
   <data name="textPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 117</value>
-  </data>
-  <data name="textPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>15, 95</value>
   </data>
   <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>325, 22</value>
+    <value>245, 20</value>
   </data>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -268,13 +250,10 @@
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 94</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>15, 76</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>41, 17</value>
+    <value>32, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -295,13 +274,10 @@
     <value>6</value>
   </data>
   <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>384, 114</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>288, 93</value>
   </data>
   <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -325,13 +301,10 @@
     <value>True</value>
   </data>
   <data name="labelSpecLibLinks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 161</value>
-  </data>
-  <data name="labelSpecLibLinks.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>12, 131</value>
   </data>
   <data name="labelSpecLibLinks.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 17</value>
+    <value>111, 13</value>
   </data>
   <data name="labelSpecLibLinks.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -355,13 +328,10 @@
     <value>True</value>
   </data>
   <data name="linkPeptideAtlas.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 185</value>
-  </data>
-  <data name="linkPeptideAtlas.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>12, 150</value>
   </data>
   <data name="linkPeptideAtlas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>87, 17</value>
+    <value>66, 13</value>
   </data>
   <data name="linkPeptideAtlas.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -385,13 +355,10 @@
     <value>True</value>
   </data>
   <data name="linkNIST.Location" type="System.Drawing.Point, System.Drawing">
-    <value>128, 185</value>
-  </data>
-  <data name="linkNIST.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>96, 150</value>
   </data>
   <data name="linkNIST.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 17</value>
+    <value>32, 13</value>
   </data>
   <data name="linkNIST.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -415,13 +382,10 @@
     <value>True</value>
   </data>
   <data name="linkGPM.Location" type="System.Drawing.Point, System.Drawing">
-    <value>195, 185</value>
-  </data>
-  <data name="linkGPM.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>146, 150</value>
   </data>
   <data name="linkGPM.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 17</value>
+    <value>31, 13</value>
   </data>
   <data name="linkGPM.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -445,13 +409,10 @@
     <value>True</value>
   </data>
   <data name="cbxUseExplicitPeakBounds.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 218</value>
-  </data>
-  <data name="cbxUseExplicitPeakBounds.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>18, 177</value>
   </data>
   <data name="cbxUseExplicitPeakBounds.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 21</value>
+    <value>145, 17</value>
   </data>
   <data name="cbxUseExplicitPeakBounds.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -475,13 +436,10 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>8, 16</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>503, 254</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>377, 206</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -489,16 +447,10 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Library</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.413, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.413, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

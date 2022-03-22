@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -12,12 +13,12 @@ namespace pwiz.Skyline.Controls
     public interface IControlSize
     {
         Size ExpectedSize { get; }
-        void Update(Settings set, PeptideSettings peptideSet);
+        void Update(GraphSpectrumSettings set, PeptideSettings peptideSet);
     }
 
     public class MenuControl<T> : ToolStripControlHost where T : Panel, IControlSize, new()
     {
-        public MenuControl(Settings set, PeptideSettings peptideSet) : base(new T())
+        public MenuControl(GraphSpectrumSettings set, PeptideSettings peptideSet) : base(new T())
         {
             AutoSize = false;
             HostedControl.Update(set, peptideSet);
@@ -29,7 +30,7 @@ namespace pwiz.Skyline.Controls
             get { return Control as T; }
         }
 
-        public void Update(Settings set, PeptideSettings peptideSet)
+        public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
             HostedControl.Update(set, peptideSet);
             HostedControl.Size = HostedControl.ExpectedSize;
@@ -59,7 +60,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private bool GetButtonState(int charge, Settings set)
+        private bool GetButtonState(int charge, GraphSpectrumSettings set)
         {
             switch (charge)
             {
@@ -86,7 +87,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public void Update(Settings set, PeptideSettings peptideSet)
+        public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
             foreach (var button in Controls.OfType<CheckBox>())
                 button.Checked = GetButtonState((int)button.Tag, set);
@@ -201,7 +202,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public void Update(Settings set, PeptideSettings peptideSet)
+        public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
             var modLosses = peptideSet.Modifications.StaticModifications.SelectMany(mod => mod.Losses).ToList();
             modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
