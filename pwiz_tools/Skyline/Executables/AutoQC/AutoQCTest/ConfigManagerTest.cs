@@ -28,11 +28,12 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 using SharedBatch.Properties;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
     [TestClass]
-    public class ConfigManagerTest
+    public class ConfigManagerTest: AbstractUnitTest
     {
 
         #region ConfigList Operations

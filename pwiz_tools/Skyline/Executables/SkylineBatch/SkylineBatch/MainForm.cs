@@ -755,7 +755,8 @@ namespace SkylineBatch
 
         public bool ConfigRunning(string name)
         {
-            foreach (ListViewItem lvi in listViewConfigs.Items)
+            var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
+            foreach (var lvi in listViewItems)
             {
                 if (lvi.Text.Equals(name))
                 {

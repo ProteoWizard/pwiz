@@ -1449,6 +1449,9 @@
   <data name="ReportSpecList_GetDefaults_Peak_Boundaries" xml:space="preserve">
     <value>Peak Boundaries</value>
   </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Peak_Boundaries" xml:space="preserve">
+    <value>Molecule Peak Boundaries</value>
+  </data>
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>Standard co-elution (weighted)</value>
   </data>
@@ -11664,5 +11667,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
 	  <value>Associate Proteins</value>
+  </data>
+  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
+	  <value>Skyline 21.2</value>
   </data>
 </root>

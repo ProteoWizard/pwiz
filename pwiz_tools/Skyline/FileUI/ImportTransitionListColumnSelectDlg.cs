@@ -946,6 +946,9 @@ namespace pwiz.Skyline.FileUI
         public void OkDialog()
         {
             var isAssociateProteins = checkBoxAssociateProteins.Checked;
+
+            Assume.IsTrue(isAssociated || !isAssociateProteins, @"expected a complete associate proteins preview");
+
             // Check for errors is expensive with associate proteins, so don't re-run if associate proteins is known good
             if (InsertionParams == null || // Haven't checked yet
                 _associateProteinsMode == AssociateProteinsMode.preview || // Either no associate proteins, or we didn't do the full input set
@@ -1486,5 +1489,10 @@ namespace pwiz.Skyline.FileUI
 
             return !canceled;
         }
+
+        #region testing support
+        public bool AssociateProteinsPreviewCompleted => checkBoxAssociateProteins.Checked && isAssociated;
+        #endregion
+
     }
 }  

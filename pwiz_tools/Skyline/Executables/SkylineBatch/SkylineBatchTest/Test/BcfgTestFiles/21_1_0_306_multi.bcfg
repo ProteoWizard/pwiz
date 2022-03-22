@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config_list saved_path_root="REPLACE_TEXT\BcfgTestFiles" xml_version="21.11">
+<config_list saved_path_root="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles" xml_version="21.11">
   <skylinebatch_config name="Basic" modified="01/12/2022 12:12:00">
-    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Basic">
-      <template_file path="REPLACE_TEXT\emptyTemplate.sky" />
-      <data_folder path="REPLACE_TEXT\EmptyData" />
+    <file_settings analysis_folder_path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Basic">
+      <template_file path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" />
+      <data_folder path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" />
       <annotations_file />
     </file_settings>
     <import_settings />
@@ -12,25 +12,25 @@
     <config_skyline_settings type="Skyline" version="latest" />
   </skylinebatch_config>
   <skylinebatch_config name="Complex" enabled="true" modified="01/12/2022 13:53:28">
-    <file_settings analysis_folder_path="REPLACE_TEXT\BcfgTestFiles\Complex" replicate_naming_pattern="Tester">
-      <template_file zip_path="REPLACE_TEXT\Bruderer.sky.zip">
+    <file_settings analysis_folder_path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Complex" replicate_naming_pattern="Tester">
+      <template_file zip_path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\Bruderer.sky.zip">
         <remote_file>
           <remote_file_source name="panoramaweb.org Bruderer.sky.zip" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/Bruderer.sky.zip" username="alimarsh@mit.edu" password="test" />
         </remote_file>
       </template_file>
-      <data_folder path="REPLACE_TEXT\EmptyData">
+      <data_folder path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData">
         <remote_file_set data_naming_pattern="0314_SGSDSsample.*_MHRM_">
           <remote_file_source name="ftp://ftp.peptideatlas.org/" url="ftp://ftp.peptideatlas.org/" username="PASS00589" password="WF6554orn" />
         </remote_file_set>
       </data_folder>
-      <annotations_file path="REPLACE_TEXT\MSstats_annotations.sky">
+      <annotations_file path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_annotations.sky">
         <remote_file>
           <remote_file_source name="panoramaweb.org MSstats_annotations.sky" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/reports/MSstats_annotations.sky" username="alimarsh@mit.edu" password="test" />
         </remote_file>
       </annotations_file>
     </file_settings>
     <import_settings ms_one_resolving_power="1" ms_ms_resolving_power="1000" retention_time="100" add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
-    <refine_settings remove_decoys="true" remove_results="true" output_file_path="REPLACE_TEXT\refinedTemplate.sky">
+    <refine_settings remove_decoys="true" remove_results="true" output_file_path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\refinedTemplate.sky">
       <command_argument name="min_peptides" value="1" />
       <command_argument name="remove_repeats" value="True" />
       <command_argument name="remove_duplicates" value="True" />
@@ -67,16 +67,16 @@
     </refine_settings>
     <report_settings>
       <report_info name="MSstats Input-plus">
-        <r_script path="REPLACE_TEXT\MSstats_Bruderer.R" version="4.0.3">
+        <r_script path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\MSstats_Bruderer.R" version="4.0.3">
           <remote_file>
             <remote_file_source name="panoramaweb.org MSstats_Bruderer.R" url="https://panoramaweb.org/_webdav/Panorama Public/2021/MacCoss - 2015-Bruderer/%40files/reports/MSstats_Bruderer.R" username="alimarsh@mit.edu" password="test" />
           </remote_file>
         </r_script>
       </report_info>
-      <report_info name="Unique Report" path="REPLACE_TEXT\UniqueReport.skyr" use_refined_file="true">
-        <r_script path="REPLACE_TEXT\testScript.R" version="4.0.3" />
+      <report_info name="Unique Report" path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr" use_refined_file="true">
+        <r_script path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R" version="4.0.3" />
       </report_info>
     </report_settings>
-    <config_skyline_settings type="Custom" version="latest" path="C:\Program Files\Skyline\SkylineCmd.exe" />
+    <config_skyline_settings type="Custom" version="latest" path="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
   </skylinebatch_config>
 </config_list>

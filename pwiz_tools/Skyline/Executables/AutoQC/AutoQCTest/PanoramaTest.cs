@@ -6,12 +6,13 @@ using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using SharedBatch;
+using SharedBatchTest;
 
 
 namespace AutoQCTest
 {
     [TestClass]
-    public class PanoramaTest
+   public class PanoramaTest: AbstractUnitTest
     {
         public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_PARENT_PATH = "SkylineTest";
@@ -61,24 +62,27 @@ namespace AutoQCTest
         }
 
         [TestMethod]
+        [DeploymentItem(@"..\AutoQC\FileAcquisitionTime.skyr")]
+        [DeploymentItem(@"..\AutoQC\SkylineRunner.exe")]
+        [DeploymentItem(@"..\AutoQC\SkylineDailyRunner.exe")]
         public async Task TestPublishToPanorama()
         {
-            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky")),
+            var testFilesDir = new TestFilesDir(TestContext, TestUtils.GetTestFilePath("PanoramaPublishTest.zip"));
+            var skyFileName = "QEP_2015_0424_RJ.sky";
+            var rawFileName = "CE_Vantage_15mTorr_0001_REP1_01.raw";
+
+            Assert.IsTrue(File.Exists(testFilesDir.GetTestPath(skyFileName)),
                 "Could not find Skyline file, nothing to import data into.");
-            Assert.IsTrue(File.Exists(TestUtils.GetTestFilePath("PanoramaTestConfig\\QEP_2015_0424_RJ_05_prtc.raw")),
-                "Data file is not in configuration folder, nothing to upload.");
+            Assert.IsTrue(File.Exists(testFilesDir.GetTestPath(rawFileName)),
+                "Could not find data file, nothing to upload.");
 
-            File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.sky"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.sky"), true);
-            File.Copy(TestUtils.GetTestFilePath("QEP_2015_0424_RJ_2015_04\\QEP_2015_0424_RJ.skyd"), TestUtils.GetTestFilePath("QEP_2015_0424_RJ.skyd"), true);
-
-            
             var skylineSettings = TestUtils.GetTestSkylineSettings();
             Assert.IsNotNull(skylineSettings, "Test cannot run without an installation of Skyline or Skyline-daily.");
 
             var config = new AutoQcConfig("PanoramaTestConfig", false, DateTime.MinValue, DateTime.MinValue,
-                TestUtils.GetTestMainSettings("folderToWatch", "PanoramaTestConfig"),
+                TestUtils.GetTestMainSettings(testFilesDir.GetTestPath(skyFileName), "folderToWatch", testFilesDir.FullPath),
                 new PanoramaSettings(true, SERVER_URL, PANORAMA_USER_NAME, PANORAMA_PASSWORD, $"{PANORAMA_PARENT_PATH}/{_testPanoramaFolder}"), 
-                TestUtils.GetTestSkylineSettings());
+                skylineSettings);
 
             // Validate the configuration
             try

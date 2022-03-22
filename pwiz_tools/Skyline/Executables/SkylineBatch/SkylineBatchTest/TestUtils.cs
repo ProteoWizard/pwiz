@@ -387,6 +387,7 @@ namespace SkylineBatchTest
         {
             var originalFilePath = GetTestFilePath(fileName);
             newName = newName ?? Path.GetTempFileName();
+            if (File.Exists(newName)) File.Delete(newName);
 
             using (var fileStream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
             using (var writeStream = File.OpenWrite(newName))

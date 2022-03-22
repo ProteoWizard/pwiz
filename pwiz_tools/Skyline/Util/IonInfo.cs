@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Util
             return resultDict;
         }
 
-        public static bool IsFormulaWithAdduct(string formula, out Molecule molecule, out Adduct adduct, out string neutralFormula)
+        public static bool IsFormulaWithAdduct(string formula, out Molecule molecule, out Adduct adduct, out string neutralFormula, bool strict = false)
         {
             molecule = null;
             adduct = Adduct.EMPTY;
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Util
             {
                 neutralFormula = parts[0];
                 var adductString = formula.Substring(neutralFormula.Length);
-                if (Adduct.TryParse(adductString, out adduct))
+                if (Adduct.TryParse(adductString, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, strict))
                 {
                     molecule = neutralFormula.Length > 0 ? ApplyAdductToFormula(neutralFormula, adduct) : Molecule.Empty;
                     return true;

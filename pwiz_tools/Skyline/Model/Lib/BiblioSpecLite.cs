@@ -29,7 +29,6 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -1530,7 +1529,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0,
                                 RegressionMethodRT.linear,
-                                new CustomCancellationToken(longWaitBroker.CancellationToken));
+                                longWaitBroker.CancellationToken);
                         }
                         catch (OperationCanceledException)
                         {

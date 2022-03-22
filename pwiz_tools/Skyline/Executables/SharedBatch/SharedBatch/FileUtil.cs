@@ -16,7 +16,7 @@ namespace SharedBatch
     {
 
         public const string DOWNLOADS_FOLDER = "\\Downloads";
-        public const int ONE_GB = 1000000000;
+        public const long ONE_GB = 1000000000;
 
 
         public static void ValidateNotEmptyPath(string input, string name)
@@ -220,8 +220,12 @@ namespace SharedBatch
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
+        public static long? SimulatedDriveSpace { get; set; }
         public static long GetTotalFreeSpace(string driveName)
         {
+            if (SimulatedDriveSpace.HasValue)
+                return SimulatedDriveSpace.Value;
+
             foreach (DriveInfo drive in DriveInfo.GetDrives())
             {
                 if (drive.IsReady && drive.Name == driveName)
