@@ -352,8 +352,7 @@ namespace SkylineTester
                 // Load all tests from each dll.
                 var testSetValue = testSet.InvokeRequired
                     ? (string)Invoke(new Func<string>(() => testSet.SelectedItem.ToString()))
-                    : testSet.SelectedText;
-                testSetValue = string.IsNullOrEmpty(testSetValue) ? "All tests" : testSetValue;
+                    : testSet.SelectedItem.ToString();
                 var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
