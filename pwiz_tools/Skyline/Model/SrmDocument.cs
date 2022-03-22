@@ -977,6 +977,21 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
+            try
+            {
+                return ChangeSettingsInternalOrThrow(settingsNew, progressMonitor);
+            }
+            catch (Exception)
+            {
+                if (progressMonitor != null && progressMonitor.IsCanceled())
+                {
+                    throw new OperationCanceledException();
+                }
+                throw;
+            }
+        }
+        private SrmDocument ChangeSettingsInternalOrThrow(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor)
+        {
             settingsNew = UpdateHasHeavyModifications(settingsNew);
             // First figure out what changed.
             SrmSettingsDiff diff = new SrmSettingsDiff(Settings, settingsNew);
@@ -1077,9 +1092,12 @@ namespace pwiz.Skyline.Model
                         {
                             if (progressMonitor.IsCanceled())
                                 throw new OperationCanceledException();
-                            var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair, moleculeGroupPairs.Length);
+                            var percentComplete =
+                                ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair,
+                                    moleculeGroupPairs.Length);
                             if (percentComplete.HasValue && percentComplete.Value < 100)
-                                progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                                progressMonitor.ChangeProgress(status =>
+                                    status.ChangePercentComplete(percentComplete.Value));
                         }
 
                         var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
