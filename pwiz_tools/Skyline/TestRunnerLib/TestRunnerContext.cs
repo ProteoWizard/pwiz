@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunnerLib
 {
-    class TestRunnerContext : TestContext
+    public class TestRunnerContext : TestContext
     {
         private readonly Dictionary<string, string> _dictionary;
 

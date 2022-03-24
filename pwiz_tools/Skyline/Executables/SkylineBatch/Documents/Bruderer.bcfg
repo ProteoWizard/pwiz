@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config_list saved_path_root="D:\Users\other\Bruderer" xml_version="21.12">
+  <skylinebatch_config name="Bruderer" enabled="true" modified="11/01/2021 16:31:14">
+    <file_settings analysis_folder_path="D:\Users\other\Bruderer\Bruderer_ppm15c_rt10" use_analysis_folder_name="true" replicate_naming_pattern="(sample._R0.)">
+      <template_file zip_path="D:\Users\other\Bruderer\Bruderer.sky.zip">
+        <remote_file relative_path="Bruderer.sky.zip">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file>
+      </template_file>
+      <data_folder path="D:\Users\other\Bruderer\raw">
+        <remote_file_set relative_path="RawFiles/rep">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Bruderer\Bruderer-annotations.csv">
+        <remote_file relative_path="reports/Bruderer-annotations.csv">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus" />
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+  <skylinebatch_config name="Bruderer (MSstats)" modified="11/01/2021 16:31:16">
+    <file_settings analysis_folder_path="D:\Users\other\Bruderer\Bruderer_ppm15c_rt10" use_analysis_folder_name="true" replicate_naming_pattern="(sample._R0.)">
+      <template_file zip_path="D:\Users\other\Bruderer\Bruderer.sky.zip">
+        <remote_file relative_path="Bruderer.sky.zip">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file>
+      </template_file>
+      <data_folder path="D:\Users\other\Bruderer\raw">
+        <remote_file_set relative_path="RawFiles/rep">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file_set>
+      </data_folder>
+      <annotations_file path="D:\Users\other\Bruderer\Bruderer-annotations.csv">
+        <remote_file relative_path="reports/Bruderer-annotations.csv">
+          <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+        </remote_file>
+      </annotations_file>
+    </file_settings>
+    <import_settings add_decoys="true" shuffle_decoys="true" train_m_prophet="true" />
+    <refine_settings />
+    <report_settings>
+      <report_info name="MSstats Input-plus">
+        <r_script path="D:\Users\other\Bruderer\MSstats_Bruderer.R" version="4.0.3">
+          <remote_file relative_path="reports\MSstats_Bruderer.R">
+            <remote_file_source name="Bruderer Panorama Folder" url="https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/" />
+          </remote_file>
+        </r_script>
+      </report_info>
+    </report_settings>
+    <config_skyline_settings type="Skyline" version="latest" />
+  </skylinebatch_config>
+</config_list>

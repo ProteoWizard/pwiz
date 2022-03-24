@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
-                                                      FullScanMassAnalyzerType.none, null, null, false,
+                                                      FullScanMassAnalyzerType.none, null, null, false, false,
                                                       null, RetentionTimeFilterType.none, 0);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
@@ -1089,7 +1089,8 @@ namespace pwiz.Skyline.Model.DocSettings
             string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
-            return ionTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
+            var stringsList = ionTypes.Select(ion => ion.GetInputAliases().First()).ToList();
+            return stringsList.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
@@ -1109,7 +1110,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return IonType.precursor;
             }
-            IonType ionType = TypeSafeEnum.Parse<IonType>(s);
+            IonType ionType = IonTypeExtension.GetEnum(s);
             if (ionType == IonType.custom)
             {
                 throw new ArgumentException();
@@ -2295,6 +2296,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
                                     double? precursorResMz,
+                                    bool ignoreSim,
                                     bool selectiveExtraction,
                                     IsotopeEnrichments isotopeEnrichments,
                                     RetentionTimeFilterType retentionTimeFilterType,
@@ -2310,6 +2312,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorMassAnalyzer = precursorMassAnalyzer;
             PrecursorRes = precursorRes;
             PrecursorResMz = precursorResMz;
+            IgnoreSimScans = ignoreSim;
 
             UseSelectiveExtraction = selectiveExtraction;
 
@@ -2324,6 +2327,9 @@ namespace pwiz.Skyline.Model.DocSettings
         // Applies to both MS1 and MS/MS because it is related to sample complexity
         [Track]
         public bool UseSelectiveExtraction { get; private set; }
+
+        [Track]
+        public bool IgnoreSimScans { get; private set; }
 
         public double ResPerFilter { get { return UseSelectiveExtraction ? RES_PER_FILTER_SELECTIVE : RES_PER_FILTER; } }
 
@@ -2737,6 +2743,7 @@ namespace pwiz.Skyline.Model.DocSettings
             scheduled_filter, // deprecated
             retention_time_filter_type,
             retention_time_filter_length,
+            ignore_sim_scans,
         }
 
         void IValidating.Validate()
@@ -2748,7 +2755,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (PrecursorIsotopes == FullScanPrecursorIsotopes.None)
             {
-                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue)
+                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue || IgnoreSimScans)
                     throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included);
             }
             else
@@ -2913,6 +2920,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            IgnoreSimScans = reader.GetBoolAttribute(ATTR.ignore_sim_scans);
             UseSelectiveExtraction = reader.GetBoolAttribute(ATTR.selective_extraction);
             RetentionTimeFilterType = RetentionTimeFilterType.none;
             RetentionTimeFilterLength = 0;
@@ -2990,6 +2998,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
+            if (IgnoreSimScans)
+                writer.WriteAttribute(ATTR.ignore_sim_scans, true);
             if (UseSelectiveExtraction)
                 writer.WriteAttribute(ATTR.selective_extraction, true);
             if (RetentionTimeFilterType != RetentionTimeFilterType.none)
@@ -3024,6 +3034,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.IsotopeEnrichments, IsotopeEnrichments) &&
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
+                other.IgnoreSimScans == IgnoreSimScans &&
                 other.UseSelectiveExtraction == UseSelectiveExtraction &&
                 other.PrecursorResMz.Equals(PrecursorResMz) &&
                 other.RetentionTimeFilterType == RetentionTimeFilterType &&
@@ -3053,6 +3064,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ IgnoreSimScans.GetHashCode();
                 result = (result*397) ^ UseSelectiveExtraction.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterType.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterLength.GetHashCode();

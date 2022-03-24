@@ -755,7 +755,8 @@ namespace SkylineBatch
 
         public bool ConfigRunning(string name)
         {
-            foreach (ListViewItem lvi in listViewConfigs.Items)
+            var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());
+            foreach (var lvi in listViewItems)
             {
                 if (lvi.Text.Equals(name))
                 {
@@ -795,6 +796,8 @@ namespace SkylineBatch
         public void SetConfigEnabled(int index, bool newValue) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, newValue ? CheckState.Checked : CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
 
         public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
+
+        public void ClearRemoteFileSources() => _configManager.ClearRemoteFileSources();
         
 
         #endregion

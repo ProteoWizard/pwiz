@@ -360,8 +360,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var color1 = Blend(GetTransitionColor(transition), Color.White, 0.60);
-                var color2 = Blend(GetTransitionColor(transition), Color.White, 0.95);
+                var color1 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.60);
+                var color2 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.95);
                 var extractionBox = new BoxObj(
                     transition.ProductMz - transition.ExtractionWidth.Value / 2,
                     0.0,
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Tag = i
                     };
                     label.FontSpec.Border.IsVisible = false;
-                    label.FontSpec.FontColor = Blend(GetTransitionColor(transition), Color.Black, 0.30);
+                    label.FontSpec.FontColor = GraphHelper.Blend(GetTransitionColor(transition), Color.Black, 0.30);
                     label.FontSpec.IsBold = true;
                     label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
                     GraphPane.GraphObjList.Add(label);
@@ -902,14 +902,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private Color Blend(Color baseColor, Color blendColor, double blendAmount)
-        {
-            return Color.FromArgb(
-                (int) (baseColor.R*(1 - blendAmount) + blendColor.R*blendAmount),
-                (int) (baseColor.G*(1 - blendAmount) + blendColor.G*blendAmount),
-                (int) (baseColor.B*(1 - blendAmount) + blendColor.B*blendAmount));
-        }
-
         private void ClearGraph()
         {
             comboBoxScanType.Items.Clear();
@@ -1161,7 +1153,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            LoadScan(false, false);
+            LoadScan(false, Settings.Default.LockYAxis);
         }
 
         private void comboBoxScanType_SelectedIndexChanged(object sender, EventArgs e)
@@ -1336,6 +1328,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public double XAxisMax { get { return GraphPane.XAxis.Scale.Max; }}
         public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}
         public double YAxisMax { get { return GraphPane.YAxis.Scale.Max; }}
+
+        public bool IsScanTypeSelected(ChromSource source)
+        {
+            return string.Equals(comboBoxScanType.SelectedItem.ToString(),
+                _msDataFileScanHelper.NameFromSource(source));
+        }
 
         public void SelectScanType(ChromSource source)
         {

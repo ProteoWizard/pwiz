@@ -379,6 +379,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return true;
                 }
+                // Test support - in "AsSmallMolecules" versions of tests where we transform a proteomic document to small molecules,
+                // cached chromatogram textID may be that of the original peptide. In that case, look for "PEPTIDER" instead of "pep_PEPTIDER"
+                if (SrmDocument.IsConvertedFromProteomicTestDocNode(nodePep) &&
+                    nodePep.CustomMolecule.Name.StartsWith(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator))
+                {
+                    if (EqualTextIdBytes(nodePep.CustomMolecule.Name.Substring(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator.Length), textIdIndex, textIdLen))
+                    {
+                        return true;
+                    }
+                }
                 return false;
             }
             else
@@ -1276,6 +1286,8 @@ namespace pwiz.Skyline.Model.Results
                     long offsetPoints = fs.Stream.Position - firstEntry.LocationPoints;
 
                     int iNext = i;
+                    int firstPeakToTransfer = 0;
+                    int numPeaksToTransfer = 0;
                     // Enumerate until end of current file encountered
                     while (iNext < listEntries.Length && fileIndex == ChromGroupHeaderInfos[listEntries[iNext].Item3].FileIndex)
                     {
@@ -1313,10 +1325,23 @@ namespace pwiz.Skyline.Model.Results
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)
                             listKeepTransitions.Add(_rawData.ChromTransitions[j]);
-                        start = lastEntry.StartPeakIndex;
-                        end = start + lastEntry.NumPeaks*lastEntry.NumTransitions;
-                        peakCount += end - start;
-                        TransferPeaks(cacheFormat, start, end - start, fsPeaks.FileStream);
+                        int numEntryPeaks = lastEntry.NumPeaks * lastEntry.NumTransitions;
+                        if (lastEntry.StartPeakIndex == firstPeakToTransfer + numPeaksToTransfer)
+                        {
+                            numPeaksToTransfer += numEntryPeaks;
+                        }
+                        else
+                        {
+                            if (numPeaksToTransfer > 0)
+                            {
+                                TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
+                            }
+
+                            firstPeakToTransfer = lastEntry.StartPeakIndex;
+                            numPeaksToTransfer = numEntryPeaks;
+                        }
+                        peakCount += numEntryPeaks;
+                        
                         start = lastEntry.TextIdIndex;
                         end = start + lastEntry.TextIdLen;
                         for (int j = start; j < end; j++)
@@ -1333,6 +1358,11 @@ namespace pwiz.Skyline.Model.Results
                                 inStream.TransferBytes(fsScores.FileStream, (end - start) * SCORE_VALUE_SIZE);
                             }
                         }
+                    }
+
+                    if (numPeaksToTransfer > 0)
+                    {
+                        TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
                     }
 
                     if (_rawData.ChromCacheFiles[fileIndex].SizeScanIds == 0)

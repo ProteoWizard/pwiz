@@ -170,10 +170,16 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="LegacyScoringModelTest.cs" />
+    <Compile Include="MinimizeIrtTest.cs" />
+    <Compile Include="EADZIonsTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
     <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
+    <Compile Include="TargetRatiosTest.cs" />
+    <Compile Include="TestPeakAreaDotpGraph.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -474,6 +480,7 @@
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="DuplicateSmallMoleculePrecursorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />
+    <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
@@ -494,6 +501,7 @@
     <None Include="ClusteredHeatMapTest.zip" />
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
+    <None Include="IgnoreSimScansTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />
@@ -510,6 +518,7 @@
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
+    <None Include="LegacyScoringModelTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryCacheTest.zip" />
@@ -525,6 +534,7 @@
     <None Include="MassErrorGraphsTest.zip" />
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
+    <None Include="MinimizeIrtTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="ModifyMoleculeTest.zip" />
     <None Include="MultiSelectRetentionTimeTest.zip" />
@@ -536,6 +546,7 @@
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
+    <None Include="PeakAreaDotpGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PermuteIsotopeModificationsTest.zip" />

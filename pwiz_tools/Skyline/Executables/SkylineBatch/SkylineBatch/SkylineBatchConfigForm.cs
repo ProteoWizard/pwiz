@@ -45,7 +45,6 @@ namespace SkylineBatch
         private readonly Dictionary<string, string> _possibleTemplates;
         private SkylineSettings _currentSkylineSettings;
         private bool _showChangeAllSkylineSettings;
-        private SkylineBatchConfigManagerState _state;
 
         public DownloadingFileControl templateControl;
         public DownloadingFileControl dataControl;
@@ -63,7 +62,7 @@ namespace SkylineBatch
             _newReportList = new List<ReportInfo>();
             _rDirectorySelector = rDirectorySelector;
             _mainControl = mainControl;
-            _state = configManagerStartState;
+            State = configManagerStartState;
             _possibleTemplates = State.Templates.ToDictionary(pair => pair.Key, pair => pair.Value);
             var numConfigs = State.ConfigRunners.Count;
             _showChangeAllSkylineSettings = (numConfigs == 1 && _action != ConfigAction.Edit) || numConfigs > 1;
@@ -92,19 +91,7 @@ namespace SkylineBatch
             ActiveControl = textConfigName;
         }
 
-        public SkylineBatchConfigManagerState State {
-            get
-            {
-                return _state;
-            }
-            private set
-            {
-                _state = value;
-                templateControl.State = value;
-                dataControl.State = value;
-                annotationsControl.State = value;
-            }
-        }
+        public SkylineBatchConfigManagerState State { get; private set; }
         public SkylineTypeControl SkylineTypeControl { get; private set; }
 
         private bool ShowTemplateComboBox => _possibleTemplates.Count > 0 && !_isBusy;
@@ -153,9 +140,12 @@ namespace SkylineBatch
 
         private void InitMainSettingsTab(SkylineBatchConfig config)
         {
+            var setMainState = new Action<SkylineBatchConfigManagerState> ((state) => State = state);
+            var getMainState = new Func<SkylineBatchConfigManagerState>(() => State);
             templateControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Template_File, config?.MainSettings.Template.FilePath, 
-                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl, State);
+                TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl,
+                setMainState, getMainState);
             templateControl.AddPathChangedHandler(templateControl_PathChanged);
             templateControl.Dock = DockStyle.Fill;
             templateControl.Show();
@@ -163,14 +153,16 @@ namespace SkylineBatch
 
             dataControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory,
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Data_directory, 
-                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data", _mainControl, State);
+                config?.MainSettings.DataFolderPath, null, config?.MainSettings.Server, true, "Download data", _mainControl,
+                setMainState, getMainState);
             dataControl.Dock = DockStyle.Fill;
             dataControl.Show();
             panelData.Controls.Add(dataControl);
 
             annotationsControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_file__optional_, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Annotations_File, config?.MainSettings.AnnotationsFilePath, 
-                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama", _mainControl, State);
+                TextUtil.FILTER_CSV, config?.MainSettings.AnnotationsDownload, false, "Download annotations file from Panorama", _mainControl,
+                setMainState, getMainState);
             annotationsControl.Dock = DockStyle.Fill;
             annotationsControl.Show();
             panelAnnotations.Controls.Add(annotationsControl);
@@ -206,7 +198,7 @@ namespace SkylineBatch
                 comboTemplateFile.Text = mainSettings.Template.FilePath;
                 comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
             }
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private MainSettings GetMainSettingsFromUi()
@@ -218,14 +210,18 @@ namespace SkylineBatch
                 if (_possibleTemplates[configName].Equals(templateFilePath))
                     dependentConfig = configName;
             }
-            var template = SkylineTemplate.FromUi(templateFilePath, dependentConfig, (PanoramaFile)templateControl.Server);
+            var panoramaFile = (PanoramaFile)templateControl.Server;
+            panoramaFile = panoramaFile == null ? null : new PanoramaFile(State.FileSources[panoramaFile.FileSource.Name], panoramaFile.RelativePath, panoramaFile.DownloadFolder, panoramaFile.FileName);
+            var template = SkylineTemplate.FromUi(templateFilePath, dependentConfig, panoramaFile);
 
             var analysisFolderPath = textAnalysisPath.Text;
             var useAnalysisFolderName = checkBoxUseFolderName.Checked;
             var dataFolderPath = dataControl.Path;
-            var server = (DataServerInfo)dataControl.Server;
+            var server = ((DataServerInfo)dataControl.Server);
+            server = server == null ? null : new DataServerInfo(State.FileSources[server.FileSource.Name], server.RelativePath, server.DataNamingPattern, server.Folder);
             var annotationsFilePath = annotationsControl.Path;
             var annotationsDownload = (PanoramaFile)annotationsControl.Server;
+            annotationsDownload = annotationsDownload == null ? null : new PanoramaFile(State.FileSources[annotationsDownload.FileSource.Name], annotationsDownload.RelativePath, annotationsDownload.DownloadFolder, annotationsDownload.FileName);
             var replicateNamingPattern = textReplicateNamingPattern.Text;
             
             return new MainSettings(template, analysisFolderPath, useAnalysisFolderName, dataFolderPath, server, annotationsFilePath, annotationsDownload, replicateNamingPattern);
@@ -245,12 +241,12 @@ namespace SkylineBatch
         {
             if (!comboTemplateFile.Text.Equals(templateControl.Path))
                 comboTemplateFile.Text = templateControl.Path;
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private void templateControl_PathChanged(object sender, EventArgs e)
         {
-            UpdateAnalysisFolderName();
+            UpdateAnalysisFileName();
         }
 
         private void comboTemplateFile_TextChanged(object sender, EventArgs e)
@@ -268,7 +264,7 @@ namespace SkylineBatch
                     comboTemplateFile.Text = newPath;
                     comboTemplateFile.TextChanged += comboTemplateFile_TextChanged;
                     templateControl.SetPath(newPath);
-                    UpdateAnalysisFolderName();
+                    UpdateAnalysisFileName();
                 };
                 timer.Start();
             }
@@ -284,6 +280,31 @@ namespace SkylineBatch
                 textAnalysisPath.Text = path;
                 _lastEnteredPath = path;
             }
+        }
+
+        private void UpdateAnalysisFileName()
+        {
+            try
+            {
+                var fileName = checkBoxUseFolderName.Checked ?
+                     Path.GetFileName(textAnalysisPath.Text) + TextUtil.EXT_SKY : Path.GetFileName(templateControl.Path);
+                textAnalysisFileName.Text = fileName.EndsWith(TextUtil.EXT_SKY_ZIP) ? fileName.Replace(TextUtil.EXT_SKY_ZIP, TextUtil.EXT_SKY) : fileName;
+
+            }
+            catch (Exception)
+            {
+                textAnalysisFileName.Text = string.Empty;
+            }
+        }
+
+        private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFileName();
+        }
+
+        private void textAnalysisPath_TextChanged(object sender, EventArgs e)
+        {
+            UpdateAnalysisFileName();
         }
 
         private void linkLabelRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -407,6 +428,22 @@ namespace SkylineBatch
                 _newReportList.Add(report);
                 gridReportSettings.Rows.Add(report.AsObjectArray());
             }
+        }
+
+        private ReportSettings GetReportSettingsFromUI()
+        {
+            var reportList = new List<ReportInfo>();
+            foreach (var report in _newReportList)
+            {
+                var rScriptServers = new Dictionary<string, PanoramaFile>();
+                foreach(var rScript in report.RScriptServers.Keys)
+                {
+                    var panoramaFile = report.RScriptServers[rScript];
+                    rScriptServers.Add(rScript, panoramaFile.ReplacedRemoteFileSource(panoramaFile.FileSource, State.FileSources[panoramaFile.FileSource.Name], out _));
+                }
+                reportList.Add(new ReportInfo(report.Name, report.CultureSpecific, report.ReportPath, report.RScripts.ToList(), rScriptServers, report.UseRefineFile));
+            }
+            return new ReportSettings(reportList);
         }
 
         private void btnAddReport_Click(object sender, EventArgs e)
@@ -549,7 +586,7 @@ namespace SkylineBatch
             var mainSettings = GetMainSettingsFromUi();
             var fileSettings = GetFileSettingsFromUi();
             var refineSettings = GetRefineSettingsFromUi();
-            var reportSettings = new ReportSettings(_newReportList);
+            var reportSettings = GetReportSettingsFromUI();
             var skylineSettings = GetSkylineSettingsFromUi();
             return new SkylineBatchConfig(name, enabled, logTestFormat, DateTime.Now, mainSettings, fileSettings, refineSettings, reportSettings, skylineSettings);
         }
@@ -580,29 +617,19 @@ namespace SkylineBatch
 
         #endregion
 
-        private void UpdateAnalysisFolderName()
-        {
-            try
-            {
-                var fileName = checkBoxUseFolderName.Checked ?
-                     Path.GetFileName(textAnalysisPath.Text) + TextUtil.EXT_SKY : Path.GetFileName(templateControl.Path);
-                textAnalysisFileName.Text = fileName.EndsWith(TextUtil.EXT_SKY_ZIP) ? fileName.Replace(TextUtil.EXT_SKY_ZIP, TextUtil.EXT_SKY) : fileName;
+        #region Tests
 
-            }
-            catch (Exception)
-            {
-                textAnalysisFileName.Text = string.Empty;
-            }
+        public void ClickAddReport() => btnAddReport_Click(new object(), new EventArgs());
+
+        public void ClickEditReport(int index)
+        {
+            for(int i = 0; i < gridReportSettings.Rows.Count; i++)
+                gridReportSettings.Rows[i].Selected = i == index;
+            btnEditReport_Click(new object(), new EventArgs());
+
         }
 
-        private void checkBoxUseFolderName_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateAnalysisFolderName();
-        }
 
-        private void textAnalysisPath_TextChanged(object sender, EventArgs e)
-        {
-            UpdateAnalysisFolderName();
-        }
+        #endregion
     }
 }

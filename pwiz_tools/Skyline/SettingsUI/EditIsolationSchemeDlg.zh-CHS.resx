@@ -589,7 +589,7 @@
     <value>9</value>
   </data>
   <data name="rbPrespecified.Text" xml:space="preserve">
-    <value>预指定隔离窗口(&amp;P)</value>
+    <value>预指定分离窗口(&amp;P)</value>
   </data>
   <data name="&gt;&gt;rbPrespecified.Name" xml:space="preserve">
     <value>rbPrespecified</value>
@@ -673,7 +673,7 @@
     <value>3</value>
   </data>
   <data name="labelIsolationWidth.Text" xml:space="preserve">
-    <value>隔离宽度(&amp;I)：</value>
+    <value>分离宽度(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;labelIsolationWidth.Name" xml:space="preserve">
     <value>labelIsolationWidth</value>
@@ -703,7 +703,7 @@
     <value>2</value>
   </data>
   <data name="rbUseResultsData.Text" xml:space="preserve">
-    <value>使用结果数据隔离目标(&amp;U)</value>
+    <value>使用结果数据分离目标(&amp;U)</value>
   </data>
   <data name="&gt;&gt;rbUseResultsData.Name" xml:space="preserve">
     <value>rbUseResultsData</value>
@@ -856,7 +856,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>编辑隔离方案</value>
+    <value>编辑分离方案</value>
   </data>
   <data name="&gt;&gt;editIsolationWindowBindingSource.Name" xml:space="preserve">
     <value>editIsolationWindowBindingSource</value>

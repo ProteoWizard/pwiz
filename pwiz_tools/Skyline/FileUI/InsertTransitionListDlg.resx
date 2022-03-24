@@ -159,6 +159,9 @@
   <data name="textBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 27</value>
   </data>
+  <data name="textBox1.MaxLength" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
   <data name="textBox1.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -196,7 +199,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Press Ctrl-V to paste here:</value>
+    <value>Press Ctrl-V to paste here.</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

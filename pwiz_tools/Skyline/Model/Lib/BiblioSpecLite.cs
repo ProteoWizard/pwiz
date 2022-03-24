@@ -29,7 +29,6 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -943,7 +942,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached, out var failureException))
+            if (Load(loader, status, cached))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -955,7 +954,7 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false, out failureException))
+                if (Load(loader, status, false))
                     return true;
             }
 
@@ -963,18 +962,15 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
 
-            if (failureException != null)
-                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                failureException = null;
                 byte[] cacheBytes = null;
                 if (!cached)
                 {
@@ -985,19 +981,12 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    try
+                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                    if (cacheBytes == null)
                     {
-                        cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                        if (cacheBytes == null)
-                        {
-                            return false;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        failureException = new Exception(FormatErrorMessage(e), e);
                         return false;
                     }
+
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -1136,29 +1125,20 @@ namespace pwiz.Skyline.Model.Lib
 
                 return true;
             }
-            catch (InvalidDataException x)
-            {
-                failureException = new InvalidDataException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
-            catch (IOException x)
-            {
-                failureException = new IOException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
+
             catch (Exception x)
             {
-                failureException = new Exception(FormatErrorMessage(x), x);
+                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
+                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
+                // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
+                    var failureException = new Exception(FormatErrorMessage(x), x);
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw failureException; // We want this to show up in ExceptionWeb
+                    }
+                    // This will show the user the error message after which the operation can be treated as canceled.
                     loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
@@ -1549,7 +1529,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0,
                                 RegressionMethodRT.linear,
-                                new CustomCancellationToken(longWaitBroker.CancellationToken));
+                                longWaitBroker.CancellationToken);
                         }
                         catch (OperationCanceledException)
                         {

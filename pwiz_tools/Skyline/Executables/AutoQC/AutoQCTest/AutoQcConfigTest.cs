@@ -18,15 +18,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 using SharedBatch;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
 
     [TestClass]
-    public class AutoQcConfigTest
+    public class AutoQcConfigTest: AbstractUnitTest
     {
 
         
@@ -35,7 +37,11 @@ namespace AutoQCTest
         public void TestValidateMainSettings()
         {
             var skylinePath = TestUtils.GetTestFilePath("EmptyTemplate.sky");
-            var folderToWatch = TestUtils.CreateTestFolder("Config");
+
+            var folderToWatch = TestContext.GetTestPath(Path.Combine("ValidateMainSettings", "DataDir"));
+            Directory.CreateDirectory(folderToWatch);
+            Assert.IsTrue(Directory.Exists(folderToWatch));
+            
             var resultsWindow = "51";
             var acquisitionTime = "500";
 
@@ -77,16 +83,16 @@ namespace AutoQCTest
             }
 
             var testValidMainSettings = new MainSettings(TestUtils.GetTestFilePath("EmptyTemplate.sky"),
-                TestUtils.GetTestFilePath("Config"),
+                folderToWatch,
                 true, MainSettings.GetDefaultQcFileFilter(), true, "50", MainSettings.SCIEX,
                 "500");
             try
             {
                 testValidMainSettings.ValidateSettings();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Assert.Fail("Should have validated valid MainSettings");
+                Assert.Fail(TextUtil.LineSeparate("Expected valid MainSettings", string.Format("Error was {0}", e.Message)));
             }
 
         }
@@ -158,7 +164,7 @@ namespace AutoQCTest
             var fsUtil = new TestFileSystemUtil();
             var config = new AutoQcConfig("Test Config", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
-            ConfigRunner configRunner = new ConfigRunner(config, TestUtils.GetTestLogger(config), null);
+            ConfigRunner configRunner = new ConfigRunner(config, TestUtils.GetTestLogger(config));
             Assert.AreEqual(new DateTime(2015, 06, 01), configRunner.GetLastArchivalDate(fsUtil));
         }
 

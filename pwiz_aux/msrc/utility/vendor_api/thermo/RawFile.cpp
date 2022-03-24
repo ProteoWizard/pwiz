@@ -1079,6 +1079,8 @@ class ScanInfoImpl : public ScanInfo
     void reinitialize(const std::string& filter);
 
     virtual long scanNumber() const {return scanNumber_;}
+    virtual int scanSegmentNumber() const { return scanSegment_; }
+    virtual int scanEventNumber() const { return scanEvent_; }
 
 #ifndef _WIN64
     virtual std::string filter() const {return filter_;}
@@ -1158,6 +1160,8 @@ class ScanInfoImpl : public ScanInfo
     private:
 
     long scanNumber_;
+    int scanSegment_;
+    int scanEvent_;
 #ifndef _WIN64
     const RawFileImpl* rawfile_;
     string filter_;
@@ -1267,6 +1271,8 @@ void ScanInfoImpl::initialize()
 {
     try
     {
+        scanSegment_ = 0;
+        scanEvent_ = 0;
         massAnalyzerType_ = (MassAnalyzerType_Unknown);
         ionizationType_ = (IonizationType_Unknown);
         activationType_ = (ActivationType_Unknown);
@@ -1348,6 +1354,8 @@ void ScanInfoImpl::initialize()
                 checkResult(rawfile_->raw_->GetStartTime(&startTime_));
 #else
             auto scanStats = rawfile_->raw_->GetScanStatsForScanNumber(scanNumber_);
+            scanSegment_ = scanStats->SegmentNumber;
+            scanEvent_ = scanStats->ScanEventNumber;
             packetCount_ = scanStats->PacketCount;
             startTime_ = scanStats->StartTime;
             lowMass_ = scanStats->LowMass;
@@ -1492,6 +1500,7 @@ void ScanInfoImpl::initTrailerExtraHelper() const
             trailerExtraMap_[trailerExtraLabels_.back()] = trailerExtraValues_.back();
         }
 #endif
+        trailerExtraSize_ = trailerExtraLabels_.size();
     }
     CATCH_AND_FORWARD
 

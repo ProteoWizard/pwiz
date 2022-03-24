@@ -340,6 +340,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
             }
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
+
             //p. 15 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);

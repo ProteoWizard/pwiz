@@ -704,10 +704,11 @@ namespace pwiz.Skyline.Model.Results
             return isSimSpectrum;
         }
 
+        public const int SIM_ISOLATION_CUTOFF = 500;
+
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {
             // Consider: Introduce a variable cut-off in the document settings
-            const int SIM_ISOLATION_CUTOFF = 500;
             return isoWin.IsolationMz.HasValue && isoWin.IsolationWidth.HasValue &&
                    isoWin.IsolationWidth.Value <= SIM_ISOLATION_CUTOFF;
         }
@@ -803,6 +804,9 @@ namespace pwiz.Skyline.Model.Results
             SpectrumFilterPair[] filterPairs;
             if (isSimSpectra)
             {
+                if (_fullScan.IgnoreSimScans)
+                    yield break;
+
                 filterPairs = FindMs1FilterPairs(precursors).ToArray();
             }
             else

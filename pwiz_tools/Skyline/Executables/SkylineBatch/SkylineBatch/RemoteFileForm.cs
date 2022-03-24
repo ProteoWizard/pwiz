@@ -10,7 +10,6 @@ namespace SkylineBatch
     {
         private CancellationTokenSource _cancelSource;
         private IMainUiControl _mainControl;
-        private RemoteFileControl _remoteFileControl;
 
         public RemoteFileForm(Server editingServer, string path, string title, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
         {
@@ -20,10 +19,10 @@ namespace SkylineBatch
             path = path ?? string.Empty;
             _mainControl = mainControl;
             
-            _remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false);
-            _remoteFileControl.Dock = DockStyle.Fill;
-            _remoteFileControl.Show();
-            panelRemoteFile.Controls.Add(_remoteFileControl);
+            remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false, true);
+            remoteFileControl.Dock = DockStyle.Fill;
+            remoteFileControl.Show();
+            panelRemoteFile.Controls.Add(remoteFileControl);
 
             Shown += (sender, args) =>
             {
@@ -32,16 +31,27 @@ namespace SkylineBatch
 
         }
 
+
+        public RemoteFileControl remoteFileControl;
+
         public PanoramaFile PanoramaServer;
 
-        public SkylineBatchConfigManagerState State => _remoteFileControl.State;
+        public SkylineBatchConfigManagerState State => remoteFileControl.State;
         
         private void btnSave_Click(object sender, EventArgs e)
         {
+            // Remove this when FTP sources supported
+            if (remoteFileControl.ServerFromUI().FileSource.FtpSource)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), 
+                    Resources.RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_);
+                return;
+            }
+            
             _cancelSource = new CancellationTokenSource();
             btnSave.Text = Resources.AddServerForm_btnAdd_Click_Verifying;
             btnSave.Enabled = false;
-            _remoteFileControl.CheckPanoramaServer(_cancelSource.Token, DoneValidatingServer);
+            remoteFileControl.CheckPanoramaServer(_cancelSource.Token, DoneValidatingServer);
         }
 
         private void DoneValidatingServer(PanoramaFile panoramaFile, Exception error)
@@ -72,7 +82,7 @@ namespace SkylineBatch
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            _remoteFileControl.Clear();
+            remoteFileControl.Clear();
         }
 
         private void AddPanoramaTemplate_FormClosing(object sender, FormClosingEventArgs e)

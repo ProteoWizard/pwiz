@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using ZedGraph;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -95,14 +96,14 @@ namespace pwiz.SkylineTestFunctional
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
                     //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
                     AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList);
+                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath).ToList());
                     SkylineWindow.ShowProductTransitions();
                     Assert.AreEqual(6, graphChromatogram.CurveList.Count);
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
                     AssertCurveListsSame(graphChromatogram.CurveList,
                       libraryMatchGraphControl.GraphPane.CurveList);
                     AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList);
+                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath).ToList());
                     SkylineWindow.ShowAllTransitions();
                     SkylineWindow.ShowSplitChromatogramGraph(true);
                 });
@@ -110,12 +111,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, graphChromatogramGraphControl.MasterPane.PaneList.Count);
             Assert.AreEqual(2, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
-                peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList);
+                peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList.FindAll(c => c.Tag is IdentityPath).ToList());
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
-                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList);
+                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList.FindAll(c => c.Tag is IdentityPath).ToList());
         }
 
-        private static void AssertCurveListsSame(CurveList curveList1, CurveList curveList2)
+        private static void AssertCurveListsSame(List<CurveItem> curveList1, List<CurveItem> curveList2)
         {
             CollectionAssert.AreEqual(curveList1.Select(curve=>curve.Label.Text).ToArray(), curveList2.Select(curve=>curve.Label.Text).ToArray());
             CollectionAssert.AreEqual(curveList1.Select(curve=>curve.Color).ToArray(), curveList2.Select(curve=>curve.Color).ToArray());

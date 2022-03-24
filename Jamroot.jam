@@ -274,6 +274,12 @@ if ! [ modules.peek : NT ]
     [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
     ;
 }
+else
+{
+    # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+    # also, catch(...) will catch SEH exceptions with this on
+    DEFAULT_ASYNCH_EXCEPTIONS = <asynch-exceptions>on ;
+}
 
 
 project pwiz 
@@ -288,10 +294,6 @@ project pwiz
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
-
-        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
-        # also, catch(...) will catch SEH exceptions with this on
-        <toolset>msvc:<asynch-exceptions>on
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
@@ -324,6 +326,7 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on
@@ -420,6 +423,7 @@ project pwiz
         <warnings>all
         <threading>multi
         <response-file>file               # auto-detection of max command-line length broken on Windows Server?
+        $(DEFAULT_ASYNCH_EXCEPTIONS)
     ;
 
 
@@ -937,13 +941,26 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.2 in $(properties) )
+       ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.3 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
     }
 }
 
+# newer OS/GCC versions have PIE enabled by default, but msparser was compiled without PIE, so we must also compile without PIE
+obj has-pie : $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
+explicit has-pie ;
+
+if [ check-target-builds has-pie "GCC has -no-pie" : <cflags>-no-pie <cxxflags>-no-pie <linkflags>-no-pie ]
+{
+    .pic-options = -fPIC -no-pie -fno-pie ;
+}
+else
+{
+    .pic-options = -fPIC ;
+}
 
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
@@ -951,7 +968,7 @@ rule static-with-fpic ( properties * )
     if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
        <link>static in $(properties)
     {
-        return <cflags>-fPIC <cxxflags>-fPIC <linkflags>-fPIC ;
+        return <cflags>$(.pic-options) <cxxflags>$(.pic-options) <linkflags>$(.pic-options) ;
     }
 }
 

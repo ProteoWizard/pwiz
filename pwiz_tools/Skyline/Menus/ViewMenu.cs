@@ -238,6 +238,8 @@ namespace pwiz.Skyline.Menus
                 case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
                 case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
                 case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
+                case IonType.zh: set.ShowZHIons = zhMenuItem.Checked = check; zhMenuItem.Visible = visible; break;
+                case IonType.zhh: set.ShowZHHIons = zhhMenuItem.Checked = check; zhhMenuItem.Visible = visible; break;
                 case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
             }
         }
@@ -251,6 +253,8 @@ namespace pwiz.Skyline.Menus
             xMenuItem.Checked = set.ShowXIons;
             yMenuItem.Checked = set.ShowYIons;
             zMenuItem.Checked = set.ShowZIons;
+            zhMenuItem.Checked = set.ShowZHIons;
+            zhhMenuItem.Checked = set.ShowZHHIons;
             fragmentsMenuItem.Checked = set.ShowFragmentIons;
             precursorIonMenuItem.Checked = set.ShowPrecursorIon;
             UpdateIonTypesMenuItemsVisibility();
@@ -260,7 +264,7 @@ namespace pwiz.Skyline.Menus
         public void UpdateIonTypesMenuItemsVisibility()
         {
             aMenuItem.Visible = bMenuItem.Visible = cMenuItem.Visible =
-                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible =
+                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = zhMenuItem.Visible = zhhMenuItem.Visible =
                     DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
 
             fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
@@ -273,42 +277,52 @@ namespace pwiz.Skyline.Menus
         }
         private void aMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowAIons = !GraphSpectrumSettings.ShowAIons;
+            SkylineWindow.ShowAIons(!GraphSpectrumSettings.ShowAIons);
         }
 
         private void bMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowBIons = !GraphSpectrumSettings.ShowBIons;
+            SkylineWindow.ShowBIons(!GraphSpectrumSettings.ShowBIons);
         }
 
         private void cMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCIons = !GraphSpectrumSettings.ShowCIons;
+            SkylineWindow.ShowCIons(!GraphSpectrumSettings.ShowCIons);
         }
 
         private void xMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowXIons = !GraphSpectrumSettings.ShowXIons;
+            SkylineWindow.ShowXIons(!GraphSpectrumSettings.ShowXIons);
         }
 
         private void yMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowYIons = !GraphSpectrumSettings.ShowYIons;
+            SkylineWindow.ShowYIons(!GraphSpectrumSettings.ShowYIons);
         }
 
         private void zMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowZIons = !GraphSpectrumSettings.ShowZIons;
+            SkylineWindow.ShowZIons(!GraphSpectrumSettings.ShowZIons);
+        }
+
+        private void zhMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowZHIons(!GraphSpectrumSettings.ShowZHIons);
+        }
+
+        private void zhhMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowZHHIons(!GraphSpectrumSettings.ShowZHHIons);
         }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowFragmentIons = !GraphSpectrumSettings.ShowFragmentIons;
+            SkylineWindow.ShowFragmentIons(!GraphSpectrumSettings.ShowFragmentIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowPrecursorIon = !GraphSpectrumSettings.ShowPrecursorIon;
+            SkylineWindow.ShowPrecursorIon(!GraphSpectrumSettings.ShowPrecursorIon);
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -322,22 +336,22 @@ namespace pwiz.Skyline.Menus
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge1 = !GraphSpectrumSettings.ShowCharge1;
+            SkylineWindow.ShowCharge1(!GraphSpectrumSettings.ShowCharge1);
         }
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge2 = !GraphSpectrumSettings.ShowCharge2;
+            SkylineWindow.ShowCharge2(!GraphSpectrumSettings.ShowCharge2);
         }
 
         private void charge3MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge3 = !GraphSpectrumSettings.ShowCharge3;
+            SkylineWindow.ShowCharge3(!GraphSpectrumSettings.ShowCharge3);
         }
 
         private void charge4MenuItem_Click(object sender, EventArgs e)
         {
-            GraphSpectrumSettings.ShowCharge4 = !GraphSpectrumSettings.ShowCharge4;
+            SkylineWindow.ShowCharge4(!GraphSpectrumSettings.ShowCharge4);
         }
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {

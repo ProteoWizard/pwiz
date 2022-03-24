@@ -487,9 +487,6 @@
   <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
     <value>创建(&amp;C)…</value>
   </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>第 {0} 行上的错误：母离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不匹配。 更正表格中的质荷比值，或者将其留为空白，Skyline将会为您进行计算。</value>
-  </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>面积比率</value>
   </data>
@@ -948,7 +945,7 @@
     <value>重复测定</value>
   </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
-    <value>导出采集列表</value>
+    <value>导出分离列表</value>
   </data>
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
     <value>FASTA 序列不同的肽段不可比较。</value>
@@ -1343,9 +1340,6 @@
   </data>
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>文件{0}无法被打开。{1}</value>
-  </data>
-  <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Product_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>第 {0} 行上的错误：子离子质荷比 {1} 与从离子公式和电荷状态（delta = {3}，离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {4}）计算的值 {2} 不一致。 更正表格中的质荷比值，或者将其留为空白，Skyline将会为您进行计算。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator" xml:space="preserve">
     <value>请针对 iRT 计算器使用通向数据库文件的完整路径。</value>
@@ -1753,9 +1747,6 @@
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library" xml:space="preserve">
     <value>查找谱图库</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>第 {0} 行上的错误：母离子公式和质荷比值与任何电荷态不一致。</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
     <value>训练模型失败：</value>
@@ -2928,9 +2919,6 @@
   <data name="EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection" xml:space="preserve">
     <value>无效的模型选择。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>第 {0} 行上的错误：子离子公式和质荷比值与任何电荷态不一致。</value>
-  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
     <value>选定的文件夹无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
   </data>
@@ -2960,9 +2948,6 @@
   </data>
   <data name="CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_" xml:space="preserve">
     <value>错误：文件{0}不是支持的谱图库文件格式。</value>
-  </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>第 {0} 行上的错误：母离子需要以下任何两项的值：公式、质荷比或电荷。</value>
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>您必须至少选择一个重复测定</value>
@@ -7919,9 +7904,6 @@
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>初始化成功前对 iRT 计算器的意外使用。</value>
   </data>
-  <data name="PasteDlg_ValidateEntry_Error_on_line__0___Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>第 {0} 行上的错误：子离子需要以下任何两项的值：公式、质荷比或电荷。</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents" xml:space="preserve">
     <value>Skyline 共享文档</value>
   </data>
@@ -8563,12 +8545,6 @@
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
     <value>插入分子离子对列表</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0___column_1____2_" xml:space="preserve">
-    <value>第 {0} 行第 {1} 列出错: {2}</value>
-  </data>
-  <data name="InsertSmallMoleculeTransitionList_InsertSmallMoleculeTransitionList_Error_on_line__0__1_" xml:space="preserve">
-    <value>第 {0} 行有错误：{1}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
     <value>读取分子列标题时出错，无法识别：
