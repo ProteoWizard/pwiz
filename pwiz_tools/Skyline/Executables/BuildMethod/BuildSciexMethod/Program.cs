@@ -27,6 +27,7 @@ using SCIEX.Apis.Control.v1;
 using SCIEX.Apis.Control.v1.DeviceMethods;
 using SCIEX.Apis.Control.v1.DeviceMethods.Properties;
 using SCIEX.Apis.Control.v1.DeviceMethods.Requests;
+using SCIEX.Apis.Control.v1.DeviceMethods.Responses;
 using SCIEX.Apis.Control.v1.Security.Requests;
 
 namespace BuildSciexMethod
@@ -73,6 +74,7 @@ namespace BuildSciexMethod
                 "   Takes template method file and a Skyline generated \n" +
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
+                "   -d               Standard (unscheduled) method\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
                 "   -s               Transition list is read from stdin.\n" +
                 "                    e.g. cat TranList.csv | BuildSciexMethod -s -o new.ext temp.ext\n" +
@@ -95,6 +97,7 @@ namespace BuildSciexMethod
         private readonly List<MethodTransitions> _methodTrans = new List<MethodTransitions>();
 
         private string TemplateMethod { get; set; }
+        private bool StandardMethod { get; set; }
 
         public void ParseCommandArgs(string[] args)
         {
@@ -108,6 +111,9 @@ namespace BuildSciexMethod
             {
                 switch (args[i++][1])
                 {
+                    case 'd':
+                        StandardMethod = true;
+                        break;
                     case 'o':
                         if (i >= args.Length)
                             throw new Program.UsageException();
@@ -195,7 +201,7 @@ namespace BuildSciexMethod
                     if (!string.IsNullOrEmpty(outputMethod))
                     {
                         // Only one file, if outputMethod specified
-                        throw new IOException(string.Format("Failure creating method file {0}. Transition lists may not contain blank lines.", outputMethod));
+                        throw new IOException($"Failure creating method file {outputMethod}. Transition lists may not contain blank lines.");
                     }
 
                     // Read output file path from a line in the file
@@ -236,13 +242,16 @@ namespace BuildSciexMethod
             if (response.IsSuccessful)
                 return;
 
-            var msg = new StringBuilder();
-            msg.AppendFormat("{0} failure.", response.GetType().Name);
+            var msgs = new List<string> { $"{response.GetType().Name} failure." };
+
             if (!string.IsNullOrEmpty(response.ErrorCode))
-                msg.AppendFormat(" Error code: {0}.", response.ErrorCode);
+                msgs.Add($"Error code: {response.ErrorCode}.");
             if (!string.IsNullOrEmpty(response.ErrorMessage))
-                msg.AppendFormat(" Error message: {0}.", response.ErrorMessage);
-            throw new Exception(msg.ToString());
+                msgs.Add($"Error message: {response.ErrorMessage}.");
+            if (response is MsMethodValidationResponse validationResponse && validationResponse.ValidationErrors.Length > 0)
+                msgs.AddRange(validationResponse.ValidationErrors.Select(error => $"Validation error: {error}"));
+
+            throw new Exception(string.Join(Environment.NewLine, msgs));
         }
 
         public void BuildMethod()
@@ -256,7 +265,7 @@ namespace BuildSciexMethod
                 Console.Error.WriteLine($"MESSAGE: Exporting method {Path.GetFileName(methodTranList.FinalMethod)}");
 
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
-                    throw new IOException(string.Format("Failure creating method file {0}. The transition list is empty.", methodTranList.FinalMethod));
+                    throw new IOException($"Failure creating method file {methodTranList.FinalMethod}. The transition list is empty.");
 
                 try
                 {
@@ -264,12 +273,12 @@ namespace BuildSciexMethod
                 }
                 catch (Exception x)
                 {
-                    throw new IOException(string.Format("Failure creating method file {0}.  {1}", methodTranList.FinalMethod, x.Message));
+                    throw new IOException($"Failure creating method file {methodTranList.FinalMethod}.  {x.Message}");
                 }
 
                 if (!File.Exists(methodTranList.OutputMethod))
                 {
-                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+                    throw new IOException($"Failure creating method file {methodTranList.FinalMethod}.");
                 }
 
                 // Skyline uses a segmented progress status, which expects 100% for each
@@ -301,52 +310,56 @@ namespace BuildSciexMethod
             massTable.CloneAndAddRow(0, transitions.Transitions.Length - 1);
 
             const string rowGetterMethodName = "TryGet";
+            const string rowPropertyValue = "Value";
             var rowGetter = typeof(PropertiesRow).GetMethod(rowGetterMethodName);
             if (rowGetter == null)
-                throw new Exception(string.Format("PropertiesRow does not have method {0}.", rowGetterMethodName));
-            var allProps = new[]
-                {
-                    typeof(GroupIdProperty), typeof(CompoundIdProperty),
-                    typeof(Q1MassProperty), typeof(Q3MassProperty),
-                    typeof(DwellTimeProperty),
-                    typeof(DeclusteringPotentialProperty), typeof(EntrancePotentialProperty),
-                    typeof(CollisonEnergyProperty), typeof(CollisionCellExitPotentialProperty)
-                }
-                .Where(prop => rowGetter.MakeGenericMethod(prop).Invoke(massTable.Rows[0], null) != null)
-                .ToList();
+                throw new Exception($"PropertiesRow does not have method {rowGetterMethodName}.");
+
+            var doNothingObj = new object();
+            var allProps = new Dictionary<Type, Func<MethodTransition, object>>
+            {
+                [typeof(GroupIdProperty)] = t => t.Group,
+                [typeof(CompoundIdProperty)] = t => t.Label,
+                [typeof(Q1MassProperty)] = t => t.PrecursorMz,
+                [typeof(Q3MassProperty)] = t => t.ProductMz,
+                [typeof(PrecursorIonProperty)] = t => t.PrecursorMz,
+                [typeof(FragmentIonProperty)] = t => t.ProductMz,
+                [typeof(DwellTimeProperty)] = t => t.DwellOrRt,
+                [typeof(RetentionTimeProperty)] = t => t.DwellOrRt,
+                [typeof(DeclusteringPotentialProperty)] = t => t.DP,
+                [typeof(EntrancePotentialProperty)] = t => doNothingObj,
+                [typeof(CollisonEnergyProperty)] = t => t.CE,
+                [typeof(CollisionCellExitPotentialProperty)] = t => doNothingObj,
+            };
+
+            allProps.Remove(StandardMethod ? typeof(RetentionTimeProperty) : typeof(DwellTimeProperty));
+
+            // Remove missing properties from the dictionary
+            var missingProps = allProps.Select(kvp => kvp.Key).Where(prop =>
+                rowGetter.MakeGenericMethod(prop).Invoke(massTable.Rows[0], null) == null).ToArray();
+            foreach (var prop in missingProps)
+                allProps.Remove(prop);
 
             for (var i = 0; i < transitions.Transitions.Length; i++)
             {
                 var row = massTable.Rows[i];
                 var transition = transitions.Transitions[i];
-                foreach (var prop in allProps)
+                foreach (var kvp in allProps)
                 {
-                    if (prop == typeof(GroupIdProperty))
-                        row.TryGet<GroupIdProperty>().Value = transition.Group;
-                    else if (prop == typeof(CompoundIdProperty))
-                        row.TryGet<CompoundIdProperty>().Value = transition.Label;
-                    else if (prop == typeof(Q1MassProperty))
-                        row.TryGet<Q1MassProperty>().Value = transition.PrecursorMz;
-                    else if (prop == typeof(Q3MassProperty))
-                        row.TryGet<Q3MassProperty>().Value = transition.ProductMz;
-                    else if (prop == typeof(DwellTimeProperty))
-                        row.TryGet<DwellTimeProperty>().Value = transition.Dwell;
-                    else if (prop == typeof(DeclusteringPotentialProperty))
-                        row.TryGet<DeclusteringPotentialProperty>().Value = transition.DP;
-                    else if (prop == typeof(EntrancePotentialProperty))
-                    {
-                    }
-                    else if (prop == typeof(CollisonEnergyProperty))
-                        row.TryGet<CollisonEnergyProperty>().Value = transition.CE;
-                    else if (prop == typeof(CollisionCellExitPotentialProperty))
-                    {
-                    }
-                    else
-                        throw new Exception(string.Format("Unhandled property '{0}'.", prop.Name));
+                    var prop = kvp.Key;
+                    var valueProp = prop.GetProperty(rowPropertyValue);
+                    if (valueProp == null)
+                        throw new Exception($"Property '{prop.Name}' does not have a property named '{rowPropertyValue}'.");
+
+                    var rowProp = rowGetter.MakeGenericMethod(prop).Invoke(row, null);
+                    var newValue = kvp.Value.Invoke(transition);
+                    if (!ReferenceEquals(newValue, doNothingObj))
+                        valueProp.SetValue(rowProp, newValue);
                 }
             }
 
-            // Save method
+            // Validate and save method
+            ExecuteAndCheck(new MsMethodValidationRequest(method));
             ExecuteAndCheck(new MsMethodSaveRequest(method, transitions.OutputMethod));
         }
 
@@ -371,6 +384,22 @@ namespace BuildSciexMethod
             while ((line = reader.ReadLine()) != null)
                 tmp.Add(new MethodTransition(line));
             Transitions = tmp.ToArray();
+
+            // Sciex requires that compound IDs are unique, so fix if necessary
+            var idSet = new HashSet<string>();
+            var needRename = new Dictionary<string, int>();
+            foreach (var transition in Transitions)
+            {
+                if (!needRename.ContainsKey(transition.Label) && !idSet.Add(transition.Label))
+                    needRename.Add(transition.Label, 0);
+            }
+            foreach (var transition in Transitions)
+            {
+                if (!needRename.TryGetValue(transition.Label, out var i))
+                    continue;
+                needRename[transition.Label]++;
+                transition.Label += "_" + i;
+            }
         }
 
         public string OutputMethod { get; }
@@ -381,72 +410,62 @@ namespace BuildSciexMethod
 
     public sealed class MethodTransition
     {
+        private static readonly Dictionary<int, Action<MethodTransition, string>> Columns = new Dictionary<int, Action<MethodTransition, string>>
+        {
+            [0] = (t, s) => { t.PrecursorMz = double.Parse(s, CultureInfo.InvariantCulture); },
+            [1] = (t, s) => { t.ProductMz = double.Parse(s, CultureInfo.InvariantCulture); },
+            [2] = (t, s) => { t.DwellOrRt = double.Parse(s, CultureInfo.InvariantCulture); },
+            [3] = (t, s) => { t.Label = s; },
+            [4] = (t, s) => { t.DP = double.Parse(s, CultureInfo.InvariantCulture); },
+            [5] = (t, s) => { t.CE = double.Parse(s, CultureInfo.InvariantCulture); },
+            [6] = (t, s) => { t.PrecursorWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [7] = (t, s) => { t.ProductWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [8] = (t, s) => { t.Group = s; },
+            [9] = (t, s) => { t.AveragePeakArea = string.IsNullOrEmpty(s) ? (float?)null : float.Parse(s, CultureInfo.InvariantCulture); },
+            [10] = (t, s) => { t.VariableRtWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [11] = (t, s) => { t.Threshold = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [12] = (t, s) => { t.Primary = string.IsNullOrEmpty(s) ? (int?)null : int.Parse(s, CultureInfo.InvariantCulture); },
+            [13] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+        };
+
         public MethodTransition(string transitionListLine)
         {
             var values = transitionListLine.Split(',');
             if (values.Length < 6)
                 throw new IOException("Invalid transition list format. Each line must at least have 6 values.");
-            try
+            for (var i = 0; i < values.Length; i++)
             {
-                var i = 0;
-                PrecursorMz = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                ProductMz = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                Dwell = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                Label = values[i++];
-                DP = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                CE = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                if (i < values.Length)
-                    PrecursorWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    ProductWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    Group = values[i++];
-
-                if (i < values.Length)
-                    AveragePeakArea = string.IsNullOrEmpty(values[i]) ? (float?)null : float.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    VariableRtWindow = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    Threshold = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    Primary = string.IsNullOrEmpty(values[i]) ? 1 : int.Parse(values[i], CultureInfo.InvariantCulture);
-                i++;
-
-                if (i < values.Length)
-                    CoV = string.IsNullOrEmpty(values[i]) ? 1 : double.Parse(values[i], CultureInfo.InvariantCulture);
-            }
-
-            catch (FormatException)
-            {
-                throw new IOException("Invalid transition list format. Failure parsing numeric value.");
+                try
+                {
+                    if (Columns.TryGetValue(i, out var func))
+                        func(this, values[i]);
+                }
+                catch (FormatException)
+                {
+                    throw new IOException($"Invalid transition list format. Error parsing value '{values[i]}' in column {i}.");
+                }
             }
         }
 
-        public double PrecursorMz { get; }
-        public double ProductMz { get; }
-        public double Dwell { get; }
-        public string Label { get; }
-        public double CE { get; }
-        public double DP { get; }
-        public double? PrecursorWindow { get; }
-        public double? ProductWindow { get; }
-        public double? Threshold { get; }
-        public int? Primary { get; }
-        public string Group { get; }
-        public float? AveragePeakArea { get; }
-        public double? VariableRtWindow { get; }
-        public double? CoV { get; }
+        public double PrecursorMz { get; private set; }
+        public double ProductMz { get; private set; }
+        public double DwellOrRt { get; private set; }
+        public string Label { get; set; }
+        public double CE { get; private set; }
+        public double DP { get; private set; }
+        public double? PrecursorWindow { get; private set; }
+        public double? ProductWindow { get; private set; }
+        public double? Threshold { get; private set; }
+        public int? Primary { get; private set; }
+        public string Group { get; private set; }
+        public float? AveragePeakArea { get; private set; }
+        public double? VariableRtWindow { get; private set; }
+        public double? CoV { get; private set; }
 
-        public int ExperimentIndex { get; set; }
+        public override string ToString()
+        {
+            // For debugging
+            return $"{Label}; Q1={PrecursorMz}; Q3={ProductMz}; DwellOrRT={DwellOrRt}";
+        }
     }
 }

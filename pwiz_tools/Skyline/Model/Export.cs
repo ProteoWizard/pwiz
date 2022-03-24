@@ -2816,7 +2816,11 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            MethodExporter.ExportMethod(EXE_NAME, new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
+            var args = new List<string>();
+            if (MethodType == ExportMethodType.Standard)
+                args.Add(@"-d");
+
+            MethodExporter.ExportMethod(EXE_NAME, args, fileName, templateName, MemoryOutput, progressMonitor);
         }
 
         private static void EnsureSciexOs(IProgressMonitor progressMonitor)
