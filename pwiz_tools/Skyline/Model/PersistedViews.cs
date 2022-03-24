@@ -29,8 +29,26 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model
 {
     /// <summary>
-    /// Holds all of the Skyline views that get saved in <see cref="Settings.PersistedViews"/>.
+    /// Holds all of the Skyline views (aka "reports") that get saved in <see cref="Settings.PersistedViews"/>, and
+    /// thus appear in the Document Grid "Reports" dropdown button.
+    /// 
     /// This class replaces <see cref="Settings.ViewSpecList"/> and <see cref="Settings.ReportSpecList"/>.
+    ///
+    /// TO ADD OR CHANGE A DEFAULT REPORT
+    ///
+    /// 1) increase the number that is returned by "PersistedViews.RevisionIndexCurrent" (necessary even mid-release-cycle if there has been an official Daily release).
+    /// 2) add a new string constant defining the new or revised report. If there's already a report by that name, the more recent one is what shows up in Skyline.
+    /// 3) change the PersistedViews.GetDefaults(int revisionIndex) method so that it adds the new string to "reportString".
+    /// 
+    /// A convenient way to create the string constant defining a report is to build the report in Skyline, then export the report
+    /// definition with "File > Export > Report > Edit List > Share" (or you can do it from "Manage Views" on the Document Grid).
+    /// Then open the.skyr file in Notepad and replace all of the double quotes with single quotes and paste the contents of the file into
+    /// a @"" string constant. Find the commit in which this comment was added for an example.
+    ///
+    /// Note that if you skip step 1, users who have installed the current Skyline-Daily will not see the new report(s) when they upgrade.
+    /// On your own computer, if you want to see the new reports without increasing the version number, you can go to Tools > Options > Miscellaneous
+    /// and push the "Clear all saved settings" button.
+    /// 
     /// </summary>
     [XmlRoot("persisted_views")]
     public class PersistedViews : SerializableViewGroups
@@ -112,7 +130,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 11; } }
+        public int RevisionIndexCurrent { get { return 12; } } // v12 adds small mol peak boundaries report
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -171,6 +189,11 @@ namespace pwiz.Skyline.Model
                 reportStrings.Add(REPORTS_V11);
             }
 
+            if (revisionIndex >= 12)
+            {
+                reportStrings.Add(REPORTS_V12); // Including molecule peak boundaries export
+            }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -184,6 +207,7 @@ namespace pwiz.Skyline.Model
                 {"Peptide RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_RT_Results)},
                 {"Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Transition_Results)},
                 {"Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries)},
+                {"Molecule Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Peak_Boundaries)},
                 {"Peptide Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List)},
                 {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
                 {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
@@ -464,6 +488,17 @@ namespace pwiz.Skyline.Model
     <column name='Results!*.Value.PeptideRetentionTime' />
     <column name='Results!*.Value.RatioToStandard' />
     <column name='Results!*.Value.Quantification' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+</views>";
+
+        private const string REPORTS_V12 = @"<views>
+  <view name='Molecule Peak Boundaries' rowsource='pwiz.Skyline.Model.Databinding.Entities.Precursor' sublist='Results!*' uimode='small_molecules'>
+    <column name='Results!*.Value.PeptideResult.ResultFile.FileName' />
+    <column name='Peptide' />
+    <column name='Results!*.Value.MinStartTime' />
+    <column name='Results!*.Value.MaxEndTime' />
+    <column name='Adduct' />
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";

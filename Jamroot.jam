@@ -274,6 +274,12 @@ if ! [ modules.peek : NT ]
     [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
     ;
 }
+else
+{
+    # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+    # also, catch(...) will catch SEH exceptions with this on
+    DEFAULT_ASYNCH_EXCEPTIONS = <asynch-exceptions>on ;
+}
 
 
 project pwiz 
@@ -288,10 +294,6 @@ project pwiz
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
-
-        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
-        # also, catch(...) will catch SEH exceptions with this on
-        <toolset>msvc:<asynch-exceptions>on
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
@@ -421,6 +423,7 @@ project pwiz
         <warnings>all
         <threading>multi
         <response-file>file               # auto-detection of max command-line length broken on Windows Server?
+        $(DEFAULT_ASYNCH_EXCEPTIONS)
     ;
 
 

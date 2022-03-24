@@ -41,12 +41,7 @@ namespace SkylineBatchTest
         }
         private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
-            bool worked = false;
-            RunUI(() =>
-            {
-                worked = expectedAnswer == mainForm.ConfigRunning("Bruderer");
-            });
-            return worked;
+            return expectedAnswer == mainForm.ConfigRunning("Bruderer");
         }
 
         public void TestZipFiles(MainForm mainForm)
