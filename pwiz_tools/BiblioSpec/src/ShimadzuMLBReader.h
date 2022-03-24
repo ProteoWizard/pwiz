@@ -38,6 +38,7 @@ namespace BiblioSpec
                   const ProgressIndicator* parent_progress);
         ~ShimadzuMLBReader();
         bool parseFile();   // BuildParser virtual function
+        vector<PSM_SCORE_TYPE> getScoreTypes();
 
     private:
         sqlite3* mlbFile_;
