@@ -81,6 +81,8 @@ namespace pwiz.Skyline.Model.Results
 
                 double minStartTime = double.MaxValue;
                 double maxEndTime = double.MinValue;
+                double apexTime = double.MinValue;
+                double apexHeight = 0;
                 foreach (var groupNode in groupNodes)
                 {
                     var transitionGroupChromInfo = groupNode.GetSafeChromInfo(ReplicateIndex)
@@ -95,10 +97,20 @@ namespace pwiz.Skyline.Model.Results
                     {
                         maxEndTime = Math.Max(maxEndTime, transitionGroupChromInfo.EndRetentionTime.Value);
                     }
+
+                    if (transitionGroupChromInfo?.RetentionTime != null && (transitionGroupChromInfo.Height ?? 0) > apexHeight)
+                    {
+                        apexHeight = transitionGroupChromInfo.Height ?? 0;
+                        apexTime = transitionGroupChromInfo.RetentionTime ?? double.MinValue;
+                    }
                 }
 
+<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
                 var candidatePeakData =
                     new CandidatePeakGroupData(null, minStartTime, maxEndTime, true, MakePeakScore(scores));
+=======
+                var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores));
+>>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
             }
 
@@ -208,6 +220,8 @@ namespace pwiz.Skyline.Model.Results
             bool isChosen = true;
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
+            double apexTime = double.MinValue;
+            double apexHeight = 0;
             for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
             {
                 var transitionChromInfo = transitionChromInfos[iTransition];
@@ -230,9 +244,23 @@ namespace pwiz.Skyline.Model.Results
 
                     minStartTime = Math.Min(minStartTime, chromPeak.StartTime);
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
+                    if (chromPeak.Height > apexHeight)
+                    {
+                        apexHeight = chromPeak.Height;
+                        apexTime = chromPeak.RetentionTime;
+                    }
                 }
             }
+<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
             return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
+=======
+            var model = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            if (model == null || !model.IsTrained)
+            {
+                model = LegacyScoringModel.DEFAULT_MODEL;
+            }
+            return new CandidatePeakGroupData(peakIndex, apexTime, minStartTime, maxEndTime, isChosen, MakePeakScore(featureValues));
+>>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
         }
 
         private PeakGroupScore MakePeakScore(FeatureScores featureScores)
@@ -248,7 +276,13 @@ namespace pwiz.Skyline.Model.Results
         internal IEnumerable<FeatureScores> CalculateChromatogramGroupScores(
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
+<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
             var context = new PeakScoringContext(Settings);
+=======
+            var context = new PeakScoringContext(Document);
+            if (chromatogramGroupInfos.IsNullOrEmpty())
+                yield break;
+>>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(
                 Settings, PeptideDocNode, transitionGroups, Settings.MeasuredResults.Chromatograms[ReplicateIndex],
                 ChromFileInfo, chromatogramGroupInfos);
@@ -259,7 +293,12 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (calculator is SummaryPeakFeatureCalculator)
                     {
-                        scores.Add(calculator.Calculate(context, summaryData));
+                        // Retention time difference is not currently used in picking peaks for iRT standards
+                        if (PeptideDocNode.GlobalStandardType == StandardType.IRT &&
+                            calculator is MQuestRetentionTimePredictionCalc)
+                            scores.Add(float.NaN);
+                        else
+                            scores.Add(calculator.Calculate(context, summaryData));
                     }
                     else if (calculator is DetailedPeakFeatureCalculator)
                     {

@@ -643,6 +643,10 @@ namespace pwiz.Skyline
             {
                 return _resultsGridForm ?? CreateResultsGrid();
             }
+            if (Equals(persistentString, typeof(CandidatePeakForm).ToString()))
+            {
+                return _candidatePeakForm ?? CreateCandidatePeakForm();
+            }
             if (Equals(persistentString, typeof (DocumentGridForm).ToString()))
             {
                 return _documentGridForm ?? CreateDocumentGrid();
