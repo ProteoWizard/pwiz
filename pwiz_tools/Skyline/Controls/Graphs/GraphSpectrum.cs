@@ -84,6 +84,8 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes(bool isProteomic);
 
+            IList<string> ShowLosses();
+
             // N.B. we're interested in the absolute value of charge here, so output list 
             // may be shorter than input list
             // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
@@ -103,6 +105,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return isProteomic ? new[] { IonType.y } :  new[] { IonType.custom }; 
             }
+
+            public IList<string> ShowLosses()
+            {
+                return null;
+            }
+
 
             public IList<int> ShowIonCharges(IEnumerable<Adduct> adductPriority)
             {
@@ -690,6 +698,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var group = selection.Precursor.TransitionGroup;
             var types = _stateProvider.ShowIonTypes(group.IsProteomic);
+            var losses = _stateProvider.ShowLosses();
             var adducts =
                 (group.IsProteomic
                     ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
@@ -745,6 +754,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 ShowTypes = types,
                 ShowCharges = charges,
+                ShowLosses = losses,
                 ShowRanks = Settings.Default.ShowRanks,
                 ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
@@ -1546,6 +1556,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Set.ShowCharge4; }
             set { ActAndUpdate(() => Set.ShowCharge4 = value); }
+        }
+
+        public List<string> ShowLosses
+        {
+            get { return  Set.ShowLosses.Split(',').ToList(); }
+            set { ActAndUpdate(() => Set.ShowLosses = value.ToString(@","));}
         }
 
         public bool Prosit

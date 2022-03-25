@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -125,7 +126,7 @@ namespace pwiz.Skyline.Controls
     {
 
         public event Action<IonType, bool> IonTypeChanged;
-        public event Action<FragmentLoss, bool> LossChanged;
+        public event Action<string[]> LossChanged;
 
         private ToolTip _panelToolTip;
         private FlowLayoutPanel _lossesPanel;
@@ -204,8 +205,10 @@ namespace pwiz.Skyline.Controls
 
         public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
-            var modLosses = peptideSet.Modifications.StaticModifications.SelectMany(mod => mod.Losses).ToList();
-            modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+            var modLosses = peptideSet.Modifications.StaticModifications.SelectMany(mod => mod.Losses??(new List<FragmentLoss>()));
+            //Deduplicate the losses on formula
+            modLosses = modLosses?.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+
             if (_lossesPanel != null)
             {
                 //remove the buttons for losses
@@ -248,7 +251,6 @@ namespace pwiz.Skyline.Controls
                     Controls.Remove(_lossesLabel);
                     _lossesLabel = null;
                 }
-
                 if (_lossesPanel != null)
                 {
                     Controls.Remove(_lossesPanel);
@@ -258,9 +260,9 @@ namespace pwiz.Skyline.Controls
             }
 
             //Update loss buttons
+            var lossButtonStates = set.ShowLosses;
             foreach (var loss in modLosses)
             {
-
                 //Add the buttons that are not there yet
                 if (!Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
                 {
@@ -270,6 +272,7 @@ namespace pwiz.Skyline.Controls
                         AutoSize = true,
                         Tag = loss,
                         Appearance = Appearance.Button,
+                        Checked = lossButtonStates.Contains(loss.Formula)
                     };
                     cb.CheckedChanged += LossButton_Click;
                     cb.MouseHover += LossButton_MouseHover;
@@ -300,7 +303,11 @@ namespace pwiz.Skyline.Controls
             if (LossChanged != null && sender is CheckBox cb)
             {
                 if (cb.Tag is FragmentLoss loss)
-                    LossChanged(loss, cb.Checked);
+                {
+                    var losses = _lossesPanel.Controls.OfType<CheckBox>().ToList().FindAll(cbox => cbox.Checked)
+                        .Select(cbox => ((FragmentLoss) cbox.Tag).Formula).ToArray();
+                    LossChanged(losses);
+                }
             }
         }
 
