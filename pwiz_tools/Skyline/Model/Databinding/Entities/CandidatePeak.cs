@@ -19,6 +19,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME)]
+        public double PeakGroupRetentionTime
+        {
+            get
+            {
+                return _data.RetentionTime;
+            }
+        }
+
+        [Format(Formats.RETENTION_TIME)]
         public double PeakGroupStartTime
         {
             get
@@ -43,7 +52,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format(@"[{0}-{1}]", 
+            return string.Format(@"[{0},{1}-{2}]", 
+                PeakGroupRetentionTime.ToString(Formats.RETENTION_TIME),
                 PeakGroupStartTime.ToString(Formats.RETENTION_TIME),
                 PeakGroupEndTime.ToString(Formats.RETENTION_TIME));
         }

@@ -1442,4 +1442,12 @@ higher than the other extent.</value>
   <data name="InstrumentSerialNumber" xml:space="preserve">
     <value>The instrument serial number read from an imported result file</value>
   </data>
+    <value>The maximum integration ending time of all transitions in a peak group</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>The retention time of the peak with the maximum height of all transitions in a peak group</value>
+  </data>
+  <data name="PeakGroupStartTime" xml:space="preserve">
+    <value>The minimum integration starting time of all transitions in a peak group</value>
+  </data>
 </root>

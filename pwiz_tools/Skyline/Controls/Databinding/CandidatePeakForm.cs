@@ -175,6 +175,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var viewSpec = new ViewSpec().SetName(Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
             {
+                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupRetentionTime))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupStartTime))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupEndTime))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.Chosen))),

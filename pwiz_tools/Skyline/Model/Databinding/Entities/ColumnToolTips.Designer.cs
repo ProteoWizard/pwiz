@@ -2206,6 +2206,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum integration ending time of all transitions in a peak group.
+        /// </summary>
+        public static string PeakGroupEndTime {
+            get {
+                return ResourceManager.GetString("PeakGroupEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The retention time of the peak with the maximum height of all transitions in a peak group.
+        /// </summary>
+        public static string PeakGroupRetentionTime {
+            get {
+                return ResourceManager.GetString("PeakGroupRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum integration starting time of all transitions in a peak group.
+        /// </summary>
+        public static string PeakGroupStartTime {
+            get {
+                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The rank based on Area of this transition among all other transitions of the
         ///same precursor..
         /// </summary>

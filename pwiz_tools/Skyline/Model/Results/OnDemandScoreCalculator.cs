@@ -79,6 +79,8 @@ namespace pwiz.Skyline.Model.Results
 
                 double minStartTime = double.MaxValue;
                 double maxEndTime = double.MinValue;
+                double apexTime = double.MinValue;
+                double apexHeight = 0;
                 foreach (var groupNode in groupNodes)
                 {
                     var transitionGroupChromInfo = groupNode.GetSafeChromInfo(ReplicateIndex).FirstOrDefault(chromInfo=>0 == chromInfo.OptimizationStep && ReferenceEquals(chromInfo.FileId, ChromFileInfo.FileId));
@@ -91,9 +93,15 @@ namespace pwiz.Skyline.Model.Results
                     {
                         maxEndTime = Math.Max(maxEndTime, transitionGroupChromInfo.EndRetentionTime.Value);
                     }
+
+                    if (transitionGroupChromInfo?.RetentionTime != null && (transitionGroupChromInfo.Height ?? 0) > apexHeight)
+                    {
+                        apexHeight = transitionGroupChromInfo.Height ?? 0;
+                        apexTime = transitionGroupChromInfo.RetentionTime ?? double.MinValue;
+                    }
                 }
 
-                var candidatePeakData = new CandidatePeakGroupData(null, minStartTime, maxEndTime, true, MakePeakScore(scores));
+                var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores));
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
             }
 
@@ -199,6 +207,8 @@ namespace pwiz.Skyline.Model.Results
             bool isChosen = true;
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
+            double apexTime = double.MinValue;
+            double apexHeight = 0;
             for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
             {
                 var transitionChromInfo = transitionChromInfos[iTransition];
@@ -221,6 +231,11 @@ namespace pwiz.Skyline.Model.Results
 
                     minStartTime = Math.Min(minStartTime, chromPeak.StartTime);
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
+                    if (chromPeak.Height > apexHeight)
+                    {
+                        apexHeight = chromPeak.Height;
+                        apexTime = chromPeak.RetentionTime;
+                    }
                 }
             }
             var model = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
@@ -228,7 +243,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 model = LegacyScoringModel.DEFAULT_MODEL;
             }
-            return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureValues));
+            return new CandidatePeakGroupData(peakIndex, apexTime, minStartTime, maxEndTime, isChosen, MakePeakScore(featureValues));
         }
 
         private PeakGroupScore MakePeakScore(FeatureValues featureValues)
@@ -245,6 +260,8 @@ namespace pwiz.Skyline.Model.Results
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
             var context = new PeakScoringContext(Document);
+            if (chromatogramGroupInfos.IsNullOrEmpty())
+                yield break;
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(
                 Document, PeptideDocNode, transitionGroups, Document.MeasuredResults.Chromatograms[ReplicateIndex],
                 ChromFileInfo, chromatogramGroupInfos);
@@ -255,7 +272,12 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (calculator is SummaryPeakFeatureCalculator)
                     {
-                        scores.Add(calculator.Calculate(context, summaryData));
+                        // Retention time difference is not currently used in picking peaks for iRT standards
+                        if (PeptideDocNode.GlobalStandardType == StandardType.IRT &&
+                            calculator is MQuestRetentionTimePredictionCalc)
+                            scores.Add(float.NaN);
+                        else
+                            scores.Add(calculator.Calculate(context, summaryData));
                     }
                     else if (calculator is DetailedPeakFeatureCalculator)
                     {
