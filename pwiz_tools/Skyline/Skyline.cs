@@ -1108,6 +1108,7 @@ namespace pwiz.Skyline
                 if (ionTypeSelector != null)
                 {
                     ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
                 }
             }
         }

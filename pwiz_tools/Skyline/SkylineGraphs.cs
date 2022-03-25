@@ -904,43 +904,9 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = show;
         }
 
-        private void aMenuItem_Click(object sender, EventArgs e)
+        public void ShowLosses(List<string> losses)
         {
-            ShowAIons(!_graphSpectrumSettings.ShowAIons);
-        }
-
-        private void bMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowBIons(!_graphSpectrumSettings.ShowBIons);
-        }
-
-        private void cMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCIons(!_graphSpectrumSettings.ShowCIons);
-        }
-
-        private void xMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowXIons(!_graphSpectrumSettings.ShowXIons);
-        }
-
-        private void yMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowYIons(!_graphSpectrumSettings.ShowYIons);
-        }
-
-        private void zMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZIons(!_graphSpectrumSettings.ShowZIons);
-        }
-        private void zhMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZHIons(!_graphSpectrumSettings.ShowZHIons);
-        }
-
-        private void zhhMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZHHIons(!_graphSpectrumSettings.ShowZHHIons);
+            _graphSpectrumSettings.ShowLosses = losses;
         }
 
         private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
@@ -972,6 +938,11 @@ namespace pwiz.Skyline
                     ShowZHHIons(show);
                     break;
             }
+        }
+
+        private void IonTypeSelector_LossChanged(string[] losses)
+        {
+            ShowLosses(losses.ToList());
         }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
@@ -1069,6 +1040,7 @@ namespace pwiz.Skyline
                 var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
                 ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
                 ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
             }
         }
 
@@ -1409,6 +1381,12 @@ namespace pwiz.Skyline
         {
             return _graphSpectrumSettings.ShowIonTypes(isProteomic); 
         }
+
+        IList<string> GraphSpectrum.IStateProvider.ShowLosses()
+        {
+            return _graphSpectrumSettings.ShowLosses;
+        }
+
 
         private void CheckIonTypes(IEnumerable<IonType> types, bool check, bool visible)
         {

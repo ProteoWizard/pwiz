@@ -567,6 +567,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var stateProvider = (GraphSpectrum.IStateProvider) _documentContainer;
             var group = precursor.TransitionGroup;
             var types = stateProvider.ShowIonTypes(group.IsProteomic);
+            var losses = stateProvider.ShowLosses();
             var adducts =
                 (group.IsProteomic
                     ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
@@ -660,6 +661,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     ShowTypes = types,
                     ShowCharges = charges,
+                    ShowLosses = losses,
                     ShowRanks = Settings.Default.ShowRanks,
                     ShowScores = Settings.Default.ShowLibraryScores,
                     ShowMz = Settings.Default.ShowIonMz,
