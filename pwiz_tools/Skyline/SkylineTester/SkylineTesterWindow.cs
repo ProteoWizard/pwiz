@@ -34,7 +34,6 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
-using pwiz.SkylineTestUtil;
 using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
@@ -386,11 +385,11 @@ namespace SkylineTester
                                     }
                                 };
 
-                                if (!(Activator.CreateInstance(test.TestClassType) is AbstractFunctionalTest testObj))
-                                    continue;
+                                var inst = Activator.CreateInstance(test.TestClassType);
                                 if (test.SetTestContext != null)
-                                    test.SetTestContext.Invoke(testObj, new object[] { testContext });
-                                if (!testObj.AuditLogCompareLogs)
+                                    test.SetTestContext.Invoke(inst, new object[] { testContext });
+                                var method = inst.GetType().GetMethod("get_AuditLogCompareLogs");
+                                if (method == null || !(bool)(method.Invoke(inst, null)))
                                     continue;
                                 break;
                             }
@@ -466,9 +465,16 @@ namespace SkylineTester
 
         public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
-            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(ExeDir, testDll)).Where(info =>
-                (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
-                (filterName == null || info.TestMethod.Name.Contains(filterName)));
+            return
+                from type in LoadFromAssembly.Try(Path.Combine(ExeDir, testDll)).GetTypes()
+                    .Where(type => type.IsClass && HasAttribute(type, "TestClassAttribute"))
+                let methods = type.GetMethods()
+                let testInitializeMethod = methods.FirstOrDefault(method => HasAttribute(method, "TestInitializeAttribute"))
+                let testCleanupMethod = methods.FirstOrDefault(method => HasAttribute(method, "TestCleanupAttribute"))
+                from method in methods.Where(method => HasAttribute(method, "TestMethodAttribute"))
+                where (filterAttribute == null || !method.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
+                      (filterName == null || method.Name.Contains(filterName))
+                select new TestInfo(type, method, testInitializeMethod, testCleanupMethod);
         }
 
         // Determine if the given class or method from an assembly has the given attribute.
