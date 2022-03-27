@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -744,18 +745,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_page: // this is really the last page
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
-                    var ddaSearchDataSources = ImportPeptideSearch.SearchEngine.SpectrumFileNames; // DdaConverter may change the input filenames (and thus output filenames of the search)
-                    ImportPeptideSearch.SearchFilenames = new string[ddaSearchDataSources.Length];
-                    for(int i=0; i < ddaSearchDataSources.Length; ++i)
-                    {
-                        var ddaSource = ddaSearchDataSources[i];
-                        var outFilePath = ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(ddaSource);
-                        ImportPeptideSearch.SearchFilenames[i] = outFilePath;
-                    }
-                    BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
+                    BuildPepSearchLibControl.Grid.IsFileOnly = false;
+                    var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
+                    BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
+                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), BiblioSpecScoreType.GenericQValue, qValue));
+                    BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
-                            return;
+                        return;
 
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
@@ -1088,9 +1085,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private bool BuildPeptideSearchLibrary(CancelEventArgs e)
+        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings = true)
         {
-            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e);
+            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings);
             if (result)
             {
                 SkylineWindow.ModifyDocument(
@@ -1192,10 +1189,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             base.OnFormClosing(e);
         }
 
-        private void BuildPepSearchLibForm_OnInputFilesChanged(object sender,
-            EventArgs e)
+        private void BuildPepSearchLibForm_OnInputFilesChanged(object sender, EventArgs e)
         {
-            bool isReady = BuildPepSearchLibControl.AnyInputFiles;
+            var isReady = BuildPepSearchLibControl.IsReady;
             btnNext.Enabled = isReady;
             if (btnEarlyFinish.Visible)
             {

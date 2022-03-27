@@ -34,8 +34,49 @@
 #include "CommandLine.h"
 #include "BlibBuilder.h"
 #include "AllBuildParsers.h"
+#include <memory>
 
 using namespace BiblioSpec;
+
+class BlibHandler : public BuildParser {
+public:
+    BlibHandler(BlibBuilder& maker, const char* fileName, int fileIdx, const ProgressIndicator* progress)
+        : BuildParser(maker, fileName, progress) {
+            file_ = fileIdx;
+        }
+    ~BlibHandler() {}
+    bool parseFile() {
+        blibMaker_.transferLibrary(file_, parentProgress_);
+        return true;
+    }
+    vector<PSM_SCORE_TYPE> getScoreTypes() {
+        BiblioSpec::BlibMaker::verifyFileExists(getFileName());
+        blibMaker_.openDb(getFileName().c_str());
+        const char* zSql =
+            "SELECT DISTINCT(ScoreTypes.scoreType) FROM RefSpectra "
+            "JOIN ScoreTypes ON RefSpectra.scoreType = ScoreTypes.id";
+        smart_stmt pStmt;
+        int rc = sqlite3_prepare(blibMaker_.getDb(), zSql, -1, &pStmt, 0);
+        blibMaker_.check_rc(rc, zSql);
+
+        vector<PSM_SCORE_TYPE> scoreTypes;
+        for (rc = sqlite3_step(pStmt); rc == SQLITE_ROW; rc = sqlite3_step(pStmt)) {
+            PSM_SCORE_TYPE scoreType = stringToScoreType(boost::lexical_cast<string>(sqlite3_column_text(pStmt, 0)));
+            if (scoreType != UNKNOWN_SCORE_TYPE) {
+                scoreTypes.push_back(scoreType);
+            }
+        }
+        if (rc != SQLITE_DONE) {
+            Verbosity::error("Error reading score types: %s", sqlite3_errmsg(blibMaker_.getDb()));
+        }
+        if (scoreTypes.empty()) {
+            scoreTypes.push_back(UNKNOWN_SCORE_TYPE);
+        }
+        return scoreTypes;
+    }
+private:
+    int file_;
+};
 
 static void WriteErrorLines(string s)
 {
@@ -45,6 +86,16 @@ static void WriteErrorLines(string s)
     {
         iss.getline(buffer, sizeof(buffer));
         cerr << "ERROR: " << buffer << endl;
+    }
+}
+
+static void WriteScoreTypesLine(string file, vector<PSM_SCORE_TYPE> scoreTypes) {
+    for (size_t i = 0; i < scoreTypes.size(); i++) {
+        cout << "SCORETYPE" << '\t'
+             << file << '\t'
+             << scoreTypeToString(scoreTypes[i])
+             << '\t' << scoreTypeToProbabilityTypeString(scoreTypes[i])
+             << std::endl;
     }
 }
 
@@ -84,7 +135,7 @@ int main(int argc, char* argv[])
 
         builder.init();
 
-        vector<char*> inFiles = builder.getInputFiles();
+        vector<string> inFiles = builder.getInputFiles();
 
         // for progress of score files 
         ProgressIndicator progress(inFiles.size());
@@ -94,160 +145,132 @@ int main(int argc, char* argv[])
         string failureMessage;
 
         // process each .sqt, .pepxml, .idpXML, .xtan.xml, .dat, .blib file
-        for(int i=0; i<(int)inFiles.size(); i++) {
-            try{
-            
-                char* result_file = inFiles.at(i);
+        for (int i = 0; i < (int)inFiles.size(); i++) {
+            try {
+                string result_file = inFiles.at(i);
                 builder.setCurFile(i);
-            
-                Verbosity::comment(V_STATUS, "Reading results from %s.", 
-                                   result_file);
-                progress.increment();
-            
-                if(has_extension(result_file, ".pep.xml") || 
-                   has_extension(result_file, ".pepXML")) {
-                    PepXMLreader tmpXMLreader(builder, 
-                                              result_file,
-                                              progress_cptr);
-                    success = tmpXMLreader.parseFile();
-                } else if(has_extension(result_file, ".sqt")) {
-                
-                    SQTreader tmpSQTreader(builder, result_file, progress_cptr);
-                    success = tmpSQTreader.parseFile();
-                
-                } else if(has_extension(result_file, ".perc.xml")) {
-                    PercolatorXmlReader PercolatorXmlReader(builder, result_file, 
-                                                            progress_cptr);
-                    success = PercolatorXmlReader.parseFile();
-                } else if (has_extension(result_file, ".blib")) {
-                    builder.transferLibrary(i, progress_cptr);
+
+                if (!builder.isScoreLookupMode()) {
+                    Verbosity::comment(V_STATUS, "Reading results from %s.", result_file.c_str());
+                    progress.increment();
+                }
+
+                std::shared_ptr<BuildParser> reader;
+                if (has_extension(result_file, ".blib")) {
+                    reader = std::make_shared<BlibHandler>(builder, result_file.c_str(), i, progress_cptr);
+                } else if (has_extension(result_file, ".pep.xml") || has_extension(result_file, ".pepXML")) {
+                    reader = std::make_shared<PepXMLreader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".sqt")) {
+                    reader = std::make_shared<SQTreader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".perc.xml")) {
+                    reader = std::make_shared<PercolatorXmlReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".idpXML")) {
-                
-                    IdpXMLreader tmpXMLreader(builder, result_file, progress_cptr);
-                    success = tmpXMLreader.parseFile();
-                
+                    reader = std::make_shared<IdpXMLreader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".dat")) {
-                    MascotResultsReader tmpMascotReader(builder, result_file, 
-                                                        progress_cptr);
-                    success = tmpMascotReader.parseFile();
-                
+                    reader = std::make_shared<MascotResultsReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".ssl")) {
-                    SslReader tmpSslReader(builder, result_file, progress_cptr);
-                    success = tmpSslReader.parseFile(); 
-                
+                    reader = std::make_shared<SslReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".xtan.xml")) {
-                    TandemNativeParser tandemReader(builder, result_file, 
-                                                    progress_cptr);
-                    success = tandemReader.parseFile();
-                
+                    reader = std::make_shared<TandemNativeParser>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".group.xml")) {
-                    ProteinPilotReader pilotReader(builder, result_file, 
-                                                   progress_cptr);
-                    success = pilotReader.parseFile();
-                
+                    reader = std::make_shared<ProteinPilotReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, "pride.xml")) {
-                    PrideXmlReader prideXmlReader(builder, result_file, progress_cptr);
-
-                    success = prideXmlReader.parseFile();
+                    reader = std::make_shared<PrideXmlReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, "msms.txt")) {
-                    MaxQuantReader maxQuantReader(builder, result_file, progress_cptr);
-                
-                    success = maxQuantReader.parseFile();
-                } else if (has_extension(result_file, ".msf") ||
-                           has_extension(result_file, ".pdResult")) {
-                    MSFReader msfReader(builder, result_file, progress_cptr);
-
-                    success = msfReader.parseFile();
-                } else if (has_extension(result_file, ".mzid") ||
-                           has_extension(result_file, ".mzid.gz")) {
-                    MzIdentMLReader mzidReader(builder, result_file, progress_cptr);
-                    success = mzidReader.parseFile();
-
+                    reader = std::make_shared<MaxQuantReader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".msf") || has_extension(result_file, ".pdResult")) {
+                    reader = std::make_shared<MSFReader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".mzid") || has_extension(result_file, ".mzid.gz")) {
+                    reader = std::make_shared<MzIdentMLReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, "final_fragment.csv")) {
-                    WatersMseReader mseReader(builder, result_file, progress_cptr);
-                    success = mseReader.parseFile();
+                    reader = std::make_shared<WatersMseReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".proxl.xml")) {
-                    ProxlXmlReader proxlReader(builder, result_file, progress_cptr);
-                    success = proxlReader.parseFile();
+                    reader = std::make_shared<ProxlXmlReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".mlb")) {
-                    ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
-                    success = mlbReader.parseFile();
+                    reader = std::make_shared<ShimadzuMLBReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".speclib")) {
-                    DiaNNSpecLibReader diannReader(builder, result_file, progress_cptr);
-                    success = diannReader.parseFile();
+                    reader = std::make_shared<DiaNNSpecLibReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".tsv")) {
-                    auto tsvReader = TSVReader::create(builder, result_file, progress_cptr);
-                    success = tsvReader->parseFile();
+                    reader = TSVReader::create(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".osw")) {
-                    OSWReader oswReader(builder, result_file, progress_cptr);
-                    success = oswReader.parseFile();
-                } else if (has_extension(result_file, ".mzTab") ||
-                           has_extension(result_file, "mztab.txt")) {
-                    mzTabReader mzTabReader(builder, result_file, progress_cptr);
-                    success = mzTabReader.parseFile();
+                    reader = std::make_shared<OSWReader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".mzTab") || has_extension(result_file, "mztab.txt")) {
+                    reader = std::make_shared<mzTabReader>(builder, result_file.c_str(), progress_cptr);
                 } else {
                     // shouldn't get to here b/c cmd line parsing checks, but...
-                    Verbosity::error("Unknown input file type '%s'.", result_file);
+                    Verbosity::error("Unknown input file type '%s'.", result_file.c_str());
+                    throw "Failed to parse " + result_file;
                 }
-            
-                if( !success ){ // in the unlikely event a reader returns false instead of throwing an error
-                    string errorMsg = "Failed to parse ";
-                    errorMsg += result_file;
-                    throw errorMsg;
+
+                if (builder.isScoreLookupMode()) {
+                    vector<PSM_SCORE_TYPE> scoreTypes;
+                    try {
+                        scoreTypes = reader->getScoreTypes();
+                    } catch (...) {
+                        WriteScoreTypesLine(result_file, vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE));
+                        throw; // rethrow
+                    }
+                    WriteScoreTypesLine(result_file, scoreTypes);
+                } else if (!reader->parseFile()) {
+                    // in the unlikely event a reader returns false instead of throwing an error
+                    throw "Failed to parse " + result_file;
                 }
-            } catch(BlibException& e){
+            } catch (BlibException& e) {
                 failureMessage = e.what();
                 WriteErrorLines(e.what());
-                if( ! e.hasFilename() ){
+                if (!e.hasFilename()) {
                     cerr << "ERROR: reading file " << inFiles.at(i) << endl;
                 }
                 success = false;
-            } catch(std::exception& e){
+            } catch (std::exception& e) {
                 failureMessage = e.what();
                 WriteErrorLines(e.what());
                 cerr << "ERROR: reading file " << inFiles.at(i) << endl;
                 success = false;
-            } catch(string s){ // in case a throwParseError is not caught
+            } catch (string s) { // in case a throwParseError is not caught
                 failureMessage = s;
                 cerr << "ERROR: " << s << endl;
                 cerr << "ERROR: reading file " << inFiles.at(i) << endl;
                 success = false;
-            } catch (const char *str){
+            } catch (const char *str) {
                 failureMessage = str;
                 cerr << "ERROR: " << str << endl;
                 cerr << "ERROR: reading file " << inFiles.at(i) << endl;
                 success = false;
-            } catch (...){
+            } catch (...) {
                 failureMessage = "Unknown ERROR";
                 cerr << "ERROR: Unknown error reading file " << inFiles.at(i) << endl;
                 success = false;
             }
         }
 
-        if( ! success ){
-            if (expectedError != "" && failureMessage.find(expectedError) != string::npos)
+        if (builder.isScoreLookupMode()) {
+            Verbosity::close_logfile();
+            return !success;
+        }
+
+        if (!success) {
+            if (!expectedError.empty() && failureMessage.find(expectedError) != string::npos)
                 success = true; // We actually expected a failure, this is a negative test
             // try saving the library
             builder.undoActiveTransaction();
-        }
-        else if (expectedError != "")
-        {
+        } else if (!expectedError.empty()) {
             // We expected to catch a failure
             cerr << "FAILED: This negative test expected an error containing \"" << expectedError << "\"" << endl;
             success = false;
         }
 
         // check that library contains spectra
-        if( builder.is_empty() ){
+        if (builder.is_empty()) {
             builder.abort_current_library();
-            if ( success ){
+            if (success) {
                 Verbosity::error("No spectra were found for the new library.");
             }
         } else {
             builder.collapseSources();
             builder.commit();
         }
-    
+
         Verbosity::close_logfile();
         return !success;
 
