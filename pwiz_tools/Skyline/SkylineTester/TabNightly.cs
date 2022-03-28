@@ -387,7 +387,6 @@ namespace SkylineTester
             if (_stopTimer != null)
                 _stopTimer.Start();
 
-            _nightlyListener?.Stop();
             _nightlyListener = new NightlyListener(_stopTimer);
         }
 
