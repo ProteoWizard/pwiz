@@ -435,7 +435,21 @@ namespace pwiz.Skyline.Util
                 // after ZIP file extraction of shared files to a network drive.
                 try
                 {
-                    return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
+                    if (IsOpen)
+                    {
+                        return false;
+                    }
+
+                    var currentWriteTime = File.GetLastWriteTime(FilePath);
+                    var timeDifference = FileTime.Ticks - currentWriteTime.Ticks;
+                    if (Math.Abs(timeDifference) <= MILLISECOND_TICKS)
+                    {
+                        return false;
+                    }
+
+                    FormUtil.LOG_FUNCTION?.Invoke("File {0} has been modified. Expected write time: {1} Actual write time: {2} Time difference {3} Current time: {4}",
+                        new object[]{FilePath, FileTime, currentWriteTime, timeDifference, DateTime.Now});
+                    return true;
                 }
                 catch (UnauthorizedAccessException uae)
                 {
