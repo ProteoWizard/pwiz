@@ -3216,6 +3216,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection BlibLibraryThresholds {
+                                               
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["BlibLibraryThresholds"]));
+            }
+            set {
+                this["BlibLibraryThresholds"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
         public float PeakAreaIDotpCutoffValue {
             get {
@@ -3269,4 +3281,3 @@ namespace pwiz.Skyline.Properties {
         }
     }
 }
-

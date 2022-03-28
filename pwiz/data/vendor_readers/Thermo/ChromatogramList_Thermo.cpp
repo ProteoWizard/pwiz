@@ -181,7 +181,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 setActivationType(activationType, hasSupplemental ? scanInfo->supplementalActivationType() : ActivationType_Unknown, result->precursor.activation);
                 if (activationType == ActivationType_CID)
                     result->precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(0));
-                if (hasSupplemental && !scanInfo->supplementalActivationEnergy() > 0)
+                if (hasSupplemental && !(scanInfo->supplementalActivationEnergy() > 0))
                     result->precursor.activation.set(MS_supplemental_collision_energy, scanInfo->supplementalActivationEnergy());
 
                 result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);

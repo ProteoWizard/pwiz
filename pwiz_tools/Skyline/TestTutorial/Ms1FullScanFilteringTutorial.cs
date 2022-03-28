@@ -173,9 +173,9 @@ namespace pwiz.SkylineTestTutorial
                     PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
                 importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -190,10 +190,16 @@ namespace pwiz.SkylineTestTutorial
             // Verify input paths sent to BlibBuild
             string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
             string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
-            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var argFiles = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Skip(1).ToArray();
+            for (var i = 0; i < argFiles.Length; i++)
+            {
+                var j = argFiles[i].IndexOf("score_threshold=", StringComparison.InvariantCulture);
+                if (j >= 0)
+                    argFiles[i] = argFiles[i].Substring(0, j).TrimEnd();
+            }
             var dirCommon = PathEx.GetCommonRoot(searchFiles);
             var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
-            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argFiles), buildArgs);
 
             // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];
