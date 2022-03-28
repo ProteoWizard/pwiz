@@ -11716,4 +11716,16 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
 	  <value>Skyline 21.2</value>
   </data>
+  <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
+	  <value>N-Term:</value>
+  </data>
+  <data name="IonTypeSelector_CTermLabel" xml:space="preserve">
+	  <value>C-Term:</value>
+  </data>
+  <data name="IonTypeSelector_LossesLabel" xml:space="preserve">
+	  <value>Losses:</value>
+  </data>
+  <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
+	  <value>Formula: {0}</value>
+  </data>
 </root>
