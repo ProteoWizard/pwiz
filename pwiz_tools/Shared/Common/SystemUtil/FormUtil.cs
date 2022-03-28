@@ -27,6 +27,7 @@ namespace pwiz.Common.SystemUtil
 {
     public static class FormUtil
     {
+        public static Action<string> LOG_FUNCTION;
         /// <summary>
         /// Shows a dialog box.
         /// If the owner of the dialog is a popup window, then this method uses <see cref="FormUtil.FindTopLevelOwner"/> 

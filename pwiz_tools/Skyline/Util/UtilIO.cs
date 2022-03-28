@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Util
         {
             if (pathDestination.EndsWith(".skyd"))
             {
-                Console.Out.WriteLine("Begin commit {0}", pathDestination);
+                FormUtil.LOG_FUNCTION?.Invoke(string.Format("Begin commit {0}", pathDestination));
             }
             try
             {
@@ -723,9 +723,8 @@ namespace pwiz.Skyline.Util
             {
                 if (pathDestination.EndsWith(".skyd"))
                 {
-                    Console.Out.WriteLine("End commit {0}", pathDestination);
+                    FormUtil.LOG_FUNCTION?.Invoke(string.Format("End commit {0}", pathDestination));
                 }
-
             }
         }
 
