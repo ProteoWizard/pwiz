@@ -437,13 +437,15 @@ namespace pwiz.Skyline.Util
                 {
                     return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException uae)
                 {
+                    FormUtil.LOG_FUNCTION?.Invoke("UnauthorizedAccessException reading file {0}: {1}", new object[]{FilePath, uae});
                     // May have had access privileges changed, reporting IsModified better than throwing an unhandled exception
                     return true;
                 }
-                catch (IOException)
+                catch (IOException ioe)
                 {
+                    FormUtil.LOG_FUNCTION?.Invoke("IOException reading file {0}: {1}", new object[]{FilePath, ioe});
                     // May have been removed, reporting IsModified better than throwing an unhandled exception
                     return true;
                 }
