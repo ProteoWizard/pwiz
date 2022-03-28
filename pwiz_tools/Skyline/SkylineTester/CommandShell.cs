@@ -75,7 +75,11 @@ namespace SkylineTester
         // Insert a pause before next executed command
         public void InsertPause()
         {
-            _commands.Insert(0, "timeout /T " + RETRY_WAIT_SECONDS + " /NOBREAK");
+            var pauseCommand = "timeout /T " + RETRY_WAIT_SECONDS + " /NOBREAK";
+            if (_commands.Count == 0 || _commands[0] != pauseCommand)
+            {
+                _commands.Insert(0, pauseCommand);
+            }
         }
 
         /// <summary>
