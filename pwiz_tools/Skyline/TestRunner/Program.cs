@@ -269,7 +269,6 @@ namespace TestRunner
                 FileAccess.Write,
                 FileShare.ReadWrite);
             var log = new StreamWriter(logStream);
-            FormUtil.LOG_FUNCTION = s => log.WriteLine(s);
 
             bool allTestsPassed = true;
 
@@ -516,7 +515,7 @@ namespace TestRunner
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose);
-
+            FormUtil.LOG_FUNCTION = runTests.Log;
             using (new DebuggerListener(runTests))
             {
                 if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
@@ -856,6 +855,7 @@ namespace TestRunner
                 }
             }
 
+            FormUtil.LOG_FUNCTION = null;
             return runTests.FailureCount == 0;
         }
 
