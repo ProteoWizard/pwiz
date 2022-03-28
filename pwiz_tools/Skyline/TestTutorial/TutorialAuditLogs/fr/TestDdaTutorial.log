@@ -9,7 +9,7 @@ Summary   : Added spectral library "TestDdaTutorial"
 All Info  :
 Added spectral library "TestDdaTutorial"
 Build Spectral Library > Cut-off score is "0,95"
-Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.pepXML"
+Build Spectral Library > Search files : contains { File = "QE_140221_01_UPS1_100fmolspiked.pepXML", Score type = "q-value", Score threshold = "0,05" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -18,7 +18,11 @@ Build Spectral Library > Input File Type is "DDA raw (search and build library)"
 Extra Info: Cut-off score = "0,95",
 Search files = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.pepXML"
+    {
+        File = "QE_140221_01_UPS1_100fmolspiked.pepXML",
+        Score type = "q-value",
+        Score threshold = "0,05"
+    }
 ],
 iRT standard peptides = None,
 Include ambiguous matches = False,

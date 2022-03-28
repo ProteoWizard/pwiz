@@ -161,6 +161,10 @@ bool OSWReader::parseFile() {
     return true;
 }
 
+vector<PSM_SCORE_TYPE> OSWReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, GENERIC_QVALUE);
+}
+
 void OSWReader::transferPeaks(SpecData* dst, vector<double>& mzs, vector<float>& intensities) {
     if (!dst) {
         return;

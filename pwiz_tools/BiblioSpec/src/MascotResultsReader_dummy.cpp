@@ -48,6 +48,10 @@ bool MascotResultsReader::parseFile(){
     return false;
 }
 
+std::vector<PSM_SCORE_TYPE> MascotResultsReader::getScoreTypes() {
+    return std::vector<PSM_SCORE_TYPE>(1, MASCOT_IONS_SCORE);
+}
+
 } // namespace
 
 /*

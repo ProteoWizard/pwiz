@@ -66,6 +66,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage = new System.Windows.Forms.TabPage();
             this.importFASTATitlePanel = new System.Windows.Forms.Panel();
             this.lblFasta = new System.Windows.Forms.Label();
+            this.converterSettingsPage = new System.Windows.Forms.TabPage();
+            this.converterSettingsTitlePanel = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
             this.ddaSearchSettingsPage = new System.Windows.Forms.TabPage();
             this.searchSettingsTitlePanel = new System.Windows.Forms.Panel();
             this.lblSearchSettings = new System.Windows.Forms.Label();
@@ -73,9 +76,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ddaSearchTitlePanel = new System.Windows.Forms.Panel();
             this.lblDDASearch = new System.Windows.Forms.Label();
             this.btnBack = new System.Windows.Forms.Button();
-            this.converterSettingsPage = new System.Windows.Forms.TabPage();
-            this.converterSettingsTitlePanel = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -89,12 +89,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.SuspendLayout();
             this.importFastaPage.SuspendLayout();
             this.importFASTATitlePanel.SuspendLayout();
+            this.converterSettingsPage.SuspendLayout();
+            this.converterSettingsTitlePanel.SuspendLayout();
             this.ddaSearchSettingsPage.SuspendLayout();
             this.searchSettingsTitlePanel.SuspendLayout();
             this.ddaSearch.SuspendLayout();
             this.ddaSearchTitlePanel.SuspendLayout();
-            this.converterSettingsPage.SuspendLayout();
-            this.converterSettingsTitlePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -377,6 +377,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblFasta.ForeColor = System.Drawing.SystemColors.ControlText;
             this.lblFasta.Name = "lblFasta";
             // 
+            // converterSettingsPage
+            // 
+            this.converterSettingsPage.Controls.Add(this.converterSettingsTitlePanel);
+            resources.ApplyResources(this.converterSettingsPage, "converterSettingsPage");
+            this.converterSettingsPage.Name = "converterSettingsPage";
+            this.converterSettingsPage.UseVisualStyleBackColor = true;
+            // 
+            // converterSettingsTitlePanel
+            // 
+            this.converterSettingsTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.converterSettingsTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.converterSettingsTitlePanel.Controls.Add(this.label2);
+            resources.ApplyResources(this.converterSettingsTitlePanel, "converterSettingsTitlePanel");
+            this.converterSettingsTitlePanel.Name = "converterSettingsTitlePanel";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label2.Name = "label2";
+            // 
             // ddaSearchSettingsPage
             // 
             this.ddaSearchSettingsPage.Controls.Add(this.searchSettingsTitlePanel);
@@ -426,27 +447,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBack.UseVisualStyleBackColor = true;
             this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
             // 
-            // converterSettingsPage
-            // 
-            this.converterSettingsPage.Controls.Add(this.converterSettingsTitlePanel);
-            resources.ApplyResources(this.converterSettingsPage, "converterSettingsPage");
-            this.converterSettingsPage.Name = "converterSettingsPage";
-            this.converterSettingsPage.UseVisualStyleBackColor = true;
-            // 
-            // converterSettingsTitlePanel
-            // 
-            this.converterSettingsTitlePanel.BackColor = System.Drawing.Color.GhostWhite;
-            this.converterSettingsTitlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.converterSettingsTitlePanel.Controls.Add(this.label2);
-            resources.ApplyResources(this.converterSettingsTitlePanel, "converterSettingsTitlePanel");
-            this.converterSettingsTitlePanel.Name = "converterSettingsTitlePanel";
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label2.Name = "label2";
-            // 
             // ImportPeptideSearchDlg
             // 
             resources.ApplyResources(this, "$this");
@@ -479,12 +479,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.PerformLayout();
             this.importFastaPage.ResumeLayout(false);
             this.importFASTATitlePanel.ResumeLayout(false);
+            this.converterSettingsPage.ResumeLayout(false);
+            this.converterSettingsTitlePanel.ResumeLayout(false);
             this.ddaSearchSettingsPage.ResumeLayout(false);
             this.searchSettingsTitlePanel.ResumeLayout(false);
             this.ddaSearch.ResumeLayout(false);
             this.ddaSearchTitlePanel.ResumeLayout(false);
-            this.converterSettingsPage.ResumeLayout(false);
-            this.converterSettingsTitlePanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

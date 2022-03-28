@@ -271,7 +271,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 buildLibraryDlg.LibraryPath = GetTestPath("Skyline");
                 buildLibraryDlg.LibraryName = "Mtb_hDP_20140210";
-                buildLibraryDlg.LibraryCutoff = 0.9;
             });
             PauseForScreenShot("Build Library Window", 2);
             RunUI(() =>
@@ -279,6 +278,8 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddDirectory(GetTestPath("Tutorial-3_Library"));
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.9));
             PauseForScreenShot("Build Library Window Next", 2);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             RunUI(() =>

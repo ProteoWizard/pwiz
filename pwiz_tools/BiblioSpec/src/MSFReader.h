@@ -43,7 +43,9 @@ namespace BiblioSpec
                   const char* msfFile,
                   const ProgressIndicator* parent_progress);
         ~MSFReader();
+        void initFile();
         bool parseFile();   // BuildParser virtual function
+        vector<PSM_SCORE_TYPE> getScoreTypes();   // BuildParser virtual function
 
     private:
         /* These are for decompressing the spectrum archives */
