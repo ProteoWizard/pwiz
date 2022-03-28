@@ -77,6 +77,8 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
+        public bool IsDelayedWrite { get; set; }
+
         public RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
