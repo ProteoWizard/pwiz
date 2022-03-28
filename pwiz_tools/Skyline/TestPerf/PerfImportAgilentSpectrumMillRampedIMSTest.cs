@@ -169,12 +169,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
 
             var doc = SkylineWindow.Document;
             RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton()));

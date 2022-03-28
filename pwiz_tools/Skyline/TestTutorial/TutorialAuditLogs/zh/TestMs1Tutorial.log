@@ -3,8 +3,8 @@ Summary   : 已添加谱图库“Ms1FilterTutorial”
 All Info  :
 已添加谱图库“Ms1FilterTutorial”
 建立谱图库 > 截止值 是 "0.95"
-建立谱图库 > 搜索文件 : 包含 "100803_0001_MCF7_TiB_L.group.xml"
-建立谱图库 > 搜索文件 : 包含 "100803_0005b_MCF7_TiTip3.group.xml"
+建立谱图库 > 搜索文件 : 包含 { File = "100803_0001_MCF7_TiB_L.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }
+建立谱图库 > 搜索文件 : 包含 { File = "100803_0005b_MCF7_TiTip3.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
@@ -13,8 +13,16 @@ All Info  :
 Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
-    "100803_0001_MCF7_TiB_L.group.xml",
-    "100803_0005b_MCF7_TiTip3.group.xml"
+    {
+        File = "100803_0001_MCF7_TiB_L.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    },
+    {
+        File = "100803_0005b_MCF7_TiTip3.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,

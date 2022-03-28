@@ -83,8 +83,8 @@ enum BUILD_INPUT
     NUM_BUILD_INPUTS
 };
 
-extern string base_name(const char* name);
-extern bool has_extension(const char* name, const char* ext);
+extern string base_name(string name);
+extern bool has_extension(string name, string ext);
 
 class BlibBuilder : public BlibMaker
 {
@@ -96,7 +96,7 @@ class BlibBuilder : public BlibMaker
   //double getProbabilityCutoff();
   double getScoreThreshold(BUILD_INPUT fileType); // replaces getProbabilityCutoff()
   int getLevelCompress();
-  vector<char*> getInputFiles();
+  vector<string> getInputFiles();
   void setCurFile(int i);
   int getCurFile() const;
   string getMaxQuantModsPath();
@@ -128,12 +128,11 @@ class BlibBuilder : public BlibMaker
  private:
   // Command-line options
   enum STDIN_LIST { FILENAMES, UNMODIFIED_SEQUENCES, MODIFIED_SEQUENCES };
-  //double probability_cutoff;
-  double scoreThresholds[NUM_BUILD_INPUTS]; // replaces probability_cutoff
   double explicitCutoff;
   int level_compress;
   int fileSizeThresholdForCaching; // for parsing .dat files
-  vector<char*> input_files;
+  vector<string> input_files;
+  map<string, double> inputThresholds;
   int curFile;
   string maxQuantModsPath;
   string maxQuantParamsPath;

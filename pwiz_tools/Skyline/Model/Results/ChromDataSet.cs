@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
+                    peak.CalcChromPeak(peakMax, flags, FullScanAcquisitionMethod, intersectedTimeIntervals);
 
                     if (intersectedTimeIntervals != null && peakMax != null)
                     {
@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
                             endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
                         }
 
-                        var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        var chromPeak = ChromPeak.IntegrateWithoutBackground(peak.Data.RawTimeIntensities, startTime, endTime, flags);
                         peak.SetChromPeak(chromPeak);
                     }
                 }

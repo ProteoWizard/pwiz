@@ -57,6 +57,7 @@ class PercolatorXmlReader : public BuildParser {
   ~PercolatorXmlReader();
 
   bool parseFile(); // impelement BuildParser virtual function
+  vector<PSM_SCORE_TYPE> getScoreTypes();
   virtual void startElement(const XML_Char* name, const XML_Char** attr);
   virtual void endElement(const XML_Char* name);
   virtual void characters(const XML_Char *s, int len);

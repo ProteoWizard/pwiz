@@ -1647,7 +1647,7 @@ namespace pwiz.Skyline.Model
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            return info.CalcPeak(chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime, flags);
+            return info.CalcPeak(settingsNew.TransitionSettings.FullScan.AcquisitionMethod, chromInfoBest.StartRetentionTime, chromInfoBest.EndRetentionTime, flags);
         }
 
         private static ChromPeak CalcMatchingPeak(SrmSettings settingsNew,
@@ -1660,7 +1660,7 @@ namespace pwiz.Skyline.Model
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
-            var peak = info.CalcPeak(chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
+            var peak = info.CalcPeak(settingsNew.TransitionSettings.FullScan.AcquisitionMethod, chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
             userSet = UserSet.MATCHED;
             var userSetBest = UserSet.FALSE;
             int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSetBest);
@@ -2845,8 +2845,10 @@ namespace pwiz.Skyline.Model
                     for (int step = -numSteps; step <= numSteps; step++)
                     {
                         var chromInfo = listChromInfo.GetChromatogramForStep(step);
-                        ChromPeak chromPeak = chromInfo?.CalcPeak((float) startTime, (float) endTime, flags) 
-                                              ?? ChromPeak.EMPTY;
+                        ChromPeak chromPeak =
+                            chromInfo?.CalcPeak(settings.TransitionSettings.FullScan.AcquisitionMethod,
+                                (float) startTime, (float) endTime, flags)
+                            ?? ChromPeak.EMPTY;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step, chromPeak,
                             chromInfo?.GetIonMobilityFilter(), ratioCount, userSet);
                     }
