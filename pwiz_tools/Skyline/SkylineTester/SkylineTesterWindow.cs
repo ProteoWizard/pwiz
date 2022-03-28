@@ -34,11 +34,9 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
-using pwiz.SkylineTestUtil;
 using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
-using FormSeen = TestRunnerLib.FormSeen;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
 
@@ -191,8 +189,6 @@ namespace SkylineTester
             DefaultLogFile = Path.Combine(RootDir, "SkylineTester.log");
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
-
-            testSet.SelectedIndex = 0;
 
             runMode.SelectedIndex = 0;
 
@@ -350,54 +346,19 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                var testSetValue = testSet.InvokeRequired
-                    ? (string)Invoke(new Func<string>(() => testSet.SelectedItem.ToString()))
-                    : testSet.SelectedItem.ToString();
-                var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
+                var arrayDllNames = showTutorialsOnly.Checked ? TUTORIAL_DLLS : TEST_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
-                    var tests = GetTestInfos(testDll).OrderBy(test => test.TestMethod.Name).ToArray();
+                    var tests = GetTestInfos(testDll).OrderBy(test => test).ToArray();
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
                     var childNodes = new List<TreeNode>(tests.Length);
                     foreach (var test in tests)
                     {
-                        switch (testSetValue)
-                        {
-                            case "Tutorial tests":
-                                if (!test.TestMethod.Name.EndsWith("Tutorial"))
-                                    continue;
-                                break;
-                            case "Audit log tests":
-                            {
-                                var testContext = new TestRunnerContext
-                                {
-                                    Properties =
-                                    {
-                                        ["AccessInternet"] = true.ToString(),
-                                        ["LiveReports"] = true.ToString(),
-                                        ["RunSmallMoleculeTestVersions"] = true.ToString(),
-                                        ["RetryDataDownloads"] = true.ToString(),
-                                        ["RunPerfTests"] = true.ToString(),
-                                        ["TestName"] = test.TestMethod.Name,
-                                        ["TestRunResultsDirectory"] = null,
-                                        ["RecordAuditLogs"] = true.ToString()
-                                    }
-                                };
-
-                                if (!(Activator.CreateInstance(test.TestClassType) is AbstractFunctionalTest testObj))
-                                    continue;
-                                if (test.SetTestContext != null)
-                                    test.SetTestContext.Invoke(testObj, new object[] { testContext });
-                                if (!testObj.AuditLogCompareLogs)
-                                    continue;
-                                break;
-                            }
-                        }
-
-                        childNodes.Add(new TreeNode(test.TestMethod.Name));
-                    }
+                        if (!showTutorialsOnly.Checked || test.EndsWith("Tutorial"))
+                            childNodes.Add(new TreeNode(test));
+                }
                     skylineNode.Nodes.Add(new TreeNode(dllName, childNodes.ToArray()));
                 }
 
@@ -423,7 +384,7 @@ namespace SkylineTester
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
-                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial").Select(t => t.TestMethod.Name));
+                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial"));
                 foreach (var test in tutorialTests.ToArray())
                 {
                     // Remove any tutorial tests we've hacked for extra testing (extending test name not to end with Tutorial) - not of interest to localizers
@@ -464,11 +425,26 @@ namespace SkylineTester
             return type.GetInterfaces().Any(t => t.Name == interfaceName);
         }
 
-        public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
+        public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
-            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(ExeDir, testDll)).Where(info =>
-                (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
-                (filterName == null || info.TestMethod.Name.Contains(filterName)));
+            var dllPath = Path.Combine(ExeDir, testDll);
+            var assembly = LoadFromAssembly.Try(dllPath);
+            var types = assembly.GetTypes();
+
+            foreach (var type in types)
+            {
+                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
+                {
+                    var methods = type.GetMethods();
+                    foreach (var method in methods)
+                    {
+                        if (HasAttribute(method, "TestMethodAttribute") && 
+                            (filterAttribute == null || !HasAttribute(method, filterAttribute)) &&
+                            (filterName == null || method.Name.Contains(filterName)))
+                            yield return method.Name;
+                    }
+                }
+            }
         }
 
         // Determine if the given class or method from an assembly has the given attribute.
@@ -1066,7 +1042,7 @@ namespace SkylineTester
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
-                testSet,
+                showTutorialsOnly,
                 runMode,
 
                 // Build
@@ -1501,7 +1477,7 @@ namespace SkylineTester
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
         public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
-        public ComboBox         TestSet                     { get { return testSet; } }
+        public CheckBox         ShowTutorialsOnly           { get { return showTutorialsOnly; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
@@ -1906,7 +1882,7 @@ namespace SkylineTester
             }
         }
 
-        private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
+        private void showTutorialsOnly_CheckedChanged(object sender, EventArgs e)
         {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;

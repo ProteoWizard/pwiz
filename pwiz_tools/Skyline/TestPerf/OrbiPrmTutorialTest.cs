@@ -212,18 +212,22 @@ namespace TestPerf
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
             });
 
-            RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
             {
                 buildLibraryDlg.LibraryPath = GetTestPath(LIBRARY_DIR) + "\\";
                 buildLibraryDlg.LibraryName = HEAVY_LIBRARY;
-                buildLibraryDlg.LibraryCutoff = 0.9;
                 buildLibraryDlg.OkWizardPage();
-                IList<string> inputPaths = new List<string>
+                buildLibraryDlg.AddInputFiles(new []
                 {
                     GetTestPath(Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml")),
                     GetTestPath(Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml")),
-                };
-                buildLibraryDlg.AddInputFiles(inputPaths);
+                });
+            });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            RunUI(() =>
+            {
+                buildLibraryDlg.Grid.SetScoreThreshold(0.1);
                 buildLibraryDlg.OkWizardPage();
             });
 

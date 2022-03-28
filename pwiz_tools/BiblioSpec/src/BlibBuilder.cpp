@@ -42,23 +42,6 @@ level_compress(3), fileSizeThresholdForCaching(800000000),
 targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin),
 forcedPusherInterval(-1), explicitCutoff(-1)
 {
-    scoreThresholds[SQT] = 0.01;    // 1% FDR
-    scoreThresholds[PEPXML] = 0.95; // peptide prophet probability
-    scoreThresholds[IDPXML] = 0;    // use all results
-    scoreThresholds[MASCOT] = 0.05; // expectation value
-    scoreThresholds[TANDEM] = 0.1;  // expect score
-    scoreThresholds[PROT_PILOT] = 0.95;  // 95% confidence
-    scoreThresholds[SCAFFOLD] = 0.95;  // Scaffold: Peptide Probability
-    scoreThresholds[MSE] = 6;       // Waters MSe peptide score
-    scoreThresholds[OMSSA] = 0.00001; // Max OMSSA expect score
-    scoreThresholds[PROT_PROSPECT] = 0.001; // expect score
-    scoreThresholds[MAXQUANT] = 0.05; // MaxQuant PEP
-    scoreThresholds[MORPHEUS] = 0.01; // Morpheus PSM q-value
-    scoreThresholds[MSGF] = 0.01; // MSGF+ PSM q-value
-    scoreThresholds[PEAKS] = 0.05;  // PEAKS p-value
-    scoreThresholds[BYONIC] = 0.05;  // ByOnic PEP
-    scoreThresholds[PEPTIDE_SHAKER] = 0.95; // PeptideShaker PSM confidence
-    scoreThresholds[GENERIC_QVALUE_INPUT] = 0.01;
 }
 
 BlibBuilder::~BlibBuilder()
@@ -133,21 +116,62 @@ void BlibBuilder::usage()
         "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
         "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
         "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
-        "   -K                Keep ambiguously matched spectra\n";
+        "   -K                Keep ambiguously matched spectra\n"
+        "   -t                Only output score types (no library build).\n";
 
     cerr << usage << endl;
     exit(1);
 }
 
 double BlibBuilder::getScoreThreshold(BUILD_INPUT fileType) {
-    return scoreThresholds[fileType];
+    map<string, double>::const_iterator i = inputThresholds.find(input_files[curFile]);
+    if (i != inputThresholds.end()) {
+        return i->second;
+    }
+    switch (fileType) {
+    case SQT: // FDR
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.01;
+    case PEPXML: // peptide prophet probability
+        return explicitCutoff >= 0 ? explicitCutoff : 0.95;
+    case IDPXML:
+        return 0; // use all results
+    case MASCOT: // expectation value
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.05;
+    case TANDEM: // expect score
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.1;
+    case PROT_PILOT: // confidence
+        return explicitCutoff >= 0 ? explicitCutoff : 0.95;
+    case SCAFFOLD: // peptide probability
+        return explicitCutoff >= 0 ? explicitCutoff : 0.95;
+    case MSE: // Waters MSe peptide score
+        return 6;
+    case OMSSA: // max OMSSA expect score
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.00001;
+    case PROT_PROSPECT: // expect score
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.001;
+    case MAXQUANT: // PEP
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.05;
+    case MORPHEUS: // PSM q-value
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.01;
+    case MSGF: // PSM q-value
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.01;
+    case PEAKS: // p-value
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.05;
+    case BYONIC: // PEP
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.05;
+    case PEPTIDE_SHAKER: // PSM confidence
+        return explicitCutoff >= 0 ? explicitCutoff : 0.95;
+    case GENERIC_QVALUE_INPUT:
+        return explicitCutoff >= 0 ? 1 - explicitCutoff : 0.01;
+    }
+    return -1;
 }
 
 int BlibBuilder::getLevelCompress() {
     return level_compress;
 }
 
-vector<char*> BlibBuilder::getInputFiles() {
+vector<string> BlibBuilder::getInputFiles() {
     return input_files;
 }
 
@@ -187,31 +211,38 @@ const set<string>* BlibBuilder::getTargetSequencesModified() {
 int BlibBuilder::parseCommandArgs(int argc, char* argv[])
 {
     int i = BlibMaker::parseCommandArgs(argc, argv);
-    argc--;               // Remove output library at the end
+    if (!isScoreLookupMode()) {
+        argc--; // Remove output library at the end
+    }
 
     bool filesFromStdin = false;
-    while (!stdinput.empty())
-    {
+    while (!stdinput.empty()) {
         // handle list
-        switch (stdinput.front())
-        {
+        switch (stdinput.front()) {
         case FILENAMES:
             // read filenames until end of cin or empty line
             filesFromStdin = true;
             Verbosity::debug("Reading input filenames");
-            while (*stdinStream)
-            {
+            while (*stdinStream) {
                 string infileName;
                 getline(*stdinStream, infileName);
                 bal::trim(infileName);
-                if (infileName.empty())
-                {
+                if (infileName.empty()) {
                     break;
                 }
-                char* name = new char[infileName.size()+1];
-                strcpy(name, infileName.c_str());
-                Verbosity::debug("Input file: %s", name);
-                input_files.push_back(name);
+                const string thresholdSearch = "score_threshold=";
+                size_t thresholdIdx = infileName.rfind(thresholdSearch);
+                if (thresholdIdx == string::npos) {
+                    Verbosity::debug("Input file: %s", infileName.c_str());
+                } else {
+                    string thresholdStr = infileName.substr(thresholdIdx + thresholdSearch.length());
+                    infileName = infileName.substr(0, thresholdIdx);
+                    bal::trim(infileName);
+                    double threshold = stod(thresholdStr);
+                    Verbosity::debug("Input file: %s (cutoff = %.2f)", infileName.c_str(), threshold);
+                    inputThresholds[infileName] = threshold;
+                }
+                input_files.push_back(infileName);
             }
             break;
         case UNMODIFIED_SEQUENCES:
@@ -234,7 +265,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
         ((ifstream*)stdinStream)->close();
     }
 
-    if(!filesFromStdin) {
+    if (!filesFromStdin) {
         int nInputs = argc - i;
         if (nInputs < 1)
         {
@@ -254,7 +285,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                     supported = has_extension(file_name, ext->c_str());
                 }
                 if (supported) {
-                    input_files.push_back(file_name);
+                    input_files.push_back(string(file_name));
                 } else {
                     Verbosity::error("Unsupported file type '%s'.  Must be one of %s.",
                         file_name, boost::algorithm::join(supportedTypes, ", ").c_str());
@@ -284,28 +315,14 @@ int BlibBuilder::transferLibrary(int iLib,
                                  const ProgressIndicator* parentProgress)
 {
     // Check to see if library exists
-
-    {
-        auto libPath = input_files.at(iLib);
-        if (!bfs::exists(libPath))
-        {
-            throw BlibException(true, "Library file '%s' cannot be opened for "
-                "transferring: file does not exist", bfs::absolute(libPath).string().c_str());
-        }
-        ifstream test(libPath);
-        if (!test) {
-            throw BlibException(true, "Library file '%s' cannot be opened for "
-                "transferring", libPath);
-        }
-    }
+    verifyFileExists(input_files.at(iLib));
 
     // give the incomming library a name
     char schemaTmp[32];
     sprintf(schemaTmp, "tmp%d", iLib);
 
     // add it to our open libraries
-    sprintf(zSql, "ATTACH DATABASE '%s' as %s",
-            input_files.at(iLib), schemaTmp);
+    sprintf(zSql, "ATTACH DATABASE '%s' as %s", input_files.at(iLib).c_str(), schemaTmp);
     sql_stmt(zSql);
 
     createUpdatedRefSpectraView(schemaTmp);
@@ -341,7 +358,7 @@ int BlibBuilder::transferLibrary(int iLib,
     setMessage(msg.c_str());
 
     Verbosity::status("Transferring spectra from %s.",
-                      base_name(input_files.at(iLib)).c_str());
+                      base_name(input_files.at(iLib).c_str()).c_str());
 
     // first add all the spectrum source files from incomming library
     transferSpectrumFiles(schemaTmp);
@@ -472,7 +489,7 @@ void BlibBuilder::commit()
     BlibMaker::commit();
 
     for (int i = 0; i < (int)input_files.size(); i++) {
-        if(has_extension(input_files.at(i), ".blib")) {
+        if(has_extension(input_files.at(i).c_str(), ".blib")) {
             sprintf(zSql, "DETACH DATABASE tmp%d", i);
             sql_stmt(zSql);
         }
@@ -496,21 +513,6 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         }
     } else if (switchName == 'c' && ++i < argc) {
         explicitCutoff = atof(argv[i]);
-        scoreThresholds[PEPXML] = explicitCutoff;
-        scoreThresholds[PROT_PILOT] = explicitCutoff;
-        scoreThresholds[SQT] = 1 - explicitCutoff;
-        scoreThresholds[MASCOT] = 1 - explicitCutoff;
-        scoreThresholds[TANDEM] = 1 - explicitCutoff;
-        scoreThresholds[SCAFFOLD] = explicitCutoff;
-        scoreThresholds[OMSSA] = 1 - explicitCutoff;
-        scoreThresholds[PROT_PROSPECT] = 1 - explicitCutoff;
-        scoreThresholds[MAXQUANT] = 1 - explicitCutoff;
-        scoreThresholds[MORPHEUS] = 1 - explicitCutoff;
-        scoreThresholds[MSGF] = 1 - explicitCutoff;
-        scoreThresholds[PEAKS] = 1 - explicitCutoff;
-        scoreThresholds[BYONIC] = 1 - explicitCutoff;
-        scoreThresholds[PEPTIDE_SHAKER] = explicitCutoff;
-        scoreThresholds[GENERIC_QVALUE_INPUT] = 1 - explicitCutoff;
     } else if (switchName == 'l' && ++i < argc) {
         level_compress = atoi(argv[i]);
     } else if (switchName == 'C' && ++i < argc) {
@@ -560,7 +562,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
 }
 
 double BlibBuilder::getCutoffScore() const {
-    return explicitCutoff;
+    map<string, double>::const_iterator i = inputThresholds.find(input_files[curFile]);
+    return i != inputThresholds.end() ? i->second : explicitCutoff;
 }
 
 int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
@@ -704,16 +707,13 @@ string BlibBuilder::generateModifiedSeq(const char* unmodSeq,
     return getModifiedSequenceWithPrecision(unmodSeq, mods, isHighPrecisionModifications());
 }
 
-string base_name(const char* name)
+string base_name(string name)
 {
-    string baseName = name;
-    size_t slash = baseName.find_last_of("/\\");
-    if(slash != string::npos)
-        baseName = baseName.substr(slash+1);
-    return baseName;
+    size_t slash = name.find_last_of("/\\");
+    return (slash != string::npos) ? name.substr(slash+1) : name;
 }
 
-bool has_extension(const char* name, const char* ext)
+bool has_extension(string name, string ext)
 {
     return bal::iends_with(name, ext);
 }

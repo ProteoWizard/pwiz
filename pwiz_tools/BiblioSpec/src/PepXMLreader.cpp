@@ -82,7 +82,8 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   analysisType_(UNKNOWN_ANALYSIS),
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
-  state(STATE_INIT)
+  state(STATE_INIT),
+  isScoreLookup_(false)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -166,7 +167,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if (paramName == "post-processor" && paramValue == "percolator")
        {
            analysisType_ = CRUX_ANALYSIS;
-           scoreType_ = PERCOLATOR_QVALUE;
+           setScoreType(PERCOLATOR_QVALUE);
            probCutOff = getScoreThreshold(SQT);
        }
    }
@@ -185,7 +186,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            if(search_engine.find("spectrummill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
-               scoreType_ = SPECTRUM_MILL;
+               setScoreType(SPECTRUM_MILL);
                probCutOff = 0; // accept all psms
 
                lookUpBy_ = INDEX_ID; 
@@ -193,17 +194,17 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            } else if(search_engine.find("omssa") == 0) {
                Verbosity::debug("Pepxml file is from OMSSA.");
                analysisType_ = OMSSA_ANALYSIS;
-               scoreType_ = OMSSA_EXPECTATION_SCORE;
+               setScoreType(OMSSA_EXPECTATION_SCORE);
                probCutOff = getScoreThreshold(OMSSA);
            } else if(search_engine.find("proteinprospector") != string::npos) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Protein Prospector.");
                analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
-               scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
+               setScoreType(PROTEIN_PROSPECTOR_EXPECT);
                probCutOff = getScoreThreshold(PROT_PROSPECT);
            } else if(search_engine.find("morpheus") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Morpheus.");
                analysisType_ = MORPHEUS_ANALYSIS;
-               scoreType_ = MORPHEUS_SCORE;
+               setScoreType(MORPHEUS_SCORE);
                probCutOff = getScoreThreshold(MORPHEUS);
 
                lookUpBy_ = INDEX_ID; 
@@ -211,7 +212,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            } else if(search_engine.find("ms-gfdb") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from MS-GFDB.");
                analysisType_ = MSGF_ANALYSIS;
-               scoreType_ = MSGF_SCORE;
+               setScoreType(MSGF_SCORE);
                probCutOff = getScoreThreshold(MSGF);
 
                lookUpBy_ = NAME_ID;
@@ -219,17 +220,17 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            } else if (search_engine.find("peaksdb") == 0 || search_engine.find("peaks_db") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from PEAKS");
                analysisType_ = PEAKS_ANALYSIS;
-               scoreType_ = PEAKS_CONFIDENCE_SCORE;
+               setScoreType(PEAKS_CONFIDENCE_SCORE);
                probCutOff = getScoreThreshold(PEAKS);
            } else if(search_engine.find("sequest") == 0 &&
                      analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST Proteome Discoverer.");
-               scoreType_ = PERCOLATOR_QVALUE;
+               setScoreType(PERCOLATOR_QVALUE);
                probCutOff = getScoreThreshold(SQT);
            } else if(search_engine.find("mascot") == 0 &&
                      analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Mascot Proteome Discoverer.");
-               scoreType_ = MASCOT_IONS_SCORE;
+               setScoreType(MASCOT_IONS_SCORE);
                probCutOff = getScoreThreshold(MASCOT);
            } else if(search_engine.find("x!tandem") == 0 &&
                      analysisType_ != PEPTIDE_PROPHET_ANALYSIS) {
@@ -241,16 +242,15 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                    Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
                    analysisType_ = XTANDEM_ANALYSIS;
                }
-               scoreType_ = TANDEM_EXPECTATION_VALUE;
+               setScoreType(TANDEM_EXPECTATION_VALUE);
                probCutOff = getScoreThreshold(TANDEM);
            } else if(search_engine.find("crux") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Crux.");
                analysisType_ = CRUX_ANALYSIS;
-           
            } else if(search_engine.find("comet") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Comet.");
                analysisType_ = COMET_ANALYSIS;
-               scoreType_ = TANDEM_EXPECTATION_VALUE; // expect values should be compatible with X!Tandem
+               setScoreType(TANDEM_EXPECTATION_VALUE); // expect values should be compatible with X!Tandem
                probCutOff = getScoreThreshold(TANDEM);
            }// else assume peptide prophet or inter prophet 
 
@@ -488,7 +488,9 @@ void PepXMLreader::endElement(const XML_Char* name)
                 break;
             }
         }
-        buildTables(scoreType_);
+        if (!isScoreLookup_) {
+            buildTables(scoreType_);
+        }
         if (originalReader) {
             delete specReader_;
             specReader_ = originalReader;
@@ -564,6 +566,19 @@ void PepXMLreader::endElement(const XML_Char* name)
 bool PepXMLreader::parseFile()
 {
    return parse();
+}
+
+vector<PSM_SCORE_TYPE> PepXMLreader::getScoreTypes() {
+    isScoreLookup_ = true;
+    parse();
+    return vector<PSM_SCORE_TYPE>(1, scoreType_);
+}
+
+void PepXMLreader::setScoreType(PSM_SCORE_TYPE scoreType) {
+    scoreType_ = scoreType;
+    if (isScoreLookup_) {
+        throw SAXHandler::EndEarlyException();
+    }
 }
 
 /**

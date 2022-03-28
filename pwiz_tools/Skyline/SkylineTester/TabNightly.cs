@@ -387,7 +387,7 @@ namespace SkylineTester
             if (_stopTimer != null)
                 _stopTimer.Start();
 
-            _nightlyListener = new NightlyListener(_stopTimer, Process.GetCurrentProcess().Id);
+            _nightlyListener = new NightlyListener(_stopTimer);
         }
 
         private int _architecture;
@@ -742,9 +742,9 @@ namespace SkylineTester
             private readonly ServiceHost _host;
             private readonly Timer _stopTimer;
 
-            public NightlyListener(Timer stopTimer, int pid)
+            public NightlyListener(Timer stopTimer)
             {
-                _host = new ServiceHost(this, new Uri("net.pipe://localhost/Nightly_" + pid));
+                _host = new ServiceHost(this, new Uri("net.pipe://localhost/Nightly"));
                 _host.AddServiceEndpoint(typeof(IEndTimeSetter), new NetNamedPipeBinding(), "SetEndTime");
                 _host.Open();
 

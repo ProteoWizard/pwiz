@@ -169,6 +169,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -471,6 +472,7 @@
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkingTest.zip" />
     <None Include="CrosslinkNeutralLossTest.zip" />
+    <None Include="DdaPeakIntegrationTest.zip" />
     <None Include="DdaSearchTest.zip" />
     <None Include="DecoyTargetMatchTest.zip" />
     <None Include="DetectionsPlotTest.zip" />

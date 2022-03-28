@@ -38,20 +38,38 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
 : BuildParser(maker, datFileName, parent_progress)
 {
     Verbosity::comment(V_DETAIL, "Creating a MascotResultsReader.");
+    ms_params_ = NULL;
+    readSpecProgress_ = NULL;
+}
 
+MascotResultsReader::~MascotResultsReader()
+{
+    delete ms_params_;
+    // the spec reader will delete the results and file
+
+    // Delete all the mod tables
+    map<string, ModTable* >::iterator it = methodModsMaps_.begin();
+    while (it != methodModsMaps_.end())
+    {
+        delete it->second;
+        it++;
+    }
+    delete readSpecProgress_;
+}
+
+void MascotResultsReader::initParse() {
     // Create the ms_file
-    unsigned int cacheFlag = getCacheFlag(datFileName, 
-                                          maker.getCacheThreshold()); 
+    unsigned int cacheFlag = getCacheFlag(getFileName(), blibMaker_.getCacheThreshold()); 
     const char* cachePath = getPsmFilePath();
     if( *cachePath == '\0' ){
         cachePath = ".";
     }
 
-    string datFileNameStr(datFileName), realDatFilePath;
-    if (pwiz::util::findUnicodeBytes(datFileNameStr) != datFileNameStr.end())
+    string realDatFilePath(getFileName());
+    if (pwiz::util::findUnicodeBytes(getFileName()) != getFileName().end())
     {
-        Verbosity::warn("Mascot Parser does not support Unicode in filepaths ('%s'): copying file to a temporary non-Unicode path", datFileName);
-        string sanitizedFilename = bfs::path(datFileNameStr).filename().string();
+        Verbosity::warn("Mascot Parser does not support Unicode in filepaths ('%s'): copying file to a temporary non-Unicode path", getFileName().c_str());
+        string sanitizedFilename = bfs::path(getFileName()).filename().string();
         string::const_iterator unicodeByteItr;
         while ((unicodeByteItr = pwiz::util::findUnicodeBytes(sanitizedFilename)) != sanitizedFilename.end())
         {
@@ -61,12 +79,10 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
         realDatFilePath = (bfs::temp_directory_path() / sanitizedFilename).string();
         if (!bfs::exists(realDatFilePath))
         {
-            bfs::copy_file(datFileNameStr, realDatFilePath);
+            bfs::copy_file(getFileName(), realDatFilePath);
             tmpDatFile_.reset(new TempFileDeleter(realDatFilePath));
         }
     }
-    else
-        realDatFilePath = datFileNameStr;
 
     ms_file_ = new ms_mascotresfile(realDatFilePath.c_str(), 0, "",
                                     cacheFlag,
@@ -170,23 +186,8 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
     initReadAddProgress();
 }
 
-
-MascotResultsReader::~MascotResultsReader()
-{
-    delete ms_params_;
-    // the spec reader will delete the results and file
-
-    // Delete all the mod tables
-    map<string, ModTable* >::iterator it = methodModsMaps_.begin();
-    while (it != methodModsMaps_.end())
-    {
-        delete it->second;
-        it++;
-    }
-    delete readSpecProgress_;
-}
-
 bool MascotResultsReader::parseFile(){
+    initParse();
 
     // track the progress of reading the file
     int nQueries = ms_file_->getNumQueries();
@@ -296,6 +297,10 @@ bool MascotResultsReader::parseFile(){
     }
 
     return true;
+}
+
+vector<PSM_SCORE_TYPE> MascotResultsReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, MASCOT_IONS_SCORE);
 }
 
 /**
@@ -855,12 +860,11 @@ string MascotResultsReader::getErrorMessage(int errorCode){
     return message;
 }
 
-
 /**
  * Returns the correct flag to use for initializing the msresfile object.
  * If the input file is larger than a cutoff, use caching.  Otherwise do not.
  */
-unsigned int MascotResultsReader::getCacheFlag(const char* filename, 
+unsigned int MascotResultsReader::getCacheFlag(const string& filename, 
                                                int threshold){
   unsigned int flag = ms_mascotresfile::RESFILE_NOFLAG;
 
@@ -876,25 +880,7 @@ unsigned int MascotResultsReader::getCacheFlag(const char* filename,
   return flag;
 }
 
-
-
 } // namespace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
  * Local Variables:
