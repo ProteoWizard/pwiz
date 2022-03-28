@@ -142,8 +142,9 @@ namespace pwiz.Skyline.Controls
             int colNumber = 0;
             var rowLabel = new Label()
             {
-                Text = "N-Term:",
-                AutoSize = true
+                Text = Resources.IonTypeSelector_NTermLabel,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleLeft
             };
             Controls.Add(rowLabel);
             SetCellPosition(rowLabel, new TableLayoutPanelCellPosition(colNumber++, 0));
@@ -157,7 +158,7 @@ namespace pwiz.Skyline.Controls
             colNumber = 0;
             rowLabel = new Label()
             {
-                Text = "C-Term:",
+                Text = Resources.IonTypeSelector_CTermLabel,
                 AutoSize = true
             };
             Controls.Add(rowLabel);
@@ -205,9 +206,9 @@ namespace pwiz.Skyline.Controls
 
         public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
-            var modLosses = peptideSet.Modifications.StaticModifications.SelectMany(mod => mod.Losses??(new List<FragmentLoss>()));
+            var modLosses = peptideSet.Modifications.StaticModifications.SelectMany(mod => mod.Losses??(new List<FragmentLoss>())).ToList();
             //Deduplicate the losses on formula
-            modLosses = modLosses?.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+            modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
 
             if (_lossesPanel != null)
             {
@@ -228,7 +229,7 @@ namespace pwiz.Skyline.Controls
 
                     _lossesLabel = new Label()
                     {
-                        Text = "Losses:",
+                        Text = Resources.IonTypeSelector_LossesLabel,
                         AutoSize = true,
                         Tag = @"LossesLabel"
                     };
@@ -268,7 +269,7 @@ namespace pwiz.Skyline.Controls
                 {
                     var cb = new CheckBox()
                     {
-                        Text = string.Format("-{0:F0}", loss.AverageMass),
+                        Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
                         AutoSize = true,
                         Tag = loss,
                         Appearance = Appearance.Button,
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.Controls
         {
             if(sender is CheckBox cb)
                 _panelToolTip.Show( 
-                    string.Format("Formula: {0}", (cb.Tag as FragmentLoss).Formula),
+                    string.Format(Resources.IonTypeSelector_LossesTooltip, (cb.Tag as FragmentLoss)?.Formula),
                     cb);
         }
     }
