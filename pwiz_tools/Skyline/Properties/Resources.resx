@@ -11668,6 +11668,51 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
 	  <value>Associate Proteins</value>
   </data>
+  <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
+	  <value>File</value>
+  </data>
+  <data name="BuildLibraryGridView__colScoreType_Score_Type" xml:space="preserve">
+	  <value>Score Type</value>
+  </data>
+  <data name="BuildLibraryGridView__colThreshold_Score_Threshold" xml:space="preserve">
+	  <value>Score Threshold</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_types_not_loaded_" xml:space="preserve">
+	  <value>Score types not loaded.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_" xml:space="preserve">
+	  <value>Score threshold {0} for {1} will only include identifications with perfect scores.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
+	  <value>Score threshold {0} for {1} will include all identifications.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_" xml:space="preserve">
+	  <value>Score threshold {0} for {1} is unusually permissive.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__" xml:space="preserve">
+	  <value>{0} scores indicate the probability that an identification is {1}.</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_correct" xml:space="preserve">
+	  <value>correct</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_incorrect" xml:space="preserve">
+	  <value>incorrect</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
+	  <value>Error getting score type for this file.</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
+	  <value>Score threshold minimum (score is probability that identification is correct).</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
+	  <value>Score threshold maximum (score is probability that identification is incorrect).</value>
+  </data>
+  <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+	  <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
+  </data>
+  <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
+	  <value>Are you sure you want to continue?</value>
+  </data>
   <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
 	  <value>Skyline 21.2</value>
   </data>

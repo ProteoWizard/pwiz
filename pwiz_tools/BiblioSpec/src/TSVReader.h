@@ -136,9 +136,10 @@ public:
     ~TSVReader();
 
     /// factory function for creating correct implementaiton of TSVReader based on column names
-    static boost::shared_ptr<TSVReader> create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress);
+    static std::shared_ptr<TSVReader> create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress);
 
     virtual bool parseFile() = 0;
+    virtual vector<PSM_SCORE_TYPE> getScoreTypes() = 0;
 
     // these inherited from SpecFileReader
     virtual void openFile(const char*, bool) {}

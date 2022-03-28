@@ -64,18 +64,15 @@ namespace BiblioSpec
             return lexical_cast<string>(specId);
     }
 
-    bool MSFReader::parseFile()
-    {
+    void MSFReader::initFile() {
         sqlite3_open(msfName_, &msfFile_);
         if (!msfFile_)
         {
-            throw BlibException(true, "Couldn't open '%s'.",
-                                msfName_);
+            throw BlibException(true, "Couldn't open '%s'.", msfName_);
         }
 
         // Get the schema version
-        sqlite3_stmt* statement = getStmt(
-            "SELECT SoftwareVersion FROM SchemaInfo");
+        sqlite3_stmt* statement = getStmt("SELECT SoftwareVersion FROM SchemaInfo");
         if (hasNext(&statement))
         {
             string version = lexical_cast<string>(sqlite3_column_text(statement, 0));
@@ -106,6 +103,11 @@ namespace BiblioSpec
 
         collectSpectra();
         collectPsms();
+    }
+
+    bool MSFReader::parseFile()
+    {
+        initFile();
 
         // add psms by filename
         for (auto iter = fileMap_.begin();
@@ -126,6 +128,20 @@ namespace BiblioSpec
         }
 
         return true;
+    }
+
+    vector<PSM_SCORE_TYPE> MSFReader::getScoreTypes() {
+        initFile();
+
+        set<PSM_SCORE_TYPE> allScoreTypes;
+        for (auto iter = fileMap_.begin(); iter != fileMap_.end(); ++iter) {
+            for (auto scoreIter = iter->second.begin(); scoreIter != iter->second.end(); ++scoreIter) {
+                if (iter->second.size() > 0) {
+                    allScoreTypes.insert(scoreIter->first);
+                }
+            }
+        }
+        return vector<PSM_SCORE_TYPE>(allScoreTypes.begin(), allScoreTypes.end());
     }
 
     /**

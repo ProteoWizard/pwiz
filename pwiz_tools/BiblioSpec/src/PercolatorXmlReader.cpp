@@ -152,6 +152,10 @@ bool PercolatorXmlReader::parseFile() {
     return true;
 }
 
+vector<PSM_SCORE_TYPE> PercolatorXmlReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, PERCOLATOR_QVALUE);
+}
+
 /**
  * Called when each start tag is read from the file. 
  */

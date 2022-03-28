@@ -112,6 +112,9 @@ bool SAXHandler::parse()
             success = success && (XML_Parse(m_parser_, buffer, 0, true) != 0);
         }
     }
+    catch (EndEarlyException e) {
+        return true;
+    }
     catch(string thrown_msg) { // from parsers
         message = thrown_msg;
         success = false;

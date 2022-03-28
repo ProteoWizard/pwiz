@@ -56,6 +56,7 @@ public:
   virtual void endElement(const XML_Char* name);
   virtual void characters(const XML_Char *s, int len);
   bool parseFile();
+  vector<PSM_SCORE_TYPE> getScoreTypes();
  
 private:
   enum STATE { ROOT_STATE,
@@ -103,6 +104,7 @@ private:
   PSM_SCORE_TYPE scoreType_;
   vector<STATE> stateHistory_;  ///< a stack for keeping states
   STATE curState_;              ///< current state (not on the stack)
+  bool isScoreLookup_;
 
   // for parsing and storing spectra
   SpecData* curSpec_;

@@ -138,6 +138,10 @@ bool TandemNativeParser::parseFile()
     return success;
 }
 
+vector<PSM_SCORE_TYPE> TandemNativeParser::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, TANDEM_EXPECTATION_VALUE);
+}
+
 /**
  * Extract data from a group element.  Groups of type = model at the
  * highest level are a single PSM.  Nested groups of type = support
