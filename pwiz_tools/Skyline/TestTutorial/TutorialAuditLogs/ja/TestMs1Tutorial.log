@@ -3,8 +3,8 @@ Summary   : スペクトルライブラリ「Ms1FilterTutorial」が追加され
 All Info  :
 スペクトルライブラリ「Ms1FilterTutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："100803_0001_MCF7_TiB_L.group.xml"が含まれています
-スペクトルライブラリを構築>ファイルを検索："100803_0005b_MCF7_TiTip3.group.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "100803_0001_MCF7_TiB_L.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "100803_0005b_MCF7_TiTip3.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドはなしです
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
@@ -13,8 +13,16 @@ All Info  :
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "100803_0001_MCF7_TiB_L.group.xml",
-    "100803_0005b_MCF7_TiTip3.group.xml"
+    {
+        File = "100803_0001_MCF7_TiB_L.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    },
+    {
+        File = "100803_0005b_MCF7_TiTip3.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,

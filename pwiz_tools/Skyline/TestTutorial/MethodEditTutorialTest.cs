@@ -76,17 +76,18 @@ namespace pwiz.SkylineTestTutorial
         {
             // Creating a MS/MS Spectral Library, p. 1
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
             {
                 buildLibraryDlg.LibraryPath = TestFilesDirs[0].GetTestPath(@"MethodEdit\Library\"); // Not L10N
                 buildLibraryDlg.LibraryName = YEAST_ATLAS;
-                buildLibraryDlg.LibraryCutoff = 0.95;
                 buildLibraryDlg.OkWizardPage();
-                IList<string> inputPaths = new List<string>
-                 {
-                     TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") // Not L10N
-                 };
-                buildLibraryDlg.AddInputFiles(inputPaths);
+                buildLibraryDlg.AddInputFiles(new[] { TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") }); // Not L10N
+            });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            RunUI(() =>
+            {
+                buildLibraryDlg.Grid.SetScoreThreshold(0.95);
                 buildLibraryDlg.OkWizardPage();
             });
 

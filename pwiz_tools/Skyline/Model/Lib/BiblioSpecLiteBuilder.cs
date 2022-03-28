@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -88,6 +90,7 @@ namespace pwiz.Skyline.Model.Lib
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
         public double? CutOffScore { get; set; }
+        public Dictionary<string, double> ScoreThresholdsByFile { get; set; }
         public string Id { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
@@ -149,6 +152,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 IncludeAmbiguousMatches = IncludeAmbiguousMatches,
                 CutOffScore = CutOffScore,
+                ScoreThresholdsByFile = ScoreThresholdsByFile,
                 Id = Id,
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
                 DebugMode = DebugMode,
@@ -289,5 +293,44 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static string BiblioSpecSupportedFileExtensions => @"mz5, mzML, raw, wiff, d, lcd, mzXML, cms2, ms2, or mgf";
+
+        public static double? GetDefaultScoreThreshold(string scoreName, double? defaultThreshold = null)
+        {
+            foreach (var s in Settings.Default.BlibLibraryThresholds ?? new StringCollection())
+            {
+                var parsed = ParseScoreThresholdSetting(s);
+                if (parsed != null && Equals(parsed.Item1, scoreName))
+                    return parsed.Item2;
+            }
+            return defaultThreshold;
+        }
+
+        public static void SetDefaultScoreThreshold(string scoreName, double? threshold)
+        {
+            for (var i = 0; i < Settings.Default.BlibLibraryThresholds?.Count; i++)
+            {
+                var parsed = ParseScoreThresholdSetting(Settings.Default.BlibLibraryThresholds[i]);
+                if (Equals(parsed.Item1, scoreName))
+                {
+                    if (threshold.HasValue)
+                        Settings.Default.BlibLibraryThresholds[i] = scoreName + @"=" + threshold.Value.ToString(CultureInfo.InvariantCulture);
+                    else
+                        Settings.Default.BlibLibraryThresholds.RemoveAt(i);
+                    return;
+                }
+            }
+            if (Settings.Default.BlibLibraryThresholds == null)
+                Settings.Default.BlibLibraryThresholds = new StringCollection();
+            if (threshold.HasValue)
+                Settings.Default.BlibLibraryThresholds.Add(scoreName + @"=" + threshold.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        private static Tuple<string, double> ParseScoreThresholdSetting(string s)
+        {
+            var i = s.IndexOf('=');
+            return i >= 0 && double.TryParse(s.Substring(i + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out var threshold)
+                ? Tuple.Create(s.Substring(0, i), threshold)
+                : null;
+        }
     }
 }

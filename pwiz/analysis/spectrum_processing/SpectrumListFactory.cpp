@@ -222,8 +222,7 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
     cout << assumeSorted << endl;
     if (open!='[' || comma!=',' || close!=']')
     {
-        cerr << "scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored." << endl;
-        return SpectrumListPtr();
+        throw user_error("scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored.");
     }
 
     return SpectrumListPtr(new
@@ -233,7 +232,7 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 UsageInfo usage_scanTime = {"<scan_time_range>",
     "This filter selects only spectra within a given time range.\n"
     "  <scan_time_range> is a time range, specified in seconds.  For example, to select only spectra within the "
-    "second minute of the run, use \"scanTime [60-119.99]\"."};
+    "second minute of the run, use \"scanTime [60,119.99]\"."};
 
 SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -797,8 +796,7 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
 
     if ((lockmassMz <= 0 && lockmassMzNegIons <= 0) || lockmassTolerance <= 0)
     {
-        cerr << "lockmassMz and lockmassTolerance must be positive real numbers" << endl;
-        return SpectrumListPtr();
+        throw user_error("lockmassMz and lockmassTolerance must be positive real numbers");
     }
     else if (lockmassMzNegIons <= 0)
         lockmassMzNegIons = lockmassMz;
@@ -831,8 +829,7 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
         demuxParams.nnlsEps <= 0 ||
         demuxParams.demuxBlockExtra < 0)
     {
-        cerr << "massError, nnlsEps must be positive real numbers; demuxBlockExtra must be a positive real number or 0" << endl;
-        return SpectrumListPtr();
+        throw user_error("massError, nnlsEps must be positive real numbers; demuxBlockExtra must be a positive real number or 0");
     }
 
     demuxParams.optimization = SpectrumList_Demux::Params::stringToOptimization(optimization);
@@ -888,8 +885,7 @@ SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg, pwi
 
     if (open!='[' || comma!=',' || close!=']')
     {
-        cerr << "mzWindow filter expected an mzrange formatted something like \"[123.4,567.8]\"" << endl;
-        return SpectrumListPtr();
+        throw user_error("mzWindow filter expected an mzrange formatted something like \"[123.4,567.8]\"");
     }
 
     return SpectrumListPtr(new SpectrumList_MZWindow(msd.run.spectrumListPtr, mzLow, mzHigh));
@@ -1393,8 +1389,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
         byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff;
     else
     {
-        cerr << "unknown ThresholdFilter type " << byTypeArg << endl;
-        return SpectrumListPtr();
+        throw user_error("unknown ThresholdFilter type " + byTypeArg);
     }
 
     ThresholdFilter::ThresholdingOrientation orientation;
@@ -1404,7 +1399,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
         orientation = ThresholdFilter::Orientation_LeastIntense;
     else
     {
-        cerr << "unknown ThresholdFilter orientation " << orientationArg << endl;
+        throw user_error("unknown ThresholdFilter orientation " + orientationArg);
         return SpectrumListPtr();
     }
 
@@ -1656,8 +1651,30 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper, pwiz::util::I
 PWIZ_API_DECL
 void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappers, pwiz::util::IterationListenerRegistry* ilr)
 {
-    for (vector<string>::const_iterator it=wrappers.begin(); it!=wrappers.end(); ++it)
-        wrap(msd, *it, ilr);
+    // validate all filters at once, combining multiple exceptions into a single exception;
+    // pure user_errors are kept separate so they don't prompt the user to submit a bug report
+
+    stringstream userErrors;
+    stringstream otherErrors;
+    for (vector<string>::const_iterator it = wrappers.begin(); it != wrappers.end(); ++it)
+    {
+        try
+        {
+            wrap(msd, *it, ilr);
+        }
+        catch (user_error& e)
+        {
+            userErrors << e.what() << "\n";
+        }
+        catch (exception& e)
+        {
+            otherErrors << e.what() << "\n";
+        }
+    }
+    if (!otherErrors.str().empty())
+        throw runtime_error(otherErrors.str() + userErrors.str());
+    if (!userErrors.str().empty())
+        throw user_error(userErrors.str());
 }
 
 
@@ -1669,7 +1686,8 @@ string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt
 
     oss << endl;
 
-    oss << "FILTER OPTIONS" << endl;
+    oss << "Spectrum List Filters\n"
+           "=====================\n";
     if (!detailedHelp)
     {
         if (morehelp_prompt)

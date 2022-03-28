@@ -42,6 +42,7 @@
 using namespace std;
 using boost::format;
 using boost::lexical_cast;
+using pwiz::svm;
 namespace bio = boost::iostreams;
 
 
