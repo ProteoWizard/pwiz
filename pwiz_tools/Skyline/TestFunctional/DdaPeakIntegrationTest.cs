@@ -95,7 +95,6 @@ namespace pwiz.SkylineTestFunctional
                                 continue;
                             }
                             Assert.AreEqual(0, transitionChromInfo.BackgroundArea);
-                            Console.Out.Write("hello");
                         }
                     }
                 }
