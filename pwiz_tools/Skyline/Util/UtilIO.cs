@@ -447,8 +447,9 @@ namespace pwiz.Skyline.Util
                         return false;
                     }
 
-                    FormUtil.LOG_FUNCTION?.Invoke("File {0} has been modified. Expected write time: {1} Actual write time: {2} Time difference {3} Current time: {4}",
-                        new object[]{FilePath, FileTime, currentWriteTime, timeDifference, DateTime.Now});
+                    bool fileExists = File.Exists(FilePath);
+                    FormUtil.LOG_FUNCTION?.Invoke("File {0} has been modified. Expected write time: {1} Actual write time: {2} Time difference {3} Current time: {4} FileExists: {5}",
+                        new object[]{FilePath, FileTime, currentWriteTime, timeDifference, DateTime.Now, fileExists});
                     return true;
                 }
                 catch (UnauthorizedAccessException uae)
