@@ -105,12 +105,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
-                var candidatePeakData =
-                    new CandidatePeakGroupData(null, minStartTime, maxEndTime, true, MakePeakScore(scores));
-=======
                 var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores));
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
             }
 
@@ -251,16 +246,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
-            return new CandidatePeakGroupData(peakIndex, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
-=======
-            var model = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
-            if (model == null || !model.IsTrained)
-            {
-                model = LegacyScoringModel.DEFAULT_MODEL;
-            }
-            return new CandidatePeakGroupData(peakIndex, apexTime, minStartTime, maxEndTime, isChosen, MakePeakScore(featureValues));
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
+            return new CandidatePeakGroupData(peakIndex, apexTime, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
         }
 
         private PeakGroupScore MakePeakScore(FeatureScores featureScores)
@@ -276,13 +262,9 @@ namespace pwiz.Skyline.Model.Results
         internal IEnumerable<FeatureScores> CalculateChromatogramGroupScores(
             IList<TransitionGroupDocNode> transitionGroups, IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
-<<<<<<< HEAD:pwiz_tools/Skyline/Model/Results/OnDemandFeatureCalculator.cs
             var context = new PeakScoringContext(Settings);
-=======
-            var context = new PeakScoringContext(Document);
             if (chromatogramGroupInfos.IsNullOrEmpty())
                 yield break;
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph):pwiz_tools/Skyline/Model/Results/OnDemandScoreCalculator.cs
             var summaryData = new PeakFeatureEnumerator.SummaryPeptidePeakData(
                 Settings, PeptideDocNode, transitionGroups, Settings.MeasuredResults.Chromatograms[ReplicateIndex],
                 ChromFileInfo, chromatogramGroupInfos);

@@ -2233,11 +2233,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-<<<<<<< HEAD
         ///   Looks up a localized string similar to The maximum end time of the individual peaks in the peak group..
-=======
-        ///   Looks up a localized string similar to The maximum integration ending time of all transitions in a peak group.
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph)
         /// </summary>
         public static string PeakGroupEndTime {
             get {
@@ -2246,36 +2242,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-<<<<<<< HEAD
-        ///   Looks up a localized string similar to The minimum start time of the individual peaks in the peak group..
-        /// </summary>
-        public static string PeakGroupStartTime {
-            get {
-                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
-=======
         ///   Looks up a localized string similar to The retention time of the peak with the maximum height of all transitions in a peak group.
         /// </summary>
         public static string PeakGroupRetentionTime {
             get {
                 return ResourceManager.GetString("PeakGroupRetentionTime", resourceCulture);
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph)
             }
         }
         
         /// <summary>
-<<<<<<< HEAD
+        ///   Looks up a localized string similar to The minimum start time of the individual peaks in the peak group..
+        /// </summary>
+        public static string PeakGroupStartTime {
+            get {
+                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The estimate q-value (false discovery rate) that a peak with this score would get if it were the peak chosen by Skyline..
         /// </summary>
         public static string PeakQValue {
             get {
                 return ResourceManager.GetString("PeakQValue", resourceCulture);
-=======
-        ///   Looks up a localized string similar to The minimum integration starting time of all transitions in a peak group.
-        /// </summary>
-        public static string PeakGroupStartTime {
-            get {
-                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph)
             }
         }
         

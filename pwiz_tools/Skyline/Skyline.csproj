@@ -457,8 +457,6 @@
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

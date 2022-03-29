@@ -868,6 +868,9 @@ being performed in the replicate.</value>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
   </data>
+  <data name="PeakGroupRetentionTime">
+    <value>The retention time of the peak with the maximum height of all transitions in a peak group</value>
+  </data>
   <data name="PeakGroupStartTime">
     <value>The minimum start time of the individual peaks in the peak group.</value>
   </data>
@@ -1478,45 +1481,4 @@ higher than the other extent.</value>
   <data name="AllInfoMessage">
     <value>Detailed description of the change</value>
   </data>
-<<<<<<< HEAD
-=======
-  <data name="User">
-    <value>User who made the change</value>
-  </data>
-  <data name="Reason">
-    <value>Reason the user gave for making the change</value>
-  </data>
-  <data name="DetailReason">
-    <value>Detailed reason the user gave for making the change</value>
-  </data>
-  <data name="SkylineVersion">
-    <value>Version of Skyline in which the change was made</value>
-  </data>
-  <data name="Details">
-    <value>List of detailed change messages and reasons</value>
-  </data>
-  <data name="AuditLogRow">
-    <value>Row of audit log information</value>
-  </data>
-  <data name="AuditLogRowId">
-    <value>Id of the entry</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>Id of the detailed message</value>
-  </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>A free text identifier for referring to a sample (which may be shared among multiple files). Read from the "sample id" attribute in an imported result file</value>
-  </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>The instrument serial number read from an imported result file</value>
-  </data>
-    <value>The maximum integration ending time of all transitions in a peak group</value>
-  </data>
-  <data name="PeakGroupRetentionTime" xml:space="preserve">
-    <value>The retention time of the peak with the maximum height of all transitions in a peak group</value>
-  </data>
-  <data name="PeakGroupStartTime" xml:space="preserve">
-    <value>The minimum integration starting time of all transitions in a peak group</value>
-  </data>
->>>>>>> 42f1b7866 (- Added a Peak Group Retention Time field to make it easier to match peaks with the RT annotations in the chrom graph)
 </root>
