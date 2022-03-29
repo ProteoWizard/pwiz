@@ -37,6 +37,14 @@ namespace pwiz.Skyline.Model.Results
 {
     internal sealed class ChromCacheBuilder : ChromCacheWriter
     {
+        /// <summary>
+        /// This flag controls whether the peaks for iRT peptides get re-picked after the
+        /// iRT predictor is trained. This is currently not ready for prime-time, but
+        /// it tools some effort to get working at all. So, keeping the code around to
+        /// make it possible until we decide when/if it might be useful.
+        /// </summary>
+        public static bool REPICK_IRTS_AFTER_TRAINING => false;
+
         // Lock on this to access these variables
         private readonly SrmDocument _document;
         private FileBuildInfo _currentFileInfo;
@@ -96,6 +104,9 @@ namespace pwiz.Skyline.Model.Results
             GetPeptideRetentionTimes(chromDataSets);
             chromDataSets.PickChromatogramPeaks();
             StorePeptideRetentionTime(chromDataSets);
+
+            if (chromDataSets.IsDelayedWrite)
+                return;
 
             // Only one writer at a time.
             lock (_writeLock)
@@ -385,23 +396,7 @@ namespace pwiz.Skyline.Model.Results
             bool doFirstPass = predict.RetentionTime != null && predict.RetentionTime.IsAutoCalculated;
             if (doFirstPass)
             {
-                for (int i = 0; i < listChromData.Count; i++)
-                {
-                    var pepChromData = listChromData[i];
-                    if (IsFirstPassPeptide(pepChromData))
-                    {
-                        if (pepChromData.Load(provider))
-                            PostChromDataSet(pepChromData);
-
-                        // Release the reference to the chromatogram data set so that
-                        // it can be garbage collected after it has been written
-                        listChromData[i] = null;
-                    }
-                }
-
-                // All threads must complete scoring before we complete the first pass.
-                _chromDataSets.Wait();
-                if (!_retentionTimePredictor.CreateConversion())
+                if (!CreateRetentionTimeEquation(provider, listChromData))
                 {
                     var transitionFullScan = _document.Settings.TransitionSettings.FullScan;
                     if (transitionFullScan.IsEnabled && transitionFullScan.RetentionTimeFilterType ==
@@ -480,6 +475,53 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
+        }
+
+        private bool CreateRetentionTimeEquation(ChromDataProvider provider,
+            IList<PeptideChromDataSets> listChromData)
+        {
+            // Train once without writing to disk, re-score and write the peaks using the trained
+            // predictor, and then retrain the predictor for all subsequent use
+            return CreateRetentionTimeEquationSub(provider, listChromData, true) &&
+                   CreateRetentionTimeEquationSub(provider, listChromData, false);
+        }
+
+        private bool CreateRetentionTimeEquationSub(ChromDataProvider provider, IList<PeptideChromDataSets> listChromData, bool delayWrite)
+        {
+            for (int i = 0; i < listChromData.Count; i++)
+            {
+                var pepChromData = listChromData[i];
+                if (IsFirstPassPeptide(pepChromData))
+                {
+                    pepChromData.IsDelayedWrite = delayWrite && REPICK_IRTS_AFTER_TRAINING;
+
+                    if (delayWrite)
+                    {
+                        if (pepChromData.Load(provider))
+                            PostChromDataSet(pepChromData);
+                    }
+                    else
+                    {
+                        if (REPICK_IRTS_AFTER_TRAINING)
+                        {
+                            // Remove original peak choices before re-scoring
+                            foreach (var chromDataSet in pepChromData.DataSets)
+                                chromDataSet.TruncatePeakSets(0);
+
+                            PostChromDataSet(pepChromData);
+                        }
+
+                        // Release the reference to the chromatogram data set so that
+                        // it can be garbage collected after it has been written
+                        listChromData[i] = null;
+                    }
+                }
+            }
+
+            // All threads must complete scoring before calculating the regression
+            _chromDataSets.Wait();
+
+            return _retentionTimePredictor.CreateConversion();
         }
 
         private bool IsFirstPassPeptide(PeptideChromDataSets pepChromData)

@@ -244,6 +244,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         /// <summary>
+        /// Get ms2 ions used in dotp calculation which may differ from ms2 peak area ions for DDA
+        /// </summary>
+        /// <typeparam name="TData">Peak scoring data type (summary or detail)</typeparam>
+        /// <param name="tranGroupPeakDatas">Transition group peak datas to be scored</param>
+        /// <returns></returns>
+        public static IList<ITransitionPeakData<TData>> GetMs2DotpIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            // Copied because using a lambda/delegate causes allocation in this case (profiled)
+            if (tranGroupPeakDatas.Count == 1)
+                return tranGroupPeakDatas[0].Ms2TranstionDotpData;
+            var listTrans = new List<ITransitionPeakData<TData>>();
+            foreach (var transitionGroupPeakData in tranGroupPeakDatas)
+                listTrans.AddRange(transitionGroupPeakData.Ms2TranstionDotpData);
+            return listTrans;
+        }
+
+        /// <summary>
         /// Get ms2 ions if there are any available, otherwise get the ms1 ions
         /// </summary>
         /// <typeparam name="TData">Peak scoring data type (summary or detail)</typeparam>
@@ -274,7 +291,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static float CalculateIdotp(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = GetAnalyteGroups(summaryPeakData);
+            var tranGroupPeakDatas = GetBestAvailableGroups(summaryPeakData);
 
             if (tranGroupPeakDatas.Count == 0)
                 return float.NaN;
@@ -399,8 +416,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
 
-            // If there are no light transition groups with library intensities,
-            // then this score does not apply.
+            // If there are no transition groups with library intensities, then this score does not apply.
             if (tranGroupPeakDatas.Count == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
@@ -511,14 +527,27 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
-            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas).Any() ? 
-                base.Calculate(context, summaryPeakData) : 
-                MQuestHelpers.CalculateIdotp(context, summaryPeakData);
+            if (MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas).Any())
+                return base.Calculate(context, summaryPeakData);
+
+            float feature = MQuestHelpers.CalculateIdotp(context, summaryPeakData);
+            // If there are MS2 ions for only dotp values (as in DDA) then add the dotp values together
+            if (MQuestHelpers.GetMs2DotpIonTypes(tranGroupPeakDatas).Any())
+            {
+                // For DDA MS2 spectra may not be sampled at all for the peak of interest
+                // However, when they are sampled, they are usually highly specific because
+                // of the narrow isolation range. So, avoid adding to this score unless
+                // the match is pretty good.
+                float dotp = base.Calculate(context, summaryPeakData);
+                if (dotp >= 0.75)
+                    feature += dotp;
+            }
+            return feature;
         }
 
         protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
         {
-            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas);
+            return MQuestHelpers.GetMs2DotpIonTypes(tranGroupPeakDatas);
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
