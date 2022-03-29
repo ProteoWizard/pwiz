@@ -215,6 +215,7 @@ namespace pwiz.SkylineTest.Reporting
         public IEnumerable<ColumnDescriptor> EnumerateAllColumnDescriptors(DataSchema dataSchema,
             ICollection<Type> startingTypes)
         {
+            var startingTypesSet = new HashSet<Type>(startingTypes);
             var typeQueue = new Queue<Type>(startingTypes);
             var processedTypes = new HashSet<Type>();
             while (typeQueue.Count > 0)
@@ -228,6 +229,14 @@ namespace pwiz.SkylineTest.Reporting
                 foreach (var uiMode in UiModes.AllModes)
                 {
                     var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
+                    if (startingTypesSet.Contains(type) && typeof(ILinkValue).IsAssignableFrom(type))
+                    {
+                        // If the root column is selectable, make sure that its caption is localized
+                        if (type != typeof(SkylineDocument))
+                        {
+                            yield return rootColumn;
+                        }
+                    }
                     foreach (var child in GetChildColumns(rootColumn))
                     {
                         typeQueue.Enqueue(child.PropertyType);

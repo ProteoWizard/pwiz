@@ -209,6 +209,9 @@ maximum intensity for the precursor.</value>
   <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>A set of peaks with the same start and end time from the transition chromatograms of a set of precursors belonging to the same peptide or molecule.</value>
+  </data>
   <data name="CAS" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>

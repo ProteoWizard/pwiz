@@ -219,6 +219,9 @@
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
+  <data name="CandidatePeakGroup">
+	  <value>Candidate Peak Group</value>
+  </data>
   <data name="CAS">
     <value>CAS</value>
   </data>
