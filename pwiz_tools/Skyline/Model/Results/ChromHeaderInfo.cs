@@ -1072,159 +1072,29 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
-        /// <summary>
-        /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
-        /// </summary>
-        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
         {
-            int pointsAcrossThePeak = 0;
-            double totalArea = 0;
-            double totalMassError = 0;
-            double apexTime = 0;
-            double apexHeight = 0;
-
-            int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
-            if (startIndex < 0)
-            {
-                startIndex = ~startIndex;
-            }
-
-            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
-            {
-                double time = timeIntensities.Times[index];
-                double prevTime = startTime;
-                if (index > 0)
-                {
-                    prevTime = Math.Max(prevTime, (time + timeIntensities.Times[index - 1]) / 2);
-                }
-
-                double nextTime = endTime;
-                if (index < timeIntensities.NumPoints - 1)
-                {
-                    nextTime = Math.Min(nextTime, (time + timeIntensities.Times[index + 1]) / 2);
-                }
-
-                float intensity = timeIntensities.Intensities[index];
-                if (nextTime > prevTime)
-                {
-                    double width = nextTime - prevTime;
-                    double area = intensity * width * 60;
-                    totalArea += area;
-                    if (timeIntensities.MassErrors != null)
-                    {
-                        totalMassError += area * timeIntensities.MassErrors[index];
-                    }
-                }
-
-                if (startTime <= time && endTime >= time)
-                {
-                    pointsAcrossThePeak++;
-                    if (intensity > apexHeight)
-                    {
-                        apexHeight = intensity;
-                        apexTime = time;
-                    }
-                }
-
-                if (time >= endTime)
-                {
-                    break;
-                }
-            }
-
-            // Determine the full width at half max
-            bool fwhmDegenerate = false;
-            double? halfMaxStart = null;
-            double? halfMaxEnd = null;
-            var halfHeight = apexHeight / 2;
-            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
-            {
-                double time = timeIntensities.Times[index];
-                double intensity = timeIntensities.Intensities[index];
-                if (intensity >= halfHeight)
-                {
-                    if (!halfMaxStart.HasValue)
-                    {
-                        halfMaxStart = time;
-                        if (index > startIndex)
-                        {
-                            if (intensity > halfHeight)
-                            {
-                                double prevTime = timeIntensities.Times[index - 1];
-                                double prevIntensity = timeIntensities.Intensities[index - 1];
-                                if (prevIntensity < halfHeight)
-                                {
-                                    var fraction = (intensity - halfHeight) / (intensity - prevIntensity);
-                                    halfMaxStart = (1 - fraction) * time + fraction * prevTime;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            fwhmDegenerate = true;
-                        }
-                    }
-
-                    halfMaxEnd = time;
-                    if (index < timeIntensities.NumPoints - 1)
-                    {
-                        double nextTime = timeIntensities.Times[index + 1];
-                        if (nextTime <= endTime)
-                        {
-                            double nextIntensity = timeIntensities.Intensities[index + 1];
-                            if (nextIntensity < halfHeight)
-                            {
-                                var fraction = (intensity - halfHeight) / (intensity - nextIntensity);
-                                halfMaxEnd = (1 - fraction) * time + fraction * nextTime;
-                            }
-                        }
-                        else
-                        {
-                            fwhmDegenerate = true;
-                        }
-                    }
-                    else
-                    {
-                        fwhmDegenerate = true;
-                    }
-                }
-                if (time >= endTime)
-                {
-                    break;
-                }
-            }
-
-            _area = (float) totalArea;
+            _retentionTime = retentionTime;
             _startTime = startTime;
             _endTime = endTime;
-            _height = (float) apexHeight;
-            _backgroundArea = 0;
-            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
-            _retentionTime = (float) apexTime;
-            _flagValues = flagValues;
-            if (halfMaxStart.HasValue)
+            _area = area;
+            _backgroundArea = backgroundArea;
+            _height = height;
+            _fwhm = fwhm;
+            if (massError.HasValue)
             {
-                _fwhm = (float) (halfMaxEnd - halfMaxStart);
+                flagValues |= FlagValues.mass_error_known;
+                _massError = To10x(massError.Value);
             }
             else
             {
-                _fwhm = 0;
-            }
-            if (null != timeIntensities.MassErrors && totalArea > 0)
-            {
-                _flagValues |= FlagValues.mass_error_known;
-                _massError = To10x(totalMassError / totalArea);
-            }
-            else
-            {
-                _flagValues &= ~FlagValues.mass_error_known;
+                flagValues &= ~FlagValues.mass_error_known;
                 _massError = 0;
             }
 
-            if (fwhmDegenerate)
-            {
-                _flagValues |= FlagValues.degenerate_fwhm;
-            }
+            _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
+            _flagValues = flagValues;
         }
 
         public ChromPeak(IPeakFinder finder,
@@ -1448,6 +1318,154 @@ namespace pwiz.Skyline.Model.Results
                 ItemSizeOnDisk = chromPeakSize,
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
             };
+        }
+
+        public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
+            float endTime, FlagValues flags)
+        {
+            int pointsAcrossPeak = 0;
+            int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (startIndex < 0)
+            {
+                startIndex = ~startIndex;
+                timeIntensities = timeIntensities.InterpolateTime(startTime);
+                Assume.AreEqual(startTime, timeIntensities.Times[startIndex]);
+                pointsAcrossPeak--;
+            }
+
+            int endIndex = CollectionUtil.BinarySearch(timeIntensities.Times, endTime);
+            if (endIndex < 0)
+            {
+                endIndex = ~endIndex;
+                timeIntensities = timeIntensities.InterpolateTime(endTime);
+                Assume.AreEqual(endTime, timeIntensities.Times[endIndex]);
+                pointsAcrossPeak--;
+            }
+            pointsAcrossPeak += endIndex - startIndex + 1;
+            double totalArea = 0;
+            double totalMassError = 0;
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                double width = (timeIntensities.Times[i + 1] - timeIntensities.Times[i]) * 60;
+                double intensity1 = timeIntensities.Intensities[i];
+                double intensity2 = timeIntensities.Intensities[i + 1];
+                totalArea += (intensity1 + intensity2) * width / 2;
+                if (timeIntensities.MassErrors != null)
+                {
+                    totalMassError +=
+                        (intensity1 * timeIntensities.MassErrors[i] + intensity2 * timeIntensities.MassErrors[i + 1]) *
+                        width / 2;
+                }
+            }
+
+            double apexTime, apexHeight;
+            if (totalArea == 0)
+            {
+                apexTime = (startTime + endTime) / 2;
+                apexHeight = 0;
+            }
+            else
+            {
+                apexHeight = timeIntensities.Intensities[startIndex];
+                apexTime = timeIntensities.Times[startIndex];
+                for (int i = startIndex + 1; i <= endIndex; i++)
+                {
+                    if (timeIntensities.Intensities[i] > apexHeight)
+                    {
+                        apexTime = timeIntensities.Times[i];
+                        apexHeight = timeIntensities.Intensities[i];
+                    }
+                }
+            }
+            // Determine the full width at half max
+            bool fwhmDegenerate = false;
+            double? halfMaxStart = null;
+            double? halfMaxEnd = null;
+            var halfHeight = apexHeight / 2;
+            for (int index = startIndex; index <= endIndex; index++)
+            {
+                double time = timeIntensities.Times[index];
+                double intensity = timeIntensities.Intensities[index];
+                if (intensity >= halfHeight)
+                {
+                    if (!halfMaxStart.HasValue)
+                    {
+                        halfMaxStart = time;
+                        if (index > startIndex)
+                        {
+                            if (intensity > halfHeight)
+                            {
+                                double prevTime = timeIntensities.Times[index - 1];
+                                double prevIntensity = timeIntensities.Intensities[index - 1];
+                                if (prevIntensity < halfHeight)
+                                {
+                                    var fraction = (intensity - halfHeight) / (intensity - prevIntensity);
+                                    halfMaxStart = (1 - fraction) * time + fraction * prevTime;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+
+                    halfMaxEnd = time;
+                    if (index < timeIntensities.NumPoints - 1)
+                    {
+                        double nextTime = timeIntensities.Times[index + 1];
+                        if (nextTime <= endTime)
+                        {
+                            double nextIntensity = timeIntensities.Intensities[index + 1];
+                            if (nextIntensity < halfHeight)
+                            {
+                                var fraction = (intensity - halfHeight) / (intensity - nextIntensity);
+                                halfMaxEnd = (1 - fraction) * time + fraction * nextTime;
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+                    else
+                    {
+                        fwhmDegenerate = true;
+                    }
+                }
+                if (time >= endTime)
+                {
+                    break;
+                }
+            }
+
+            if (fwhmDegenerate)
+            {
+                flags |= FlagValues.degenerate_fwhm;
+            }
+            else
+            {
+                flags &= ~FlagValues.degenerate_fwhm;
+            }
+
+            float fwhm;
+            if (halfMaxStart.HasValue)
+            {
+                fwhm = (float)(halfMaxEnd - halfMaxStart);
+            }
+            else
+            {
+                fwhm = 0;
+            }
+
+            double? massError = null;
+            if (timeIntensities.MassErrors != null && totalArea > 0)
+            {
+                massError = totalMassError / totalArea;
+            }
+
+            return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
+                pointsAcrossPeak);
         }
 
         #region Fast file I/O
@@ -2835,13 +2853,10 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(FullScanAcquisitionMethod acquisitionMethod, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(TimeIntensities)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = TimeIntervals
-            };
+            var peakIntegrator = new PeakIntegrator(acquisitionMethod, TimeIntervals, Source, RawTimeIntensities,
+                TimeIntensities, null);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
 
