@@ -540,6 +540,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             TransitionPeakData = ConvertTransitionPeakDatas(_groupPeakData.TransitionPeakData);
             Ms1TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms1TranstionPeakData);
             Ms2TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms2TranstionPeakData);
+            Ms2TranstionDotpData = ConvertTransitionPeakDatas(_groupPeakData.Ms2TranstionDotpData);
         }
 
         private readonly ITransitionGroupPeakData<TData> _groupPeakData;
@@ -553,6 +554,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public IList<ITransitionPeakData<ISummaryPeakData>> Ms1TranstionPeakData { get; private set; }
 
         public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionPeakData { get; private set; }
+
+        public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionDotpData { get; private set; }
 
         public IList<ITransitionPeakData<ISummaryPeakData>> DefaultTranstionPeakData
         {
@@ -618,6 +621,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         IList<ITransitionPeakData<TData>> Ms1TranstionPeakData { get; }
 
         IList<ITransitionPeakData<TData>> Ms2TranstionPeakData { get; }
+
+        IList<ITransitionPeakData<TData>> Ms2TranstionDotpData { get; }
 
         IList<ITransitionPeakData<TData>> DefaultTranstionPeakData { get; }
     }
