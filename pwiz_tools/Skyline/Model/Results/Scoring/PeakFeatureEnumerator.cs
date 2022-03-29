@@ -510,8 +510,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
-                        if (isDda && !nodeTran.IsMs1)
-                            continue;
                         var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
                         if (tranInfo == null)
                             continue;
@@ -530,7 +528,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     }
                     TransitionPeakData = listPeakData.ToArray();
                     Ms1TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, true);
-                    Ms2TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, false);
+                    Ms2TranstionPeakData = Ms2TranstionDotpData =
+                        GetTransitionTypePeakData(ms1Count, ms2Count, false);
+                    if (isDda)
+                        Ms2TranstionPeakData = Array.Empty<ITransitionPeakData<ISummaryPeakData>>();
                 }
             }
 
@@ -563,6 +564,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             public IList<ITransitionPeakData<ISummaryPeakData>> TransitionPeakData { get; private set; }
             public IList<ITransitionPeakData<ISummaryPeakData>> Ms1TranstionPeakData { get; private set; }
             public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionDotpData { get; private set; }
 
             public IList<ITransitionPeakData<ISummaryPeakData>> DefaultTranstionPeakData
             {

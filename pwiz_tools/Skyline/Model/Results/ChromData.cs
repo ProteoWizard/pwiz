@@ -237,6 +237,13 @@ namespace pwiz.Skyline.Model.Results
 
         private IPeakFinder Finder { get; set; }
 
+        public PeakIntegrator MakePeakIntegrator(FullScanAcquisitionMethod acquisitionMethod,
+            TimeIntervals timeIntervals)
+        {
+            return new PeakIntegrator(acquisitionMethod, timeIntervals, Key.Source, RawTimeIntensities, TimeIntensities,
+                Finder);
+        }
+
         public ChromKey Key { get; private set; }
         public ChromExtra Extra { get; private set; }
         public TransitionDocNode DocNode { get; set; }
@@ -301,7 +308,7 @@ namespace pwiz.Skyline.Model.Results
             return Finder.GetPeak(startIndex, endIndex);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals, out IFoundPeak peak)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals, out IFoundPeak peak)
         {
             // Reintegrate all peaks to the max peak, even the max peak itself, since its boundaries may
             // have been extended from the Crawdad originals.
@@ -311,11 +318,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
 
-            var peakIntegrator = new PeakIntegrator(TimeIntensities, Finder)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = timeIntervals
-            };
+            var peakIntegrator = MakePeakIntegrator(acquisitionMethod, timeIntervals);
             var tuple = peakIntegrator.IntegrateFoundPeak(peakMax, flags);
             peak = tuple.Item2;
             return tuple.Item1;
@@ -412,9 +415,9 @@ namespace pwiz.Skyline.Model.Results
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex], Data.Times[Peak.TimeIndex]);
         }
 
-        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, TimeIntervals timeIntervals)
+        public ChromPeak CalcChromPeak(IFoundPeak peakMax, ChromPeak.FlagValues flags, FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals)
         {
-            _chromPeak = Data.CalcChromPeak(peakMax, flags, timeIntervals, out _crawPeak);
+            _chromPeak = Data.CalcChromPeak(peakMax, flags, acquisitionMethod, timeIntervals, out _crawPeak);
             return _chromPeak;
         }
 
