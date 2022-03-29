@@ -294,7 +294,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 0;
             }
+
             double total = 0;
+            
             for (int i = startIndex + 1; i < endIndex; i++)
             {
                 total += Intensities[i] * (Times[i + 1] - Times[i - 1]) / 2;
@@ -316,6 +318,86 @@ namespace pwiz.Skyline.Model.Results
                     iTime--;
             }
             return iTime;
+        }
+
+        /// <summary>
+        /// Return a new TimeIntensities which includes the specified time point.
+        /// The intensities and mass errors will be interpolated using the two values on either side
+        /// of the inserted time.
+        /// </summary>
+        public TimeIntensities InterpolateTime(float newTime)
+        {
+            int index = CollectionUtil.BinarySearch(Times, newTime);
+            if (index >= 0)
+            {
+                return this;
+            }
+
+            index = ~index;
+            double newIntensity;
+            double newMassError = 0;
+            int newScanId = 0;
+            if (index == 0)
+            {
+                newIntensity = Intensities[0];
+                newMassError = MassErrors?[0] ?? 0;
+                newScanId = ScanIds?[0] ?? 0;
+            }
+            else if (index >= Times.Count)
+            {
+                newIntensity = Intensities[NumPoints - 1];
+                newMassError = MassErrors?[NumPoints - 1] ?? 0;
+                newScanId = ScanIds?[NumPoints - 1] ?? 0;
+            }
+            else
+            {
+                double intensity1 = Intensities[index - 1];
+                double intensity2 = Intensities[index];
+                double time1 = Times[index - 1];
+                double time2 = Times[index];
+                double width = time2 - time1;
+                newIntensity = (intensity2 * (newTime - time1) + intensity1 * (time2 - newTime)) / width;
+                if (MassErrors != null)
+                {
+                    double massError1 = MassErrors[index - 1];
+                    double massError2 = MassErrors[index];
+                    double weight1 = intensity1 * (time2 - newTime);
+                    double weight2 = intensity2 * (newTime - time1);
+                    newMassError = (weight1 * massError1 + weight2 * massError2) / (weight1 + weight2);
+                }
+
+                if (ScanIds != null)
+                {
+                    if (newTime - time1 < time2 - newTime)
+                    {
+                        newScanId = ScanIds[index - 1];
+                    }
+                    else
+                    {
+                        newScanId = ScanIds[index];
+                    }
+                }
+            }
+
+            var newTimes = Times.ToList();
+            newTimes.Insert(index, newTime);
+            var newIntensities = Intensities.ToList();
+            newIntensities.Insert(index, (float) newIntensity);
+            IList<float> newMassErrors = null;
+            if (MassErrors != null)
+            {
+                newMassErrors = MassErrors.ToList();
+                newMassErrors.Insert(index, (float) newMassError);
+            }
+
+            IList<int> newScanIds = null;
+            if (ScanIds != null)
+            {
+                newScanIds = ScanIds.ToList();
+                newScanIds.Insert(index, newScanId);
+            }
+
+            return new TimeIntensities(newTimes, newIntensities, newMassErrors, newScanIds);
         }
     }
 }

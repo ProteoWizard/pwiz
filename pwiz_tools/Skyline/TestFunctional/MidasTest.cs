@@ -45,6 +45,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // CONSIDER(kaipot): Support for mzML?
             if (!ExtensionTestContext.CanImportAbWiff)
                 return;
 

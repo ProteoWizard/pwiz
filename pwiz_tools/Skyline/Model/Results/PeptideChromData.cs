@@ -77,6 +77,8 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
+        public bool IsDelayedWrite { get; set; }
+
         public RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
@@ -996,6 +998,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ITransitionPeakData<IDetailedPeakData>> Ms1TranstionPeakData { get; private set; }
         public IList<ITransitionPeakData<IDetailedPeakData>> Ms2TranstionPeakData { get; private set; }
+        public IList<ITransitionPeakData<IDetailedPeakData>> Ms2TranstionDotpData { get; private set; }
         public IList<ITransitionPeakData<IDetailedPeakData>> DefaultTranstionPeakData
         {
             get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
@@ -1023,13 +1026,14 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
                     if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
                     {
                         Ms2TranstionPeakData = ChromDataPeakList.EMPTY;
                     }
                     else
                     {
-                        Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                        Ms2TranstionPeakData = Ms2TranstionDotpData;
                     }
                 }
             }
