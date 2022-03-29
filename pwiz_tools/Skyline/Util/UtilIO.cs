@@ -885,6 +885,7 @@ namespace pwiz.Skyline.Util
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
+            FormUtil.LOG_FUNCTION?.Invoke("Deleting {0}", new object[]{path});
             if (ignoreExceptions)
             {
                 try
