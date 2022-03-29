@@ -448,19 +448,19 @@ namespace pwiz.Skyline.Util
                     }
 
                     bool fileExists = File.Exists(FilePath);
-                    FormUtil.LOG_FUNCTION?.Invoke("File {0} has been modified. Expected write time: {1} Actual write time: {2} Time difference {3} Current time: {4} FileExists: {5}",
+                    FormUtil.LOG_FUNCTION?.Invoke("File {0} has been modified. Expected write time: {1} Actual write time: {2} Time difference {3} Current time: {4} FileExists: {5}\r\n",
                         new object[]{FilePath, FileTime, currentWriteTime, timeDifference, DateTime.Now, fileExists});
                     return true;
                 }
                 catch (UnauthorizedAccessException uae)
                 {
-                    FormUtil.LOG_FUNCTION?.Invoke("UnauthorizedAccessException reading file {0}: {1}", new object[]{FilePath, uae});
+                    FormUtil.LOG_FUNCTION?.Invoke("UnauthorizedAccessException reading file {0}: {1}\r\n", new object[]{FilePath, uae});
                     // May have had access privileges changed, reporting IsModified better than throwing an unhandled exception
                     return true;
                 }
                 catch (IOException ioe)
                 {
-                    FormUtil.LOG_FUNCTION?.Invoke("IOException reading file {0}: {1}", new object[]{FilePath, ioe});
+                    FormUtil.LOG_FUNCTION?.Invoke("IOException reading file {0}: {1}\r\n", new object[]{FilePath, ioe});
                     // May have been removed, reporting IsModified better than throwing an unhandled exception
                     return true;
                 }
@@ -697,7 +697,7 @@ namespace pwiz.Skyline.Util
         {
             if (pathDestination.EndsWith(".skyd"))
             {
-                FormUtil.LOG_FUNCTION?.Invoke("\r\n***Begin commit {0}***\r\n", new object[]{pathDestination});
+                FormUtil.LOG_FUNCTION?.Invoke("***Begin commit {0}***\r\n", new object[]{pathDestination});
             }
             try
             {
@@ -740,7 +740,7 @@ namespace pwiz.Skyline.Util
             {
                 if (pathDestination.EndsWith(".skyd"))
                 {
-                    FormUtil.LOG_FUNCTION?.Invoke("\r\n***End commit {0}***\r\n", new object[]{pathDestination});
+                    FormUtil.LOG_FUNCTION?.Invoke("***End commit {0}***\r\n", new object[]{pathDestination});
                 }
             }
         }
@@ -885,7 +885,11 @@ namespace pwiz.Skyline.Util
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
-            FormUtil.LOG_FUNCTION?.Invoke("Deleting {0}", new object[]{path});
+            FormUtil.LOG_FUNCTION?.Invoke("Deleting {0}\r\n", new object[]{path});
+            if (Path.GetFileName(path) == "102816 Plas ApoB MIDAS testing 2_0.wiff.skyd")
+            {
+                FormUtil.LOG_FUNCTION?.Invoke("Stack trace {0}\r\n", new object[]{new StackTrace()});
+            }
             if (ignoreExceptions)
             {
                 try
