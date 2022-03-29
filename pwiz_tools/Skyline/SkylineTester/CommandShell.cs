@@ -231,7 +231,7 @@ namespace SkylineTester
                             catch (Exception e)
                             {
                                 Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
-                                CommandsDone(EXIT_TYPE.error_stop);
+                                CommandsDone(IsUnattended ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop);
                                 return;
                             }
                         }
