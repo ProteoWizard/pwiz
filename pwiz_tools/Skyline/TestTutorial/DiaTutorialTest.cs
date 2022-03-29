@@ -154,6 +154,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Spectral Library page - input files", 17);
 
             using (new WaitDocumentChange(1, true))

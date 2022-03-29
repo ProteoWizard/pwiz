@@ -107,4 +107,61 @@
   <data name="LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value" xml:space="preserve">
     <value>The string '{0}' does not match an enum value</value>
   </data>
+	<data name="BiblioSpecScoreType_DisplayName_Percolator_q_value" xml:space="preserve">
+		<value>Percolator q-value</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PeptideProphet_confidence" xml:space="preserve">
+		<value>PeptideProphet confidence</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Spectrum_Mill" xml:space="preserve">
+		<value>Spectrum Mill</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_IDPicker_FDR" xml:space="preserve">
+		<value>IDPicker FDR</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Mascot_expectation" xml:space="preserve">
+		<value>Mascot expectation</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_X__Tandem_expectation" xml:space="preserve">
+		<value>X! Tandem expectation</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_ProteinPilot_confidence" xml:space="preserve">
+		<value>ProteinPilot confidence</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Scaffold_confidence" xml:space="preserve">
+		<value>Scaffold confidence</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score" xml:space="preserve">
+		<value>Waters MSE peptide score</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_OMSSA_expectation" xml:space="preserve">
+		<value>OMSSA expectation</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_ProteinProspector_expectation" xml:space="preserve">
+		<value>ProteinProspector expectation</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_q_value" xml:space="preserve">
+		<value>q-value</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_MaxQuant_PEP" xml:space="preserve">
+		<value>MaxQuant PEP</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Morpheus_q_value" xml:space="preserve">
+		<value>Morpheus q-value</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_MSGF__q_value" xml:space="preserve">
+		<value>MSGF+ q-value</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PEAKS_confidence" xml:space="preserve">
+		<value>PEAKS confidence</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Byonic_PEP" xml:space="preserve">
+		<value>Byonic PEP</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PeptideShaker_confidence" xml:space="preserve">
+		<value>PeptideShaker confidence</value>
+	</data>
+	<data name="BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
+	  <value>Number of score types is not equal to number of rows in grid.</value>
+  </data>
 </root>

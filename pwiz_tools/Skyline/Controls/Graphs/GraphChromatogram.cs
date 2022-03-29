@@ -1269,7 +1269,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
             var displayTrans = GetDisplayTransitions(nodeGroup, displayType).ToArray();
-            bool anyQuantitative = displayTrans.Any(IsQuantitative);
             int numTrans = displayTrans.Length;
             int numSteps = 0;
             bool allowEmpty = false;
@@ -1305,6 +1304,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            bool anyQuantitative = displayTrans.Any(IsQuantitative);
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
             float maxPeakHeight = float.MinValue;
@@ -1622,7 +1622,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineItem.Line.Fill = new Fill(Color.FromArgb(fillAlpha, lineItem.Color));
             }
 
-            if (null == chromatogramInfo.TimeIntervals)
+            if (PeakIntegrator.HasBackgroundSubtraction(
+                    DocumentUI.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromatogramInfo.TimeIntervals,
+                    chromatogramInfo.Source))
             {
                 // Add peak background shading
                 float min = Math.Min(peakIntensities.First(), peakIntensities.Last());

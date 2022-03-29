@@ -9,7 +9,7 @@ Summary   : スペクトルライブラリ「TestDdaTutorial」が追加され�
 All Info  :
 スペクトルライブラリ「TestDdaTutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："QE_140221_01_UPS1_100fmolspiked.pepXML"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "QE_140221_01_UPS1_100fmolspiked.pepXML", Score type = "q-value", Score threshold = "0.05" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドはなしです
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
@@ -18,7 +18,11 @@ All Info  :
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.pepXML"
+    {
+        File = "QE_140221_01_UPS1_100fmolspiked.pepXML",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    }
 ],
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,

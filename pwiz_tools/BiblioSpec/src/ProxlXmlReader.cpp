@@ -50,6 +50,10 @@ bool ProxlXmlReader::parseFile() {
     return parse();
 }
 
+vector<PSM_SCORE_TYPE> ProxlXmlReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, PERCOLATOR_QVALUE);
+}
+
 void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
     if (state_.empty()) {
         if (isIElement("proxl_input", name)) {

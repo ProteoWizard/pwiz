@@ -100,7 +100,7 @@ SslReader::SslReader(BlibBuilder& maker,
       }
   }
 
-  bool SslReader::parseFile(){
+  void SslReader::parse() {
     Verbosity::debug("Parsing File.");
 
     // create a new DelimitedFileReader, with self as the consumer
@@ -132,6 +132,10 @@ SslReader::SslReader(BlibBuilder& maker,
 
     // parse, getting each line with addDataLine
     fileReader.parseFile(sslName_.c_str());
+  }
+
+  bool SslReader::parseFile(){
+    parse();
 
     // mark progress of each file
     if( fileMap_.size() > 1 ){
@@ -169,10 +173,18 @@ SslReader::SslReader(BlibBuilder& maker,
       buildTables(fileScoreTypes_[fileIterator->first]);
     }
 
-    
     return true;
   }
 
+  vector<PSM_SCORE_TYPE> SslReader::getScoreTypes() {
+    parse();
+
+    set<PSM_SCORE_TYPE> allScoreTypes;
+    for (map<string, PSM_SCORE_TYPE>::const_iterator i = fileScoreTypes_.begin(); i != fileScoreTypes_.end(); i++) {
+      allScoreTypes.insert(i->second);
+    }
+    return vector<PSM_SCORE_TYPE>(allScoreTypes.begin(), allScoreTypes.end());
+  }
   
   bool SslReader::getSpectrum(int identifier,
                               SpecData& returnData,

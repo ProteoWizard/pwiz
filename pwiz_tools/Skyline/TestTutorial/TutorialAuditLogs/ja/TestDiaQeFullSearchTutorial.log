@@ -9,7 +9,7 @@ Summary   : スペクトルライブラリ「DIA-QE-tutorial」が追加され�
 All Info  :
 スペクトルライブラリ「DIA-QE-tutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："interact.pep.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "interact.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0.95" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
@@ -18,7 +18,11 @@ All Info  :
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "interact.pep.xml"
+    {
+        File = "interact.pep.xml",
+        Score type = "PeptideProphet confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
 曖昧な一致を含める = 偽,
