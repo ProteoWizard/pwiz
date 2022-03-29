@@ -122,7 +122,6 @@ class RefSpectrum : public Spectrum
   string getInchiKey() const;
   string getotherKeys() const;
   const SmallMolMetadata getSmallMolMetadata() const; // Small molecule stuff
-
   
   // Sets result string to a tab seperated concatenation of molecule name, formula,
   // inchikey, otherkeys and adduct when this is non-proteomic (has no mods).

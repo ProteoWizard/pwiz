@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
             // Check for proper handling of precursor-only entries in an SSL file 
             BuildLibrary(TestFilesDir.GetTestPath("library_valid"), new[] { "ssl_small_mol.ssl" },
-                TestFilesDir.GetTestPath("ssl-small-mol.blib"), false, false, false, false, null);
+                TestFilesDir.GetTestPath("ssl-small-mol.blib"), false, false, false, false, null, false);
             RunUI(() =>
             {
                 PeptideSettingsUI.OkDialog();
