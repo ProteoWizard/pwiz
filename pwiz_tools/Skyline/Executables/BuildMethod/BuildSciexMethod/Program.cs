@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using SCIEX.Apis.Control.v1;
 using SCIEX.Apis.Control.v1.DeviceMethods;
@@ -273,7 +274,7 @@ namespace BuildSciexMethod
                 }
                 catch (Exception x)
                 {
-                    throw new IOException($"Failure creating method file {methodTranList.FinalMethod}.  {x.Message}");
+                    throw new IOException($"Failure creating method file {methodTranList.FinalMethod}. {x.Message}");
                 }
 
                 if (!File.Exists(methodTranList.OutputMethod))
@@ -294,68 +295,12 @@ namespace BuildSciexMethod
             var method = loadResponse.MsMethod;
 
             // Edit method
-            if (method.Experiments.Count == 0)
-                throw new Exception("Method does not contain any experiments.");
-            var massTable = method.Experiments[0].MassTable;
-            switch (massTable.Rows.Count)
-            {
-                case 0:
-                    throw new Exception("Mass table does not contain any rows.");
-                case 1:
-                    break;
-                default:
-                    massTable.RemoveRows(massTable.Rows.Skip(1).ToArray());
-                    break;
-            }
-            massTable.CloneAndAddRow(0, transitions.Transitions.Length - 1);
-
-            const string rowGetterMethodName = "TryGet";
-            const string rowPropertyValue = "Value";
-            var rowGetter = typeof(PropertiesRow).GetMethod(rowGetterMethodName);
-            if (rowGetter == null)
-                throw new Exception($"PropertiesRow does not have method {rowGetterMethodName}.");
-
-            var doNothingObj = new object();
-            var allProps = new Dictionary<Type, Func<MethodTransition, object>>
-            {
-                [typeof(GroupIdProperty)] = t => t.Group,
-                [typeof(CompoundIdProperty)] = t => t.Label,
-                [typeof(Q1MassProperty)] = t => t.PrecursorMz,
-                [typeof(Q3MassProperty)] = t => t.ProductMz,
-                [typeof(PrecursorIonProperty)] = t => t.PrecursorMz,
-                [typeof(FragmentIonProperty)] = t => t.ProductMz,
-                [typeof(DwellTimeProperty)] = t => t.DwellOrRt,
-                [typeof(RetentionTimeProperty)] = t => t.DwellOrRt,
-                [typeof(DeclusteringPotentialProperty)] = t => t.DP,
-                [typeof(EntrancePotentialProperty)] = t => doNothingObj,
-                [typeof(CollisonEnergyProperty)] = t => t.CE,
-                [typeof(CollisionCellExitPotentialProperty)] = t => doNothingObj,
-            };
-
-            allProps.Remove(StandardMethod ? typeof(RetentionTimeProperty) : typeof(DwellTimeProperty));
-
-            // Remove missing properties from the dictionary
-            var missingProps = allProps.Select(kvp => kvp.Key).Where(prop =>
-                rowGetter.MakeGenericMethod(prop).Invoke(massTable.Rows[0], null) == null).ToArray();
-            foreach (var prop in missingProps)
-                allProps.Remove(prop);
-
+            var massTable = InitMethod(method, transitions.Transitions.Length);
+            var props = PropertyData.GetAll(StandardMethod, massTable).ToArray();
             for (var i = 0; i < transitions.Transitions.Length; i++)
             {
-                var row = massTable.Rows[i];
-                var transition = transitions.Transitions[i];
-                foreach (var kvp in allProps)
-                {
-                    var prop = kvp.Key;
-                    var valueProp = prop.GetProperty(rowPropertyValue);
-                    if (valueProp == null)
-                        throw new Exception($"Property '{prop.Name}' does not have a property named '{rowPropertyValue}'.");
-
-                    var rowProp = rowGetter.MakeGenericMethod(prop).Invoke(row, null);
-                    var newValue = kvp.Value.Invoke(transition);
-                    if (!ReferenceEquals(newValue, doNothingObj))
-                        valueProp.SetValue(rowProp, newValue);
-                }
+                foreach (var prop in props)
+                    prop.UpdateRow(massTable.Rows[i], transitions.Transitions[i]);
             }
 
             // Validate and save method
@@ -363,10 +308,86 @@ namespace BuildSciexMethod
             ExecuteAndCheck(new MsMethodSaveRequest(method, transitions.OutputMethod));
         }
 
+        private static PropertiesTable InitMethod(IMsMethod method, int numTransitions)
+        {
+            // Check that there is at least one experiment
+            if (method.Experiments.Count == 0)
+                throw new Exception("Method does not contain any experiments.");
+
+            // Check that there is at least one row in the mass table
+            var massTable = method.Experiments[0].MassTable;
+            if (massTable.Rows.Count == 0)
+                throw new Exception("Mass table does not contain any rows.");
+
+            // Adjust number of rows in the mass table to match number of transitions
+            if (massTable.Rows.Count < numTransitions)
+                massTable.CloneAndAddRow(0, numTransitions - massTable.Rows.Count);
+            else if (massTable.Rows.Count > numTransitions)
+                massTable.RemoveRows(massTable.Rows.Skip(numTransitions).ToArray());
+
+            return massTable;
+        }
+
         public void Dispose()
         {
             _api.Logout(new LogoutRequest());
             _api.Disconnect(new DisconnectRequest());
+        }
+
+        private class PropertyData
+        {
+            private static string RowGetterMethodName => "TryGet";
+            private static MethodInfo RowGetter => typeof(PropertiesRow).GetMethod(RowGetterMethodName);
+
+            private Type Property { get; }
+            private Func<MethodTransition, object> GetValueForTransition { get; }
+            private Func<PropertiesRow, object> GetPropertiesRowObj { get; }
+            private PropertyInfo ValueProperty { get; }
+
+            private PropertyData(Type property, Func<MethodTransition, object> getValueForTransition = null)
+            {
+                Property = property;
+                GetValueForTransition = getValueForTransition;
+
+                if (RowGetter == null)
+                    throw new Exception($"PropertiesRow does not have method {RowGetterMethodName}.");
+                GetPropertiesRowObj = (Func<PropertiesRow, object>)Delegate.CreateDelegate(typeof(Func<PropertiesRow, object>), RowGetter.MakeGenericMethod(property));
+
+                const string valueProperty = "Value";
+                ValueProperty = property.GetProperty(valueProperty);
+                if (ValueProperty == null)
+                    throw new Exception($"Property '{property.Name}' does not have a property named '{valueProperty}'.");
+            }
+
+            public void UpdateRow(PropertiesRow row, MethodTransition transition)
+            {
+                if (GetValueForTransition == null)
+                    return;
+
+                var rowPropObj = GetPropertiesRowObj(row);
+                var newValue = GetValueForTransition(transition);
+                ValueProperty.SetValue(rowPropObj, newValue);
+            }
+
+            public static IEnumerable<PropertyData> GetAll(bool standardMethod, PropertiesTable table)
+            {
+                return new[]
+                {
+                    new PropertyData(typeof(GroupIdProperty), t => t.Group),
+                    new PropertyData(typeof(CompoundIdProperty), t => t.Label),
+                    new PropertyData(typeof(Q1MassProperty), t => t.PrecursorMz),
+                    new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
+                    new PropertyData(typeof(PrecursorIonProperty), t => t.PrecursorMz),
+                    new PropertyData(typeof(FragmentIonProperty), t => t.ProductMz),
+                    new PropertyData(standardMethod ? typeof(DwellTimeProperty) : typeof(RetentionTimeProperty), t => t.DwellOrRt),
+                    new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
+                    new PropertyData(typeof(EntrancePotentialProperty)),
+                    new PropertyData(typeof(CollisonEnergyProperty), t => t.CE),
+                    new PropertyData(typeof(CollisionCellExitPotentialProperty)),
+                }.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
+            }
+
+            public override string ToString() => Property.Name;
         }
     }
 
