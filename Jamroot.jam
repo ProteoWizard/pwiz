@@ -324,6 +324,7 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on
@@ -937,7 +938,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.2 in $(properties) )
+       ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.3 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -1163,7 +1165,7 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2"
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2015" ;
         }
