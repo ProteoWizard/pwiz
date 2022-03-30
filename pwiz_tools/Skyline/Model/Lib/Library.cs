@@ -246,8 +246,18 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                         }
                     }
+                } while (!CompleteProcessing(container, docNew, docCurrent));
+            }
+            catch (FileModifiedException)
+            {
+                if (null != document.Settings.MeasuredResults?.IsNotLoadedExplained)
+                {
+                    // If an exception was thrown because a .skyd file change, we can swallow the
+                    // exception since we know ChromatogramManager will reload the .skyd files
+                    return false;
                 }
-                while (!CompleteProcessing(container, docNew, docCurrent));
+
+                throw;
             }
             finally
             {

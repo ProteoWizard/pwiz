@@ -1253,27 +1253,16 @@ namespace pwiz.Skyline.Model
 
             var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
-            try
+            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
+            if (MustReadAllChromatograms(settingsNew, diff))
             {
-                List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
-                if (MustReadAllChromatograms(settingsNew, diff))
-                {
-                    allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
-                        (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
-                    ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
-                }
-
-                for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
-                {
-                    CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious,
-                        setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
-                }
+                allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
+                    (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list=>list), false);
             }
-            catch (FileModifiedException fme)
+            for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
-                // If the .skyd file was modified out from under us, treat is an OperationCanceled and
-                // assume that the document will soon be replaced with one that uses the new .skyd file
-                throw new OperationCanceledException(fme.Message, fme);
+                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
