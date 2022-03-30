@@ -1254,16 +1254,26 @@ namespace pwiz.Skyline.Model
             var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
             List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
-            if (MustReadAllChromatograms(settingsNew, diff))
+            try
             {
-                allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
-                    (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
-                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list=>list), false);
+                if (MustReadAllChromatograms(settingsNew, diff))
+                {
+                    allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
+                        (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                    ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
+                }
             }
+            catch (FileModifiedException)
+            {
+                // Unable to read results for all replicates: fall back to reading replicates individually
+            }
+
             for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
             {
-                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
+                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious,
+                    setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
             }
+
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
 
@@ -1299,24 +1309,53 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            bool canUseOldResults = false;
             // Check whether we can reuse the existing information without having to look at the ChromatogramInfo
             if (iResultOld != -1 && resultsHandler == null)
             {
-                if (CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld))
-                {
-                    for (int iTran = 0; iTran < Children.Count; iTran++)
-                    {
-                        var nodeTran = (TransitionDocNode)Children[iTran];
-                        var results = nodeTran.HasResults ? nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
-                        if (results.IsEmpty)
-                            resultsCalc.AddTransitionChromInfo(iTran, null);
-                        else
-                            resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
-                    }
+                canUseOldResults = CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld);
+            }
 
-                    return;
+            float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
+            if (!canUseOldResults)
+            {
+                if (chromGroupInfos == null)
+                {
+                    try
+                    {
+                        measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
+                            out var arrayChromGroupInfo);
+                        chromGroupInfos = arrayChromGroupInfo ?? Array.Empty<ChromatogramGroupInfo>();
+                    }
+                    catch (FileModifiedException)
+                    {
+                        if (iResultOld != -1 && resultsHandler == null)
+                        {
+                            canUseOldResults = true;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
                 }
             }
+
+            if (canUseOldResults)
+            {
+                for (int iTran = 0; iTran < Children.Count; iTran++)
+                {
+                    var nodeTran = (TransitionDocNode)Children[iTran];
+                    var results = nodeTran.HasResults ? nodeTran.Results[iResultOld] : default(ChromInfoList<TransitionChromInfo>);
+                    if (results.IsEmpty)
+                        resultsCalc.AddTransitionChromInfo(iTran, null);
+                    else
+                        resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
+                }
+
+                return;
+            }
+
             double qcutoff = double.MaxValue;
             bool keepUserSet = true;
             if (resultsHandler != null)
@@ -1339,13 +1378,6 @@ namespace pwiz.Skyline.Model
                     mismatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
                 if (setTranPrevious != null || mismatchedEmptyReintegrated || chromatogramDataChanged)
                     dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
-            }
-            float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
-            if (chromGroupInfos == null)
-            {
-                measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
-                    out var arrayChromGroupInfo);
-                chromGroupInfos = arrayChromGroupInfo ?? Array.Empty<ChromatogramGroupInfo>();
             }
             if (chromGroupInfos.Count == 0)
             {
