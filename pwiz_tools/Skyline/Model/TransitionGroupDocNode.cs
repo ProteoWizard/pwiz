@@ -1271,6 +1271,8 @@ namespace pwiz.Skyline.Model
             }
             catch (FileModifiedException fme)
             {
+                // If the .skyd file was modified out from under us, treat is an OperationCanceled and
+                // assume that the document will soon be replaced with one that uses the new .skyd file
                 throw new OperationCanceledException(fme.Message, fme);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);

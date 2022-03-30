@@ -32,7 +32,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
 //         build from Visual Studio after a full bjam build removes all of the Skyline project
 //         root files from the Skyline bin directory, leaving it un-runnable until a full
@@ -515,7 +514,7 @@ namespace TestRunner
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose);
-            FormUtil.LOG_FUNCTION = runTests.Log;
+
             using (new DebuggerListener(runTests))
             {
                 if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
@@ -855,7 +854,6 @@ namespace TestRunner
                 }
             }
 
-            FormUtil.LOG_FUNCTION = null;
             return runTests.FailureCount == 0;
         }
 
