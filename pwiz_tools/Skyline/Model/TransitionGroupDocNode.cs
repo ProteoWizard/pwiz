@@ -1253,16 +1253,25 @@ namespace pwiz.Skyline.Model
 
             var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
-            List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
-            if (MustReadAllChromatograms(settingsNew, diff))
+            try
             {
-                allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
-                    (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
-                ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list=>list), false);
+                List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
+                if (MustReadAllChromatograms(settingsNew, diff))
+                {
+                    allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
+                        (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                    ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
+                }
+
+                for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
+                {
+                    CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious,
+                        setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
+                }
             }
-            for (int chromIndex = 0; chromIndex < measuredResults.Chromatograms.Count; chromIndex++)
+            catch (FileModifiedException fme)
             {
-                CalcResultsForReplicate(resultsCalc, chromIndex, settingsNew, diff, nodePep, nodePrevious, setTranPrevious, allChromatogramGroupInfos?[chromIndex]);
+                throw new OperationCanceledException(fme.Message, fme);
             }
             return resultsCalc.UpdateTransitionGroupNode(this);
         }
