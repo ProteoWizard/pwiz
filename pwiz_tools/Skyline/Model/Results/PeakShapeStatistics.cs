@@ -1,0 +1,103 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using pwiz.Skyline.Util;
+
+namespace pwiz.Skyline.Model.Results
+{
+    public class PeakShapeStatistics
+    {
+        public static PeakShapeStatistics Calculate(IList<float> times, IList<float> intensities)
+        {
+            int count = times.Count;
+            Assume.AreEqual(count, intensities.Count);
+            if (count == 0)
+            {
+                return null;
+            }
+
+            if (count == 1)
+            {
+                return new PeakShapeStatistics()
+                {
+                    MeanTime = times[0],
+                    MedianTime = times[0],
+                    StdDevTime = double.NaN
+                };
+            }
+            double totalArea = 0;
+            double totalTimeTimesArea = 0;
+            for (int i = 0; i < count - 1; i++)
+            {
+                var time1 = times[i];
+                var time2 = times[i + 1];
+                var width = time2 - time1;
+                var intensity1 = intensities[i];
+                var intensity2 = intensities[i + 1];
+                var area = (intensity1 + intensity2) * width / 2;
+                if (area <= 0)
+                {
+                    continue;
+                }
+                var slope = (intensity2 - intensity1) / width;
+                var meanTimeThisSlice = time1 + (intensity1 / 2 + slope * width / 3) * width * width / area; 
+                totalTimeTimesArea += meanTimeThisSlice * area;
+                totalArea += area;
+            }
+
+            var meanTime = totalTimeTimesArea / totalArea;
+            double medianTime = FindTimeWithAccumulatedArea(times, intensities, totalArea / 2);
+            return new PeakShapeStatistics
+            {
+                Area = totalArea,
+                MeanTime = meanTime,
+                MedianTime = medianTime,
+                StdDevTime = double.NaN
+            };
+        }
+
+        private PeakShapeStatistics()
+        {
+
+        }
+
+        public double Area { get; private set; }
+        public double MeanTime { get; private set; }
+        public double MedianTime { get; private set; }
+        public double StdDevTime { get; private set; }
+
+        public static double FindTimeWithAccumulatedArea(IList<float> times, IList<float> intensities, double targetArea)
+        {
+            int count = times.Count;
+            Assume.AreEqual(count, intensities.Count);
+            if (targetArea <= 0)
+            {
+                return times[0];
+            }
+            double accumulatedArea = 0;
+            for (int i = 0; i < count - 1; i++)
+            {
+                var time1 = times[i];
+                var time2 = times[i + 1];
+                var intensity1 = intensities[i];
+                var intensity2 = intensities[i + 1];
+                var width = time2 - time1;
+                var area = (intensity1 + intensity2) * width / 2;
+                if (accumulatedArea + area >= targetArea)
+                {
+                    var midArea = targetArea - accumulatedArea;
+                    double slope = (intensity2 - intensity1) / width;
+                    // midArea = x * intensity1 + slope * x * x / 2
+                    var x = (-intensity1 + Math.Sqrt(intensity1 * intensity1 + 2 * slope * midArea)) / slope;
+                    return time1 + x;
+                }
+
+                accumulatedArea += area;
+            }
+
+            return double.NaN;
+        }
+    }
+}
