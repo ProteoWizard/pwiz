@@ -1028,13 +1028,13 @@ namespace SkylineNightly
 
                 if (SetCSRFToken(request, null))
                 {
-                    using (var stream = request.GetRequestStream())
-                    {
-                        stream.Write(postData, 0, postData.Length);
-                    }
-
                     try
                     {
+                        using (var stream = request.GetRequestStream())
+                        {
+                            stream.Write(postData, 0, postData.Length);
+                        }
+
                         using (var response = (HttpWebResponse)request.GetResponse())
                         using (var responseStream = response.GetResponseStream())
                         {
@@ -1049,6 +1049,7 @@ namespace SkylineNightly
                     }
                     catch (Exception)
                     {
+                        // We will retry
                     }
                 }
                 if (retry > 1)
