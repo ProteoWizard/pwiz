@@ -1326,6 +1326,11 @@ namespace pwiz.Skyline.Model
                         measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
                             out var arrayChromGroupInfo);
                         chromGroupInfos = arrayChromGroupInfo ?? Array.Empty<ChromatogramGroupInfo>();
+                        foreach (var chromGroupInfo in chromGroupInfos)
+                        {
+                            // We will need the peaks later, so make sure they can be read now
+                            chromGroupInfo.GetTransitionPeak(0, 0);
+                        }
                     }
                     catch (FileModifiedException)
                     {
