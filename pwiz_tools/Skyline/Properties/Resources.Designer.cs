@@ -10474,6 +10474,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to remove these targets from the library?.
+        /// </summary>
+        public static string EditIrtCalcDlg_CheckForDuplicates_Do_you_want_to_remove_these_targets_from_the_library_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_CheckForDuplicates_Do_you_want_to_remove_these_targets_from_the_li" +
+                        "brary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Each target must be either a standard or in the library, but not both. The following targets were found as both:.
+        /// </summary>
+        public static string EditIrtCalcDlg_CheckForDuplicates_Each_target_must_be_either_a_standard_or_in_the_library__but_not_both__The_following_targets_were_found_as_both_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_CheckForDuplicates_Each_target_must_be_either_a_standard_or_in_the" +
+                        "_library__but_not_both__The_following_targets_were_found_as_both_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The list of standard peptides must contain only recognized iRT-C18 standards to switch to a predefined set of iRT-C18 standards..
         /// </summary>
         public static string EditIrtCalcDlg_comboStandards_SelectedIndexChanged_The_list_of_standard_peptides_must_contain_only_recognized_iRT_C18_standards_to_switch_to_a_predefined_set_of_iRT_C18_standards_ {
@@ -10605,6 +10625,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended" +
                         "_Are_you_sure_you_want_to_continue_with_only__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Opening database.
+        /// </summary>
+        public static string EditIrtCalcDlg_OpenDatabase_Opening_database {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OpenDatabase_Opening_database", resourceCulture);
             }
         }
         

@@ -177,13 +177,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         public IEnumerable<DbIrtPeptide> StandardPeptides => StandardPeptideList;
-
         public IEnumerable<DbIrtPeptide> LibraryPeptides => LibraryPeptideList;
-
-        public IEnumerable<DbIrtPeptide> AllPeptides
-        {
-            get { return new[] {StandardPeptideList, LibraryPeptideList}.SelectMany(list => list); }
-        }
+        public IEnumerable<DbIrtPeptide> AllPeptides => StandardPeptides.Concat(LibraryPeptides);
 
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
@@ -301,6 +296,51 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        // Check that there are no peptides in both the standard and library list. Return true if no duplicates.
+        public static bool CheckForDuplicates(IWin32Window parent, IEnumerable<DbIrtPeptide> standards,
+            IEnumerable<DbIrtPeptide> library, bool allowKeep, Action<HashSet<Target>> removeDuplicatesAction, string extraText = null)
+        {
+            var duplicates = standards.Select(pep => pep.ModifiedTarget)
+                .Intersect(library.Select(pep => pep.ModifiedTarget)).ToHashSet();
+            if (!duplicates.Any())
+                return true;
+
+            var msg = new List<string>();
+            if (!string.IsNullOrEmpty(extraText))
+            {
+                msg.Add(extraText);
+                msg.Add(Environment.NewLine);
+            }
+            msg.Add(Resources.EditIrtCalcDlg_CheckForDuplicates_Each_target_must_be_either_a_standard_or_in_the_library__but_not_both__The_following_targets_were_found_as_both_);
+            msg.Add(Environment.NewLine);
+            msg.AddRange(duplicates.Select(pep => pep.DisplayName));
+            msg.Add(Environment.NewLine);
+            msg.Add(Resources.EditIrtCalcDlg_CheckForDuplicates_Do_you_want_to_remove_these_targets_from_the_library_);
+            using (var dlg = new MultiButtonMsgDlg(TextUtil.LineSeparate(msg),
+                       allowKeep ? MessageBoxButtons.YesNo : MessageBoxButtons.OKCancel, DialogResult.Yes))
+            {
+                switch (dlg.ShowDialog(parent))
+                {
+                    case DialogResult.Yes:
+                    case DialogResult.OK:
+                        removeDuplicatesAction(duplicates);
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        private bool CheckForDuplicates(bool allowKeep)
+        {
+            return CheckForDuplicates(this, StandardPeptides, LibraryPeptides, allowKeep, duplicates =>
+            {
+                for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
+                    if (duplicates.Contains(LibraryPeptideList[i].ModifiedTarget))
+                        LibraryPeptideList.RemoveAt(i);
+            });
+        }
+
         public void OpenDatabase(string path)
         {
             if (!File.Exists(path))
@@ -313,7 +353,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
-                var db = IrtDb.GetIrtDb(path, null, out var dbPeptides); // TODO: LongWaitDlg
+                IrtDb db = null;
+                IList<DbIrtPeptide> dbPeptides = null;
+                using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
+                {
+                    dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
+                }
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -332,6 +377,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         ? SrmDocument.DOCUMENT_TYPE.mixed
                         : SrmDocument.DOCUMENT_TYPE.small_molecules;
                 }
+
+                CheckForDuplicates(true);
             }
             catch (DatabaseOpeningException e)
             {
@@ -347,6 +394,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textCalculatorName.Focus();
                 return;
             }
+
+            if (!CheckForDuplicates(false))
+                return;
 
             if (_existingCalcs != null)
             {
