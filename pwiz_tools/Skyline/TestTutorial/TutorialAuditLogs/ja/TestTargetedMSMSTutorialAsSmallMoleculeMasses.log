@@ -156,19 +156,27 @@ Undo Redo : スペクトルライブラリ「BSA_Protea_label_free_meth3.convert
 Summary   : スペクトルライブラリ「BSA_Protea_label_free_meth3.converted_to_small_molecules」が追加されました
 All Info  :
 スペクトルライブラリ「BSA_Protea_label_free_meth3.converted_to_small_molecules」が追加されました
-スペクトルライブラリを構築>カットオフスコアは"0.99"です
-スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"が含まれています
-スペクトルライブラリを構築>ファイルを検索："klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"が含まれています
+スペクトルライブラリを構築>カットオフスコアは"0.95"です
+スペクトルライブラリを構築>ファイルを検索：{ File = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml", Score type = "Percolator q-value", Score threshold = "0.01" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml", Score type = "Percolator q-value", Score threshold = "0.01" }が含まれています
 スペクトルライブラリを構築>iRT標準分子はなしです
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内の分子をフィルタリングは真です
 スペクトルライブラリを構築>ワークフローは"PRM"です
 スペクトルライブラリを構築>入力ファイルタイプは"検索結果 (ライブラリを直接構築)"です
-Extra Info: カットオフスコア = "0.99",
+Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
-    "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+    {
+        File = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
+        Score type = "Percolator q-value",
+        Score threshold = "0.01"
+    },
+    {
+        File = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml",
+        Score type = "Percolator q-value",
+        Score threshold = "0.01"
+    }
 ],
 iRT標準分子 = なし,
 曖昧な一致を含める = 偽,

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class PropertyNames {
@@ -1083,6 +1083,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ExplicitTransitionValues_SLens {
             get {
                 return ResourceManager.GetString("ExplicitTransitionValues_SLens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File.
+        /// </summary>
+        public static string File_FileName {
+            get {
+                return ResourceManager.GetString("File_FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold.
+        /// </summary>
+        public static string File_ScoreThreshold {
+            get {
+                return ResourceManager.GetString("File_ScoreThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score type.
+        /// </summary>
+        public static string File_ScoreTypeName {
+            get {
+                return ResourceManager.GetString("File_ScoreTypeName", resourceCulture);
             }
         }
         
@@ -4062,6 +4089,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionFullScan_AcquisitionMethod {
             get {
                 return ResourceManager.GetString("TransitionFullScan_AcquisitionMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore SIM scans.
+        /// </summary>
+        public static string TransitionFullScan_IgnoreSimScans {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_IgnoreSimScans", resourceCulture);
             }
         }
         

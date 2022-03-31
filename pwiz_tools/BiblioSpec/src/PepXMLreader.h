@@ -55,6 +55,7 @@ class PepXMLreader : public BuildParser{
   virtual void startElement(const XML_Char* name, const XML_Char** attr);
   virtual void endElement(const XML_Char* name);
   bool parseFile();
+  vector<PSM_SCORE_TYPE> getScoreTypes();
  
  private:
   enum ANALYSIS { UNKNOWN_ANALYSIS, // none of the following
@@ -88,6 +89,7 @@ class PepXMLreader : public BuildParser{
   int lastFilePosition_;
   map<PSM*, double> precursorMap_;
   string fileroot_;
+  bool isScoreLookup_;
 
   //for each spectrum
   
@@ -105,10 +107,8 @@ class PepXMLreader : public BuildParser{
   int state;
   int numFiles;
 
-
+  void setScoreType(PSM_SCORE_TYPE scoreType);
   bool scorePasses(double score);
-
-
 };
 
 } // namespace

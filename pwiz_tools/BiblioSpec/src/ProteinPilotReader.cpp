@@ -116,6 +116,10 @@ bool ProteinPilotReader::parseFile()
     return true;
 }
 
+vector<PSM_SCORE_TYPE> ProteinPilotReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, PROTEIN_PILOT_CONFIDENCE);
+}
+
 void ProteinPilotReader::startElement(const XML_Char* name, 
                                       const XML_Char** attr)
 {
@@ -506,7 +510,7 @@ void ProteinPilotReader::addMod(){
         found->second != curMod_.deltaMass ){
         throw BlibException(false, "Two entries for a modification named %s,"
                             "one with delta mass %f and one with %f.",
-                            curMod_.name, found->second, modTable_[curMod_.name]);
+                            curMod_.name.c_str(), found->second, modTable_[curMod_.name]);
     }
 
     // else add it

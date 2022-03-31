@@ -36,6 +36,7 @@
 
 
 using namespace IDPICKER_NAMESPACE;
+using namespace pwiz::svm;
 
 
 // sorting functors

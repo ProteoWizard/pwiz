@@ -69,6 +69,9 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
+                // Verify fix for issue where we would not preserve a simple change to IM window width
+                TestMobilityWindowWidth();
+
                 const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.1;
 
                 // do a few unit tests on the UI error handlers
@@ -470,6 +473,41 @@ namespace pwiz.SkylineTestFunctional
         private void SetUiDocument(SrmDocument newDocument)
         {
             RunUI(() => AssertEx.IsTrue(SkylineWindow.SetDocument(newDocument, SkylineWindow.DocumentUI)));
+        }
+
+        // Verify fix for issue where we would not preserve a simple change to IM window width
+        private static void TestMobilityWindowWidth()
+        {
+            var doc = SkylineWindow.Document;
+            if (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none !=
+                doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode)
+            {
+                var transitionSettingsDlg0 = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+                RunUI(() => transitionSettingsDlg0.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none);
+                RunUI(() =>  transitionSettingsDlg0.OkDialog());
+                doc = WaitForDocumentChange(doc);
+                AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none,
+                    doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode);
+            }
+
+            var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(() => transitionSettingsDlg.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
+            RunUI(() => transitionSettingsDlg.IonMobilityControl.SetFixedWidth(5));
+            RunUI(() => transitionSettingsDlg.OkDialog());
+            doc = WaitForDocumentChange(doc);
+            AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width,
+                doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode);
+            AssertEx.AreEqual(5,
+                doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.FixedWindowWidth);
+
+            // If the bug has not been fixed, we won't preserve changing just the window width
+            transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(() => transitionSettingsDlg.IonMobilityControl.SetFixedWidth(55));
+            RunUI(() => transitionSettingsDlg.OkDialog());
+            doc = WaitForDocumentChange(doc);
+            AssertEx.AreEqual(55,
+                doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.FixedWindowWidth);
+
         }
 
         private static string BuildPasteLibraryText(IEnumerable<ValidatingIonMobilityPrecursor> mobilities, Func<string, string> adjustSeq, bool useHighEnergyOffset)

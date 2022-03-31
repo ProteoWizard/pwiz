@@ -696,6 +696,10 @@ bool DiaNNSpecLibReader::parseFile()
     return true;
 }
 
+vector<PSM_SCORE_TYPE> DiaNNSpecLibReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, GENERIC_QVALUE);
+}
+
 // SpecFileReader methods
 /**
     * Implemented to satisfy SpecFileReader interface.  Since spec and

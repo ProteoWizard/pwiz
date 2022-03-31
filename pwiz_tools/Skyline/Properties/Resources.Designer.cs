@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -2990,6 +2990,148 @@ namespace pwiz.Skyline.Properties {
         public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File.
+        /// </summary>
+        public static string BuildLibraryGridView__colFile_File {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView__colFile_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score Type.
+        /// </summary>
+        public static string BuildLibraryGridView__colScoreType_Score_Type {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView__colScoreType_Score_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score Threshold.
+        /// </summary>
+        public static string BuildLibraryGridView__colThreshold_Score_Threshold {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView__colThreshold_Score_Threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} scores indicate the probability that an identification is {1}..
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_id" +
+                        "entification_is__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to correct.
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_correct {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_correct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to incorrect.
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_incorrect {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold {0} for {1} is unusually permissive..
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permi" +
+                        "ssive_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold {0} for {1} will include all identifications..
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_i" +
+                        "dentifications_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold {0} for {1} will only include identifications with perfect scores..
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_" +
+                        "identifications_with_perfect_scores_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score types not loaded..
+        /// </summary>
+        public static string BuildLibraryGridView_GetThresholds_Score_types_not_loaded_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GetThresholds_Score_types_not_loaded_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting score type for this file..
+        /// </summary>
+        public static string BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
+        /// </summary>
+        public static string BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probab" +
+                        "ility_that_identification_is_incorrect__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
+        /// </summary>
+        public static string BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probab" +
+                        "ility_that_identification_is_correct__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold &apos;{0}&apos; is invalid (must be a decimal value between {1} and {2})..
+        /// </summary>
+        public static string BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be" +
+                        "_a_decimal_value_between__1__and__2___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to continue?.
+        /// </summary>
+        public static string BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -16627,7 +16769,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -21440,7 +21582,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -27275,6 +27417,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_V21_1_Skyline_21_1 {
             get {
                 return ResourceManager.GetString("SkylineVersion_V21_1_Skyline_21_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 21.2.
+        /// </summary>
+        public static string SkylineVersion_V21_2_Skyline_21_2 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V21_2_Skyline_21_2", resourceCulture);
             }
         }
         
@@ -34581,7 +34732,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by [rest of string was truncated]&quot;;.
+        ///If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities mea [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError {
             get {
@@ -34598,7 +34749,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///{2}
         ///
-        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by  [rest of string was truncated]&quot;;.
+        ///If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities meas [rest of string was truncated]&quot;;.
         /// </summary>
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {

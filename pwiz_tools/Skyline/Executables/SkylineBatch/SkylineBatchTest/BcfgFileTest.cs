@@ -52,18 +52,19 @@ namespace SkylineBatchTest
 
         private void TestBcfgFile(string version, string type)
         {
-            /*var testFolderPath = TestUtils.GetTestFilePath(string.Empty);
-            var rawImportFile = ImportFilePath(version, type);
-            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, TestUtils.GetTestFilePath(string.Empty), "REPLACE_TEXT", AppendToFileName(rawImportFile, "(1)"));
-            var rawExpectedFile = ExpectedFilePath(version, type);
-            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, TestUtils.GetTestFilePath(string.Empty), "REPLACE_TEXT", AppendToFileName(rawExpectedFile, "(1)"));
-            */
             // create bcfg files with file paths from this computer
             var testFolderPath = TestUtils.GetTestFilePath(string.Empty);
             var rawImportFile = ImportFilePath(version, type);
-            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", testFolderPath, AppendToFileName(rawImportFile, "_replaced"));
+            var currentFolderName = Path.GetFileName(testFolderPath);
+            var pwizToolsDirectory = Path.GetDirectoryName(testFolderPath);
+            while (!currentFolderName.Equals("pwiz_tools"))
+            {
+                currentFolderName = Path.GetFileName(pwizToolsDirectory);
+                pwizToolsDirectory = Path.GetDirectoryName(pwizToolsDirectory);
+            }
+            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawImportFile, "_replaced"));
             var rawExpectedFile = ExpectedFilePath(version, type);
-            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", testFolderPath, AppendToFileName(rawExpectedFile, "_replaced"));
+            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawExpectedFile, "_replaced"));
             
             // run tests
             CompareImports(updatedImportFile, updatedExpectedFile);
@@ -78,7 +79,7 @@ namespace SkylineBatchTest
         private void CompareImports(string oldVersionFile, string currentVersionFile)
         {
             Assert.IsTrue(File.Exists(oldVersionFile), oldVersionFile + " does not exist. Must import old version configuration(s) from an existing file.");
-            Assert.IsTrue(File.Exists(currentVersionFile), currentVersionFile + " does not exist. Please run test in SETUP MODE (see top of BcfgFileTest.cs).");
+            Assert.IsTrue(File.Exists(currentVersionFile), currentVersionFile + " does not exist.");
 
 
             var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());

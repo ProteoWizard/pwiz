@@ -39,14 +39,14 @@
             this.iRTPeptidesLabel = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
             this.panelFilesPrositProperties = new System.Windows.Forms.Panel();
+            this.ceLabel = new System.Windows.Forms.Label();
+            this.ceCombo = new System.Windows.Forms.ComboBox();
             this.panelFilesProps = new System.Windows.Forms.Panel();
             this.actionLabel = new System.Windows.Forms.Label();
             this.comboAction = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
             this.cbFilter = new System.Windows.Forms.CheckBox();
-            this.textCutoff = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
             this.prositInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
@@ -54,21 +54,19 @@
             this.dataSourceFilesRadioButton = new System.Windows.Forms.RadioButton();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.panelFiles = new System.Windows.Forms.Panel();
+            this.gridInputFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.btnAddPaths = new System.Windows.Forms.Button();
-            this.cbSelect = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.btnAddDirectory = new System.Windows.Forms.Button();
             this.btnAddFile = new System.Windows.Forms.Button();
-            this.listInputFiles = new System.Windows.Forms.CheckedListBox();
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.ceLabel = new System.Windows.Forms.Label();
-            this.ceCombo = new System.Windows.Forms.ComboBox();
             this.panelProperties.SuspendLayout();
             this.panelFilesPrositProperties.SuspendLayout();
             this.panelFilesProps.SuspendLayout();
             this.dataSourceGroupBox.SuspendLayout();
             this.panelFiles.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
             this.SuspendLayout();
             // 
             // textName
@@ -136,6 +134,18 @@
             resources.ApplyResources(this.panelFilesPrositProperties, "panelFilesPrositProperties");
             this.panelFilesPrositProperties.Name = "panelFilesPrositProperties";
             // 
+            // ceLabel
+            // 
+            resources.ApplyResources(this.ceLabel, "ceLabel");
+            this.ceLabel.Name = "ceLabel";
+            // 
+            // ceCombo
+            // 
+            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ceCombo.FormattingEnabled = true;
+            resources.ApplyResources(this.ceCombo, "ceCombo");
+            this.ceCombo.Name = "ceCombo";
+            // 
             // panelFilesProps
             // 
             this.panelFilesProps.Controls.Add(this.actionLabel);
@@ -143,8 +153,6 @@
             this.panelFilesProps.Controls.Add(this.cbIncludeAmbiguousMatches);
             this.panelFilesProps.Controls.Add(this.cbKeepRedundant);
             this.panelFilesProps.Controls.Add(this.cbFilter);
-            this.panelFilesProps.Controls.Add(this.textCutoff);
-            this.panelFilesProps.Controls.Add(this.label6);
             resources.ApplyResources(this.panelFilesProps, "panelFilesProps");
             this.panelFilesProps.Name = "panelFilesProps";
             // 
@@ -182,17 +190,6 @@
             resources.ApplyResources(this.cbFilter, "cbFilter");
             this.cbFilter.Name = "cbFilter";
             this.cbFilter.UseVisualStyleBackColor = true;
-            // 
-            // textCutoff
-            // 
-            resources.ApplyResources(this.textCutoff, "textCutoff");
-            this.textCutoff.Name = "textCutoff";
-            this.helpTip.SetToolTip(this.textCutoff, resources.GetString("textCutoff.ToolTip"));
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
             // 
             // comboStandards
             // 
@@ -243,13 +240,19 @@
             // panelFiles
             // 
             resources.ApplyResources(this.panelFiles, "panelFiles");
+            this.panelFiles.Controls.Add(this.gridInputFiles);
             this.panelFiles.Controls.Add(this.btnAddPaths);
-            this.panelFiles.Controls.Add(this.cbSelect);
             this.panelFiles.Controls.Add(this.label7);
             this.panelFiles.Controls.Add(this.btnAddDirectory);
             this.panelFiles.Controls.Add(this.btnAddFile);
-            this.panelFiles.Controls.Add(this.listInputFiles);
             this.panelFiles.Name = "panelFiles";
+            // 
+            // gridInputFiles
+            // 
+            this.gridInputFiles.AllowUserToAddRows = false;
+            resources.ApplyResources(this.gridInputFiles, "gridInputFiles");
+            this.gridInputFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridInputFiles.Name = "gridInputFiles";
             // 
             // btnAddPaths
             // 
@@ -257,13 +260,6 @@
             this.btnAddPaths.Name = "btnAddPaths";
             this.btnAddPaths.UseVisualStyleBackColor = true;
             this.btnAddPaths.Click += new System.EventHandler(this.btnAddPaths_Click);
-            // 
-            // cbSelect
-            // 
-            resources.ApplyResources(this.cbSelect, "cbSelect");
-            this.cbSelect.Name = "cbSelect";
-            this.cbSelect.UseVisualStyleBackColor = true;
-            this.cbSelect.CheckedChanged += new System.EventHandler(this.cbSelect_CheckedChanged);
             // 
             // label7
             // 
@@ -286,15 +282,6 @@
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
-            // listInputFiles
-            // 
-            resources.ApplyResources(this.listInputFiles, "listInputFiles");
-            this.listInputFiles.CheckOnClick = true;
-            this.listInputFiles.FormattingEnabled = true;
-            this.listInputFiles.Name = "listInputFiles";
-            this.helpTip.SetToolTip(this.listInputFiles, resources.GetString("listInputFiles.ToolTip"));
-            this.listInputFiles.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listInputFiles_ItemCheck);
-            // 
             // btnPrevious
             // 
             resources.ApplyResources(this.btnPrevious, "btnPrevious");
@@ -307,18 +294,6 @@
             this.helpTip.AutoPopDelay = 32767;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // ceLabel
-            // 
-            resources.ApplyResources(this.ceLabel, "ceLabel");
-            this.ceLabel.Name = "ceLabel";
-            // 
-            // ceCombo
-            // 
-            this.ceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ceCombo.FormattingEnabled = true;
-            resources.ApplyResources(this.ceCombo, "ceCombo");
-            this.ceCombo.Name = "ceCombo";
             // 
             // BuildLibraryDlg
             // 
@@ -346,6 +321,7 @@
             this.dataSourceGroupBox.PerformLayout();
             this.panelFiles.ResumeLayout(false);
             this.panelFiles.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -363,9 +339,7 @@
         private System.Windows.Forms.Panel panelFiles;
         private System.Windows.Forms.Button btnAddDirectory;
         private System.Windows.Forms.Button btnAddFile;
-        private System.Windows.Forms.CheckedListBox listInputFiles;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.CheckBox cbSelect;
         private System.Windows.Forms.Button btnPrevious;
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.ToolTip helpTip;
@@ -382,9 +356,8 @@
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
-        private System.Windows.Forms.TextBox textCutoff;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
+        private FileUI.PeptideSearch.BuildLibraryGridView gridInputFiles;
     }
 }
