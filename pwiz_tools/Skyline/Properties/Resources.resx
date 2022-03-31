@@ -11725,4 +11725,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
   </data>
+  <data name="SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___" xml:space="preserve">
+	  <value>An issue was found in the iRT calculator "{0}".</value>
+  </data>
 </root>

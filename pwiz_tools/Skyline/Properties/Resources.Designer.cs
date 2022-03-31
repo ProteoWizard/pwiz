@@ -29113,6 +29113,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An issue was found in the iRT calculator &quot;{0}&quot;..
+        /// </summary>
+        public static string SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator..
         /// </summary>
         public static string SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_ {
