@@ -14,12 +14,6 @@ Fatty Acid;FA 22:6 omega-3 (DHA);C22H32O2;[M-H];;;1;1,1
 Fatty Acid;FA 22:6 omega-3 (DHA);C22H27H'5O2;[M-H];;;1;1,1
 
 
-Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
-Summary   : Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
-All Info  :
-Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
-Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
-
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
@@ -35,6 +29,19 @@ Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from M
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
 Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans within time frame of MS/MS IDs" to "Include all matching scans"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
+
+Undo Redo : Refined targets
+Summary   : Refined targets
+All Info  :
+Refined targets
+Advanced refinement settings > Auto-select all transitions is True
+Extra Info: Auto-select all transitions = True
+
+Undo Redo : Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
+Summary   : Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
+All Info  :
+Set standard type for FA 22:6 omega-3 (DHA) (C22H32O2)
+Targets > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > Standard type changed from Missing to "Surrogate Standard"
 
 Undo Redo : Imported results from 16 files
 Summary   : Imported results from 16 files

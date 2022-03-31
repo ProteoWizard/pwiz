@@ -14,12 +14,6 @@ Fatty Acid,FA 22:6 omega-3 (DHA),C22H32O2,[M-H],,,1,1.1
 Fatty Acid,FA 22:6 omega-3 (DHA),C22H27H'5O2,[M-H],,,1,1.1
 
 
-Undo Redo : 设定 FA 22:6 omega-3 (DHA) (C22H32O2) 的标准类型
-Summary   : 目标 > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > 标准类型 从 缺失 更改到 "替代标准"
-All Info  :
-设定 FA 22:6 omega-3 (DHA) (C22H32O2) 的标准类型
-目标 > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > 标准类型 从 缺失 更改到 "替代标准"
-
 Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
 All Info  :
@@ -35,6 +29,19 @@ All Info  :
 设置 > 离子对设置 -- 全扫描 > 同位素标记富集 从 缺失 更改到 "默认"
 设置 > 离子对设置 -- 全扫描 > 保留时间过滤类型 从 "仅使用 MS/MS ID 时间范围内的扫描" 更改到 "包含所有匹配的扫描"
 设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "5" 更改到 "0"
+
+Undo Redo : 已调整目标
+Summary   : 已调整目标
+All Info  :
+已调整目标
+高级调整设置 > 自动选择所有离子对 是 真
+Extra Info: 自动选择所有离子对 = 真
+
+Undo Redo : 设定 FA 22:6 omega-3 (DHA) (C22H32O2) 的标准类型
+Summary   : 目标 > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > 标准类型 从 缺失 更改到 "替代标准"
+All Info  :
+设定 FA 22:6 omega-3 (DHA) (C22H32O2) 的标准类型
+目标 > Fatty Acid > FA 22:6 omega-3 (DHA) (C22H32O2) > 标准类型 从 缺失 更改到 "替代标准"
 
 Undo Redo : 已从 16 文件导入结果
 Summary   : 已从 16 文件导入结果
