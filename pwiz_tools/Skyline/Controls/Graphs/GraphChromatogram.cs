@@ -2173,14 +2173,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         bestPeakInfo = new TransitionChromInfo(startRetentionTime, endRetentionTime);
                         var retentionTimeValues = RetentionTimeValues.FromTransitionChromInfo(bestPeakInfo);
-                        if (firstPeak == null || firstPeak.StartRetentionTime > retentionTimeValues.StartRetentionTime)
+                        if (retentionTimeValues != null)
                         {
-                            firstPeak = retentionTimeValues;
-                        }
+                            if (firstPeak == null ||
+                                firstPeak.StartRetentionTime > retentionTimeValues.StartRetentionTime)
+                            {
+                                firstPeak = retentionTimeValues;
+                            }
 
-                        if (lastPeak == null || lastPeak.EndRetentionTime < retentionTimeValues.EndRetentionTime)
-                        {
-                            lastPeak = retentionTimeValues;
+                            if (lastPeak == null || lastPeak.EndRetentionTime < retentionTimeValues.EndRetentionTime)
+                            {
+                                lastPeak = retentionTimeValues;
+                            }
                         }
                     }
                 }
