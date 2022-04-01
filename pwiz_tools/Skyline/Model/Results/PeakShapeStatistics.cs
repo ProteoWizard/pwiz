@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class PeakShapeStatistics
     {
-        public static PeakShapeStatistics Calculate(IList<float> times, IList<float> intensities)
+        public static PeakShapeStatistics Calculate(IList<double> times, IList<double> intensities)
         {
             int count = times.Count;
             Assume.AreEqual(count, intensities.Count);
@@ -49,12 +46,13 @@ namespace pwiz.Skyline.Model.Results
 
             var meanTime = totalTimeTimesArea / totalArea;
             double medianTime = FindTimeWithAccumulatedArea(times, intensities, totalArea / 2);
+            double stdDev = Math.Sqrt(GetTotalVariance(times, intensities, meanTime) / totalArea);
             return new PeakShapeStatistics
             {
                 Area = totalArea,
                 MeanTime = meanTime,
                 MedianTime = medianTime,
-                StdDevTime = double.NaN
+                StdDevTime = stdDev
             };
         }
 
@@ -68,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
         public double MedianTime { get; private set; }
         public double StdDevTime { get; private set; }
 
-        public static double FindTimeWithAccumulatedArea(IList<float> times, IList<float> intensities, double targetArea)
+        private static double FindTimeWithAccumulatedArea(IList<double> times, IList<double> intensities, double targetArea)
         {
             int count = times.Count;
             Assume.AreEqual(count, intensities.Count);
@@ -89,6 +87,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var midArea = targetArea - accumulatedArea;
                     double slope = (intensity2 - intensity1) / width;
+                    if (slope == 0)
+                    {
+                        var fraction = midArea / area;
+                        return time1 * (1- fraction) + time2 * fraction;
+                    }
                     // midArea = x * intensity1 + slope * x * x / 2
                     var x = (-intensity1 + Math.Sqrt(intensity1 * intensity1 + 2 * slope * midArea)) / slope;
                     return time1 + x;
@@ -98,6 +101,26 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return double.NaN;
+        }
+
+        private static double GetTotalVariance(IList<double> times, IList<double> intensities, double mean)
+        {
+            double totalVariance = 0;
+            for (int i = 0; i < times.Count - 1; i++)
+            {
+                var time1 = times[i];
+                var time2 = times[i + 1];
+                var intensity1 = intensities[i];
+                var intensity2 = intensities[i + 1];
+                var width = time2 - time1;
+                var slope = (intensity2 - intensity1) / width;
+                var lowerIntegral = Math.Pow(time1 - mean, 3) * (slope * (3 * time1 + mean - 4 * time1) + 4 * intensity1) / 12;
+                var upperIntegral = Math.Pow(time2 - mean, 3) *
+                    (slope * (3 * time2 + mean - 4 * time1) + 4 * intensity1) / 12;
+                totalVariance += upperIntegral - lowerIntegral;
+            }
+
+            return totalVariance;
         }
     }
 }
