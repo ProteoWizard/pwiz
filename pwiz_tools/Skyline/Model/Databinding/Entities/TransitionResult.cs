@@ -196,5 +196,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return DataSchema.NormalizedValueCalculator.GetTransitionValue(normalizationMethod,
                 Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, ChromInfo);
         }
+
+        [Format(Formats.Skewness)]
+        public double? Skewness
+        {
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.Skewness; }
+        }
+
+        [Format(Formats.Skewness)]
+        public double? Kurtosis
+        {
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.Kurtosis; }
+        }
     }
 }

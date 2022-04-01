@@ -494,6 +494,9 @@ indicating which isotope modifications are applied</value>
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="Kurtosis">
+	<value>A measure of the "tailedness" of the chromatogram peak.</value>
+  </data>
   <data name="LastPosition">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
@@ -1191,6 +1194,9 @@ file, or the file name again for other file types.</value>
       Solvent
       Blank
       Double Blank</value>
+  </data>
+  <data name="Skewness">
+    <value>A measure of the asymmetry of the chromatogram peak.</value>
   </data>
   <data name="Slope">
     <value>Coefficient of the linear term in the fitted curve or line.</value>

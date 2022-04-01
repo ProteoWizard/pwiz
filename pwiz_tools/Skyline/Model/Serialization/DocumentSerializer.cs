@@ -204,6 +204,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
             public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
+            public const string skewness = "skewness";
+            public const string kurtosis = "kurtosis";
             // ReSharper restore LocalizableElement
         }
     }

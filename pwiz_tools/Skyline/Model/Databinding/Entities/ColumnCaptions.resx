@@ -532,6 +532,9 @@
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="Kurtosis">
+	<value>Kurtosis</value>
+  </data>
   <data name="LastPosition">
     <value>Last Position</value>
   </data>
@@ -1130,6 +1133,9 @@
   </data>
   <data name="SampleType">
     <value>Sample Type</value>
+  </data>
+  <data name="Skewness">
+    <value>Skewness</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>

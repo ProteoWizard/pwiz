@@ -60,6 +60,25 @@ namespace pwiz.Skyline.Model.Results
             };
         }
 
+        public static PeakShapeStatistics CalculateFromTimeIntensities(TimeIntensities timeIntensities, int startIndex,
+            int endIndex, float backgroundLevel)
+        {
+            if (endIndex < startIndex)
+            {
+                return null;
+            }
+
+            var times = new List<double>(endIndex - startIndex + 1);
+            var intensities = new List<double>(endIndex - startIndex + 1);
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                times.Add(timeIntensities.Times[i]);
+                intensities.Add(Math.Max(0, timeIntensities.Intensities[i] - backgroundLevel));
+            }
+
+            return Calculate(times, intensities);
+        }
+
         private PeakShapeStatistics()
         {
 

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnToolTips {
@@ -1363,6 +1363,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Key {
             get {
                 return ResourceManager.GetString("Key", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A measure of the &quot;tailedness&quot; of the chromatogram peak..
+        /// </summary>
+        public static string Kurtosis {
+            get {
+                return ResourceManager.GetString("Kurtosis", resourceCulture);
             }
         }
         
@@ -3296,6 +3305,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleType {
             get {
                 return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A measure of the asymmetry of the chromatogram peak..
+        /// </summary>
+        public static string Skewness {
+            get {
+                return ResourceManager.GetString("Skewness", resourceCulture);
             }
         }
         

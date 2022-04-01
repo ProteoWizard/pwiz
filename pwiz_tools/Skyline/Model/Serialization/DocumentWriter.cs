@@ -860,6 +860,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
+                writer.WriteAttributeNullable(ATTR.skewness, chromInfo.Skewness);
+                writer.WriteAttributeNullable(ATTR.kurtosis, chromInfo.Kurtosis);
                 if (SkylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 {
                     writer.WriteAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);

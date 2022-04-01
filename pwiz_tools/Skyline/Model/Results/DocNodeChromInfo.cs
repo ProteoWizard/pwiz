@@ -525,7 +525,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class TransitionChromInfo : ChromInfo
     {
         [Flags]
-        private enum Flags : byte
+        private enum Flags : short
         {
             HasMassError = 1,
             IsFwhmDegenerate = 2,
@@ -535,6 +535,8 @@ namespace pwiz.Skyline.Model.Results
             ForcedIntegration = 32,
             Identified = 64,
             IdentifiedByAlignment = 128,
+            HasSkewness = 256,
+            HasKurtosis = 512,
         }
 
         private Flags _flags;
@@ -553,7 +555,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.IsFwhmDegenerate, peak.IsTruncated, 
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   annotations, userSet, peak.IsForcedIntegration)
+                   annotations, userSet, peak.IsForcedIntegration, 
+                   peak.Skewness, peak.Kurtosis)
         {
         }
 
@@ -563,7 +566,8 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
-                                   Annotations annotations, UserSet userSet, bool isForcedIntegration)
+                                   Annotations annotations, UserSet userSet, bool isForcedIntegration, 
+                                   float? skewness, float? kurtosis)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -588,6 +592,8 @@ namespace pwiz.Skyline.Model.Results
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
+            Skewness = skewness;
+            Kurtosis = kurtosis;
         }
 
         /// <summary>
@@ -677,6 +683,8 @@ namespace pwiz.Skyline.Model.Results
         public short RankByLevel { get; private set; }
 
         private short _pointsAcrossPeak;
+        private float _skewness;
+        private float _kurtosis;
 
         public short? PointsAcrossPeak
         {
@@ -688,6 +696,26 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
                 _pointsAcrossPeak = value ?? 0;
+            }
+        }
+
+        public float? Skewness
+        {
+            get { return GetFlag(Flags.HasSkewness) ? _skewness : (float?) null; }
+            private set
+            {
+                SetFlag(Flags.HasSkewness, value.HasValue);
+                _skewness = value ?? 0;
+            }
+        }
+
+        public float? Kurtosis
+        {
+            get { return GetFlag(Flags.HasKurtosis) ? _kurtosis : (float?) null; }
+            private set
+            {
+                SetFlag(Flags.HasKurtosis, value.HasValue);
+                _kurtosis = value ?? 0;
             }
         }
 
@@ -812,6 +840,8 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
+            chromInfo.Skewness = peak.Skewness;
+            chromInfo.Kurtosis = peak.Kurtosis;
             return chromInfo;
         }
 
@@ -879,7 +909,9 @@ namespace pwiz.Skyline.Model.Results
                    other.UserSet.Equals(UserSet) &&
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
-                   Equals(IsForcedIntegration, other.IsForcedIntegration);
+                   Equals(IsForcedIntegration, other.IsForcedIntegration) &&
+                   Equals(Skewness, other.Skewness) &&
+                   Equals(Kurtosis, other.Kurtosis);
             return result; // For ease of breakpoint setting
         }
 
@@ -914,6 +946,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobility.GetHashCode();
                 result = (result*397) ^ PointsAcrossPeak.GetHashCode();
                 result = (result*397) ^ IsForcedIntegration.GetHashCode();
+                result = (result*397) ^ Skewness.GetHashCode();
+                result = (result*397) ^ Kurtosis.GetHashCode();
                 return result;
             }
         }
@@ -990,8 +1024,10 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.RankByLevel,
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
-                transitionPeak.ForcedIntegration
-                );
+                transitionPeak.ForcedIntegration,
+                DataValues.FromOptional(transitionPeak.Skewness),
+                DataValues.FromOptional(transitionPeak.Kurtosis)
+            );
         }
 
         private bool GetFlag(Flags flag)

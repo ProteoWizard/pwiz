@@ -67,6 +67,8 @@ message SkylineDocumentProto {
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
 		bool forcedIntegration = 25;
+		OptionalFloat skewness = 26;
+		OptionalFloat kurtosis = 27;
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;

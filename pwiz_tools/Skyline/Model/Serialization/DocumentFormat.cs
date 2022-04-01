@@ -93,7 +93,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_1 = new DocumentFormat(22.1); // Add Cu' to list of supported heavy isotopes
         public static readonly DocumentFormat VERSION_22_11 = new DocumentFormat(22.11); // zh and zhh ion types added to the schema.
         public static readonly DocumentFormat VERSION_22_12 = new DocumentFormat(22.12); // ignore_sim_scans added
-        public static readonly DocumentFormat CURRENT = VERSION_22_12;
+        public static readonly DocumentFormat VERSION_22_13 = new DocumentFormat(22.13); // skewness and kurtosis
+        public static readonly DocumentFormat CURRENT = VERSION_22_13;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

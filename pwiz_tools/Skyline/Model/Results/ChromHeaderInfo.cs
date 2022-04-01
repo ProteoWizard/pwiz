@@ -1036,6 +1036,8 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
+        private readonly float _skewness;
+        private readonly float _kurtosis;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1047,6 +1049,7 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
+            has_skewness_kurtosis = 0x0080,
 
             // This is the last available flag
             mass_error_known =      0x8000,
@@ -1073,7 +1076,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
-            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross, PeakShapeStatistics peakShapeStatistics)
         {
             _retentionTime = retentionTime;
             _startTime = startTime;
@@ -1094,6 +1097,16 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
+            if (peakShapeStatistics != null)
+            {
+                flagValues |= FlagValues.has_skewness_kurtosis;
+                _skewness = (float) peakShapeStatistics.Skewness;
+                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+            }
+            else
+            {
+                _skewness = _kurtosis = 0;
+            }
             _flagValues = flagValues;
         }
 
@@ -1205,6 +1218,17 @@ namespace pwiz.Skyline.Model.Results
                     _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
                 }
             }
+
+            var backgroundLevel = Math.Min(timeIntensities.Intensities[peak.StartIndex],
+                timeIntensities.Intensities[peak.EndIndex]);
+            var peakShapeStatistics = PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, peak.StartIndex,
+                peak.EndIndex, backgroundLevel);
+            if (peakShapeStatistics != null)
+            {
+                _flagValues |= FlagValues.has_skewness_kurtosis;
+                _skewness = (float) peakShapeStatistics.Skewness;
+                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+            }
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -1279,6 +1303,30 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public float? Skewness
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.has_skewness_kurtosis) == 0)
+                {
+                    return null;
+                }
+                return _skewness;
+            }
+        }
+
+        public float? Kurtosis
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.has_skewness_kurtosis) == 0)
+                {
+                    return null;
+                }
+                return _kurtosis;
+            }
+        }
+
         /// <summary>
         /// Removes the mass error bits from the upper 16 in order to keep
         /// from writing mass errors into older cache file formats until
@@ -1308,7 +1356,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 32;
             }
-            return 36;
+            if (formatVersion < CacheFormatVersion.Sixteen)
+            {
+                return 36;
+            }
+            return 44;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
@@ -1341,6 +1393,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.AreEqual(endTime, timeIntensities.Times[endIndex]);
                 pointsAcrossPeak--;
             }
+
+            var peakShapeStatistics =
+                PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, startIndex, endIndex, 0);
             pointsAcrossPeak += endIndex - startIndex + 1;
             double totalArea = 0;
             double totalMassError = 0;
@@ -1465,7 +1520,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak);
+                pointsAcrossPeak, peakShapeStatistics);
         }
 
         #region Fast file I/O
