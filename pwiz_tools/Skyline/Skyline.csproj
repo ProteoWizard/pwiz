@@ -613,8 +613,12 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
+<<<<<<< HEAD
     <Compile Include="Model\Results\PeakShapeStatistics.cs" />
     <Compile Include="Model\Results\PeakShapeValues.cs" />
+=======
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
+>>>>>>> remotes/origin/Skyline/work/20220215_nicksh_DdaLibraryDotProduct
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -775,7 +779,10 @@
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
+<<<<<<< HEAD
     <Compile Include="Util\HalfPrecisionFloat.cs" />
+=======
+>>>>>>> remotes/origin/Skyline/work/20220215_nicksh_DdaLibraryDotProduct
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
