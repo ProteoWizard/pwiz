@@ -1329,7 +1329,10 @@ namespace pwiz.Skyline.Model
                         foreach (var chromGroupInfo in chromGroupInfos)
                         {
                             // We will need the peaks later, so make sure they can be read now
-                            chromGroupInfo.GetTransitionPeak(0, 0);
+                            if (chromGroupInfo.NumPeaks > 0)
+                            {
+                                chromGroupInfo.GetTransitionPeak(0, 0);
+                            }
                         }
                     }
                     catch (FileModifiedException)
