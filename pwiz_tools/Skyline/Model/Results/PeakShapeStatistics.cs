@@ -47,12 +47,16 @@ namespace pwiz.Skyline.Model.Results
             var meanTime = totalTimeTimesArea / totalArea;
             double medianTime = FindTimeWithAccumulatedArea(times, intensities, totalArea / 2);
             double stdDev = Math.Sqrt(GetTotalVariance(times, intensities, meanTime) / totalArea);
+            double skewness = CalculateTotalSkewness(times, intensities, meanTime) / Math.Pow(stdDev, 3) / totalArea;
+            double kurtosis = CalculateTotalKurtosis(times, intensities, meanTime) / Math.Pow(stdDev, 4) / totalArea - 3;
             return new PeakShapeStatistics
             {
                 Area = totalArea,
                 MeanTime = meanTime,
                 MedianTime = medianTime,
-                StdDevTime = stdDev
+                StdDevTime = stdDev,
+                Skewness = skewness,
+                Kurtosis = kurtosis
             };
         }
 
@@ -65,6 +69,13 @@ namespace pwiz.Skyline.Model.Results
         public double MeanTime { get; private set; }
         public double MedianTime { get; private set; }
         public double StdDevTime { get; private set; }
+
+        public double Skewness
+        {
+            get; private set;
+        }
+
+        public double Kurtosis { get; private set; }
 
         private static double FindTimeWithAccumulatedArea(IList<double> times, IList<double> intensities, double targetArea)
         {
@@ -114,13 +125,74 @@ namespace pwiz.Skyline.Model.Results
                 var intensity2 = intensities[i + 1];
                 var width = time2 - time1;
                 var slope = (intensity2 - intensity1) / width;
-                var lowerIntegral = Math.Pow(time1 - mean, 3) * (slope * (3 * time1 + mean - 4 * time1) + 4 * intensity1) / 12;
+                // Calculate the integral from time1 to time2 of:
+                // (x - mean) ^ 2 * (intensity1 + slope * (x - time1)) dx
+                var lowerIntegral = Math.Pow(time1 - mean, 3) *
+                    (slope * (3 * time1 + mean - 4 * time1) + 4 * intensity1) / 12;
                 var upperIntegral = Math.Pow(time2 - mean, 3) *
                     (slope * (3 * time2 + mean - 4 * time1) + 4 * intensity1) / 12;
                 totalVariance += upperIntegral - lowerIntegral;
             }
 
             return totalVariance;
+        }
+
+        /// <summary>
+        /// Calculate an intermediate value that is used to determine the skewness.
+        /// The value being calculated is the integral of (x - mean)^3.
+        /// In order to turn the value returned from this function into the actual skewness value, you need to
+        /// divide by (area * stdDev^3).
+        /// </summary>
+        private static double CalculateTotalSkewness(IList<double> times, IList<double> intensities, double mean)
+        {
+            double totalSkewness = 0;
+            for (int i = 0; i < times.Count - 1; i++)
+            {
+                var time1 = times[i];
+                var time2 = times[i + 1];
+                var intensity1 = intensities[i];
+                var intensity2 = intensities[i + 1];
+                var width = time2 - time1;
+                var slope = (intensity2 - intensity1) / width;
+                // Calculate the integral from time1 to time2 of:
+                // (x-mean)^3 * (intensity1 + slope * (x - time1)) dx
+                var lowerIntegral = Math.Pow(time1 - mean, 4) *
+                    (slope * (4 * time1 + mean - 5 * time1) + 5 * intensity1) / 20;
+                var upperIntegral = Math.Pow(time2 - mean, 4) *
+                    (slope * (4 * time2 + mean - 5 * time1) + 5 * intensity1) / 20;
+                totalSkewness += upperIntegral - lowerIntegral;
+            }
+
+            return totalSkewness;
+        }
+
+        /// <summary>
+        /// Calculate an intermediate value that is used to determine the kurtosis.
+        /// The value being calculated is the integral of (x - mean)^4.
+        /// In order to turn the value returned from this function into the actual kurtosis value, you need to
+        /// divide by (area * stdDev^3) and then subtract 3.
+        /// </summary>
+        private static double CalculateTotalKurtosis(IList<double> times, IList<double> intensities, double mean)
+        {
+            double totalKurtosis = 0;
+            for (int i = 0; i < times.Count - 1; i++)
+            {
+                var time1 = times[i];
+                var time2 = times[i + 1];
+                var intensity1 = intensities[i];
+                var intensity2 = intensities[i + 1];
+                var width = time2 - time1;
+                var slope = (intensity2 - intensity1) / width;
+                // Calculate the integral from time1 to time2 of:
+                // (x-mean)^4 * (intensity1 + slope * (x - time1)) dx
+                var lowerIntegral = Math.Pow(time1 - mean, 5) *
+                    (slope * (5 * time1 + mean - 6 * time1) + 6 * intensity1) / 30;
+                var upperIntegral = Math.Pow(time2 - mean, 5) *
+                    (slope * (5 * time2 + mean - 6 * time1) + 6 * intensity1) / 30;
+                totalKurtosis += upperIntegral - lowerIntegral;
+            }
+
+            return totalKurtosis;
         }
     }
 }
