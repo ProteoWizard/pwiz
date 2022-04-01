@@ -535,8 +535,7 @@ namespace pwiz.Skyline.Model.Results
             ForcedIntegration = 32,
             Identified = 64,
             IdentifiedByAlignment = 128,
-            HasSkewness = 256,
-            HasKurtosis = 512,
+            HasPeakShape = 256,
         }
 
         private Flags _flags;
@@ -556,7 +555,7 @@ namespace pwiz.Skyline.Model.Results
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
                    annotations, userSet, peak.IsForcedIntegration, 
-                   peak.Skewness, peak.Kurtosis)
+                   peak.PeakShapeValues)
         {
         }
 
@@ -567,7 +566,7 @@ namespace pwiz.Skyline.Model.Results
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
                                    Annotations annotations, UserSet userSet, bool isForcedIntegration, 
-                                   float? skewness, float? kurtosis)
+                                   PeakShapeValues? peakShapeValues)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -592,8 +591,7 @@ namespace pwiz.Skyline.Model.Results
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
-            Skewness = skewness;
-            Kurtosis = kurtosis;
+            PeakShapeValues = peakShapeValues;
         }
 
         /// <summary>
@@ -683,8 +681,7 @@ namespace pwiz.Skyline.Model.Results
         public short RankByLevel { get; private set; }
 
         private short _pointsAcrossPeak;
-        private float _skewness;
-        private float _kurtosis;
+        private PeakShapeValues _peakShapeValue;
 
         public short? PointsAcrossPeak
         {
@@ -699,23 +696,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public float? Skewness
+        public PeakShapeValues? PeakShapeValues
         {
-            get { return GetFlag(Flags.HasSkewness) ? _skewness : (float?) null; }
+            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
             private set
             {
-                SetFlag(Flags.HasSkewness, value.HasValue);
-                _skewness = value ?? 0;
-            }
-        }
-
-        public float? Kurtosis
-        {
-            get { return GetFlag(Flags.HasKurtosis) ? _kurtosis : (float?) null; }
-            private set
-            {
-                SetFlag(Flags.HasKurtosis, value.HasValue);
-                _kurtosis = value ?? 0;
+                SetFlag(Flags.HasPeakShape, value.HasValue);
+                _peakShapeValue = value.GetValueOrDefault();
             }
         }
 
@@ -840,8 +827,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
-            chromInfo.Skewness = peak.Skewness;
-            chromInfo.Kurtosis = peak.Kurtosis;
+            chromInfo.PeakShapeValues = peak.PeakShapeValues;
             return chromInfo;
         }
 
@@ -910,8 +896,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
                    Equals(IsForcedIntegration, other.IsForcedIntegration) &&
-                   Equals(Skewness, other.Skewness) &&
-                   Equals(Kurtosis, other.Kurtosis);
+                   Equals(PeakShapeValues, other.PeakShapeValues);
             return result; // For ease of breakpoint setting
         }
 
@@ -946,8 +931,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobility.GetHashCode();
                 result = (result*397) ^ PointsAcrossPeak.GetHashCode();
                 result = (result*397) ^ IsForcedIntegration.GetHashCode();
-                result = (result*397) ^ Skewness.GetHashCode();
-                result = (result*397) ^ Kurtosis.GetHashCode();
+                result = (result*397) ^ PeakShapeValues.GetHashCode();
                 return result;
             }
         }
@@ -1004,6 +988,13 @@ namespace pwiz.Skyline.Model.Results
                     peakIdentification = PeakIdentification.TRUE;
                     break;
             }
+
+            PeakShapeValues? peakShapeValues = null;
+            if (transitionPeak.PeakShapeValues != null)
+            {
+                peakShapeValues = new PeakShapeValues(transitionPeak.PeakShapeValues.StdDev,
+                    transitionPeak.PeakShapeValues.Skewness, transitionPeak.PeakShapeValues.Kurtosis);
+            }
             return new TransitionChromInfo(
                 fileId, 
                 transitionPeak.OptimizationStep,
@@ -1025,8 +1016,7 @@ namespace pwiz.Skyline.Model.Results
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration,
-                DataValues.FromOptional(transitionPeak.Skewness),
-                DataValues.FromOptional(transitionPeak.Kurtosis)
+                peakShapeValues
             );
         }
 

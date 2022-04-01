@@ -200,13 +200,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.Skewness)]
         public double? Skewness
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.Skewness; }
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.Skewness; }
         }
 
         [Format(Formats.Skewness)]
         public double? Kurtosis
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.Kurtosis; }
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.Kurtosis; }
+        }
+
+        [Format(Formats.RETENTION_TIME)]
+        public double? PeakStandardDeviation
+        {
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.StdDev; }
         }
     }
 }

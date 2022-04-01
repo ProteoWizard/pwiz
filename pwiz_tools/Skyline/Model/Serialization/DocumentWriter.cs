@@ -860,8 +860,13 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
-                writer.WriteAttributeNullable(ATTR.skewness, chromInfo.Skewness);
-                writer.WriteAttributeNullable(ATTR.kurtosis, chromInfo.Kurtosis);
+                var peakShapeValues = chromInfo.PeakShapeValues;
+                if (peakShapeValues.HasValue)
+                {
+                    writer.WriteAttribute(ATTR.std_dev, peakShapeValues.Value.StdDev);
+                    writer.WriteAttribute(ATTR.skewness, peakShapeValues.Value.Skewness);
+                    writer.WriteAttribute(ATTR.kurtosis, peakShapeValues.Value.Kurtosis);
+                }
                 if (SkylineVersion.SrmDocumentVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 {
                     writer.WriteAttributeNullable(ATTR.points_across, chromInfo.PointsAcrossPeak);

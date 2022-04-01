@@ -495,8 +495,15 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadStartElement();
                     annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
+
+                float? stdDev = reader.GetNullableFloatAttribute(ATTR.std_dev);
                 float? skewness = reader.GetNullableFloatAttribute(ATTR.skewness);
                 float? kurtosis = reader.GetNullableFloatAttribute(ATTR.kurtosis);
+                PeakShapeValues? peakShapeValues = null;
+                if (stdDev.HasValue && skewness.HasValue && kurtosis.HasValue)
+                {
+                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value);
+                }
 
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
@@ -518,8 +525,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations,
                     userSet,
                     forcedIntegration,
-                    skewness,
-                    kurtosis);
+                    peakShapeValues);
             }
         }
 

@@ -2167,6 +2167,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak StdDev.
+        /// </summary>
+        public static string PeakStandardDeviation {
+            get {
+                return ResourceManager.GetString("PeakStandardDeviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide.
         /// </summary>
         public static string Peptide {

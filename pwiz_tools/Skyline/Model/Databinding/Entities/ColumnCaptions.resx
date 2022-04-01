@@ -799,6 +799,9 @@
   <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
   </data>
+  <data name="PeakStandardDeviation">
+    <value>Peak StdDev</value>
+  </data>
   <data name="Peptide">
     <value>Peptide</value>
   </data>

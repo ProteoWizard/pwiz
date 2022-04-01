@@ -1036,8 +1036,9 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
-        private readonly float _skewness;
-        private readonly float _kurtosis;
+        private readonly HalfPrecisionFloat _stdDev;
+        private readonly HalfPrecisionFloat _skewness;
+        private readonly HalfPrecisionFloat _kurtosis;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1049,7 +1050,7 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
-            has_skewness_kurtosis = 0x0080,
+            has_peak_shape = 0x0080,
 
             // This is the last available flag
             mass_error_known =      0x8000,
@@ -1099,13 +1100,15 @@ namespace pwiz.Skyline.Model.Results
             _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
             if (peakShapeStatistics != null)
             {
-                flagValues |= FlagValues.has_skewness_kurtosis;
-                _skewness = (float) peakShapeStatistics.Skewness;
-                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+                flagValues |= FlagValues.has_peak_shape;
+                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
+                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
+                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
             }
             else
             {
-                _skewness = _kurtosis = 0;
+                flagValues &= ~FlagValues.has_peak_shape;
+                _stdDev = _skewness = _kurtosis = 0;
             }
             _flagValues = flagValues;
         }
@@ -1225,9 +1228,14 @@ namespace pwiz.Skyline.Model.Results
                 peak.EndIndex, backgroundLevel);
             if (peakShapeStatistics != null)
             {
-                _flagValues |= FlagValues.has_skewness_kurtosis;
-                _skewness = (float) peakShapeStatistics.Skewness;
-                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+                _flagValues |= FlagValues.has_peak_shape;
+                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
+                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
+                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
+            }
+            else
+            {
+                _flagValues &= ~FlagValues.has_peak_shape;
             }
         }
 
@@ -1303,30 +1311,18 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public float? Skewness
+        public PeakShapeValues? PeakShapeValues
         {
             get
             {
-                if ((_flagValues & FlagValues.has_skewness_kurtosis) == 0)
+                if ((_flagValues & FlagValues.has_peak_shape) == 0)
                 {
                     return null;
                 }
-                return _skewness;
+
+                return new PeakShapeValues(_stdDev, _skewness, _kurtosis);
             }
         }
-
-        public float? Kurtosis
-        {
-            get
-            {
-                if ((_flagValues & FlagValues.has_skewness_kurtosis) == 0)
-                {
-                    return null;
-                }
-                return _kurtosis;
-            }
-        }
-
         /// <summary>
         /// Removes the mass error bits from the upper 16 in order to keep
         /// from writing mass errors into older cache file formats until
