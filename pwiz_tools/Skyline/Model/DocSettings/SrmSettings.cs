@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return TryGetPrecursorCalc(labelType, mods) != null;
         }
 
-        public bool AllowPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods)
+        public bool SupportsPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
             if (transitionGroup.IsLight)
             {
