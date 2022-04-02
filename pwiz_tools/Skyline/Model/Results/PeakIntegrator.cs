@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -42,6 +44,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public PeakGroupIntegrator PeakGroupIntegrator { get; }
+        public FullScanAcquisitionMethod FullScanAcquisitionMethod
+        {
+            get { return PeakGroupIntegrator.FullScanAcquisitionMethod; }
+        }
         public ChromSource ChromSource { get; }
 
         public IPeakFinder PeakFinder { get; private set; }
@@ -75,8 +81,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
             var foundPeak = PeakFinder.GetPeak(startIndex, endIndex);
-            var chromPeak = new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
-            chromPeak = FixDdaPeakArea(chromPeak);
+            var chromPeak = new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
             return chromPeak;
         }
 
@@ -91,13 +96,14 @@ namespace pwiz.Skyline.Model.Results
             if ((flags & ChromPeak.FlagValues.forced_integration) != 0 && ChromData.AreCoeluting(peakMax, interpolatedPeak))
                 flags &= ~ChromPeak.FlagValues.forced_integration;
 
-            var chromPeak = new ChromPeak(PeakFinder, interpolatedPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
+            var startTime = InterpolatedTimeIntensities.Times[peakMax.StartIndex];
+            var endTime = InterpolatedTimeIntensities.Times[peakMax.EndIndex];
+            var chromPeak = new ChromPeak(PeakFinder, interpolatedPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
             if (!BackgroundSubtraction)
             {
-                chromPeak = IntegratePeakWithoutBackground(InterpolatedTimeIntensities.Times[peakMax.StartIndex], InterpolatedTimeIntensities.Times[peakMax.EndIndex], flags);
+                chromPeak = IntegratePeakWithoutBackground(startTime, endTime, flags);
             }
 
-            chromPeak = FixDdaPeakArea(chromPeak);
             return Tuple.Create(chromPeak, interpolatedPeak);
         }
 
@@ -116,7 +122,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return ChromPeak.IntegrateWithoutBackground(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime,
-                endTime, flags);
+                endTime, flags, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
         }
 
         public bool BackgroundSubtraction
@@ -143,48 +149,23 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        /// <summary>
-        /// If the Acquisition Method is DDA, then change the Area of the peak to
-        /// be the intensity at the time point with the highest total MS2 intensity
-        /// </summary>
-        public ChromPeak FixDdaPeakArea(ChromPeak chromPeak)
+        public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)
         {
-            if (ChromSource != ChromSource.fragment ||
-                !FullScanAcquisitionMethod.DDA.Equals(PeakGroupIntegrator.FullScanAcquisitionMethod))
-            {
-                return chromPeak;
-            }
-
-            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
-            int? bestIndex = GetIndexOfBestDdaRetentionTime(timeIntensities, chromPeak.StartTime, chromPeak.EndTime);
-            var flags = chromPeak.Flags;
-            // Fwhm is always degenerate and peak is never truncated
-            flags |= ChromPeak.FlagValues.degenerate_fwhm | ChromPeak.FlagValues.peak_truncation_known;
-            flags &= ~(ChromPeak.FlagValues.forced_integration | ChromPeak.FlagValues.peak_truncated);
-            if (!bestIndex.HasValue)
-            {
-                return new ChromPeak(chromPeak.RetentionTime, chromPeak.StartTime, chromPeak.EndTime, 0, 0, 0, 0,
-                    flags, null, chromPeak.PointsAcross);
-            }
-
-            float retentionTime = timeIntensities.Times[bestIndex.Value];
-            float height = timeIntensities.Intensities[bestIndex.Value];
-            float? massError = timeIntensities.MassErrors?[bestIndex.Value];
-
-            return new ChromPeak(retentionTime, chromPeak.StartTime, chromPeak.EndTime, height, 0, height, 0,
-                flags, massError, chromPeak.PointsAcross);
+            var peakFinder = PeakFinders.NewDefaultPeakFinder();
+            peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+            return peakFinder;
         }
 
-        /// <summary>
-        /// Return the point in the range where the total MS2 intensity is the largest.
-        /// </summary>
-        public int? GetIndexOfBestDdaRetentionTime(TimeIntensities timeIntensities, float startTime, float endTime)
+        public TimeIntensities GetChromatogramNormalizedToOne(float startTime, float endTime)
         {
-            int? bestIndex = null;
-            double bestTotalIntensity = 0;
+            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
+            var times = new List<float>();
+            var intensities = new List<float>();
             int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
             if (index < 0)
             {
+                times.Add(startTime);
+                intensities.Add(timeIntensities.GetInterpolatedIntensity(startTime));
                 index = ~index;
             }
 
@@ -195,23 +176,23 @@ namespace pwiz.Skyline.Model.Results
                 {
                     break;
                 }
-
-                var totalIntensity = PeakGroupIntegrator.GetTotalMs2IntensityAtTime(time, index);
-                if (bestIndex == null || totalIntensity > bestTotalIntensity)
-                {
-                    bestIndex = index;
-                    bestTotalIntensity = totalIntensity;
-                }
+                times.Add(time);
+                intensities.Add(timeIntensities.Intensities[index]);
             }
 
-            return bestIndex;
-        }
+            if (times[times.Count - 1] < endTime)
+            {
+                times.Add(endTime);
+                intensities.Add(timeIntensities.GetInterpolatedIntensity(endTime));
+            }
 
-        public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)
-        {
-            var peakFinder = PeakFinders.NewDefaultPeakFinder();
-            peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
-            return peakFinder;
+            var max = intensities.Max();
+            if (max == 0)
+            {
+                return new TimeIntensities(times, intensities);
+            }
+
+            return new TimeIntensities(times, intensities.Select(i => i / max));
         }
     }
 }

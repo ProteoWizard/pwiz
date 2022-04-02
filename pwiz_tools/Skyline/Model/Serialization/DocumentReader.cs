@@ -499,10 +499,11 @@ namespace pwiz.Skyline.Model.Serialization
                 float? stdDev = reader.GetNullableFloatAttribute(ATTR.std_dev);
                 float? skewness = reader.GetNullableFloatAttribute(ATTR.skewness);
                 float? kurtosis = reader.GetNullableFloatAttribute(ATTR.kurtosis);
+                float? shapeCorrelation = reader.GetNullableFloatAttribute(ATTR.shape_correlation);
                 PeakShapeValues? peakShapeValues = null;
                 if (stdDev.HasValue && skewness.HasValue && kurtosis.HasValue)
                 {
-                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value);
+                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
                 }
 
                 return new TransitionChromInfo(fileInfo.FileId,

@@ -28,6 +28,11 @@ namespace pwiz.Skyline.Model.Results
     public class TimeIntensities : Immutable
     {
         public static readonly TimeIntensities EMPTY = new TimeIntensities(ImmutableList<float>.EMPTY, ImmutableList<float>.EMPTY, null, null);
+        
+        public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities) : this(times, intensities, null, null)
+        {
+        }
+        
         public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds)
         {
             Times = ImmutableList<float>.ValueOf(times);
@@ -232,7 +237,7 @@ namespace pwiz.Skyline.Model.Results
                 double intensitySum = Intensities[i] + other.Intensities[i];
                 newIntensities[i] = intensitySum < float.MaxValue ? (float)intensitySum : float.MaxValue;
             }
-            return new TimeIntensities(Times, newIntensities, null, null);
+            return new TimeIntensities(Times, newIntensities);
         }
 
         /// <summary>
@@ -398,6 +403,59 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return new TimeIntensities(newTimes, newIntensities, newMassErrors, newScanIds);
+        }
+
+        public float GetInterpolatedIntensity(float time)
+        {
+            int index = CollectionUtil.BinarySearch(Times, time);
+            if (index >= 0)
+            {
+                return Intensities[index];
+            }
+
+            index = ~index;
+            if (index <= 0)
+            {
+                return Intensities[0];
+            }
+
+            if (index >= Times.Count)
+            {
+                return Intensities[Intensities.Count - 1];
+            }
+            double intensity1 = Intensities[index - 1];
+            double intensity2 = Intensities[index];
+            double time1 = Times[index - 1];
+            double time2 = Times[index];
+            double width = time2 - time1;
+            return (float) ((intensity2 * (time - time1) + intensity1 * (time2 - time)) / width);
+        }
+
+        public float MaxIntensityInRange(float startTime, float endTime)
+        {
+            int index = CollectionUtil.BinarySearch(Times, startTime);
+            float max = 0;
+            if (index < 0)
+            {
+                max = GetInterpolatedIntensity(startTime);
+                index = ~index;
+            }
+
+            for (; index < NumPoints; index++)
+            {
+                if (Times[index] > endTime)
+                {
+                    max = Math.Max(max, GetInterpolatedIntensity(endTime));
+                    break;
+                }
+
+                max = Math.Max(max, Intensities[index]);
+                if (Times[index] == endTime)
+                {
+                    break;
+                }
+            }
+            return max;
         }
     }
 }

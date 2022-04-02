@@ -214,5 +214,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.StdDev; }
         }
+
+        [Format(Formats.Skewness)]
+        public double? ShapeCorrelation
+        {
+            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.ShapeCorrelation; }
+        }
     }
 }

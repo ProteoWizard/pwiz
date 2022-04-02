@@ -72,6 +72,7 @@ message SkylineDocumentProto {
 			float stdDev = 1;
 			float skewness = 2;
 			float kurtosis = 3;
+			float shapeCorrelation = 4;
 		}
 	}
 	message TransitionResults {

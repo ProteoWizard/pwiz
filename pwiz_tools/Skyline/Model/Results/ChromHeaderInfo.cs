@@ -1039,6 +1039,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly HalfPrecisionFloat _stdDev;
         private readonly HalfPrecisionFloat _skewness;
         private readonly HalfPrecisionFloat _kurtosis;
+        private readonly HalfPrecisionFloat _shapeCorrelation;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1077,52 +1078,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
-            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross, PeakShapeStatistics peakShapeStatistics)
-        {
-            _retentionTime = retentionTime;
-            _startTime = startTime;
-            _endTime = endTime;
-            _area = area;
-            _backgroundArea = backgroundArea;
-            _height = height;
-            _fwhm = fwhm;
-            if (massError.HasValue)
-            {
-                flags |= FlagValues.mass_error_known;
-                _massError = To10x(massError.Value);
-            }
-            else
-            {
-                flags &= ~FlagValues.mass_error_known;
-                _massError = 0;
-            }
-
-            if (pointsAcross.HasValue)
-            {
-                if (pointsAcross < 0 || pointsAcross > short.MaxValue)
-                {
-                    _pointsAcross = 0;
-                }
-                else
-                {
-                    _pointsAcross = Convert.ToInt16(pointsAcross.Value);
-                }
-            }
-            else
-            {
-                // It would be nice if "-1" meant "pointsAcross" is unknown, but for
-                // backwards compatibility reasons, 0 is the unknown value.
-                _pointsAcross = 0;
-            }
-
-            _flagValues = flags;
-        }
-
-        /// <summary>
-        /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
-        /// </summary>
-        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
->>>>>>> remotes/origin/Skyline/work/20220215_nicksh_DdaLibraryDotProduct
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross, PeakShapeValues? peakShapeValues)
         {
             _retentionTime = retentionTime;
             _startTime = startTime;
@@ -1143,17 +1099,18 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
-            if (peakShapeStatistics != null)
+            if (peakShapeValues.HasValue)
             {
                 flagValues |= FlagValues.has_peak_shape;
-                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
-                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
-                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
+                _skewness = (HalfPrecisionFloat) peakShapeValues.Value.Skewness;
+                _kurtosis = (HalfPrecisionFloat)peakShapeValues.Value.Kurtosis;
+                _stdDev = (HalfPrecisionFloat)peakShapeValues.Value.StdDev;
+                _shapeCorrelation = (HalfPrecisionFloat) peakShapeValues.Value.ShapeCorrelation;
             }
             else
             {
                 flagValues &= ~FlagValues.has_peak_shape;
-                _stdDev = _skewness = _kurtosis = 0;
+                _shapeCorrelation = _stdDev = _skewness = _kurtosis = 0;
             }
             _flagValues = flagValues;
         }
@@ -1162,7 +1119,8 @@ namespace pwiz.Skyline.Model.Results
                          IFoundPeak peak,
                          FlagValues flags,
                          TimeIntensities timeIntensities,
-                         IList<float> rawTimes)
+                         IList<float> rawTimes,
+                         MedianPeakShape medianPeakShape)
             : this()
         {
             var times = timeIntensities.Times;
@@ -1277,6 +1235,7 @@ namespace pwiz.Skyline.Model.Results
                 _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
                 _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
                 _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
+                _shapeCorrelation = (HalfPrecisionFloat) (medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f);
             }
             else
             {
@@ -1365,7 +1324,7 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
-                return new PeakShapeValues(_stdDev, _skewness, _kurtosis);
+                return new PeakShapeValues(_stdDev, _skewness, _kurtosis, _shapeCorrelation);
             }
         }
         /// <summary>
@@ -1414,7 +1373,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
-            float endTime, FlagValues flags)
+            float endTime, FlagValues flags, MedianPeakShape medianPeakShape)
         {
             int pointsAcrossPeak = 0;
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
@@ -1560,8 +1519,21 @@ namespace pwiz.Skyline.Model.Results
                 massError = totalMassError / totalArea;
             }
 
+            float correlation;
+            if (medianPeakShape == null)
+            {
+                correlation = 1;
+            }
+            else
+            {
+                correlation = (float) medianPeakShape.GetCorrelation(timeIntensities);
+            }
+
+            var peakShapeValues = new PeakShapeValues((float) peakShapeStatistics.StdDevTime, (float)peakShapeStatistics.Skewness,
+                (float)peakShapeStatistics.Kurtosis, correlation);
+
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak, peakShapeStatistics);
+                pointsAcrossPeak, peakShapeValues);
         }
 
         #region Fast file I/O

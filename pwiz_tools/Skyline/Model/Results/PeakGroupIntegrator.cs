@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
@@ -30,6 +31,7 @@ namespace pwiz.Skyline.Model.Results
     public class PeakGroupIntegrator
     {
         private List<PeakIntegrator> _peakIntegrators;
+        private Dictionary<PeakBounds, MedianPeakShape> _medianChromatograms = new Dictionary<PeakBounds, MedianPeakShape>();
         public PeakGroupIntegrator(FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals)
         {
             FullScanAcquisitionMethod = acquisitionMethod;
@@ -50,38 +52,19 @@ namespace pwiz.Skyline.Model.Results
         {
             _peakIntegrators.Add(peakIntegrator);
         }
-
-        /// <summary>
-        /// Returns the sum of the intensities across all of the MS2 chromatograms at a particular time point.
-        /// </summary>
-        /// <param name="time">The time point to look at in the chromatograms</param>
-        /// <param name="timeIndexHint">The index of the time in the TimeIntensities.Times list, to avoid having to do a binary search</param>
-        /// <returns>Sum of intensities</returns>
-        public double GetTotalMs2IntensityAtTime(float time, int timeIndexHint)
+        
+        public MedianPeakShape GetMedianChromatogram(float startTime, float endTime)
         {
-            double totalIntensity = 0;
-            foreach (var peakIntegrator in PeakIntegrators)
+            var key = new PeakBounds(startTime, endTime);
+            MedianPeakShape medianChromatogram;
+            if (_medianChromatograms.TryGetValue(key, out medianChromatogram))
             {
-                if (peakIntegrator.ChromSource != ChromSource.fragment)
-                {
-                    continue;
-                }
-
-                var timeIntensities = peakIntegrator.RawTimeIntensities ?? peakIntegrator.InterpolatedTimeIntensities;
-                float intensity;
-                if (timeIndexHint >= 0 && timeIndexHint < timeIntensities.NumPoints && timeIntensities.Times[timeIndexHint] == time)
-                {
-                    intensity = timeIntensities.Intensities[timeIndexHint];
-                }
-                else
-                {
-                    intensity = timeIntensities.Intensities[timeIntensities.IndexOfNearestTime(time)];
-                }
-
-                totalIntensity += intensity;
+                return medianChromatogram;
             }
-
-            return totalIntensity;
+            medianChromatogram = MedianPeakShape.GetMedianPeakShape(startTime, endTime, PeakIntegrators.Select(p => p.RawTimeIntensities ?? p.InterpolatedTimeIntensities)
+                .ToList());
+            _medianChromatograms[key] = medianChromatogram;
+            return medianChromatogram;
         }
     }
 }

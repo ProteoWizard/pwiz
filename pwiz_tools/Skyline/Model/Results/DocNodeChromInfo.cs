@@ -993,7 +993,7 @@ namespace pwiz.Skyline.Model.Results
             if (transitionPeak.PeakShapeValues != null)
             {
                 peakShapeValues = new PeakShapeValues(transitionPeak.PeakShapeValues.StdDev,
-                    transitionPeak.PeakShapeValues.Skewness, transitionPeak.PeakShapeValues.Kurtosis);
+                    transitionPeak.PeakShapeValues.Skewness, transitionPeak.PeakShapeValues.Kurtosis, transitionPeak.PeakShapeValues.ShapeCorrelation);
             }
             return new TransitionChromInfo(
                 fileId, 
