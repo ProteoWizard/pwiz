@@ -1892,8 +1892,22 @@ namespace pwiz.Skyline.Util
         {
             Trace.WriteLine(string.Format(@"Encountered the following exception (attempt {0} of {1}):", loopCount, maxLoopCount));
             Trace.WriteLine(x.Message);
+            if (RunningResharperAnalysis)
+            {
+                Trace.WriteLine(@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                // Allow up to 5 sec extra time when running code coverage or other analysis
+                milliseconds += (5000 * loopCount) / maxLoopCount; // Each loop a little more desperate
+            }
+            Trace.WriteLine(string.Format(@"Sleeping {0}ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
         }
+
+        // Detect the use of ReSharper code coverage, memory profiling etc, which may affect timing
+        //
+        // Per https://youtrack.jetbrains.com/issue/PROF-1093
+        // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
+        // in case of dotCover and dotMemory."
+        public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
