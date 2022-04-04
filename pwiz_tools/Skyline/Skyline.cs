@@ -643,7 +643,7 @@ namespace pwiz.Skyline
                                 new RCalcIrt(calc.Name, calc.DatabasePath).ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null))
                             )))));
                 } while (!SetDocument(docNew, docCurrent));
-            }, string.Format("An issue was found in the iRT calculator \"{0}\".", calc.Name));
+            }, string.Format(Resources.SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___, calc.Name));
         }
 
         private void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)
