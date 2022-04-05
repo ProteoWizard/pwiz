@@ -953,7 +953,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                Helpers.TryTwice(() => Directory.Delete(path, true), 4, 500, string.Format(@"SafeDelete({0})", path));
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }

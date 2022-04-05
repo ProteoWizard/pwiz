@@ -1865,7 +1865,8 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500)
+        /// <param name="hint">text to show in debug trace on failure</param>
+        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500, string hint = null)
         {
             for (int i = 1; i<loopCount; i++)
             {
@@ -1876,29 +1877,30 @@ namespace pwiz.Skyline.Util
                 }
                 catch (IOException exIO)
                 {
-                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount, hint);
                 }
                 catch (UnauthorizedAccessException exUA)
                 {
-                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount, hint);
                 }
             }
-
+            Trace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
             // Try the last time, and let the exception go.
             action();
         }
 
-        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount)
+        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint = null)
         {
-            Trace.WriteLine(string.Format(@"Encountered the following exception (attempt {0} of {1}):", loopCount, maxLoopCount));
+            Trace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
+                string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
             Trace.WriteLine(x.Message);
             if (RunningResharperAnalysis)
             {
                 Trace.WriteLine(@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
-                // Allow up to 5 sec extra time when running code coverage or other analysis
-                milliseconds += (5000 * loopCount) / maxLoopCount; // Each loop a little more desperate
+                // Allow up to 60 sec extra time when running code coverage or other analysis
+                milliseconds += (60000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }
-            Trace.WriteLine(string.Format(@"Sleeping {0}ms then retrying...", milliseconds));
+            Trace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
         }
 
@@ -1919,7 +1921,8 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void Try<TEx>(Action action, int loopCount = 4, int milliseconds = 500) where TEx : Exception
+        /// <param name="hint">text to show in debug trace on failure</param>
+        public static void Try<TEx>(Action action, int loopCount = 4, int milliseconds = 500, string hint = null) where TEx : Exception
         {
             for (int i = 1; i < loopCount; i++)
             {
@@ -1930,10 +1933,10 @@ namespace pwiz.Skyline.Util
                 }
                 catch (TEx x)
                 {
-                    ReportExceptionForRetry(milliseconds, x, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, x, i, loopCount, hint);
                 }
             }
-
+            Trace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
             // Try the last time, and let the exception go.
             action();
         }
