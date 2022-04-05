@@ -683,6 +683,7 @@ namespace pwiz.Skyline.Model.Lib
                     int iScore = reader.GetOrdinal(RefSpectra.score);
                     int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
                     int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
+                    int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
 
                     int rowsRead = 0;
                     while (reader.Read())
@@ -727,9 +728,20 @@ namespace pwiz.Skyline.Model.Lib
                             if (string.IsNullOrEmpty(chemicalFormula))
                             {
                                 var precursorMz = reader.GetDouble(iPrecursorMZ);
+                                Adduct precursorAdduct;
+                                if (string.IsNullOrEmpty(adduct))
+                                {
+                                    precursorAdduct = Adduct.FromChargeNoMass(charge);
+                                }
+                                else
+                                {
+                                    precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic,
+                                        charge);
+                                }
+                                TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
+                                TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
                                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
-                                    null, new TypedMass(precursorMz, MassType.Monoisotopic),
-                                    new TypedMass(precursorMz, MassType.Average), inChiKey, otherKeys);
+                                    null, monoMass, avgMass, inChiKey, otherKeys);
                             }
                             else
                             {
