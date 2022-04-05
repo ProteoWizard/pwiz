@@ -1852,6 +1852,8 @@ namespace pwiz.Skyline.Util
             return s.Length <= length ? s : s.Substring(0, length - ELIPSIS.Length) + ELIPSIS;
         }
 
+        private const int defaultLoopCount = 4;
+        private const int defaultMilliseconds = 500;
 
         /// <summary>
         /// Try an action that might throw an exception commonly related to a file move or delete.
@@ -1866,7 +1868,7 @@ namespace pwiz.Skyline.Util
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
         /// <param name="hint">text to show in debug trace on failure</param>
-        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500, string hint = null)
+        public static void TryTwice(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null)
         {
             for (int i = 1; i<loopCount; i++)
             {
@@ -1889,7 +1891,12 @@ namespace pwiz.Skyline.Util
             action();
         }
 
-        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint = null)
+        public static void TryTwice(Action action, string hint)
+        {
+            TryTwice(action, defaultLoopCount, defaultMilliseconds, hint);
+        }
+
+        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint)
         {
             Trace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));

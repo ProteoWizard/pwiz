@@ -854,12 +854,13 @@ namespace pwiz.Skyline.Util
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
+            var hint = $@"File.Delete({path})";
             if (ignoreExceptions)
             {
                 try
                 {
                     if (path != null && File.Exists(path))
-                        Helpers.TryTwice(() => File.Delete(path));
+                        Helpers.TryTwice(() => File.Delete(path), hint);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception)
@@ -872,7 +873,7 @@ namespace pwiz.Skyline.Util
 
             try
             {
-                Helpers.TryTwice(() => File.Delete(path));
+                Helpers.TryTwice(() => File.Delete(path), hint);
             }
             catch (ArgumentException e)
             {
@@ -953,7 +954,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Helpers.TryTwice(() => Directory.Delete(path, true), 4, 500, string.Format(@"SafeDelete({0})", path));
+                Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete({path})");
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }

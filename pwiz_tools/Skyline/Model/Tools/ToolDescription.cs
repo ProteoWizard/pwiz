@@ -895,7 +895,9 @@ namespace pwiz.Skyline.Model.Tools
             string skylineDirPath = Path.GetDirectoryName(skylinePath);
             if (string.IsNullOrEmpty(skylineDirPath))
                 return null;
-            return Path.Combine(skylineDirPath, @"Tools");
+            return string.IsNullOrEmpty(Program.TestName) ? 
+                Path.Combine(skylineDirPath, @"Tools") :
+                Path.Combine(skylineDirPath, Program.TestName + @"_Tools");
         }
     }
 }

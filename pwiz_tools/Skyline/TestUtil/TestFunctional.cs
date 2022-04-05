@@ -560,7 +560,7 @@ namespace pwiz.SkylineTestUtil
             // Code coverage testing may be slower yet.
             if (Helpers.RunningResharperAnalysis)
             {
-                waitCycles = waitCycles * 2;
+                waitCycles *= System.Diagnostics.Debugger.IsAttached ? 2 : ExtensionTestContext.IsDebugMode ? 4 : 16;
             }
 
             return waitCycles;
