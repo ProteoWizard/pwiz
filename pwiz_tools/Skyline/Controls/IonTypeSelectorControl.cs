@@ -143,8 +143,7 @@ namespace pwiz.Skyline.Controls
             var rowLabel = new Label()
             {
                 Text = Resources.IonTypeSelector_NTermLabel,
-                AutoSize = true,
-                TextAlign = ContentAlignment.MiddleLeft
+                AutoSize = true
             };
             Controls.Add(rowLabel);
             SetCellPosition(rowLabel, new TableLayoutPanelCellPosition(colNumber++, 0));
@@ -155,6 +154,9 @@ namespace pwiz.Skyline.Controls
                 Controls.Add(cb);
                 SetCellPosition(cb, new TableLayoutPanelCellPosition(colNumber++, 0));
             }
+            rowLabel.Margin = new Padding()
+                {Top = ((Controls.OfType<CheckBox>().Last().Height - rowLabel.Height) / 2)};
+
             colNumber = 0;
             rowLabel = new Label()
             {
@@ -170,6 +172,9 @@ namespace pwiz.Skyline.Controls
                 cb.CheckedChanged += ionTypeButton_Click;
                 SetCellPosition(cb, new TableLayoutPanelCellPosition(colNumber++, 1));
             }
+            rowLabel.Margin = new Padding()
+                { Top = ((Controls.OfType<CheckBox>().Last().Height - rowLabel.Height) / 2) };
+
         }
 
         CheckBox CreateIonTypeCheckBox(IonType ionType)
@@ -230,8 +235,7 @@ namespace pwiz.Skyline.Controls
                     _lossesLabel = new Label()
                     {
                         Text = Resources.IonTypeSelector_LossesLabel,
-                        AutoSize = true,
-                        Tag = @"LossesLabel"
+                        AutoSize = true
                     };
                     Controls.Add(_lossesLabel);
                     SetCellPosition(_lossesLabel, new TableLayoutPanelCellPosition(0, 2));
@@ -242,6 +246,8 @@ namespace pwiz.Skyline.Controls
                     Controls.Add(_lossesPanel);
                     SetCellPosition(_lossesPanel, new TableLayoutPanelCellPosition(1, 2));
                     SetColumnSpan(_lossesPanel, ColumnCount - 1);
+                    _lossesLabel.Margin = new Padding()
+                        { Top = ((Controls.OfType<CheckBox>().First().Height - _lossesLabel.Height) / 2) };
                 }
             }
             else
