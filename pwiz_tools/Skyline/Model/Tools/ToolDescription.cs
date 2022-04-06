@@ -895,6 +895,7 @@ namespace pwiz.Skyline.Model.Tools
             string skylineDirPath = Path.GetDirectoryName(skylinePath);
             if (string.IsNullOrEmpty(skylineDirPath))
                 return null;
+            // If we're running tests, make sure each has its own tools directory in case of parallel execution
             return string.IsNullOrEmpty(Program.TestName) ? 
                 Path.Combine(skylineDirPath, @"Tools") :
                 Path.Combine(skylineDirPath, Program.TestName + @"_Tools");
