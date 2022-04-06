@@ -128,7 +128,7 @@ bool MzIdentMLReader::parseFile(){
 vector<PSM_SCORE_TYPE> MzIdentMLReader::getScoreTypes() {
     isScoreLookup_ = true;
     try {
-	    parseFile();
+        parseFile();
     } catch (SAXHandler::EndEarlyException) {
     }
     return vector<PSM_SCORE_TYPE>(1, analysisToScoreType(analysisType_));
