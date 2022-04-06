@@ -97,6 +97,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.HeavyModList.Add(heavyKMod);
             Settings.Default.SpectralLibraryList.Clear();
             Settings.Default.SpectralLibraryList.Add(librarySpec);
+            Settings.Default.ShowLosses = "H3PO4,H2O,H3N";
 
             // Prepare document settings for this test
             const int countIons = 6;
