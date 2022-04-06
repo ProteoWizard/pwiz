@@ -955,27 +955,6 @@ namespace pwiz.Skyline
             ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
         }
 
-        // Update the Ion Types menu for document contents
-        private void charge1MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge1(!_graphSpectrumSettings.ShowCharge1);
-        }
-
-        private void charge2MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge2(!_graphSpectrumSettings.ShowCharge2);
-        }
-
-        private void charge3MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge3(!_graphSpectrumSettings.ShowCharge3);
-        }
-
-        private void charge4MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge4(!_graphSpectrumSettings.ShowCharge4);
-        }
-
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
             if(ListMzScaleCopyables().Count() < 2)
