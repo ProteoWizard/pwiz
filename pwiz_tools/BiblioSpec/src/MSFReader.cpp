@@ -64,17 +64,14 @@ namespace BiblioSpec
             return lexical_cast<string>(specId);
     }
 
-    void MSFReader::initFile() {
+    void MSFReader::openFile() {
         sqlite3_open(msfName_, &msfFile_);
-        if (!msfFile_)
-        {
+        if (!msfFile_) {
             throw BlibException(true, "Couldn't open '%s'.", msfName_);
         }
-
         // Get the schema version
         sqlite3_stmt* statement = getStmt("SELECT SoftwareVersion FROM SchemaInfo");
-        if (hasNext(&statement))
-        {
+        if (hasNext(&statement)) {
             string version = lexical_cast<string>(sqlite3_column_text(statement, 0));
             sqlite3_finalize(statement);
             vector<string> versionPieces;
@@ -92,6 +89,10 @@ namespace BiblioSpec
         if (schemaVersionMajor_ < 0) {
             Verbosity::error("Could not determine schema version.");
         }
+    }
+
+    bool MSFReader::parseFile() {
+        openFile();
 
         if (!hasQValues() && getScoreThreshold(SQT) < 1) {
             // no q-value fields in this database, error unless user wants everything
@@ -103,11 +104,6 @@ namespace BiblioSpec
 
         collectSpectra();
         collectPsms();
-    }
-
-    bool MSFReader::parseFile()
-    {
-        initFile();
 
         // add psms by filename
         for (auto iter = fileMap_.begin();
@@ -131,17 +127,11 @@ namespace BiblioSpec
     }
 
     vector<PSM_SCORE_TYPE> MSFReader::getScoreTypes() {
-        initFile();
-
-        set<PSM_SCORE_TYPE> allScoreTypes;
-        for (auto iter = fileMap_.begin(); iter != fileMap_.end(); ++iter) {
-            for (auto scoreIter = iter->second.begin(); scoreIter != iter->second.end(); ++scoreIter) {
-                if (iter->second.size() > 0) {
-                    allScoreTypes.insert(scoreIter->first);
-                }
-            }
-        }
-        return vector<PSM_SCORE_TYPE>(allScoreTypes.begin(), allScoreTypes.end());
+        openFile();
+        int pepConfidence, protConfidence;
+        PSM_SCORE_TYPE scoreType;
+        getScoreInfo(NULL, NULL, &scoreType, &pepConfidence, &protConfidence);
+        return vector<PSM_SCORE_TYPE>(1, scoreType);
     }
 
     /**
@@ -307,7 +297,6 @@ namespace BiblioSpec
     
     void MSFReader::collectPsms() {
         sqlite3_stmt* statement;
-        int resultCount;
         map<int, double> alts; // peptide id --> alt score, for breaking ties when q-values are identical
         vector<string> altScoreNames;
         altScoreNames.push_back("XCorr");
@@ -339,95 +328,10 @@ namespace BiblioSpec
             }
         }
 
-        // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
-        PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
-        bool peptideGroups = false;
-        bool proteins = false;
-        int pepConfidence = 0;
-        int protConfidence = 0;
-        const bool useProtConfidence = false;
-        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence")) {
-            // Confidence levels correspond to whatever the user selected.
-            // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
-            double threshold = getScoreThreshold(SQT);
-            if (std::abs(threshold - 0.01) < 0.001) {
-                pepConfidence = 3;
-            } else if (std::abs(threshold - 0.05) < 0.001) {
-                pepConfidence = 2;
-            }
-            if (useProtConfidence && columnExists(msfFile_, "TargetProteins", "ProteinFDRConfidence")) {
-                protConfidence = pepConfidence;
-            }
-        }
-        if (!filtered_ && versionLess(2, 2)) {
-            if (!hasQValues()) {
-                statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
-                resultCount = getRowCount("Peptides");
-            } else {
-                statement = getStmt(
-                    "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue, 0 "
-                    "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
-                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                resultCount = getRowCount(
-                    "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
-                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-            }
-        } else {
-            string qValueCol;
-            string qValueWhere;
-            if (!hasQValues()) {
-                qValueCol = "'0'";
-            } else {
-                if (pepConfidence > 0) {
-                    peptideGroups = true;
-                    qValueCol = "peps.Confidence";
-                    if (protConfidence > 0) {
-                        proteins = true;
-                    }
-                } else if (columnExists(msfFile_, "TargetPeptideGroups", "Qvalityqvalue")) {
-                    peptideGroups = true;
-                    qValueCol = "peps.Qvalityqvalue";
-                } else if (columnExists(msfFile_, "TargetPsms", "PercolatorqValue")) {
-                    qValueCol = "psms.PercolatorqValue";
-                } else if (columnExists(msfFile_, "TargetPsms", "qValue")) {
-                    qValueCol = "psms.qValue";
-                } else if (columnExists(msfFile_, "TargetPsms", "ExpectationValue")) {
-                    qValueCol = "psms.ExpectationValue";
-                    scoreType = MASCOT_IONS_SCORE;
-                }
-                qValueWhere = (pepConfidence <= 0)
-                    ? " WHERE " + qValueCol + " <= " + lexical_cast<string>(getScoreThreshold(SQT))
-                    : " WHERE " + qValueCol + " >= " + lexical_cast<string>(pepConfidence);
-            }
-            string stmtStr =
-                "SELECT psms.PeptideID, psm_spec.MSnSpectrumInfoSpectrumID, psms.Sequence, " +
-                    qValueCol + ", psms.WorkflowID, psms.SpectrumFileName" + (protConfidence > 0 ? ", prots.ProteinFDRConfidence" : "") +
-                " FROM TargetPsms psms"
-                " JOIN TargetPsmsMSnSpectrumInfo psm_spec ON psms.PeptideID = psm_spec.TargetPsmsPeptideID"
-                "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
-            string countStr =
-                "TargetPsms psms"
-                " JOIN TargetPsmsMSnSpectrumInfo psm_spec ON psms.PeptideID = psm_spec.TargetPsmsPeptideID"
-                "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
-            if (peptideGroups) {
-                string joins =
-                    " JOIN TargetPsmsTargetPeptideGroups psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
-                    " JOIN TargetPeptideGroups peps ON psm_pep.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
-                if (proteins) {
-                    joins +=
-                        " JOIN TargetPeptideGroupsTargetProteins pep_prot ON peps.PeptideGroupID = pep_prot.TargetPeptideGroupsPeptideGroupID"
-                        " JOIN TargetProteins prots ON pep_prot.TargetProteinsUniqueSequenceID = prots.UniqueSequenceID";
-                }
-                stmtStr += joins;
-                countStr += joins;
-            }
-            stmtStr += qValueWhere;
-            countStr += qValueWhere;
-            statement = getStmt(stmtStr);
-            resultCount = getRowCount(countStr);
-        }
+        int resultCount, pepConfidence, protConfidence;
+        PSM_SCORE_TYPE scoreType;
+        getScoreInfo(&statement, &resultCount, &scoreType, &pepConfidence, &protConfidence);
+
         Verbosity::status("Parsing %d PSMs.", resultCount);
         ProgressIndicator progress(resultCount);
 
@@ -566,6 +470,118 @@ namespace BiblioSpec
     }
 
     /**
+     * set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
+     */
+    void MSFReader::getScoreInfo(sqlite3_stmt** outStmt, int* outResultCount, PSM_SCORE_TYPE* outScoreType,
+        int* outPepConfidence, int* outProtConfidence) {
+        *outScoreType = PERCOLATOR_QVALUE;
+        *outPepConfidence = -1;
+        *outProtConfidence = -1;
+
+        string stmtStr;
+        string countStr;
+        if (!filtered_ && versionLess(2, 2)) {
+            if (!hasQValues()) {
+                stmtStr = "SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides";
+                countStr = "Peptides";
+            } else {
+                stmtStr =
+                    "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue, 0 "
+                    "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
+                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT));
+                countStr =
+                    "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
+                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT));
+            }
+            if (outStmt != NULL) {
+                *outStmt = getStmt(stmtStr);
+            }
+            if (outResultCount != NULL) {
+                *outResultCount = getRowCount(countStr);
+            }
+            return;
+        }
+
+        bool peptideGroups = false;
+        bool proteins = false;
+        const bool useProtConfidence = false;
+        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence") &&
+            tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
+            // Confidence levels correspond to whatever the user selected.
+            // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
+            double threshold = getScoreThreshold(SQT);
+            if (std::abs(threshold - 0.01) < 0.001) {
+                *outPepConfidence = 3;
+            } else if (std::abs(threshold - 0.05) < 0.001) {
+                *outPepConfidence = 2;
+            }
+            if (useProtConfidence && columnExists(msfFile_, "TargetProteins", "ProteinFDRConfidence") &&
+                tableExists(msfFile_, "TargetPeptideGroupsTargetProteins")) {
+                *outProtConfidence = *outPepConfidence;
+            }
+        }
+
+        string qValueCol;
+        string qValueWhere;
+        if (!hasQValues()) {
+            qValueCol = "'0'";
+        } else {
+            if (*outPepConfidence > 0) {
+                peptideGroups = true;
+                qValueCol = "peps.Confidence";
+                if (*outProtConfidence > 0) {
+                    proteins = true;
+                }
+            } else if (columnExists(msfFile_, "TargetPeptideGroups", "Qvalityqvalue")) {
+                peptideGroups = true;
+                qValueCol = "peps.Qvalityqvalue";
+            } else if (columnExists(msfFile_, "TargetPsms", "PercolatorqValue")) {
+                qValueCol = "psms.PercolatorqValue";
+            } else if (columnExists(msfFile_, "TargetPsms", "qValue")) {
+                qValueCol = "psms.qValue";
+            } else if (columnExists(msfFile_, "TargetPsms", "ExpectationValue")) {
+                qValueCol = "psms.ExpectationValue";
+                *outScoreType = MASCOT_IONS_SCORE;
+            }
+            qValueWhere = (*outPepConfidence <= 0)
+                ? " WHERE " + qValueCol + " <= " + lexical_cast<string>(getScoreThreshold(SQT))
+                : " WHERE " + qValueCol + " >= " + lexical_cast<string>(*outPepConfidence);
+        }
+        stmtStr =
+            "SELECT psms.PeptideID, psm_spec.MSnSpectrumInfoSpectrumID, psms.Sequence, " +
+                qValueCol + ", psms.WorkflowID, psms.SpectrumFileName" + (*outProtConfidence > 0 ? ", prots.ProteinFDRConfidence" : "") +
+            " FROM TargetPsms psms"
+            " JOIN TargetPsmsMSnSpectrumInfo psm_spec ON psms.PeptideID = psm_spec.TargetPsmsPeptideID"
+            "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
+        countStr =
+            "TargetPsms psms"
+            " JOIN TargetPsmsMSnSpectrumInfo psm_spec ON psms.PeptideID = psm_spec.TargetPsmsPeptideID"
+            "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
+        if (peptideGroups) {
+            string joins =
+                " JOIN TargetPsmsTargetPeptideGroups psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
+                " JOIN TargetPeptideGroups peps ON psm_pep.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
+            if (proteins) {
+                joins +=
+                    " JOIN TargetPeptideGroupsTargetProteins pep_prot ON peps.PeptideGroupID = pep_prot.TargetPeptideGroupsPeptideGroupID"
+                    " JOIN TargetProteins prots ON pep_prot.TargetProteinsUniqueSequenceID = prots.UniqueSequenceID";
+            }
+            stmtStr += joins;
+            countStr += joins;
+        }
+        stmtStr += qValueWhere;
+        countStr += qValueWhere;
+        if (outStmt != NULL) {
+            *outStmt = getStmt(stmtStr);
+        }
+        if (outResultCount != NULL) {
+            *outResultCount = getRowCount(countStr);
+        }
+    }
+
+    /**
      * Initialize fileNameMap_, which maps FileID to their filenames.
      */
     void MSFReader::initFileNameMap() {
@@ -632,6 +648,8 @@ namespace BiblioSpec
                    columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ||
                    columnExists(msfFile_, "TargetPsms", "qValue") ||
                    columnExists(msfFile_, "TargetPsms", "ExpectationValue");
+        } else if (!tableExists(msfFile_, "CustomDataFields")) {
+            return false;
         }
 
          statement = getStmt(
