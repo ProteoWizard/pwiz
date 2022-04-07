@@ -599,7 +599,6 @@ namespace pwiz.Skyline.Model.Irt
             {
                 foreach (var pep in peptides)
                 {
-
                     using (var cmd = session.Connection.CreateCommand())
                     {
                         cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 AND PeptideModSeq = ?";

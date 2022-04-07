@@ -629,7 +629,7 @@ namespace pwiz.Skyline
                 else
                     library.Add(pep);
             }
-            EditIrtCalcDlg.CheckForDuplicates(this, standards, library, true, duplicates =>
+            EditIrtCalcDlg.CheckForDuplicates(standards, library, duplicates =>
             {
                 var db = IrtDb.GetIrtDb(calc.DatabasePath, null);
                 db.RemoveLibraryPeptides(duplicates);
@@ -643,7 +643,7 @@ namespace pwiz.Skyline
                                 new RCalcIrt(calc.Name, calc.DatabasePath).ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null))
                             )))));
                 } while (!SetDocument(docNew, docCurrent));
-            }, string.Format(Resources.SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___, calc.Name));
+            });
         }
 
         private void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)

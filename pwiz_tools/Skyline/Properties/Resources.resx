@@ -11716,16 +11716,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
 	  <value>Skyline 21.2</value>
   </data>
-  <data name="EditIrtCalcDlg_CheckForDuplicates_Each_target_must_be_either_a_standard_or_in_the_library__but_not_both__The_following_targets_were_found_as_both_" xml:space="preserve">
-	  <value>Each target must be either a standard or in the library, but not both. The following targets were found as both:</value>
-  </data>
-  <data name="EditIrtCalcDlg_CheckForDuplicates_Do_you_want_to_remove_these_targets_from_the_library_" xml:space="preserve">
-	  <value>Do you want to remove these targets from the library?</value>
-  </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
-  </data>
-  <data name="SkylineWindow_IrtCalcLoaded_An_issue_was_found_in_the_iRT_calculator___0___" xml:space="preserve">
-	  <value>An issue was found in the iRT calculator "{0}".</value>
   </data>
 </root>
