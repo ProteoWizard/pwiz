@@ -592,21 +592,13 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public void RemoveLibraryPeptides(IEnumerable<Target> peptides)
+        public void RemoveDuplicateLibraryPeptides()
         {
             using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
+            using (var cmd = session.Connection.CreateCommand())
             {
-                foreach (var pep in peptides)
-                {
-                    using (var cmd = session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 AND PeptideModSeq = ?";
-                        cmd.Parameters.Add(new SQLiteParameter { Value = pep.Sequence });
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                transaction.Commit();
+                cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 and PeptideModSeq IN (SELECT PeptideModSeq FROM IrtLibrary WHERE Standard = 1)";
+                cmd.ExecuteNonQuery();
             }
         }
     }

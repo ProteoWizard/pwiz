@@ -631,8 +631,7 @@ namespace pwiz.Skyline
             }
             EditIrtCalcDlg.CheckForDuplicates(standards, library, duplicates =>
             {
-                var db = IrtDb.GetIrtDb(calc.DatabasePath, null);
-                db.RemoveLibraryPeptides(duplicates);
+                IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides();
                 SrmDocument docCurrent, docNew;
                 do
                 {
