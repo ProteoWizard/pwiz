@@ -177,13 +177,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         public IEnumerable<DbIrtPeptide> StandardPeptides => StandardPeptideList;
-
         public IEnumerable<DbIrtPeptide> LibraryPeptides => LibraryPeptideList;
-
-        public IEnumerable<DbIrtPeptide> AllPeptides
-        {
-            get { return new[] {StandardPeptideList, LibraryPeptideList}.SelectMany(list => list); }
-        }
+        public IEnumerable<DbIrtPeptide> AllPeptides => StandardPeptides.Concat(LibraryPeptides);
 
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
@@ -301,6 +296,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        // Check that there are no peptides in both the standard and library list.
+        private void CheckForDuplicates()
+        {
+            var duplicates = IrtDb.CheckForDuplicates(StandardPeptides, LibraryPeptides);
+            for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
+                if (duplicates.Contains(LibraryPeptideList[i].ModifiedTarget))
+                    LibraryPeptideList.RemoveAt(i);
+        }
+
         public void OpenDatabase(string path)
         {
             if (!File.Exists(path))
@@ -313,7 +317,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
-                var db = IrtDb.GetIrtDb(path, null, out var dbPeptides); // TODO: LongWaitDlg
+                IrtDb db = null;
+                IList<DbIrtPeptide> dbPeptides = null;
+                using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
+                {
+                    dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
+                }
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -332,6 +341,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         ? SrmDocument.DOCUMENT_TYPE.mixed
                         : SrmDocument.DOCUMENT_TYPE.small_molecules;
                 }
+
+                CheckForDuplicates();
             }
             catch (DatabaseOpeningException e)
             {
@@ -347,6 +358,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textCalculatorName.Focus();
                 return;
             }
+
+            CheckForDuplicates();
 
             if (_existingCalcs != null)
             {
