@@ -189,7 +189,6 @@ namespace pwiz.Skyline
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
 
-            DocumentUIChangedEvent += IrtCalcLoaded;
             DocumentUIChangedEvent += AutoTrainCompleted;
 
             checkForUpdatesMenuItem.Visible =
@@ -608,41 +607,6 @@ namespace pwiz.Skyline
                 SetUIMode(ModeUI);
             }
             ViewMenu.DocumentUiChanged();
-        }
-
-        private void IrtCalcLoaded(object sender, DocumentChangedEventArgs e)
-        {
-            var calc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
-            var calcPrev = e.DocumentPrevious?.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
-
-            if (calc == null || !calc.IsUsable ||
-                (calcPrev != null && calcPrev.IsUsable && Equals(calc.DatabasePath, calcPrev.DatabasePath)))
-                return;
-
-            var existing = calc.GetDbIrtPeptides().ToArray();
-            var standards = new List<DbIrtPeptide>();
-            var library = new List<DbIrtPeptide>();
-            foreach (var pep in existing)
-            {
-                if (pep.Standard)
-                    standards.Add(pep);
-                else
-                    library.Add(pep);
-            }
-            EditIrtCalcDlg.CheckForDuplicates(standards, library, duplicates =>
-            {
-                IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides();
-                SrmDocument docCurrent, docNew;
-                do
-                {
-                    docCurrent = DocumentUI;
-                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(pepSettings =>
-                        pepSettings.ChangePrediction(pepSettings.Prediction.ChangeRetentionTime(
-                            pepSettings.Prediction.RetentionTime.ChangeCalculator(
-                                new RCalcIrt(calc.Name, calc.DatabasePath).ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null))
-                            )))));
-                } while (!SetDocument(docNew, docCurrent));
-            });
         }
 
         private void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)

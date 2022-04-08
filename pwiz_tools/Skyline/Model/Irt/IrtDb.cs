@@ -592,6 +592,12 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        public static HashSet<Target> CheckForDuplicates(IEnumerable<DbIrtPeptide> standards, IEnumerable<DbIrtPeptide> library)
+        {
+            return standards.Select(pep => pep.ModifiedTarget)
+                .Intersect(library.Select(pep => pep.ModifiedTarget)).ToHashSet();
+        }
+
         public void RemoveDuplicateLibraryPeptides()
         {
             using (var session = OpenWriteSession())

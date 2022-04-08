@@ -296,24 +296,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        public static void CheckForDuplicates(IEnumerable<DbIrtPeptide> standards, IEnumerable<DbIrtPeptide> library,
-            Action<HashSet<Target>> removeDuplicatesAction)
-        {
-            var duplicates = standards.Select(pep => pep.ModifiedTarget)
-                .Intersect(library.Select(pep => pep.ModifiedTarget)).ToHashSet();
-            if (duplicates.Any())
-                removeDuplicatesAction(duplicates);
-        }
-
         // Check that there are no peptides in both the standard and library list.
         private void CheckForDuplicates()
         {
-            CheckForDuplicates(StandardPeptides, LibraryPeptides, duplicates =>
-            {
-                for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
-                    if (duplicates.Contains(LibraryPeptideList[i].ModifiedTarget))
-                        LibraryPeptideList.RemoveAt(i);
-            });
+            var duplicates = IrtDb.CheckForDuplicates(StandardPeptides, LibraryPeptides);
+            for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
+                if (duplicates.Contains(LibraryPeptideList[i].ModifiedTarget))
+                    LibraryPeptideList.RemoveAt(i);
         }
 
         public void OpenDatabase(string path)
