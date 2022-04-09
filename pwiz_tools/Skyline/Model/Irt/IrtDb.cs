@@ -591,21 +591,5 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
         }
-
-        public static HashSet<Target> CheckForDuplicates(IEnumerable<DbIrtPeptide> standards, IEnumerable<DbIrtPeptide> library)
-        {
-            return standards.Select(pep => pep.ModifiedTarget)
-                .Intersect(library.Select(pep => pep.ModifiedTarget)).ToHashSet();
-        }
-
-        public void RemoveDuplicateLibraryPeptides()
-        {
-            using (var session = OpenWriteSession())
-            using (var cmd = session.Connection.CreateCommand())
-            {
-                cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 and PeptideModSeq IN (SELECT PeptideModSeq FROM IrtLibrary WHERE Standard = 1)";
-                cmd.ExecuteNonQuery();
-            }
-        }
     }
 }

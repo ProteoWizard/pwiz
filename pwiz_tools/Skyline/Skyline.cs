@@ -609,7 +609,7 @@ namespace pwiz.Skyline
             ViewMenu.DocumentUiChanged();
         }
 
-        private void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)
+        public void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)
         {
             var trainedType = AutoTrainManager.CompletedType(DocumentUI, e.DocumentPrevious);
             if (Equals(trainedType, PeptideIntegration.AutoTrainType.none))

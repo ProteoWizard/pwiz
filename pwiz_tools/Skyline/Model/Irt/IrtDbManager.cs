@@ -100,22 +100,6 @@ namespace pwiz.Skyline.Model.Irt
                 EndProcessing(document);
                 return false;
             }
-
-            var existing = calc.GetDbIrtPeptides().ToArray();
-            var standards = new List<DbIrtPeptide>();
-            var library = new List<DbIrtPeptide>();
-            foreach (var pep in existing)
-            {
-                if (pep.Standard)
-                    standards.Add(pep);
-                else
-                    library.Add(pep);
-            }
-
-            var duplicates = IrtDb.CheckForDuplicates(standards, library);
-            if (duplicates != null)
-                IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides();
-
             var rtRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
             var rtRegressionNew = !ReferenceEquals(calc, rtRegression.Calculator)
                 ? rtRegression.ChangeCalculator(calc)
