@@ -510,7 +510,7 @@ namespace BiblioSpec
         if (tableExists(msfFile_, "TargetPeptideGroupsTargetPsms")) {
             pepPsmTable = "TargetPeptideGroupsTargetPsms";
         } else if (tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
-	        pepPsmTable = "TargetPsmsTargetPeptideGroups";
+            pepPsmTable = "TargetPsmsTargetPeptideGroups";
         }
 
         bool peptideGroups = false;
