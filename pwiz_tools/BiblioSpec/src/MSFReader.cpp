@@ -370,6 +370,12 @@ namespace BiblioSpec
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
             double qvalue = pepConfidence <= 0 ? sqlite3_column_double(statement, 3) : 0;
 
+            auto findItr = spectra_.find(specId);
+            if (findItr == spectra_.end()) {
+                Verbosity::warn("Peptide %d (%s) with score %f has a spectrum id (%s) not present in the spectrum map.", peptideId, sequence.c_str(), qvalue, specId.c_str());
+                continue;
+            }
+
             auto altIter = alts.find(peptideId);    
             double altScore = (altIter != alts.end()) ? altIter->second : -std::numeric_limits<double>::max();
 
@@ -420,10 +426,6 @@ namespace BiblioSpec
                 curPSM_ = new PSM();
                 processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
             }
-
-            auto findItr = spectra_.find(specId);
-            if (findItr == spectra_.end())
-                throw BlibException(false, "Peptide %d (%s) with score %f has a spectrum id (%s) not present in the spectrum map.", peptideId, sequence.c_str(), qvalue, specId.c_str());
 
             curPSM_->charge = findItr->second->charge;
             curPSM_->unmodSeq = sequence;
@@ -561,7 +563,8 @@ namespace BiblioSpec
             "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
         if (peptideGroups) {
             string joins =
-                " JOIN TargetPsmsTargetPeptideGroups psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
+                " JOIN " + string(tableExists(msfFile_, "TargetPeptideGroupsTargetPsms") ? "TargetPeptideGroupsTargetPsms" : "TargetPsmsTargetPeptideGroups") +
+                    " psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
                 " JOIN TargetPeptideGroups peps ON psm_pep.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
             if (proteins) {
                 joins +=
