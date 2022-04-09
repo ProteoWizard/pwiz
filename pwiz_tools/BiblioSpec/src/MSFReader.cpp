@@ -506,11 +506,17 @@ namespace BiblioSpec
             return;
         }
 
+        string pepPsmTable = "";
+        if (tableExists(msfFile_, "TargetPeptideGroupsTargetPsms")) {
+            pepPsmTable = "TargetPeptideGroupsTargetPsms";
+        } else if (tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
+	        pepPsmTable = "TargetPsmsTargetPeptideGroups";
+        }
+
         bool peptideGroups = false;
         bool proteins = false;
         const bool useProtConfidence = false;
-        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence") &&
-            tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
+        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence") && !pepPsmTable.empty()) {
             // Confidence levels correspond to whatever the user selected.
             // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
             double threshold = getScoreThreshold(SQT);
@@ -563,8 +569,7 @@ namespace BiblioSpec
             "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
         if (peptideGroups) {
             string joins =
-                " JOIN " + string(tableExists(msfFile_, "TargetPeptideGroupsTargetPsms") ? "TargetPeptideGroupsTargetPsms" : "TargetPsmsTargetPeptideGroups") +
-                    " psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
+                " JOIN " + pepPsmTable + " psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
                 " JOIN TargetPeptideGroups peps ON psm_pep.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
             if (proteins) {
                 joins +=
