@@ -145,8 +145,7 @@ namespace pwiz.Skyline.Alerts
 
         public void CopyMessage()
         {
-            Clipboard.Clear();
-            Clipboard.SetText(GetTitleAndMessageDetail());
+            ClipboardHelper.SetSystemClipboardText(this, GetTitleAndMessageDetail());
         }
 
         public override string DetailedMessage
