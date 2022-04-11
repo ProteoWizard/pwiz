@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class GroupComparisonStrings {
@@ -498,11 +498,29 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median Normalized {0}.
+        /// </summary>
+        internal static string NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_ {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ratio to {0}.
         /// </summary>
         internal static string NormalizationMethod_FromName_Ratio_to__0_ {
             get {
                 return ResourceManager.GetString("NormalizationMethod_FromName_Ratio_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Ratio to Global Standards.
+        /// </summary>
+        internal static string NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards", resourceCulture);
             }
         }
         
@@ -530,6 +548,15 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string NormalizationMethod_QUANTILE_Quantile {
             get {
                 return ResourceManager.GetString("NormalizationMethod_QUANTILE_Quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TIC Normalized {0}.
+        /// </summary>
+        internal static string NormalizationMethod_TIC_TIC_Normalized__0_ {
+            get {
+                return ResourceManager.GetString("NormalizationMethod_TIC_TIC_Normalized__0_", resourceCulture);
             }
         }
         
