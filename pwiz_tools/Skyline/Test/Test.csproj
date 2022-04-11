@@ -138,6 +138,7 @@
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
+    <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />

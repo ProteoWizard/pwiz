@@ -562,6 +562,7 @@
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />

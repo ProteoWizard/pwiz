@@ -136,13 +136,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return CalibrationCurve.NO_EXTERNAL_STANDARDS;
         }
 
-        protected static CalibrationCurve LinearFit(IList<WeightedPoint> points)
+        public static CalibrationCurve LinearFit(IList<WeightedPoint> points)
         {
             CalibrationCurve calibrationCurve = new CalibrationCurve().ChangePointCount(points.Count);
             try
             {
-                double[] values = WeightedRegression.Weighted(points.Select(p => new Tuple<double[], double>(new[] {p.X}, p.Y)),
-                    points.Select(p => p.Weight).ToArray(), true);
+                var samples = points.Select(p => new Tuple<double[], double>(new[] {p.X}, p.Y));
+                var weights = points.Select(p => p.Weight).ToArray();
+                double[] values = WeightedRegression.Weighted(samples, weights, true);
                 calibrationCurve = calibrationCurve.ChangeSlope(values[1]).ChangeIntercept(values[0]);
             }
             catch (Exception ex)
