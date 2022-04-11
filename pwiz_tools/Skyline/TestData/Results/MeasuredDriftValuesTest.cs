@@ -63,9 +63,8 @@ namespace pwiz.SkylineTestData.Results
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
+                if (SkipSmallMoleculeTestVersions())
                 {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return;
                 }
             }

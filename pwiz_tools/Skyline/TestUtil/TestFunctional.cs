@@ -531,39 +531,36 @@ namespace pwiz.SkylineTestUtil
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
-            int waitCycles = millis / SLEEP_INTERVAL;
+            var waitMultiplier = 1; // Various conditions may require longer timeouts
 
-            // Wait a little longer for stress test.
-            if (Program.StressTest)
+            if (Helpers.RunningResharperAnalysis)
             {
-                waitCycles = waitCycles * 2;
+                // Code coverage testing is very slow.
+                waitMultiplier = 16;
             }
-
-            if (System.Diagnostics.Debugger.IsAttached)
+            else if (System.Diagnostics.Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
-                waitCycles *= 10;
+                waitMultiplier = 10;
+            }
+            else if (ExtensionTestContext.IsDebugMode)
+            {
+                // Wait a little longer for debug build.
+                waitMultiplier = 4;
+            }
+            else if (Program.StressTest)
+            {
+                // Wait a little longer for stress test.
+                waitMultiplier = 2;
             }
 
             // Wait longer if running multiple processes simultaneously.
-            if (Program.UnitTestTimeoutMultiplier != 0)
+            if (Program.UnitTestTimeoutMultiplier > 0)
             {
-                waitCycles *= Program.UnitTestTimeoutMultiplier;
+                waitMultiplier *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build.
-            if (ExtensionTestContext.IsDebugMode)
-            {
-                waitCycles = waitCycles * 4;
-            }
-
-            // Code coverage testing may be slower yet.
-            if (Helpers.RunningResharperAnalysis)
-            {
-                waitCycles *= System.Diagnostics.Debugger.IsAttached ? 2 : ExtensionTestContext.IsDebugMode ? 4 : 16;
-            }
-
-            return waitCycles;
+            return  (millis * waitMultiplier) / SLEEP_INTERVAL; // Return the wait cycle count
         }
 
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
