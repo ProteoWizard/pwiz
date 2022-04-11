@@ -136,6 +136,11 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
+            AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
+                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs"}, 
+                null, "Clipboard(Ex)?\\.SetText", true, 
+                "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
+
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
             // AddInspection(@"*.cs", Inspection.Forbidden, Level.Error, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -645,7 +650,7 @@ namespace pwiz.SkylineTest
             public Pattern(string patternString, bool isRegEx, string patternExceptionString)
             {
                 PatternString = patternString;
-                RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.CultureInvariant) : null;
+                RegExPattern = isRegEx ? new Regex(patternString, RegexOptions.CultureInvariant | RegexOptions.CultureInvariant | RegexOptions.Compiled) : null;
                 PatternExceptionString = patternExceptionString;
             }
 
