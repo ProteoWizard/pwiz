@@ -47,11 +47,9 @@ namespace pwiz.SkylineTestUtil
         private static readonly Stopwatch STOPWATCH = new Stopwatch();
 
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
-        public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION =
-            " (RunSmallMoleculeTestVersions=False, skipping.) ";
+        public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
 
-        public const string MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST =
-            " (test is too slow running under ReSharper analysis, skippiing.) ";
+        public const string MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST = " (test is too slow running under ReSharper analysis, skippiing.) ";
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
@@ -61,25 +59,19 @@ namespace pwiz.SkylineTestUtil
 
         protected bool AllowInternetAccess
         {
-            get { return GetBoolValue("AccessInternet", false); } // Return false if unspecified
-            set
-            {
-                TestContext.Properties["AccessInternet"] = value ? "true" : "false";
-            } // Only appropriate to use in perf tests, really
+            get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
+            set { TestContext.Properties["AccessInternet"] = value ? "true" : "false"; } // Only appropriate to use in perf tests, really
         }
 
         protected bool RunPerfTests
         {
-            get { return GetBoolValue("RunPerfTests", false); } // Return false if unspecified
+            get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
             set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
         }
 
         protected bool RetryDataDownloads
         {
-            get
-            {
-                return GetBoolValue("RetryDataDownloads", false);
-            } // When true, re-download data sets on test failure in case it's due to stale data
+            get { return GetBoolValue("RetryDataDownloads", false); }  // When true, re-download data sets on test failure in case it's due to stale data
             set { TestContext.Properties["RetryDataDownloads"] = value ? "true" : "false"; }
         }
 
@@ -88,7 +80,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RecordAuditLogs
         {
-            get { return GetBoolValue("RecordAuditLogs", false); } // Return false if unspecified
+            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
             set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
         }
 
@@ -99,15 +91,10 @@ namespace pwiz.SkylineTestUtil
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"};
-
+        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get
-            {
-                return GetBoolValue("RunSmallMoleculeTestVersions", false) ||
-                       SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd));
-            }
+            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
         }
 
@@ -146,10 +133,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return false;
             }
-
-            Console.Out.WriteLine(
-                "Skipping {0} because Wiff2 DLLs do not load in the correct order when test is executed by Test Explorer.",
-                testName);
+            Console.Out.WriteLine("Skipping {0} because Wiff2 DLLs do not load in the correct order when test is executed by Test Explorer.", testName);
             Console.Out.WriteLine("This test only runs to completion when executed by TestRunner or SkylineTester.");
             return true;
         }
@@ -164,25 +148,22 @@ namespace pwiz.SkylineTestUtil
         protected bool GetBoolValue(string property, bool defaultValue)
         {
             var value = TestContext.Properties[property];
-            return (value == null)
-                ? defaultValue
-                : string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+            return (value == null) ? defaultValue :
+                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
         }
 
 
         private string[] _testFilesZips;
-
         public string TestFilesZip
         {
             get
             {
                 // ReSharper disable LocalizableElement
-                Assert.AreEqual(1, _testFilesZips.Length,
-                    "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead.");
+                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead.");
                 // ReSharper restore LocalizableElement
                 return _testFilesZips[0];
             }
-            set { TestFilesZipPaths = new[] {value}; }
+            set { TestFilesZipPaths = new[] { value }; }
         }
 
         /// <summary>
@@ -219,26 +200,21 @@ namespace pwiz.SkylineTestUtil
                     var zipPath = zipPaths[i];
                     // If the file is on the web, save it to the local disk in the developer's
                     // Downloads folder for future use
-                    if (zipPath.Substring(0, 8).ToLower().Equals(@"https://") ||
-                        zipPath.Substring(0, 7).ToLower().Equals(@"http://"))
+                    if (zipPath.Substring(0, 8).ToLower().Equals(@"https://") || zipPath.Substring(0, 7).ToLower().Equals(@"http://"))
                     {
                         var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
                         if (!File.Exists(zipFilePath) &&
-                            (!IsPerfTest ||
-                             RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
+                           (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
                         {
                             zipPath = DownloadZipFile(targetFolder, zipPath, zipFilePath);
                             DictZipFileIsKnownCurrent.Add(zipPath, true);
                         }
                         else
                         {
-                            DictZipFileIsKnownCurrent.Add(zipPath,
-                                false); // May wish to retry test with a fresh download if it fails
+                            DictZipFileIsKnownCurrent.Add(zipPath, false); // May wish to retry test with a fresh download if it fails
                         }
-
                         zipPath = zipFilePath;
                     }
-
                     _testFilesZips[i] = zipPath;
                 }
             }
@@ -252,7 +228,7 @@ namespace pwiz.SkylineTestUtil
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
-            for (var retry = downloadFromS3;; retry = false)
+            for (var retry = downloadFromS3; ; retry = false)
             {
                 var zipURL = downloadFromS3
                     ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
@@ -272,7 +248,6 @@ namespace pwiz.SkylineTestUtil
                         Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
                     }
-
                     return zipURL;
                 }
                 catch (Exception x)
@@ -282,7 +257,6 @@ namespace pwiz.SkylineTestUtil
                     {
                         AssertEx.Fail(message);
                     }
-
                     Console.Write(message);
                     downloadFromS3 = false; // Maybe it just never got copied to S3
                 }
@@ -294,35 +268,31 @@ namespace pwiz.SkylineTestUtil
             var downloadsFolder = PathEx.GetDownloadsPath();
             var urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
             var targetFolder =
-                Path.Combine(downloadsFolder,
-                    char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
+                Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
             var fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
             zipFilePath = Path.Combine(targetFolder, fileName);
             return targetFolder;
         }
 
         public string TestDirectoryName { get; set; }
-
         public TestFilesDir TestFilesDir
         {
             get
             {
                 // ReSharper disable LocalizableElement
-                Assert.AreEqual(1, TestFilesDirs.Length,
-                    "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
+                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
                 // ReSharper restore LocalizableElement
                 return TestFilesDirs[0];
             }
-            set { TestFilesDirs = new[] {value}; }
+            set { TestFilesDirs = new[] { value }; }
         }
-
         public TestFilesDir[] TestFilesDirs { get; set; }
 
         /// <summary>
         /// If there are any stale downloads, freshen them
         /// </summary>
         /// <returns>true if any files are shown to be stale and thus worthy of a retry of the test that uses them</returns>
-        public bool FreshenTestDataDownloads()
+        public bool FreshenTestDataDownloads() 
         {
             if (DictZipFileIsKnownCurrent == null || DictZipFileIsKnownCurrent.All(kvp => kvp.Value))
                 return false;
@@ -342,13 +312,12 @@ namespace pwiz.SkylineTestUtil
                 {
                     File.Delete(zipFilePathTest);
                 }
-
                 DictZipFileIsKnownCurrent[zipPath] = true;
             }
 
             return knownStale;
         }
-
+        
         public static int CountInstances(string search, string searchSpace)
         {
             if (search.Length == 0)
@@ -356,8 +325,8 @@ namespace pwiz.SkylineTestUtil
 
             int count = 0;
             for (int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
-                 lastIndex != -1;
-                 lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
+                lastIndex != -1;
+                lastIndex = searchSpace.IndexOf(search, lastIndex + 1, StringComparison.Ordinal))
             {
                 count++;
             }
@@ -433,13 +402,8 @@ namespace pwiz.SkylineTestUtil
 //                STOPWATCH.ElapsedMilliseconds / 1000.0));
         }
 
-        protected virtual void Initialize()
-        {
-        }
-
-        protected virtual void Cleanup()
-        {
-        }
+        protected virtual void Initialize() {}
+        protected virtual void Cleanup() {}
 
         protected bool IsProfiling
         {
