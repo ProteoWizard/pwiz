@@ -136,12 +136,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDiaSearchVariableWindowsMsFragger()
         {
-            // This test just takes much too long under code coverage analysis
-            if (SkipForResharperAnalysis())
-            {
-                return;
-            }
-
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();

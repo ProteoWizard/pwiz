@@ -109,12 +109,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDdaSearchMsgfPlus()
         {
-            // This test just takes much too long under code coverage analysis
-            if (SkipForResharperAnalysis())
-            {
-                return;
-            }
-
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
             if (RedownloadTools)
@@ -142,12 +136,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDdaSearchMsFragger()
         {
-            // This test just takes much too long under code coverage analysis
-            if (SkipForResharperAnalysis())
-            {
-                return;
-            }
-
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
             if (RedownloadTools)

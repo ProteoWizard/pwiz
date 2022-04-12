@@ -157,7 +157,8 @@ namespace pwiz.Skyline.Util
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
 
         // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
-        public static FileDownloadInfo[] FilesToDownload = { new FileDownloadInfo { Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true } };
+        public static FileDownloadInfo[] FilesToDownload => // N.B. using lazy evaluation here instead of static assignment to avoid race condition with setting tools directory name
+            new[] { new FileDownloadInfo { Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true } };
     }
 
     public static class SimpleFileDownloader

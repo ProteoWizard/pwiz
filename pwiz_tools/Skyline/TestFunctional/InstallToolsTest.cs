@@ -41,13 +41,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestInstallTools()
         {
-            // This test just takes much too long under code coverage analysis
-            if (SkipForResharperAnalysis())
-            {
-                return;
-            }
-
-            TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
+            TestFilesZip = @"TestFunctional\InstallToolsTest.zip";
             RunFunctionalTest();
         }
 
