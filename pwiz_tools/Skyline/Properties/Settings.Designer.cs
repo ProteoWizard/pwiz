@@ -1486,18 +1486,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string StackTraceListVersion {
-            get {
-                return ((string)(this["StackTraceListVersion"]));
-            }
-            set {
-                this["StackTraceListVersion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection CustomFinders {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["CustomFinders"]));
