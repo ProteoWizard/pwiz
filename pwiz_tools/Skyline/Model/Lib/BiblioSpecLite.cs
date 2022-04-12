@@ -714,7 +714,7 @@ namespace pwiz.Skyline.Model.Lib
                         int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?) null;
                         var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
                         bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
-                            string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
+                                           !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
                         SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
                         if (isProteomic)
                         {
