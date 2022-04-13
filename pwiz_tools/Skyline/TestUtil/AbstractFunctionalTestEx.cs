@@ -806,12 +806,8 @@ namespace pwiz.SkylineTestUtil
 
             RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
             {
-                var nameTextBox = (TextBox)addLibUI.Controls.Find("textName", true)[0];
-                Assert.IsNotNull(nameTextBox);
-                var pathTextBox = (TextBox)addLibUI.Controls.Find("textPath", true)[0];
-                Assert.IsNotNull(pathTextBox);
-                nameTextBox.Text = libName;
-                pathTextBox.Text = libFullPath;
+                addLibUI.LibraryName = libName;
+                addLibUI.LibraryPath = libFullPath;
                 addLibUI.OkDialog();
             });
             RunUI(editListUI.OkDialog);
