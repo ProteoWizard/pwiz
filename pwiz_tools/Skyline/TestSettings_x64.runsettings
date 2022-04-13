@@ -8,16 +8,12 @@
     <TargetPlatform>x64</TargetPlatform>  
   
     <!-- Framework35 | [Framework40] | Framework45 -->
- <!-- obsolete
-     <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
- -->
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
 
   </RunConfiguration>
   
   <MSTest>
-<!-- not needed for VS2022
     <ForcedLegacyMode>True</ForcedLegacyMode>
--->
     <SettingsFile>TestSettings_x64.testsettings</SettingsFile>
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
     <CaptureTraceOutput>False</CaptureTraceOutput>

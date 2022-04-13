@@ -910,7 +910,9 @@ namespace pwiz.Skyline.Model.Tools
             // Use a random tools path when running tests to allow tests to run in parallel
             if (Program.UnitTest)
             {
-                _toolsDirectory = Path.Combine(skylineDirPath, "Tools-" + Path.GetRandomFileName());
+                var newDirectory = Path.Combine(skylineDirPath, "Tools-" + Path.GetRandomFileName());
+                Assume.IsFalse(File.Exists(newDirectory) || Directory.Exists(newDirectory)); // This is meant to be unique
+                _toolsDirectory = newDirectory;
             }
             else
             {
