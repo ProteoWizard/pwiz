@@ -907,12 +907,10 @@ namespace pwiz.Skyline.Model.Tools
                 return null;
             }
 
-            // Use a random tools path when running tests to allow tests to run in parallel
+            // Use a unique tools path when running tests to allow tests to run in parallel
             if (Program.UnitTest)
             {
-                var newDirectory = Path.Combine(skylineDirPath, "Tools-" + Path.GetRandomFileName());
-                Assume.IsFalse(File.Exists(newDirectory) || Directory.Exists(newDirectory)); // This is meant to be unique
-                _toolsDirectory = newDirectory;
+                _toolsDirectory = Path.Combine(skylineDirPath, @"Tools"+(Program.TestName + Thread.CurrentThread.CurrentCulture.Name).GetHashCode().ToString());
             }
             else
             {

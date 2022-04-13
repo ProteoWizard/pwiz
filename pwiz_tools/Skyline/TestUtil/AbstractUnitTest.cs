@@ -352,6 +352,7 @@ namespace pwiz.SkylineTestUtil
         {
 
             Program.UnitTest = true;
+            Program.TestName = TestContext.TestName;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
