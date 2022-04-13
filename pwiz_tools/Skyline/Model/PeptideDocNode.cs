@@ -997,9 +997,10 @@ namespace pwiz.Skyline.Model
                     IList<DocNode> childrenNew = new List<DocNode>();
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        if (settingsNew.HasPrecursorCalc(nodeGroup.TransitionGroup.LabelType, explicitMods)
-                            || nodeGroup.IsCustomIon)
+                        if (settingsNew.SupportsPrecursor(nodeGroup, explicitMods))
+                        {
                             childrenNew.Add(nodeGroup);
+                        }
                     }
 
                     nodeResult = (PeptideDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
@@ -1048,14 +1049,6 @@ namespace pwiz.Skyline.Model
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)
         {
             return Peptide.GetTransitionGroups(settings, this, explicitMods, useFilter);
-        }
-
-        public TransitionGroup[] GetNonProteomicChildren()
-        {
-            return
-                TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon)
-                    .Select(groupNode => groupNode.TransitionGroup)
-                    .ToArray();
         }
 
         /// <summary>
@@ -1529,7 +1522,7 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
-                var listInfo = nodeTran.Results[ResultsIndex];
+                var listInfo = nodeTran.GetSafeChromInfo(ResultsIndex);
                 if (listInfo.IsEmpty)
                     return;
 
