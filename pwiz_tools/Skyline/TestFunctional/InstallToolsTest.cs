@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestInstallTools()
         {
-            TestFilesZip = @"TestFunctional\InstallToolsTest.zip";
+            TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
             RunFunctionalTest();
         }
 
