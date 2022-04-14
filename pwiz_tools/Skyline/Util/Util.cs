@@ -1903,7 +1903,8 @@ namespace pwiz.Skyline.Util
             Trace.WriteLine(x.Message);
             if (RunningResharperAnalysis)
             {
-                Trace.WriteLine(@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                var testName = Program.TestName ?? @"??";
+                Trace.WriteLine($@"We're running under ReSharper analysis (testName={testName}), which may throw off timing - adding some extra sleep time");
                 // Allow up to 60 sec extra time when running code coverage or other analysis
                 milliseconds += (60000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }

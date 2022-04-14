@@ -533,17 +533,12 @@ namespace pwiz.SkylineTestUtil
         {
             var waitMultiplier = 1; // Various conditions may require longer timeouts
 
-            if (Helpers.RunningResharperAnalysis)
-            {
-                // Code coverage testing is very slow.
-                waitMultiplier = 16;
-            }
-            else if (System.Diagnostics.Debugger.IsAttached)
+            if (System.Diagnostics.Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
             }
-            else if (ExtensionTestContext.IsDebugMode)
+            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
             {
                 // Wait a little longer for debug build.
                 waitMultiplier = 4;
