@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);
-            if (duplicates != null)
+            if (duplicates != null && duplicates.Any())
             {
                 calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides());
             }
