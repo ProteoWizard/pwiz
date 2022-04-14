@@ -174,6 +174,15 @@ namespace pwiz.Skyline.Util
             return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
         }
 
+        private static void Log(string message)
+        {
+            if (Helpers.RunningResharperAnalysis)
+            {
+                Trace.WriteLine(@"# (ReSharper Analysis Trace) " + message);
+            }
+            Console.WriteLine(@"# " + message);
+        }
+
         public static bool DownloadRequiredFiles(IEnumerable<FileDownloadInfo> filesToDownload, ILongWaitBroker waitBroker)
         {
             var filesNotAlreadyDownloaded = FilesNotAlreadyDownloaded(filesToDownload).ToList();
@@ -194,13 +203,13 @@ namespace pwiz.Skyline.Util
                     if (Program.FunctionalTest && !Program.UseOriginalURLs)
                         downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
 
+                    string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     if (downloadTimer != null)
                     {
-                        Console.Write($@"# Downloading test data file {downloadUrl}...");
+                        Log($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
                         downloadTimer.Start();
                     }
 
-                    string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     using (var fileSaver = new FileSaver(downloadFilename))
                     {
                         if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
@@ -211,7 +220,7 @@ namespace pwiz.Skyline.Util
                     if (downloadTimer != null)
                     {
                         downloadTimer.Stop();
-                        Console.WriteLine(@" done.");
+                        Log($@"Done downloading test data file {downloadUrl}");
                     }
 
                     if (!requiredFile.Unzip)
@@ -219,7 +228,7 @@ namespace pwiz.Skyline.Util
 
                     if (unzipTimer != null)
                     {
-                        Console.Write($@"# Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        Log($@"Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
                         unzipTimer.Start();
                     }
 
@@ -232,7 +241,8 @@ namespace pwiz.Skyline.Util
                     if (unzipTimer != null)
                     {
                         unzipTimer.Stop();
-                        Console.WriteLine(@" done.");
+
+                        Log($@"Done unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
                     }
 
                     FileEx.SafeDelete(downloadFilename);
@@ -240,8 +250,8 @@ namespace pwiz.Skyline.Util
 
                 if (downloadTimer != null)
                 {
-                    Console.WriteLine(@"Total download time {0:F2} sec ", downloadTimer.ElapsedMilliseconds / 1000.0);
-                    Console.WriteLine(@"Total unzip time {0:F2} sec ", unzipTimer.ElapsedMilliseconds / 1000.0);
+                    Log($@"Total download time {downloadTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                    Log($@"Total unzip time {unzipTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
                 }
             }
             return true;
