@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("Skyline-daily")]
-[assembly: AssemblyCopyright("Copyright © University of Washington 2011-2020")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2011-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("20.1.1.223")]
-[assembly: AssemblyFileVersion("20.1.1.223")]
+[assembly: AssemblyVersion("21.2.1.470")]
+[assembly: AssemblyFileVersion("21.2.1.470")]
