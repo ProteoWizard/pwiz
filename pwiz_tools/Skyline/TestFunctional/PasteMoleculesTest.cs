@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -124,6 +124,9 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestMzOrderIndependence();
+            TestNegativeModeLabels();
+            TestImportMethods();
             TestImpliedAdductWithSynonyms();
             TestMissingProductMZ();
             TestImpliedFragmentAdduct();
@@ -1190,6 +1193,42 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
         }
 
+        // Test uniform handling in File>Import>TransitionList, Edit>Insert>TransitionList, and pasting into Targets area
+        private void TestImportMethods()
+        {
+            var filename = TestFilesDir.GetTestPath("heavy_and_light.txt");
+            for (var pass = 0; pass < 3; pass++)
+            {
+                var doc = SkylineWindow.Document;
+                switch (pass)
+                {
+                    case 0: // Use Edit | Insert | Transition List
+                        TestError(GetCsvFileText(filename), null, null);
+                        break;
+                    case 1: // Use File | Import | Transition List
+                        ImportTransitionListSkipColumnSelect(filename);
+                        break;
+                    case 2: // Paste into Targets window
+                        var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(GetCsvFileText(filename)));
+                        OkDialog(dlg, dlg.OkDialog);
+                        break;
+                }
+                doc = WaitForDocumentChangeLoaded(doc);
+                AssertEx.IsDocumentState(doc, null, 1, 244, 488, 1430);
+
+                // In this data set, all heavy labeled precursors should have heavy labeled transitions
+                foreach (var precursor in doc.MoleculeTransitionGroups)
+                {
+                    foreach (var transition in precursor.Transitions)
+                    {
+                        AssertEx.IsTrue(precursor.PrecursorAdduct.HasIsotopeLabels == transition.Transition.Adduct.HasIsotopeLabels ||
+                                        !transition.Transition.CustomIon.Formula.Contains(@"C")); // Can't C13-label a fragment with no C in it
+                    }
+                }
+                NewDocument();
+            }
+        }
+
         private void TestImpliedAdductWithSynonyms()
         {
             // Deal with implied adducts for which we support synonyms (this caused trouble with use of a dictionary in parser code, since synonyms yield identical mz matches) 
@@ -1320,6 +1359,53 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
+        }
+
+        private void TestMzOrderIndependence()
+        {
+            // Ensure that the line order of an m/z-only mixed polarity transition list does not matter
+            var texts = new[]
+            {
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n", // If bug is not fixed, this order won't give same doc structure as the other
+
+                "Molecule list name,Molecule name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Label type\n" +
+                "Compounds,Mol1,228.1,-1,144.1,-1,light\n" +
+                "Compounds,Mol1,430.1,1,236.1,1,light\n"
+            };
+            foreach (var text in texts)
+            {
+                SetClipboardText(text);
+                // Paste directly into targets area - no interaction expected
+                RunUI(() => SkylineWindow.Paste());
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 2);
+                AssertEx.AreEqual(228, SkylineWindow.Document.Molecules.First().Target.Molecule.AverageMass, 1);
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t => 
+                    t.PrecursorAdduct.AdductCharge < 0 && !t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Contains(t =>
+                    t.PrecursorAdduct.AdductCharge > 0 && t.PrecursorAdduct.HasIsotopeLabels));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 144.1) < 1));
+                AssertEx.IsTrue(SkylineWindow.Document.MoleculeTransitions.Contains(t => !t.IsMs1 &&
+                    !t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 236.1) < 1));
+                NewDocument();
+            }
+        }
+
+        private void TestNegativeModeLabels()
+        {
+            // If bug is not fixed, the negative heavy does not appear in the document
+            var text = "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor Charge,Label Type\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M+H]+,1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M+H]+,1,heavy\n" +
+                       "compound_of_interest,Taurin,C2H7NO3S,[M-H]-,-1,light\n" +
+                       "compound_of_interest, Taurin, C'2H7NO3S,[M-H]-,-1,heavy";
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 4, 4);
+            NewDocument();
         }
 
         private void TestProductNeutralLoss()
