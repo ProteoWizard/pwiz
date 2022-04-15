@@ -1886,7 +1886,7 @@ namespace pwiz.Skyline.Util
                     ReportExceptionForRetry(milliseconds, exUA, i, loopCount, hint);
                 }
             }
-            DetailedTrace(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
             // Try the last time, and let the exception go.
             action();
         }
@@ -1896,34 +1896,18 @@ namespace pwiz.Skyline.Util
             TryTwice(action, defaultLoopCount, defaultMilliseconds, hint);
         }
 
-        /// <summary>
-        /// Like Trace.WriteLine, but with considerable detail when running a test
-        /// </summary>
-        public static void DetailedTrace(string msg)
-        {
-            if (string.IsNullOrEmpty(Program.TestName))
-            {
-                Trace.WriteLine(msg);
-            }
-            else
-            {
-                // Give more detail - useful in case of parallel tests
-                Trace.WriteLine($@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
-            }
-        }
-
         private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint)
         {
-            DetailedTrace(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
+            DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
-            DetailedTrace(x.Message);
+            DetailedTrace.WriteLine(x.Message);
             if (RunningResharperAnalysis)
             {
-                DetailedTrace($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 60 sec extra time when running code coverage or other analysis
                 milliseconds += (60000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }
-            DetailedTrace(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
+            DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
         }
 
@@ -1959,7 +1943,7 @@ namespace pwiz.Skyline.Util
                     ReportExceptionForRetry(milliseconds, x, i, loopCount, hint);
                 }
             }
-            DetailedTrace(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
             // Try the last time, and let the exception go.
             action();
         }
@@ -2286,4 +2270,24 @@ namespace pwiz.Skyline.Util
         }
     }
 
+
+    /// <summary>
+    /// Like Trace.WriteLine, but with considerable detail when running a test
+    /// </summary>
+    public class DetailedTrace
+    {
+        public static void WriteLine(string msg)
+        {
+            if (string.IsNullOrEmpty(Program.TestName))
+            {
+                Trace.WriteLine(msg);
+            }
+            else
+            {
+                // Give more detail - useful in case of parallel tests
+                Trace.WriteLine(
+                    $@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
+            }
+        }
+    }
 }

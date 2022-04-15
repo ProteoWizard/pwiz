@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Model.Tools
             // Use a unique tools path when running tests to allow tests to run in parallel
             if (Program.UnitTest)
             {
-                _toolsDirectory = Path.Combine(skylineDirPath, @"Tools"+Program.TestName + @"_" + Thread.CurrentThread.CurrentCulture.Name);
+                _toolsDirectory = Path.Combine(skylineDirPath, $@"Tools_{Program.TestName}_{Thread.CurrentThread.CurrentCulture.Name}");
             }
             else
             {
