@@ -70,6 +70,7 @@ namespace pwiz.SkylineRunner
                 if(!WaitForConnection(serverStream, inPipeName))
                 {
                     Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
+                    Console.WriteLine(@"    cmd.exe {0}", psiExporter.Arguments);
                     Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
                     return 1;
                 }
@@ -228,7 +229,7 @@ namespace pwiz.SkylineRunner
         /// </summary>
         private string EscapeIfNecessary(string path)
         {
-            var escapeChars = "&^".ToCharArray();
+            var escapeChars = "^&".ToCharArray();   // The caret (^) must be first to avoid duplication
             if (path.IndexOfAny(escapeChars) != -1)
             {
                 foreach (var escapeChar in escapeChars.Append(' ')) // add space to characters that need escaping
