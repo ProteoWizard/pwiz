@@ -1886,7 +1886,7 @@ namespace pwiz.Skyline.Util
                     ReportExceptionForRetry(milliseconds, exUA, i, loopCount, hint);
                 }
             }
-            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
             // Try the last time, and let the exception go.
             action();
         }
@@ -1943,7 +1943,7 @@ namespace pwiz.Skyline.Util
                     ReportExceptionForRetry(milliseconds, x, i, loopCount, hint);
                 }
             }
-            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount));
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
             // Try the last time, and let the exception go.
             action();
         }
@@ -2276,7 +2276,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class DetailedTrace
     {
-        public static void WriteLine(string msg)
+        public static void WriteLine(string msg, bool showStackTrace = false)
         {
             if (string.IsNullOrEmpty(Program.TestName))
             {
@@ -2284,9 +2284,22 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                // Give more detail - useful in case of parallel tests
+                // Give more detail - useful in case of parallel test interactions
                 Trace.WriteLine(
                     $@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
+                if (showStackTrace)
+                {
+                    // per https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.stacktrace?view=net-6.0
+                    // Create a StackTrace that captures filename, line number and column information.
+                    var st = new StackTrace(true);
+                    var stackIndent = string.Empty;
+                    for (var i = 0; i < st.FrameCount; i++)
+                    {
+                        var sf = st.GetFrame(i);
+                        Trace.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
+                        stackIndent += @"  ";
+                    }
+                }
             }
         }
     }
