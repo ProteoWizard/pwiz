@@ -887,37 +887,23 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private static string _toolsDirectory;
+        private static string _skylineDirPath;
         public static string GetToolsDirectory()
         {
-            if (_toolsDirectory != null)
+            if (_skylineDirPath == null)
             {
-                return _toolsDirectory;
-            }
-
-            string skylinePath = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrEmpty(skylinePath))
-            {
-                return null;
-            }
-
-            string skylineDirPath = Path.GetDirectoryName(skylinePath);
-            if (string.IsNullOrEmpty(skylineDirPath))
-            {
-                return null;
+                var skylinePath = Assembly.GetExecutingAssembly().Location;
+                Assume.IsFalse(string.IsNullOrEmpty(skylinePath), @"Could not determine Skyline installation location");
+                _skylineDirPath = Path.GetDirectoryName(skylinePath);
+                Assume.IsFalse(string.IsNullOrEmpty(_skylineDirPath), @"Could not determine Skyline installation directory name");
             }
 
             // Use a unique tools path when running tests to allow tests to run in parallel
-            if (Program.UnitTest)
-            {
-                _toolsDirectory = Path.Combine(skylineDirPath, $@"Tools_{Program.TestName}_{Thread.CurrentThread.CurrentCulture.Name}");
-            }
-            else
-            {
-                _toolsDirectory = Path.Combine(skylineDirPath, @"Tools");
-            }
+            // ReSharper disable once AssignNullToNotNullAttribute
+            return Path.Combine(_skylineDirPath, Program.UnitTest ?
+                $@"Tools_{Program.TestName}_{Thread.CurrentThread.CurrentCulture.Name}" :
+                @"Tools");
 
-            return _toolsDirectory;
         }
     }
 }
