@@ -887,6 +887,17 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
+
+        // Long test names make for long Tools directory names, which can make for long command lines - maybe too long. So limit that directory name length by
+        // shortening to acronym and original length (e.g. "Foo7WithBar" => "F7WB10", "Foo7WithoutBar" => "F7WB13"))
+        private static string LimitDirectoryNameLength()
+        {
+            var testName = Program.TestName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
+                ? string.Concat(Program.TestName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + Program.TestName.Length
+                : Program.TestName;
+            return $@"{testName}_{Thread.CurrentThread.CurrentCulture.Name}";
+        }
+
         /// <summary>
         /// Get a name for the Skyline Tools directory - if we are running a test, make that name unique to the test in case tests are executing in parallel
         /// </summary>
@@ -899,7 +910,7 @@ namespace pwiz.Skyline.Model.Tools
 
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
-            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{Program.TestName}_{Thread.CurrentThread.CurrentCulture.Name}" : @"Tools");
+            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{LimitDirectoryNameLength()}" : @"Tools");
         }
     }
 }
