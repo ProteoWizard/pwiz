@@ -316,6 +316,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(null,ListPackages[2].Version);
         }
 
+
         private void AssertCleared()
         {
             Assert.AreEqual(0, Settings.Default.ToolList.Count);

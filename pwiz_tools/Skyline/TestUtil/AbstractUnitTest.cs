@@ -353,7 +353,6 @@ namespace pwiz.SkylineTestUtil
 
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
-DetailedTrace.WriteLine($@"Start test"); // TODO(bspratt) remove this debug code
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -397,10 +396,10 @@ DetailedTrace.WriteLine($@"Start test"); // TODO(bspratt) remove this debug code
             DotTraceProfile.Save();
             Settings.Init();
 
-            //            var log = new Log<AbstractUnitTest>();
-            //            log.Info(
-            //                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
-            //                STOPWATCH.ElapsedMilliseconds / 1000.0));
+//            var log = new Log<AbstractUnitTest>();
+//            log.Info(
+//                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
+//                STOPWATCH.ElapsedMilliseconds / 1000.0));
 
             // Prevent any weird interactions between tests on reused processes
             Program.UnitTest = Program.FunctionalTest = false;
