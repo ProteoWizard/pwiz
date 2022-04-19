@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
         private TransitionGroupDocNode _nodeGroup;
-        private IList<SpectrumDisplayInfo> _spectra;
+        private IList<PrecursorSpectra> _spectra;
 
         private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
@@ -381,79 +381,88 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void UpdateToolbar()
         {
-            if ((_spectra == null || _spectra.Count < 2) && !UsingProsit)
+            if ((_spectra == null || _spectra.Sum(s => s.Spectra.Length) < 2) && !UsingProsit)
             {
                 toolBar.Visible = false;
             }
             else
             {
-                var showMirror = !UsingProsit && Settings.Default.LibMatchMirror;
-                var showSpectraSelect = (_spectra != null && _spectra.Count >= 2) &&
-                                        (!UsingProsit || Settings.Default.LibMatchMirror);
-                if (showSpectraSelect)
+                var selectedPrecursor = comboPrecursor.SelectedItem;
+                var selectedPrecursorIndex = comboPrecursor.SelectedIndex;
+                var selectedSpectrum = comboSpectrum.SelectedItem;
+                var selectedSpectrumIndex = comboSpectrum.SelectedIndex;
+                var selectedMirror = comboMirrorSpectrum.SelectedItem;
+
+                var showPrecursorSelect = _spectra != null && _spectra.Count > 1;
+                comboPrecursor.Visible = labelPrecursor.Visible = showPrecursorSelect;
+                var precursorStrings = (_spectra ?? new List<PrecursorSpectra>()).Select(s => s.PrecursorString).ToArray();
+                var precursorExisting = (from object item in comboPrecursor.Items select item.ToString()).ToList();
+                if (!ArrayUtil.EqualsDeep(precursorStrings, precursorExisting))
                 {
-                    comboMirrorSpectrum.Visible = showMirror;
-                    mirrorLabel.Visible = showMirror;
-                    comboSpectrum.Visible = true;
-                    labelSpectrum.Visible = true;
-                }
-                else
-                {
-                    comboSpectrum.Visible = false;
-                    labelSpectrum.Visible = false;
-                    comboMirrorSpectrum.Visible = false;
-                    mirrorLabel.Visible = false;
-                }
+                    using (new ToolbarUpdate(this))
+                    {
+                        comboPrecursor.Items.Clear();
+                        comboPrecursor.Items.AddRange(precursorStrings);
 
-                // We still need to do this, even if we hide those items,
-                // since other code relies on the combo box selection being right
+                        if (selectedPrecursorIndex == 0 || selectedPrecursor == null || comboSpectrum.Items.IndexOf(selectedPrecursor) == -1)
+                        {
+                            if (comboPrecursor.Items.Count > 0)
+                                comboPrecursor.SelectedIndex = 0;
+                        }
+                        else
+                        {
+                            comboPrecursor.SelectedItem = selectedPrecursor;
+                        }
 
-                if (_spectra != null)
-                {
-                    // Check to see if the list of files has changed.
-                    var listNames = _spectra.Select(spectrum => spectrum.Identity).ToArray();
-                    var listExisting = new List<string>();
-                    foreach (var item in comboSpectrum.Items)
-                        listExisting.Add(item.ToString());
-
-                    if (!ArrayUtil.EqualsDeep(listNames, listExisting)) {
-                        // If it has, update the list, trying to maintain selection, if possible.
-                        object selected = comboSpectrum.SelectedItem;
-                        // Unless the current selected index is the one matching the one currently
-                        // in use by the precursor (zero), then try to stay viewing the in-use spectrum (zero)
-                        int selectedIndex = comboSpectrum.SelectedIndex;
-                        object selectedMirror = comboMirrorSpectrum.SelectedItem;
-
-                        using (new ToolbarUpdate(this))
+                        if (!Equals(selectedPrecursor, comboPrecursor.SelectedItem))
                         {
                             comboSpectrum.Items.Clear();
                             comboMirrorSpectrum.Items.Clear();
-                            comboMirrorSpectrum.Items.Add(string.Empty); // No mirror
-                            foreach (string name in listNames)
-                            {
-                                comboSpectrum.Items.Add(name);
-                                comboMirrorSpectrum.Items.Add(name);
-                            }
+                            selectedSpectrum = null;
+                            selectedSpectrumIndex = -1;
+                            selectedMirror = null;
+                        }
+                    }
 
-                            if (selectedIndex == 0 || selected == null ||
-                                comboSpectrum.Items.IndexOf(selected) == -1)
-                            {
+                    ComboHelper.AutoSizeDropDown(comboPrecursor);
+                }
+
+                var thisSpectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
+
+                var showMirror = !UsingProsit && Settings.Default.LibMatchMirror;
+                var showSpectraSelect = thisSpectra.Length > 1 && (!UsingProsit || Settings.Default.LibMatchMirror);
+                comboMirrorSpectrum.Visible = mirrorLabel.Visible = showSpectraSelect && showMirror;
+                comboSpectrum.Visible = labelSpectrum.Visible = showSpectraSelect;
+
+                // Check to see if the list of spectra has changed.
+                var spectraStrings = thisSpectra.Select(spectrum => spectrum.Identity).ToArray();
+                var spectraExisting = (from object item in comboSpectrum.Items select item.ToString()).ToList();
+                if (!ArrayUtil.EqualsDeep(spectraStrings, spectraExisting))
+                {
+                    using (new ToolbarUpdate(this))
+                    {
+                        comboSpectrum.Items.Clear();
+                        comboSpectrum.Items.AddRange(spectraStrings);
+                        comboMirrorSpectrum.Items.Clear();
+                        comboMirrorSpectrum.Items.Add(string.Empty); // No mirror
+                        comboMirrorSpectrum.Items.AddRange(spectraStrings);
+
+                        if (selectedSpectrumIndex == 0 || selectedSpectrum == null || comboSpectrum.Items.IndexOf(selectedSpectrum) == -1)
+                        {
+                            if (comboSpectrum.Items.Count > 0)
                                 comboSpectrum.SelectedIndex = 0;
-                            }
-                            else
-                            {
-                                comboSpectrum.SelectedItem = selected;
-                            }
-
-                            if (selectedMirror != null && comboMirrorSpectrum.Items.IndexOf(selectedMirror) != -1)
-                            {
-                                comboMirrorSpectrum.SelectedItem = selectedMirror;
-                            }
+                        }
+                        else
+                        {
+                            comboSpectrum.SelectedItem = selectedSpectrum;
                         }
 
-                        ComboHelper.AutoSizeDropDown(comboSpectrum);
-                        ComboHelper.AutoSizeDropDown(comboMirrorSpectrum);
+                        if (selectedMirror != null && comboMirrorSpectrum.Items.IndexOf(selectedMirror) != -1)
+                            comboMirrorSpectrum.SelectedItem = selectedMirror;
                     }
+
+                    ComboHelper.AutoSizeDropDown(comboSpectrum);
+                    ComboHelper.AutoSizeDropDown(comboMirrorSpectrum);
                 }
 
                 var enableCE = false;
@@ -486,21 +495,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 ceLabel.Visible = enableCE;
 
                 // Show only if we made any of the things visible
-                toolBar.Visible = showSpectraSelect || enableCE;
+                toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
             }
             FireSelectedSpectrumChanged(false);
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
         {
-            if (_spectra != null && _spectra.Count > 1)
+            if (_spectra == null)
+                return;
+
+            for (var i = 0; i < _spectra.Count; i++)
             {
                 // Selection by file name and retention time should not select best spectrum
-                int iSpectrum = _spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest &&
-                                                                 SpectrumMatches(spectrumInfo, spectrumIdentifier));
-
+                var iSpectrum = _spectra[i].Spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest && SpectrumMatches(spectrumInfo, spectrumIdentifier));
                 if (iSpectrum != -1)
+                {
+                    comboPrecursor.SelectedIndex = i;
                     comboSpectrum.SelectedIndex = iSpectrum;
+                    return;
+                }
             }
         }
 
@@ -520,21 +534,19 @@ namespace pwiz.Skyline.Controls.Graphs
         // For unit test
         public SpectrumDisplayInfo PrositSpectrum { get; private set; }
 
+        public PrecursorSpectra SelectedPrecursorSpectra =>
+            _spectra != null && (_spectra.Count == 1 || (_spectra.Count > 1 && comboPrecursor.SelectedIndex >= 0))
+                ? _spectra[_spectra.Count == 1 ? 0 : comboPrecursor.SelectedIndex]
+                : null;
+
         public SpectrumDisplayInfo SelectedSpectrum
         {
             get
             {
-                if (_spectra == null)
-                    return null;
-
-                if (toolBar.Visible)
-                {
-                    return comboSpectrum.SelectedIndex != -1
-                               ? _spectra[comboSpectrum.SelectedIndex]
-                               : null;
-                }
-
-                return _spectra[0];
+                var spectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
+                return spectra.Length == 1 || (spectra.Length > 1 && comboSpectrum.SelectedIndex >= 0)
+                    ? spectra[spectra.Length == 1 ? 0 : comboSpectrum.SelectedIndex]
+                    : null;
             }
         }
 
@@ -542,16 +554,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (_spectra == null)
-                    return null;
-
-                if (toolBar.Visible) {
-                    return comboMirrorSpectrum.SelectedIndex > 0
-                        ? _spectra[comboMirrorSpectrum.SelectedIndex - 1]
-                        : null;
-                }
-
-                return null;
+                var spectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
+                return spectra.Length == 1 || (spectra.Length > 1 && comboMirrorSpectrum.SelectedIndex >= 0)
+                    ? spectra[spectra.Length == 1 ? 0 : comboMirrorSpectrum.SelectedIndex]
+                    : null;
             }
         }
 
@@ -559,9 +565,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var selectedNodes = SpectrumNodeSelection.GetCurrent(_stateProvider);
-                return selectedNodes.Precursor != null &&
-                       selectedNodes.Precursor.HasLibInfo;
+                var precursor = SpectrumNodeSelection.GetCurrent(_stateProvider).Precursor ?? SelectedPrecursorSpectra.Precursor;
+                return precursor != null && precursor.HasLibInfo;
             }
         }
 
@@ -598,14 +603,44 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IEnumerable<SpectrumDisplayInfo> AvailableSpectra
         {
-            get { return _spectra; }
+            get { return _spectra.SelectMany(s => s.Spectra); }
+        }
+
+        public class PrecursorSpectra
+        {
+            public PrecursorSpectra(TreeNodeMS selectedTreeNode, TransitionGroupDocNode precursor, SpectrumDisplayInfo[] spectra)
+            {
+                SelectedTreeNode = selectedTreeNode;
+                Precursor = precursor;
+                Spectra = spectra;
+            }
+
+            public void Add(IEnumerable<SpectrumDisplayInfo> spectra)
+            {
+                Spectra = (Spectra != null ? Spectra.Concat(spectra) : spectra).ToArray();
+            }
+
+            private TreeNodeMS SelectedTreeNode { get; }
+            public TransitionGroupDocNode Precursor { get; }
+            public SpectrumDisplayInfo[] Spectra { get; private set; }
+
+            public string PrecursorString
+            {
+                get
+                {
+                    var s = TransitionGroupTreeNode.GetLabel(Precursor.TransitionGroup, Precursor.PrecursorMz.RawValue, null);
+                    return !(SelectedTreeNode is PeptideGroupTreeNode) ? s : $@"{Precursor.Peptide.Target}, {s}";
+                }
+            }
         }
 
         public class SpectrumNodeSelection
         {
-            public SpectrumNodeSelection(PeptideDocNode peptide,
+            private SpectrumNodeSelection(TreeNodeMS selectedTreeNode, PeptideGroupDocNode protein, PeptideDocNode peptide,
                 TransitionGroupDocNode precursor, TransitionDocNode transition)
             {
+                SelectedTreeNode = selectedTreeNode;
+                Protein = protein;
                 Peptide = peptide;
                 Precursor = precursor;
                 Transition = transition;
@@ -615,24 +650,27 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 switch (stateProvider.SelectedNode)
                 {
+                    case PeptideGroupTreeNode p:
+                    {
+                        return new SpectrumNodeSelection(stateProvider.SelectedNode, p.DocNode, null, null, null);
+                    }
                     case PeptideTreeNode p:
                     {
                         var usingProsit = p.DocNode.IsProteomic && Settings.Default.Prosit;
                         var listInfoGroups = GetChargeGroups(p, !usingProsit);
-                        return new SpectrumNodeSelection(p.DocNode,
+                        return new SpectrumNodeSelection(stateProvider.SelectedNode, p.PepGroupNode, p.DocNode,
                             listInfoGroups.Length == 1 ? listInfoGroups[0] : null, null);
                     }
                     case TransitionGroupTreeNode pr:
                     {
-                        return new SpectrumNodeSelection(pr.PepNode, pr.DocNode, null);
+                        return new SpectrumNodeSelection(stateProvider.SelectedNode, pr.PepGroupNode, pr.PepNode, pr.DocNode, null);
                     }
                     case TransitionTreeNode t:
                     {
-                        return new SpectrumNodeSelection(t.PepNode, t.TransitionGroupNode, t.DocNode);
+                        return new SpectrumNodeSelection(stateProvider.SelectedNode, t.PepGroupNode, t.PepNode, t.TransitionGroupNode, t.DocNode);
                     }
                 }
-
-                return new SpectrumNodeSelection(null, null, null);
+                return new SpectrumNodeSelection(stateProvider.SelectedNode, null, null, null, null);
             }
 
             public static explicit operator PeptidePrecursorPair(SpectrumNodeSelection sel)
@@ -645,9 +683,71 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PrositIntensityModel.PeptidePrecursorNCE(sel.Peptide, sel.Precursor);
             }
 
-            public PeptideDocNode Peptide { get; private set; }
-            public TransitionGroupDocNode Precursor { get; private set; }
-            public TransitionDocNode Transition { get; private set; }
+            public TreeNodeMS SelectedTreeNode { get; }
+            public PeptideGroupDocNode Protein { get; }
+            public PeptideDocNode Peptide { get; }
+            public TransitionGroupDocNode Precursor { get; }
+            public TransitionDocNode Transition { get; }
+
+            public IEnumerable<PrecursorSelectionData> Precursors
+            {
+                get
+                {
+                    if (Protein != null)
+                    {
+                        if (Precursor != null)
+                            yield return new PrecursorSelectionData(SelectedTreeNode, Precursor, GetTarget(Precursor), GetMods(Precursor));
+                        else
+                            foreach (var peptide in Peptide != null ? new[] { Peptide } : Protein.Peptides)
+                            foreach (var precursor in peptide.TransitionGroups)
+                                yield return new PrecursorSelectionData(SelectedTreeNode, precursor, GetTarget(precursor), peptide.SourceExplicitMods);
+                    }
+                }
+            }
+
+            public Target GetTarget(TransitionGroupDocNode nodeTranGroup)
+            {
+                return Peptide?.SourceUnmodifiedTarget ?? nodeTranGroup.TransitionGroup.Peptide.Target;
+            }
+
+            public PeptideDocNode GetPeptide(TransitionGroupDocNode nodeTranGroup)
+            {
+                return Peptide ?? Protein.Peptides.First(pep => ReferenceEquals(pep.Peptide, nodeTranGroup.Peptide));
+            }
+
+            public ExplicitMods GetMods(TransitionGroupDocNode nodeTranGroup)
+            {
+                return GetPeptide(nodeTranGroup).SourceExplicitMods;
+            }
+
+            public class PrecursorSelectionData
+            {
+                public PrecursorSelectionData(TreeNodeMS selectedTreeNode, TransitionGroupDocNode precursor,
+                    Target lookupSequence, ExplicitMods lookupMods)
+                {
+                    SelectedTreeNode = selectedTreeNode;
+                    Precursor = precursor;
+                    LookupSequence = lookupSequence;
+                    LookupMods = lookupMods;
+                }
+
+                private TreeNodeMS SelectedTreeNode { get; }
+                public TransitionGroupDocNode Precursor { get; }
+                public Target LookupSequence { get; }
+                public ExplicitMods LookupMods { get; }
+
+                public bool HasLibInfo => Precursor.HasLibInfo;
+                public Adduct Adduct => Precursor.PrecursorAdduct;
+                public Peptide Peptide => Precursor.Peptide;
+                public TransitionGroup TransitionGroup => Precursor.TransitionGroup;
+
+                public PrecursorSpectra GetSpectra(SrmSettings settings)
+                {
+                    return new PrecursorSpectra(SelectedTreeNode, Precursor,
+                        settings.GetBestSpectra(LookupSequence, Adduct, LookupMods)
+                            .Select(s => new SpectrumDisplayInfo(s, Precursor)).ToArray());
+                }
+            }
         }
 
         private PrositHelpers.PrositRequest _prositRequest;
@@ -656,8 +756,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             try
             {
+                var precursor = selection.Precursor ?? SelectedPrecursorSpectra.Precursor;
                 var prositRequest = new PrositHelpers.PrositRequest(
-                    DocumentUI.Settings, selection.Peptide, selection.Precursor, labelType,
+                    DocumentUI.Settings, selection.GetPeptide(precursor), precursor, labelType,
                     () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
 
                 if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
@@ -688,12 +789,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
         {
-            var group = selection.Precursor.TransitionGroup;
+            var precursor = selection.Precursor ?? SelectedPrecursorSpectra.Precursor;
+
+            var group = precursor.TransitionGroup;
             var types = _stateProvider.ShowIonTypes(group.IsProteomic);
             var adducts =
                 (group.IsProteomic
                     ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
-                    : selection.Precursor.InUseAdducts).ToArray();
+                    : precursor.InUseAdducts).ToArray();
             var charges = _stateProvider.ShowIonCharges(adducts);
             var rankTypes = group.IsProteomic
                 ? settings.TransitionSettings.Filter.PeptideIonTypes
@@ -726,22 +829,19 @@ namespace pwiz.Skyline.Controls.Graphs
             showAdducts.AddRange(adducts.Where(a =>
                 charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
 
-
-            var lookupData = new LookupData(selection);
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
-                selection.Precursor,
+                precursor,
                 settings,
-                lookupData.LookupSequence,
-                lookupData.LookupMods,
+                selection.GetTarget(precursor),
+                selection.GetMods(precursor),
                 showAdducts,
                 types,
                 rankAdducts,
                 rankTypes,
                 null);
 
-            return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
-                spectrum.Name)
+            return new SpectrumGraphItem(selection.GetPeptide(precursor), precursor, selection.Transition, spectrumInfoR, spectrum.Name)
             {
                 ShowTypes = types,
                 ShowCharges = charges,
@@ -754,24 +854,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 FontSize = Settings.Default.SpectrumFontSize,
                 LineWidth = Settings.Default.SpectrumLineWidth
             };
-        }
-
-        private class LookupData
-        {
-            public LookupData(SpectrumNodeSelection selection)
-            {
-                var group = selection.Precursor.TransitionGroup;
-                LookupSequence = group.Peptide.Target; // Sequence or custom ion id
-
-                if (selection.Peptide != null)
-                {
-                    LookupSequence = selection.Peptide.SourceUnmodifiedTarget;
-                    LookupMods = selection.Peptide.SourceExplicitMods;
-                }
-            }
-
-            public Target LookupSequence { get; }
-            public ExplicitMods LookupMods { get; }
         }
 
         private SpectrumPeaksInfo RescaleMirrorSpectrum(SpectrumDisplayInfo mirrorSpectrum, SpectrumDisplayInfo mainSpectrum)
@@ -938,9 +1020,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!Settings.Default.LibMatchMirror)
                         throw prositEx;
                 }
-                    
-                if (selection.Precursor == null || (!selection.Precursor.HasLibInfo && !libraries.HasMidasLibrary &&
-                                                    !usingProsit))
+
+                var precursors = selection.Precursors.ToArray();
+                if (precursors.Length == 0 || (!precursors.Any(p => p.HasLibInfo) && !libraries.HasMidasLibrary && !usingProsit))
                 {
                     _spectra = null;
                     PrositSpectrum = null;
@@ -952,7 +1034,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (libraries.HasLibraries && libraries.IsLoaded || usingProsit)
                     {
                         // Need this to make sure we still update the toolbar if the prosit prediction throws
-                        
                         SpectrumDisplayInfo spectrum = null;
                         PrositSpectrum = null;
 
@@ -960,7 +1041,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             spectrum = PrositSpectrum = UpdatePrositPrediction(selection, null, out prositEx);
                             if (prositEx == null)
-                                _spectra = new[] { spectrum };
+                                _spectra = new[]
+                                {
+                                    new PrecursorSpectra(selection.SelectedTreeNode,
+                                        selection.Precursor ?? SelectedPrecursorSpectra.Precursor, new[] { spectrum })
+                                };
                         }
 
                         var loadFromLib = libraries.HasLibraries && libraries.IsLoaded &&
@@ -968,14 +1053,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         try
                         {
+                            if (loadFromLib || precursors.Length > 1)
+                                UpdateSpectra(precursors);
                             if (loadFromLib)
                             {
-                                UpdateSpectra(selection.Precursor, new LookupData(selection));
-
                                 // For a mirrored spectrum, make sure the isotope label types between library and Prosit match
                                 if (usingProsit && Settings.Default.LibMatchMirror && prositEx == null)
                                 {
-                                    var labelType = _spectra != null ? _spectra[0].LabelType : null;
+                                    var labelType = SelectedPrecursorSpectra?.Precursor.LabelType;
                                     PrositSpectrum = UpdatePrositPrediction(selection, labelType, out prositEx);
                                 }
                             }
@@ -1000,10 +1085,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                 ? _mirrorSpectrum.Name
                                 : string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                     _spectrum.Name, _mirrorSpectrum.Name);
-                            GraphPane.Title.Text = TextUtil.LineSeparate(
-                                libraryStr,
-                                SpectrumGraphItem.GetTitle(null, selection.Peptide, _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
-                                prositEx.Message);
+                            GraphPane.Title.Text = TextUtil.LineSeparate(libraryStr,
+                                SpectrumGraphItem.GetTitle(null,
+                                    selection.Peptide ?? selection.GetPeptide(_mirrorSpectrum.Precursor),
+                                    _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType), prositEx.Message);
                             graphControl.Refresh();
                             return;
                         }
@@ -1024,7 +1109,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             if (spectrum != null)
                             {
-                                _graphHelper.ResetForSpectrum(new[] { selection.Precursor.TransitionGroup });
+                                _graphHelper.ResetForSpectrum(new[] { spectrum.Precursor.TransitionGroup });
                                 // Don't refresh here, it will be refreshed on zoom
                                 _graphHelper.AddSpectrum(GraphItem, false);
                             }
@@ -1196,18 +1281,18 @@ namespace pwiz.Skyline.Controls.Graphs
             return index;
         }
 
-        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, LookupData lookup)
+        private void UpdateSpectra(IReadOnlyList<SpectrumNodeSelection.PrecursorSelectionData> precursors)
         {
-            _spectra = GetSpectra(nodeGroup, lookup);
+            _spectra = GetSpectra(precursors);
             if (!_spectra.Any())
                 _spectra = null;
         }
 
-        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, LookupData lookup)
+        private IList<PrecursorSpectra> GetSpectra(IReadOnlyList<SpectrumNodeSelection.PrecursorSelectionData> precursors)
         {
             var settings = DocumentUI.Settings;
-            var charge = nodeGroup.PrecursorAdduct;
-            var spectra = settings.GetBestSpectra(lookup.LookupSequence, charge, lookup.LookupMods).Select(s => new SpectrumDisplayInfo(s, nodeGroup)).ToList();
+            var spectra = precursors.Select(precursor => precursor.GetSpectra(settings)).ToList();
+
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
             if ((!settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.HasMidasLibrary) || !settings.HasResults)
@@ -1215,62 +1300,63 @@ namespace pwiz.Skyline.Controls.Graphs
 
             try
             {
-                var spectraRedundant = new List<SpectrumDisplayInfo>();
-                var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(nodeGroup.Peptide, lookup.LookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookup.LookupMods))
+                for (var i = 0; i < precursors.Count; i++)
                 {
-                    var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
-                    if (matchingFile == null)
-                        continue;
-
-                    string replicateName = matchingFile.Chromatograms.Name;
-                    spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
-                        nodeGroup,
-                        replicateName,
-                        matchingFile.FilePath,
-                        matchingFile.FileOrder,
-                        spectrumInfo.RetentionTime,
-                        false));
-
-                    // Include the best spectrum twice, once displayed in the normal
-                    // way and once displayed with its replicate and retetion time.
-                    if (spectrumInfo.IsBest)
+                    var precursor = precursors[i];
+                    var spectraRedundant = new List<SpectrumDisplayInfo>();
+                    var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
+                    foreach (var spectrumInfo in settings.GetRedundantSpectra(
+                                 precursor.Peptide, precursor.LookupSequence, precursor.Adduct, precursor.TransitionGroup.LabelType, precursor.LookupMods))
                     {
-                        string libName = spectrumInfo.Name;
-                        var labelType = spectrumInfo.LabelType;
-                        int iBest = spectra.IndexOf(s => Equals(s.Name, libName) &&
-                                                         Equals(s.LabelType, labelType));
-                        if (iBest != -1)
+                        var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
+                        if (matchingFile == null)
+                            continue;
+
+                        string replicateName = matchingFile.Chromatograms.Name;
+                        spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
+                            precursor.Precursor,
+                            replicateName,
+                            matchingFile.FilePath,
+                            matchingFile.FileOrder,
+                            spectrumInfo.RetentionTime,
+                            false));
+
+                        // Include the best spectrum twice, once displayed in the normal
+                        // way and once displayed with its replicate and retention time.
+                        if (spectrumInfo.IsBest)
                         {
-                            spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo,
-                                nodeGroup,
-                                replicateName,
-                                matchingFile.FilePath,
-                                0,
-                                spectrumInfo.RetentionTime,
-                                true);
+                            var iBest = spectra[i].Spectra.IndexOf(s =>
+                                Equals(s.Name, spectrumInfo.Name) && Equals(s.LabelType, spectrumInfo.LabelType));
+                            if (iBest != -1)
+                            {
+                                spectra[i].Spectra[iBest] = new SpectrumDisplayInfo(spectra[i].Spectra[iBest].SpectrumInfo,
+                                    precursor.Precursor,
+                                    replicateName,
+                                    matchingFile.FilePath,
+                                    0,
+                                    spectrumInfo.RetentionTime,
+                                    true);
+                            }
                         }
+
+                        if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
+                        {
+                            setFiles = new HashSet<string>();
+                            dictReplicateNameFiles.Add(replicateName, setFiles);
+                        }
+                        setFiles.Add(spectrumInfo.FilePath);
                     }
 
-                    HashSet<string> setFiles;
-                    if (!dictReplicateNameFiles.TryGetValue(replicateName, out setFiles))
+                    // Determine if replicate name is sufficient to uniquely identify the file
+                    foreach (var spectrumInfo in spectraRedundant)
                     {
-                        setFiles = new HashSet<string>();
-                        dictReplicateNameFiles.Add(replicateName, setFiles);
+                        var replicateName = spectrumInfo.ReplicateName;
+                        if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
+                            spectrumInfo.IsReplicateUnique = true;
                     }
-                    setFiles.Add(spectrumInfo.FilePath);
+                    spectraRedundant.Sort();
+                    spectra[i].Add(spectraRedundant);
                 }
-
-                // Determine if replicate name is sufficient to uniquely identify the file
-                foreach (var spectrumInfo in spectraRedundant)
-                {
-                    string replicateName = spectrumInfo.ReplicateName;
-                    if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
-                        spectrumInfo.IsReplicateUnique = true;
-                }
-
-                spectraRedundant.Sort();
-                spectra.AddRange(spectraRedundant);
                 return spectra;
             }
             catch (Exception)
@@ -1366,6 +1452,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 case Keys.Escape:
                     _documentContainer.FocusDocument();
                     break;
+            }
+        }
+
+        private void comboPrecursor_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateUI();
+
+            if (!_inToolbarUpdate)
+            {
+                FireSelectedSpectrumChanged(true);
             }
         }
 
