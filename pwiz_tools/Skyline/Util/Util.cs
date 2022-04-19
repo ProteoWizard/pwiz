@@ -1929,7 +1929,7 @@ namespace pwiz.Skyline.Util
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
         /// <param name="hint">text to show in debug trace on failure</param>
-        public static void Try<TEx>(Action action, int loopCount = 4, int milliseconds = 500, string hint = null) where TEx : Exception
+        public static void Try<TEx>(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null) where TEx : Exception
         {
             for (int i = 1; i < loopCount; i++)
             {

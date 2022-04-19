@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Util
             return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
         }
 
-        private static void Log(string message)
+        private static void LogToConsole(string message)
         {
             if (Helpers.RunningResharperAnalysis)
             {
@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Util
                     string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
                     if (downloadTimer != null)
                     {
-                        Log($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
+                        LogToConsole($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
                         downloadTimer.Start();
                     }
 
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Util
                     if (downloadTimer != null)
                     {
                         downloadTimer.Stop();
-                        Log($@"Done downloading test data file {downloadUrl}");
+                        LogToConsole($@"Done downloading test data file {downloadUrl}");
                     }
 
                     if (!requiredFile.Unzip)
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Util
 
                     if (unzipTimer != null)
                     {
-                        Log($@"Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        LogToConsole($@"Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
                         unzipTimer.Start();
                     }
 
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Util
                     {
                         unzipTimer.Stop();
 
-                        Log($@"Done unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        LogToConsole($@"Done unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
                     }
 
                     FileEx.SafeDelete(downloadFilename);
@@ -253,8 +253,8 @@ namespace pwiz.Skyline.Util
 
                 if (downloadTimer != null)
                 {
-                    Log($@"Total download time {downloadTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
-                    Log($@"Total unzip time {unzipTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                    LogToConsole($@"Total download time {downloadTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                    LogToConsole($@"Total unzip time {unzipTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
                 }
             }
             return true;
