@@ -456,6 +456,8 @@ namespace pwiz.SkylineTest
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
+            var inspected = new HashSet<string>();
+
             foreach (var fileMask in allFileMasks)
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
@@ -466,6 +468,11 @@ namespace pwiz.SkylineTest
                     if (Equals(filename, thisFile))
                     {
                         continue; // Can't inspect yourself!
+                    }
+
+                    if (!inspected.Add(filename))
+                    {
+                        continue; // Already inspected (matched multiple filemasks)
                     }
 
                     var content = File.ReadAllText(filename);
@@ -569,10 +576,7 @@ namespace pwiz.SkylineTest
 
                     if (crlfCount != 0 && crlfCount < lines.Length-1)
                     {
-                        if (!filename.ToLowerInvariant().EndsWith(".designer.cs")) // Generated code, we have no opinion
-                        {
-                            results.Add($@"Inconsistent line endings in {filename}");
-                        }
+                        results.Add($@"Inconsistent line endings in {filename}");
                     }
 
                     if (requiredPatternsObservedInThisFile != null)
