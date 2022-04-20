@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #region Object Overrides
-		public bool Equals(ResultNameMap<T> other)
+        public bool Equals(ResultNameMap<T> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;

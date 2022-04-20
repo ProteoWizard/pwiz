@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -82,7 +82,7 @@ namespace SkylineNightly
 
                 switch (command)
                 {
-					case @"run":
+                    case @"run":
                     {
                         switch (args.Length)
                         {
@@ -95,10 +95,10 @@ namespace SkylineNightly
                             {
                                 PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]),
                                     (Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[2]),
-									args[1] + @" then " + args[2]);
+                                    args[1] + @" then " + args[2]);
                                 break;
                             }
-							default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
+                            default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
                         }
 
                         break;
@@ -114,13 +114,13 @@ namespace SkylineNightly
                     case @"/?":
                     {
                         nightly = new Nightly(Nightly.RunMode.trunk);
-						string commands = string.Join(@" | ",
+                        string commands = string.Join(@" | ",
                             SkylineNightly.RunModes.Select(r => r.ToString()).ToArray());
                         message = string.Format(@"Usage: SkylineNightly run [{0}] [{1}]", commands, commands);
                         nightly.Finish(message, errMessage);
                         break;
                     }
-					case @"parse":
+                    case @"parse":
                     {
                         nightly = new Nightly(Nightly.RunMode.parse);
                         message = string.Format(@"Parse and post log {0}", nightly.GetLatestLog());
@@ -131,7 +131,7 @@ namespace SkylineNightly
                         nightly.Finish(message, errMessage);
                         break;
                     }
-					case @"post":
+                    case @"post":
                     {
                         nightly = new Nightly(Nightly.RunMode.post);
                         message = string.Format(@"Post existing XML for {0}", nightly.GetLatestLog());
@@ -168,7 +168,7 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-				MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
+                MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
             }
         }
     }

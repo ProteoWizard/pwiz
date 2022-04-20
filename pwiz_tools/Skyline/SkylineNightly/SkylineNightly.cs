@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -149,7 +149,7 @@ namespace SkylineNightly
         public string RunType(out int durationHours)
         {
             durationHours = 0;
-			string result = @"run ";
+            string result = @"run ";
 
             int[] hours =
             {
@@ -162,7 +162,7 @@ namespace SkylineNightly
 
             if (comboBoxOptions2.SelectedIndex != RunModes.Length && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
             {
-				result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
+                result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
                 durationHours += hours[comboBoxOptions2.SelectedIndex];
             }
 

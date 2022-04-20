@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Util
                     continue;
                 }
                 AddMass(entry.Key, entry.Value.AverageMass);
-			}
+            }
 
             // Add entries for isotope synonyms like D (H') and T (H")
             foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES) 

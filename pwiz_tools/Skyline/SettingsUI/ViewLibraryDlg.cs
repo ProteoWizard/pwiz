@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  Alana Killeen <killea .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeMatchCategoryComboBox()
         {
-        	// Clear the combo box of any items left over from a previous library
+            // Clear the combo box of any items left over from a previous library
             comboFilterCategory.Items.Clear();
             
             // Add localized names for fields like Formula, Precursor m/z

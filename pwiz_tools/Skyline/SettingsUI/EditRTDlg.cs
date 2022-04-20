@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -468,8 +468,8 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// This function will update the calculator to the one given, or to the one with the best score for the document 
         /// peptides. It will then return the peptides chosen by that calculator for regression.
-		/// Todo: split this function into one that chooses and returns the calculator and one that returns the peptides
-		/// todo: chosen by that calculator
+        /// Todo: split this function into one that chooses and returns the calculator and one that returns the peptides
+        /// todo: chosen by that calculator
         /// </summary>
         private IList<MeasuredRetentionTime> UpdateCalculator(RetentionScoreCalculatorSpec calculator, IList<MeasuredRetentionTime> activePeptides = null)
         {
@@ -524,7 +524,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             }
             
-			//This "if" is to keep from getting into infinite loops
+            //This "if" is to keep from getting into infinite loops
             if (calcInitiallyNull)
                 comboCalculator.SelectedItem = calculator.Name;
 

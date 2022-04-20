@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -46,15 +46,15 @@ namespace pwiz.Skyline.Model
         public HashSet<string> UnrecognizedPeptides { get; private set; }
         public HashSet<string> UnrecognizedFiles { get; private set; }
         public HashSet<UnrecognizedChargeState> UnrecognizedChargeStates { get; private set; } 
-	    
+        
         public PeakBoundaryImporter(SrmDocument document)
-	    {
+        {
             Document = document;
             AnnotationsAdded = new List<string>();
             UnrecognizedFiles = new HashSet<string>();
             UnrecognizedPeptides = new HashSet<string>();
             UnrecognizedChargeStates = new HashSet<UnrecognizedChargeState>();
-	    }
+        }
 
         public struct UnrecognizedChargeState
         {

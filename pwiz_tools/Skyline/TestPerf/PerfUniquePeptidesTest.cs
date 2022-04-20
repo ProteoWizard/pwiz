@@ -31,8 +31,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 {
     /// <summary>
     /// Verify operation of UI when working with large protdb files that may need 
-	/// processing before the settings can be changed.  In particular verify the 
-	/// interaction of the UI with the background loader, and behaviour on cancellation.
+    /// processing before the settings can be changed.  In particular verify the 
+    /// interaction of the UI with the background loader, and behaviour on cancellation.
     /// </summary>
     [TestClass]
     public class PerfUniquePeptidesTest : AbstractFunctionalTest

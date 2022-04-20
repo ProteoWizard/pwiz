@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             var alignedTo10 = documentRetentionTimes.FileAlignments.Find("S_10");
             var af10To1 = alignedTo1.RetentionTimeAlignments.Find("S_10");
             var af1To10 = alignedTo10.RetentionTimeAlignments.Find("S_1");
-		    // Verify that the slopes and intercepts are reciprocals of each other.
+            // Verify that the slopes and intercepts are reciprocals of each other.
             // We can only verify this with very coarse precision
             Assert.AreEqual(af10To1.RegressionLine.Slope, 1/af1To10.RegressionLine.Slope, .03);
             Assert.AreEqual(af10To1.RegressionLine.Intercept, -af1To10.RegressionLine.Intercept * af10To1.RegressionLine.Slope, 1);

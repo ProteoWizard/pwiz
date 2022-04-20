@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestTutorial
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-        const int WM_KEYDOWN	= 0x100;
+        const int WM_KEYDOWN    = 0x100;
         private const int WM_KEYUP = 0x101;
 
         [TestMethod, NoLocalization]

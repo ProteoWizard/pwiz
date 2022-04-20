@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1243,11 +1243,11 @@ namespace pwiz.Skyline.EditUI
                         row.Cells[column.Index].Value = valueEnumerator.Current;
                     }
                 }
-				if (enumerateProteins)
-				{
-					EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches,
-						ref numFiltered, listPepSeqs, associateHelper);
-				}
+                if (enumerateProteins)
+                {
+                    EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches,
+                        ref numFiltered, listPepSeqs, associateHelper);
+                }
             }
         }
 

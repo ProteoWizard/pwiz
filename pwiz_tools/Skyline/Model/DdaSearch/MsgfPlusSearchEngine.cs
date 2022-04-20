@@ -194,27 +194,27 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             /*  # Mass or CompositionStr, Residues, ModType, Position, Name (all the five fields are required).
                 # CompositionStr (C[Num]H[Num]N[Num]O[Num]S[Num]P[Num]Br[Num]Cl[Num]Fe[Num])
-                # 	- C (Carbon), H (Hydrogen), N (Nitrogen), O (Oxygen), S (Sulfur), P (Phosphorus), Br (Bromine), Cl (Chlorine), Fe (Iron), and Se (Selenium) are allowed.
-                # 	- Negative numbers are allowed.
-                # 	- E.g. C2H2O1 (valid), H2C1O1 (invalid) 
+                #   - C (Carbon), H (Hydrogen), N (Nitrogen), O (Oxygen), S (Sulfur), P (Phosphorus), Br (Bromine), Cl (Chlorine), Fe (Iron), and Se (Selenium) are allowed.
+                #   - Negative numbers are allowed.
+                #   - E.g. C2H2O1 (valid), H2C1O1 (invalid) 
                 # Mass can be used instead of CompositionStr. It is important to specify accurate masses (integer masses are insufficient).
-                # 	- E.g. 15.994915 
+                #   - E.g. 15.994915 
                 # Residues: affected amino acids (must be upper letters)
-                # 	- Must be upper letters or *
-                # 	- Use * if this modification is applicable to any residue. 
-                # 	- * should not be "anywhere" modification (e.g. "15.994915, *, opt, any, Oxidation" is not allowed.) 
-                # 	- E.g. NQ, *
+                #   - Must be upper letters or *
+                #   - Use * if this modification is applicable to any residue. 
+                #   - * should not be "anywhere" modification (e.g. "15.994915, *, opt, any, Oxidation" is not allowed.) 
+                #   - E.g. NQ, *
                 # ModType: "fix" for fixed modifications, "opt" for variable modifications, "custom" for custom amino acids (case insensitive)
                 # Position: position in the peptide where the modification can be attached. 
-                # 	- One of the following five values should be used:
-                # 	- any (anywhere), N-term (peptide N-term), C-term (peptide C-term), Prot-N-term (protein N-term), Prot-C-term (protein C-term) 
-                # 	- Case insensitive
-                # 	- "-" can be omitted
-                # 	- E.g. any, Any, Prot-n-Term, ProtNTerm => all valid
+                #   - One of the following five values should be used:
+                #   - any (anywhere), N-term (peptide N-term), C-term (peptide C-term), Prot-N-term (protein N-term), Prot-C-term (protein C-term) 
+                #   - Case insensitive
+                #   - "-" can be omitted
+                #   - E.g. any, Any, Prot-n-Term, ProtNTerm => all valid
                 # Name: name of the modification (Unimod PSI-MS name)
-                # 	- For proper mzIdentML output, this name should be the same as the Unimod PSI-MS name
-                # 	- E.g. Phospho, Acetyl
-                # 	- Visit http://www.unimod.org to get PSI-MS names.
+                #   - For proper mzIdentML output, this name should be the same as the Unimod PSI-MS name
+                #   - E.g. Phospho, Acetyl
+                #   - Visit http://www.unimod.org to get PSI-MS names.
              */
             using (var modsFileStream = new StreamWriter(modsFile, false))
             {

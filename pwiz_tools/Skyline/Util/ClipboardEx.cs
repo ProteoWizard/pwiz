@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Util
     {
         public const string SKYLINE_FORMAT = "Skyline Format";
 
-	    private static bool _useSystemClipboard = true;
+        private static bool _useSystemClipboard = true;
         private static DataObject _dataObject;
 
         // Set this true to check that the internal clipboard returns the

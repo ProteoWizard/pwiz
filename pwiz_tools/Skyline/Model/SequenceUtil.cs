@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1321,7 +1321,7 @@ namespace pwiz.Skyline.Model
             _aminoMasses['b'] = _aminoMasses['B'] =
                 (_massCalc.CalculateMassFromFormula(@"C4H5NO3") + _massCalc.CalculateMassFromFormula(@"C4H6N2O2")) / 2;
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;
-            _aminoMasses['x'] = _aminoMasses['X'] = 111.060000;	// Why?
+            _aminoMasses['x'] = _aminoMasses['X'] = 111.060000;    // Why?
             // Wikipedia says Glutamic acid or Glutamine
             _aminoMasses['z'] = _aminoMasses['Z'] =
                 (_massCalc.CalculateMassFromFormula(@"C5H6ON2") + _massCalc.CalculateMassFromFormula(@"C5H8N2O2")) / 2;

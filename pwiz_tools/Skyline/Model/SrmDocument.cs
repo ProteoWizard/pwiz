@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model
             get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
         }
 
-		public static string FILTER_DOC_AND_SKY_ZIP
+        public static string FILTER_DOC_AND_SKY_ZIP
         {
             // Used only in the open file dialog.
             get
