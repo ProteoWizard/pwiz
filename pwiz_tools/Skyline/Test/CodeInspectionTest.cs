@@ -468,7 +468,9 @@ namespace pwiz.SkylineTest
                         continue; // Can't inspect yourself!
                     }
 
-                    var lines = File.ReadAllLines(filename);
+                    var content = File.ReadAllText(filename);
+                    var lines = content.Split('\n');
+
                     var lineNum = 0;
                     var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
                         ? requiredPatternsByFileMask[fileMask].Where(kvp =>
@@ -497,9 +499,15 @@ namespace pwiz.SkylineTest
                     var warnings = new List<string>();
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
+                    var crlfCount = 0; // Look for inconsistent line endings
 
                     foreach (var line in lines)
                     {
+                        // Look for inconsistent line endings
+                        if (line.EndsWith("\r")) 
+                        {
+                            crlfCount++;
+                        }
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
@@ -556,6 +564,14 @@ namespace pwiz.SkylineTest
                                     break;
                                 }
                             }
+                        }
+                    }
+
+                    if (crlfCount != 0 && crlfCount < lines.Length-1)
+                    {
+                        if (!filename.ToLowerInvariant().EndsWith(".designer.cs")) // Generated code, we have no opinion
+                        {
+                            results.Add($@"Inconsistent line endings in {filename}");
                         }
                     }
 
