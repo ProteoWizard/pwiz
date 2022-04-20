@@ -390,10 +390,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Show precursor ions when they are supposed to be shown, regardless of charge
             // N.B. for fragments, we look at abs value of charge. CONSIDER(bspratt): for small mol libs we may want finer per-adduct control
-            var showLossFlag = ShowLosses == null || mfi.Losses == null ||
-                               mfi.Losses.Losses.Any(loss => ShowLosses.Contains(loss.Loss.Formula));
-
-            return mfi.Ordinal > 0 && ShowTypes.Contains(mfi.IonType) && showLossFlag && 
+            return mfi.Ordinal > 0 && ShowTypes.Contains(mfi.IonType) && mfi.HasVisibleLoss(ShowLosses) && 
                 (mfi.IonType == IonType.precursor || ShowCharges.Contains(Math.Abs(mfi.Charge.AdductCharge)));
         }
     }

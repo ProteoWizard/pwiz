@@ -8,6 +8,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -22,7 +23,10 @@ namespace pwiz.Skyline.Controls
         public MenuControl(GraphSpectrumSettings set, PeptideSettings peptideSet) : base(new T())
         {
             AutoSize = false;
+            HostedControl.ResumeLayout();
+            HostedControl.SuspendLayout();
             HostedControl.Update(set, peptideSet);
+            HostedControl.ResumeLayout();
             HostedControl.Size = HostedControl.ExpectedSize;
         }
 
@@ -33,7 +37,9 @@ namespace pwiz.Skyline.Controls
 
         public void Update(GraphSpectrumSettings set, PeptideSettings peptideSet)
         {
+            HostedControl.SuspendLayout();
             HostedControl.Update(set, peptideSet);
+            HostedControl.ResumeLayout();
             HostedControl.Size = HostedControl.ExpectedSize;
         }
     }
@@ -136,6 +142,7 @@ namespace pwiz.Skyline.Controls
 
         public IonTypeSelectionPanel()
         {
+            SuspendLayout();
             LayoutSettings.ColumnCount = 6;
             LayoutSettings.RowCount = 2;
             _panelToolTip = new ToolTip();
@@ -174,7 +181,7 @@ namespace pwiz.Skyline.Controls
             }
             rowLabel.Margin = new Padding()
                 { Top = ((Controls.OfType<CheckBox>().Last().Height - rowLabel.Height) / 2) };
-
+            //ResumeLayout();
         }
 
         CheckBox CreateIonTypeCheckBox(IonType ionType)
@@ -215,8 +222,22 @@ namespace pwiz.Skyline.Controls
             //Deduplicate the losses on formula
             modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
 
+            //SuspendLayout();
+
+            //if no losses defined
+            // clean up the loss buttons and the panel
+            // set the table row count to 2
+            //else
+            // set the table row count to 3
+            // if no panel exists -
+            //   create one
+            // else
+            //   remove the existing loss buttons
+            // add new buttons to the panel
+
             if (_lossesPanel != null)
             {
+                _lossesPanel.SuspendLayout();
                 //remove the buttons for losses
                 foreach (var cb in _lossesPanel.Controls.OfType<CheckBox>().ToList())
                 {
@@ -241,14 +262,50 @@ namespace pwiz.Skyline.Controls
                     SetCellPosition(_lossesLabel, new TableLayoutPanelCellPosition(0, 2));
                     _lossesPanel = new FlowLayoutPanel()
                     {
-                        AutoSize = true
+                        AutoSize = true,
+                        BackColor = Color.BlueViolet,
+                        Width = 120
                     };
                     Controls.Add(_lossesPanel);
+                    _lossesPanel.SuspendLayout();
                     SetCellPosition(_lossesPanel, new TableLayoutPanelCellPosition(1, 2));
                     SetColumnSpan(_lossesPanel, ColumnCount - 1);
+                    _lossesPanel.Layout += LossPanel_OnLayout;
+                    _lossesPanel.Resize += LossPanel_OnResize;
+
                     _lossesLabel.Margin = new Padding()
                         { Top = ((Controls.OfType<CheckBox>().First().Height - _lossesLabel.Height) / 2) };
+
                 }
+                //Update loss buttons
+                var lossButtonStates = set.ShowLosses;
+                foreach (var loss in modLosses)
+                {
+                    //Add the buttons that are not there yet
+                    if (!_lossesPanel.Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
+                    {
+                        var cb = new CheckBox()
+                        {
+                            Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
+                            AutoSize = true,
+                            Tag = loss,
+                            Appearance = Appearance.Button,
+                            Checked = lossButtonStates.Contains(loss.Formula)
+                        };
+                        cb.CheckedChanged += LossButton_Click;
+                        cb.MouseHover += LossButton_MouseHover;
+                        _lossesPanel.Controls.Add(cb);
+                    }
+                }
+                _lossesPanel.ResumeLayout();
+
+                var panelWidth =
+                    new Statistics(_lossesPanel.Controls.OfType<CheckBox>().Select(cb => (double)cb.Bounds.Right))
+                        .Max();
+                var panelHeight =
+                    new Statistics(_lossesPanel.Controls.OfType<CheckBox>().Select(cb => (double)cb.Bounds.Bottom))
+                        .Max();
+                _lossesPanel.Size = new Size((int)panelWidth, (int)panelHeight);
             }
             else
             {
@@ -261,31 +318,15 @@ namespace pwiz.Skyline.Controls
                 if (_lossesPanel != null)
                 {
                     Controls.Remove(_lossesPanel);
+                    _lossesPanel.Layout -= LossPanel_OnLayout;
+                    _lossesPanel.Resize -= LossPanel_OnResize;
                     _lossesPanel = null;
                 }
 
             }
 
-            //Update loss buttons
-            var lossButtonStates = set.ShowLosses;
-            foreach (var loss in modLosses)
-            {
-                //Add the buttons that are not there yet
-                if (!Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
-                {
-                    var cb = new CheckBox()
-                    {
-                        Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
-                        AutoSize = true,
-                        Tag = loss,
-                        Appearance = Appearance.Button,
-                        Checked = lossButtonStates.Contains(loss.Formula)
-                    };
-                    cb.CheckedChanged += LossButton_Click;
-                    cb.MouseHover += LossButton_MouseHover;
-                    _lossesPanel?.Controls.Add(cb);
-                }
-            }
+            //ResumeLayout();
+            //_lossesPanel.PerformLayout();
 
             //Update ion type button states
             var showIonTypeDict = set.GetShowIonTypeSettings();
@@ -296,6 +337,24 @@ namespace pwiz.Skyline.Controls
                 cb.CheckedChanged += ionTypeButton_Click;
             }
         }
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+        }
+        protected void LossPanel_OnLayout(object sender, LayoutEventArgs e)
+        {
+
+        }
+        protected void LossPanel_OnResize(object sender, EventArgs e)
+        {
+            //Size = ExpectedSize;
+        }
+
 
         public void ionTypeButton_Click(object sender, EventArgs e)
         {

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -97,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.HeavyModList.Add(heavyKMod);
             Settings.Default.SpectralLibraryList.Clear();
             Settings.Default.SpectralLibraryList.Add(librarySpec);
-            Settings.Default.ShowLosses = "H3PO4,H2O,H3N";
+            Settings.Default.ShowLosses = "H3PO4,H2O,NH3";
 
             // Prepare document settings for this test
             const int countIons = 6;
@@ -213,6 +214,46 @@ namespace pwiz.SkylineTestFunctional
                               }
                           }
                       });
+
+            RunUI(() =>
+            {
+                //SkylineWindow.SaveDocument(TestFilesDir.FullPath + @"\NeutralLossLibraryTest.sky");
+                SkylineWindow.ShowLosses(new[] { "H2O", "NH3" }.ToList());
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                //Make sure all displayed losses are enabled
+                var nodePepSelected = (PeptideDocNode)docComplex.FindNode(SkylineWindow.SelectedPath);
+                var lossLabelMatch = new Regex(@"(\D)(\d+) -([^ +]+).*");
+                var ionLabelsWithLoss = SkylineWindow.GraphSpectrum.IonLabels
+                    .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success).ToList();
+                Assert.AreEqual(10, ionLabelsWithLoss.Count);
+
+                //find all transitions with visible losses
+                var showLossesProperty = SkylineWindow.GraphSpectrumSettings.ShowLosses;
+                var lossNodes = nodePepSelected.Children.ToList().SelectMany(precursor => ((precursor as DocNodeParent)?
+                    .Children.Select(node => node as TransitionDocNode))).ToList();
+                if (!lossNodes.IsNullOrEmpty())
+                    lossNodes = lossNodes.ToList().FindAll(node =>
+                    {
+                        if (node is TransitionDocNode transitionNode)
+                            return transitionNode.HasLoss && transitionNode.Losses.Losses.Any(loss => showLossesProperty.Any(formula => loss.Loss.Formula.Equals(formula)));
+                        return false;
+                    }).ToList();
+                Assert.AreEqual(6, lossNodes.Count);
+
+                //for each label with loss make sure there is a matching element in the second list
+                var allEnabled = ionLabelsWithLoss.All(m => lossNodes.Any(node =>
+                {
+                    if (node.Id is Transition nodeId)
+                        return m.Groups[1].Value.Equals(nodeId.IonType.GetLocalizedString()) &&
+                               m.Groups[2].Value.Equals((nodeId.Ordinal.ToString())) &&
+                               Math.Abs(node.LostMass - double.Parse(m.Groups[3].Value)) <  0.1;
+                    return false;
+                }));
+                Assert.IsTrue(allEnabled);
+            });
 
             // Make sure setting losses as included Never works
             {

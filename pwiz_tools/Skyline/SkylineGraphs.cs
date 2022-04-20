@@ -1020,6 +1020,7 @@ namespace pwiz.Skyline
                 ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
                 ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
                 ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
+                //ionTypeSelector.Invalidate();
             }
         }
 
