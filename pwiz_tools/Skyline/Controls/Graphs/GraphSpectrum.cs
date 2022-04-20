@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void UpdateToolbar()
         {
-            if ((_spectra == null || _spectra.Sum(s => s.Spectra.Length) < 2) && !UsingProsit)
+            if ((_spectra == null || _spectra.Sum(s => s.Spectra.Count) < 2) && !UsingProsit)
             {
                 toolBar.Visible = false;
             }
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         comboPrecursor.Items.Clear();
                         comboPrecursor.Items.AddRange(precursorStrings);
 
-                        if (selectedPrecursorIndex == 0 || selectedPrecursor == null || comboSpectrum.Items.IndexOf(selectedPrecursor) == -1)
+                        if (selectedPrecursorIndex == 0 || selectedPrecursor == null || comboPrecursor.Items.IndexOf(selectedPrecursor) == -1)
                         {
                             if (comboPrecursor.Items.Count > 0)
                                 comboPrecursor.SelectedIndex = 0;
@@ -427,10 +427,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     ComboHelper.AutoSizeDropDown(comboPrecursor);
                 }
 
-                var thisSpectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
+                var thisSpectra = SelectedPrecursorSpectra?.Spectra ?? new List<SpectrumDisplayInfo>();
 
                 var showMirror = !UsingProsit && Settings.Default.LibMatchMirror;
-                var showSpectraSelect = thisSpectra.Length > 1 && (!UsingProsit || Settings.Default.LibMatchMirror);
+                var showSpectraSelect = thisSpectra.Count > 1 && (!UsingProsit || Settings.Default.LibMatchMirror);
                 comboMirrorSpectrum.Visible = mirrorLabel.Visible = showSpectraSelect && showMirror;
                 comboSpectrum.Visible = labelSpectrum.Visible = showSpectraSelect;
 
@@ -543,10 +543,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var spectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
-                return spectra.Length == 1 || (spectra.Length > 1 && comboSpectrum.SelectedIndex >= 0)
-                    ? spectra[spectra.Length == 1 ? 0 : comboSpectrum.SelectedIndex]
-                    : null;
+                var spectra = SelectedPrecursorSpectra?.Spectra ?? new List<SpectrumDisplayInfo>();
+                if (spectra.Count == 1)
+                    return spectra[0];
+                if (spectra.Count > 1 && comboSpectrum.SelectedIndex >= 0)
+                    return spectra[comboSpectrum.SelectedIndex];
+                return null;
             }
         }
 
@@ -554,10 +556,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var spectra = SelectedPrecursorSpectra?.Spectra ?? Array.Empty<SpectrumDisplayInfo>();
-                return spectra.Length == 1 || (spectra.Length > 1 && comboMirrorSpectrum.SelectedIndex >= 0)
-                    ? spectra[spectra.Length == 1 ? 0 : comboMirrorSpectrum.SelectedIndex]
-                    : null;
+                var spectra = SelectedPrecursorSpectra?.Spectra ?? new List<SpectrumDisplayInfo>();
+                if (spectra.Count == 1)
+                    return spectra[0];
+                if (spectra.Count > 1 && comboMirrorSpectrum.SelectedIndex >= 0)
+                    return spectra[comboMirrorSpectrum.SelectedIndex];
+                return null;
             }
         }
 
@@ -608,21 +612,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class PrecursorSpectra
         {
-            public PrecursorSpectra(TreeNodeMS selectedTreeNode, TransitionGroupDocNode precursor, SpectrumDisplayInfo[] spectra)
+            public PrecursorSpectra(TreeNodeMS selectedTreeNode, TransitionGroupDocNode precursor, IEnumerable<SpectrumDisplayInfo> spectra)
             {
                 SelectedTreeNode = selectedTreeNode;
                 Precursor = precursor;
-                Spectra = spectra;
-            }
-
-            public void Add(IEnumerable<SpectrumDisplayInfo> spectra)
-            {
-                Spectra = (Spectra != null ? Spectra.Concat(spectra) : spectra).ToArray();
+                Spectra = new List<SpectrumDisplayInfo>();
+                Spectra.AddRange(spectra);
             }
 
             private TreeNodeMS SelectedTreeNode { get; }
             public TransitionGroupDocNode Precursor { get; }
-            public SpectrumDisplayInfo[] Spectra { get; private set; }
+            public List<SpectrumDisplayInfo> Spectra { get; }
 
             public string PrecursorString
             {
@@ -1355,7 +1355,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             spectrumInfo.IsReplicateUnique = true;
                     }
                     spectraRedundant.Sort();
-                    spectra[i].Add(spectraRedundant);
+                    spectra[i].Spectra.AddRange(spectraRedundant);
                 }
                 return spectra;
             }
