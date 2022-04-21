@@ -217,7 +217,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                //SkylineWindow.SaveDocument(TestFilesDir.FullPath + @"\NeutralLossLibraryTest.sky");
                 SkylineWindow.ShowLosses(new[] { "H2O", "NH3" }.ToList());
             });
             WaitForGraphs();

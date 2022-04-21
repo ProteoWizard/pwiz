@@ -506,7 +506,7 @@ namespace pwiz.Skyline
             _listGraphDetections.ToList().ForEach(DestroyGraphDetections);
             DetectionsGraphController.GraphType = type;
 
-            CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeForm>(), f => f.Close());
+            FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
 
             DestroyResultsGrid();
             DestroyDocumentGrid();
