@@ -10609,6 +10609,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opening database.
+        /// </summary>
+        public static string EditIrtCalcDlg_OpenDatabase_Opening_database {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OpenDatabase_Opening_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} does not exist. Click the Create button to create a new database or the Open button to find the missing file..
         /// </summary>
         public static string EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_ {

@@ -644,7 +644,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Some details for the library. 
         /// This can be the library revision, program version, 
-		/// build date or a hyperlink to the library source 
+        /// build date or a hyperlink to the library source 
         /// (e.g. http://peptide.nist.gov/ for NIST libraries)
         /// </summary>
         public abstract LibraryDetails LibraryDetails { get; }

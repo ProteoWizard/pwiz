@@ -370,6 +370,12 @@ namespace BiblioSpec
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
             double qvalue = pepConfidence <= 0 ? sqlite3_column_double(statement, 3) : 0;
 
+            auto findItr = spectra_.find(specId);
+            if (findItr == spectra_.end()) {
+                Verbosity::warn("Peptide %d (%s) with score %f has a spectrum id (%s) not present in the spectrum map.", peptideId, sequence.c_str(), qvalue, specId.c_str());
+                continue;
+            }
+
             auto altIter = alts.find(peptideId);    
             double altScore = (altIter != alts.end()) ? altIter->second : -std::numeric_limits<double>::max();
 
@@ -420,10 +426,6 @@ namespace BiblioSpec
                 curPSM_ = new PSM();
                 processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
             }
-
-            auto findItr = spectra_.find(specId);
-            if (findItr == spectra_.end())
-                throw BlibException(false, "Peptide %d (%s) with score %f has a spectrum id (%s) not present in the spectrum map.", peptideId, sequence.c_str(), qvalue, specId.c_str());
 
             curPSM_->charge = findItr->second->charge;
             curPSM_->unmodSeq = sequence;
@@ -504,11 +506,17 @@ namespace BiblioSpec
             return;
         }
 
+        string pepPsmTable = "";
+        if (tableExists(msfFile_, "TargetPeptideGroupsTargetPsms")) {
+            pepPsmTable = "TargetPeptideGroupsTargetPsms";
+        } else if (tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
+            pepPsmTable = "TargetPsmsTargetPeptideGroups";
+        }
+
         bool peptideGroups = false;
         bool proteins = false;
         const bool useProtConfidence = false;
-        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence") &&
-            tableExists(msfFile_, "TargetPsmsTargetPeptideGroups")) {
+        if (columnExists(msfFile_, "TargetPeptideGroups", "Confidence") && !pepPsmTable.empty()) {
             // Confidence levels correspond to whatever the user selected.
             // But by default, 3 = High (<= 0.01), 2 = Medium (<= 0.05), 1 = Low (> 0.05).
             double threshold = getScoreThreshold(SQT);
@@ -561,7 +569,7 @@ namespace BiblioSpec
             "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
         if (peptideGroups) {
             string joins =
-                " JOIN TargetPsmsTargetPeptideGroups psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
+                " JOIN " + pepPsmTable + " psm_pep ON psms.PeptideID = psm_pep.TargetPsmsPeptideID"
                 " JOIN TargetPeptideGroups peps ON psm_pep.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
             if (proteins) {
                 joins +=
