@@ -607,7 +607,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IEnumerable<SpectrumDisplayInfo> AvailableSpectra
         {
-            get { return _spectra.SelectMany(s => s.Spectra); }
+            get { return _spectra?.SelectMany(s => s.Spectra); }
         }
 
         public class PrecursorSpectra
@@ -696,28 +696,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (Protein != null)
                     {
                         if (Precursor != null)
-                            yield return new PrecursorSelectionData(SelectedTreeNode, Precursor, GetTarget(Precursor), GetMods(Precursor));
+                            yield return new PrecursorSelectionData(SelectedTreeNode, Precursor, Peptide.SourceUnmodifiedTarget, Peptide.SourceExplicitMods);
                         else
                             foreach (var peptide in Peptide != null ? new[] { Peptide } : Protein.Peptides)
                             foreach (var precursor in peptide.TransitionGroups)
-                                yield return new PrecursorSelectionData(SelectedTreeNode, precursor, GetTarget(precursor), peptide.SourceExplicitMods);
+                                yield return new PrecursorSelectionData(SelectedTreeNode, precursor, peptide.SourceUnmodifiedTarget, peptide.SourceExplicitMods);
                     }
                 }
-            }
-
-            public Target GetTarget(TransitionGroupDocNode nodeTranGroup)
-            {
-                return Peptide?.SourceUnmodifiedTarget ?? nodeTranGroup.TransitionGroup.Peptide.Target;
             }
 
             public PeptideDocNode GetPeptide(TransitionGroupDocNode nodeTranGroup)
             {
                 return Peptide ?? Protein.Peptides.First(pep => ReferenceEquals(pep.Peptide, nodeTranGroup.Peptide));
-            }
-
-            public ExplicitMods GetMods(TransitionGroupDocNode nodeTranGroup)
-            {
-                return GetPeptide(nodeTranGroup).SourceExplicitMods;
             }
 
             public class PrecursorSelectionData
@@ -790,6 +780,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
         {
             var precursor = selection.Precursor ?? SelectedPrecursorSpectra.Precursor;
+            var peptide = selection.GetPeptide(precursor);
 
             var group = precursor.TransitionGroup;
             var types = _stateProvider.ShowIonTypes(group.IsProteomic);
@@ -833,15 +824,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 spectrum.LabelType,
                 precursor,
                 settings,
-                selection.GetTarget(precursor),
-                selection.GetMods(precursor),
+                peptide.SourceUnmodifiedTarget,
+                peptide.SourceExplicitMods,
                 showAdducts,
                 types,
                 rankAdducts,
                 rankTypes,
                 null);
 
-            return new SpectrumGraphItem(selection.GetPeptide(precursor), precursor, selection.Transition, spectrumInfoR, spectrum.Name)
+            return new SpectrumGraphItem(peptide, precursor, selection.Transition, spectrumInfoR, spectrum.Name)
             {
                 ShowTypes = types,
                 ShowCharges = charges,
@@ -1021,7 +1012,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         throw prositEx;
                 }
 
-                var precursors = selection.Precursors.ToArray();
+                const int precursorLimit = 100; // Limit number of precursors for performance reasons
+                var precursors = selection.Precursors.Take(precursorLimit).ToArray();
                 if (precursors.Length == 0 || (!precursors.Any(p => p.HasLibInfo) && !libraries.HasMidasLibrary && !usingProsit))
                 {
                     _spectra = null;
@@ -1086,8 +1078,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 : string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                     _spectrum.Name, _mirrorSpectrum.Name);
                             GraphPane.Title.Text = TextUtil.LineSeparate(libraryStr,
-                                SpectrumGraphItem.GetTitle(null,
-                                    selection.Peptide ?? selection.GetPeptide(_mirrorSpectrum.Precursor),
+                                SpectrumGraphItem.GetTitle(null, selection.GetPeptide(_mirrorSpectrum.Precursor),
                                     _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType), prositEx.Message);
                             graphControl.Refresh();
                             return;
