@@ -675,7 +675,6 @@ namespace pwiz.Skyline.Model.Lib
                     int iId = reader.GetOrdinal(RefSpectra.id);
                     //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
                     int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
-                    int iPrecursorMz = reader.GetOrdinal(RefSpectra.precursorMZ);
                     int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
                     int iCopies = reader.GetOrdinal(RefSpectra.copies);
                     int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
@@ -686,6 +685,7 @@ namespace pwiz.Skyline.Model.Lib
                     int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
                     int iScore = reader.GetOrdinal(RefSpectra.score);
                     int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
+                    int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
 
                     int rowsRead = 0;
                     while (reader.Read())
@@ -716,7 +716,7 @@ namespace pwiz.Skyline.Model.Lib
                         int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?) null;
                         var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
                         bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
-                            string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
+                                           !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
                         SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
                         if (isProteomic)
                         {
@@ -727,19 +727,27 @@ namespace pwiz.Skyline.Model.Lib
                             var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName) ? reader.GetString(iMoleculeName) : null;
                             var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
                             var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
-                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
-                            if (string.IsNullOrEmpty(smallMoleculeLibraryAttributes.ChemicalFormula))
+                            if (string.IsNullOrEmpty(chemicalFormula))
                             {
                                 // Perhaps we were supplied only mz and charge
-                                var mz = !reader.IsDBNull(iPrecursorMz) ? reader.GetDouble(iPrecursorMz) : (double?)null;
-                                if (mz.HasValue && !string.IsNullOrEmpty(adduct))
+                                var precursorMz = reader.GetDouble(iPrecursorMZ);
+                                Adduct precursorAdduct;
+                                if (string.IsNullOrEmpty(adduct))
                                 {
-                                    var precursorAdduct = Adduct.FromStringAssumeChargeOnly(adduct);
-                                    var massAverage = precursorAdduct.MassFromMz(mz.Value, MassType.Average);
-                                    var massMono = precursorAdduct.MassFromMz(mz.Value, MassType.Monoisotopic);
-                                    smallMoleculeLibraryAttributes =
-                                        SmallMoleculeLibraryAttributes.Create(moleculeName, null, massMono, massAverage, inChiKey, otherKeys);
+                                    precursorAdduct = Adduct.FromChargeNoMass(charge);
                                 }
+                                else
+                                {
+                                    precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic, charge);
+                                }
+                                TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
+                                TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
+                                    null, monoMass, avgMass, inChiKey, otherKeys);
+                            }
+                            else
+                            {
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
                             }
                             // Construct a custom molecule so we can be sure we're using the same keys
                             var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
