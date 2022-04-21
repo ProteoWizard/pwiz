@@ -102,8 +102,8 @@ namespace pwiz.Skyline.Controls.Graphs
         sealed class GraphData : Immutable
         {
             // Cache variables for this data. Data only valid for this state
-            private readonly SrmDocument _document;	// Active document when data was created
-            private readonly int _resultIndex;	// Index to active replicate or -1 for everything
+            private readonly SrmDocument _document; // Active document when data was created
+            private readonly int _resultIndex; // Index to active replicate or -1 for everything
             private readonly DisplayTypeMassError _displayType; // Display type when data was created
             private readonly ReplicateDisplay _replicateDisplay; // Replicate dsiaply when data was created
 
