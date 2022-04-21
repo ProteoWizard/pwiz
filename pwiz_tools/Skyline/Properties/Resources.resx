@@ -11716,4 +11716,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
 	  <value>Skyline 21.2</value>
   </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
+	  <value>Opening database</value>
+  </data>
 </root>
