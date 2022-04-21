@@ -22,8 +22,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -223,36 +223,36 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             RunUI(() =>
             {
+
                 //Make sure all displayed losses are enabled
-                var nodePepSelected = (PeptideDocNode)docComplex.FindNode(SkylineWindow.SelectedPath);
+                //find all annotations with losses
                 var lossLabelMatch = new Regex(@"(\D)(\d+) -([^ +]+).*");
                 var ionLabelsWithLoss = SkylineWindow.GraphSpectrum.IonLabels
                     .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success).ToList();
                 Assert.AreEqual(10, ionLabelsWithLoss.Count);
 
-                //find all transitions with visible losses
+                //get matched peaks with losses from the currently displayed spectrum
                 var showLossesProperty = SkylineWindow.GraphSpectrumSettings.ShowLosses;
-                var lossNodes = nodePepSelected.Children.ToList().SelectMany(precursor => ((precursor as DocNodeParent)?
-                    .Children.Select(node => node as TransitionDocNode))).ToList();
-                if (!lossNodes.IsNullOrEmpty())
-                    lossNodes = lossNodes.ToList().FindAll(node =>
-                    {
-                        if (node is TransitionDocNode transitionNode)
-                            return transitionNode.HasLoss && transitionNode.Losses.Losses.Any(loss => showLossesProperty.Any(formula => loss.Loss.Formula.Equals(formula)));
-                        return false;
-                    }).ToList();
-                Assert.AreEqual(6, lossNodes.Count);
+                var ionsWithLosses = SkylineWindow.GraphSpectrum.DisplayedSpectrum.PeaksMatched
+                    .SelectMany(p => p.MatchedIons).ToList().FindAll(ion => ion.Losses != null && ion.HasVisibleLoss(showLossesProperty))
+                    .ToList();
 
-                //for each label with loss make sure there is a matching element in the second list
-                var allEnabled = ionLabelsWithLoss.All(m => lossNodes.Any(node =>
-                {
-                    if (node.Id is Transition nodeId)
-                        return m.Groups[1].Value.Equals(nodeId.IonType.GetLocalizedString()) &&
-                               m.Groups[2].Value.Equals((nodeId.Ordinal.ToString())) &&
-                               Math.Abs(node.LostMass - double.Parse(m.Groups[3].Value)) <  0.1;
-                    return false;
-                }));
-                Assert.IsTrue(allEnabled);
+                Assert.AreEqual(11, ionsWithLosses.Count);
+
+                //match the peak to the spectrum annotations
+                //make sure each label has a matching peak
+                var matchedList = ionLabelsWithLoss.Select(label => new{label, ion = ionsWithLosses.Find(
+                    ion => label.Groups[1].Value.Equals(ion.IonType.GetLocalizedString()) &&
+                             label.Groups[2].Value.Equals(ion.Ordinal.ToString()) &&
+                             Math.Abs(ion.Losses.Mass - double.Parse(label.Groups[3].Value)) < 0.1)});
+
+                Assert.AreEqual(10, matchedList.Count());
+
+                var menuControl = new MenuControl<IonTypeSelectionPanel>(SkylineWindow.GraphSpectrumSettings,
+                    SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                Assert.AreEqual(12, menuControl.HostedControl.Controls.OfType<CheckBox>().Count());
+                Assert.AreEqual(4, menuControl.HostedControl.Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Checked).Count);
+                menuControl.Dispose();
             });
 
             // Make sure setting losses as included Never works
