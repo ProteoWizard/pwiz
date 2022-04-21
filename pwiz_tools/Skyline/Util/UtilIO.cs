@@ -1180,10 +1180,10 @@ namespace pwiz.Skyline.Util
         /// <param name="fileName">File path to the final destination</param>
         /// <param name="createStream">If true, create a Stream for the temporary file</param>
         /// <throws>IOException</throws>
-		public FileSaver(string fileName, bool createStream = false)
+        public FileSaver(string fileName, bool createStream = false)
             : this(fileName, FileStreamManager.Default, createStream)
-		{
-		}
+        {
+        }
 
         /// <summary>
         /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
@@ -1199,14 +1199,14 @@ namespace pwiz.Skyline.Util
 
             RealName = fileName;
 
-		    string dirName = Path.GetDirectoryName(fileName);
-		    string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
+            string dirName = Path.GetDirectoryName(fileName);
+            string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
             // If the directory name is returned, then starting path was bogus.
             if (!Equals(dirName, tempName))
                 SafeName = tempName;
             if (createStream)
                 CreateStream();
-		}
+        }
 
         public void CreateStream()
         {
@@ -1284,10 +1284,10 @@ namespace pwiz.Skyline.Util
         public bool Commit(IPooledStream streamDest)
         {
             // This is where the file that got written is renamed to the desired file.
-	        // Dispose() will do any necessary temporary file clean-up.
+            // Dispose() will do any necessary temporary file clean-up.
 
-	        if (string.IsNullOrEmpty(SafeName))
-		        return false;
+            if (string.IsNullOrEmpty(SafeName))
+                return false;
 
             if (_stream != null)
             {
@@ -1303,7 +1303,7 @@ namespace pwiz.Skyline.Util
 //                _streamManager.Commit(baseMatchFile, Path.ChangeExtension(RealName, baseMatchFile.Substring(SafeName.LastIndexOf('.'))), null);
 //            }
 
-        	Dispose();
+            Dispose();
 
             return true;
         }
