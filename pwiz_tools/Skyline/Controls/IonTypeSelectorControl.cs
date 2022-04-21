@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Controls
 
                 var rightBound = (int) new Statistics(Controls.OfType<Control>().Select(c => (double)c.Bounds.Right + c.Margin.Right)).Max();
                 var bottomBound = (int)new Statistics(Controls.OfType<Control>().Select(c => (double)c.Bounds.Bottom+ c.Margin.Bottom)).Max();
-                return new Size((int)(rightBound),(int)(bottomBound));
+                return new Size((rightBound),(bottomBound));
             }
         }
 
