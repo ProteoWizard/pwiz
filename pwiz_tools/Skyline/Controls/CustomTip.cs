@@ -509,11 +509,11 @@ namespace pwiz.Skyline.Controls
 
         private static bool PerformWmNcHitTest(ref Message m)
         {
-//			POINT point1;
-//			Point p = Control.MousePosition;
-//			point1.x = p.X;
-//			point1.y = p.Y;
-//			point1 = MousePositionToClient(point1);
+//          POINT point1;
+//          Point p = Control.MousePosition;
+//          point1.x = p.X;
+//          point1.y = p.Y;
+//          point1 = MousePositionToClient(point1);
 
             m.Result = (IntPtr) (-1);
             return true;

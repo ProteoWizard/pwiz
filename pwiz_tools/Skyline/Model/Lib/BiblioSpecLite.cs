@@ -686,6 +686,8 @@ namespace pwiz.Skyline.Model.Lib
                     int iScore = reader.GetOrdinal(RefSpectra.score);
                     int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
                     int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
+                    int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
+
 
                     int rowsRead = 0;
                     while (reader.Read())
