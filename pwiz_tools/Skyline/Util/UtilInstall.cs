@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Util
             {
                 Stopwatch downloadTimer = null;
                 Stopwatch unzipTimer = null;
-                if (Program.FunctionalTest)
+                if (Program.UnitTest)
                 {
                     downloadTimer = new Stopwatch();
                     unzipTimer = new Stopwatch();
@@ -201,29 +201,46 @@ namespace pwiz.Skyline.Util
 
                 foreach (var requiredFile in filesNotAlreadyDownloaded)
                 {
-                    // for functional testing, replace the hostname with the Skyline tool testing mirror path on AWS
+                    // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
                     var downloadUrl = requiredFile.DownloadUrl;
-                    if (Program.FunctionalTest && !Program.UseOriginalURLs)
+                    if (Program.UnitTest && !Program.UseOriginalURLs)
                         downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
 
-                    string downloadFilename = requiredFile.Unzip ? Path.GetTempFileName() : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
-                    if (downloadTimer != null)
-                    {
-                        LogToConsole($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
-                        downloadTimer.Start();
-                    }
+                    var useCachedDownloads = Program.UnitTest; // Cache downloads in case of tests running in parallel
+                    var destinationFilename = Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+                    string downloadFilename = useCachedDownloads
+                        ? Path.Combine(GetCachedDownloadsDirectory(), requiredFile.DownloadUrl.Segments.Last()) :
+                        requiredFile.Unzip ? Path.GetTempFileName() : destinationFilename;
 
-                    using (var fileSaver = new FileSaver(downloadFilename))
+                    if (useCachedDownloads && File.Exists(downloadFilename))
                     {
-                        if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
-                            throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
-                        fileSaver.Commit();
+                        LogToConsole($@"Using cached test data from {downloadUrl} in {downloadFilename} as {destinationFilename}...");
+                        if (!requiredFile.Unzip)
+                        {
+                            Helpers.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
+                        }
+                        downloadTimer = null;
                     }
-
-                    if (downloadTimer != null)
+                    else
                     {
-                        downloadTimer.Stop();
-                        LogToConsole($@"Done downloading test data file {downloadUrl}");
+                        if (downloadTimer != null)
+                        {
+                            LogToConsole($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
+                            downloadTimer.Start();
+                        }
+
+                        using (var fileSaver = new FileSaver(downloadFilename))
+                        {
+                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
+                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
+                            fileSaver.Commit();
+                        }
+
+                        if (downloadTimer != null)
+                        {
+                            downloadTimer.Stop();
+                            LogToConsole($@"Done downloading test data file {downloadUrl} to {downloadFilename}");
+                        }
                     }
 
                     if (!requiredFile.Unzip)
@@ -248,16 +265,28 @@ namespace pwiz.Skyline.Util
                         LogToConsole($@"Done unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
                     }
 
-                    FileEx.SafeDelete(downloadFilename);
+                    if (!useCachedDownloads)
+                    {
+                        FileEx.SafeDelete(downloadFilename);
+                    }
                 }
 
                 if (downloadTimer != null)
                 {
                     LogToConsole($@"Total download time {downloadTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                }
+
+                if (unzipTimer != null)
+                {
                     LogToConsole($@"Total unzip time {unzipTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
                 }
             }
             return true;
+        }
+
+        private static string GetCachedDownloadsDirectory()
+        {
+            return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
         }
     }
 

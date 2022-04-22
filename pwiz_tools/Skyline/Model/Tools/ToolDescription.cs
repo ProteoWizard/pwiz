@@ -903,14 +903,23 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public static string GetToolsDirectory()
         {
-            var skylinePath = Assembly.GetExecutingAssembly().Location;
-            Assume.IsFalse(string.IsNullOrEmpty(skylinePath), @"Could not determine Skyline installation location");
-            var skylineDirPath = Path.GetDirectoryName(skylinePath);
-            Assume.IsFalse(string.IsNullOrEmpty(skylineDirPath), @"Could not determine Skyline installation directory name");
+            var skylineDirPath = GetSkylineInstallationPath();
 
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
             return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{LimitDirectoryNameLength()}" : @"Tools");
+        }
+
+        /// <summary>
+        /// Gets the current installation directory, where we would expect to find Tools directory etc
+        /// </summary>
+        public static string GetSkylineInstallationPath()
+        {
+            var skylinePath = Assembly.GetExecutingAssembly().Location;
+            Assume.IsFalse(string.IsNullOrEmpty(skylinePath), @"Could not determine Skyline installation location");
+            var skylineDirPath = Path.GetDirectoryName(skylinePath);
+            Assume.IsFalse(string.IsNullOrEmpty(skylineDirPath), @"Could not determine Skyline installation directory name");
+            return skylineDirPath;
         }
     }
 }
