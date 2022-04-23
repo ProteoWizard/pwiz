@@ -9,8 +9,8 @@ Summary   : Added spectral library "DIA-TTOF-tutorial"
 All Info  :
 Added spectral library "DIA-TTOF-tutorial"
 Build Spectral Library > Cut-off score is "0.95"
-Build Spectral Library > Search files : contains "collinsb_I180316_001_SW-A-diaumpire.mzid.gz"
-Build Spectral Library > Search files : contains "collinsb_I180316_002_SW-B-diaumpire.mzid.gz"
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
 Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is True
 Build Spectral Library > Filter for document peptides is False
@@ -19,8 +19,16 @@ Build Spectral Library > Input File Type is "DIA raw (deconvolute, search, and b
 Extra Info: Cut-off score = "0.95",
 Search files = 
 [
-    "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
-    "collinsb_I180316_002_SW-B-diaumpire.mzid.gz"
+    {
+        File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    },
+    {
+        File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    }
 ],
 iRT standard peptides = "Biognosys-11 (iRT-C18)",
 Include ambiguous matches = True,

@@ -792,5 +792,56 @@ namespace pwiz.SkylineTestUtil
                 renameDlg.OkDialog();
             });
         }
+
+        public static SrmDocument NewDocumentFromSpectralLibrary(string libName, string libFullPath)
+        {
+            // Now import the .blib and populate document from that
+            RunUI(() => SkylineWindow.NewDocument(true));
+
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            Assert.IsNotNull(peptideSettingsUI);
+            var editListUI =
+                ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
+
+            RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
+            {
+                addLibUI.LibraryName = libName;
+                addLibUI.LibraryPath = libFullPath;
+                addLibUI.OkDialog();
+            });
+            RunUI(editListUI.OkDialog);
+            WaitForClosedForm(editListUI);
+
+            // Make sure the libraries actually show up in the peptide settings dialog before continuing.
+            WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
+            RunUI(() => Assert.IsFalse(peptideSettingsUI.IsSettingsChanged));
+
+            // Add all the molecules in the library
+            RunUI(() => SkylineWindow.ViewSpectralLibraries());
+            var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
+            var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
+
+            RunDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
+            {
+                var addLibraryMessage =
+                    string.Format(
+                        Resources.ViewLibraryDlg_CheckLibraryInSettings_The_library__0__is_not_currently_added_to_your_document,
+                        libName);
+                StringAssert.StartsWith(messageDlg.Message, addLibraryMessage);
+                messageDlg.DialogResult = DialogResult.Yes;
+            });
+            var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
+            RunDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
+
+            OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
+
+            var docAfter = WaitForDocumentChange(docBefore);
+
+            OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
+            RunUI(() => peptideSettingsUI.OkDialog());
+            WaitForClosedForm(peptideSettingsUI);
+            return docAfter;
+        }
     }
 }

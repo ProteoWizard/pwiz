@@ -60,6 +60,7 @@ class TandemNativeParser : public BuildParser, public SpecFileReader
   virtual void endElement(const XML_Char* name);
   virtual void characters(const XML_Char *s, int len);
   bool parseFile();
+  vector<PSM_SCORE_TYPE> getScoreTypes();
  
  private:
   enum STATE{ ROOT_STATE, PSM_GROUP_STATE, // highest level group

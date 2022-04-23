@@ -19,7 +19,7 @@ namespace pwiz.BiblioSpec.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,178 @@ namespace pwiz.BiblioSpec.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Byonic PEP.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Byonic_PEP {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Byonic_PEP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IDPicker FDR.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_IDPicker_FDR {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_IDPicker_FDR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mascot expectation.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Mascot_expectation {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Mascot_expectation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MaxQuant PEP.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_MaxQuant_PEP {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_MaxQuant_PEP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Morpheus q-value.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Morpheus_q_value {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Morpheus_q_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSGF+ q-value.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_MSGF__q_value {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_MSGF__q_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OMSSA expectation.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_OMSSA_expectation {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_OMSSA_expectation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PEAKS confidence.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_PEAKS_confidence {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_PEAKS_confidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PeptideProphet confidence.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_PeptideProphet_confidence {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_PeptideProphet_confidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PeptideShaker confidence.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_PeptideShaker_confidence {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_PeptideShaker_confidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percolator q-value.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Percolator_q_value {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Percolator_q_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ProteinPilot confidence.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_ProteinPilot_confidence {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_ProteinPilot_confidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ProteinProspector expectation.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_ProteinProspector_expectation {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_ProteinProspector_expectation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to q-value.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_q_value {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_q_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scaffold confidence.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Scaffold_confidence {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Scaffold_confidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Mill.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Spectrum_Mill {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Spectrum_Mill", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waters MSE peptide score.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X! Tandem expectation.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_X__Tandem_expectation {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_X__Tandem_expectation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of score types is not equal to number of rows in grid..
+        /// </summary>
+        internal static string BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_r" +
+                        "ows_in_grid_", resourceCulture);
             }
         }
         

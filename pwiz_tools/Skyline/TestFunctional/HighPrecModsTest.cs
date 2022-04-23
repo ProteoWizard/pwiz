@@ -57,8 +57,8 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("HighPrecModsTestLib.blib");
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("table_of_all_spectra_update_November2016.ssl") });
-                
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             WaitForConditionUI(() => peptideSettingsUi.AvailableLibraries.Contains(LIBRARY_NAME));
             RunUI(() => peptideSettingsUi.PickedLibraries = new[] { LIBRARY_NAME });

@@ -368,9 +368,6 @@
     <Setting Name="InstallationId" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="StackTraceListVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="CustomFinders" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -802,6 +799,9 @@
     </Setting>
     <Setting Name="ChromatogramDisplayRTDigits" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="BlibLibraryThresholds" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="PeakAreaIDotpCutoffValue" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.9</Value>

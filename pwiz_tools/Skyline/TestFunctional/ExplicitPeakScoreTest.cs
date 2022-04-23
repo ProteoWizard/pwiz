@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("explicitpeakscoretest.tsv") });
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             Assert.IsTrue(WaitForCondition(()=>peptideSettings.AvailableLibraries.Contains(libraryname)));
             OkDialog(peptideSettings, peptideSettings.OkDialog);

@@ -9,8 +9,8 @@ Summary   : スペクトルライブラリ「DIA-TTOF-tutorial」が追加され
 All Info  :
 スペクトルライブラリ「DIA-TTOF-tutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："collinsb_I180316_001_SW-A-diaumpire.mzid.gz"が含まれています
-スペクトルライブラリを構築>ファイルを検索："collinsb_I180316_002_SW-B-diaumpire.mzid.gz"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
 スペクトルライブラリを構築>曖昧な一致を含めるは真です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
@@ -19,8 +19,16 @@ All Info  :
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
-    "collinsb_I180316_002_SW-B-diaumpire.mzid.gz"
+    {
+        File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    },
+    {
+        File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    }
 ],
 iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
 曖昧な一致を含める = 真,

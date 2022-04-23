@@ -79,8 +79,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static RetentionTimeValues FromTransitionChromInfo(TransitionChromInfo transitionChromInfo)
         {
-            if (null == transitionChromInfo || transitionChromInfo.StartRetentionTime == 0 ||
-                transitionChromInfo.EndRetentionTime == 0)
+            if (null == transitionChromInfo || transitionChromInfo.IsEmpty)
             {
                 return null;
             }
