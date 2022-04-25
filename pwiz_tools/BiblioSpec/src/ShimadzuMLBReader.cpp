@@ -97,6 +97,10 @@ namespace BiblioSpec
         return true;
     }
 
+    vector<PSM_SCORE_TYPE> ShimadzuMLBReader::getScoreTypes() {
+        return vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE);
+    }
+
     double ShimadzuMLBReader::ReadDoubleFromBuffer(const char * & buf)
     {
         double result;

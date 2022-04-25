@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ConfigList SavedConfigsFilePath="REPLACE_TEXT\BcfgTestFiles\20_2_0_464_complex.bcfg">
+<ConfigList SavedConfigsFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\20_2_0_464_complex.bcfg">
   <skylinebatch_config Name="Complex" Enabled="true" Modified="1/12/2022 12:17 PM">
-    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\EmptyData" AnnotationsFilePath="REPLACE_TEXT\fakeAnnotations.csv" ReplicateNamingPattern="Tester" />
+    <main_settings TemplateFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Complex" DataFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" AnnotationsFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\fakeAnnotations.csv" ReplicateNamingPattern="Tester" />
     <file_settings MsOneResolvingPower="1" MsMsResolvingPower="1000" RetentionTime="100" AddDecoys="true" ShuffleDecoys="true" TrainMProphet="true" />
-    <refine_settings RemoveDecoys="true" RemoveResults="true" OutputFilePath="REPLACE_TEXT\refinedTemplate.sky">
+    <refine_settings RemoveDecoys="true" RemoveResults="true" OutputFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\refinedTemplate.sky">
       <command_value>(min_peptides, 1)</command_value>
       <command_value>(remove_repeats, )</command_value>
       <command_value>(remove_duplicates, )</command_value>
@@ -39,13 +39,13 @@
       <command_value>(cv_ms_level, products)</command_value>
     </refine_settings>
     <report_settings>
-      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr">
-        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr">
+        <script_path>(REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R, 4.0.3)</script_path>
       </report_info>
-      <report_info Name="Unique Report" Path="REPLACE_TEXT\UniqueReport.skyr" UseRefineFile="true">
-        <script_path>(REPLACE_TEXT\testScript.R, 4.0.3)</script_path>
+      <report_info Name="Unique Report" Path="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\UniqueReport.skyr" UseRefineFile="true">
+        <script_path>(REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\testScript.R, 4.0.3)</script_path>
       </report_info>
     </report_settings>
-    <config_skyline_settings Type="Custom" CmdPath="C:\Program Files\Skyline\SkylineCmd.exe" />
+    <config_skyline_settings Type="Custom" CmdPath="REPLACE_TEXT\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" />
   </skylinebatch_config>
 </ConfigList>

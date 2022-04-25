@@ -18,6 +18,7 @@
  */
 using System;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -26,27 +27,34 @@ namespace pwiz.Skyline.Model.Results
     public class PeakIntegrator
     {
         public PeakIntegrator(TimeIntensities interpolatedTimeIntensities)
-            : this(interpolatedTimeIntensities, null)
+            : this(FullScanAcquisitionMethod.None, null, ChromSource.unknown, null, interpolatedTimeIntensities, null)
         {
         }
 
-        public PeakIntegrator(TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
+        public PeakIntegrator(FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals, ChromSource chromSource, TimeIntensities rawTimeIntensities, TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
         {
+            FullScanAcquisitionMethod = acquisitionMethod;
+            TimeIntervals = timeIntervals;
+            ChromSource = chromSource;
+            RawTimeIntensities = rawTimeIntensities;
             InterpolatedTimeIntensities = interpolatedTimeIntensities;
             PeakFinder = peakFinder;
         }
 
+        public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; }
+        public ChromSource ChromSource { get; }
+
         public IPeakFinder PeakFinder { get; private set; }
-        public TimeIntensities InterpolatedTimeIntensities { get; private set; }
-        public TimeIntensities RawTimeIntensities { get; set; }
-        public TimeIntervals TimeIntervals { get; set; }
+        public TimeIntensities InterpolatedTimeIntensities { get; }
+        public TimeIntensities RawTimeIntensities { get; }
+        public TimeIntervals TimeIntervals { get; }
 
         /// <summary>
         /// Return the ChromPeak with the specified start and end times chosen by a user.
         /// </summary>
         public ChromPeak IntegratePeak(float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            if (TimeIntervals != null)
+            if (!BackgroundSubtraction)
             {
                 // For a triggered acquisition, we just use the start and end time supplied by the
                 // user and Crawdad is not involved with the peak integration.
@@ -79,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
                 flags &= ~ChromPeak.FlagValues.forced_integration;
 
             var chromPeak = new ChromPeak(PeakFinder, interpolatedPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
-            if (TimeIntervals != null)
+            if (!BackgroundSubtraction)
             {
                 chromPeak = IntegratePeakWithoutBackground(InterpolatedTimeIntensities.Times[peakMax.StartIndex], InterpolatedTimeIntensities.Times[peakMax.EndIndex], flags);
             }
@@ -101,7 +109,32 @@ namespace pwiz.Skyline.Model.Results
                     endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
                 }
             }
-            return new ChromPeak(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime, endTime, flags);
+            return ChromPeak.IntegrateWithoutBackground(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime,
+                endTime, flags);
+        }
+
+        public bool BackgroundSubtraction
+        {
+            get
+            {
+                return HasBackgroundSubtraction(FullScanAcquisitionMethod, TimeIntervals, ChromSource);
+            }
+        }
+
+        public static bool HasBackgroundSubtraction(FullScanAcquisitionMethod acquisitionMethod,
+            TimeIntervals timeIntervals, ChromSource chromSource)
+        {
+            if (timeIntervals != null)
+            {
+                return false;
+            }
+
+            if (FullScanAcquisitionMethod.DDA.Equals(acquisitionMethod) && chromSource == ChromSource.fragment)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)

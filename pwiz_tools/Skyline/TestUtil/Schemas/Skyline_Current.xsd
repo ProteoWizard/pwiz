@@ -496,6 +496,7 @@
           <xs:attribute name="precursor_mass_analyzer" type="full_scan_mass_analyzer_type"/>
           <xs:attribute name="precursor_res" type="xs:double"/>
           <xs:attribute name="precursor_res_mz" type="xs:double"/>
+          <xs:attribute name="ignore_sim_scans" type="xs:boolean"/>
           <xs:attribute name="selective_extraction" type="xs:boolean"/>
           <xs:attribute name="scheduled_filter" type="xs:boolean"/>
           <xs:attribute name="retention_time_filter_type" type="retention_time_filtering_type"/>

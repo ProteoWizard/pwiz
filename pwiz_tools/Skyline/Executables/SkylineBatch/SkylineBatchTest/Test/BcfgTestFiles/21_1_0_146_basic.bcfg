@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ConfigList SavedPathRoot="REPLACE_TEXT\BcfgTestFiles">
+<ConfigList SavedPathRoot="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles">
   <skylinebatch_config Name="Basic" Modified="01/12/2022 12:12:00">
-    <main_settings TemplateFilePath="REPLACE_TEXT\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\EmptyData" />
+    <main_settings TemplateFilePath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\emptyTemplate.sky" AnalysisFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\BcfgTestFiles\Basic" DataFolderPath="REPLACE_TEXT\pwiz_tools\Skyline\Executables\SkylineBatch\SkylineBatchTest\Test\EmptyData" />
     <file_settings />
     <refine_settings RemoveDecoys="true" RemoveResults="true" />
     <report_settings />

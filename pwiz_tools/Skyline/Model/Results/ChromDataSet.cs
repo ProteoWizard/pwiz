@@ -500,7 +500,7 @@ namespace pwiz.Skyline.Model.Results
             if (firstChromData.RawPeaks.Any())
             {
                 var firstPeak = new ChromDataPeak(firstChromData, firstChromData.RawPeaks.First());
-                ChromDataPeakList chromDataPeakList = new ChromDataPeakList(firstPeak, _listChromData);
+                ChromDataPeakList chromDataPeakList = new ChromDataPeakList(FullScanAcquisitionMethod, firstPeak, _listChromData);
                 _listPeakSets.Add(chromDataPeakList);
             }
         }
@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
+                    peak.CalcChromPeak(peakMax, flags, FullScanAcquisitionMethod, intersectedTimeIntervals);
 
                     if (intersectedTimeIntervals != null && peakMax != null)
                     {
@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
                             endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
                         }
 
-                        var chromPeak = new ChromPeak(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        var chromPeak = ChromPeak.IntegrateWithoutBackground(peak.Data.RawTimeIntensities, startTime, endTime, flags);
                         peak.SetChromPeak(chromPeak);
                     }
                 }
@@ -1071,7 +1071,7 @@ namespace pwiz.Skyline.Model.Results
             int endMax = peakMax.EndIndex;
             int widthMax = peakMax.Length;
             int deltaMax = (int)Math.Round(widthMax / 4.0, 0);
-            var listPeaks = new ChromDataPeakList(dataPeakMax);
+            var listPeaks = new ChromDataPeakList(FullScanAcquisitionMethod, dataPeakMax);
 
             // Allow peaks in the group to be smaller, if the max peak is the precursor.
             // Really this should be checking to see if the precursor data came from MS1
@@ -1207,7 +1207,7 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         var peakAdd = new ChromDataPeak(BestChromatogram, null);
-                        peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true };
+                        peakSetAdd = new ChromDataPeakList(FullScanAcquisitionMethod, peakAdd, _listChromData) { IsForcedIntegration = true };
                     }
                 }
             }
@@ -1234,13 +1234,13 @@ namespace pwiz.Skyline.Model.Results
                     peakAdd = new ChromDataPeak(BestChromatogram, null);
                 }
 
-                peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) {IsForcedIntegration = true};
+                peakSetAdd = new ChromDataPeakList(FullScanAcquisitionMethod, peakAdd, _listChromData) {IsForcedIntegration = true};
             }
             else
             {
                 // Otherwise, insert an empty peak
                 var peakAdd = new ChromDataPeak(BestChromatogram, null);
-                peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true };
+                peakSetAdd = new ChromDataPeakList(FullScanAcquisitionMethod, peakAdd, _listChromData) { IsForcedIntegration = true };
             }
 
             if (peakSetAdd != null)

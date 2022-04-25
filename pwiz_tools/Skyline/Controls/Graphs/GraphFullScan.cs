@@ -1329,6 +1329,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}
         public double YAxisMax { get { return GraphPane.YAxis.Scale.Max; }}
 
+        public bool IsScanTypeSelected(ChromSource source)
+        {
+            return string.Equals(comboBoxScanType.SelectedItem.ToString(),
+                _msDataFileScanHelper.NameFromSource(source));
+        }
+
         public void SelectScanType(ChromSource source)
         {
             comboBoxScanType.SelectedItem = _msDataFileScanHelper.NameFromSource(source);

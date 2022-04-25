@@ -1655,4 +1655,16 @@
   <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
     <value>Search Engine</value>
   </data>
+  <data name="File_FileName" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="File_ScoreTypeName" xml:space="preserve">
+    <value>Score type</value>
+  </data>
+  <data name="File_ScoreThreshold" xml:space="preserve">
+    <value>Score threshold</value>
+  </data>
+  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
+    <value>Ignore SIM scans</value>
+  </data>
 </root>

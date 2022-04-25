@@ -235,6 +235,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private IDictionary<int, Tuple<double, bool>> CalculateProteinAbundances()
         {
+            if (DocNode.IsDecoy)
+            {
+                // Don't bother calculating protein abundances for the "Decoy" peptide list,
+                // since it can be very slow.
+                return new Dictionary<int, Tuple<double, bool>>();
+            }
             var allTransitionIdentityPaths = new HashSet<IdentityPath>();
             var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
             int replicateCount = SrmDocument.Settings.HasResults
