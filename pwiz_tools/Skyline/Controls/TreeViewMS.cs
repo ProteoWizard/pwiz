@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,11 +32,11 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls
 {
-	/// <summary>
+    /// <summary>
     /// A MultiSelect TreeView.
     /// <para>
     /// Inspired by the example at http://www.codeproject.com/KB/tree/treeviewms.aspx for details.</para>
-	/// </summary>
+    /// </summary>
     public abstract class TreeViewMS : TreeView
     {
         // Length of the horizontal dashed lines representing each branch of the tree
@@ -47,14 +47,14 @@ namespace pwiz.Skyline.Controls
         protected internal const int IMG_WIDTH = 16;
 
         private TreeNodeMS _anchorNode;
-	    private bool _inRightClick;
+        private bool _inRightClick;
 
-	    private const int DEFAULT_ITEM_HEIGHT = 16;
-	    private const float DEFAULT_FONT_SIZE = (float) 8.25;
+        private const int DEFAULT_ITEM_HEIGHT = 16;
+        private const float DEFAULT_FONT_SIZE = (float) 8.25;
 
         public const double DEFAULT_TEXT_FACTOR = 1;
-	    public const double LRG_TEXT_FACTOR = 1.25;
-	    public const double XLRG_TEXT_FACTOR = 1.5;
+        public const double LRG_TEXT_FACTOR = 1.25;
+        public const double XLRG_TEXT_FACTOR = 1.5;
 
         protected TreeViewMS()
         {
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Controls
         public ICollection<TreeNodeMS> SelectedNodes { get; private set; }
 
         // If true, disjoint select is enabled.
-	    private bool _allowDisjoint;
+        private bool _allowDisjoint;
 
         /// <summary>
         /// For functional testing of multiple selection code.
@@ -188,9 +188,9 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-	    protected abstract bool IsParentNode(TreeNode node);
+        protected abstract bool IsParentNode(TreeNode node);
 
-	    protected abstract int EnsureChildren(TreeNode node);
+        protected abstract int EnsureChildren(TreeNode node);
 
         public bool RestoredFromPersistentString { get; set; }
         private TreeViewStateRestorer TreeStateRestorer { get; set; }
@@ -378,7 +378,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-	    private int _updateLockCount;
+        private int _updateLockCount;
 
         public bool IsInUpdate { get { return _updateLockCount > 0; } }
 

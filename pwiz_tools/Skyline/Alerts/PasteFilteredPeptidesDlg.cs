@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Alerts
                 var listSizing = new List<string>(_peptides);
                 if (listSizing.Count > MAX_LINES)
                     listSizing.RemoveRange(MAX_LINES, listSizing.Count - MAX_LINES);
- 				labelList.Text = TextUtil.LineSeparate(listSizing);                
-				Height += labelList.Height - panelList.Height;
+                labelList.Text = TextUtil.LineSeparate(listSizing);                
+                Height += labelList.Height - panelList.Height;
                 labelList.Text = TextUtil.LineSeparate(_peptides);
                 if (_peptides.Count > 1)
                 {

@@ -1407,18 +1407,18 @@ namespace pwiz.Skyline.Util
         // convert electric to scaler - v 2,3 algorithms
         private static double electric_scale(double v)
         {
-	        double best=1.0;
+            double best=1.0;
 
             // Translator2 Note: this is commented out in the perl source
             // if (NOELECTRIC==1) { return 1.0; }
-        	
-	        foreach (Isoparams p in ISOPARAMS)
-	        {
-		        if (v > p.emin && v < p.emax)
+            
+            foreach (Isoparams p in ISOPARAMS)
+            {
+                if (v > p.emin && v < p.emax)
                     best= p.eK;
-	        }
+            }
 
-	        return best;            
+            return best;            
         }
         */
     }

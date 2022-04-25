@@ -35,15 +35,15 @@ namespace pwiz.Skyline.Model
     public class ChromatogramExporter
     {
         public SrmDocument Document { get; private set; }
-	    
+        
         public ChromatogramExporter(SrmDocument document)
-	    {
+        {
             Document = document;
             _settings = Document.Settings;
             _measuredResults = _settings.MeasuredResults;
             _matchTolerance = (float)_settings.TransitionSettings.Instrument.MzMatchTolerance;
             _chromatogramSets = _measuredResults.Chromatograms;
-	    }
+        }
 
         public const char MAIN_SEPARATOR = TextUtil.SEPARATOR_TSV;
 
