@@ -82,7 +82,7 @@ namespace pwiz.Common.Graph
         }
 
         #region object overrides
-		public bool Equals(DataColumn<T> other)
+        public bool Equals(DataColumn<T> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -104,6 +104,6 @@ namespace pwiz.Common.Graph
                 return (Cells.GetHashCode()*397) ^ (Title != null ? Title.GetHashCode() : 0);
             }
         }
- 	    #endregion    
+         #endregion    
     }
 }

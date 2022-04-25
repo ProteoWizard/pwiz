@@ -1863,8 +1863,8 @@ namespace pwiz.Skyline.Model.Results
                 if (configInfo == null || configInfo.IsEmpty)
                     continue;
 
-				if (infoString.Length > 0)
-	                infoString.Append('\n');
+                if (infoString.Length > 0)
+                    infoString.Append('\n');
 
                 // instrument model
                 if(!string.IsNullOrWhiteSpace(configInfo.Model))

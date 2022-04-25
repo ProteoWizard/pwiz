@@ -737,7 +737,7 @@ Waters</value>
     <value>将删除峰面积 CV 高于截止值的所有目标母离子。</value>
   </data>
   <data name="_refine_cv_global_normalize" xml:space="preserve">
-    <value>CV 计算中使用的面积按规定进行标准化。（默认没有标准化）</value>
+    <value>CV 计算中使用的面积按规定进行归一化。（默认没有归一化）</value>
   </data>
   <data name="_refine_cv_reference_normalize" xml:space="preserve">
     <value>CV 计算中使用的面积被归一化为一种参考类型，如“重型”。</value>

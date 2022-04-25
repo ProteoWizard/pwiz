@@ -57,6 +57,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunIrtTest();
             RunCalibrationTest();
+            RunRemoveDuplicatesTest();
         }
 
         private void RunIrtTest()
@@ -964,6 +965,74 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editIrtCalcDlg2, editIrtCalcDlg2.CancelDialog);
             OkDialog(peptideSettingsDlg3, peptideSettingsDlg3.CancelDialog);
+        }
+
+        private void RunRemoveDuplicatesTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+            var dbPath = testFilesDir.GetTestPath("MPDS_1_Peptides.irtdb");
+            var dbBytes = File.ReadAllBytes(dbPath);
+
+            const int numStandards = 19;
+            const int numLibrary = 127;
+            const int numOverlap = 18;
+
+            void CheckIrtDbFile(bool expectDuplicates, out DbIrtPeptide[] arrStandards, out DbIrtPeptide[] arrLibrary, out Target[] arrOverlap)
+            {
+                IrtDb.GetIrtDb(dbPath, null, out var dbPeptides);
+                arrStandards = dbPeptides.Where(pep => pep.Standard).ToArray();
+                arrLibrary = dbPeptides.Where(pep => !pep.Standard).ToArray();
+                arrOverlap = arrStandards.Select(pep => pep.ModifiedTarget).Intersect(arrLibrary.Select(pep => pep.ModifiedTarget)).ToArray();
+                Assert.AreEqual(numStandards, arrStandards.Length);
+                Assert.AreEqual(expectDuplicates ? numLibrary : numLibrary - numOverlap, arrLibrary.Length);
+                Assert.AreEqual(expectDuplicates ? numOverlap : 0, arrOverlap.Length);
+            }
+            
+            CheckIrtDbFile(true, out var standards, out var library, out var overlap);
+
+            const string calcName = "Duplicate test";
+
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettings.EditCalculator);
+            RunUI(() =>
+            {
+                editCalcDlg.CalcName = calcName;
+                editCalcDlg.OpenDatabase(dbPath);
+                // Check that the duplicates were removed from the list of library peptides
+                Assert.AreEqual(numStandards, editCalcDlg.StandardPeptideCount);
+                Assert.AreEqual(numLibrary - numOverlap, editCalcDlg.LibraryPeptideCount);
+                // Reset lists to original values (i.e. containing duplicates)
+                editCalcDlg.StandardPeptides = standards;
+                editCalcDlg.LibraryPeptides = library;
+                Assert.AreEqual(numStandards, editCalcDlg.StandardPeptideCount);
+                Assert.AreEqual(numLibrary, editCalcDlg.LibraryPeptideCount);
+            });
+            OkDialog(editCalcDlg, editCalcDlg.OkDialog);
+
+            // Check that the database got saved without duplicates
+            CheckIrtDbFile(false, out _, out _, out _);
+
+            // Add RT predictor with the new calculator
+            var rtPredictorDlg = ShowDialog<EditRTDlg>(peptideSettings.AddRTRegression);
+            rtPredictorDlg.ChooseCalculator(calcName);
+            OkDialog(rtPredictorDlg, rtPredictorDlg.OkDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            var docPath = testFilesDir.GetTestPath("duplicate-test.sky");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(docPath);
+                SkylineWindow.NewDocument();
+            });
+
+            // Reset irtdb file to contain duplicates
+            File.WriteAllBytes(dbPath, dbBytes);
+            CheckIrtDbFile(true, out _, out _, out _);
+
+            // Open file and check that the duplicates get removed
+            RunUI(() => SkylineWindow.OpenFile(docPath));
+            WaitForDocumentLoaded();
+            CheckIrtDbFile(false, out _, out _, out _);
         }
 
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)

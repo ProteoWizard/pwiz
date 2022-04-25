@@ -200,6 +200,8 @@ namespace pwiz.SkylineTestFunctional
             var nodeTranGroup = doc.PeptideTransitionGroups.First(n => ReferenceEquals(n.TransitionGroup, tranGroup));
 
             var syncTargets = (syncChromSets ?? Array.Empty<string>()).ToHashSet();
+            if (!syncTargets.Contains(targetChromName))
+                syncTargets.Clear();
 
             for (var i = 0; i < doc.MeasuredResults.Chromatograms.Count; i++)
             {

@@ -53,6 +53,8 @@ namespace pwiz.SkylineRunner
                 }
                 return 1;
             }
+
+            skylinePath = EscapeIfNecessary(skylinePath);
             string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
             var psiExporter = new ProcessStartInfo(@"cmd.exe") // Not L10N
             {
@@ -68,6 +70,7 @@ namespace pwiz.SkylineRunner
                 if(!WaitForConnection(serverStream, inPipeName))
                 {
                     Console.WriteLine(Resources.Program_Program_Error__Could_not_connect_to_Skyline_);
+                    Console.WriteLine(@"    cmd.exe {0}", psiExporter.Arguments);
                     Console.WriteLine(Resources.Program_Program_Make_sure_you_have_a_valid__0__installation_, skylineAppName);
                     return 1;
                 }
@@ -203,6 +206,36 @@ namespace pwiz.SkylineRunner
                 Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
                 Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
             };
+        }
+
+        /// <summary>
+        /// Apply Windows command-line escaping if necessary. The command is quoted, but
+        /// this doesn't seem to work if special characters are present, e.g. in the user name.
+        /// This problem was found with a username that contained an ampersand "V&amp;V...".
+        /// Once escaping is applied, it must be applied even to spaces, which do not cause
+        /// issues for the simple quoted version without escaping:
+        ///
+        /// C:\Users\A&amp;B\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Skyline\Skyline.appref-ms
+        ///
+        /// must become:
+        ///
+        /// C:\Users\A^&amp;B\AppData\Roaming\Microsoft\Windows\Start^ Menu\Programs\Skyline\Skyline.appref-ms
+        ///
+        /// Note: User names can't contain these characters: /\[]:&lt;>+=;,?"*%
+        /// Note: Paths can't contain these characters: \/:*?"&lt;>|
+        ///
+        /// In the end, it seems like only &amp; and ^ (the escape character itself are
+        /// possible and problematic)
+        /// </summary>
+        private string EscapeIfNecessary(string path)
+        {
+            var escapeChars = "^&".ToCharArray();   // The caret (^) must be first to avoid duplication
+            if (path.IndexOfAny(escapeChars) != -1)
+            {
+                foreach (var escapeChar in escapeChars.Append(' ')) // add space to characters that need escaping
+                    path = path.Replace(escapeChar.ToString(), "^" + escapeChar);
+            }
+            return path;
         }
     }
 }

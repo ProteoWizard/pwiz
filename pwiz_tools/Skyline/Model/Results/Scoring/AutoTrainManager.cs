@@ -42,15 +42,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return document.Settings.PeptideSettings.Integration.IsAutoTrain &&
-                   document.Settings.HasResults && document.MeasuredResults.IsLoaded &&
-                   !(previous.Settings.HasResults && previous.MeasuredResults.IsLoaded);
+            return document.IsLoaded != previous?.IsLoaded;
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
             if (document.Settings.PeptideSettings.Integration.IsAutoTrain &&
-                document.Settings.HasResults && document.MeasuredResults.IsLoaded)
+                document.Settings.HasResults && document.IsLoaded)
             {
                 return @"AutoTrainManager: Model not trained";
             }
