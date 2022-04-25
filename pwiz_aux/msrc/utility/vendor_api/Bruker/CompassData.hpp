@@ -110,6 +110,7 @@ PWIZ_API_DECL enum InstrumentSource // not from CXT
     InstrumentSource_EI = 16,
     InstrumentSource_GC_APCI = 17,
     InstrumentSource_VIP_HESI = 18,
+    InstrumentSource_VIP_APCI = 19,
     InstrumentSource_Unknown = 255
 };
 

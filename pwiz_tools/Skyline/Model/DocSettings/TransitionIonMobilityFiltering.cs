@@ -497,6 +497,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return other != null &&
                    Equals(other.WindowWidthMode, WindowWidthMode) &&
                    Equals(other.ResolvingPower, ResolvingPower) &&
+                   Equals(other.FixedWindowWidth, FixedWindowWidth) &&
                    Equals(other.PeakWidthAtIonMobilityValueZero, PeakWidthAtIonMobilityValueZero) &&
                    Equals(other.PeakWidthAtIonMobilityValueMax, PeakWidthAtIonMobilityValueMax);
         }
@@ -512,6 +513,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             int result = WindowWidthMode.GetHashCode();
             result = (result * 397) ^ ResolvingPower.GetHashCode();
+            result = (result * 397) ^ FixedWindowWidth.GetHashCode();
             result = (result * 397) ^ PeakWidthAtIonMobilityValueZero.GetHashCode();
             result = (result * 397) ^ PeakWidthAtIonMobilityValueMax.GetHashCode();
             return result;

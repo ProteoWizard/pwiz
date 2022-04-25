@@ -417,6 +417,23 @@ EndSelection:<<<<<<<3
             }
         }
 
+        /// <summary>
+        /// Sets the text on the system clipboard. Use this method for functionality that should
+        /// use the real clipboard regardless of whether a functional test is running.
+        /// </summary>
+        public static void SetSystemClipboardText(Control owner, string text)
+        {
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText(text);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetCopyErrorMessage());
+            }
+        }
+
         public static void SetClipboardData(Control owner, DataObject data, bool copy)
         {
             try
