@@ -323,12 +323,13 @@ namespace pwiz.Skyline.Controls
                         cb.CheckedChanged += LossButton_Click;
                         cb.MouseHover += LossButton_MouseHover;
                         Controls.Add(cb);
-                        if (colCount < tableWidth)
+                        if (colCount < tableWidth-1)
                             colCount++;
                         else
                         {
                             colCount = 1;
                             rowCount++;
+                            SetRowSpan(_lossesLabel, GetRowSpan(_lossesLabel)+1);
                         }
                         SetCellPosition(cb, new TableLayoutPanelCellPosition(colCount, rowCount));
                     }
