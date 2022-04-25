@@ -444,6 +444,7 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
+/pwiz_tools/Skyline/SignAfterPublishPW.bat
 /BrowseOnly
 /x64/BrowseOnly
 /qb64.bat
