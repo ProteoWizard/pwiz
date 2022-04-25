@@ -516,7 +516,8 @@ namespace SkylineNightly
                         retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
                     if (retryTester)
                     {
-                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes retrying.");
+                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes. Will try again in " + retryTimeoutInMinutes + " minutes.");
+                        Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                     }
                 }
             }
