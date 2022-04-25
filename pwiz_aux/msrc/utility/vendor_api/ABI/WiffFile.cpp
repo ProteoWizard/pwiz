@@ -671,7 +671,7 @@ Polarity ExperimentImpl::getPolarity() const
 
 int ExperimentImpl::getMsLevel(int cycle) const
 {
-    return 0;
+    return msExperiment->GetMassSpectrumInfo(cycle - 1)->MSLevel;
 }
 
 double ExperimentImpl::convertCycleToRetentionTime(int cycle) const
