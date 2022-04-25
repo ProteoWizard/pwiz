@@ -1535,7 +1535,7 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
-                var listInfo = nodeTran.Results[ResultsIndex];
+                var listInfo = nodeTran.GetSafeChromInfo(ResultsIndex);
                 if (listInfo.IsEmpty)
                     return;
 

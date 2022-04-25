@@ -175,6 +175,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
 
         case InstrumentSource_APCI:
         case InstrumentSource_GC_APCI:
+        case InstrumentSource_VIP_APCI:  // TODO: yet another new source, this is a guess along with the VIP_HESI question above
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_atmospheric_pressure_chemical_ionization, 1));
             break;

@@ -446,9 +446,9 @@ namespace pwiz.ProteomeDatabase.Fasta
             @"tpd", //  third-party DDBJ  tpd|accession|name
             @"tpe", //  third-party EMBL  tpe|accession|name
             @"tpg", //  third-party GenBank  tpg|accession|name
-            @"bbm", //  GenInfo backbone moltype	bbm|integer
-            @"bbs", //  GenInfo backbone seqid	bbs|integer
-            @"gim", //  GenInfo import ID	gim|integer
+            @"bbm", //  GenInfo backbone moltype  bbm|integer
+            @"bbs", //  GenInfo backbone seqid  bbs|integer
+            @"gim", //  GenInfo import ID gim|integer
         };
 
         // basic Regex.Replace expression for returning the info we want - some regexes may want to augment

@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public string Library { get; private set; }
 
         #region object overrides
-		public bool Equals(RetentionTimeSource other)
+        public bool Equals(RetentionTimeSource other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return (base.GetHashCode()*397) ^ (Library != null ? Library.GetHashCode() : 0);
             }
         }
-	    #endregion
+        #endregion
         #region Implementation of IXmlSerializable
         private enum Attr
         {

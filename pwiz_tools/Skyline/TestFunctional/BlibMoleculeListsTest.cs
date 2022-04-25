@@ -19,18 +19,14 @@
 
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class BlibMoleculeListsTest : AbstractFunctionalTest
+    public class BlibMoleculeListsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestBlibMoleculeLists()
@@ -58,56 +54,7 @@ namespace pwiz.SkylineTestFunctional
             libraryExporter.ExportSpectralLibrary(exporteDFullPath, null);
             Assert.IsTrue(File.Exists(exporteDFullPath));
 
-            // Now import the .blib and populate document from that
-            RunUI(() => SkylineWindow.NewDocument(true));
-
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-
-            Assert.IsNotNull(peptideSettingsUI);
-            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
-
-            RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
-            {
-                var nameTextBox = (TextBox)addLibUI.Controls.Find("textName", true)[0];
-                Assert.IsNotNull(nameTextBox);
-                var pathTextBox = (TextBox)addLibUI.Controls.Find("textPath", true)[0];
-                Assert.IsNotNull(pathTextBox);
-                nameTextBox.Text = exported;
-                pathTextBox.Text = exporteDFullPath;
-                addLibUI.OkDialog();
-            });
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
-
-            // Make sure the libraries actually show up in the peptide settings dialog before continuing.
-            WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
-            RunUI(() => Assert.IsFalse(peptideSettingsUI.IsSettingsChanged));
-
-            // Add all the molecules in the library
-            RunUI(() => SkylineWindow.ViewSpectralLibraries());
-            var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
-            var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-
-            RunDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
-            {
-                var addLibraryMessage =
-                    string.Format(Resources.ViewLibraryDlg_CheckLibraryInSettings_The_library__0__is_not_currently_added_to_your_document, exported);
-                StringAssert.StartsWith(messageDlg.Message, addLibraryMessage);
-                messageDlg.DialogResult = DialogResult.Yes;
-            });
-            var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
-            RunDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg =>
-            {
-                addLibraryPepsDlg.Btn1Click();
-            });
-
-            OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
-
-            var docAfter = WaitForDocumentChange(docBefore);
-
-            OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
-            RunUI(() => peptideSettingsUI.OkDialog());
-            WaitForClosedForm(peptideSettingsUI);
+            var docAfter = NewDocumentFromSpectralLibrary(exported, exporteDFullPath);
 
             // Expect two molecule lists instead of the old single "Library Molecules" list
             var newMoleculeLists = docAfter.MoleculeGroups.Select(g => g.Name).ToArray(); 
@@ -117,5 +64,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsTrue(moleculeLists.Contains(name));
             }
         }
+
+
     }
 }

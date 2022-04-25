@@ -1608,6 +1608,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> ReadPeaksStartingAt(long startPeakIndex, int count)
         {
+            if (count == 0)
+            {
+                return Array.Empty<ChromPeak>();
+            }
             return CallWithStream(stream => ReadPeaksStartingAt(stream, startPeakIndex, count));
         }
 

@@ -136,6 +136,11 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
+            AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
+                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs"}, 
+                null, "Clipboard(Ex)?\\.SetText", true, 
+                "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
+
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
             // AddInspection(@"*.cs", Inspection.Forbidden, Level.Error, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -451,6 +456,8 @@ namespace pwiz.SkylineTest
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
+            var inspected = new HashSet<string>();
+
             foreach (var fileMask in allFileMasks)
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
@@ -463,7 +470,14 @@ namespace pwiz.SkylineTest
                         continue; // Can't inspect yourself!
                     }
 
-                    var lines = File.ReadAllLines(filename);
+                    if (!inspected.Add(filename))
+                    {
+                        continue; // Already inspected (matched multiple filemasks)
+                    }
+
+                    var content = File.ReadAllText(filename);
+                    var lines = content.Split('\n');
+
                     var lineNum = 0;
                     var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
                         ? requiredPatternsByFileMask[fileMask].Where(kvp =>
@@ -492,9 +506,15 @@ namespace pwiz.SkylineTest
                     var warnings = new List<string>();
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
+                    var crlfCount = 0; // Look for inconsistent line endings
 
                     foreach (var line in lines)
                     {
+                        // Look for inconsistent line endings
+                        if (line.EndsWith("\r")) 
+                        {
+                            crlfCount++;
+                        }
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
@@ -552,6 +572,11 @@ namespace pwiz.SkylineTest
                                 }
                             }
                         }
+                    }
+
+                    if (crlfCount != 0 && crlfCount < lines.Length-1)
+                    {
+                        results.Add($@"Inconsistent line endings in {filename}");
                     }
 
                     if (requiredPatternsObservedInThisFile != null)
