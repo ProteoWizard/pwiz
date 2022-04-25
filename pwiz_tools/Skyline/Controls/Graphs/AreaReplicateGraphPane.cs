@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
@@ -50,6 +51,53 @@ namespace pwiz.Skyline.Controls.Graphs
             return (expectedValue == AreaExpectedValue.isotope_dist ||
                     expectedValue == AreaExpectedValue.library);
         }
+
+        public static string GetDotpLabel(this AreaExpectedValue expectedValue)
+        {
+            switch (expectedValue)
+            {
+                case AreaExpectedValue.library:
+                    return @"dotp";
+                case AreaExpectedValue.isotope_dist:
+                    return @"idotp";
+                case AreaExpectedValue.ratio_to_label:
+                    return @"rdotp";
+                default:
+                    return string.Empty;
+            }
+        }
+
+        public static float GetDotpValueCutoff(this AreaExpectedValue expectedValue, Settings set)
+        {
+            switch (expectedValue)
+            {
+                case AreaExpectedValue.library:
+                    return set.PeakAreaDotpCutoffValue;
+                case AreaExpectedValue.isotope_dist:
+                    return set.PeakAreaIDotpCutoffValue;
+                case AreaExpectedValue.ratio_to_label:
+                    return set.PeakAreaRDotpCutoffValue;
+                default:
+                    return 0.9f;
+            }
+        }
+        public static void SetDotpValueCutoff(this AreaExpectedValue expectedValue, Settings set, float val)
+        {
+            Assume.IsTrue(val >= 0 || val <= 1, string.Format(CultureInfo.CurrentCulture, Resources.AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1, expectedValue.GetDotpLabel()));
+
+            switch (expectedValue)
+            {
+                case AreaExpectedValue.library:
+                    set.PeakAreaDotpCutoffValue = val;
+                    break;
+                case AreaExpectedValue.isotope_dist:
+                    set.PeakAreaIDotpCutoffValue = val;
+                    break;
+                case AreaExpectedValue.ratio_to_label:
+                    set.PeakAreaRDotpCutoffValue = val;
+                    break;
+            }
+        }
     }
     public enum DotProductDisplayOption { none, label, line }
 
@@ -70,9 +118,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public static DotProductDisplayOption ParseLocalizedString(string optionString)
+        {
+            if(Resources.DotpDisplayOption_label.Equals(optionString))
+                return DotProductDisplayOption.label;
+            else if(Resources.DotpDisplayOption_line.Equals(optionString))
+                return DotProductDisplayOption.line;
+            else 
+                return DotProductDisplayOption.none;
+        }
+
         public static bool IsSet(this DotProductDisplayOption displayOption, Settings set)
         {
             return displayOption.ToString().Equals(set.PeakAreaDotpDisplay);
+        }
+
+        public static DotProductDisplayOption GetCurrent(Settings set)
+        {
+            return ListAll().First(op => op.ToString().Equals(set.PeakAreaDotpDisplay));
         }
 
         public static IEnumerable<DotProductDisplayOption> ListAll()
@@ -589,10 +652,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 3.5f, Fill = new Fill(Color.DimGray)}
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
                 };
                 CurveList.Insert(0, dotpLine);
-                ToolTip.TargetCurve = dotpLine;
+                ToolTip.TargetCurves.ClearAndAdd(dotpLine);
             }
             else
             {
@@ -600,6 +663,48 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+
+            if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
+            {
+                var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
+                var highlightValues = new PointPairList(graphData.DotpData.Select(point => point.Y < cutoff ? point : new PointPair(){X = point.X, Y = float.NaN}).ToList());
+                var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
+                {
+                    IsY2Axis = true,
+                    Line = new Line() { Color = Color.Transparent},
+                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
+                };
+                cutoffHighlightLine.Label.IsVisible = false;
+                CurveList.Add(cutoffHighlightLine);
+                ToolTip.TargetCurves.Add(cutoffHighlightLine);
+
+
+                var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
+                var labelText = string.Format(Resources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
+                    _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
+                var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                };
+                labelObject.FontSpec.Fill = new Fill(Color.Transparent);
+                GraphObjList.Add(labelObject);
+                var cutoffLine = new LineObj()
+                {
+                    IsClippedToChartRect = true,
+                    Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale){Rect = new RectangleF(0, cutoff, 1, 0)},
+                    Line = new LineBase(Color.Red)
+                };
+                GraphObjList.Add(cutoffLine);
+                //This is a placeholder to make sure the line shows in the legend.
+                CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
+                    Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
+                {
+                    Points = new PointPairList(new[] { new PointPair(0, 0) }),
+                    Symbol = new Symbol(SymbolType.None, Color.Transparent)
+                });
+            }
         }
 
         public override ImmutableList<float> GetToolTipDataSeries()
@@ -609,7 +714,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            ToolTip.AddLine("",GetDotProductResultsText(index));
+            ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
+                string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -855,12 +962,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                                   AlignV.Bottom)
                                           {
                                               IsClippedToChartRect = true,
-                                              ZOrder = ZOrder.F_BehindGrid,
+                                              ZOrder = ZOrder.E_BehindCurves
                                           };
 
 
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
+                    textObj.FontSpec.Fill = new Fill(Color.Transparent);
                     _labelHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
@@ -898,17 +1006,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                switch (ExpectedVisible)
-                {
-                    case AreaExpectedValue.library:
-                        return @"dotp";
-                    case AreaExpectedValue.isotope_dist:
-                        return @"idotp";
-                    case AreaExpectedValue.ratio_to_label:
-                        return @"rdotp";
-                    default:
-                        return string.Empty; 
-                }
+                return ExpectedVisible.GetDotpLabel();
             }
         }
 

@@ -60,6 +60,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BcfgFileTest.cs" />
+    <Compile Include="RemoteFileSourceFunctionalTest.cs" />
     <Compile Include="DataDownloadFunctionalTest.cs" />
     <Compile Include="FunctionalTestUtil.cs" />
     <Compile Include="AbstractSkylineBatchFunctionalTest.cs" />

@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             const int notFoundCount = 20;
             for (int i = 0; i < notFoundCount; i++)
             {
-                listPeptides.Add(string.Join(string.Empty, ProteinRand.ToArray().RandomOrder().ToArray()));
+                listPeptides.Add(string.Concat(ProteinRand.ToArray().RandomOrder().ToArray()));
             }
             listPeptides.Add(FirstProteinName);
             listPeptides.Add(SecondProteinName);

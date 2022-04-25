@@ -648,7 +648,7 @@
         private System.Windows.Forms.Panel panelTemplate;
         private System.Windows.Forms.Panel panelData;
         private System.Windows.Forms.CheckBox checkBoxLogTestFormat;
-        private System.Windows.Forms.CheckBox checkBoxUseFolderName;
+        public System.Windows.Forms.CheckBox checkBoxUseFolderName;
         public System.Windows.Forms.TextBox textAnalysisFileName;
         private System.Windows.Forms.Label label1;
     }

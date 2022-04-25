@@ -9,8 +9,9 @@ namespace SkylineBatch
 
         private SkylineBatchConfigManagerState _initialState;
         private IMainUiControl _mainControl;
+        private readonly bool _preferPanoramaSource;
 
-        public EditRemoteFileSourcesForm(IMainUiControl mainControl, SkylineBatchConfigManagerState state, int selectedIndex)
+        public EditRemoteFileSourcesForm(IMainUiControl mainControl, SkylineBatchConfigManagerState state, int selectedIndex, bool preferPanoramaSource)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -18,6 +19,7 @@ namespace SkylineBatch
             State = state;
             _initialState = state.Copy();
             _mainControl = mainControl;
+            _preferPanoramaSource = preferPanoramaSource;
             LastEditedName = null;
             UpdateRemoteFilesList();
             if (selectedIndex >= 0)
@@ -42,7 +44,7 @@ namespace SkylineBatch
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            var remoteSourceForm = new RemoteSourceForm(null, _mainControl, State);
+            var remoteSourceForm = new RemoteSourceForm(null, _mainControl, State, _preferPanoramaSource);
             var dialogResult = remoteSourceForm.ShowDialog(this);
             State = remoteSourceForm.State;
             if (DialogResult.OK == dialogResult)
@@ -57,7 +59,7 @@ namespace SkylineBatch
         private void btnEdit_Click(object sender, EventArgs e)
         {
             var initialName = listSources.SelectedItem;
-            var remoteSourceForm = new RemoteSourceForm(State.FileSources[(string)initialName], _mainControl, State);
+            var remoteSourceForm = new RemoteSourceForm(State.FileSources[(string)initialName], _mainControl, State, _preferPanoramaSource);
             var dialogResult = remoteSourceForm.ShowDialog(this);
             State = remoteSourceForm.State;
             if (DialogResult.OK == dialogResult)

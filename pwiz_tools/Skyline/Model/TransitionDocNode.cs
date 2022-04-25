@@ -1132,7 +1132,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeTransitionId(Transition transition)
         {
-            return (TransitionDocNode) ChangeId(transition);
+            return (TransitionDocNode)ChangeId(transition);
         }
     }
 }

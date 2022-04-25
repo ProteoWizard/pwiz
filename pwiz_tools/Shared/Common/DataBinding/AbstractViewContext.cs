@@ -141,11 +141,6 @@ namespace pwiz.Common.DataBinding
 
         protected abstract void SaveViewSpecList(ViewGroupId viewGroupId, ViewSpecList viewSpecList);
 
-        protected RowSourceInfo FindRowSourceInfo(ViewInfo viewInfo)
-        {
-            return FindRowSourceInfo(viewInfo.ParentColumn.PropertyType);
-        }
-
         public ViewInfo GetViewInfo(ViewGroup viewGroup, ViewSpec viewSpec)
         {
             var rowSourceInfo = GetRowSourceInfo(viewSpec);
@@ -170,7 +165,7 @@ namespace pwiz.Common.DataBinding
             return GetViewInfo(FindGroup(viewName.Value.GroupId), viewSpec);
         }
 
-        protected RowSourceInfo GetRowSourceInfo(ViewSpec viewSpec)
+        public RowSourceInfo GetRowSourceInfo(ViewSpec viewSpec)
         {
             return RowSources.FirstOrDefault(rowSource => rowSource.Name == viewSpec.RowSource);
         }
@@ -706,5 +701,10 @@ namespace pwiz.Common.DataBinding
         // SkylineViewContext overrides and uses this event 
 #pragma warning disable 67
         public virtual event Action ViewsChanged;
+
+        public virtual bool CanDisplayView(ViewSpec viewSpec)
+        {
+            return null != GetRowSourceInfo(viewSpec);
+        }
     }
 }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
@@ -37,9 +38,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private readonly PeakTransitionGroupFeatureSet _peakTransitionGroupFeaturesList;
 
         public Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
+        public bool ReplaceUnknownFeatureScores { get; }
 
         public TargetDecoyGenerator(IPeakScoringModel scoringModel, PeakTransitionGroupFeatureSet featureScores)
         {
+            ReplaceUnknownFeatureScores = scoringModel.ReplaceUnknownFeatureScores;
             // Determine which calculators will be used to score peaks in this document.
             FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
             _peakTransitionGroupFeaturesList = featureScores;
@@ -102,6 +105,31 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
+        public void GetScoresForCalculator(int calculatorIndex, List<double> targetScores, List<double> decoyScores,
+            List<double> secondBestScores)
+        {
+            var weights = ImmutableList.ValueOf(Enumerable.Range(0, FeatureCalculators.Count)
+                .Select(i => i == calculatorIndex ? 1 : double.NaN));
+            var linearModelParams = new LinearModelParams(weights);
+            int invertSign = FeatureCalculators[calculatorIndex].IsReversedScore ? -1 : 1;
+            GetScores(linearModelParams, linearModelParams, targetScores, decoyScores, secondBestScores, false, invertSign);
+        }
+
+        /// <summary>
+        /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
+        /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
+        /// </summary>
+        /// <param name="calculatorParams">Parameters to calculate the score of the best peak.</param>
+        /// <param name="targetScores">Output list of target scores.</param>
+        /// <param name="decoyScores">Output list of decoy scores.</param>
+        /// <param name="secondBestScores">Output list of false target scores.</param>
+        public void GetScores(LinearModelParams calculatorParams, List<double> targetScores, List<double> decoyScores,
+            List<double> secondBestScores)
+        {
+            GetScores(calculatorParams, calculatorParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
+        }
+
+
         /// <summary>
         /// Calculate scores for targets and decoys.  A transition is selected from each transition group using the
         /// scoring weights, and then its score is calculated using the calculator weights applied to each feature.
@@ -111,13 +139,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="targetScores">Output list of target scores.</param>
         /// <param name="decoyScores">Output list of decoy scores.</param>
         /// <param name="secondBestScores">Output list of false target scores.</param>
-        /// <param name="invert">If true, select minimum rather than maximum scores</param>
+        /// <param name="replaceUnknownFeatureScores">If true, replace NaN and Infinite feature scores with zero</param>
+        /// <param name="invertSign">Either 1 or -1 to multiply the final scores by</param>
         public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams,
             List<double> targetScores, List<double> decoyScores, List<double> secondBestScores,
-            bool invert = false)
+            bool replaceUnknownFeatureScores,
+            int invertSign)
         {
-            int invertSign = invert ? -1 : 1;
-
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
                 PeakGroupFeatures? maxFeatures = null;
@@ -132,7 +160,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // Find the highest and second highest scores among the transitions in this group.
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                 {
-                    double score = invertSign * GetScore(scoringParams, peakGroupFeatures);
+                    double score = invertSign * GetScore(scoringParams, peakGroupFeatures, replaceUnknownFeatureScores);
                     if (maxScore < score)
                     {
                         nextScore = maxScore;
@@ -148,7 +176,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
 
                 double currentScore = maxFeatures.HasValue
-                    ? GetScore(calculatorParams, maxFeatures.Value) : Double.NaN;
+                    ? GetScore(calculatorParams, maxFeatures.Value, replaceUnknownFeatureScores) : Double.NaN;
                 if (peakTransitionGroupFeatures.IsDecoy)
                 {
                     if (decoyScores != null)
@@ -163,7 +191,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     if (secondBestScores != null)
                     {
                         double secondBestScore = nextFeatures.HasValue
-                            ? GetScore(calculatorParams, nextFeatures.Value) : Double.NaN;
+                            ? GetScore(calculatorParams, nextFeatures.Value, replaceUnknownFeatureScores) : Double.NaN;
                         secondBestScores.Add(secondBestScore);
                     }
                 }
@@ -239,7 +267,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             List<double> decoyScores = peakScoringModel.UsesDecoys ? new List<double>(DecoyCount) : null;
             List<double> secondBestScores = peakScoringModel.UsesSecondBest ? new List<double>(TargetCount) : null;
 
-            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores);
+            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
 
             if (peakScoringModel.UsesDecoys && !peakScoringModel.UsesSecondBest)
                 activeDecoyScores = decoyScores;
@@ -273,6 +301,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         private bool IsValidCalculator(int calculatorIndex)
         {
+            if (ReplaceUnknownFeatureScores)
+            {
+                return true;
+            }
             double maxValue = Double.MinValue;
             double minValue = Double.MaxValue;
 
@@ -283,7 +315,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     double value = peakGroupFeatures.Features[calculatorIndex];
                     if (IsUnknown(value))
+                    {
                         return false;
+                    }
                     maxValue = Math.Max(value, maxValue);
                     minValue = Math.Min(value, minValue);
                 }
@@ -291,17 +325,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return maxValue > minValue;
         }
 
-        /// <summary>
-        /// Calculate the score of a set of features given an array of weighting coefficients.
-        /// </summary>
-        private static double GetScore(IList<double> weights, PeakGroupFeatures peakGroupFeatures, double bias)
+        private double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures, bool replaceUnknownFeatureScores)
         {
-            return LinearModelParams.Score(peakGroupFeatures.Features, weights, bias);
-        }
-
-        private static double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures)
-        {
-            return GetScore(parameters.Weights, peakGroupFeatures, parameters.Bias);
+            IList<float> features = peakGroupFeatures.Features;
+            if (replaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
+            return parameters.Score(features);
         }
 
         public static bool IsUnknown(double d)

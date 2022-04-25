@@ -767,8 +767,7 @@ namespace seems
             spectrumListForm.EndBulkLoad();
             Application.DoEvents();
 
-            var ionMobilityColumn = spectrumListForm.GridView.Columns["IonMobility"];
-            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.size() > 0 && sl.spectrum(0, true).GetIonMobilityArray() != null)
+            if (managedDataSource.SpectrumListForm.GetIonMobilityRows().Any())
             {
                 var heatmapForm = new HeatmapForm(this, managedDataSource);
                 heatmapForm.Show(DockPanel, DockState.Document);

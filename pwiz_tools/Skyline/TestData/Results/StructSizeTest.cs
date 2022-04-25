@@ -41,7 +41,8 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual((IntPtr)16, Marshal.OffsetOf<ChromPeak>("_backgroundArea"));
             Assert.AreEqual((IntPtr)20, Marshal.OffsetOf<ChromPeak>("_height"));
             Assert.AreEqual((IntPtr)24, Marshal.OffsetOf<ChromPeak>("_fwhm"));
-            Assert.AreEqual((IntPtr)28, Marshal.OffsetOf<ChromPeak>("_flagBits"));
+            Assert.AreEqual((IntPtr)28, Marshal.OffsetOf<ChromPeak>("_flagValues"));
+            Assert.AreEqual((IntPtr)30, Marshal.OffsetOf<ChromPeak>("_massError"));
             Assert.AreEqual((IntPtr)32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));

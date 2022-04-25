@@ -120,10 +120,20 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
+        public PeptideDocNode ChangeFastaSequence(FastaSequence newSequence)
+        {
+            int begin = newSequence.Sequence.IndexOf(Peptide.Target.Sequence, StringComparison.Ordinal);
+            Assume.IsTrue(begin >= 0);
+            int end = begin + Peptide.Target.Sequence.Length;
+            var newPeptide = new Peptide(newSequence, Peptide.Target.Sequence,
+                begin, end, Peptide.MissedCleavages);
+            return ChangePeptide(newPeptide, TransitionGroups.Select(tg => tg.ChangePeptide(newPeptide)));
+        }
+
         public PeptideDocNode ChangePeptide(Peptide peptide, IEnumerable<TransitionGroupDocNode> newTransitionGroups)
         {
-            var node = (PeptideDocNode) ChangeId(peptide);
-            node = (PeptideDocNode) node.ChangeChildren(newTransitionGroups.Cast<DocNode>().ToList());
+            var node = (PeptideDocNode)ChangeId(peptide);
+            node = (PeptideDocNode)node.ChangeChildren(newTransitionGroups.Cast<DocNode>().ToList());
             return node;
         }
 
@@ -553,7 +563,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo != null && chromInfo.Area > 0)
+                            if (chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;
@@ -1283,13 +1293,9 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeExcludeFromCalibration(int replicateIndex, bool excluded)
         {
-            ChromInfoList<PeptideChromInfo>[] newResults = Results.ToArray();
-            var chromInfoList = newResults[replicateIndex];
-            var newChromInfos = chromInfoList.Select(
-                peptideChromInfo => null == peptideChromInfo ? null 
-                    : peptideChromInfo.ChangeExcludeFromCalibration(excluded)).ToArray();
-            newResults[replicateIndex] = new ChromInfoList<PeptideChromInfo>(newChromInfos);
-            return ChangeResults(new Results<PeptideChromInfo>(newResults));
+            var newChromInfos = new ChromInfoList<PeptideChromInfo>(Results[replicateIndex]
+                .Select(peptideChromInfo => peptideChromInfo.ChangeExcludeFromCalibration(excluded)));
+            return ChangeResults(Results.ChangeAt(replicateIndex, newChromInfos));
         }
 
         public bool HasPrecursorConcentrations
@@ -1570,7 +1576,6 @@ namespace pwiz.Skyline.Model
                 // Delay allocation in the hope that nothing has changed for faster loading
                 TransitionChromInfo[] listInfoNew = null;
                 int changeStartIndex = -1;
-                var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                 for (int iInfo = 0; iInfo < countInfo; iInfo++)
                 {
                     var info = listInfo[iInfo];

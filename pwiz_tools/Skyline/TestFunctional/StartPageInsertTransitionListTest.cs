@@ -16,9 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
+
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.FileUI;
@@ -46,16 +45,9 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() =>
-            {
-                var importTransitionListControl = RecurseControlsOfType<ActionBoxControl>(startPage)
-                    .Single(control =>
-                        control.Caption == Resources.SkylineStartup_SkylineStartup_Import_Transition_List);
-                importTransitionListControl.EventAction();
-            });
-            var startPageSettingsControl = WaitForOpenForm<StartPageSettingsUI>();
-            OkDialog(startPageSettingsControl, ()=>startPageSettingsControl.AcceptButton.PerformClick());
-            var insertTransitionListDlg = WaitForOpenForm<InsertTransitionListDlg>();
+            var startPageSettings = ShowDialog<StartPageSettingsUI>(() =>
+                startPage.ClickWizardAction(Resources.SkylineStartup_SkylineStartup_Import_Transition_List));
+            var insertTransitionListDlg = ShowDialog<InsertTransitionListDlg>(startPageSettings.OkDialog);
             string clipboardText = TextUtil.LineSeparate(string.Join(TextUtil.SEPARATOR_TSV_STR,
                     Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
                     Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
@@ -66,21 +58,11 @@ namespace pwiz.SkylineTestFunctional
                     "H2O10", "[M+]", "HO10", "1"));
             var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() =>
             {
-                insertTransitionListDlg.textBox1.Text = clipboardText;
+                insertTransitionListDlg.TransitionListText = clipboardText;
             });
             OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionCount);
             Assert.AreEqual("HO10", SkylineWindow.Document.MoleculeTransitions.First().CustomIon.Formula);
-        }
-
-        private IEnumerable<T> RecurseControlsOfType<T>(Control parent)
-        {
-            var result = parent.Controls.OfType<Control>().SelectMany(RecurseControlsOfType<T>);
-            if (parent is T)
-            {
-                result = result.Prepend((T)(object)parent);
-            }
-            return result;
         }
     }
 }

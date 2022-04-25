@@ -1205,11 +1205,7 @@ namespace pwiz.Skyline
             document = DocumentUI;
             string fileName = DocumentFilePath;
             ShareType shareType;
-            DocumentFormat? fileFormatOnDisk = null;
-            if (!Dirty && null != DocumentFilePath)
-            {
-                fileFormatOnDisk = SavedDocumentFormat;
-            }
+            DocumentFormat? fileFormatOnDisk = GetFileFormatOnDisk();
             using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
@@ -1239,6 +1235,11 @@ namespace pwiz.Skyline
                 }
             }
             ShareDocument(skyZipFileName, shareType);
+        }
+
+        private DocumentFormat? GetFileFormatOnDisk()
+        {
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType)
@@ -1764,6 +1765,10 @@ namespace pwiz.Skyline
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
                         var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText), columnPositions);
+                        if (smallMoleculeTransitionListReader.RowCount == 0)
+                        {
+                            throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
+                        }
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -3191,8 +3196,14 @@ namespace pwiz.Skyline
                 fileName = DocumentFilePath;
             }
 
-            if (!SaveDocument())
-                return;
+            // Issue 866: Provide option in Skyline to upload a minimized library to Panorama
+            // Save the document but only if it is "dirty". If the user is uploading an older document with a newer
+            // version of Skyline they may want to preserve the version in the .sky file. The version is preserved only with a 
+            // "complete" share, however. 
+            if (Dirty)
+            {
+                SaveDocument();
+            }
 
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
@@ -3236,7 +3247,7 @@ namespace pwiz.Skyline
             // if no uri was saved to publish to or user chose to view the dialog show the dialog
             if (showPublishDocDlg)
             {
-                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName))
+                using (var publishDocumentDlg = new PublishDocumentDlg(this, servers, fileName, GetFileFormatOnDisk()))
                 {
                     publishDocumentDlg.PanoramaPublishClient = publishClient;
                     if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
@@ -3253,9 +3264,15 @@ namespace pwiz.Skyline
         {
             var message = TextUtil.LineSeparate(Resources.SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_,
                 Resources.SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_);
-            if (MultiButtonMsgDlg.Show(this, string.Format(message, panoramaSavedUri),
-                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
-                return false;
+            var result = MultiButtonMsgDlg.Show(this, string.Format(message, panoramaSavedUri),
+                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+            switch (result)
+            {
+                case DialogResult.No:
+                    return false;
+                case DialogResult.Cancel:
+                    return true;
+            }
 
             var server = servers.FirstOrDefault(s => s.URI.Host.Equals(panoramaSavedUri.Host));
             if (server == null)
@@ -3313,7 +3330,12 @@ namespace pwiz.Skyline
             ShareType shareType;
             try
             {
-                shareType = publishClient.DecideShareType(fileInfo, DocumentUI);
+                var cancelled = false;
+                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, ref cancelled);
+                if (cancelled)
+                {
+                    return true;
+                }
             }
             catch (PanoramaServerException pse)
             {
