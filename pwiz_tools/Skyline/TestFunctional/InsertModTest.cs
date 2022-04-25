@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
                         containsValue, errDlg.ErrorList));
                 errDlg.Close();
             });
-            RunUI(windowDlg.CancelDialog);
+            OkDialog(windowDlg, windowDlg.CancelDialog);
             WaitForClosedForm(transitionDlg);
             // TODO: Do we need to support these checks for columnSelectDlg?
             //Assert.AreEqual(row, insertTransDlg.SelectedGridRow);
