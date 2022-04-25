@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -22,10 +20,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var fits = new List<BilinearCurveFit>();
             foreach (var conc in uniqueConcentrations)
             {
-                fits.Add(FitBilinearCurveWithOffset(conc, pointList));
+                var fit = FitBilinearCurveWithOffset(conc, pointList);
+                if (fit != null)
+                {
+                    fits.Add(fit);
+                }
             }
 
-            return fits.OrderBy(fit => -fit.Error).FirstOrDefault();
+            return fits.OrderBy(fit => fit.Error).FirstOrDefault();
         }
 
         public static BilinearCurveFit FitBilinearCurveWithOffset(double xOffset, ICollection<WeightedPoint> points)
@@ -34,7 +36,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
 
             var linearFit = RegressionFit.LinearFit(linearPoints);
-            if (linearFit == null)
+            if (linearFit == null || !string.IsNullOrEmpty(linearFit.ErrorMessage))
             {
                 return null;
             }
@@ -53,9 +55,35 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 BaselineHeight = baselineHeight,
                 Slope = linearFit.Slope.Value,
                 Intercept = linearFit.Intercept.Value,
-                StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDev(),
+                StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDevP(),
                 Error = totalError,
             };
+        }
+
+        public static BilinearCurveFit ComputeBootstrappedLoq(double lod, IEnumerable<WeightedPoint> points)
+        {
+            var random = new Random(0);
+            return null;
+        }
+
+        public static double ComputeLod(IList<WeightedPoint> points)
+        {
+            BilinearCurveFit fit = FitBilinearCurve(points);
+            var lodArea = fit.BaselineHeight + fit.StdDevBaseline;
+            var largestConc = points.Max(pt => pt.X);
+            var smallestNonzeroConc = points.Where(pt => pt.X > 0).Select(pt => pt.X).Append(largestConc).Min();
+            double lodConc;
+            if (fit.Slope == 0)
+            {
+                lodConc = largestConc;
+            }
+            else
+            {
+                lodConc = (lodArea - fit.Intercept) / fit.Slope;
+            }
+
+            lodConc = Math.Max(smallestNonzeroConc, Math.Min(lodConc, largestConc));
+            return lodConc;
         }
     }
 }

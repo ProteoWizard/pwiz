@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MathNet.Numerics.LinearRegression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -24,6 +21,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0.16317916521766687, result.Intercept, delta);
             Assert.AreEqual(0.172315, result.BaselineHeight, delta);
             Assert.AreEqual(0.057632885215053185, result.Error, delta);
+            Assert.AreEqual(0.0008070195509128315, result.StdDevBaseline, delta);
         }
 
         [TestMethod]
@@ -34,7 +32,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0.00239897, result.Slope, delta);
             Assert.AreEqual(0.16965172, result.Intercept, delta);
             Assert.AreEqual(0.17205111, result.BaselineHeight, delta);
-            Assert.AreEqual(0.07240250761116633, result.Error);
+            Assert.AreEqual(0.07240250761116633, result.Error, delta);
+            Assert.AreEqual(0.0007680004501027473, result.StdDevBaseline, delta);
         }
 
         [TestMethod]
@@ -91,6 +90,14 @@ namespace pwiz.SkylineTest
                 .Zip(areas, (conc, area) => Tuple.Create(conc, area)).ToLookup(tuple => tuple.Item1)
                 .Select(grouping => new WeightedPoint(grouping.Key, grouping.Average(tuple => tuple.Item2),
                     Math.Pow(grouping.Key <= 0 ? 1e-6 : 1 / grouping.Key, 2))).ToList();
+        }
+
+        [TestMethod]
+        public void TestComputeLod()
+        {
+            var points = GetWeightedPoints();
+            var lod = BilinearCurveFit.ComputeLod(points);
+            Assert.AreEqual(0.3845768874492954, lod, delta);
         }
     }
 }
