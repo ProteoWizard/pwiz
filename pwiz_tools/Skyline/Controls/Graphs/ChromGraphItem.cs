@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
-        private static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.BlueViolet;
+        public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var height = graphPane.YAxis.Scale.Max;
             var originalPeakShadingBox = new BoxObj(start.DisplayTime, graphPane.YAxis.Scale.Max, width, height)
             {
-                Fill = new Fill(Color.FromArgb(30, COLOR_ORIGINAL_PEAK_SHADE)),
+                Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
                 ZOrder = ZOrder.F_BehindGrid,
                 Border = new Border { IsVisible = false },
                 IsClippedToChartRect = true,

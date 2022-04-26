@@ -48,6 +48,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public bool Chosen
         {
             get { return _data.Chosen; }
+            set
+            {
+                if (value == Chosen)
+                {
+                    return;
+                }
+                var identityPath = _precursorResult.Precursor.IdentityPath;
+                var resultFile = _precursorResult.GetResultFile();
+
+                if (!value)
+                {
+                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), "Remove Peak"), doc =>
+                        doc.ChangePeak(identityPath, resultFile.Replicate.Name,
+                            resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false));
+                }
+                else
+                {
+                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), "Choose peak"), doc =>
+                        doc.ChangePeak(identityPath, resultFile.Replicate.Name,
+                            resultFile.ChromFileInfo.FilePath, null, PeakGroupRetentionTime, UserSet.TRUE));
+                }
+            }
         }
 
         public override string ToString()
@@ -87,6 +109,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PeakGroupScore PeakScores
         {
             get { return _data.Score; }
+        }
+
+        public CandidatePeakGroupData GetCandidatePeakGroupData()
+        {
+            return _data;
         }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -22,7 +24,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private Selector _selector;
         private BindingList<CandidatePeakGroup> _bindingList;
         private List<CandidatePeakGroup> _candidatePeakGroups;
-
+        private Color _originalPeakColor;
 
         public CandidatePeakForm(SkylineWindow skylineWindow)
         {
@@ -38,6 +40,29 @@ namespace pwiz.Skyline.Controls.Databinding
             var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
             Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
+            DataboundGridControl.DataGridView.CellFormatting += DataGridView_OnCellFormatting;
+            _originalPeakColor = GetOriginalPeakColor();
+        }
+
+        private void DataGridView_OnCellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (!Settings.Default.ShowOriginalPeak)
+            {
+                return;
+            }
+
+            if (e.RowIndex < 0 || e.RowIndex >= BindingListSource.Count)
+                return;
+            var candidatePeak = (BindingListSource[e.RowIndex] as RowItem)?.Value as CandidatePeakGroup;
+            if (candidatePeak == null)
+            {
+                return;
+            }
+
+            if (!candidatePeak.Chosen && candidatePeak.GetCandidatePeakGroupData().OriginallyBestPeak)
+            {
+                e.CellStyle.BackColor = _originalPeakColor;
+            }
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -316,6 +341,31 @@ namespace pwiz.Skyline.Controls.Databinding
                     return hashCode;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the color to be used as the background to indicate the originally chosen peak.
+        /// </summary>
+        private Color GetOriginalPeakColor()
+        {
+            Color foreColor = ChromGraphItem.COLOR_ORIGINAL_PEAK_SHADE;
+            if (foreColor.A == 255)
+            {
+                return foreColor;
+            }
+            // If the original peak color is semi-transparent, then take the weighted average of the color
+            // with the grid's background color
+            // We do this, because the DataGridView has bugs erasing itself if the cell background color is
+            // semi-transparent
+            var alphaFraction = foreColor.A / 255.0;
+            var backColor = DataboundGridControl.DataGridView.BackColor;
+            var red = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.R * foreColor.R +
+                                                 (1 - alphaFraction) * backColor.R * backColor.R));
+            var green = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.G * foreColor.G +
+                                                   (1 - alphaFraction) * backColor.G * backColor.G));
+            var blue = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.B * foreColor.B +
+                                                  (1 - alphaFraction) * backColor.B * backColor.B));
+            return Color.FromArgb(red, green, blue);
         }
     }
 }

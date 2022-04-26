@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores));
+                var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores), false);
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
             }
 
@@ -246,7 +246,10 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            return new CandidatePeakGroupData(peakIndex, apexTime, minStartTime, maxEndTime, isChosen, MakePeakScore(featureScores));
+
+            bool originallyBestPeak = chromatogramInfos.All(info => info.Header.MaxPeakIndex == peakIndex);
+            return CandidatePeakGroupData.FoundPeak(peakIndex, apexTime, minStartTime, maxEndTime, isChosen,
+                MakePeakScore(featureScores), originallyBestPeak);
         }
 
         private PeakGroupScore MakePeakScore(FeatureScores featureScores)

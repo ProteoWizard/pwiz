@@ -557,7 +557,7 @@
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
-    <Compile Include="Model\Databinding\Entities\CandidatePeak.cs" />
+    <Compile Include="Model\Databinding\Entities\CandidatePeakGroup.cs" />
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
     <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
     <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
