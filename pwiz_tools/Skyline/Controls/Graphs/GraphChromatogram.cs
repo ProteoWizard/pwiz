@@ -1852,28 +1852,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return chromGraphItems;
         }
 
-        private static ChromatogramInfo[] ResizeArrayChromInfo(ChromatogramInfo[] arrayChromInfo, int centerInfo, int numStepsExpected)
-        {
-            int numStepsFound = arrayChromInfo.Length;
-            var arrayChromInfoNew = new ChromatogramInfo[numStepsExpected];
-            if (numStepsFound < numStepsExpected)
-            {
-                // Position a smaller set inside a larger array
-                int destinationIndex = numStepsExpected / 2 - centerInfo;
-                int length = Math.Min(numStepsFound, numStepsExpected - destinationIndex);
-                Array.Copy(arrayChromInfo, 0,
-                    arrayChromInfoNew, destinationIndex, length);
-            }
-            else
-            {
-                // Position as much as will fit of a larger set into a smaller array
-                Array.Copy(arrayChromInfo, centerInfo - numStepsExpected / 2,
-                    arrayChromInfoNew, 0, numStepsExpected);
-            }
-            arrayChromInfo = arrayChromInfoNew;
-            return arrayChromInfo;
-        }
-
         private sealed class OptimizationGraphData
         {
             public OptimizationGraphData(int numPeaks)
