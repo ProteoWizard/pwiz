@@ -112,9 +112,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestImportPeakBoundaryAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 

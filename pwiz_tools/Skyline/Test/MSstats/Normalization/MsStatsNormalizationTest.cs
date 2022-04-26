@@ -296,9 +296,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
+                if (SkipSmallMoleculeTestVersions())
                 {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return null;
                 }
             }
