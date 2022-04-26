@@ -13,6 +13,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public double Error { get; private set; }
         public double StdDevBaseline { get; private set; }
 
+        public double GetY(double x)
+        {
+            return Math.Max(BaselineHeight, x * Slope + Intercept);
+        }
+
         public static BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
         {
             var pointList = points.ToList();
@@ -60,10 +65,57 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             };
         }
 
-        public static BilinearCurveFit ComputeBootstrappedLoq(double lod, IEnumerable<WeightedPoint> points)
+        public static BilinearCurveFit ComputeBootstrapParams(Random random, IList<WeightedPoint> points)
         {
-            var random = new Random(0);
-            return null;
+            var randomPoints = Enumerable.Range(0, points.Count)
+                .Select(i => points[random.Next(points.Count)]).ToList();
+            return FitBilinearCurve(randomPoints);
+        }
+
+        public static double ComputeBootstrappedLoq(Random random, int maxIterations, IList<WeightedPoint> points)
+        {
+            var lod = ComputeLod(points);
+            const int gridSize = 100;
+            var maxConcentration = points.Max(pt => pt.X);
+            var concentrationValues = Enumerable.Range(0, gridSize)
+                .Select(i => lod + (maxConcentration - lod) * i / (gridSize - 1)).ToList();
+            var areaGrid = Enumerable.Range(0, gridSize).Select(i => new MathNet.Numerics.Statistics.RunningStatistics()).ToList();
+            for (int i = 0; i < maxIterations; i++)
+            {
+                var p = ComputeBootstrapParams(random, points);
+                for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
+                {
+                    areaGrid[iConcentration].Push(p.GetY(concentrationValues[iConcentration]));
+                }
+            }
+
+            const double cvThreshold = .2;
+            var cvs = new List<double>(areaGrid.Count);
+            foreach (var runningStatistics in areaGrid)
+            {
+                if (runningStatistics.Mean <= 0)
+                {
+                    cvs.Add(cvThreshold * 2);
+                }
+                else
+                {
+                    cvs.Add(runningStatistics.StandardDeviation / runningStatistics.Mean);
+                }
+            }
+
+            double loq = maxConcentration;
+            for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
+            {
+                var cv = cvs[iConcentration];
+                if (cv > cvThreshold)
+                {
+                    break;
+                }
+
+                loq = concentrationValues[iConcentration];
+            }
+
+            return loq;
         }
 
         public static double ComputeLod(IList<WeightedPoint> points)

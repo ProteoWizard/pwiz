@@ -86,6 +86,12 @@ namespace pwiz.SkylineTest
                 0.005, 0.005, 0.005, 0.01, 0.01, 0.01, 0.03, 0.03, 0.03, 0.05, 0.05, 0.05, 0.07, 0.07, 0.07,
                 0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0
             };
+            return MakeWeightedPoints(concentrations, areas);
+        }
+
+        private IList<WeightedPoint> MakeWeightedPoints(IList<double> concentrations, IList<double> areas)
+        {
+            Assert.AreEqual(concentrations.Count, areas.Count);
             return concentrations
                 .Zip(areas, (conc, area) => Tuple.Create(conc, area)).ToLookup(tuple => tuple.Item1)
                 .Select(grouping => new WeightedPoint(grouping.Key, grouping.Average(tuple => tuple.Item2),
@@ -98,6 +104,30 @@ namespace pwiz.SkylineTest
             var points = GetWeightedPoints();
             var lod = BilinearCurveFit.ComputeLod(points);
             Assert.AreEqual(0.3845768874492954, lod, delta);
+        }
+
+        [TestMethod]
+        public void TestComputeLoq()
+        {
+            var areas = new double[]
+            {
+                0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000,
+                0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000,
+                0.00000000000000000000, 0.00014956993646152492, 0.00014995676055750597, 0.00000000000000000000,
+                0.00017176402663390654, 0.00043060652812320662, 0.00000000000000000000, 0.00047242916172544338,
+                0.00024007723157733063, 0.00016317133730713851, 0.00224918647629133951, 0.00208678377690913949,
+                0.00126969307708830310, 0.00352413988932613045, 0.00360755126030127627, 0.00287816697272668147,
+                0.00512273079101743887, 0.00491574289577129727, 0.00501447277612654049, 0.00750785941174682541,
+                0.00808758893988542615, 0.00522947445339865240
+            };
+            var concentrations = new double[]
+            {0.005, 0.005, 0.005, 0.01, 0.01, 0.01, 0.03, 0.03, 0.03, 0.05, 0.05, 0.05, 0.07, 0.07, 0.07, 0.1, 0.1,
+                0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0
+            };
+            var weightedPoints = MakeWeightedPoints(concentrations, areas);
+            var random = new Random(0);
+            var loq = BilinearCurveFit.ComputeBootstrappedLoq(random, 200, weightedPoints);
+            Assert.AreEqual(0.07947949229870066, loq, delta);
         }
     }
 }
