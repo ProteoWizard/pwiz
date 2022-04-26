@@ -417,9 +417,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FullScanSettingsTestAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
