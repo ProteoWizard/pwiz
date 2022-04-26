@@ -886,7 +886,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
-            GraphSummary.GraphControl.Refresh();
         }
 
         private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas, Func<double, double, double> aggregateFunc)

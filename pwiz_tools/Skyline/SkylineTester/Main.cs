@@ -311,6 +311,7 @@ namespace SkylineTester
 
         public void Restart()
         {
+            commandShell.InsertPause();
             commandShell.NextCommand = 0;
             RunCommands();
         }
