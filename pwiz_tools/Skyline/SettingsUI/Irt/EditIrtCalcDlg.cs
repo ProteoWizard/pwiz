@@ -176,8 +176,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        public IEnumerable<DbIrtPeptide> StandardPeptides => StandardPeptideList;
-        public IEnumerable<DbIrtPeptide> LibraryPeptides => LibraryPeptideList;
+        public IEnumerable<DbIrtPeptide> StandardPeptides
+        {
+            get => StandardPeptideList;
+            set => LoadStandard(value);
+        }
+
+        public IEnumerable<DbIrtPeptide> LibraryPeptides
+        {
+            get => LibraryPeptideList;
+            set => LoadLibrary(value);
+        }
         public IEnumerable<DbIrtPeptide> AllPeptides => StandardPeptides.Concat(LibraryPeptides);
 
         public int StandardPeptideCount => StandardPeptideList.Count;

@@ -598,13 +598,19 @@ namespace pwiz.Skyline.Model.Irt
                 .Intersect(library.Select(pep => pep.ModifiedTarget)).ToHashSet();
         }
 
-        public void RemoveDuplicateLibraryPeptides()
+        public IrtDb RemoveDuplicateLibraryPeptides()
         {
             using (var session = OpenWriteSession())
-            using (var cmd = session.Connection.CreateCommand())
             {
-                cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 and PeptideModSeq IN (SELECT PeptideModSeq FROM IrtLibrary WHERE Standard = 1)";
-                cmd.ExecuteNonQuery();
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 and PeptideModSeq IN (SELECT PeptideModSeq FROM IrtLibrary WHERE Standard = 1)";
+                    cmd.ExecuteNonQuery();
+                }
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.LoadPeptides(session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>());
+                });
             }
         }
     }

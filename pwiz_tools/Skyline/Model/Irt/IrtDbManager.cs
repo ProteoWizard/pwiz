@@ -101,10 +101,9 @@ namespace pwiz.Skyline.Model.Irt
                 return false;
             }
 
-            var existing = calc.GetDbIrtPeptides().ToArray();
             var standards = new List<DbIrtPeptide>();
             var library = new List<DbIrtPeptide>();
-            foreach (var pep in existing)
+            foreach (var pep in calc.GetDbIrtPeptides())
             {
                 if (pep.Standard)
                     standards.Add(pep);
@@ -113,8 +112,10 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);
-            if (duplicates != null)
-                IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides();
+            if (duplicates != null && duplicates.Any())
+            {
+                calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides());
+            }
 
             var rtRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
             var rtRegressionNew = !ReferenceEquals(calc, rtRegression.Calculator)

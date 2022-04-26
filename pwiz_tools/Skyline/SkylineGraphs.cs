@@ -2292,12 +2292,19 @@ namespace pwiz.Skyline
             if (includeSelf)
                 yield return change;
 
-            var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToArray();
-            if (syncTargets.Length == 0)
-                yield break;
+            ChromatogramSet thisChromSet = null;
+            var syncTargets = new List<ChromatogramSet>();
+            foreach (var syncTarget in document.GetSynchronizeIntegrationChromatogramSets())
+            {
+                syncTargets.Add(syncTarget);
+                if (thisChromSet == null && Equals(change.NameSet, syncTarget.Name))
+                    thisChromSet = syncTarget;
+            }
 
-            var thisChromSet = document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom => Equals(change.NameSet, chrom.Name));
-            var thisFile = thisChromSet?.FindFile(change.FilePath);
+            if (thisChromSet == null)
+                yield break; // This chromatogram is not selected for synchronized integration
+
+            var thisFile = thisChromSet.FindFile(change.FilePath);
 
             var transformOp = GetRetentionTimeTransformOperation();
             var thisStart = change.StartTime.MeasuredTime;
