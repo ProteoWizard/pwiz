@@ -96,7 +96,8 @@ namespace pwiz.SkylineTestFunctional
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
                     //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
                     AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && 
+                                                                                                       !c.IsY2Axis).ToList());  //exclude the dotp graph from the count.
                     SkylineWindow.ShowProductTransitions();
                     Assert.AreEqual(6, graphChromatogram.CurveList.Count);
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
