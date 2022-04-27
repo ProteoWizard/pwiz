@@ -954,11 +954,12 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagKEGG, kegg);
             }
 
-            var result = !moleculeIdKeys.Any()
+            var accessionNumbers = !moleculeIdKeys.Any()
                 ? MoleculeAccessionNumbers.EMPTY
                 : new MoleculeAccessionNumbers(moleculeIdKeys);
 
-            return GetConsensusAccessionNumbers(row, name, result);
+            // Now go see if these parsed values complement and combine with any previously parsed rows
+            return MoleculeNameAndAccessions.GetConsensusAccessionNumbers(name, accessionNumbers, row.Index, _consensusAccessionNumbers);
         }
 
         public static eIonMobilityUnits IonMobilityUnitsFromAttributeValue(string xmlAttributeValue)
@@ -987,116 +988,9 @@ namespace pwiz.Skyline.Model
         private IdentityPath _firstAddedPathPepGroup;
         private bool _requireProductInfo;
 
-        private class MoleculeNameAndAccessions : IEquatable<MoleculeNameAndAccessions>
-        {
-            public static MoleculeNameAndAccessions EMPTY =
-                new MoleculeNameAndAccessions(null, MoleculeAccessionNumbers.EMPTY);
-
-            public MoleculeNameAndAccessions(string name, MoleculeAccessionNumbers accessionNumbers)
-            {
-                Name = name;
-                AccessionNumbers = accessionNumbers ?? MoleculeAccessionNumbers.EMPTY;
-            }
-
-            public string Name;
-            public MoleculeAccessionNumbers AccessionNumbers;
-
-            public bool IsMatchWith(MoleculeNameAndAccessions other)
-            {
-                return Equals(Name, other.Name) &&
-                       ((AccessionNumbers.IsEmpty && other.AccessionNumbers.IsEmpty) || 
-                        AccessionNumbers.Intersection(other.AccessionNumbers) != null);
-            }
-
-            public bool InconsistentWith(MoleculeNameAndAccessions other)
-            {
-                return Equals(Name, other.Name) && AccessionNumbers.InconsistentWith(other.AccessionNumbers);
-            }
-
-            public bool IsEmpty => string.IsNullOrEmpty(Name) && MoleculeAccessionNumbers.IsNullOrEmpty(AccessionNumbers);
-
-            public override string ToString() => (Name??@"<no name>") + @" " + AccessionNumbers; // For debugging convenience
-
-            public bool Equals(MoleculeNameAndAccessions other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return Name == other.Name && Equals(AccessionNumbers, other.AccessionNumbers);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((MoleculeNameAndAccessions)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (AccessionNumbers != null ? AccessionNumbers.GetHashCode() : 0);
-                }
-            }
-
-        }
-
-        // Used in the case where later entries add details to accession numbers - map row number to name+accession
+        // Used in the case where later entries add details to accession numbers
+        // We use a mapping from row index to name+accession as we may not see rows in original order (might be mass sorted)
         private Dictionary<int, MoleculeNameAndAccessions> _consensusAccessionNumbers = new Dictionary<int, MoleculeNameAndAccessions>(); 
-        private MoleculeNameAndAccessions GetConsensusAccessionNumbers(Row row, string name, MoleculeAccessionNumbers accessionNumbers)
-        {
-            if (!_consensusAccessionNumbers.TryGetValue(row.Index, out var result))
-            {
-                // Add this to the list - but does it add any information to any existing entries?
-                var mergedAccessionNumbers = accessionNumbers;
-                var mergedName = name;
-                // May need multiple passes to handle merging i.e. 3 no-names with overlapping (inchi, hmdb) (hmdb, smiles) (smiles, inchikey)
-                for (var changing = true; changing;)
-                {
-                    changing = false;
-                    // Find any existing entries that might be complementary descriptions
-                    foreach (var kvp in _consensusAccessionNumbers)
-                    {
-                        if (string.IsNullOrEmpty(kvp.Value.Name) || string.IsNullOrEmpty(mergedName))
-                        {
-                            // If either or both lack names, see if any accessions agree
-                            var intersect = kvp.Value.AccessionNumbers.Intersection(mergedAccessionNumbers);
-                            if (MoleculeAccessionNumbers.IsNullOrEmpty(intersect))
-                            {
-                                continue; // No agreement
-                            }
-                            if (string.IsNullOrEmpty(mergedName))
-                            {
-                                mergedName = kvp.Value.Name;
-                            }
-                        }
-                        // Names must agree if both are present 
-                        else if (!Equals(kvp.Value.Name, mergedName))
-                        {
-                            continue;
-                        }
-
-                        var merged = kvp.Value.AccessionNumbers.Union(mergedAccessionNumbers);
-                        if (merged != null)
-                        {
-                            mergedAccessionNumbers = merged;
-                            if (!Equals(kvp.Value.Name, mergedName) || !Equals(kvp.Value.AccessionNumbers, merged))
-                            {
-                                changing = true;
-                                kvp.Value.AccessionNumbers = mergedAccessionNumbers;
-                                kvp.Value.Name = mergedName;
-                            }
-                        }
-                    }
-                }
-
-                result = new MoleculeNameAndAccessions(mergedName, mergedAccessionNumbers);
-                _consensusAccessionNumbers.Add(row.Index, result);
-            }
-
-            return result;
-        }
 
         public static string GetAcceptedIonMobilityUnitsString()
         {
