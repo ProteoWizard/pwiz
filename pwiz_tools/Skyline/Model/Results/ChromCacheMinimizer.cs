@@ -79,7 +79,6 @@ namespace pwiz.Skyline.Model.Results
         {
             var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
             var statisticsCollector = new MinStatisticsCollector(this);
-            bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
             var chromGroupHeaderToIndex = new Dictionary<long, int>(ChromGroupHeaderInfos.Count);
             for (int i = 0; i < ChromGroupHeaderInfos.Count; i++)
@@ -427,7 +426,7 @@ namespace pwiz.Skyline.Model.Results
             public MinStatistics(IEnumerable<Replicate> replicates)
             {
                 Replicates = replicates.ToArray();
-                OriginalFileSize = Replicates.Select(r => r.OriginalFileSize).Sum();
+                OriginalFileSize = Math.Max(1, Replicates.Select(r => r.OriginalFileSize).Sum());
                 var processedFileSize = Replicates.Select(r => r.ProcessedFileSize).Sum();
                 PercentComplete = (int) (100*processedFileSize/OriginalFileSize);
             }
