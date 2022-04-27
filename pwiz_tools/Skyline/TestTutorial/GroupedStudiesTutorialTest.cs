@@ -47,8 +47,6 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-ForceMzml = (DateTime.Now.DayOfYear % 2) == 0;   // TODO(bspratt) remove this once we're convinced that WIFF isn't the source of leaks and hangs
-
 
             TestFilesZipPaths = new[]
                 {
