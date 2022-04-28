@@ -56,9 +56,8 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorialAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
             AsSmallMolecules = true;

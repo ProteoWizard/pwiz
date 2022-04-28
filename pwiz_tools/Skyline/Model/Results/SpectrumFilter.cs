@@ -824,7 +824,6 @@ namespace pwiz.Skyline.Model.Results
                     filterPairs = _filterMzValues;
                 }
             }
-            bool orderedByMz = firstSpectrum.IonMobilities == null; // 3D spectra may come ordered by ion mobility
             foreach (var filterPair in filterPairs)
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))

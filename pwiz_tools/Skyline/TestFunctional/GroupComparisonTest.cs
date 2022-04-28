@@ -48,9 +48,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestGroupComparisonAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
