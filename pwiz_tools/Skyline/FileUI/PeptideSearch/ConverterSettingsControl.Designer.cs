@@ -34,10 +34,10 @@
             this.converterTabControl = new System.Windows.Forms.TabControl();
             this.msconvertTabPage = new System.Windows.Forms.TabPage();
             this.diaUmpireTabPage = new System.Windows.Forms.TabPage();
+            this.cbEstimateBg = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cbInstrumentPreset = new System.Windows.Forms.ComboBox();
             this.lblInstrumentPreset = new System.Windows.Forms.Label();
-            this.cbEstimateBg = new System.Windows.Forms.CheckBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.converterTabControl.SuspendLayout();
             this.diaUmpireTabPage.SuspendLayout();
@@ -52,9 +52,9 @@
             // 
             // converterTabControl
             // 
+            resources.ApplyResources(this.converterTabControl, "converterTabControl");
             this.converterTabControl.Controls.Add(this.msconvertTabPage);
             this.converterTabControl.Controls.Add(this.diaUmpireTabPage);
-            resources.ApplyResources(this.converterTabControl, "converterTabControl");
             this.converterTabControl.Name = "converterTabControl";
             this.converterTabControl.SelectedIndex = 0;
             // 
@@ -75,6 +75,13 @@
             this.diaUmpireTabPage.Name = "diaUmpireTabPage";
             this.diaUmpireTabPage.UseVisualStyleBackColor = true;
             // 
+            // cbEstimateBg
+            // 
+            resources.ApplyResources(this.cbEstimateBg, "cbEstimateBg");
+            this.cbEstimateBg.Name = "cbEstimateBg";
+            this.toolTip.SetToolTip(this.cbEstimateBg, resources.GetString("cbEstimateBg.ToolTip"));
+            this.cbEstimateBg.UseVisualStyleBackColor = true;
+            // 
             // label1
             // 
             resources.ApplyResources(this.label1, "label1");
@@ -91,13 +98,6 @@
             // 
             resources.ApplyResources(this.lblInstrumentPreset, "lblInstrumentPreset");
             this.lblInstrumentPreset.Name = "lblInstrumentPreset";
-            // 
-            // cbEstimateBg
-            // 
-            resources.ApplyResources(this.cbEstimateBg, "cbEstimateBg");
-            this.cbEstimateBg.Name = "cbEstimateBg";
-            this.toolTip.SetToolTip(this.cbEstimateBg, resources.GetString("cbEstimateBg.ToolTip"));
-            this.cbEstimateBg.UseVisualStyleBackColor = true;
             // 
             // ConverterSettingsControl
             // 
