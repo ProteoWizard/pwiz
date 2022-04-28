@@ -208,6 +208,9 @@
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
       </Component>
+      <Component Id="msconvert.exe">
+        <File Source="$(var.Skyline.TargetDir)/msconvert.exe" KeyPath="yes"/>
+      </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
       </Component>
