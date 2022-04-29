@@ -1,6 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Linq;
+using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -27,26 +33,52 @@ namespace pwiz.SkylineTestFunctional
             var candidatePeakForm = WaitForOpenForm<CandidatePeakForm>();
             Assert.IsNotNull(candidatePeakForm);
             WaitForConditionUI(() => candidatePeakForm.IsComplete);
-            RunUI(() =>
-            {
-
-            });
+            VerifyFeatureScores();
         }
 
-        // private void VerifyFeatureScores()
-        // {
-        //     var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
-        //     WaitForConditionUI(() => candidatePeakForm.IsComplete);
-        //     PropertyPath ppWeightedFeature = PropertyPath.Root
-        //         .Property(nameof(CandidatePeakGroup.PeakScores))
-        //         .Property(nameof(PeakGroupScore.WeightedFeatures))
-        //         .DictionaryValues();
-        //         
-        //     var colIntensity = candidatePeakForm.DataboundGridControl.FindColumn()
-        //         
-        // }
+        private void VerifyFeatureScores()
+        {
+            var candidatePeakForm = FindOpenForm<CandidatePeakForm>();
+            WaitForConditionUI(() => candidatePeakForm.IsComplete);
+            var colIntensity =
+                FindFeatureColumn(candidatePeakForm.DataboundGridControl, typeof(MQuestDefaultIntensityCalc));
+            Assert.IsNotNull(colIntensity);
+        }
 
-        // private DataGridViewColumn FindColumn(PropertyPath propertyPath, )
+        private DataGridViewColumn FindFeatureColumn(DataboundGridControl databoundGridControl, Type featureType)
+        {
+            Assert.IsTrue(typeof(IPeakFeatureCalculator).IsAssignableFrom(featureType));
+            PropertyPath ppWeightedFeature = PropertyPath.Root
+                .Property(nameof(CandidatePeakGroup.PeakScores))
+                .Property(nameof(PeakGroupScore.WeightedFeatures));
+            var pivotKey = PivotKey.EMPTY.AppendValue(ppWeightedFeature.LookupAllItems(), featureType.FullName);
+            return FindColumn(databoundGridControl, ppWeightedFeature.DictionaryValues(), pivotKey);
+        }
+
+        private DataGridViewColumn FindColumn(DataboundGridControl control, PropertyPath propertyPath, PivotKey pivotKey)
+        {
+            foreach (var property in control.BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>())
+            {
+                if (!property.DisplayColumn.ColumnDescriptor.PropertyPath.Equals(propertyPath))
+                {
+                    continue;
+                }
+
+                if (pivotKey != null && !Equals(pivotKey, property.PivotKey))
+                {
+                    continue;
+                }
+
+                var column = control.DataGridView.Columns.OfType<DataGridViewColumn>()
+                    .FirstOrDefault(col => col.DataPropertyName == property.Name);
+                if (column != null)
+                {
+                    return column;
+                }
+            }
+
+            return null;
+        }
 
         private void SelectPeptide(string sequence)
         {

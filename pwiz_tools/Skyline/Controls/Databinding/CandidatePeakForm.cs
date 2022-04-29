@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Colors;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -203,9 +204,8 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var viewSpec = new ViewSpec().SetName(Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
             {
+                new ColumnSpec(PropertyPath.Root),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupRetentionTime))),
-                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupStartTime))),
-                new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupEndTime))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.Chosen))),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakScores))
                     .Property(nameof(PeakGroupScore.ModelScore))),
@@ -348,24 +348,8 @@ namespace pwiz.Skyline.Controls.Databinding
         /// </summary>
         private Color GetOriginalPeakColor()
         {
-            Color foreColor = ChromGraphItem.COLOR_ORIGINAL_PEAK_SHADE;
-            if (foreColor.A == 255)
-            {
-                return foreColor;
-            }
-            // If the original peak color is semi-transparent, then take the weighted average of the color
-            // with the grid's background color
-            // We do this, because the DataGridView has bugs erasing itself if the cell background color is
-            // semi-transparent
-            var alphaFraction = foreColor.A / 255.0;
-            var backColor = DataboundGridControl.DataGridView.BackColor;
-            var red = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.R * foreColor.R +
-                                                 (1 - alphaFraction) * backColor.R * backColor.R));
-            var green = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.G * foreColor.G +
-                                                   (1 - alphaFraction) * backColor.G * backColor.G));
-            var blue = (int) Math.Round(Math.Sqrt(alphaFraction * foreColor.B * foreColor.B +
-                                                  (1 - alphaFraction) * backColor.B * backColor.B));
-            return Color.FromArgb(red, green, blue);
+            return ColorPalettes.MergeWithBackground(ChromGraphItem.COLOR_ORIGINAL_PEAK_SHADE,
+                DataboundGridControl.DataGridView.BackColor);
         }
     }
 }

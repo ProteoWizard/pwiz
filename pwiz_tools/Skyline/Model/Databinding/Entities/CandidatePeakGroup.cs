@@ -3,6 +3,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -59,13 +60,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                 if (!value)
                 {
-                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), "Remove Peak"), doc =>
+                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), Resources.CandidatePeakGroup_Chosen_Remove_Peak), doc =>
                         doc.ChangePeak(identityPath, resultFile.Replicate.Name,
                             resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false));
                 }
                 else
                 {
-                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), "Choose peak"), doc =>
+                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), Resources.CandidatePeakGroup_Chosen_Choose_peak), doc =>
                         doc.ChangePeak(identityPath, resultFile.Replicate.Name,
                             resultFile.ChromFileInfo.FilePath, null, PeakGroupRetentionTime, UserSet.TRUE));
                 }
@@ -74,8 +75,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format(@"[{0},{1}-{2}]", 
-                PeakGroupRetentionTime.ToString(Formats.RETENTION_TIME),
+            return string.Format(Resources.CandidatePeakGroup_ToString___0___1__, 
                 PeakGroupStartTime.ToString(Formats.RETENTION_TIME),
                 PeakGroupEndTime.ToString(Formats.RETENTION_TIME));
         }
