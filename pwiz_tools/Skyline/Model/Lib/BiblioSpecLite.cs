@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                using (var reader = ExecuteReader(select))
                 {
                     if (!reader.Read())
                         throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (rows == 0)
                 {
                     select.CommandText = @"SELECT count(*) FROM [RefSpectra]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    using (SQLiteDataReader reader = ExecuteReader(select))
                     {
                         if (!reader.Read())
                             throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
@@ -633,7 +633,7 @@ namespace pwiz.Skyline.Model.Lib
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
                             cmd.CommandText = @"SELECT * FROM RetentionTimes";
-                            using (var dataReader = cmd.ExecuteReader())
+                            using (var dataReader = ExecuteReader(cmd))
                             {
                                 var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
                                 retentionTimeReader.ReadAllRows();
@@ -649,7 +649,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
                     {
                         select.CommandText = @"SELECT id, scoreType FROM ScoreTypes";
-                        using (var reader = select.ExecuteReader())
+                        using (var reader = ExecuteReader(select))
                         {
                             while (reader.Read())
                             {
@@ -667,7 +667,7 @@ namespace pwiz.Skyline.Model.Lib
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
                 select.CommandText = @"SELECT * FROM [RefSpectra]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                using (SQLiteDataReader reader = ExecuteReader(select))
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
                     //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
@@ -808,7 +808,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (schemaVer > 0)
                 {
                     select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    using (SQLiteDataReader reader = ExecuteReader(select))
                     {
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
                         int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
@@ -929,6 +929,18 @@ namespace pwiz.Skyline.Model.Lib
 
             loader.UpdateProgress(status.Complete());
             return cacheBytes;
+        }
+
+        private SQLiteDataReader ExecuteReader(SQLiteCommand command)
+        {
+            try
+            {
+                return command.ExecuteReader();
+            }
+            catch (SQLiteException ex)
+            {
+                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath), ex);
+            }
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
