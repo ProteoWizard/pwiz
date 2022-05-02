@@ -20,7 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -45,49 +47,74 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+static Stopwatch _stopwatch = new Stopwatch();
+
+static void Split([CallerLineNumber] int linenum = 0)
+{
+Console.WriteLine($@"#InstallToolsTest line {linenum} split = {0.001 * (double)_stopwatch.ElapsedMilliseconds} sec");
+_stopwatch.Reset();
+}
         protected override void DoTest()
         {
+_stopwatch.Start();
             Settings.Default.ToolList.Clear();
 
+Split();
             /* Running in a loop want to move the toolDir out of the way.
              */
             using (new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Skyline.Program.StressTest))
             {
+                Split();
                 //WaitForCondition(2*1000, () => !Directory.Exists(ToolDescriptionHelpers.GetToolsDirectory()));
-                ClearAllTools();
+            ClearAllTools();
+            Split();
                 AssertCleared();
+                Split();
                 ZipTestInvalidPropertiesFiles();
+                Split();
 
-                ZipTestAllCommandTypes();
+            ZipTestAllCommandTypes();
+            Split();
 
-                ZipTestSkylineReports();
+            ZipTestSkylineReports();
 
+            Split();
                 ZipTestAnnotations();
+                Split();
 
-                TestToolDirMacro();
+            TestToolDirMacro();
+            Split();
 
-                if (!Skyline.Program.StressTest)
+            if (!Skyline.Program.StressTest)
                 {
                     /* This test creates TestArgsCollector.Dll a file that cannot be deleted in this instance of skyline
                      * after running the tool. */
                     TestArgCollector();
+                    Split();
                 }
 
-                TestNotInstalledTool();
+            TestNotInstalledTool();
+            Split();
 
-                TestLocateFileDlg();
+            TestLocateFileDlg();
+            Split();
 
-                TestToolVersioning();
+            TestToolVersioning();
+            Split();
 
-                TestPackageVersioning();
+            TestPackageVersioning();
+            Split();
 
-                ClearAllTools();
+            ClearAllTools();
+            Split();
                 if (Skyline.Program.StressTest)
                 {
                     // If TestArgsCollector is run this will fail. Only run when looping.
                     AssertCleared();
+                    Split();
                 }
-            }
+        }
+            Split();
         }
 
         private class UnpackZipToolTestSupport: IUnpackZipToolSupport
