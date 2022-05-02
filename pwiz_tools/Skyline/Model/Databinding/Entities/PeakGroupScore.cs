@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class PeakGroupScore
     {
-        public PeakGroupScore(FeatureScores scores, double? modelScore, double? qValue, IDictionary<string, WeightedFeature> weightedFeatures)
+        public PeakGroupScore(FeatureScores scores, double? modelScore, double? qValue, IDictionary<FeatureKey, WeightedFeature> weightedFeatures)
         {
             Features = new Features(scores);
             WeightedFeatures = weightedFeatures;
@@ -30,11 +30,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? PeakQValue { get; }
 
         [OneToMany(ItemDisplayName = "WeightedFeature")]
-        public IDictionary<string, WeightedFeature> WeightedFeatures { get; }
+        public IDictionary<FeatureKey, WeightedFeature> WeightedFeatures { get; }
 
         public static PeakGroupScore MakePeakScores(FeatureScores featureScores, PeakScoringModelSpec model, ScoreQValueMap scoreQValueMap)
         {
-            var weightedFeatures = new Dictionary<string, WeightedFeature>();
+            var weightedFeatures = new Dictionary<FeatureKey, WeightedFeature>();
             double? modelScore = 0;
             double? qValue = null;
             if (model?.Parameters != null)
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                     var weightedFeature = new WeightedFeature(score, weight);
                     modelScore += weightedFeature.WeightedScore;
-                    weightedFeatures[featureCalc.HeaderName] = weightedFeature;
+                    weightedFeatures[FeatureKey.FromCalculator(featureCalc)] = weightedFeature;
                 }
                 qValue = scoreQValueMap.GetQValue(modelScore + model.Parameters.Bias);
             }
@@ -136,6 +136,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return stringBuilder.ToString();
+        }
+    }
+
+    public struct FeatureKey : IComparable<FeatureKey>
+    {
+        private string _calculatorName;
+        public static FeatureKey FromCalculator(IPeakFeatureCalculator calculator)
+        {
+            return new FeatureKey {_calculatorName = calculator.FullyQualifiedName};
+        }
+
+        public static FeatureKey FromCalculatorType(Type type)
+        {
+            return new FeatureKey {_calculatorName = type.FullName};
+        }
+
+        public override string ToString()
+        {
+            var calculator = FeatureNames.CalculatorFromTypeName(_calculatorName);
+            return calculator.Name ?? _calculatorName;
+        }
+
+        public int CompareTo(FeatureKey other)
+        {
+            return StringComparer.OrdinalIgnoreCase.Compare(ToString(), other.ToString());
         }
     }
 }
