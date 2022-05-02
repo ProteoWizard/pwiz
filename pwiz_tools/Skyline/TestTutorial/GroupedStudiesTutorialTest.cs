@@ -216,7 +216,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
 
             PauseForScreenShot();
-            LoadNewDocument(true); // Clean up
         }
 
         private void SetTransitionClipboardText(int[] columnIndices, Func<string[], string[]> convertColumns = null)
