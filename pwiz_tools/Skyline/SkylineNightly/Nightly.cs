@@ -187,7 +187,7 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
-        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+        public static string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
         {
