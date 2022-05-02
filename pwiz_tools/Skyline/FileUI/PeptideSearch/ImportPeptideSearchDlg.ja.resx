@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>315, 511</value>
+    <value>497, 605</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -154,7 +154,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>234, 511</value>
+    <value>416, 605</value>
   </data>
   <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -487,7 +487,7 @@
     <value>False</value>
   </data>
   <data name="btnEarlyFinish.Location" type="System.Drawing.Point, System.Drawing">
-    <value>72, 511</value>
+    <value>254, 605</value>
   </data>
   <data name="btnEarlyFinish.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -523,7 +523,7 @@
     <value>3, 46</value>
   </data>
   <data name="buildLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 430</value>
+    <value>570, 524</value>
   </data>
   <data name="buildLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -577,7 +577,7 @@
     <value>3, 3</value>
   </data>
   <data name="buildSpectralLibraryTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="buildSpectralLibraryTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -601,7 +601,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="buildSearchSpecLibPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="buildSearchSpecLibPage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -658,7 +658,7 @@
     <value>3, 3</value>
   </data>
   <data name="extractChromatogramsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="extractChromatogramsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -682,7 +682,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="getChromatogramsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="getChromatogramsPage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -739,7 +739,7 @@
     <value>3, 3</value>
   </data>
   <data name="addModsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="addModsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -763,7 +763,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="matchModificationsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="matchModificationsPage.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -816,11 +816,14 @@
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>0, 0</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -841,7 +844,7 @@
     <value>4, 22</value>
   </data>
   <data name="transitionSettingsUiPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="transitionSettingsUiPage.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -898,7 +901,7 @@
     <value>3, 3</value>
   </data>
   <data name="ms1FullScanSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="ms1FullScanSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -922,7 +925,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="ms1FullScanSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ms1FullScanSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -976,7 +979,7 @@
     <value>3, 3</value>
   </data>
   <data name="importFASTATitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="importFASTATitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -1000,7 +1003,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="importFastaPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="importFastaPage.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1057,7 +1060,7 @@
     <value>3, 3</value>
   </data>
   <data name="converterSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="converterSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -1081,7 +1084,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="converterSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="converterSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1138,7 +1141,7 @@
     <value>0, 0</value>
   </data>
   <data name="searchSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="searchSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1159,7 +1162,7 @@
     <value>4, 22</value>
   </data>
   <data name="ddaSearchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ddaSearchSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -1216,7 +1219,7 @@
     <value>0, 0</value>
   </data>
   <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -1237,7 +1240,7 @@
     <value>4, 22</value>
   </data>
   <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -1261,7 +1264,7 @@
     <value>0, 0</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>402, 505</value>
+    <value>584, 599</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1285,7 +1288,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 511</value>
+    <value>335, 605</value>
   </data>
   <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1321,7 +1324,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>402, 547</value>
+    <value>584, 641</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>418, 585</value>

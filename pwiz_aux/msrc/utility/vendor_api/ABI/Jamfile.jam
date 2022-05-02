@@ -53,7 +53,7 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Sciex.Data.XYData.dll ;
         result += <assembly>$(dll_location)/SCIEX.Apis.Data.v1.dll ;
         result += <assembly-dependency>$(dll_location)/$(PLATFORM)/SQLite.Interop.dll ;
-        result += <assembly>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.DLL ;
+        result += <assembly>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
 
         result += <assembly-dependency>$(dll_location)/Clearcore2.Compression.dll ;
         result += <assembly-dependency>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
@@ -71,7 +71,7 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(dll_location)/Sciex.Clearcore.FMan.dll ;
         result += <assembly-dependency>$(dll_location)/Sciex.FMan.dll ;
         result += <assembly-dependency>$(dll_location)/Sciex.Wiff.dll ;
-        result += <assembly-dependency>$(dll_location)/Sciex.Data.Processing.DLL ;
+        result += <assembly-dependency>$(dll_location)/Sciex.Data.Processing.dll ;
         result += <assembly-dependency>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
 
         result += <include>$(dll_location) ;
