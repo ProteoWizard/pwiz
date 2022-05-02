@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>298</ApplicationRevision>
-    <ApplicationVersion>21.1.1.298</ApplicationVersion>
+    <ApplicationRevision>476</ApplicationRevision>
+    <ApplicationVersion>21.2.1.476</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -613,6 +613,7 @@
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
+    <Compile Include="Model\MoleculeNameAndAccessions.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />

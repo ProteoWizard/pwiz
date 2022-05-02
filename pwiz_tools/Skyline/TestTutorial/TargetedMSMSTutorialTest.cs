@@ -84,9 +84,8 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -426,6 +425,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             // PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.TransitionSettingsPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -440,6 +440,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 19);
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.Ms2FullScanPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.

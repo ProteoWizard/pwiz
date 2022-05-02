@@ -70,9 +70,21 @@ namespace pwiz.Common.SystemUtil
 
             _messageLog.Clear();
 
-            var proc = Process.Start(psi);
-            if (proc == null)
-                throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
+            Process proc = null;
+            var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
+            try
+            {
+                proc = Process.Start(psi);
+                if (proc == null)
+                {
+                    throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments));
+                }
+            }
+            catch (Exception x)
+            {
+                throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments), x);
+            }
+
             try
             {
                 proc.PriorityClass = priorityClass;

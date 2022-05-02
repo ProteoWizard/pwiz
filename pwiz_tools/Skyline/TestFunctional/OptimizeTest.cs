@@ -68,9 +68,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (AsSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (AsSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
