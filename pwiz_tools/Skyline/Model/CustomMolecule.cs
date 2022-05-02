@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
 
         public static MoleculeAccessionNumbers EMPTY = new MoleculeAccessionNumbers(string.Empty);
+        public static bool IsNullOrEmpty(MoleculeAccessionNumbers item) { return item == null || Equals(item, EMPTY); }
         public ImmutableSortedList<string, string> AccessionNumbers { get; private set; } // Accession type/value pairs, sorted by PREFERRED_ACCESSION_TYPE_ORDER
         public string PrimaryAccessionType { get { return AccessionNumbers == null ? null : AccessionNumbers.Keys.FirstOrDefault(); } } // Type of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
@@ -206,6 +207,90 @@ namespace pwiz.Skyline.Model
             return AccessionNumbers.Count.CompareTo(other.AccessionNumbers.Count);
         }
 
+        // Return true iff this and other have some accessions in common and others in conflict
+        public bool InconsistentWith(MoleculeAccessionNumbers other)
+        {
+            if (IsEmpty && IsNullOrEmpty(other))
+            {
+                return false;
+            }
+            return AccessionNumbers.Any(kvp => 
+                       other.AccessionNumbers.TryGetValue(kvp.Key, out var value) && Equals(value, kvp.Value)) &&
+                   AccessionNumbers.Any(kvp =>
+                       other.AccessionNumbers.TryGetValue(kvp.Key, out var value) && !Equals(value, kvp.Value));
+        }
+
+        // Return the values in common of two sets of accession numbers - return null if no intersection, or any conflict
+        public MoleculeAccessionNumbers Intersection(MoleculeAccessionNumbers other)
+        {
+            if (IsEmpty || IsNullOrEmpty(other))
+            {
+                return null;
+            }
+
+            if (Equals(other))
+            {
+                return this;
+            }
+
+            var result = new Dictionary<string, string>();
+            foreach (var keyValuePair in AccessionNumbers)
+            {
+                if (other.AccessionNumbers.TryGetValue(keyValuePair.Key, out var value))
+                {
+                    var compare = string.Compare(keyValuePair.Value, value, StringComparison.InvariantCultureIgnoreCase);
+                    if (compare != 0)
+                    {
+                        return null; // Conflict, can't intersect
+                    }
+                    result.Add(keyValuePair.Key, keyValuePair.Value); // Same value for this and other
+                }
+            }
+
+            return result.Count == 0 ? null : new MoleculeAccessionNumbers(result);
+        }
+
+        // Merge two sets of accession numbers if they don't have conflicts - return null if they do
+        public MoleculeAccessionNumbers Union(MoleculeAccessionNumbers other)
+        {
+            if (IsNullOrEmpty(other))
+            {
+                return this;
+            }
+            if (IsEmpty)
+            {
+                return other;
+            }
+            if (Equals(other))
+            {
+                return this;
+            }
+
+            var result = new Dictionary<string, string>();
+            foreach (var keyValuePair in AccessionNumbers)
+            {
+                if (other.AccessionNumbers.TryGetValue(keyValuePair.Key, out var value))
+                {
+                    var compare = string.Compare(keyValuePair.Value, value, StringComparison.InvariantCultureIgnoreCase);
+                    if (compare != 0)
+                    {
+                        return null; // Conflict, can't merge
+                    }
+                }
+                result.Add(keyValuePair.Key, keyValuePair.Value); // No conflict
+            }
+
+            foreach (var keyValuePair in other.AccessionNumbers)
+            {
+                if (!result.ContainsKey(keyValuePair.Key))
+                {
+                    result.Add(keyValuePair.Key, keyValuePair.Value); // Not in the other
+                }
+            }
+
+            return new MoleculeAccessionNumbers(result);
+        }
+
         public bool Equals(MoleculeAccessionNumbers other)
         {
             return CompareTo(other) == 0;
@@ -214,6 +299,11 @@ namespace pwiz.Skyline.Model
 
 
         public override string ToString()
+        {
+            return ToString(TextUtil.SEPARATOR_TSV_STR);
+        }
+
+        public string ToString(string separator)
         {
             var result = string.Empty;
             if (AccessionNumbers != null && AccessionNumbers.Any())
@@ -224,7 +314,7 @@ namespace pwiz.Skyline.Model
                     if (AccessionNumbers.TryGetValue(key, out value) && !string.IsNullOrEmpty(value))
                     {
                         result += string.Format(@"{0}{1}:{2}",
-                            string.IsNullOrEmpty(result) ? string.Empty : TextUtil.SEPARATOR_TSV_STR, key, value);
+                            string.IsNullOrEmpty(result) ? string.Empty : separator, key, value);
                     }
                 }
             }
