@@ -2285,7 +2285,7 @@ namespace pwiz.Skyline.Util
             else
             {
                 // Give more detail - useful in case of parallel test interactions
-                Console.WriteLine(
+                Trace.WriteLine(
                     $@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
                 if (showStackTrace)
                 {
@@ -2296,7 +2296,7 @@ namespace pwiz.Skyline.Util
                     for (var i = 0; i < st.FrameCount; i++)
                     {
                         var sf = st.GetFrame(i);
-                        Console.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
+                        Trace.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
                         stackIndent += @"  ";
                     }
                 }
