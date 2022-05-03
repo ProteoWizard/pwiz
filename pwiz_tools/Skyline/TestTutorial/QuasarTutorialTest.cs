@@ -206,6 +206,10 @@ namespace pwiz.SkylineTestTutorial
                 argsCollector.BeginInvoke(actCancel);
                 WaitForClosedForm(argsCollector);
             }
+
+            // Try to prevent the occasional "The process cannot access the file 'QuaSAR_Tutorial.skyd' because it is being
+            // used by another process" error we sometimes see on exit, especially under code coverage on TeamCity
+            WaitForDocumentLoaded();
         }
 
         private static readonly AnnotationDef SAMPLEGROUP = new AnnotationDef("SampleGroup", // Not L10N

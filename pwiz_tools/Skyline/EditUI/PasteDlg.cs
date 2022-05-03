@@ -1544,13 +1544,13 @@ namespace pwiz.Skyline.EditUI
             PanelError.Visible = true;
             if (pasteError == null)
             {
-                TbxError.Text = string.Empty;
-                TbxError.Visible = false;
+                ClearFastaError();
                 return;
             }
 
             ShowFastaError(pasteError.Message);
 
+            TbxFasta.Height -= TbxFasta.Bottom - PanelError.Top + 8;
             TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
             TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);
             TbxFasta.Focus();
@@ -1561,8 +1561,7 @@ namespace pwiz.Skyline.EditUI
             PanelError.Visible = true;
             if (string.IsNullOrEmpty(errorMsg))
             {
-                TbxError.Text = string.Empty;
-                TbxError.Visible = false;
+                ClearFastaError();
                 return;
             }
             TbxError.BackColor = Color.Red;
@@ -1578,6 +1577,7 @@ namespace pwiz.Skyline.EditUI
 
         public void ClearFastaError()
         {
+            TbxFasta.Height = PanelError.Bottom - TbxFasta.Top;
             TbxError.Text = string.Empty;
             TbxError.Visible = false;
             PanelError.Visible = false;

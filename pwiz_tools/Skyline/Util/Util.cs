@@ -1852,6 +1852,8 @@ namespace pwiz.Skyline.Util
             return s.Length <= length ? s : s.Substring(0, length - ELIPSIS.Length) + ELIPSIS;
         }
 
+        private const int defaultLoopCount = 4;
+        private const int defaultMilliseconds = 500;
 
         /// <summary>
         /// Try an action that might throw an exception commonly related to a file move or delete.
@@ -1865,7 +1867,8 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500)
+        /// <param name="hint">text to show in debug trace on failure</param>
+        public static void TryTwice(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null)
         {
             for (int i = 1; i<loopCount; i++)
             {
@@ -1876,24 +1879,44 @@ namespace pwiz.Skyline.Util
                 }
                 catch (IOException exIO)
                 {
-                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount, hint);
                 }
                 catch (UnauthorizedAccessException exUA)
                 {
-                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount, hint);
                 }
             }
-
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
             // Try the last time, and let the exception go.
             action();
         }
 
-        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount)
+        public static void TryTwice(Action action, string hint)
         {
-            Trace.WriteLine(string.Format(@"Encountered the following exception (attempt {0} of {1}):", loopCount, maxLoopCount));
-            Trace.WriteLine(x.Message);
+            TryTwice(action, defaultLoopCount, defaultMilliseconds, hint);
+        }
+
+        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount, string hint)
+        {
+            DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
+                string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
+            DetailedTrace.WriteLine(x.Message);
+            if (RunningResharperAnalysis)
+            {
+                DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                // Allow up to 5 sec extra time when running code coverage or other analysis
+                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+            }
+            DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);
         }
+
+        // Detect the use of ReSharper code coverage, memory profiling etc, which may affect timing
+        //
+        // Per https://youtrack.jetbrains.com/issue/PROF-1093
+        // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
+        // in case of dotCover and dotMemory."
+        public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
@@ -1905,7 +1928,8 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void Try<TEx>(Action action, int loopCount = 4, int milliseconds = 500) where TEx : Exception
+        /// <param name="hint">text to show in debug trace on failure</param>
+        public static void Try<TEx>(Action action, int loopCount = defaultLoopCount, int milliseconds = defaultMilliseconds, string hint = null) where TEx : Exception
         {
             for (int i = 1; i < loopCount; i++)
             {
@@ -1916,10 +1940,10 @@ namespace pwiz.Skyline.Util
                 }
                 catch (TEx x)
                 {
-                    ReportExceptionForRetry(milliseconds, x, i, loopCount);
+                    ReportExceptionForRetry(milliseconds, x, i, loopCount, hint);
                 }
             }
-
+            DetailedTrace.WriteLine(string.Format(@"Final attempt ({0} of {1}):", loopCount, loopCount), true);
             // Try the last time, and let the exception go.
             action();
         }
@@ -2246,4 +2270,37 @@ namespace pwiz.Skyline.Util
         }
     }
 
+
+    /// <summary>
+    /// Like Trace.WriteLine, but with considerable detail when running a test
+    /// </summary>
+    public class DetailedTrace
+    {
+        public static void WriteLine(string msg, bool showStackTrace = false)
+        {
+            if (string.IsNullOrEmpty(Program.TestName))
+            {
+                Trace.WriteLine(msg);
+            }
+            else
+            {
+                // Give more detail - useful in case of parallel test interactions
+                Trace.WriteLine(
+                    $@"{msg} [UTC: {DateTime.UtcNow:s} Test: {Program.TestName} PID: {Process.GetCurrentProcess().Id} Thread: {Thread.CurrentThread.ManagedThreadId})]");
+                if (showStackTrace)
+                {
+                    // per https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.stacktrace?view=net-6.0
+                    // Create a StackTrace that captures filename, line number and column information.
+                    var st = new StackTrace(true);
+                    var stackIndent = string.Empty;
+                    for (var i = 0; i < st.FrameCount; i++)
+                    {
+                        var sf = st.GetFrame(i);
+                        Trace.WriteLine($@"{stackIndent}{sf.GetMethod()} at {sf.GetFileName()}({sf.GetFileLineNumber()}:{sf.GetFileColumnNumber()})");
+                        stackIndent += @"  ";
+                    }
+                }
+            }
+        }
+    }
 }

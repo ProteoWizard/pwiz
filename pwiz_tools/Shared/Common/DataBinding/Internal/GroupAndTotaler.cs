@@ -71,9 +71,7 @@ namespace pwiz.Common.DataBinding.Internal
                 var rowValues = rowGroup.Key.ToList();
                 foreach (RowItem row in rowGroup)
                 {
-                    // ReSharper disable AccessToForEachVariableInClosure
                     var columnHeader = ImmutableList.ValueOf(ColumnHeaders.Select(pd => pd.GetValue(row)));
-                    // ReSharper restore AccessToForEachVariableInClosure
                     int columnHeaderIndex;
                     if (!columnHeaders.TryGetValue(columnHeader, out columnHeaderIndex))
                     {
@@ -88,6 +86,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     for (int iAggColumn = 0; iAggColumn < AggregateColumns.Count; iAggColumn++)
                     {
+                        CancellationToken.ThrowIfCancellationRequested();
                         var value = AggregateColumns[iAggColumn].Item1.GetValue(row);
                         if (value != null)
                         {
