@@ -58,19 +58,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? DetectionQValue { get { return ChromInfo.QValue; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionZScore { get { return ChromInfo.ZScore; } }
-        [Format(Formats.PEAK_SCORE)]
-        public Features Features
-        {
-            get
-            {
-                if (ChromInfo.FeatureScores == null)
-                {
-                    return null;
-                }
-                return new Features(ChromInfo.FeatureScores);
-            }
-        }
-        
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double PrecursorPeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]

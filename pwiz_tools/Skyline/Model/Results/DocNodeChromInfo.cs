@@ -214,7 +214,6 @@ namespace pwiz.Skyline.Model.Results
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
                                         float? qvalue,
-                                        FeatureScores featureScores,
                                         float? zscore,
                                         Annotations annotations,
                                         UserSet userSet)
@@ -240,7 +239,6 @@ namespace pwiz.Skyline.Model.Results
             LibraryDotProduct = libraryDotProduct;
             IsotopeDotProduct = isotopeDotProduct;
             QValue = qvalue;
-            FeatureScores = featureScores;
             ZScore = zscore;
             Annotations = annotations;
             UserSet = userSet;
@@ -360,13 +358,6 @@ namespace pwiz.Skyline.Model.Results
             private set { _isotopeDotProduct = SetOptional(value, Flags.HasIsotopeDotProduct); }
         }
 
-        public FeatureScores FeatureScores { get; private set; }
-
-        public TransitionGroupChromInfo ChangeFeatureScores(FeatureScores featureScores)
-        {
-            return ChangeProp(ImClone(this), im =>im.FeatureScores = featureScores);
-        }
-
         private float _qValue;
         public float? QValue
         {
@@ -469,7 +460,6 @@ namespace pwiz.Skyline.Model.Results
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
                    other.QValue.Equals(QValue) &&
-                   Equals(other.FeatureScores, FeatureScores) &&
                    other.ZScore.Equals(ZScore) &&
                    other.Annotations.Equals(Annotations) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
@@ -508,7 +498,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ QValue.GetHashCode();
-                result = (result*397) ^ (FeatureScores?.GetHashCode() ?? 0);
                 result = (result*397) ^ ZScore.GetHashCode();
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();

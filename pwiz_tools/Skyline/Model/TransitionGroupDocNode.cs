@@ -2457,7 +2457,6 @@ namespace pwiz.Skyline.Model
                 {
                     QValue = chromInfo.QValue;
                     ZScore = chromInfo.ZScore;
-                    FeatureScores = chromInfo.FeatureScores;
 
                     Annotations = chromInfo.Annotations;
 
@@ -2474,7 +2473,6 @@ namespace pwiz.Skyline.Model
                 {
                     QValue = reintegratePeak.QValue;
                     ZScore = reintegratePeak.BestScore;
-                    FeatureScores = reintegratePeak.BestFeatureScores;
                 }
                 ExplicitPeakBounds = explicitPeakBounds;
             }
@@ -2505,7 +2503,6 @@ namespace pwiz.Skyline.Model
             private float? IsotopeDotProduct { get; set; }
             private float? QValue { get; set; }
             private float? ZScore { get; set; }
-            private FeatureScores FeatureScores { get; set; }
             private Annotations Annotations { get; set; }
             private UserSet UserSet { get; set; }
 
@@ -2652,7 +2649,6 @@ namespace pwiz.Skyline.Model
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
                                                     qValue,
-                                                    FeatureScores,
                                                     ZScore,
                                                     Annotations,
                                                     UserSet);
