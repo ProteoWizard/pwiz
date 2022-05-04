@@ -219,6 +219,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public bool IsGraphUpdatePending => _updateManager.IsUpdating;
+
         public string LibraryName
         {
             get { return GraphItem.LibraryName; }
@@ -1004,21 +1006,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 _timer.Tick += DoUpdate;
             }
 
+            public bool IsUpdating
+            {
+                get
+                {
+                    lock (_timer)
+                    {
+                        return _timer.Tag != null;
+                    }
+                }
+            }
+
             public void QueueUpdate(bool isUserAction)
             {
                 // Restart the timer at 100ms, giving the UI time to interrupt.
-                _timer.Stop();
-                _timer.Interval = 100;
-                _timer.Tag = isUserAction;
-                _timer.Start();
+                lock (_timer)
+                {
+                    _timer.Stop();
+                    _timer.Interval = 100;
+                    _timer.Tag = isUserAction;
+                    _timer.Start();
+                }
             }
 
             private void DoUpdate(object sender, EventArgs e)
             {
                 // Stop the timer immediately, to keep from getting called again
                 // for the same triggering event.
-                _timer.Stop();
-                var isUserAction = (bool)_timer.Tag;
+                bool isUserAction;
+                lock (_timer)
+                {
+                    _timer.Stop();
+                    isUserAction = (bool)_timer.Tag;
+                }
 
                 var curSpectrum = _parent.SelectedSpectrum?.SpectrumInfo;
                 _parent.DoUpdate();
@@ -1026,6 +1046,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (!Equals(curSpectrum, newSpectrum))
                     _parent.FireSelectedSpectrumChanged(isUserAction);
+
+                lock (_timer)
+                {
+                    if (!_timer.Enabled)
+                        _timer.Tag = null;
+                }
             }
 
             public IReadOnlyCollection<SpectrumNodeSelection.PrecursorSelectionData> GetPrecursorSelectionData(SpectrumNodeSelection selection, SrmSettings settings)
