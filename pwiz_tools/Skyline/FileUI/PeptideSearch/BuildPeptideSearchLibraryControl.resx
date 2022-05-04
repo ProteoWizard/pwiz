@@ -439,7 +439,7 @@
     <value>11, 70</value>
   </data>
   <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>271, 147</value>
+    <value>261, 147</value>
   </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -490,7 +490,7 @@
     <value>11, 19</value>
   </data>
   <data name="comboInputFileType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>275, 21</value>
+    <value>265, 21</value>
   </data>
   <data name="comboInputFileType.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -640,7 +640,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnRemFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 99</value>
+    <value>278, 99</value>
   </data>
   <data name="btnRemFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
@@ -700,7 +700,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 70</value>
+    <value>278, 70</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 23</value>
@@ -751,7 +751,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Cut-off score:</value>
+    <value>&amp;Cut-off score:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

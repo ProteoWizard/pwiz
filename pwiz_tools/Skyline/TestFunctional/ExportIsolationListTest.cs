@@ -84,9 +84,8 @@ namespace pwiz.SkylineTestFunctional
         public void DoTestExportIsolationList(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
             bool asExplicitRetentionTimes = false, RefinementSettings.ConvertToSmallMoleculesChargesMode negativeCharges = RefinementSettings.ConvertToSmallMoleculesChargesMode.none)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 

@@ -75,9 +75,8 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoAgilentMseChromatogramTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules, small_mol_mode smallMolMode = small_mol_mode.simple, string expectedError = null)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions && smallMolMode == small_mol_mode.simple)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && smallMolMode == small_mol_mode.simple && SkipSmallMoleculeTestVersions())
             {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 

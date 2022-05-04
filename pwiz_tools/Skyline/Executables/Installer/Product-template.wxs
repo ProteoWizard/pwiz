@@ -92,7 +92,7 @@
       <Directory Id="sv_directory" Name="sv"/>
       <Directory Id="tr_directory" Name="tr"/>
       <Directory Id="zh_CHS_directory" Name="zh-CHS"/>
-      <Directory Id="zh_tw_directory" Name="zh-tw"/>
+      <Directory Id="zh_tw_directory" Name="zh-TW"/>
       
       <Directory Id="Method_directory" Name="Method">
         <Directory Id="Method_AbSciex_directory" Name="AbSciex">
@@ -207,6 +207,9 @@
       </Component>
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="msconvert.exe">
+        <File Source="$(var.Skyline.TargetDir)/msconvert.exe" KeyPath="yes"/>
       </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>

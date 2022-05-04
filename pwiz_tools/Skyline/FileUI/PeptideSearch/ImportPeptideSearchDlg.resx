@@ -662,7 +662,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3</value>
   </data>
   <data name="extractChromatogramsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="extractChromatogramsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -686,7 +686,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="getChromatogramsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="getChromatogramsPage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -743,7 +743,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3</value>
   </data>
   <data name="addModsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="addModsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -767,7 +767,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="matchModificationsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="matchModificationsPage.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -820,11 +820,14 @@ injected into the mass spectrometer.</value>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>0, 0</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -845,7 +848,7 @@ injected into the mass spectrometer.</value>
     <value>4, 22</value>
   </data>
   <data name="transitionSettingsUiPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="transitionSettingsUiPage.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -902,7 +905,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3</value>
   </data>
   <data name="ms1FullScanSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="ms1FullScanSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -926,7 +929,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="ms1FullScanSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ms1FullScanSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -980,7 +983,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3</value>
   </data>
   <data name="importFASTATitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="importFASTATitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -1004,7 +1007,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="importFastaPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="importFastaPage.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1061,7 +1064,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3</value>
   </data>
   <data name="converterSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>388, 43</value>
+    <value>570, 43</value>
   </data>
   <data name="converterSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -1085,7 +1088,7 @@ injected into the mass spectrometer.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="converterSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="converterSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1142,7 +1145,7 @@ injected into the mass spectrometer.</value>
     <value>0, 0</value>
   </data>
   <data name="searchSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="searchSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -1163,7 +1166,7 @@ injected into the mass spectrometer.</value>
     <value>4, 22</value>
   </data>
   <data name="ddaSearchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ddaSearchSettingsPage.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -1220,7 +1223,7 @@ injected into the mass spectrometer.</value>
     <value>0, 0</value>
   </data>
   <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 43</value>
+    <value>576, 43</value>
   </data>
   <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
@@ -1241,7 +1244,7 @@ injected into the mass spectrometer.</value>
     <value>4, 22</value>
   </data>
   <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>394, 479</value>
+    <value>576, 573</value>
   </data>
   <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -1274,7 +1277,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=21.2.1.418, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1340,7 +1343,7 @@ injected into the mass spectrometer.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.418, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1352,6 +1355,6 @@ injected into the mass spectrometer.</value>
     <value>ImportPeptideSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.418, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
