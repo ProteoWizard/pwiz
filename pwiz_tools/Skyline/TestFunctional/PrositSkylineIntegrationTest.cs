@@ -1655,7 +1655,7 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.MoleculeGroups, 0);
             GraphSpectrum.SpectrumNodeSelection selection = null;
             RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
-            WaitForPrositSpectrum(selection.Precursors.First().Precursor, baseCE);
+            WaitForPrositSpectrum(selection.Protein.Peptides.First().TransitionGroups.First(), baseCE);
 
             // Select several peptides and make sure they are displayed correctly
             TestPrositSinglePrecursorPredictions(client, SrmDocument.Level.Molecules, 0, 4);

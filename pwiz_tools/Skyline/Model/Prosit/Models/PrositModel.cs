@@ -350,9 +350,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 _updateCallback = updateCallback;
             }
 
-            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor, IsotopeLabelType labelType, Action updateCallback) :
+            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor,
+                IsotopeLabelType labelType, int nce, Action updateCallback) :
                 this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
-                    settings, peptide, precursor, labelType, Properties.Settings.Default.PrositNCE, updateCallback)
+                    settings, peptide, precursor, labelType, nce, updateCallback)
             {
             }
 
