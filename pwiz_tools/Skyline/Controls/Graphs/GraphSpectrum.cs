@@ -1088,6 +1088,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var ps in precursorSpectra)
                 {
+                    ps.Spectra.Clear();
                     ps.Spectra.AddRange(settings
                         .GetBestSpectra(ps.LookupTarget, ps.Precursor.PrecursorAdduct, ps.LookupMods)
                         .Select(s => new SpectrumDisplayInfo(s, ps.Precursor)));
