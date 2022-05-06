@@ -45,7 +45,7 @@ class SpectrumWorkerThreads::Impl
 
     Impl(const SpectrumList& sl, bool useWorkerThreads)
         : sl_(sl)
-        , numThreads_(min(8u, boost::thread::hardware_concurrency()))
+        , numThreads_(min(16u, boost::thread::hardware_concurrency()))
         , maxProcessedTaskCount_(numThreads_ * 4)
         , taskMRU_(maxProcessedTaskCount_)
     {
