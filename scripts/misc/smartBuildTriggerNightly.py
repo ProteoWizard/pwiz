@@ -1,8 +1,8 @@
-# This script is responsible for triggering most builds on ProteoWizard's TeamCity project.
+# This script is responsible for triggering nightly builds on ProteoWizard's TeamCity project.
 # It avoids redundant builds (build configs that have nothing to do with a given set of changed files),
 # but still reports those untriggered builds to GitHub so they can be required to pass for merging a PR.
 #
-# The "zSmart build trigger" config runs this script on all git changes.
+# The "zSmart build trigger nightly" config runs this script on all git changes.
 # Then this script runs git for master or an active pull request[1] to check the files changed by the latest commit (for master)
 # or by any commit (for PRs).
 #
@@ -77,67 +77,25 @@ if len(args) < 4:
     exit(0)
 
 targets = {}
-targets['CoreWindowsRelease'] = \
-{
-    "bt83": "Core Windows x86_64"
-    ,"bt36": "Core Windows x86"
-    ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
-}
-#targets['CoreWindowsDebug'] = \
-#{
-#    "bt84": "Core Windows x86_64 debug"
-#    ,"bt75": "Core Windows debug"
-#}
-#targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
-targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {"bt17": "Core Linux x86_64"}
 
-targets['SkylineRelease'] = \
+targets['Skyline'] = \
 {
     'master':
     {
-        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
-        #,"bt19": "Skyline master and PRs (Windows x86)"
+        "bt210": "Skyline master and PRs (Windows x86_64 debug, with code coverage)"
+        ,"ProteoWizard_SkylinePrPerfAndTutorialTestsWindowsX8664": "Skyline PR Perf and Tutorial tests (Windows x86_64)"
     },
     'release':
     {
-        "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
-        #,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
+        "ProteoWizard_SkylineReleasePerfAndTutorialTestsWindowsX8664": "Skyline Release Perf and Tutorial tests (Windows x86_64)"
     }
 }
 
-#targets['SkylineDebug'] = \
-#{
-#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-#}
-#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-targets['Skyline'] = targets['SkylineRelease']
+targets['Core'] = {}
+targets['Container'] = {}
+targets['Bumbershoot'] = {}
 
-targets['Container'] = \
-{
-    'master':
-    {
-        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
-    },
-    'release':
-    {
-        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"
-    }
-}
-
-targets['BumbershootRelease'] = \
-{
-    "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-    ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
-}
-targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
-targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
-
-targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
-targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'], targets['Container'])
+targets['All'] = merge(targets['Skyline'])
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
@@ -146,13 +104,12 @@ matchPaths = [
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
     ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['CoreWindows']),
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Topograph/.*", targets['Skyline']),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
+    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'], targets['Container'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])
 ]
