@@ -60,7 +60,8 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
                     const optional<uint64_t>& parentId, const optional<double>& precursorMz,
                     const optional<int>& isolationMode, const optional<int>& reactionMode,
                     const optional<double>& isolationWidth,
-                    const optional<int>& precursorCharge);
+                    const optional<int>& precursorCharge,
+                    const optional<double>& collisionEnergy);
 
     virtual ~Baf2SqlSpectrum() {}
 
@@ -107,6 +108,7 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
     pair<double, double> scanRange_;
     optional<int> chargeState_;
     optional<double> isolationWidth_;
+    optional<double> collisionEnergy_;
 
     optional<int> isolationMode_, reactionMode_;
     optional<double> precursorMz_;
