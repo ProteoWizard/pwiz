@@ -23,7 +23,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
 {
