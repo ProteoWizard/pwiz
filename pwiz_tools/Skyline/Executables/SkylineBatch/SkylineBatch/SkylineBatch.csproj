@@ -87,8 +87,12 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
     <None Include="Resources\downtriangle.png" />
     <None Include="Resources\download.png" />
     <None Include="Resources\downloadSelected.png" />
