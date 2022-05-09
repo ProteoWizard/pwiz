@@ -1904,8 +1904,8 @@ namespace pwiz.Skyline.Util
             if (RunningResharperAnalysis)
             {
                 DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
-                // Allow up to 60 sec extra time when running code coverage or other analysis
-                milliseconds += (60000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
+                // Allow up to 5 sec extra time when running code coverage or other analysis
+                milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }
             DetailedTrace.WriteLine(string.Format(@"Sleeping {0} ms then retrying...", milliseconds));
             Thread.Sleep(milliseconds);

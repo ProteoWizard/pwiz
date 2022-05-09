@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -250,16 +250,16 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Associated peptides with {0}.
+        ///   Looks up a localized string similar to Associated peptides with protein groups.
         /// </summary>
-        public static string associated_peptides_with_protein {
+        public static string associated_peptides_with_protein_groups {
             get {
-                return ResourceManager.GetString("associated_peptides_with_protein", resourceCulture);
+                return ResourceManager.GetString("associated_peptides_with_protein_groups", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Associated peptides with {0} proteins.
+        ///   Looks up a localized string similar to Associated peptides with proteins.
         /// </summary>
         public static string associated_peptides_with_proteins {
             get {

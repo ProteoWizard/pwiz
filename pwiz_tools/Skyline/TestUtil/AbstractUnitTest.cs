@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestUtil
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
-            for (var retry = downloadFromS3; ; retry = false)
+            for (var retry = true; ; retry = false)
             {
                 var zipURL = downloadFromS3
                     ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
@@ -258,7 +258,7 @@ namespace pwiz.SkylineTestUtil
                         AssertEx.Fail(message);
                     }
                     Console.Write(message);
-                    downloadFromS3 = false; // Maybe it just never got copied to S3
+                    downloadFromS3 = !downloadFromS3; // Maybe it just never got copied to S3 or vice versa
                 }
             }
         }
