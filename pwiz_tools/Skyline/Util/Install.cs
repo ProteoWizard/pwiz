@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace pwiz.Skyline.Util
@@ -157,6 +159,34 @@ namespace pwiz.Skyline.Util
                                     (IsAutomatedBuild ? @" : automated build" : string.Empty),
                                      Regex.Replace(Version, @"(\d+\.\d+\.\d+\.\d+)-(\S+)", "$1 ($2)"));
             } 
+        }
+
+        public static string GetUserAgentString()
+        {
+            StringBuilder sb = new StringBuilder(@"Mozilla/5.0");
+            var osVersion = Environment.OSVersion;
+            var platformParts = new List<string>();
+            if (osVersion.Platform == PlatformID.Win32NT)
+            {
+                // Specify the Windows version number
+                // Most browsers just use the Major and Minor parts of the version number, but we include
+                // the build in order to be able to distinguish Windows 10 (10.0.19042) from Windows 11 (10.0.22000)
+                platformParts.Add(string.Format(@"Windows NT {0}.{1}.{2}", 
+                    osVersion.Version.Major, osVersion.Version.Minor, osVersion.Version.Build));
+                if (Environment.Is64BitOperatingSystem)
+                {
+                    // Consider: should we bother trying to distinguish between Win64 and WOW64?
+                    platformParts.Add(@"Win64");
+                    platformParts.Add(@"x64");
+                }
+            }
+
+            if (platformParts.Count > 0)
+            {
+                sb.Append(string.Format(@" ({0})", string.Join(@"; ", platformParts)));
+            }
+
+            return sb.ToString();
         }
     }
 }

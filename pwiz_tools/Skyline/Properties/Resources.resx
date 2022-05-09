@@ -11719,4 +11719,40 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
   </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTA files</value>
+  </data>
+  <data name="AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options" xml:space="preserve">
+    <value>Applying parsimony options</value>
+  </data>
+  <data name="ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides" xml:space="preserve">
+    <value>Creating protein targets and assigning their peptides</value>
+  </data>
+  <data name="ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree" xml:space="preserve">
+    <value>Building peptide prefix tree</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups" xml:space="preserve">
+    <value>Calculating protein groups</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins" xml:space="preserve">
+    <value>Group of {0} proteins</value>
+  </data>
+  <data name="ProteinAssociation_Finding_minimal_protein_list" xml:space="preserve">
+	  <value>Finding minimal protein list</value>
+  </data>
+  <data name="ProteinAssociation_Calculating_protein_clusters" xml:space="preserve">
+	  <value>Calculating protein clusters</value>
+  </data>
+  <data name="ProteinAssociation_Removing_subset_proteins" xml:space="preserve">
+	  <value>Removing subset proteins</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+	  <value>Find &amp;minimal protein group list that explains all peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+	  <value>&amp;Remove subset protein groups</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+	  <value>Mi&amp;n peptides per protein group</value>
+  </data>
 </root>

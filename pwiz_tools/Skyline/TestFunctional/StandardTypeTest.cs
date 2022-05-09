@@ -62,9 +62,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunTestStandardType(bool asSmallMolecules)
         {
-            if (asSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 

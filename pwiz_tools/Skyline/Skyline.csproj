@@ -610,6 +610,8 @@
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
+    <Compile Include="Model\MoleculeNameAndAccessions.cs" />
+    <Compile Include="Model\Proteome\ProteinAssociation.cs" />
     <Compile Include="Model\MoleculeSynchronizer.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />

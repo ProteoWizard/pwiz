@@ -187,7 +187,7 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
-        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+        public static string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
         {
@@ -306,7 +306,8 @@ namespace SkylineNightly
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterDirBasis + ".zip");
-            const int attempts = 120; // Retry for up to two hours
+            const int retryTimeoutInMinutes = 10;
+            const int attempts = 120/ retryTimeoutInMinutes; // Retry for up to two hours
             var useLastSuccessfulInsteadOfLastFinished = false;
             string branchUrl = null;
             for (int i = 0; i < attempts; i++)
@@ -323,7 +324,7 @@ namespace SkylineNightly
                     }
 
                     // After 30 minutes, start trying for lastSuccessful build instead
-                    useLastSuccessfulInsteadOfLastFinished = i > 30; 
+                    useLastSuccessfulInsteadOfLastFinished = i > (30 / retryTimeoutInMinutes); 
                     if (useLastSuccessfulInsteadOfLastFinished)
                     {
                         Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, attempting download of lastSuccessful build instead of lastFinished.)");
@@ -332,7 +333,7 @@ namespace SkylineNightly
                     {
                         Log("Exception while downloading SkylineTester: " + ex.Message + " (Retrying every 60 seconds for 30 minutes.)");
                     }
-                    Thread.Sleep(60*1000);  // one minute
+                    Thread.Sleep(60*1000 * retryTimeoutInMinutes);
                     continue;
                 }
 
@@ -370,7 +371,7 @@ namespace SkylineNightly
                     {
                         QuitWithError("Unable to identify branch from Version.cpp in SkylineTester");
                     }
-                    Thread.Sleep(60 * 1000);  // one minute
+                    Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                 }
             }
             // Create ".skytr" file to execute nightly build in SkylineTester.
@@ -515,7 +516,8 @@ namespace SkylineNightly
                         retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
                     if (retryTester)
                     {
-                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes retrying.");
+                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes. Will try again in " + retryTimeoutInMinutes + " minutes.");
+                        Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                     }
                 }
             }
@@ -901,6 +903,12 @@ namespace SkylineNightly
                     xml = doc.ToString();
                 }
             }
+
+            if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
+            {
+                return @"No tests found in log. No results posted";
+            }
+
             string url;
             // Post to server.
             if (mode == RunMode.integration)

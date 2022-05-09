@@ -846,6 +846,9 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
+        [TrackChildren(ignoreName: true)]
+        public ProteinAssociation.ParsimonySettings ParsimonySettings { get; private set; }
+
         #region Property change methods
 
         public PeptideFilter ChangeExcludeNTermAAs(int prop)
@@ -876,6 +879,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideFilter ChangePeptideUniqueness(PeptideUniquenessConstraint prop)
         {
             return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
+        }
+
+        public PeptideFilter ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ParsimonySettings = prop);
         }
         #endregion
 
@@ -1136,6 +1144,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MaxPeptideLength == MaxPeptideLength &&
                    obj.AutoSelect.Equals(AutoSelect) &&
                    obj.PeptideUniqueness.Equals(PeptideUniqueness) &&
+                   Equals(obj.ParsimonySettings, ParsimonySettings) &&
                    ArrayUtil.EqualsDeep(obj._exclusions, _exclusions);
         }
 
@@ -1157,6 +1166,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 result = (result*397) ^ _exclusions.GetHashCodeDeep();
                 result = (result*397) ^ PeptideUniqueness.GetHashCode();
+                result = (result*397) ^ ParsimonySettings?.GetHashCode() ?? 0;
                 return result;
             }
         }

@@ -149,7 +149,6 @@ namespace pwiz.Skyline.Model.Serialization
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
-            int countRatios = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
             return new TransitionGroupChromInfo(fileInfo.FileId,

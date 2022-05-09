@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -63,9 +62,8 @@ namespace pwiz.SkylineTestData.Results
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
+                if (SkipSmallMoleculeTestVersions())
                 {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return;
                 }
             }

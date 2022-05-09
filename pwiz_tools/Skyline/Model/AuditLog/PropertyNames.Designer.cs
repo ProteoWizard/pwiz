@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Background Proteome.
+        ///   Looks up a localized string similar to Background proteome.
         /// </summary>
         public static string AssociateProteinsSettings_BackgroundProteome {
             get {
@@ -196,11 +196,65 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Proteins.
+        ///   Looks up a localized string similar to Peptides mapped.
         /// </summary>
-        public static string AssociateProteinsSettings_Proteins {
+        public static string AssociateProteinsSettings_MappedPeptides {
             get {
-                return ResourceManager.GetString("AssociateProteinsSettings_Proteins", resourceCulture);
+                return ResourceManager.GetString("AssociateProteinsSettings_MappedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins mapped.
+        /// </summary>
+        public static string AssociateProteinsSettings_MappedProteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_MappedProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide targets.
+        /// </summary>
+        public static string AssociateProteinsSettings_TargetPeptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_TargetPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein group targets.
+        /// </summary>
+        public static string AssociateProteinsSettings_TargetProteinGroups {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_TargetProteinGroups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein targets.
+        /// </summary>
+        public static string AssociateProteinsSettings_TargetProteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_TargetProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides unmapped.
+        /// </summary>
+        public static string AssociateProteinsSettings_UnmappedPeptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_UnmappedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins unmapped.
+        /// </summary>
+        public static string AssociateProteinsSettings_UnmappedProteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_UnmappedProteins", resourceCulture);
             }
         }
         
@@ -2406,6 +2460,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string OptimizationLibrary_DatabasePathAuditLog {
             get {
                 return ResourceManager.GetString("OptimizationLibrary_DatabasePathAuditLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find minimal protein list.
+        /// </summary>
+        public static string ParsimonySettings_FindMinimalProteinList {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_FindMinimalProteinList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group proteins.
+        /// </summary>
+        public static string ParsimonySettings_GroupProteins {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_GroupProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min peptides per protein.
+        /// </summary>
+        public static string ParsimonySettings_MinPeptidesPerProtein {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_MinPeptidesPerProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove subset proteins.
+        /// </summary>
+        public static string ParsimonySettings_RemoveSubsetProteins {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_RemoveSubsetProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shared peptides option.
+        /// </summary>
+        public static string ParsimonySettings_SharedPeptides {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_SharedPeptides", resourceCulture);
             }
         }
         

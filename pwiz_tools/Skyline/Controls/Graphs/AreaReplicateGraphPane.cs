@@ -654,6 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
                 };
+                dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);
                 ToolTip.TargetCurves.ClearAndAdd(dotpLine);
             }
@@ -885,7 +886,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
-            GraphSummary.GraphControl.Refresh();
         }
 
         private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas, Func<double, double, double> aggregateFunc)
