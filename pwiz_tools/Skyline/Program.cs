@@ -368,6 +368,7 @@ namespace pwiz.Skyline
 
             var data = Encoding.UTF8.GetBytes(postData);
             var request = (HttpWebRequest) WebRequest.Create("http://www.google-analytics.com/collect");
+            request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
