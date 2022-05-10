@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
-                using (var reader = ExecuteReader(select))
+                using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
                         throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
@@ -611,7 +611,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (rows == 0)
                 {
                     select.CommandText = @"SELECT count(*) FROM [RefSpectra]";
-                    using (SQLiteDataReader reader = ExecuteReader(select))
+                    using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
                             throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
@@ -633,7 +633,7 @@ namespace pwiz.Skyline.Model.Lib
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
                             cmd.CommandText = @"SELECT * FROM RetentionTimes";
-                            using (var dataReader = ExecuteReader(cmd))
+                            using (var dataReader = cmd.ExecuteReader())
                             {
                                 var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
                                 retentionTimeReader.ReadAllRows();
@@ -649,7 +649,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
                     {
                         select.CommandText = @"SELECT id, scoreType FROM ScoreTypes";
-                        using (var reader = ExecuteReader(select))
+                        using (var reader = select.ExecuteReader())
                         {
                             while (reader.Read())
                             {
@@ -667,7 +667,7 @@ namespace pwiz.Skyline.Model.Lib
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
                 select.CommandText = @"SELECT * FROM [RefSpectra]";
-                using (SQLiteDataReader reader = ExecuteReader(select))
+                using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
                     //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
@@ -808,7 +808,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (schemaVer > 0)
                 {
                     select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
-                    using (SQLiteDataReader reader = ExecuteReader(select))
+                    using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
                         int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
@@ -929,18 +929,6 @@ namespace pwiz.Skyline.Model.Lib
 
             loader.UpdateProgress(status.Complete());
             return cacheBytes;
-        }
-
-        private SQLiteDataReader ExecuteReader(SQLiteCommand command)
-        {
-            try
-            {
-                return command.ExecuteReader();
-            }
-            catch (SQLiteException ex)
-            {
-                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath), ex);
-            }
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -1168,13 +1156,19 @@ namespace pwiz.Skyline.Model.Lib
                 // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
-                    var failureException = new Exception(FormatErrorMessage(x), x);
-                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    // SQLiteExceptions are not considered programming defects and should be shown to the user
+                    // as an ordinary error message
+                    if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
                     {
-                        throw failureException; // We want this to show up in ExceptionWeb
+                        var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
+                        // This will show the user the error message after which the operation can be treated as canceled.
+                        loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
                     }
-                    // This will show the user the error message after which the operation can be treated as canceled.
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
+                    else
+                    {
+                        // Other sorts of exceptions should be posted to the Exception Web
+                        throw new Exception(FormatErrorMessage(x), x);
+                    }
                 }
                 return false;
             }
