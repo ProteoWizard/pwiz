@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -200,7 +201,7 @@ namespace SharedBatch.Properties
             if (!reader.Name.Equals("ConfigList") && !reader.Name.Equals("config_list"))
                 throw new ArgumentException(Resources.ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_);
             var xmlVersion = reader.GetAttribute(Attr.xml_version) != null
-                ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version))
+                ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version), CultureInfo.InvariantCulture)
                 : -1;
             var importingVersion = reader.GetAttribute(Attr.version);
 
