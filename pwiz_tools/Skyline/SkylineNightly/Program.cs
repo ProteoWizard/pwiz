@@ -27,24 +27,28 @@ namespace SkylineNightly
 {
     static class Program
     {
-        private static bool PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
+        private static string PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
             var nightly = new Nightly(runMode, decorateSrcDirName);
             var nightlyTask = Nightly.NightlyTask;
             if (nightlyTask != null && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nightlyTask.NextRunTime)
             {
                 // Don't run, because the projected end time is after the start of the next scheduled start
-                return false;
+                return null;
             }
             var errMessage = nightly.RunAndPost();
             var message = string.Format(@"Completed {0}", arg);
             nightly.Finish(message, errMessage);
-            return string.IsNullOrEmpty(errMessage);
+            return errMessage;
         }
 
         private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg)
         {
-            PerformTests(runMode1, string.Format(@"part one of {0}", arg), runMode1 == runMode2 ? @"A" : null);
+            var result = PerformTests(runMode1, string.Format(@"part one of {0}", arg), runMode1 == runMode2 ? @"A" : null);
+            if (Equals(result, Nightly.SkylineTesterStoppedByUser))
+            {
+                return; // If user killed the first half, assume we don't want the second half
+            }
             // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
             PerformTests(runMode2, string.Format(@"part two of {0}", arg), runMode1 == runMode2 ? @"B" : null);
         }
@@ -105,7 +109,7 @@ namespace SkylineNightly
                     }
                     case "indefinitely":
                     {
-                        while (PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1]))
+                        while (string.IsNullOrEmpty(PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1])))
                         {
                         }
 

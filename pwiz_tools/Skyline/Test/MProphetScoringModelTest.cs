@@ -21,8 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util.Extensions;
@@ -197,11 +199,12 @@ namespace pwiz.SkylineTest
 
             // Good validation.
             AssertEx.NoExceptionThrown<Exception>(new Action(() =>
-                new MProphetPeakScoringModel("GoodModel", new[] {0.0}, new[] {new LegacyLogUnforcedAreaCalc()})));   // Not L10N
+                new MProphetPeakScoringModel("GoodModel", new[] {0.0},
+                    new FeatureCalculators(ImmutableList.Singleton(new LegacyLogUnforcedAreaCalc())))));
 
             // No calculator.
             AssertEx.ThrowsException<InvalidDataException>(new Action(() =>
-                new MProphetPeakScoringModel("NoCalculator", new double[0], new IPeakFeatureCalculator[0])));   // Not L10N
+                new MProphetPeakScoringModel("NoCalculator", Array.Empty<double>(), FeatureCalculators.NONE)));
 
             // ReSharper restore ObjectCreationAsStatement
         }
@@ -310,6 +313,7 @@ namespace pwiz.SkylineTest
             // Create transition groups to be filled from data file.
             targetTransitionGroups = new ScoredGroupPeaksSet();
             decoyTransitionGroups = new ScoredGroupPeaksSet();
+            var featureNames = new FeatureNames(varColumns.Prepend(mainVarColumn).Select(i => data.Header[i]));
             var featuresCount = varColumns.Count + 1;
             var transitionGroupDictionary = new Dictionary<string, ScoredGroupPeaks>();
 
@@ -346,7 +350,7 @@ namespace pwiz.SkylineTest
                     features[j + 1] = (float) double.Parse(data.Items[i, varColumns[j]], CultureInfo.InvariantCulture);
 
                 // Add the peak to its transition group.
-                transitionGroup.Add(new ScoredPeak(features));
+                transitionGroup.Add(new ScoredPeak(new FeatureScores(featureNames, features)));
             }
         }
 

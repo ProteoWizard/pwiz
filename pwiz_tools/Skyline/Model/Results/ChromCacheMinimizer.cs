@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -599,7 +600,7 @@ namespace pwiz.Skyline.Model.Results
                 new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
             private readonly BlockedArrayList<ChromTransition> _transitions =
                 new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-            private readonly List<Type> _scoreTypes;
+            private readonly FeatureNames _scoreTypes;
             private readonly List<byte> _textIdBytes = new List<byte>();
             private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
                 = new Dictionary<ImmutableList<byte>, int>();
@@ -612,7 +613,7 @@ namespace pwiz.Skyline.Model.Results
                 _outputStreamScans = outputStreamScans;
                 _outputStreamPeaks = outputStreamPeaks;
                 _outputStreamScores = outputStreamScores;
-                _scoreTypes = chromatogramCache.ScoreTypes.ToList();
+                _scoreTypes = chromatogramCache.ScoreTypes;
             }
 
             public void WriteChromGroup(ChromatogramGroupInfo originalChromGroup, MinimizedChromGroup minimizedChromGroup)
