@@ -1677,17 +1677,17 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogEntryToString(AuditLogEntry entry)
         {
-            var result = string.Format("Undo Redo : {0}\r\n", entry.UndoRedo);
-            result += string.Format("Summary   : {0}\r\n", entry.Summary);
-            result += "All Info  :\r\n";
+            var result = new StringBuilder(string.Format("Undo Redo : {0}\r\n", entry.UndoRedo));
+            result.Append(string.Format("Summary   : {0}\r\n", entry.Summary));
+            result.Append("All Info  :\r\n");
 
             foreach (var allInfoItem in entry.AllInfo)
-                result += allInfoItem + "\r\n";
+                result.AppendLine(allInfoItem.ToString());
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType));
+                result.Append(string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType)));
 
-            return result;
+            return result.ToString();
         }
 
         private void WaitForSkyline()

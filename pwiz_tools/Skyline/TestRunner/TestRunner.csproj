@@ -86,7 +86,7 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
-    <NoWin32Manifest>true</NoWin32Manifest>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="JetBrains.Profiler.Api">
@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
