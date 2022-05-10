@@ -26,10 +26,13 @@ namespace pwiz.Skyline.Controls.Databinding
         private BindingList<CandidatePeakGroup> _bindingList;
         private List<CandidatePeakGroup> _candidatePeakGroups;
         private Color _originalPeakColor;
+        private readonly DocumentChangeListener _documentChangeListener;
+        private bool _updatePending;
 
         public CandidatePeakForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            _documentChangeListener = new DocumentChangeListener(this);
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
@@ -42,7 +45,26 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource.SetViewContext(viewContext);
             Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
             DataboundGridControl.DataGridView.CellFormatting += DataGridView_OnCellFormatting;
+            DataboundGridControl.DataGridView.CurrentCellDirtyStateChanged += DataGridView_OnCurrentCellDirtyStateChanged;
             _originalPeakColor = GetOriginalPeakColor();
+        }
+
+        private void DataGridView_OnCurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            var dataGridView = DataboundGridControl.DataGridView;
+            var currentColumn = dataGridView.CurrentCell.OwningColumn;
+            if (currentColumn is DataGridViewCheckBoxColumn)
+            {
+                // If the user has clicked on the "Chosen" column, commit that change immediately since
+                // allowing them to move off the row at the same time as the value is being committed
+                // can lead to painting weirdness.
+                var currentPropertyPath = (BindingListSource.ItemProperties.FindByName(currentColumn.DataPropertyName)
+                    as ColumnPropertyDescriptor)?.PropertyPath;
+                if (PropertyPath.Root.Property(nameof(CandidatePeakGroup.Chosen)).Equals(currentPropertyPath))
+                {
+                    dataGridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
+            }
         }
 
         private void DataGridView_OnCellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -70,7 +92,7 @@ namespace pwiz.Skyline.Controls.Databinding
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            SkylineWindow.DocumentUIChangedEvent += SkylineWindow_DocumentUIChangedEvent;
+            _dataSchema.Listen(_documentChangeListener);
             SkylineWindow.ComboResults.SelectedIndexChanged += ComboResults_OnSelectedIndexChanged;
             OnDocumentChanged();
         }
@@ -86,14 +108,9 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 SkylineWindow.ComboResults.SelectedIndexChanged -= ComboResults_OnSelectedIndexChanged;
             }
-            SkylineWindow.DocumentUIChangedEvent -= SkylineWindow_DocumentUIChangedEvent;
+            _dataSchema.Unlisten(_documentChangeListener);
             SetSequenceTree(null);
             base.OnHandleDestroyed(e);
-        }
-
-        private void SkylineWindow_DocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
-        {
-            OnDocumentChanged();
         }
 
         private void OnDocumentChanged()
@@ -126,11 +143,13 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void QueueUpdateRowSource()
         {
+            _updatePending = true;
             BeginInvoke(new Action(UpdateRowSource));
         }
 
         private void UpdateRowSource()
         {
+            _updatePending = false;
             var newSelector = GetSelector();
             if (Equals(newSelector, _selector))
             {
@@ -350,6 +369,28 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             return ColorPalettes.MergeWithBackground(ChromGraphItem.COLOR_ORIGINAL_PEAK_SHADE,
                 DataboundGridControl.DataGridView.BackColor);
+        }
+
+        private class DocumentChangeListener : IDocumentChangeListener
+        {
+            private readonly CandidatePeakForm _form;
+            public DocumentChangeListener(CandidatePeakForm form)
+            {
+                _form = form;
+            }
+
+            public void DocumentOnChanged(object sender, DocumentChangedEventArgs args)
+            {
+                _form.OnDocumentChanged();
+            }
+        }
+
+        public new bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && !_updatePending;
+            }
         }
     }
 }

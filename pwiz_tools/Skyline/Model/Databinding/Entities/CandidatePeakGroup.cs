@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -55,22 +58,91 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return;
                 }
-                var identityPath = _precursorResult.Precursor.IdentityPath;
-                var resultFile = _precursorResult.GetResultFile();
-
                 if (!value)
                 {
-                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), Resources.CandidatePeakGroup_Chosen_Remove_Peak), doc =>
-                        doc.ChangePeak(identityPath, resultFile.Replicate.Name,
-                            resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false));
+                    ModifyDocument(
+                        EditDescription.Message(_precursorResult.GetElementRef(),
+                            Resources.CandidatePeakGroup_Chosen_Remove_Peak),
+                        doc =>
+                        {
+                            foreach (var precursor in GetComparableGroup())
+                            {
+                                doc = RemovePeak(doc, precursor);
+                            }
+
+                            return doc;
+                        });
                 }
                 else
                 {
-                    ModifyDocument(EditDescription.Message(_precursorResult.GetElementRef(), Resources.CandidatePeakGroup_Chosen_Choose_peak), doc =>
-                        doc.ChangePeak(identityPath, resultFile.Replicate.Name,
-                            resultFile.ChromFileInfo.FilePath, null, PeakGroupRetentionTime, UserSet.TRUE));
+                    ModifyDocument(
+                        EditDescription.Message(_precursorResult.GetElementRef(),
+                            Resources.CandidatePeakGroup_Chosen_Choose_peak),
+                        doc =>
+                        {
+                            foreach (var precursor in GetComparableGroup())
+                            {
+                                var retentionTime = GetChromPeakRetentionTime(precursor);
+                                if (retentionTime.HasValue)
+                                {
+                                    doc = ChoosePeak(doc, precursor, retentionTime.Value);
+                                }
+                                else
+                                {
+                                    doc = RemovePeak(doc, precursor);
+                                }
+                            }
+
+                            return doc;
+                        });
                 }
             }
+        }
+
+        private double? GetChromPeakRetentionTime(TransitionGroupDocNode transitionGroupDocNode)
+        {
+            if (!_data.PeakIndex.HasValue)
+            {
+                return null;
+            }
+            float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
+            var chromatogramSet = _precursorResult.GetResultFile().Replicate.ChromatogramSet;
+            var filePath = _precursorResult.GetResultFile().ChromFileInfo.FilePath;
+            var optimizableRegression = _precursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction;
+            ChromatogramGroupInfo[] chromatogramGroupInfos = null;
+            SrmDocument.Settings.MeasuredResults?.TryLoadChromatogram(chromatogramSet,
+                peptideDocNode, transitionGroupDocNode, tolerance,
+                out chromatogramGroupInfos);
+            chromatogramGroupInfos = chromatogramGroupInfos ?? Array.Empty<ChromatogramGroupInfo>();
+            var chromatogramGroupInfo = chromatogramGroupInfos.FirstOrDefault(info =>
+                Equals(info.FilePath, filePath));
+            if (chromatogramGroupInfo == null)
+            {
+                return null;
+            }
+            foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
+            {
+                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance, optimizableRegression);
+                if (chromatogramInfo != null)
+                {
+                    ChromPeak peak;
+                    try
+                    {
+                        peak = chromatogramInfo.GetPeak(_data.PeakIndex.Value);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                    if (!peak.IsEmpty)
+                    {
+                        return peak.RetentionTime;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public override string ToString()
@@ -114,6 +186,36 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public CandidatePeakGroupData GetCandidatePeakGroupData()
         {
             return _data;
+        }
+
+        private IEnumerable<TransitionGroupDocNode> GetComparableGroup()
+        {
+            var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
+            var precursorDocNode = _precursorResult.Precursor.DocNode;
+            if (precursorDocNode.RelativeRT == RelativeRT.Unknown)
+            {
+                return peptideDocNode.TransitionGroups.Where(tg => Equals(tg.LabelType, precursorDocNode.LabelType));
+            }
+
+            return peptideDocNode.TransitionGroups.Where(tg => tg.RelativeRT != RelativeRT.Unknown);
+        }
+
+        private SrmDocument RemovePeak(SrmDocument document, TransitionGroupDocNode precursor)
+        {
+            var identityPath =
+                new IdentityPath(_precursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
+            var resultFile = _precursorResult.GetResultFile();
+            return document.ChangePeak(identityPath, resultFile.Replicate.Name,
+                resultFile.ChromFileInfo.FilePath, null, null, null, UserSet.TRUE, null, false);
+        }
+
+        private SrmDocument ChoosePeak(SrmDocument document, TransitionGroupDocNode precursor, double retentionTime)
+        {
+            var identityPath =
+                new IdentityPath(_precursorResult.Precursor.Peptide.IdentityPath, precursor.TransitionGroup);
+            var resultFile = _precursorResult.GetResultFile();
+            return document.ChangePeak(identityPath, resultFile.Replicate.Name,
+                resultFile.ChromFileInfo.FilePath, null, retentionTime, UserSet.TRUE);
         }
     }
 }
