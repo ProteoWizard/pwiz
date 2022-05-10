@@ -220,13 +220,13 @@
     <value>Calibration Curve</value>
   </data>
   <data name="CandidatePeakGroup">
-	  <value>Candidate Peak Group</value>
+    <value>Candidate Peak Group</value>
   </data>
   <data name="CAS">
     <value>CAS</value>
   </data>
   <data name="Chosen">
-	  <value>Chosen</value>
+    <value>Chosen</value>
   </data>
   <data name="Chromatogram">
     <value>Chromatogram</value>
@@ -403,7 +403,7 @@
     <value>Explicit SLens</value>
   </data>
   <data name="Features">
-	  <value>Features</value>
+    <value>Features</value>
   </data>
   <data name="FiguresOfMerit">
     <value>Figures Of Merit</value>
@@ -704,7 +704,7 @@
     <value>Missed Cleavages</value>
   </data>
   <data name="ModelScore">
-	  <value>Model Score</value>
+    <value>Model Score</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>Modified Area Proportion</value>
@@ -806,13 +806,13 @@
     <value>Opt Step</value>
   </data>
   <data name="PeakGroupEndTime">
-	  <value>Peak Group End Time</value>
+    <value>Peak Group End Time</value>
   </data>
   <data name="PeakGroupStartTime">
-	<value>Peak Group Start Time</value>
+    <value>Peak Group Start Time</value>
   </data>
   <data name="PeakQValue">
-	<value>Peak Q Value</value>
+    <value>Peak Q Value</value>
   </data>
   <data name="PeakRank">
     <value>Peak Rank</value>
@@ -821,7 +821,7 @@
     <value>Peak Rank By Level</value>
   </data>
   <data name="PeakScores">
-	  <value>Peak Scores</value>
+    <value>Peak Scores</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -1162,7 +1162,7 @@
     <value>Sample Type</value>
   </data>
   <data name="Score">
-	  <value>Score</value>
+    <value>Score</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>
@@ -1329,16 +1329,16 @@
     <value>UTC Time</value>
   </data>
   <data name="Weight">
-	  <value>Weight</value>
+    <value>Weight</value>
   </data>
   <data name="WeightedFeature">
-	  <value>Weighted Feature</value>
+    <value>Weighted Feature</value>
   </data>
   <data name="WeightedFeatures">
-	  <value>Weighted Features</value>
+    <value>Weighted Features</value>
   </data>
   <data name="WeightedScore">
-	  <value>Weighted Score</value>
+    <value>Weighted Score</value>
   </data>
   <data name="PeakGroupRetentionTime" xml:space="preserve">
     <value>Peak Group Retention Time</value>

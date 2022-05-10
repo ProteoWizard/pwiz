@@ -160,7 +160,7 @@
     <value>dataGridViewLinkedPeptides</value>
   </data>
   <data name="&gt;&gt;dataGridViewLinkedPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.481, Culture=neutral, PublicKeyToken=null</value>
+    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewLinkedPeptides.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -286,7 +286,7 @@
     <value>dataGridViewCrosslinks</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.481, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewCrosslinks.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>

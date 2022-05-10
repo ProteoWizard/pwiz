@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Serialization
                 identified,
                 libraryDotProduct,
                 isotopeDotProduct,
-                qvalue, 
+                qvalue,
                 zscore,
                 annotations,
                 userSet);

@@ -247,7 +247,7 @@ maximum intensity for the precursor.</value>
     <value>The collision cross section of the precursor</value>
   </data>
   <data name="CollisionalCrossSection">
-	<value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>
+    <value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>
   </data>
   <data name="Coeluting">
     <value>True if this transition's peak has similar apex and extents as the other transitions within the peak group.</value>
