@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Results
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)
                     {
-                        _listScoreTypes.AddRange(rawData.ScoreTypes);
+                        _listScoreTypes = rawData.ScoreTypes;
                         _scoreTypesCount = _listScoreTypes.Count;
                     }
                     else if (!ArrayUtil.EqualsDeep(_listScoreTypes, rawData.ScoreTypes))
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.Results
                     inStream.TransferBytes(_fsScores.FileStream, rawData.NumScores * ChromatogramCache.SCORE_VALUE_SIZE);
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {
-                        _listGroups.Add(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,
+                        AddChromGroup(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,
                                             offsetFiles,
                                             offsetTransitions,
                                             offsetPeaks,

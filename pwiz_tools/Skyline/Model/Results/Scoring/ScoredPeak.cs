@@ -18,18 +18,22 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
     /// <summary>
     /// The calculated features for a single peak and a composite score.
     /// </summary>
-    public struct ScoredPeak
+    public class ScoredPeak : Immutable
     {
-        public static ScoredPeak Empty = new ScoredPeak(null);
-
-        public float[] Features { get; private set; }
-        public double Score { get; set; }
+        public FeatureScores FeatureScores { get; }
+        public ImmutableList<float> Features
+        {
+            get { return FeatureScores.Values; }
+        }
+        public double Score { get; private set; }
 
         /// <summary>
         /// Construct a peak with the given feature values.  By default, the
@@ -38,15 +42,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         /// <param name="features">Array of feature values.</param>
         /// <param name="score">Explicit score value</param>
-        public ScoredPeak(float[] features, double? score = null) : this()
+        public ScoredPeak(FeatureScores features, double? score = null)
         {
-            Features = features;
+            FeatureScores = features;
             if (features != null)
                 Score = score ?? Features[0];    // Use the first feature as the initial score.
         }
 
-        public bool IsEmpty { get { return Features == null; } }
-        // for debugging...
         public override string ToString()
         {
             return string.Format(@"{0:0.00}", Score);
@@ -59,7 +61,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 features = LinearModelParams.ReplaceUnknownFeatureScores(features);
             }
-            return new ScoredPeak(Features, LinearModelParams.Score(features, weights, 0));
+
+            return ChangeProp(ImClone(this), im => im.Score = LinearModelParams.Score(features, weights, 0));
         }
     }
 }
