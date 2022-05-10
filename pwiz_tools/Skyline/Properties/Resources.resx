@@ -11632,6 +11632,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="CandidatePeakForm_CandidatePeakForm_Candidate_Peaks" xml:space="preserve">
+	<value>Candidate Peaks</value>
+  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
     <value>{0} must contain a decimal value.</value>
   </data>
@@ -11718,6 +11721,16 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
+	  <value>Remove Peak</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Choose_peak" xml:space="preserve">
+	  <value>Choose peak</value>
+  </data>
+  <data name="CandidatePeakGroup_ToString___0___1__" xml:space="preserve">
+	  <value>[{0}-{1}]</value>
+      <comment>Example: [19.3-21.7]</comment>
   </data>
   <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
     <value>FASTA files</value>

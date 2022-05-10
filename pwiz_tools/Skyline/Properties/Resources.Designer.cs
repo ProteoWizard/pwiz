@@ -3621,6 +3621,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Candidate Peaks.
+        /// </summary>
+        public static string CandidatePeakForm_CandidatePeakForm_Candidate_Peaks {
+            get {
+                return ResourceManager.GetString("CandidatePeakForm_CandidatePeakForm_Candidate_Peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose peak.
+        /// </summary>
+        public static string CandidatePeakGroup_Chosen_Choose_peak {
+            get {
+                return ResourceManager.GetString("CandidatePeakGroup_Chosen_Choose_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Peak.
+        /// </summary>
+        public static string CandidatePeakGroup_Chosen_Remove_Peak {
+            get {
+                return ResourceManager.GetString("CandidatePeakGroup_Chosen_Remove_Peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0}-{1}].
+        /// </summary>
+        public static string CandidatePeakGroup_ToString___0___1__ {
+            get {
+                return ResourceManager.GetString("CandidatePeakGroup_ToString___0___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standard peptides must exist in the database..
         /// </summary>
         public static string ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database {

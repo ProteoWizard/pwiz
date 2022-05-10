@@ -1296,6 +1296,19 @@ namespace pwiz.Skyline.Model
             get { return TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue); }
         }
 
+        /// <summary>
+        /// Return groups of TransitionGroups that should participate in peak finding with each other.
+        /// TransitionGroups whose RelativeRT are not Unknown are one group.
+        /// The rest of the TransitionGroups are grouped by LabelType.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IEnumerable<TransitionGroupDocNode>> GetComparableGroups()
+        {
+            var lookup = TransitionGroups.ToLookup(group =>
+                group.RelativeRT == RelativeRT.Unknown ? group.LabelType : null);
+            return lookup;
+        }
+
         private sealed class PeptideResultsCalculator
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
