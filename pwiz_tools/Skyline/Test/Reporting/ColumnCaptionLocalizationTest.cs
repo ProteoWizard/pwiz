@@ -47,7 +47,10 @@ namespace pwiz.SkylineTest.Reporting
     public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
-            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow)});
+        {
+            typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow),
+            typeof(CandidatePeakGroup)
+        });
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".
         /// </summary>
@@ -70,10 +73,21 @@ namespace pwiz.SkylineTest.Reporting
             var missingCaptions = new HashSet<ColumnCaption>();
             foreach (var skylineDataSchema in EnumerateDataSchemas())
             {
-                foreach (var columnDescriptor in
-                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
+                foreach (var columnDescriptor in EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
                     var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                    if ("Value".Equals(invariantCaption?.InvariantCaption))
+                    {
+                        ColumnDescriptor rootColumnDescriptor = columnDescriptor;
+                        while (rootColumnDescriptor.Parent != null)
+                        {
+                            rootColumnDescriptor = rootColumnDescriptor.Parent;
+                        }
+                        // There should not be any columns named "Value". If any column is named that, it
+                        // probably needs that the class which is the dictionary value needs
+                        // "[InvariantDisplayName]" on top of it.
+                        Assert.Fail("Column named 'Value' found on property {0} from type {1}", columnDescriptor.PropertyPath, rootColumnDescriptor.PropertyType);
+                    }
                     if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
                     {
                         missingCaptions.Add(invariantCaption);
@@ -92,19 +106,18 @@ namespace pwiz.SkylineTest.Reporting
         /// <summary>
         /// Tests that all columns that can be displayed in Skyline Live Reports have an entry in "ColumnToolTips.resx".
         /// If you add a Property to any of the entities that get displayed in Skyline Live Reports, you probably have
-        /// to add an entry to ColumnToolTips.resx so that the column tooltip can be localized.
+        /// to add an entry to ColumnToolTips.resx so that the column has a tooltip.
         /// </summary>
         [TestMethod]
-        public void TestAllColumnToolTipsAreLocalized()
+        public void TestAllColumnsHaveTooltips()
         {
             var missingCaptions = new HashSet<ColumnCaption>();
             foreach (var skylineDataSchema in EnumerateDataSchemas())
             {
-                foreach (var columnDescriptor in
-                    EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
+                foreach (var columnDescriptor in EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
                 {
-                    var invariantDescription = skylineDataSchema.GetColumnDescription(columnDescriptor);
-                    if (string.IsNullOrEmpty(invariantDescription))
+                    var tooltip = skylineDataSchema.GetColumnDescription(columnDescriptor);
+                    if (string.IsNullOrEmpty(tooltip))
                     {
                         var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
                         if (invariantCaption != null)
@@ -202,6 +215,7 @@ namespace pwiz.SkylineTest.Reporting
         public IEnumerable<ColumnDescriptor> EnumerateAllColumnDescriptors(DataSchema dataSchema,
             ICollection<Type> startingTypes)
         {
+            var startingTypesSet = new HashSet<Type>(startingTypes);
             var typeQueue = new Queue<Type>(startingTypes);
             var processedTypes = new HashSet<Type>();
             while (typeQueue.Count > 0)
@@ -215,6 +229,14 @@ namespace pwiz.SkylineTest.Reporting
                 foreach (var uiMode in UiModes.AllModes)
                 {
                     var rootColumn = ColumnDescriptor.RootColumn(dataSchema, type, uiMode.Name);
+                    if (startingTypesSet.Contains(type) && typeof(ILinkValue).IsAssignableFrom(type))
+                    {
+                        // If the root column is selectable, make sure that its caption is localized
+                        if (type != typeof(SkylineDocument))
+                        {
+                            yield return rootColumn;
+                        }
+                    }
                     foreach (var child in GetChildColumns(rootColumn))
                     {
                         typeQueue.Enqueue(child.PropertyType);

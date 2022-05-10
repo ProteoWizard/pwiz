@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public bool[] EligibleScores { get; private set; }
 
-        public IList<IPeakFeatureCalculator> FeatureCalculators { get; private set; }
+        public FeatureCalculators FeatureCalculators { get; private set; }
 
         private readonly PeakTransitionGroupFeatureSet _peakTransitionGroupFeaturesList;
 
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             ReplaceUnknownFeatureScores = scoringModel.ReplaceUnknownFeatureScores;
             // Determine which calculators will be used to score peaks in this document.
-            FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
+            FeatureCalculators = scoringModel.PeakFeatureCalculators;
             _peakTransitionGroupFeaturesList = featureScores;
             PopulateDictionary();
 
@@ -81,21 +81,21 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        public void GetTransitionGroups(out List<IList<float[]>> targetGroups,
-            out List<IList<float[]>> decoyGroups)
+        public void GetTransitionGroups(out List<IList<FeatureScores>> targetGroups,
+            out List<IList<FeatureScores>> decoyGroups)
         {
-            targetGroups = new List<IList<float[]>>(TargetCount);
-            decoyGroups = new List<IList<float[]>>(DecoyCount);
+            targetGroups = new List<IList<FeatureScores>>(TargetCount);
+            decoyGroups = new List<IList<FeatureScores>>(DecoyCount);
 
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
                 int featuresCount = peakTransitionGroupFeatures.PeakGroupFeatures.Count;
                 if (featuresCount == 0)
                     continue;
-                var transitionGroup = new float[featuresCount][];
+                var transitionGroup = new FeatureScores[featuresCount];
                 for (int i = 0; i < featuresCount; i++)
                 {
-                    transitionGroup[i] = peakTransitionGroupFeatures.PeakGroupFeatures[i].Features;
+                    transitionGroup[i] = peakTransitionGroupFeatures.PeakGroupFeatures[i].FeatureScores;
                 }
 
                 if (peakTransitionGroupFeatures.IsDecoy)
@@ -211,7 +211,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 bool isNanWeight = !peakScoringModel.IsTrained ||
                                    double.IsNaN(peakScoringModel.Parameters.Weights[i]);
 
-                var name = peakScoringModel.PeakFeatureCalculators[i].Name;
                 double? weight = null, normalWeight = null;
                 if (!isNanWeight)
                 {
@@ -225,7 +224,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // If it is eligible, enable if untrained or if trained and not nan
                 bool enabled = EligibleScores[i] &&
                                (!peakScoringModel.IsTrained || !double.IsNaN(peakScoringModel.Parameters.Weights[i]));
-                peakCalculatorWeights[i] = new PeakCalculatorWeight(name, weight, normalWeight, enabled);
+                peakCalculatorWeights[i] = new PeakCalculatorWeight(peakScoringModel.PeakFeatureCalculators[i], weight, normalWeight, enabled);
             });
             return peakCalculatorWeights;
         }
@@ -346,14 +345,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class PeakCalculatorWeight
     {
-        public string Name { get; private set; }
+        public string Name
+        {
+            get { return Calculator.Name; }
+        }
+        public IPeakFeatureCalculator Calculator { get; private set; }
         public double? Weight { get; set; }
         public double? PercentContribution { get; set; }
         public bool IsEnabled { get; set; }
 
-        public PeakCalculatorWeight(string name, double? weight, double? percentContribution, bool enabled)
+        public PeakCalculatorWeight(IPeakFeatureCalculator calculator, double? weight, double? percentContribution, bool enabled)
         {
-            Name = name;
+            Calculator = calculator;
             Weight = weight;
             PercentContribution = percentContribution;
             IsEnabled = enabled;

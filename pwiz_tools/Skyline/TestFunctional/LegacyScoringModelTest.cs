@@ -79,9 +79,8 @@ namespace pwiz.SkylineTestFunctional
 
             const double episilon = 1e-7;
 
-            int indexIdentifiedCount =
-                LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators.IndexOf(calc =>
-                    calc is LegacyIdentifiedCountCalc);
+            int indexIdentifiedCount = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators
+                .IndexOf(typeof(LegacyIdentifiedCountCalc));
             RunUI(editPeakScoringDlg.TrainModelClick);
             var weightsAll = editPeakScoringDlg.PeakCalculatorsGrid.Items.Select(row => row.Weight).ToList();
             Assert.AreEqual(0, weightsAll.Count(w=>!w.HasValue));
@@ -108,8 +107,8 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Disable the dot product score
-            int indexLibraryDotProduct = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators.IndexOf(calc =>
-                calc is MQuestDefaultIntensityCorrelationCalc);
+            int indexLibraryDotProduct = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators
+                .IndexOf(typeof(MQuestDefaultIntensityCorrelationCalc));
             RunUI(() =>
             {
                 editPeakScoringDlg.PeakCalculatorsGrid.Items[indexLibraryDotProduct].IsEnabled = false;
