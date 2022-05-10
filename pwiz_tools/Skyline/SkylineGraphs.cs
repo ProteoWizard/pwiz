@@ -781,7 +781,7 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         Resources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                if (_timerGraphs.Enabled)
+                if (_timerGraphs.Enabled || ((IList<IUpdatable>)_timerGraphs.Tag)?.Count > 0)
                 {
                     return true;
                 }

@@ -494,8 +494,6 @@ namespace pwiz.SkylineTestTutorial
         {
             SelectNode(SrmDocument.Level.TransitionGroups, indexPrecursor);
             WaitForGraphs();
-            TryWaitForConditionUI(() => SkylineWindow.GraphSpectrum != null && // Under code coverage we sometimes overrun WaitForGraphs
-                                        SkylineWindow.GraphSpectrum.GraphTitle.StartsWith(libraryName)); 
             RunUI(() =>
             {
                 var graphSpec = SkylineWindow.GraphSpectrum;
