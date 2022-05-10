@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            if (context.Document == null)
+            if (context.Settings == null)
                 return float.NaN;
 
             float maxHeight = float.MinValue;
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 if (summaryPeakData.NodePep.ExplicitRetentionTime != null)
                 {
                     explicitRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTime;
-                    windowRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTimeWindow ?? context.Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+                    windowRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTimeWindow ?? context.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
                 }
                 if (explicitRT.HasValue && windowRT.HasValue)
                 {
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 else
                 {
                     var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
-                    var settings = context.Document.Settings;
+                    var settings = context.Settings;
                     var predictor = settings.PeptideSettings.Prediction.RetentionTime;
                     var fullScan = settings.TransitionSettings.FullScan;
                     var seqModified = settings.GetSourceTarget(summaryPeakData.NodePep); 
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // This can really mess up training and peak picking for the standards, since something
                 // like a negative coefficient for delta-RT^2 can result in far away peaks having huge scores.
                 // So, here we limit the delta scores. But, this was too invasive to do for everything.
-                var fullScan = context.Document.Settings.TransitionSettings.FullScan;
+                var fullScan = context.Settings.TransitionSettings.FullScan;
                 if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
                     rtDelta = maxDelta;
             }
@@ -279,14 +279,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static double GetMaximumProductMassError(PeakScoringContext context)
         {
-            var productMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
-            return context.Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(productMz) / 2.0;
+            var productMz = context.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Settings.TransitionSettings.FullScan.GetProductFilterWindow(productMz) / 2.0;
         }
 
         public static double GetMaximumPrecursorMassError(PeakScoringContext context)
         {
-            var precursorMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
-            return context.Document.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(precursorMz) / 2.0;
+            var precursorMz = context.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(precursorMz) / 2.0;
         }
 
         public static float CalculateIdotp(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)

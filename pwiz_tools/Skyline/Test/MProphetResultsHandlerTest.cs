@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -204,7 +203,7 @@ namespace pwiz.SkylineTest
         private static void SaveMProphetFeatures(MProphetResultsHandler resultsHandler, 
                                           string saveFile, 
                                           CultureInfo cultureInfo,
-                                          IList<IPeakFeatureCalculator> calcs)
+                                          FeatureCalculators calcs)
         {
             using (var saver = new FileSaver(saveFile))
             using (var writer = new StreamWriter(saver.SafeName))
