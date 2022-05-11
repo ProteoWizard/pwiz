@@ -433,15 +433,6 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeProp(ImClone(this), im => im.LibraryDotProduct = prop);
         }
-
-        public TransitionGroupChromInfo ChangeScore(float qvalue, float score)
-        {
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.QValue = qvalue;
-                im.ZScore = score;
-            });
-        }
         #endregion
 
         #region object overrides
@@ -506,8 +497,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
-                result = (result*397) ^ (QValue.HasValue ? QValue.Value.GetHashCode() : 0);
-                result = (result*397) ^ (ZScore.HasValue ? ZScore.Value.GetHashCode() : 0);
+                result = (result*397) ^ QValue.GetHashCode();
+                result = (result*397) ^ ZScore.GetHashCode();
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
@@ -1444,7 +1435,7 @@ namespace pwiz.Skyline.Model.Results
         TRUE,   // SET by manual integration
         FALSE,  // Best peak picked during results import
         IMPORTED,   // Import peak boundaries
-        REINTEGRATED,   // Edit > Refine > Reintagrate
+        REINTEGRATED,   // Edit > Refine > Reintegrate
         MATCHED // Forced by peak matching when adding missing label type precursors
     }
 
