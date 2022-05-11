@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -66,7 +65,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 W2*identifiedCount;
         }
 
-        private ImmutableList<IPeakFeatureCalculator> _calculators;
+        private FeatureCalculators _calculators;
 
         public LegacyScoringModel(string name, LinearModelParams parameters = null, bool usesDecoys = true, bool usesSecondBest = false) : base(name)
         {
@@ -77,26 +76,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesSecondBest = usesSecondBest;
         }
 
-        public override IList<IPeakFeatureCalculator> PeakFeatureCalculators
+        public override FeatureCalculators PeakFeatureCalculators
         {
             get { return _calculators; }
         }
 
         private void SetPeakFeatureCalculators()
         {
-            _calculators = MakeReadOnly(new IPeakFeatureCalculator[]
-                {
-                    new MQuestDefaultIntensityCalc(), 
-                    new LegacyUnforcedCountScoreDefaultCalc(), 
-                    new LegacyIdentifiedCountCalc(),
-                    new MQuestDefaultIntensityCorrelationCalc(),
-                    new MQuestDefaultWeightedShapeCalc(),
-                    new MQuestDefaultWeightedCoElutionCalc(),
-                    new MQuestRetentionTimePredictionCalc(), 
-                });
+            _calculators = new FeatureCalculators(new IPeakFeatureCalculator[]
+            {
+                new MQuestDefaultIntensityCalc(),
+                new LegacyUnforcedCountScoreDefaultCalc(),
+                new LegacyIdentifiedCountCalc(),
+                new MQuestDefaultIntensityCorrelationCalc(),
+                new MQuestDefaultWeightedShapeCalc(),
+                new MQuestDefaultWeightedCoElutionCalc(),
+                new MQuestRetentionTimePredictionCalc(),
+            });
         }
 
-        public static IPeakFeatureCalculator[] AnalyteFeatureCalculators =
+        public static FeatureCalculators AnalyteFeatureCalculators = new FeatureCalculators(new IPeakFeatureCalculator[]
         {
             new MQuestIntensityCalc(),
             new LegacyUnforcedCountScoreCalc(),
@@ -105,9 +104,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestWeightedShapeCalc(),
             new MQuestWeightedCoElutionCalc(),
             new MQuestRetentionTimePredictionCalc(),
-        };
+        });
 
-        public static IPeakFeatureCalculator[] StandardFeatureCalculators =
+        public static FeatureCalculators StandardFeatureCalculators = new FeatureCalculators(new IPeakFeatureCalculator[]
         {
             new MQuestStandardIntensityCalc(),
             new LegacyUnforcedCountScoreStandardCalc(),
@@ -116,9 +115,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestStandardWeightedShapeCalc(),
             new MQuestStandardWeightedCoElutionCalc(),
             new MQuestRetentionTimePredictionCalc(),
-        };
+        });
 
-        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
+        public override IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null)
         {
             return ChangeProp(ImClone(this), im =>
