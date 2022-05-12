@@ -110,7 +110,7 @@ namespace pwiz.Skyline.FileUI
                         longWaitDlg.PerformWork(this, 1000, b =>
                                                             WriteFeatures(dlg.FileName,
                                                                           resultsHandler,
-                                                                          displayCalcs,
+                                                                          new FeatureCalculators(displayCalcs),
                                                                           LocalizationHelper.CurrentCulture,
                                                                           checkBoxBestOnly.Checked,
                                                                           !checkBoxTargetsOnly.Checked,
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.FileUI
 
         public static void WriteFeatures(string filePath, 
                                          MProphetResultsHandler resultsHandler,
-                                         IList<IPeakFeatureCalculator> calcs,
+                                         FeatureCalculators calcs,
                                          CultureInfo cultureInfo,
                                          bool bestOnly,
                                          bool includeDecoys,

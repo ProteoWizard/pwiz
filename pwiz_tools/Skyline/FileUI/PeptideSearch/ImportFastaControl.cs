@@ -53,7 +53,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, helpTipFasta);
 
-            tbxFastaHeightDifference = Height - tbxFasta.Height;
+            tbxFastaHeightDifference = Height - (panelError.Bottom - tbxFasta.Top);
 
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
             _driverEnzyme.LoadList(DocumentContainer.Document.Settings.PeptideSettings.Enzyme.GetKey());
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void TbxFasta_Resize(object sender, EventArgs e)
         {
             targetFastaPanel.Location = new System.Drawing.Point(targetFastaPanel.Location.X, tbxFasta.Bounds.Bottom + 8);
-            targetFastaPanel.Width = Width; // not sure why this is necessary
+            targetFastaPanel.Width = browseFastaBtn.Right + (targetFastaPanel.Width - browseFastaTargetsBtn.Right); // Make sure browse buttons align
         }
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }

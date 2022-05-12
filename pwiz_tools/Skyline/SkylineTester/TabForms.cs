@@ -144,6 +144,10 @@ namespace SkylineTester
 
         public void CreateFormsGrid()
         {
+            // Avoid doing this twice
+            if (MainWindow.FormsGrid.RowCount > 0)
+                return;
+
             // Remove excessive underlines from Form and Test links.
             ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[0]).LinkBehavior = LinkBehavior.NeverUnderline;
             ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[1]).LinkBehavior = LinkBehavior.NeverUnderline;
