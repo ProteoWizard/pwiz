@@ -141,9 +141,11 @@
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
     <Compile Include="StripePainterTest.cs" />
@@ -306,7 +308,9 @@
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithoutInteraction.csv" />
     <None Include="MProphetResultsHandlerTest.zip" />
     <None Include="MProphetScoringModelTest.zip" />
+    <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
+    <None Include="PeakGroupIntegratorTest.zip" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
