@@ -1618,8 +1618,13 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[5].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[6].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[7].PrecursorAdduct.HasIsotopeLabels);
-            NewDocument();
 
+            docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListUnsorted.Replace("M+", "[123.456]")); // This used to throw in SortSiblingsByMass()
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste()); // Instead it should show the column select dialog
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+
+            NewDocument();
         }
 
         private void TestAutoManage()
