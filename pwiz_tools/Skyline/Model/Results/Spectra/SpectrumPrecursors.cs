@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
+using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -13,18 +15,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
     public class SpectrumPrecursors : IFormattable
     {
         public static readonly SpectrumPrecursors EMPTY =
-            new SpectrumPrecursors(ImmutableList.Empty<KeyValuePair<int, SignedMz>>());
-        public SpectrumPrecursors(IEnumerable<KeyValuePair<int, SignedMz>> precursors)
-        {
-            Precursors = ImmutableList.ValueOfOrEmpty(precursors.OrderBy(p=>Tuple.Create(p.Key, p.Value)));
-        }
+            new SpectrumPrecursors(ImmutableList.Empty<SpectrumPrecursor>());
 
-        public ImmutableList<KeyValuePair<int, SignedMz>> Precursors { get; private set; }
-
-        public bool Contains(SignedMz mz, double tolerance)
+        private ImmutableList<SpectrumPrecursor> _precursors;
+        public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
         {
-            return Precursors.Any(precursor 
-                => 1 == precursor.Key && 0 == mz.CompareTolerant(precursor.Value, tolerance));
+            _precursors = ImmutableList.ValueOf(precursors.OrderBy(p=>p.PrecursorMz.RawValue));
         }
 
         public override string ToString()
@@ -34,35 +30,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            if (Precursors.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            if (Precursors.Count == 1 && Precursors[0].Key == 1)
-            {
-                return Precursors[0].Value.ToString(format, formatProvider);
-            }
-
-            var csvSeparator = TextUtil.GetCsvSeparator(formatProvider).ToString();
-            if (Precursors.All(p => p.Key == 1))
-            {
-                var precursorsString = string.Join(csvSeparator,
-                    Precursors.Select(p => p.Value.ToString(format, formatProvider)));
-                return string.Format(@"[{0}]", precursorsString);
-            }
-            else
-            {
-                var precursorsString = string.Join(csvSeparator,
-                    Precursors.Select(p =>
-                        string.Format(Resources.AlignedFile_AlignLibraryRetentionTimes__0__1__, p.Key, p.Value.ToString(format, formatProvider))));
-                return string.Format(@"[{0}]", precursorsString);
-            }
+            return string.Join(TextUtil.GetCsvSeparator(formatProvider).ToString(),
+                _precursors.Select(p => p.PrecursorMz.ToString(format, formatProvider)));
         }
 
         protected bool Equals(SpectrumPrecursors other)
         {
-            return Precursors.Equals(other.Precursors);
+            return _precursors.Equals(other._precursors);
         }
 
         public override bool Equals(object obj)
@@ -75,7 +49,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public override int GetHashCode()
         {
-            return Precursors.GetHashCode();
+            return _precursors.GetHashCode();
         }
     }
 }

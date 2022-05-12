@@ -28,22 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.btnBrowse = new System.Windows.Forms.Button();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.statusPanel = new System.Windows.Forms.Panel();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.lblStatus = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.listBoxFiles = new System.Windows.Forms.ListBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.databoundGridControl1 = new pwiz.Skyline.Controls.Databinding.DataboundGridControl();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.statusPanel.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // databoundGridControl
+            // 
+            this.databoundGridControl.Location = new System.Drawing.Point(0, 100);
+            this.databoundGridControl.Size = new System.Drawing.Size(800, 315);
             // 
             // btnBrowse
             // 
             this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(675, 6);
+            this.btnBrowse.Location = new System.Drawing.Point(675, 3);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(113, 28);
             this.btnBrowse.TabIndex = 1;
@@ -51,25 +54,44 @@
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
-            // splitContainer1
+            // statusPanel
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.statusPanel.Controls.Add(this.progressBar1);
+            this.statusPanel.Controls.Add(this.lblStatus);
+            this.statusPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.statusPanel.Location = new System.Drawing.Point(0, 415);
+            this.statusPanel.Name = "statusPanel";
+            this.statusPanel.Size = new System.Drawing.Size(800, 35);
+            this.statusPanel.TabIndex = 0;
             // 
-            // splitContainer1.Panel1
+            // progressBar1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.listBoxFiles);
-            this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
+            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar1.Location = new System.Drawing.Point(568, 6);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(220, 23);
+            this.progressBar1.TabIndex = 1;
             // 
-            // splitContainer1.Panel2
+            // lblStatus
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.databoundGridControl1);
-            this.splitContainer1.Panel2.Controls.Add(this.flowLayoutPanel1);
-            this.splitContainer1.Size = new System.Drawing.Size(800, 450);
-            this.splitContainer1.SplitterDistance = 109;
-            this.splitContainer1.TabIndex = 5;
+            this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblStatus.Location = new System.Drawing.Point(3, 6);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(559, 23);
+            this.lblStatus.TabIndex = 0;
+            this.lblStatus.Text = "label1";
+            this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.listBoxFiles);
+            this.panel1.Controls.Add(this.btnBrowse);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(800, 100);
+            this.panel1.TabIndex = 1;
             // 
             // listBoxFiles
             // 
@@ -77,50 +99,36 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxFiles.FormattingEnabled = true;
-            this.listBoxFiles.Location = new System.Drawing.Point(12, 6);
+            this.listBoxFiles.Location = new System.Drawing.Point(12, 12);
             this.listBoxFiles.Name = "listBoxFiles";
-            this.listBoxFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxFiles.Size = new System.Drawing.Size(657, 95);
-            this.listBoxFiles.TabIndex = 0;
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 296);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(800, 41);
-            this.flowLayoutPanel1.TabIndex = 0;
-            // 
-            // databoundGridControl1
-            // 
-            this.databoundGridControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.databoundGridControl1.Location = new System.Drawing.Point(0, 0);
-            this.databoundGridControl1.Name = "databoundGridControl1";
-            this.databoundGridControl1.Size = new System.Drawing.Size(800, 296);
-            this.databoundGridControl1.TabIndex = 1;
+            this.listBoxFiles.Size = new System.Drawing.Size(648, 69);
+            this.listBoxFiles.TabIndex = 2;
             // 
             // SpectraGridForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.statusPanel);
+            this.Controls.Add(this.panel1);
             this.Name = "SpectraGridForm";
             this.TabText = "SpectraGridForm";
             this.Text = "SpectraGridForm";
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.Controls.SetChildIndex(this.panel1, 0);
+            this.Controls.SetChildIndex(this.statusPanel, 0);
+            this.Controls.SetChildIndex(this.databoundGridControl, 0);
+            this.statusPanel.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
         private System.Windows.Forms.Button btnBrowse;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Panel statusPanel;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.ListBox listBoxFiles;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private Databinding.DataboundGridControl databoundGridControl1;
     }
 }

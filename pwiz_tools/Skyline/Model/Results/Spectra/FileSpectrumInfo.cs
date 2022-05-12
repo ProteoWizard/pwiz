@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
@@ -6,6 +7,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
+    [DisplayName("Info")]
     public class FileSpectrumInfo : SkylineObject, ILinkValue
     {
         public FileSpectrumInfo(SkylineDataSchema dataSchema, int spectrumCount) : base(dataSchema)
@@ -26,6 +28,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public object Value
         {
             get { return this; }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} Spectra", SpectrumCount);
         }
     }
 }

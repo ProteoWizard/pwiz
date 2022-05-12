@@ -1,4 +1,5 @@
-﻿using pwiz.Common.Chemistry;
+﻿using System;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Spectra
@@ -11,10 +12,16 @@ namespace pwiz.Common.Spectra
         }
 
         public SignedMz PrecursorMz { get; }
-        
+        public double? CollisionEnergy { get; private set; }
+
+        public SpectrumPrecursor ChangeCollisionEnergy(double? collisionEnergy)
+        {
+            return ChangeProp(ImClone(this), im => im.CollisionEnergy = collisionEnergy);
+        }
+
         protected bool Equals(SpectrumPrecursor other)
         {
-            return PrecursorMz.Equals(other.PrecursorMz);
+            return PrecursorMz.Equals(other.PrecursorMz) && Nullable.Equals(CollisionEnergy, other.CollisionEnergy);
         }
 
         public override bool Equals(object obj)
@@ -29,7 +36,7 @@ namespace pwiz.Common.Spectra
         {
             unchecked
             {
-                return PrecursorMz.GetHashCode() * 397;
+                return (PrecursorMz.GetHashCode() * 397) ^ CollisionEnergy.GetHashCode();
             }
         }
     }

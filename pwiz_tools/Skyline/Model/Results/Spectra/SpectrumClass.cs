@@ -1,19 +1,55 @@
 ﻿using System.Collections.Generic;
+using EnvDTE;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     public class SpectrumClass : SkylineObject
     {
-        public SpectrumClass(SkylineDataSchema dataSchema, string ms2Precursors, IDictionary<string, FileSpectrumInfo> files) : base(dataSchema)
+        private SpectrumClassKey _classKey;
+        public SpectrumClass(SkylineDataSchema dataSchema, SpectrumClassKey classKey) : base(dataSchema)
         {
-            Ms2Precursors = ms2Precursors;
-            Files = files;
+            _classKey = classKey;
+            Files = new Dictionary<string, FileSpectrumInfo>();
         }
 
-        public string Ms2Precursors { get; private set; }
+        [Format(Formats.Mz)]
+        public SpectrumPrecursors Ms1Precursors
+        {
+            get
+            {
+                return _classKey.Ms1Precursors;
+            }
+        }
 
-        public IDictionary<string, FileSpectrumInfo> Files { get; }
+        [Format(Formats.Mz)]
+        public SpectrumPrecursors Ms2Precursors
+        {
+            get
+            {
+                return _classKey.Ms2Precursors;
+            }
+        }
+
+        public string ScanDescription
+        {
+            get
+            {
+                return _classKey.ScanDescription;
+            }
+        }
+
+        public double? CollisionEnergy
+        {
+            get
+            {
+                return _classKey.CollisionEnergy;
+            }
+        }
+
+        public Dictionary<string, FileSpectrumInfo> Files { get; }
     }
 }

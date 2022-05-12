@@ -178,30 +178,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        private bool ColumnsEqual(ViewInfo viewInfo1, ViewInfo viewInfo2)
-        {
-            if (!Equals(viewInfo1.ViewSpec, viewInfo2.ViewSpec))
-            {
-                return false;
-            }
-
-            if (viewInfo1.DisplayColumns.Count != viewInfo2.DisplayColumns.Count)
-            {
-                return false;
-            }
-
-            for (int icol = 0; icol < viewInfo1.DisplayColumns.Count; icol++)
-            {
-                if (!viewInfo1.DisplayColumns[icol].ColumnDescriptor.GetAttributes()
-                    .SequenceEqual(viewInfo2.DisplayColumns[icol].ColumnDescriptor.GetAttributes()))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         //Adjusts column width to make sure the headers are displayed in a single line. Used for tutorials testing.
         public void ExpandColumns()
         {

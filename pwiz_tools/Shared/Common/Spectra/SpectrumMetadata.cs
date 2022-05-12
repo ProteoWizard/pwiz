@@ -9,6 +9,13 @@ namespace pwiz.Common.Spectra
     {
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
+
+        public SpectrumMetadata(string id)
+        {
+            Id = id;
+        }
+
+        public string Id { get; private set; }
         public int MsLevel
         {
             get { return _precursorsByMsLevel.Count + 1; }
@@ -49,6 +56,18 @@ namespace pwiz.Common.Spectra
             }
 
             return ChangeProp(ImClone(this), im => im.ScanDescription = scanDescription);
+        }
+
+        public double? CollisionEnergy { get; private set; }
+
+        public SpectrumMetadata ChangeCollisionEnergy(double? collisionEnergy)
+        {
+            if (CollisionEnergy == collisionEnergy)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im.CollisionEnergy = collisionEnergy);
         }
     }
 }
