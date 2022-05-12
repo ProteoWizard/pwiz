@@ -1,34 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Spectra
 {
-    public partial class SpectraGridForm : DockableFormEx
+    public partial class SpectraGridForm : DataboundGridForm
     {
+        private SkylineDataSchema _dataSchema;
         private SpectrumList _spectrumList;
-        private List<SpectrumRow> _rowsList;
         private SequenceTree _sequenceTree;
         private HashSet<IdentityPath> _selectedPrecursorPaths = new HashSet<IdentityPath>();
+        private List<SpectrumClass> _spectrumClasses;
+        private BindingList<SpectrumClass> _bindingList;
+
 
         public SpectraGridForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
-            _rowsList = new List<SpectrumRow>();
-            bindingSource1.DataSource = _rowsList;
+            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            BindingListSource.QueryLock = _dataSchema.QueryLock;
+            _spectrumClasses = new List<SpectrumClass>();
+            _bindingList = new BindingList<SpectrumClass>(_spectrumClasses);
+            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(SpectrumClass));
+            var rowSourceInfo = new RowSourceInfo(BindingListSource.Create())
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -247,6 +257,18 @@ namespace pwiz.Skyline.Controls.Spectra
             }
 
             return result;
+        }
+
+        class SpectrumIdentifier
+        {
+            public SpectrumIdentifier(int index, string id)
+            {
+                Index = index;
+                Id = id;
+            }
+
+            public int Index { get; }
+            public string Id { get; }
         }
     }
 }

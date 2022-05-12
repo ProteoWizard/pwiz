@@ -626,6 +626,8 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumSelector.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
