@@ -251,10 +251,10 @@ namespace pwiz.SkylineTestTutorial
                     () =>
                         SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
-                // The tutorial tells the reader they can see the library name in the spectrum graph title
-                VerifyPrecursorLibrary(12, YEAST_GPM, 125);
-                VerifyPrecursorLibrary(13, YEAST_ATLAS, 5.23156E+07);
             }
+            // The tutorial tells the reader they can see the library name in the spectrum graph title
+            VerifyPrecursorLibrary(12, YEAST_GPM, 125);
+            VerifyPrecursorLibrary(13, YEAST_ATLAS, 5.23156E+07);
 
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
             {
