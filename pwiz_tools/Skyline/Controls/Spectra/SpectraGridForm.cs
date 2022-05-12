@@ -33,11 +33,20 @@ namespace pwiz.Skyline.Controls.Spectra
         private readonly SpectrumReader _spectrumReader;
         private List<MsDataFileUri> _dataFileList = new List<MsDataFileUri>();
         private HashSet<MsDataFileUri> _dataFileSet = new HashSet<MsDataFileUri>();
+        private ImmutableList<SpectrumClassColumn> _allSpectrumClassColumns;
+        private bool _updatePending;
 
         public SpectraGridForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
+            _allSpectrumClassColumns = SpectrumClassColumn.ALL;
+            checkedListBoxSpectrumClassColumns.Items.AddRange(_allSpectrumClassColumns.ToArray());
+            for (int i = 0; i < checkedListBoxSpectrumClassColumns.Items.Count; i++)
+            {
+                checkedListBoxSpectrumClassColumns.SetItemCheckState(i, CheckState.Indeterminate);
+            }
+            checkedListBoxSpectrumClassColumns.ItemCheck += CheckedListBoxSpectrumClassColumns_OnItemCheck;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _spectrumClasses = new List<SpectrumClass>();
@@ -46,6 +55,22 @@ namespace pwiz.Skyline.Controls.Spectra
             BindingListSource.SetViewContext(viewContext);
             Text = TabText = "Spectra";
             _spectrumReader = new SpectrumReader(this);
+        }
+
+        private void CheckedListBoxSpectrumClassColumns_OnItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            QueueUpdateSpectrumRows();
+        }
+
+        private void QueueUpdateSpectrumRows()
+        {
+            if (_updatePending)
+            {
+                return;
+            }
+
+            _updatePending = true;
+            BeginInvoke(new Action(UpdateSpectrumRows));
         }
 
         private IList<RowSourceInfo> MakeRowSourceInfos()
@@ -57,58 +82,55 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private ViewSpec GetDefaultViewSpec()
         {
-            var columns = new List<ColumnSpec>
+            var columns = new List<ColumnSpec>();
+            var tolerance = SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            for (int i = 0; i < _allSpectrumClassColumns.Count; i++)
             {
-                new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms1Precursors)))
-            };
+                var checkedState = checkedListBoxSpectrumClassColumns.GetItemCheckState(i);
+                if (checkedState == CheckState.Unchecked)
+                {
+                    continue;
+                }
 
-            if (HasMultipleValues(spectrum => spectrum.GetPrecursors(2)))
-            {
-                columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Ms2Precursors))));
-            }
+                var classColumn = _allSpectrumClassColumns[i];
+                if (checkedState == CheckState.Indeterminate)
+                {
+                    if (!_spectrumLists.Values.Any(spectrumList =>
+                            HasMultipleValues(spectrumList, classColumn, tolerance)))
+                    {
+                        continue;
+                    }
+                }
 
-            if (HasMultipleValues(spectrum => spectrum.ScanDescription))
-            {
-                columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription))));
-            }
-
-            if (HasMultipleValues(spectrum => spectrum.CollisionEnergy))
-            {
-                columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.CollisionEnergy))));
+                columns.Add(new ColumnSpec(classColumn.PropertyPath));
             }
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Files)).DictionaryValues()));
             return new ViewSpec().SetName("Default").SetColumns(columns);
         }
 
-        private bool HasMultipleValues<T>(Func<SpectrumMetadata, T> getterFunc)
+        private bool HasMultipleValues(SpectrumMetadataList spectra, SpectrumClassColumn column, double tolerance)
         {
-            var tolerance = SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            return _spectrumLists.Values.Any(spectrumList => HasMultipleValues(spectrumList, getterFunc, tolerance));
-        }
-
-        private bool HasMultipleValues<T>(SpectrumMetadataList spectra, Func<SpectrumMetadata, T> getterFunc, double tolerance)
-        {
-            if (spectra.Ms1Spectra.Select(getterFunc).Distinct().Skip(1).Any())
+            if (spectra.Ms1Spectra.Select(column.GetValue).Distinct().Skip(1).Any())
             {
                 return true;
             }
 
             for (int i = 0; i < spectra.SpectraByPrecursor.Count; i++)
             {
-                IEnumerable<T> values = spectra.SpectraByPrecursor[i].Value.Select(getterFunc);
+                var values = new HashSet<object>();
                 for (int j = i + 1;
                      j < spectra.SpectraByPrecursor.Count && spectra.SpectraByPrecursor.Keys[j] - i <= tolerance * 2;
                      j++)
                 {
-                    values = values.Concat(spectra.SpectraByPrecursor[j].Value.Select(getterFunc));
-                }
-
-                if (values.Distinct().Skip(1).Any())
-                {
-                    return true;
+                    foreach (var spectrum in spectra.SpectraByPrecursor[j].Value)
+                    {
+                        if (values.Add(column.GetValue(spectrum)) && values.Count > 1)
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
-
             return false;
         }
 
@@ -129,7 +151,7 @@ namespace pwiz.Skyline.Controls.Spectra
         private void OnDocumentChanged()
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
-            UpdateSpectrumRows();
+            QueueUpdateSpectrumRows();
         }
 
         private void SetSequenceTree(SequenceTree sequenceTree)
@@ -165,13 +187,26 @@ namespace pwiz.Skyline.Controls.Spectra
             }
 
             _selectedPrecursorPaths = paths;
-            UpdateSpectrumRows();
+            QueueUpdateSpectrumRows();
+        }
+
+        public IEnumerable<SpectrumClassColumn> GetEnabledClassColumns()
+        {
+            for (int i = 0; i < checkedListBoxSpectrumClassColumns.Items.Count; i++)
+            {
+                if (checkedListBoxSpectrumClassColumns.GetItemCheckState(i) != CheckState.Unchecked)
+                {
+                    yield return _allSpectrumClassColumns[i];
+                }
+            }
         }
 
         public void UpdateSpectrumRows()
         {
+            _updatePending = false;
             var document = SkylineWindow.DocumentUI;
             var spectrumClasses = new Dictionary<SpectrumClassKey, SpectrumClass>();
+            var classColumns = ImmutableList.ValueOf(GetEnabledClassColumns());
             IList<TransitionGroupDocNode> transitionGroupDocNodes = null;
             if (_selectedPrecursorPaths.Count > 0)
             {
@@ -194,7 +229,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         FindMatchingTransitionGroups(spectrum, transitionGroupDocNodes, tolerance).Any()));
                 }
 
-                foreach (var spectrumGroup in spectra.GroupBy(SpectrumClassKey.FromSpectrumMetadata))
+                foreach (var spectrumGroup in spectra.GroupBy(spectrum=>new SpectrumClassKey(classColumns, spectrum)))
                 {
                     if (!spectrumClasses.TryGetValue(spectrumGroup.Key, out var spectrumClass))
                     {
@@ -294,7 +329,7 @@ namespace pwiz.Skyline.Controls.Spectra
         public void SetSpectra(MsDataFileUri dataFile, IList<SpectrumMetadata> spectra)
         {
             _spectrumLists[dataFile] = new SpectrumMetadataList(spectra);
-            UpdateSpectrumRows();
+            QueueUpdateSpectrumRows();
         }
 
         public HashSet<IdentityPath> GetSelectedPrecursorPaths()

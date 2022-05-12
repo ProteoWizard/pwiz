@@ -34,6 +34,7 @@
             this.lblStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.listBoxFiles = new System.Windows.Forms.ListBox();
+            this.checkedListBoxSpectrumClassColumns = new System.Windows.Forms.CheckedListBox();
             this.statusPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -85,6 +86,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
             this.panel1.Controls.Add(this.listBoxFiles);
             this.panel1.Controls.Add(this.btnBrowse);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -99,10 +101,20 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxFiles.FormattingEnabled = true;
-            this.listBoxFiles.Location = new System.Drawing.Point(12, 12);
+            this.listBoxFiles.IntegralHeight = false;
+            this.listBoxFiles.Location = new System.Drawing.Point(297, 3);
             this.listBoxFiles.Name = "listBoxFiles";
-            this.listBoxFiles.Size = new System.Drawing.Size(648, 69);
+            this.listBoxFiles.Size = new System.Drawing.Size(363, 91);
             this.listBoxFiles.TabIndex = 2;
+            // 
+            // checkedListBoxSpectrumClassColumns
+            // 
+            this.checkedListBoxSpectrumClassColumns.FormattingEnabled = true;
+            this.checkedListBoxSpectrumClassColumns.IntegralHeight = false;
+            this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(6, 3);
+            this.checkedListBoxSpectrumClassColumns.Name = "checkedListBoxSpectrumClassColumns";
+            this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 91);
+            this.checkedListBoxSpectrumClassColumns.TabIndex = 3;
             // 
             // SpectraGridForm
             // 
@@ -130,5 +142,6 @@
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.ListBox listBoxFiles;
+        private System.Windows.Forms.CheckedListBox checkedListBoxSpectrumClassColumns;
     }
 }

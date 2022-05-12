@@ -60,6 +60,18 @@ namespace pwiz.Common.Spectra
 
         public double? CollisionEnergy { get; private set; }
 
+        public double? ScanWindowLowerLimit { get; private set; }
+        public double? ScanWindowUpperLimit { get; private set; }
+
+        public SpectrumMetadata ChangeScanWindow(double lowerLimit, double upperLimit)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ScanWindowLowerLimit = ScanWindowLowerLimit;
+                im.ScanWindowUpperLimit = ScanWindowUpperLimit;
+            });
+        }
+
         public SpectrumMetadata ChangeCollisionEnergy(double? collisionEnergy)
         {
             if (CollisionEnergy == collisionEnergy)
