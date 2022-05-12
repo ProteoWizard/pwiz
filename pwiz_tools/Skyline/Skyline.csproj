@@ -392,6 +392,12 @@
     </Compile>
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
+    <Compile Include="Controls\Spectra\SpectraGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectraGridForm.Designer.cs">
+      <DependentUpon>SpectraGridForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -620,6 +626,9 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumList.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumSelector.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -2443,6 +2452,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectraGridForm.resx">
+      <DependentUpon>SpectraGridForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>

@@ -29,6 +29,7 @@ using pwiz.CLI.analysis;
 using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using Version = pwiz.CLI.msdata.Version;
 
@@ -636,6 +637,11 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
+        {
+            return GetSpectrumMetadata(_msDataFile.run.spectrumList.spectrum(spectrumIndex, DetailLevel.FullMetadata));
+        }
+
         public double? GetMaxIonMobility()
         {
             return GetMaxIonMobilityInList();
@@ -1084,6 +1090,19 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return msDataSpectrum;
+        }
+
+        private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
+        {
+            if (spectrum == null)
+            {
+                return null;
+            }
+            var metadata = new SpectrumMetadata();
+            metadata = metadata.ChangePrecursors(GetPrecursorsByMsLevel(spectrum).Select(level =>
+                level.Where(precursor => precursor.IsolationMz.HasValue)
+                    .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
+            return metadata;
         }
 
         public bool HasSrmSpectra

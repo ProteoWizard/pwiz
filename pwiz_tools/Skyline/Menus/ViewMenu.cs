@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.Spectra;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -973,6 +974,12 @@ namespace pwiz.Skyline.Menus
         private void viewTargetsMenuItem_click(object sender, EventArgs e)
         {
             ShowTargetsWindow();
+        }
+
+        private void spectrumGridMenuItem_Click(object sender, EventArgs e)
+        {
+            var spectrumGridForm = new SpectraGridForm(SkylineWindow);
+            spectrumGridForm.Show(SkylineWindow);
         }
     }
 }
